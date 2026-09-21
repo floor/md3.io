@@ -1,3 +1,8 @@
+import createBadge from 'mtrl/components/badge';
+import createProgress from 'mtrl/components/progress';
+import createLoadingIndicator from 'mtrl/components/loading-indicator';
+import createSnackbar from 'mtrl/components/snackbar';
+import createTooltip from 'mtrl/components/tooltip';
 import createCard from 'mtrl/components/card';
 import createList from 'mtrl/components/list';
 import createCarousel from 'mtrl/components/carousel';
@@ -53,6 +58,38 @@ function create(state: ComponentState) {
   const message = (value: string) => { if (instance === generation) report(value); };
   const sync = (values: ComponentState) => { if (instance === generation) syncValues(values); };
   switch (slug) {
+    case 'badge': {
+      const host = document.createElement('div');
+      const target = createIconButton({ icon: componentIcons.inbox, ariaLabel: 'Inbox', variant: 'tonal' });
+      host.append(target.element);
+      const control = createBadge({ ...components.badge.config(state), target: target.element });
+      target.on('click', () => message('Inbox clicked'));
+      return { element: host, destroy: () => { control.destroy(); target.destroy(); } };
+    }
+    case 'progress': return createProgress(components.progress.config(state));
+    case 'loading-indicator': return createLoadingIndicator(components['loading-indicator'].config(state));
+    case 'snackbar': {
+      const control = createSnackbar(components.snackbar.config(state));
+      const trigger = createButton({ text: 'Show snackbar', variant: 'tonal' });
+      trigger.on('click', () => control.show());
+      control.on('open', () => { sync({ visible: true }); message('Snackbar opened'); });
+      control.on('close', event => { sync({ visible: false }); message(`Snackbar closed: ${event.reason}`); });
+      if (state.visible) control.show();
+      return { element: trigger.element, destroy: () => { control.hide(); control.destroy(); trigger.destroy(); } };
+    }
+    case 'tooltip': {
+      const target = createIconButton({ icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' });
+      // Positioning needs the target in the document before an initially visible tooltip is created.
+      stage.append(target.element);
+      const control = createTooltip({ ...components.tooltip.config(state), target: target.element });
+      const observer = new MutationObserver(() => {
+        sync({ visible: control.isVisible() });
+        message(control.isVisible() ? 'Tooltip shown' : 'Tooltip hidden');
+      });
+      observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
+      target.on('click', () => message('Favorite clicked'));
+      return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
+    }
     case 'card': {
       const control = createCard(components.card.config(state));
       control.element.addEventListener('click', event => {

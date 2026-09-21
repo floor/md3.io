@@ -1,3 +1,8 @@
+import type { BadgeConfig } from 'mtrl/components/badge';
+import type { ProgressConfig } from 'mtrl/components/progress';
+import type { LoadingIndicatorConfig } from 'mtrl/components/loading-indicator';
+import type { SnackbarConfig } from 'mtrl/components/snackbar';
+import type { TooltipConfig } from 'mtrl/components/tooltip';
 import type { CardSchema } from 'mtrl/components/card';
 import type { ListConfig } from 'mtrl/components/list';
 import type { CarouselConfig } from 'mtrl/components/carousel';
@@ -476,6 +481,61 @@ export const components = {
     ],
     config: (state: ComponentState): SideSheetConfig => ({ variant: pick(state, 'variant', ['standard', 'modal'], 'modal'), position: pick(state, 'position', ['start', 'end'], 'end'), width: Number(state.width), title: string(state, 'title'), content: paragraph(string(state, 'content')), open: bool(state, 'open'), closeButton: bool(state, 'closeButton'), closeOnScrimClick: bool(state, 'closeOnScrimClick'), closeOnEscape: bool(state, 'closeOnEscape') }),
   },
+  badge: {
+    group: 'Communication', name: 'Badge', factory: 'createBadge', variable: 'badge',
+    description: 'Draw attention to something new. Try dots, counts, and labels attached to an action.',
+    summary: 'A small signal for updates and counts.', styles: ['icon-button', 'badge'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['small', 'large'], 'large'), choose('color', 'Color', ['error', 'primary', 'secondary', 'tertiary', 'success', 'warning', 'info'], 'error', 'select'), choose('position', 'Position', ['top-right', 'top-left', 'bottom-right', 'bottom-left'], 'top-right', 'select')]),
+      ...section('Content', [{ ...text('label', 'Label', '8'), enabledWhen: 'hasLabel' }, { ...choose('max', 'Maximum count', ['9', '99', '999'], '99'), enabledWhen: 'hasLabel' }]),
+      ...section('Behavior', [toggle('visible', 'Visible', true)]),
+    ],
+    config: (state: ComponentState): BadgeConfig => ({ variant: string(state, 'variant'), color: string(state, 'color'), position: string(state, 'position'), label: string(state, 'label'), max: Number(state.max), visible: bool(state, 'visible') }),
+  },
+  progress: {
+    group: 'Communication', name: 'Progress', factory: 'createProgress', variable: 'progress',
+    description: 'Show how a task is progressing. Compare linear and circular indicators, with flat or wavy shapes.',
+    summary: 'Linear and circular progress, flat or wavy.', styles: ['progress'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['linear', 'circular'], 'linear'), choose('shape', 'Shape', ['flat', 'wavy'], 'flat'), choose('thickness', 'Thickness', ['thin', 'thick'], 'thin'), { ...range('size', 'Circular size', '48'), min: 24, max: 240, step: 8, enabledWhen: 'circular' }, toggle('showStopIndicator', 'Stop indicator', true, 'linear')]),
+      ...section('Content', [{ ...range('value', 'Value', '45'), enabledWhen: 'determinate' }, { ...range('buffer', 'Buffer', '70'), enabledWhen: 'linearDeterminate' }, toggle('showLabel', 'Show percentage', false, 'determinate'), text('ariaLabel', 'Accessible label', 'Uploading files')]),
+      ...section('Behavior', [toggle('indeterminate', 'Indeterminate'), disabled]),
+    ],
+    config: (state: ComponentState): ProgressConfig => ({ variant: pick(state, 'variant', ['linear', 'circular'], 'linear'), shape: pick(state, 'shape', ['flat', 'wavy'], 'flat'), thickness: pick(state, 'thickness', ['thin', 'thick'], 'thin'), ...(state.variant === 'circular' ? { size: Number(state.size) } : {}), value: Number(state.value), max: 100, buffer: state.variant === 'linear' ? Number(state.buffer) : 0, showStopIndicator: bool(state, 'showStopIndicator'), showLabel: !state.indeterminate && bool(state, 'showLabel'), indeterminate: bool(state, 'indeterminate'), disabled: bool(state, 'disabled'), ariaLabel: string(state, 'ariaLabel').trim() || 'Uploading files' }),
+  },
+  'loading-indicator': {
+    group: 'Communication', name: 'Loading indicator', factory: 'createLoadingIndicator', variable: 'indicator',
+    description: 'Give short waits a little expression. Explore the morphing shape with or without its container.',
+    summary: 'An expressive shape for short waits.', styles: ['loading-indicator'],
+    controls: [
+      ...section('Appearance', [toggle('contained', 'Contained'), { ...range('size', 'Size', '48'), min: 24, max: 240, step: 8 }]),
+      ...section('Content', [{ ...range('value', 'Value', '50'), enabledWhen: 'determinate' }, text('ariaLabel', 'Accessible label', 'Loading your content')]),
+      ...section('Behavior', [toggle('indeterminate', 'Indeterminate', true)]),
+    ],
+    config: (state: ComponentState): LoadingIndicatorConfig => ({ size: Number(state.size), contained: bool(state, 'contained'), value: state.indeterminate ? null : Number(state.value) / 100, ariaLabel: string(state, 'ariaLabel').trim() || 'Loading your content' }),
+  },
+  snackbar: {
+    group: 'Communication', name: 'Snackbar', factory: 'createSnackbar', variable: 'snackbar',
+    description: 'Confirm an action without interrupting. Show a message, offer an undo, and try dismissal behavior.',
+    summary: 'Brief feedback with an optional action.', styles: ['progress', 'button', 'icon-button', 'snackbar'],
+    controls: [
+      ...section('Layout', [choose('position', 'Position', ['start', 'center', 'end'], 'center')]),
+      ...section('Content', [text('message', 'Message', 'Your changes have been saved.'), toggle('hasAction', 'Show action', true), { ...text('action', 'Action text', 'Undo'), enabledWhen: 'hasAction' }, { ...text('closeLabel', 'Dismiss label', 'Dismiss'), enabledWhen: 'dismissible' }]),
+      ...section('Behavior', [choose('duration', 'Duration', ['short', 'long', 'indefinite'], 'indefinite', 'select'), toggle('dismissible', 'Close button', true), toggle('visible', 'Visible')]),
+    ],
+    config: (state: ComponentState): SnackbarConfig => ({ message: string(state, 'message').trim() || 'Your changes have been saved.', ...(state.hasAction ? { action: string(state, 'action') } : {}), closeLabel: string(state, 'closeLabel').trim() || 'Dismiss', position: pick(state, 'position', ['start', 'center', 'end'], 'center'), duration: pick(state, 'duration', ['short', 'long', 'indefinite'], 'indefinite'), dismissible: bool(state, 'dismissible') }),
+  },
+  tooltip: {
+    group: 'Communication', name: 'Tooltip', factory: 'createTooltip', variable: 'tooltip',
+    description: 'Add a little context. Hover or focus the action to explore tooltip styles, placement, and timing.',
+    summary: 'Extra context on hover or focus.', styles: ['icon-button', 'tooltip'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['default', 'plain', 'rich'], 'default'), choose('position', 'Position', ['top', 'right', 'bottom', 'left', 'top-start', 'top-end', 'right-start', 'right-end', 'bottom-start', 'bottom-end', 'left-start', 'left-end'], 'bottom', 'select')]),
+      ...section('Content', [text('text', 'Text', 'Save to favorites')]),
+      ...section('Behavior', [toggle('visible', 'Visible'), toggle('showOnHover', 'Show on hover', true), toggle('showOnFocus', 'Show on focus', true), { ...range('showDelay', 'Show delay (ms)', '300'), max: 1500, step: 100 }, { ...range('hideDelay', 'Hide delay (ms)', '100'), max: 1500, step: 100 }]),
+    ],
+    config: (state: ComponentState): TooltipConfig => ({ text: string(state, 'text'), variant: string(state, 'variant'), position: string(state, 'position'), visible: bool(state, 'visible'), showDelay: Number(state.showDelay), hideDelay: Number(state.hideDelay), showOnFocus: bool(state, 'showOnFocus'), showOnHover: bool(state, 'showOnHover') }),
+  },
 };
 export type ComponentSlug = keyof typeof components;
 export const componentSlugs = Object.keys(components) as ComponentSlug[];
@@ -502,6 +562,13 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   if (['navigation-rail', 'drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
   if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
+  if (slug === 'badge') state.hasLabel = state.variant === 'large';
+  if (slug === 'progress' || slug === 'loading-indicator') state.determinate = !state.indeterminate;
+  if (slug === 'progress') {
+    state.circular = state.variant === 'circular';
+    state.linear = !state.circular;
+    state.linearDeterminate = state.linear && state.determinate;
+  }
   if (slug === 'list') {
     state.selectable = state.selection !== 'none';
     state.extraSelectable = state.selectable && state.count === '5';
@@ -534,6 +601,7 @@ export function initialComponentState(slug: ComponentSlug): ComponentState {
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
   if (components[slug].group === 'Navigation') return navigationCode(slug, state);
   if (components[slug].group === 'Containment') return containmentCode(slug, state);
+  if (components[slug].group === 'Communication') return communicationCode(slug, state);
   const component = components[slug];
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const checkboxSetup = slug === 'checkbox'
@@ -598,6 +666,31 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
   return `import { ${imports.join(', ')} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${literal(component.config(state))});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;
+}
+
+function communicationCode(slug: ComponentSlug, state: ComponentState): string {
+  const component = components[slug];
+  const literal = (value: unknown) => JSON.stringify(value, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  const hasTarget = slug === 'badge' || slug === 'tooltip';
+  const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
+  let before = '';
+  let config = literal(component.config(state));
+  let after = `document.body.append(${component.variable}.element);\n`;
+  let cleanup = '';
+  if (hasTarget) {
+    before = `const target = createIconButton(${literal({ icon: componentIcons[slug === 'badge' ? 'inbox' : 'heart'], ariaLabel: slug === 'badge' ? 'Inbox' : 'Favorite', variant: 'tonal' })});\ndocument.body.append(target.element);\n\n`;
+    config = config.replace(/\n}$/, ',\n  target: target.element\n}');
+    after = '';
+    cleanup = '// target.destroy();\n';
+  } else if (slug === 'snackbar') {
+    after = "const trigger = createButton({ text: 'Show snackbar', variant: 'tonal' });\ntrigger.on('click', () => snackbar.show());\ndocument.body.append(trigger.element);\n" + (state.visible ? 'snackbar.show();\n' : '');
+    cleanup = '// trigger.destroy();\n';
+  } else if (slug === 'progress' && state.variant === 'linear') {
+    after = "progress.element.style.width = 'min(100%, 360px)';\n" + after;
+  }
+  return `import { ${component.factory}${hasTarget ? ', createIconButton' : slug === 'snackbar' ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+    `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
+    `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\n// When the view is removed:\n${slug === 'snackbar' ? '// snackbar.hide();\n' : ''}// ${component.variable}.destroy();\n${cleanup}`;
 }
 
 function containmentCode(slug: ComponentSlug, state: ComponentState): string {

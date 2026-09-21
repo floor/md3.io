@@ -59,7 +59,10 @@ for (const tab of tabs) {
 function readForm(): ComponentState {
   const values = Object.fromEntries(new FormData(form));
   // Disabled dependent controls retain their configured value.
-  for (const control of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]:disabled')) values[control.name] = control.type === 'checkbox' ? (control.checked ? 'on' : '') : control.value;
+  for (const control of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]:disabled')) {
+    if (control.type === 'radio' && !control.checked) continue;
+    values[control.name] = control.type === 'checkbox' ? (control.checked ? 'on' : '') : control.value;
+  }
   const input: Record<string, unknown> = { ...values };
   for (const control of components[slug].controls) if (control.kind === 'toggle') input[control.key] = values[control.key] === 'on';
   return normalizeComponentState(slug, input);
@@ -96,7 +99,10 @@ document.querySelector('.preview-appearance')!.addEventListener('input', () => {
   catch { /* The controls still work when storage is unavailable. */ }
 });
 form.addEventListener('submit', event => event.preventDefault());
-form.addEventListener('reset', () => { setTimeout(() => { status.textContent = 'Resetting configuration…'; update(true, true); }, 0); });
+form.addEventListener('reset', () => {
+  status.textContent = 'Resetting configuration…';
+  setTimeout(() => update(true, true), 0);
+});
 frame.addEventListener('load', () => update());
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame.contentWindow) return;

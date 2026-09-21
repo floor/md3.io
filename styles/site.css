@@ -18,6 +18,7 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .page-heading h1 { font-size: 40px; letter-spacing: -1px; line-height: 1.2; margin: 10px 0 12px; }
 .page-heading p { color: var(--text-muted); font-size: var(--fs-lg); }
 .page-heading__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.page-heading__top .text-link { white-space: nowrap; }
 .eyebrow, .feature-index { color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: 1.2px; }
 .text-link, .catalog-note a, .doc-toolbar a { color: var(--accent-text); text-decoration: none; font-size: var(--fs-ui); }
 .text-link:hover, .catalog-note a:hover, .doc-toolbar a:hover { text-decoration: underline; }
@@ -179,6 +180,10 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .component-card__visual--divider span { background: transparent; color: var(--accent-text); }
 .component-card__visual--bottom-sheet span { border-radius: 16px 16px 0 0; text-align: center; line-height: 1.8; }
 .component-card__visual--side-sheet span { border-radius: 16px 0 0 16px; height: 80px; }
+.component-card__visual--badge span { padding: 3px 8px; font-size: var(--fs-sm); }
+.component-card__visual--progress span { width: 180px; height: 8px; padding: 0; background: linear-gradient(to right, var(--accent-text) 45%, var(--border) 45%); }
+.component-card__visual--loading-indicator span { background: transparent; color: var(--accent-text); font-size: 64px; padding: 0; }
+.component-card__visual--snackbar span, .component-card__visual--tooltip span { border-radius: 4px; }
 @media (max-width: 1000px) {
   .component-page:is([data-component="card"], [data-component="dialog"], [data-component="bottom-sheet"], [data-component="side-sheet"]) .playground-space { height: 480px; min-height: 480px; }
 }

@@ -33,7 +33,12 @@
           <% } else if (slug === 'divider') { %><span>──────────</span>
           <% } else if (slug === 'dialog') { %><span>Save your changes?<br><small>Cancel &nbsp; Save</small></span>
           <% } else if (slug === 'bottom-sheet') { %><span>━<br>Plan your visit</span>
-          <% } else if (slug === 'side-sheet') { %><span>Details &nbsp; ×</span><% } %>
+          <% } else if (slug === 'side-sheet') { %><span>Details &nbsp; ×</span>
+          <% } else if (slug === 'badge') { %><span>8</span><span>99+</span>
+          <% } else if (slug === 'progress') { %><span></span>
+          <% } else if (slug === 'loading-indicator') { %><span>✺</span>
+          <% } else if (slug === 'snackbar') { %><span>Changes saved &nbsp; Undo</span>
+          <% } else if (slug === 'tooltip') { %><span>Save to favorites</span><% } %>
         </div>
         <div class="component-card__body"><div><h3><%= component.name %></h3><p><%= component.summary %></p></div><span aria-hidden="true">↗</span></div>
       </a>
