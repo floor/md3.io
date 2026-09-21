@@ -9,7 +9,7 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .brand-dot { color: var(--accent-text); }
 .header__section { font-size: var(--fs-base); }
 .sidebar__label { font-size: var(--fs-2xs); color: var(--text-dim); margin: 0 0 10px; }
-.sidebar__link { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-base); }
+.sidebar__link { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-md); }
 .sidebar__foot { padding: 24px 20px; font-size: var(--fs-xs); color: var(--text-dim); }
 .sidebar__foot a { color: inherit; }
 .mobile-navigation { display: none; }
@@ -103,7 +103,7 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .document-layout .md { min-width: 0; flex: 1; width: 100%; }
 .doc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
 .doc-toc { width: 190px; flex-shrink: 0; position: sticky; top: 90px; max-height: calc(100vh - 110px); overflow: auto; margin: 44px 20px 0 0; align-self: flex-start; }
-.doc-toc a { display: block; color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs); padding: 5px 0; }
+.doc-toc a { display: block; color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs); padding: 3px 0; }
 .doc-toc a:hover { color: var(--accent-text); }
 .md table { display: block; max-width: 100%; overflow-x: auto; }
 .home .sidebar--home { display: none; }
