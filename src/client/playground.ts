@@ -81,7 +81,13 @@ function update(send = true, reset = false) {
   code.innerHTML = hljs.highlight(componentCode(slug, state), { language: 'javascript' }).value;
   if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state, reset }, location.origin);
 }
-form.addEventListener('input', () => update());
+form.addEventListener('input', event => {
+  const target = event.target;
+  if (slug === 'list' && state.selection === 'single' && target instanceof HTMLInputElement && target.checked && ['first', 'second', 'third', 'fourth', 'fifth'].includes(target.name)) {
+    for (const input of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) if (input !== target) input.checked = false;
+  }
+  update();
+});
 // Form-associated footer controls participate in FormData/reset, but events bubble through the footer.
 document.querySelector('.preview-appearance')!.addEventListener('input', () => {
   update();

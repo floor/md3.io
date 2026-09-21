@@ -1,0 +1,152 @@
+import { chromium } from 'playwright';
+import { mkdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { handleRequest } from '../server';
+import { components, componentSlugs } from '../src/shared/components';
+
+const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
+const output = resolve(import.meta.dir, '../analysis/browser');
+await mkdir(output, { recursive: true });
+const browser = await chromium.launch();
+function assert(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
+try {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', reducedMotion: 'reduce', permissions: ['clipboard-read', 'clipboard-write'] });
+  const page = await context.newPage();
+  page.setDefaultTimeout(10000);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
+  const frame = page.frameLocator('#preview');
+  const choose = async (key: string, value: string) => {
+    const select = page.locator(`#configuration select[name="${key}"]`);
+    if (await select.count()) await select.selectOption(value);
+    else await page.locator(`#configuration label.choice:has(input[name="${key}"][value="${value}"])`).click();
+  };
+  const toggle = (key: string) => page.locator(`#configuration label:has(input[type="checkbox"][name="${key}"])`).click();
+  const reset = async () => {
+    await page.getByRole('button', { name: 'Reset', exact: true }).click();
+    await page.locator('#playground-status').filter({ hasText: 'Configuration reset' }).waitFor();
+  };
+  const valueIs = (key: string, expected: string) => page.waitForFunction(({ key, expected }) => (document.querySelector(`#configuration [name="${key}"]:checked, #configuration [name="${key}"]:not([type="radio"]):not([type="checkbox"])`) as HTMLInputElement)?.value === expected, { key, expected });
+  for (const slug of componentSlugs.filter(slug => components[slug].group === 'Containment' && (!process.argv[2] || slug === process.argv[2]))) {
+    console.log(`Checking ${slug}`);
+    await page.goto(`${server.url}components/${slug}/`);
+    await frame.locator('#stage > *').first().waitFor();
+    await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
+    assert(errors.length === 0, errors.join('\n'));
+    if (slug === 'card') {
+      await frame.getByRole('button', { name: 'Explore', exact: true }).click();
+      await page.locator('#playground-status').filter({ hasText: 'Explore clicked' }).waitFor();
+      assert(await frame.locator('img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0), 'Card artwork failed to load');
+      await toggle('clickable');
+      await frame.getByText('A little time outside').click();
+      await page.locator('#playground-status').filter({ hasText: 'Card clicked' }).waitFor();
+    } else if (slug === 'list') {
+      await toggle('third');
+      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="third"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration [name="first"]')?.checked);
+      await frame.locator('.mtrl-list-item--selected[data-id="3"]').waitFor();
+      await frame.getByText('Read a chapter', { exact: true }).click();
+      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="second"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration [name="first"]')?.checked);
+      await choose('selection', 'multi');
+      await frame.getByText('Try a new recipe', { exact: true }).click();
+      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="second"]')?.checked && document.querySelector<HTMLInputElement>('#configuration [name="third"]')?.checked);
+      await choose('selection', 'none');
+      await page.locator('#configuration [name="first"]:disabled').waitFor({ state: 'attached' });
+      await frame.getByText('Morning walk', { exact: true }).click();
+      assert(await frame.locator('[aria-selected="true"]').count() === 0, 'Selection stayed active in non-selectable list');
+    } else if (slug === 'carousel') {
+      await frame.locator('.mtrl-carousel__item').first().press('ArrowRight');
+      await valueIs('initialSlide', '1');
+      await choose('variant', 'full-screen');
+      await frame.locator('.mtrl-carousel--vertical').waitFor();
+      await frame.locator('.mtrl-carousel__item').nth(1).press('ArrowDown');
+      await valueIs('initialSlide', '2');
+    } else if (slug === 'divider') {
+      await choose('orientation', 'vertical');
+      await frame.getByRole('separator').waitFor();
+      await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('hr')?.getAttribute('aria-orientation') === 'vertical');
+    } else if (slug === 'dialog') {
+      await frame.getByRole('button', { name: 'Open dialog' }).click();
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor();
+      await page.screenshot({ path: `${output}/dialog-open.png`, fullPage: true, animations: 'disabled' });
+      await frame.getByRole('button', { name: 'Save', exact: true }).click();
+      await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor({ state: 'hidden' });
+      await frame.getByRole('button', { name: 'Open dialog' }).click();
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).press('Escape');
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor({ state: 'hidden' });
+    } else if (slug === 'bottom-sheet') {
+      await frame.getByRole('button', { name: 'Open bottom sheet' }).click();
+      await valueIs('initialState', 'expanded');
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor();
+      await page.screenshot({ path: `${output}/bottom-sheet-open.png`, fullPage: true, animations: 'disabled' });
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).press('Escape');
+      await valueIs('initialState', 'hidden');
+      await choose('initialState', 'partial');
+      await frame.locator('.mtrl-bottom-sheet--partial').waitFor();
+    } else if (slug === 'side-sheet') {
+      await frame.getByRole('button', { name: 'Open side sheet' }).click();
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor();
+      await page.screenshot({ path: `${output}/side-sheet-open.png`, fullPage: true, animations: 'disabled' });
+      await frame.getByRole('button', { name: /Close/ }).click();
+      await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
+      await frame.getByRole('button', { name: 'Open side sheet' }).click();
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).press('Escape');
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor({ state: 'hidden' });
+    }
+    await reset();
+    for (const key of ['variant', 'size', 'orientation', 'position', 'mediaPosition']) {
+      const control = components[slug].controls.find(control => control.key === key);
+      for (const option of control?.options || []) {
+        await choose(key, option);
+        await frame.locator('#stage > *').first().waitFor();
+        if (slug === 'divider') {
+          await frame.getByRole('separator').waitFor();
+          const bounds = await frame.getByRole('separator').boundingBox();
+          assert(bounds && bounds.width > 0 && bounds.height > 0, 'Divider has no visible length');
+        }
+        if (slug === 'dialog' && key === 'size') {
+          await frame.getByRole('button', { name: 'Open dialog' }).click();
+          const dialog = frame.getByRole('dialog').or(frame.getByRole('alertdialog'));
+          await dialog.waitFor();
+          await dialog.press('Escape');
+          await dialog.waitFor({ state: 'hidden' });
+        }
+        if ((slug === 'bottom-sheet' || slug === 'side-sheet') && key === 'variant') {
+          await frame.getByRole('button', { name: `Open ${components[slug].name.toLowerCase()}` }).click();
+          const sheet = frame.locator(`.mtrl-${slug}-container`);
+          await sheet.waitFor();
+          assert(await sheet.getAttribute('role') === (option === 'modal' ? 'dialog' : slug === 'bottom-sheet' ? 'region' : 'complementary'), 'Wrong sheet semantics');
+          await page.screenshot({ path: `${output}/${slug}-${option}.png`, fullPage: true, animations: 'disabled' });
+          await sheet.press('Escape');
+          await page.waitForFunction(slug => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector(`.mtrl-${slug}`)?.getAttribute('aria-hidden') === 'true', slug);
+        }
+      }
+    }
+    await reset();
+    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('button', { name: 'Copy code', exact: true }).click();
+    await page.locator('#playground-status').filter({ hasText: 'Code copied' }).waitFor();
+    const source = await page.evaluate(() => navigator.clipboard.readText());
+    assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
+    assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
+    await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.setViewportSize({ width: 1280, height: 640 });
+    assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), `${slug}: desktop page overflows vertically`);
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
+    if (['dialog', 'bottom-sheet', 'side-sheet'].includes(slug)) {
+      await frame.getByRole('button', { name: `Open ${components[slug].name.toLowerCase()}` }).click();
+      await frame.getByRole('dialog').or(frame.getByRole('alertdialog')).waitFor();
+    }
+    await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
+    await reset();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    assert(errors.length === 0, errors.join('\n'));
+  }
+  console.log('Containment browser checks passed.');
+} finally {
+  await browser.close();
+  server.stop(true);
+}

@@ -1,3 +1,10 @@
+import createCard from 'mtrl/components/card';
+import createList from 'mtrl/components/list';
+import createCarousel from 'mtrl/components/carousel';
+import { createDivider } from 'mtrl/components/divider';
+import createDialog from 'mtrl/components/dialog';
+import createBottomSheet from 'mtrl/components/bottom-sheet';
+import createSideSheet from 'mtrl/components/side-sheet';
 import createNavigationRail from 'mtrl/components/navigation-rail';
 import createDrawer from 'mtrl/components/drawer';
 import createTabs from 'mtrl/components/tabs';
@@ -46,6 +53,62 @@ function create(state: ComponentState) {
   const message = (value: string) => { if (instance === generation) report(value); };
   const sync = (values: ComponentState) => { if (instance === generation) syncValues(values); };
   switch (slug) {
+    case 'card': {
+      const control = createCard(components.card.config(state));
+      control.element.addEventListener('click', event => {
+        const button = (event.target as Element).closest('button');
+        if (button) message(`${button.textContent?.trim()} clicked`);
+        else if (state.clickable) message('Card clicked');
+      });
+      control.element.addEventListener('dragstart', () => message('Card drag started'));
+      return control;
+    }
+    case 'list': {
+      const control = createList(components.list.config(state));
+      control.on('select', () => queueMicrotask(() => {
+        const selected = control.getSelectedItemIds();
+        sync(Object.fromEntries(['first', 'second', 'third', 'fourth', 'fifth'].map((key, index) => [key, selected.includes(String(index + 1))])));
+        message(selected.length ? `Selected: ${control.getSelectedItems().map(item => item.text).join(', ')}` : 'Selection cleared');
+      }));
+      return control;
+    }
+    case 'carousel': {
+      const control = createCarousel(components.carousel.config(state));
+      control.on('change', (event: { index: number }) => { sync({ initialSlide: String(event.index) }); message(`Slide ${event.index + 1} of 5`); });
+      return control;
+    }
+    case 'divider': {
+      const control = createDivider(components.divider.config(state));
+      const container = document.createElement('div');
+      container.style.cssText = `display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}`;
+      control.element.style.flex = '1';
+      container.append(control.element);
+      return { element: container, destroy: () => control.destroy() };
+    }
+    case 'dialog': {
+      const control = createDialog(components.dialog.config(state));
+      const trigger = createButton({ text: 'Open dialog', variant: 'tonal' });
+      trigger.on('click', () => control.open());
+      control.on('open', () => { sync({ open: true }); message('Dialog opened'); });
+      control.on('close', () => { sync({ open: false }); message('Dialog closed'); });
+      return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
+    }
+    case 'bottom-sheet': {
+      const control = createBottomSheet(components['bottom-sheet'].config(state));
+      const trigger = createButton({ text: 'Open bottom sheet', variant: 'tonal' });
+      trigger.on('click', () => control.expand());
+      control.on('stateChange', event => { sync({ initialState: event.state }); message(`Bottom sheet ${event.state}`); });
+      return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
+    }
+    case 'side-sheet': {
+      const control = createSideSheet(components['side-sheet'].config(state));
+      const trigger = createButton({ text: 'Open side sheet', variant: 'tonal' });
+      trigger.on('click', () => control.open());
+      control.on('open', () => { sync({ open: true }); message('Side sheet opened'); });
+      control.on('close', () => { sync({ open: false }); message('Side sheet closed'); });
+      return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
+    }
+
     case 'navigation-rail': {
       const control = createNavigationRail(components['navigation-rail'].config(state));
       const host = document.createElement('div');

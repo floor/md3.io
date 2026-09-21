@@ -1,3 +1,10 @@
+import type { CardSchema } from 'mtrl/components/card';
+import type { ListConfig } from 'mtrl/components/list';
+import type { CarouselConfig } from 'mtrl/components/carousel';
+import type { DividerConfig } from 'mtrl/components/divider';
+import type { DialogConfig } from 'mtrl/components/dialog';
+import type { BottomSheetConfig } from 'mtrl/components/bottom-sheet';
+import type { SideSheetConfig } from 'mtrl/components/side-sheet';
 import type { NavigationRailConfig } from 'mtrl/components/navigation-rail';
 import type { DrawerConfig } from 'mtrl/components/drawer';
 import type { TabsConfig } from 'mtrl/components/tabs';
@@ -73,6 +80,8 @@ const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'I
 const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
 const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
 export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: componentIcons[icon], ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon], variant: 'standard' }));
+const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
+const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -389,6 +398,84 @@ export const components = {
     ],
     config: (state: ComponentState): BottomAppBarConfig => ({ hasFab: bool(state, 'hasFab'), fabPosition: pick(state, 'fabPosition', ['center', 'end'], 'end'), autoHide: false }),
   },
+  card: {
+    group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
+    description: 'Bring content and actions together. Explore surfaces, media, and interactive cards.',
+    summary: 'Content and actions on one surface.', styles: ['progress', 'button', 'card'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['elevated', 'filled', 'outlined'], 'elevated'), toggle('media', 'Show image', true), choose('aspectRatio', 'Image ratio', ['16:9', '4:3', '1:1'], '16:9'), choose('mediaPosition', 'Image position', ['top', 'bottom'], 'top')]),
+      ...section('Content', [text('title', 'Title', 'A little time outside'), text('subtitle', 'Subtitle', 'Find your next escape'), text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), toggle('actions', 'Show actions', true)]),
+      ...section('Behavior', [toggle('clickable', 'Clickable'), toggle('draggable', 'Draggable')]),
+    ],
+    config: (state: ComponentState): CardSchema => ({ variant: string(state, 'variant'), clickable: bool(state, 'clickable'), interactive: bool(state, 'clickable'), draggable: bool(state, 'draggable'), header: { title: string(state, 'title'), subtitle: string(state, 'subtitle') }, content: { text: string(state, 'content') }, ...(state.media ? { media: { src: landscape(0), alt: 'Illustrated mountain landscape', aspectRatio: string(state, 'aspectRatio'), position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top') } } : {}), ...(state.actions ? { buttons: [{ text: 'Explore', variant: 'text' }, { text: 'Save', variant: 'tonal' }] } : {}) }),
+  },
+  list: {
+    group: 'Containment', name: 'List', factory: 'createList', variable: 'list',
+    description: 'Browse a set of items. Try single and multiple selection with different content.',
+    summary: 'A simple list with optional selection.', styles: ['list'],
+    controls: [
+      ...section('Content', [choose('content', 'Items', ['activities', 'places'], 'activities'), choose('count', 'Item count', ['3', '5'], '3'), text('ariaLabel', 'Accessible label', 'Ideas for today')]),
+      ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'single'), toggle('first', 'First selected', true, 'selectable'), toggle('second', 'Second selected', false, 'selectable'), toggle('third', 'Third selected', false, 'selectable'), toggle('fourth', 'Fourth selected', false, 'extraSelectable'), toggle('fifth', 'Fifth selected', false, 'extraSelectable')]),
+    ],
+    config: (state: ComponentState): Omit<ListConfig<{ id: string; text: string }>, 'renderItem'> => ({ items: (state.content === 'places' ? ['Mountain trail', 'Botanical garden', 'City museum', 'Riverside park', 'Local market'] : ['Morning walk', 'Read a chapter', 'Try a new recipe', 'Call a friend', 'Plan a weekend']).slice(0, Number(state.count)).map((text, index) => ({ id: String(index + 1), text })), ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi', initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < Number(state.count) && state.selection !== 'none' ? [String(index + 1)] : []) }),
+  },
+  carousel: {
+    group: 'Containment', name: 'Carousel', factory: 'createCarousel', variable: 'carousel',
+    description: 'Browse a collection with Material carousel layouts. Swipe, scroll, or use the arrow keys.',
+    summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
+      ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
+      ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', ['0', '1', '2', '3', '4'], '0', 'select')]),
+      ...section('Behavior', [toggle('snap', 'Snap to items', true)]),
+    ],
+    config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: ['Highlands', 'Coast', 'Desert', 'Forest', 'Lakeside'].map((title, index) => ({ image: landscape(index), alt: `Illustrated ${title.toLowerCase()} landscape`, ...(state.captions ? { title, description: 'Take a moment to explore' } : {}) })) }),
+  },
+  divider: {
+    group: 'Containment', name: 'Divider', factory: 'createDivider', variable: 'divider',
+    description: 'Separate related content. Explore orientation, insets, line weight, and color.',
+    summary: 'A quiet boundary between sections.', styles: ['divider'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['full-width', 'inset', 'middle-inset'], 'full-width', 'select'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), { ...range('thickness', 'Thickness', '1'), min: 1, max: 8 }, choose('color', 'Color', ['outline-variant', 'outline', 'primary', 'secondary'], 'outline-variant', 'select')]),
+      ...section('Layout', [{ ...range('insetStart', 'Start inset', '16'), max: 64 }, { ...range('insetEnd', 'End inset', '16'), max: 64 }]),
+    ],
+    config: (state: ComponentState): DividerConfig => ({ variant: pick(state, 'variant', ['full-width', 'inset', 'middle-inset'], 'full-width'), orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'), thickness: Number(state.thickness), insetStart: Number(state.insetStart), insetEnd: Number(state.insetEnd), color: `var(--mtrl-sys-color-${string(state, 'color')})` }),
+  },
+  dialog: {
+    group: 'Containment', name: 'Dialog', factory: 'createDialog', variable: 'dialog',
+    description: 'Focus on a decision. Open a dialog to try its content, actions, and dismissal behavior.',
+    summary: 'A focused surface for a task or decision.', styles: ['progress', 'button', 'divider', 'dialog'],
+    controls: [
+      ...section('Appearance', [choose('size', 'Size', ['small', 'medium', 'large', 'fullwidth', 'fullscreen'], 'small', 'select'), choose('animation', 'Animation', ['scale', 'slide-up', 'slide-down', 'fade'], 'scale', 'select'), toggle('divider', 'Dividers')]),
+      ...section('Content', [text('title', 'Title', 'Save your changes?'), text('subtitle', 'Subtitle', ''), text('content', 'Body', 'Keep your changes before leaving this view.'), toggle('actions', 'Show actions', true), choose('footerAlignment', 'Action alignment', ['right', 'left', 'center', 'space-between'], 'right', 'select')]),
+      ...section('Behavior', [toggle('open', 'Open'), toggle('closeButton', 'Close button', true), toggle('closeOnOverlayClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
+    ],
+    config: (state: ComponentState): DialogConfig => ({ title: string(state, 'title'), subtitle: string(state, 'subtitle'), content: paragraph(string(state, 'content')), ariaLabel: string(state, 'title').trim() || 'Example dialog', size: string(state, 'size'), animation: string(state, 'animation'), divider: bool(state, 'divider'), open: bool(state, 'open'), closeButton: bool(state, 'closeButton'), closeOnOverlayClick: bool(state, 'closeOnOverlayClick'), closeOnEscape: bool(state, 'closeOnEscape'), footerAlignment: string(state, 'footerAlignment'), buttons: state.actions ? [{ text: 'Cancel', variant: 'text', closeDialog: true }, { text: 'Save', variant: 'filled', closeDialog: true }] : [] }),
+  },
+  'bottom-sheet': {
+    group: 'Containment', name: 'Bottom sheet', factory: 'createBottomSheet', variable: 'sheet',
+    description: 'Reveal more from the bottom edge. Try partial and expanded states, or drag the handle.',
+    summary: 'Supporting content from the bottom edge.', styles: ['progress', 'button', 'bottom-sheet'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal'), toggle('dragHandle', 'Drag handle', true)]),
+      ...section('Layout', [{ ...range('peekHeight', 'Peek height', '120'), min: 56, max: 240, step: 8 }, { ...range('maxWidth', 'Maximum width', '640'), min: 280, max: 640, step: 20 }]),
+      ...section('Content', [text('title', 'Title', 'Plan your visit'), text('content', 'Body', 'Find a new trail, take in the view, and make time for a quiet moment.')]),
+      ...section('Behavior', [choose('initialState', 'State', ['hidden', 'partial', 'expanded'], 'hidden', 'select'), toggle('closeOnScrimClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
+    ],
+    config: (state: ComponentState): BottomSheetConfig => ({ variant: pick(state, 'variant', ['standard', 'modal'], 'modal'), initialState: pick(state, 'initialState', ['hidden', 'partial', 'expanded'], 'hidden'), dragHandle: bool(state, 'dragHandle'), peekHeight: Number(state.peekHeight), maxWidth: Number(state.maxWidth), title: string(state, 'title'), content: paragraph(string(state, 'content')), closeOnScrimClick: bool(state, 'closeOnScrimClick'), closeOnEscape: bool(state, 'closeOnEscape') }),
+  },
+  'side-sheet': {
+    group: 'Containment', name: 'Side sheet', factory: 'createSideSheet', variable: 'sheet',
+    description: 'Keep supporting details close by. Explore standard and modal sheets on either edge.',
+    summary: 'Supporting details beside the main content.', styles: ['progress', 'button', 'side-sheet'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal')]),
+      ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'end'), { ...range('width', 'Width', '320'), min: 240, max: 400, step: 20 }]),
+      ...section('Content', [text('title', 'Title', 'Details'), text('content', 'Body', 'A place for useful context, related information, and supporting actions.')]),
+      ...section('Behavior', [toggle('open', 'Open'), toggle('closeButton', 'Close button', true), toggle('closeOnScrimClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
+    ],
+    config: (state: ComponentState): SideSheetConfig => ({ variant: pick(state, 'variant', ['standard', 'modal'], 'modal'), position: pick(state, 'position', ['start', 'end'], 'end'), width: Number(state.width), title: string(state, 'title'), content: paragraph(string(state, 'content')), open: bool(state, 'open'), closeButton: bool(state, 'closeButton'), closeOnScrimClick: bool(state, 'closeOnScrimClick'), closeOnEscape: bool(state, 'closeOnEscape') }),
+  },
 };
 export type ComponentSlug = keyof typeof components;
 export const componentSlugs = Object.keys(components) as ComponentSlug[];
@@ -415,6 +502,16 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   if (['navigation-rail', 'drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
   if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
+  if (slug === 'list') {
+    state.selectable = state.selection !== 'none';
+    state.extraSelectable = state.selectable && state.count === '5';
+    let selected = false;
+    ['first', 'second', 'third', 'fourth', 'fifth'].forEach((key, index) => {
+      const keep = !!state[key] && state.selection !== 'none' && index < Number(state.count) && (state.selection === 'multi' || !selected);
+      selected ||= keep;
+      state[key] = keep;
+    });
+  }
   if (slug === 'slider') {
     const step = Number(state.step);
     state.value = String(Math.round(Number(state.value) / step) * step);
@@ -436,6 +533,7 @@ export function initialComponentState(slug: ComponentSlug): ComponentState {
 }
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
   if (components[slug].group === 'Navigation') return navigationCode(slug, state);
+  if (components[slug].group === 'Containment') return containmentCode(slug, state);
   const component = components[slug];
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const checkboxSetup = slug === 'checkbox'
@@ -500,4 +598,21 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
   return `import { ${imports.join(', ')} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${literal(component.config(state))});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;
+}
+
+function containmentCode(slug: ComponentSlug, state: ComponentState): string {
+  const component = components[slug];
+  const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
+  const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
+  let setup = '';
+  if (hasTrigger) setup = `const trigger = createButton({ text: 'Open ${component.name.toLowerCase()}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${slug === 'bottom-sheet' ? 'expand' : 'open'}());\ndocument.body.append(trigger.element);\n`;
+  else {
+    if (slug === 'divider') setup += `const container = document.createElement('div');\ncontainer.style.cssText = 'display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}';\ndivider.element.style.flex = '1';\ncontainer.append(divider.element);\ndocument.body.append(container);\n`;
+    if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n";
+    if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
+  }
+  return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+    `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
+    `${slug === 'card' && state.media || slug === 'carousel' ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
 }

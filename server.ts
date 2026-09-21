@@ -26,7 +26,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   let path: string;
   try { path = decodeURIComponent(url.pathname); } catch { return new Response('Bad request', { status: 400 }); }
   if (/(?:^|\/)\.[^/]/.test(path)) return new Response('Not found', { status: 404 });
-  const staticMatch = /^\/(styles|fonts|dist)\/(.+)$/.exec(path);
+  const staticMatch = /^\/(styles|fonts|dist|assets)\/(.+)$/.exec(path);
   if (staticMatch) {
     const base = resolve(root, staticMatch[1]!);
     const filePath = resolve(base, staticMatch[2]!);
