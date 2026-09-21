@@ -2,19 +2,19 @@ import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { docGroups, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
-import { actions, actionSlugs, actionCode, initialActionState, normalizeActionState } from '../src/shared/actions';
+import { components, componentSlugs, componentCode, initialComponentState, normalizeComponentState } from '../src/shared/components';
 
 const get = (path: string, method = 'GET') => handleRequest(new Request(`http://localhost${path}`, { method }));
 describe('site routes and documentation', () => {
   test('landing, catalog, playground, and docs render', async () => {
-    for (const path of ['/', '/components/', '/docs/', ...actionSlugs.flatMap(slug => [`/components/${slug}/`, `/preview/${slug}/`])]) {
+    for (const path of ['/', '/components/', '/docs/', ...componentSlugs.flatMap(slug => [`/components/${slug}/`, `/preview/${slug}/`])]) {
       const response = await get(path);
       expect(response.status).toBe(200);
       expect(await response.text()).toContain('<!doctype html>');
     }
   });
-  test('each action reference links to its own playground', async () => {
-    for (const slug of actionSlugs) {
+  test('each component reference links to its own playground', async () => {
+    for (const slug of componentSlugs) {
       expect(await (await get(`/docs/components/${slug}/`)).text()).toContain(`href="/components/${slug}/">Open playground`);
     }
   });
@@ -56,19 +56,19 @@ describe('preview configuration and generated code', () => {
     expect(state.disabled).toBe(false);
   });
   test('copied code uses the same config as the live preview and safely quotes text', () => {
-    const state = normalizeActionState('button', { text: 'Say "hello"\n</script>', icon: 'heart', disabled: true, size: 'xl', theme: 'ocean', mode: 'dark' });
-    const source = actionCode('button', state);
+    const state = normalizeComponentState('button', { text: 'Say "hello"\n</script>', icon: 'heart', disabled: true, size: 'xl', theme: 'ocean', mode: 'dark' });
+    const source = componentCode('button', state);
     expect(source).toContain("import 'mtrl/themes/ocean'");
     expect(source).toContain("dataset.themeMode = 'dark'");
     const literal = source.split('createButton(')[1]!.split(');')[0]!;
     const actual = new Function(`return (${literal})`)();
-    expect(actual).toEqual(actions.button.config(state));
+    expect(actual).toEqual(components.button.config(state));
   });
   test('an empty label has an accessible fallback', () => {
     expect(buttonConfig(normalizeState({ text: '', icon: 'download' })).ariaLabel).toBe('download');
   });
   test('action-specific values cannot escape the supported controls', () => {
-    const state = normalizeActionState('extended-fab', { size: 'xl', width: 'narrow', icon: '__proto__', theme: '../private', disabled: 'false' });
+    const state = normalizeComponentState('extended-fab', { size: 'xl', width: 'narrow', icon: '__proto__', theme: '../private', disabled: 'false' });
     expect(state.size).toBe('small');
     expect(state.width).toBe('fixed');
     expect(state.icon).toBe('edit');
@@ -76,7 +76,7 @@ describe('preview configuration and generated code', () => {
     expect(state.disabled).toBe(false);
   });
   test('API-only FAB states are included in the copied example', () => {
-    const code = actionCode('extended-fab', { ...initialActionState('extended-fab'), collapsed: true, lowered: true });
+    const code = componentCode('extended-fab', { ...initialComponentState('extended-fab'), collapsed: true, lowered: true });
     expect(code).toContain('extendedFab.collapse();');
     expect(code).toContain('extendedFab.lower();');
   });

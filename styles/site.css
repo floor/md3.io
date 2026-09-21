@@ -9,7 +9,7 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .brand-dot { color: var(--accent-text); }
 .header__section { font-size: var(--fs-base); }
 .sidebar__label { font-size: var(--fs-2xs); color: var(--text-dim); margin: 0 0 10px; }
-.sidebar__link { padding-top: 5px; padding-bottom: 5px; font-size: var(--fs-base); }
+.sidebar__link { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-base); }
 .sidebar__foot { padding: 24px 20px; font-size: var(--fs-xs); color: var(--text-dim); }
 .sidebar__foot a { color: inherit; }
 .mobile-navigation { display: none; }
@@ -72,6 +72,8 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .preview-appearance { width: 100%; }
   .preview-appearance .ui-select { flex: 1; }
 }
+.catalog-group + .catalog-group { margin-top: 32px; }
+.component-card__visual--checkbox span { border-radius: 4px; width: 30px; height: 30px; padding: 0; display: grid; place-items: center; font: 24px system-ui; }
 .catalog-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px; }
 .component-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .component-card { display: block; padding: 0; overflow: hidden; }
@@ -127,6 +129,9 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .component-page .preview-panel { min-height: 0; }
 }
 @media (max-width: 1000px) and (min-width: 721px) { .playground { grid-template-columns: 1fr; } .playground-space { height: 350px; min-height: 350px; flex: none; } }
+@media (max-width: 1000px) {
+  .component-page:is([data-component="datepicker"], [data-component="timepicker"]) .playground-space { height: 560px; min-height: 560px; }
+}
 @media (max-width: 720px) {
   .mobile-navigation { display: block; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
   .home .sidebar--home { display: block; }
@@ -152,3 +157,15 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .landing-features h2 { margin-top: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; } }
+
+.control-range { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.control-range output { min-width: 24px; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; text-align: right; }
+.control-range .ui-slider { min-width: 0; }
+.control-row:has(:disabled) { opacity: .5; }
+
+.component-card__visual--switch span { width: 58px; padding: 4px 6px; text-align: right; font: 28px/1 system-ui; }
+.component-card__visual--radios span { padding: 0; background: transparent; color: var(--accent-text); border: 0; font: 32px system-ui; }
+.component-card__visual--chips span { border-radius: 8px; padding: 8px 16px; }
+.component-card__visual--slider span { background: transparent; color: var(--accent-text); font: 28px var(--font-mono); }
+.component-card__visual--textfield span, .component-card__visual--select span { border-radius: 4px; background: transparent; border: 1px solid var(--accent-text); color: var(--accent-text); min-width: 180px; }
+.component-card__visual--datepicker span, .component-card__visual--timepicker span { border-radius: 12px; font-size: 28px; }

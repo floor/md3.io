@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
-import { actions, actionSlugs } from '../src/shared/actions';
+import { components, componentSlugs } from '../src/shared/components';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -22,7 +22,7 @@ try {
     if (await select.count()) await select.selectOption(value);
     else await page.locator(`label.choice:has(input[name="${name}"][value="${value}"])`).click();
   };
-  for (const slug of actionSlugs.filter(value => value !== 'button')) {
+  for (const slug of componentSlugs.filter(value => value !== 'button' && components[value].group === 'Actions')) {
     await page.goto(`${server.url}components/${slug}/`);
     const root = frame.locator(`#stage > .mtrl-${slug}`);
     await root.waitFor();
@@ -37,7 +37,7 @@ try {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.screenshot({ animations: 'disabled', path: `${output}/${slug}-desktop.png`, fullPage: true });
     for (const key of ['variant', 'size']) {
-      const control = actions[slug].controls.find(value => value.key === key)!;
+      const control = components[slug].controls.find(value => value.key === key)!;
       for (const value of control.options!) {
         await choose(key, value);
         await page.waitForFunction(({ slug, key, value }) => {
@@ -55,7 +55,7 @@ try {
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
-    assert(source.includes(actions[slug].factory) && source.includes('disabled: true'), `${slug}: copied code does not reflect controls`);
+    assert(source.includes(components[slug].factory) && source.includes('disabled: true'), `${slug}: copied code does not reflect controls`);
     await page.getByRole('button', { name: 'Reset', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
     await page.getByRole('tab', { name: 'Live preview' }).click();
@@ -117,7 +117,7 @@ try {
     await page.setViewportSize({ width: 1440, height: 900 });
   }
   await page.goto(`${server.url}components/`);
-  assert(await page.locator('.component-card').count() === 6, 'Catalog is missing an action');
+  assert(await page.locator('.component-card').count() === componentSlugs.length, 'Catalog is missing a component');
   await page.screenshot({ animations: 'disabled', path: `${output}/actions-catalog.png`, fullPage: true });
   assert(errors.length === 0, errors.join('\n'));
   console.log('All Actions browser checks passed.');

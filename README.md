@@ -30,11 +30,13 @@ The browser check uses Playwright Chromium and writes screenshots to `analysis/b
 - `server.ts`: routes and restricted static asset serving.
 - `src/server/shells/`: Eta page templates.
 - `src/server/content.ts`: existing Markdown docs, navigation, heading links, and table of contents.
-- `src/shared/actions.ts`: component definitions, controls, and typed configuration builders shared by previews and generated code.
+- `src/shared/components.ts`: component definitions, controls, and typed configuration builders shared by previews and generated code.
 - `src/client/`: site controls, playground controls, and isolated Material preview.
 - `styles/`: vlist.io styles copied unchanged, plus `site.css` and preview-only styles.
 - `docs/components/`: supplied documentation, retained as the source of truth.
 
-The site includes a compact landing page, a component catalog, all six Actions playgrounds (Button, Icon button, Button group, Split button, FAB, and Extended FAB), and all supplied component documentation. Each playground shares a configuration panel, independent Material theme controls, and preview/code tabs with contextual copying. View code uses a locally bundled highlight.js JavaScript grammar and the vlist.io syntax colors, following the site’s light/dark mode. No benchmark infrastructure is included. The docs have been integrated as supplied; this is not an API accuracy audit. They include additional/legacy references such as form, colorpicker, and segmented button.
+The site includes a compact landing page, a component catalog, all six Actions playgrounds (Button, Icon button, Button group, Split button, FAB, and Extended FAB), all ten Selection & input playgrounds (Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, and Time picker), and all supplied component documentation. Each playground shares a configuration panel, independent Material theme controls, and preview/code tabs with contextual copying. View code uses a locally bundled highlight.js JavaScript grammar and the vlist.io syntax colors, following the site’s light/dark mode. No benchmark infrastructure is included. The docs have been integrated as supplied; this is not an API accuracy audit. They include additional/legacy references such as form, colorpicker, and segmented button.
 
 The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local mtrl dependency; deployment is not configured in this iteration.
+
+The Date picker preview and copied example include compatibility handling for the current mtrl build: selectable calendar buttons receive `disabled="false"`, and closing after selection needs an explicit visibility refresh. Its styles currently come from the full mtrl stylesheet because the package has no separate Date picker CSS export.

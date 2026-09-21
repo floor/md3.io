@@ -1,11 +1,11 @@
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
-import { actions, actionCode, initialActionState, isAction, normalizeActionState, type ActionState } from '../shared/actions';
+import { components, componentCode, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
 hljs.registerLanguage('javascript', javascript);
 
 const componentSlug = document.querySelector<HTMLElement>('[data-component]')!.dataset.component!;
-if (!isAction(componentSlug)) throw new Error('Unknown component');
+if (!isComponent(componentSlug)) throw new Error('Unknown component');
 const slug = componentSlug;
 
 const form = document.querySelector<HTMLFormElement>('#configuration')!;
@@ -15,12 +15,12 @@ const status = document.querySelector<HTMLElement>('#playground-status')!;
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
 const copyButton = document.querySelector<HTMLButtonElement>('#copy-code')!;
 const previewDot = document.querySelector<HTMLElement>('.preview-dot')!;
-let state: ActionState = initialActionState(slug);
+let state: ComponentState = initialComponentState(slug);
 const appearanceKey = 'md3-preview-appearance';
 const themeSelect = document.querySelector<HTMLSelectElement>('#preview-theme')!;
 const modeInputs = [...document.querySelectorAll<HTMLInputElement>('.preview-appearance input[name="mode"]')];
 
-function applyAppearance(appearance: ActionState) {
+function applyAppearance(appearance: ComponentState) {
   document.documentElement.dataset.previewMode = String(appearance.mode);
   // Keep the user's appearance as the reset defaults, too.
   for (const option of themeSelect.options) option.defaultSelected = option.value === appearance.theme;
@@ -28,7 +28,7 @@ function applyAppearance(appearance: ActionState) {
   for (const input of modeInputs) input.checked = input.defaultChecked = input.value === appearance.mode;
 }
 try {
-  applyAppearance(normalizeActionState(slug, JSON.parse(localStorage.getItem(appearanceKey) || '{}')));
+  applyAppearance(normalizeComponentState(slug, JSON.parse(localStorage.getItem(appearanceKey) || '{}')));
 } catch { /* Keep the default appearance when storage is unavailable or invalid. */ }
 
 function selectTab(selected: HTMLButtonElement) {
@@ -56,16 +56,29 @@ for (const tab of tabs) {
   });
 }
 
-function readForm(): ActionState {
+function readForm(): ComponentState {
   const values = Object.fromEntries(new FormData(form));
+  // Disabled dependent controls retain their configured value.
+  for (const control of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]:disabled')) values[control.name] = control.type === 'checkbox' ? (control.checked ? 'on' : '') : control.value;
   const input: Record<string, unknown> = { ...values };
-  for (const control of actions[slug].controls) if (control.kind === 'toggle') input[control.key] = values[control.key] === 'on';
-  return normalizeActionState(slug, input);
+  for (const control of components[slug].controls) if (control.kind === 'toggle') input[control.key] = values[control.key] === 'on';
+  return normalizeComponentState(slug, input);
+}
+function syncControls(next: ComponentState) {
+  for (const control of components[slug].controls) {
+    for (const input of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[name="${control.key}"]`)) {
+      if (input instanceof HTMLInputElement && input.type === 'checkbox') input.checked = next[control.key] === true;
+      else if (input instanceof HTMLInputElement && input.type === 'radio') input.checked = input.value === next[control.key];
+      else input.value = String(next[control.key]);
+    }
+  }
+  for (const output of form.querySelectorAll<HTMLOutputElement>('[data-value-for]')) output.value = String(next[output.dataset.valueFor!]);
 }
 function update(send = true) {
   state = readForm();
+  syncControls(state);
   for (const input of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]')) input.disabled = state[input.dataset.enabledWhen!] !== true;
-  code.innerHTML = hljs.highlight(actionCode(slug, state), { language: 'javascript' }).value;
+  code.innerHTML = hljs.highlight(componentCode(slug, state), { language: 'javascript' }).value;
   if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state }, location.origin);
 }
 form.addEventListener('input', () => update());
@@ -82,16 +95,25 @@ frame.addEventListener('load', () => update());
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
   if (event.data?.type === 'md3:ready') { update(); status.textContent = 'Ready to try'; }
-  if (event.data?.type === 'md3:click') status.textContent = `${actions[slug].name} clicked · ${event.data.count}`;
+  if (event.data?.type === 'md3:click') status.textContent = `${components[slug].name} clicked · ${event.data.count}`;
   if (event.data?.type === 'md3:event' && typeof event.data.message === 'string') status.textContent = event.data.message;
   if (event.data?.type === 'md3:selected' && typeof event.data.selected === 'boolean') {
     const selected = form.querySelector<HTMLInputElement>('[name="selected"]');
     if (selected) { selected.checked = event.data.selected; update(false); }
   }
+  if (event.data?.type === 'md3:checkbox' && slug === 'checkbox' && ['checked', 'unchecked'].includes(event.data.state)) {
+    const control = form.querySelector<HTMLSelectElement>('[name="state"]')!;
+    control.value = event.data.state;
+    update(false);
+  }
+  if (event.data?.type === 'md3:values' && event.data.values && typeof event.data.values === 'object') {
+    syncControls(normalizeComponentState(slug, { ...state, ...event.data.values }));
+    update(false);
+  }
   if (event.data?.type === 'md3:error') status.textContent = 'Preview could not load. Please reload the page.';
 });
 copyButton.addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(actionCode(slug, state)); status.textContent = 'Code copied'; }
+  try { await navigator.clipboard.writeText(componentCode(slug, state)); status.textContent = 'Code copied'; }
   catch {
     selectTab(document.querySelector<HTMLButtonElement>('#code-tab')!);
     const range = document.createRange(); range.selectNodeContents(code);

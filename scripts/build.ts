@@ -14,5 +14,7 @@ if (!result.success) {
 }
 const mtrlDist = resolve(root, 'node_modules/mtrl/dist');
 await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'mtrl/styles'), { recursive: true });
+// Date picker is currently available only in the full library stylesheet.
+await cp(resolve(mtrlDist, 'styles.css'), resolve(outdir, 'mtrl/styles/full.css'));
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'mtrl/themes'), { recursive: true });
-console.log('Built site, Actions playgrounds, and Material preview assets.');
+console.log('Built site, component playgrounds, and Material preview assets.');

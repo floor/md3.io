@@ -2,12 +2,12 @@ import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { root, docGroups, renderDocument } from './src/server/content';
 import { themes } from './src/shared/button';
-import { actions, actionSlugs, actionIcons, isAction } from './src/shared/actions';
+import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
 const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' };
 const html = (body: string, status = 200) => new Response(body, { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' } });
-const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, { label: 'Actions', items: actionSlugs.map(slug => ({ name: actions[slug].name, href: `/components/${slug}/` })) }];
+const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
   const isHome = path === '/';
@@ -16,7 +16,7 @@ function page(path: string, title: string, description: string, template: string
     : componentGroups;
   return html(eta.render('base', {
     path, title, description, isHome, section: isDocs ? 'Documentation' : isHome ? '' : 'Components', sidebarGroups,
-    content: eta.render(template, { ...data, docGroups, actions, actionSlugs }),
+    content: eta.render(template, { ...data, docGroups, components, playgroundGroups }),
   }), status);
 }
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };
@@ -41,19 +41,19 @@ export async function handleRequest(request: Request): Promise<Response> {
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
   if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage');
   else if (path === '/components/') response = page(path, 'Components — mtrl', 'Explore mtrl components in an interactive playground.', 'catalog');
-  else if (componentMatch && isAction(componentMatch[2]!)) {
+  else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
-    const component = actions[slug];
+    const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? html(eta.render('preview', { themes, slug, component }))
-      : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: actionIcons, themes });
+      : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: componentIcons, themes });
   }
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
     const document = match ? renderDocument(match[1]!) : null;
     response = document
-      ? page(path, `${document.title} documentation — mtrl`, `Configuration, methods, and examples for the mtrl ${document.title.toLowerCase()} component.`, 'document', { ...document, playground: isAction(match![1]!) ? `/components/${match![1]}/` : null })
+      ? page(path, `${document.title} documentation — mtrl`, `Configuration, methods, and examples for the mtrl ${document.title.toLowerCase()} component.`, 'document', { ...document, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
       : page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;

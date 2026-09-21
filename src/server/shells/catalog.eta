@@ -1,7 +1,8 @@
 <div class="page-wrap">
   <header class="page-heading"><span class="eyebrow">EXPLORE THE LIBRARY</span><h1>Components</h1><p>Try a component. Adjust the details. Copy what works.</p></header>
-  <section aria-labelledby="actions-title"><h2 class="catalog-label" id="actions-title">Actions</h2>
-    <div class="component-grid"><% it.actionSlugs.forEach(slug => { const component = it.actions[slug]; %>
+  <% it.playgroundGroups.forEach((group, index) => { %>
+  <section class="catalog-group" aria-labelledby="group-<%= index %>"><h2 class="catalog-label" id="group-<%= index %>"><%= group.label %></h2>
+    <div class="component-grid"><% group.slugs.forEach(slug => { const component = it.components[slug]; %>
       <a class="component-card ui-card ui-card--interactive" href="/components/<%= slug %>/">
         <div class="component-card__visual component-card__visual--<%= slug %>" aria-hidden="true">
           <% if (slug === 'button') { %><span>Button</span><span>Button</span>
@@ -9,11 +10,22 @@
           <% } else if (slug === 'button-group') { %><span>B</span><span>I</span><span>U</span>
           <% } else if (slug === 'split-button') { %><span>Save</span><span>⌄</span>
           <% } else if (slug === 'fab') { %><span>+</span>
-          <% } else { %><span>＋ Compose</span><% } %>
+          <% } else if (slug === 'extended-fab') { %><span>＋ Compose</span>
+          <% } else if (slug === 'checkbox') { %><span>✓</span><span>−</span>
+          <% } else if (slug === 'switch') { %><span>●</span>
+          <% } else if (slug === 'radios') { %><span>◉</span><span>○</span>
+          <% } else if (slug === 'chips') { %><span>✓ Hiking</span><span>Music</span>
+          <% } else if (slug === 'slider') { %><span>━━●━━━━</span>
+          <% } else if (slug === 'textfield') { %><span>Your name</span>
+          <% } else if (slug === 'select') { %><span>Apple ⌄</span>
+          <% } else if (slug === 'search') { %><span>⌕ Search places</span>
+          <% } else if (slug === 'datepicker') { %><span>Sep 21</span>
+          <% } else if (slug === 'timepicker') { %><span>09:30</span><% } %>
         </div>
         <div class="component-card__body"><div><h3><%= component.name %></h3><p><%= component.summary %></p></div><span aria-hidden="true">↗</span></div>
       </a>
     <% }); %></div>
   </section>
+  <% }); %>
   <p class="catalog-note"><a href="/docs/">Browse the complete component reference →</a></p>
 </div>
