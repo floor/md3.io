@@ -1,0 +1,662 @@
+/* ============================================================
+   Homepage Styles
+   ============================================================ */
+
+/* All design tokens are now in tokens.css — homepage overrides only */
+
+:root {
+    --radius: 12px;
+}
+
+/* ============================================================
+   Layout
+   ============================================================ */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    overflow: hidden;
+}
+
+.container-hero {
+    width: 100%;
+    margin: 0 auto;
+    padding: 64px 24px 16px;
+    overflow: hidden;
+    background-color: var(--bg-card);
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+
+.hero {
+    padding: 64px 0 24px;
+    text-align: center;
+}
+
+.hero__logo {
+    width: clamp(56px, 8vw, 80px);
+    height: clamp(56px, 8vw, 80px);
+    margin: 0 auto 20px;
+    border-radius: 50%;
+}
+
+.hero__name {
+    font-size: clamp(38px, 8vw, 78px);
+    font-weight: var(--fw-bold);
+    letter-spacing: clamp(-1px, -0.3vw, -2px);
+    line-height: 1;
+    margin-bottom: 16px;
+    color: var(--text);
+}
+
+.hero__tagline {
+    font-size: clamp(16px, 2.5vw, 22px);
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 480px;
+    margin: 0 auto 32px;
+}
+
+.hero__frameworks {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.framework-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--text);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+}
+
+.framework-tag small {
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+    font-weight: var(--fw-normal);
+}
+
+.hero__badges {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+}
+
+.hero__actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.btn--primary {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+}
+
+.btn--primary:hover {
+    background: color-mix(in oklch, var(--accent) 85%, black);
+    border-color: color-mix(in oklch, var(--accent) 85%, black);
+}
+
+.btn--ghost {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.btn--ghost:hover {
+    background: var(--bg-card);
+    border-color: var(--border-hover);
+    color: var(--text);
+}
+
+/* ============================================================
+   Install
+   ============================================================ */
+
+.install {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 56px;
+    margin: 56px 0;
+}
+
+.install__cmd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    color: var(--text-accent);
+}
+
+.install__cmd span {
+    color: var(--accent-text);
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+
+.section {
+    margin-top: 96px;
+    margin-bottom: 156px;
+}
+
+.section__title {
+    font-size: clamp(22px, 5vw, var(--fs-4xl));
+    font-weight: var(--fw-bold);
+    /*text-transform: uppercase;*/
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    padding-left: 2px;
+    text-align: center;
+}
+
+.section__desc {
+    max-width: 720px;
+    margin: 0 auto 32px;
+    font-size: var(--fs-md);
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* ============================================================
+   Feature Grid
+   ============================================================ */
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.feature__icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.feature__name {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.feature__desc {
+    font-size: var(--fs-base);
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.ui-card--xl .feature__name {
+    font-size: var(--fs-xl);
+}
+
+.ui-card--xl .feature__desc {
+    font-size: var(--fs-md);
+}
+
+/* ============================================================
+   Comparison Table
+   ============================================================ */
+
+.comparison-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-base);
+    min-width: 640px;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.comparison-table thead th {
+    font-weight: var(--fw-bold);
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.comparison-table tbody td {
+    color: var(--text-muted);
+}
+
+.comparison-table__label {
+    font-weight: var(--fw-bold);
+    color: var(--text) !important;
+    white-space: nowrap;
+}
+
+.comparison-table__highlight {
+    color: var(--accent-text) !important;
+    font-weight: var(--fw-bold);
+    background: color-mix(in oklch, var(--accent) 6%, transparent);
+}
+
+/* ============================================================
+   Navigation Cards
+   ============================================================ */
+
+.nav-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.nav-card {
+    /* surface via .ui-card .ui-card--interactive */
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-card__icon {
+    font-size: 28px;
+}
+
+.nav-card__title {
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    color: var(--text);
+}
+
+.nav-card__desc {
+    font-size: var(--fs-base);
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.nav-card__link {
+    font-size: var(--fs-base);
+    color: var(--accent-text);
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ============================================================
+   Examples List
+   ============================================================ */
+
+.section .overview__grid {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.example-grid {
+    display: grid;
+    gap: 6px;
+}
+
+.example-item {
+    /* surface via .ui-card .ui-card--interactive .ui-card--compact .ui-card--sm */
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.example-item__name {
+    font-size: 17px;
+    font-weight: var(--fw-bold);
+    color: var(--text);
+    min-width: 160px;
+}
+
+.example-item__desc {
+    font-size: 15px;
+    color: var(--text-dim);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.example-item__arrow {
+    color: var(--text-dim);
+    font-size: 14px;
+    transition:
+        transform 0.15s ease,
+        color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.example-item:hover .example-item__arrow {
+    transform: translateX(3px);
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   Code Sample
+   ============================================================ */
+
+.code {
+    /* surface via .ui-card */
+    overflow-x: auto;
+}
+
+.code pre {
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui);
+    line-height: 1.7;
+    color: var(--text-muted);
+}
+
+/* ─── Light theme: homepage code block overrides ─── */
+
+[data-theme-mode="light"] .code pre {
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   Quick Start — code + live demo side-by-side
+   ============================================================ */
+
+.quickstart {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.quickstart__code {
+    margin: 0;
+    min-width: 0;
+}
+
+.quickstart__demo {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-card);
+    height: 480px;
+}
+
+.quickstart__demo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg-card);
+}
+
+.quickstart__demo-label {
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+
+.quickstart__demo-list {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.quickstart__demo-list .vlist {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--vlist-bg);
+    color: var(--vlist-text);
+    color-scheme: light;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+}
+.quickstart__demo-list .vlist .qs-user {
+    width: 100%;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+
+footer {
+    text-align: center;
+    padding: 48px 0 40px;
+    color: var(--text-dim);
+    font-size: var(--fs-md);
+    border-top: 1px solid var(--border);
+}
+
+footer a {
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 3px 12px;
+    border-radius: 6px;
+}
+
+footer a:hover {
+    color: var(--text);
+}
+
+.footer__links {
+    display: flex;
+    justify-content: center;
+    gap: 16px 24px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 4px 16px;
+}
+
+.footer__built {
+    padding: 4px 0;
+}
+
+.footer__built a {
+    padding: 4px 6px;
+    margin: 0 2px;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+/* ─── Tablet ─────────────────────────────────────── */
+
+@media (max-width: 800px) {
+    .quickstart {
+        grid-template-columns: 1fr;
+    }
+
+    .quickstart__demo {
+        height: 400px;
+    }
+
+    .section .overview__grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .features {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .section {
+        margin-bottom: 96px;
+    }
+
+    .nav-card__icon {
+        font-size: 26px;
+    }
+
+    .nav-card__title {
+        font-size: 18px;
+    }
+}
+
+/* ─── Mobile ─────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .hero {
+        padding: calc(var(--header-height) + 28px) 0 36px;
+    }
+
+    .section {
+        margin-bottom: 72px;
+    }
+
+    .hero__logo {
+        margin-bottom: 16px;
+    }
+
+    .hero__frameworks {
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+
+    .framework-tag {
+        font-size: var(--fs-sm);
+        padding: 5px 10px;
+    }
+
+    .hero__badges {
+        margin-bottom: 28px;
+    }
+
+    .btn {
+        font-size: var(--fs-base);
+        padding: 9px 18px;
+    }
+
+    .install__cmd {
+        font-size: 14px;
+        padding: 8px 14px;
+    }
+
+    .install {
+        margin-bottom: 40px;
+    }
+
+    .feature__icon {
+        font-size: 22px;
+    }
+
+    .feature__name {
+        font-size: 15px;
+    }
+
+    .feature__desc {
+        font-size: 13px;
+    }
+
+    .nav-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-card {
+        padding: 20px 18px;
+    }
+
+    .nav-card__icon {
+        font-size: 24px;
+    }
+
+    .nav-card__title {
+        font-size: 17px;
+    }
+
+    .nav-card__desc {
+        font-size: 14px;
+    }
+
+    .nav-card__link {
+        font-size: 13px;
+    }
+
+    .section .overview__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .example-item__name {
+        font-size: 15px;
+        min-width: 0;
+    }
+
+    .example-item__desc {
+        display: none;
+    }
+
+    .code pre {
+        font-size: 14px;
+    }
+
+    footer {
+        font-size: 14px;
+        padding: 36px 0 32px;
+    }
+
+    .footer__links {
+        gap: 12px 16px;
+    }
+}
+
+/* ─── Small phone ────────────────────────────────── */
+
+@media (max-width: 420px) {
+    .hero__logo {
+        margin-bottom: 14px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}

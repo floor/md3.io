@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= it.title %></title>
+  <meta name="description" content="<%= it.description %>" />
+  <link rel="canonical" href="https://md3.io<%= it.path %>" />
+  <meta property="og:title" content="<%= it.title %>" />
+  <meta property="og:description" content="<%= it.description %>" />
+  <meta property="og:type" content="website" />
+  <link rel="preload" href="/fonts/DIN-Alternate-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/styles/tokens.css" />
+  <link rel="stylesheet" href="/styles/shell.css" />
+  <link rel="stylesheet" href="/styles/ui.css" />
+  <link rel="stylesheet" href="/styles/content.css" />
+  <% if (it.isHome) { %><link rel="stylesheet" href="/styles/homepage.css" /><% } %>
+  <link rel="stylesheet" href="/styles/site.css" />
+  <script>
+    (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
+  </script>
+  <script type="module" src="/dist/site.js"></script>
+</head>
+<body class="<%= it.isHome ? 'home' : '' %>">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="header"><div class="header__inner">
+    <a class="header__logo" href="/">mtrl<span class="brand-dot">.</span></a>
+    <% if (it.section) { %><span class="header__sep">/</span><span class="header__section"><%= it.section %></span><% } %>
+    <nav class="header__nav" aria-label="Main navigation">
+      <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
+      <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
+      <a href="https://github.com/floor/mtrl" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
+    <button type="button" class="header__theme" id="theme-toggle" aria-label="Toggle site theme">
+      <svg class="header__theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+      <svg class="header__theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 13A9 9 0 0 1 11 3a9 9 0 1 0 10 10Z"/></svg>
+    </button>
+    <button type="button" class="header__hamburger" id="hamburger" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
+  </div></header>
+  <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
+  <div class="layout">
+    <nav class="sidebar <%= it.isHome ? 'sidebar--home' : '' %>" id="sidebar" aria-label="<%= it.section || 'Site' %> navigation">
+      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/mtrl">GitHub ↗</a></div>
+      <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
+        <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
+      <% }); %></div><% }); %>
+      <div class="sidebar__foot">mtrl · Material Design 3<br><a href="https://github.com/floor/mtrl/blob/main/LICENSE">MIT license</a></div>
+    </nav>
+    <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
+  </div>
+</body></html>

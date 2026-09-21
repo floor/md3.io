@@ -1,0 +1,10 @@
+<div class="page-wrap">
+  <header class="page-heading"><span class="eyebrow">EXPLORE THE LIBRARY</span><h1>Components</h1><p>Try a component. Adjust the details. Copy what works.</p></header>
+  <section aria-labelledby="actions-title"><h2 class="catalog-label" id="actions-title">Actions</h2>
+    <a class="component-card ui-card ui-card--interactive" href="/components/button/">
+      <div class="component-card__visual" aria-hidden="true"><span>Button</span><span>Button</span></div>
+      <div class="component-card__body"><div><h3>Button</h3><p>Five variants. Five sizes. Your next action.</p></div><span aria-hidden="true">↗</span></div>
+    </a>
+  </section>
+  <p class="catalog-note">Button is the first playground. <a href="/docs/">Browse the complete component reference →</a></p>
+</div>

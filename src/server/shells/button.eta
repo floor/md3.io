@@ -1,0 +1,24 @@
+<div class="page-wrap component-page">
+  <header class="page-heading"><div class="page-heading__top"><span class="eyebrow">ACTIONS / BUTTON</span><a class="text-link" href="/docs/components/button/">Documentation ↗</a></div><h1>Button</h1><p>One action, many expressions. Find the right fit for yours.</p></header>
+  <section class="playground" aria-label="Button playground">
+    <div class="preview-panel">
+      <div class="panel-heading"><span class="ui-title">LIVE PREVIEW</span><span class="preview-dot" aria-hidden="true"></span></div>
+      <iframe id="preview" title="Interactive mtrl button preview" src="/preview/button/"></iframe>
+      <div class="preview-footer"><span id="playground-status" role="status" aria-live="polite">Loading preview…</span><span>Click to try it</span></div>
+    </div>
+    <form class="split-panel configuration" id="configuration">
+      <div class="panel-heading"><h2 class="ui-title">CONFIGURATION</h2><button type="reset" class="reset-button">Reset</button></div>
+      <fieldset class="ui-section"><legend>Variant</legend><div class="choice-group"><% it.variants.forEach(value => { %><label class="choice"><input type="radio" name="variant" value="<%= value %>" <%= value === 'filled' ? 'checked' : '' %> /><span><%= value %></span></label><% }); %></div></fieldset>
+      <fieldset class="ui-section"><legend>Size</legend><div class="choice-group choice-group--sizes"><% it.sizes.forEach(value => { %><label class="choice"><input type="radio" name="size" value="<%= value %>" <%= value === 's' ? 'checked' : '' %> /><span><%= value.toUpperCase() %></span></label><% }); %></div></fieldset>
+      <div class="ui-section"><label class="ui-row ui-switch"><span class="control-label">Square shape</span><span><input type="checkbox" name="square" /><span class="ui-switch__track"></span></span></label></div>
+      <fieldset class="ui-section"><legend>Icon</legend><div class="choice-group choice-group--icons"><% Object.entries(it.icons).forEach(([name, svg]) => { %><label class="choice" title="<%= name %>"><input type="radio" name="icon" value="<%= name %>" aria-label="<%= name %>" <%= name === 'none' ? 'checked' : '' %> /><span><% if (svg) { %><%~ svg %><% } else { %>None<% } %></span></label><% }); %></div></fieldset>
+      <div class="ui-section"><label class="control-label" for="button-text">Text</label><input class="ui-input control-input" id="button-text" name="text" value="Button" maxlength="80" autocomplete="off" /></div>
+      <div class="ui-section"><label class="ui-row ui-switch"><span class="control-label">Disabled</span><span><input type="checkbox" name="disabled" /><span class="ui-switch__track"></span></span></label></div>
+      <div class="ui-section appearance"><h3 class="ui-title">PREVIEW APPEARANCE</h3><div class="appearance__row"><label class="control-label" for="preview-theme">Theme</label><select id="preview-theme" class="ui-select" name="theme"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= theme.charAt(0).toUpperCase() + theme.slice(1) %></option><% }); %></select></div>
+        <fieldset><legend class="sr-only">Preview mode</legend><div class="choice-group choice-group--mode"><label class="choice"><input name="mode" type="radio" value="light" checked /><span>Light</span></label><label class="choice"><input name="mode" type="radio" value="dark" /><span>Dark</span></label></div></fieldset>
+      </div>
+      <div class="ui-section code-actions"><button class="ui-btn ui-btn--primary" id="copy-code" type="button"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg> Copy code</button><details id="code-details"><summary>View code</summary><pre><code id="generated-code"></code></pre></details></div>
+    </form>
+  </section>
+</div>
+<script type="module" src="/dist/playground.js"></script>
