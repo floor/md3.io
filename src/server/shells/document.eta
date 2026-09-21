@@ -1,4 +1,4 @@
 <div class="document-layout"><article class="md">
-  <div class="doc-toolbar"><a href="/docs/">← Documentation</a><% if (it.playground) { %><a href="/components/button/">Open playground ↗</a><% } %></div>
+  <div class="doc-toolbar"><a href="/docs/">← Documentation</a><% if (it.playground) { %><a href="<%= it.playground %>">Open playground ↗</a><% } %></div>
   <%~ it.html %>
 </article><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></aside></div>

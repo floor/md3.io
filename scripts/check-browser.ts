@@ -30,6 +30,8 @@ try {
   const previewHeight = (await page.locator('.preview-panel').boundingBox())!.height;
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.getByRole('tabpanel', { name: 'View code' }).isVisible(), 'Code did not open in the playground');
+  assert(await page.locator('#generated-code .hljs-keyword').count() > 0 && await page.locator('#generated-code .hljs-string').count() > 0, 'JavaScript syntax highlighting is missing');
+  const darkKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
   assert(await page.locator('.preview-heading #copy-code').isVisible() && !await page.locator('.preview-dot').isVisible(), 'Code view did not replace the dot with Copy code');
   assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
   assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
@@ -43,10 +45,14 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-desktop.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await preview.getByRole('button', { name: 'Code view update', exact: true }).waitFor();
+  await page.getByLabel('Text', { exact: true }).fill('<img src=x onerror=alert(1)>');
+  assert((await page.locator('#generated-code').textContent())?.includes('<img src=x onerror=alert(1)>'), 'Highlighting changed literal code content');
+  assert(await page.locator('#generated-code img').count() === 0, 'Highlighting interpreted component text as HTML');
+  assert((await page.locator('#generated-code .hljs-string').allTextContents()).some(text => text.includes('<img')), 'Edited values lost syntax highlighting');
   await page.getByLabel('Text', { exact: true }).fill('Button');
 
   for (const variant of ['filled', 'tonal', 'outlined', 'elevated', 'text']) {
-    await page.locator(`label.choice:has(input[name="variant"][value="${variant}"])`).click();
+    await page.getByLabel('Variant', { exact: true }).selectOption(variant);
     await page.waitForFunction(value => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('button')?.classList.contains(`mtrl-button--${value}`), variant);
   }
   for (const size of ['xs', 's', 'm', 'l', 'xl']) {
@@ -58,16 +64,20 @@ try {
   await page.getByText('Square shape', { exact: true }).click();
   await page.getByText('Disabled', { exact: true }).click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLButtonElement>('button')?.disabled);
+  assert(await page.locator('.preview-footer #preview-theme').count() === 1, 'Appearance controls are missing from preview footer');
   await page.selectOption('#preview-theme', 'ocean');
   await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'dark', 'Preview changed site mode');
   await page.locator('#theme-toggle').click();
+  const lightKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
+  assert(lightKeywordColor !== darkKeywordColor, 'Syntax colors did not follow the site theme');
   assert(await preview.locator('html').getAttribute('data-theme-mode') === 'dark', 'Site theme changed preview mode');
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   await page.getByRole('button', { name: 'Copy code', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
+  assert(copied === await page.locator('#generated-code').textContent(), 'Copied code differs from the highlighted source');
   assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('mtrl/themes/ocean'), 'Copied code is stale');
   const parentHasMaterial = await page.evaluate(() => [...document.styleSheets].some(sheet => sheet.href?.includes('/mtrl/')));
   assert(!parentHasMaterial, 'Material CSS leaked into the site');
@@ -78,6 +88,68 @@ try {
   assert(await page.locator('#button-text').inputValue() === 'Button', 'Reset did not restore text');
   await button.waitFor();
   assert(await button.isEnabled(), 'Reset did not enable the button');
+  const assertAppearance = async (theme: string, mode: string) => {
+    await page.waitForFunction(({ theme, mode }) => {
+      const root = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement;
+      return root?.dataset.theme === theme && root?.dataset.themeMode === mode;
+    }, { theme, mode });
+    assert(await page.locator('#preview-theme').inputValue() === theme && await page.locator(`input[name="mode"][value="${mode}"]`).isChecked(), 'Appearance controls lost the saved preference');
+    const code = await page.locator('#generated-code').textContent();
+    assert(code?.includes(`dataset.theme = '${theme}'`) && code.includes(`dataset.themeMode = '${mode}'`), 'Generated code lost the saved appearance');
+  };
+  await assertAppearance('ocean', 'dark');
+  // Hold both the iframe document and application bundles to expose loading-time flashes.
+  const loadingPage = await context.newPage();
+  let releaseDocument!: () => void;
+  let releaseModules!: () => void;
+  const documentGate = new Promise<void>(resolve => { releaseDocument = resolve; });
+  const modulesGate = new Promise<void>(resolve => { releaseModules = resolve; });
+  await loadingPage.route('**/preview/**', async route => { await documentGate; await route.continue(); });
+  await loadingPage.route('**/dist/*.js', async route => { await modulesGate; await route.continue(); });
+  try {
+    await loadingPage.goto(`${base}components/icon-button/`, { waitUntil: 'commit' });
+    await loadingPage.locator('#preview').waitFor();
+    await loadingPage.waitForFunction(() => getComputedStyle(document.querySelector('#preview')!).colorScheme === 'dark');
+    const background = await loadingPage.locator('#preview').evaluate(element => getComputedStyle(element).backgroundColor);
+    assert(background === 'rgb(29, 27, 32)', 'The empty iframe has a light loading background');
+    releaseDocument();
+    const loadingFrame = loadingPage.frameLocator('#preview');
+    await loadingFrame.locator('#stage').waitFor({ state: 'attached' });
+    assert(await loadingFrame.locator('html').getAttribute('data-theme-mode') === 'dark', 'Preview waits for a bundle to apply dark mode');
+    assert(await loadingFrame.locator('html').getAttribute('data-theme') === 'ocean', 'Preview waits for a bundle to apply the saved color theme');
+    await loadingPage.waitForFunction(() => {
+      const doc = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument;
+      return doc?.body && getComputedStyle(doc.body).backgroundColor === 'rgb(25, 28, 30)';
+    });
+    await loadingFrame.locator('html').evaluate(root => {
+      const modes: string[] = [];
+      (window as any).__previewModes = modes;
+      new MutationObserver(records => {
+        for (const record of records) if (record.attributeName === 'data-theme-mode') modes.push(record.oldValue || '', root.getAttribute('data-theme-mode') || '');
+      }).observe(root, { attributes: true, attributeOldValue: true });
+    });
+    releaseModules();
+    await loadingPage.waitForLoadState('load');
+    await loadingFrame.getByRole('button', { name: 'Add to favorites' }).waitFor();
+    assert(await loadingFrame.locator('html').evaluate(() => !(window as any).__previewModes.includes('light')), 'Module startup reverted to light mode');
+  } finally {
+    releaseDocument();
+    releaseModules();
+    await loadingPage.close();
+  }
+  await page.locator('#sidebar').getByRole('link', { name: 'Icon button', exact: true }).click();
+  await assertAppearance('ocean', 'dark');
+  await page.reload();
+  await assertAppearance('ocean', 'dark');
+  // A subsequent choice must replace the previous preference on the next component.
+  await page.selectOption('#preview-theme', 'forest');
+  await page.locator('label.choice:has(input[name="mode"][value="light"])').click();
+  await page.locator('#sidebar').getByRole('link', { name: 'Button group', exact: true }).click();
+  await assertAppearance('forest', 'light');
+  assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'Saved preview appearance changed site mode');
+  await page.evaluate(() => localStorage.setItem('md3-preview-appearance', '{invalid json'));
+  await page.reload();
+  await assertAppearance('baseline', 'light');
 
   await page.goto(`${base}docs/components/button/`);
   await page.locator('.md h1').waitFor();

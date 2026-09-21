@@ -1,0 +1,270 @@
+/* =================================================================
+   syntax.css — Single source of truth for all syntax highlighting
+   Covers: highlight.js classes + short-class aliases used in
+   hand-written code samples (homepage, API page).
+   Loaded on every page via tokens.css → syntax.css → shell.css.
+   ================================================================= */
+
+/* ─── highlight.js — Dark theme (One Dark) ──────────────────────── */
+
+.hljs {
+    color: #abb2bf;
+}
+
+.hljs-keyword,
+.hljs-doctag,
+.hljs-formula {
+    color: #c678dd;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-meta-string {
+    color: #98c379;
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+    color: #d19a66;
+}
+
+.hljs-comment,
+.hljs-quote {
+    color: #ffffff59;
+    font-style: italic;
+}
+
+.hljs-function .hljs-title,
+.hljs-title.function_,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id {
+    color: #61aeee;
+}
+
+.hljs-built_in,
+.hljs-class .hljs-title,
+.class_ .hljs-title {
+    color: #e6c07b;
+}
+
+.hljs-type {
+    color: #e6c07b;
+}
+
+.hljs-section,
+.hljs-name,
+.hljs-selector-tag,
+.hljs-deletion,
+.hljs-subst {
+    color: #e06c75;
+}
+
+.hljs-tag {
+    color: #e06c75;
+}
+
+.hljs-tag .hljs-name {
+    color: #e06c75;
+}
+
+.hljs-variable.language_ {
+    color: #56b6c2;
+}
+
+.hljs-property {
+    color: #56b6c2;
+}
+
+.hljs-params {
+    color: #abb2bf;
+}
+
+.hljs-punctuation {
+    color: #abb2bf;
+}
+
+.hljs-attribute {
+    color: #c678dd;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: 700;
+}
+
+/* ─── highlight.js — Light theme ─────────────────────────────────── */
+
+[data-theme-mode="light"] .hljs {
+    color: #383a42;
+}
+
+[data-theme-mode="light"] .hljs-keyword,
+[data-theme-mode="light"] .hljs-doctag,
+[data-theme-mode="light"] .hljs-formula {
+    color: #a626a4;
+}
+
+[data-theme-mode="light"] .hljs-string,
+[data-theme-mode="light"] .hljs-regexp,
+[data-theme-mode="light"] .hljs-addition,
+[data-theme-mode="light"] .hljs-meta-string {
+    color: #50a14f;
+}
+
+[data-theme-mode="light"] .hljs-number,
+[data-theme-mode="light"] .hljs-literal,
+[data-theme-mode="light"] .hljs-variable,
+[data-theme-mode="light"] .hljs-template-variable,
+[data-theme-mode="light"] .hljs-selector-class,
+[data-theme-mode="light"] .hljs-selector-attr,
+[data-theme-mode="light"] .hljs-selector-pseudo {
+    color: #986801;
+}
+
+[data-theme-mode="light"] .hljs-comment,
+[data-theme-mode="light"] .hljs-quote {
+    color: #a0a1a7;
+    font-style: italic;
+}
+
+[data-theme-mode="light"] .hljs-function .hljs-title,
+[data-theme-mode="light"] .hljs-title.function_,
+[data-theme-mode="light"] .hljs-symbol,
+[data-theme-mode="light"] .hljs-bullet,
+[data-theme-mode="light"] .hljs-link,
+[data-theme-mode="light"] .hljs-meta,
+[data-theme-mode="light"] .hljs-selector-id {
+    color: #4078f2;
+}
+
+[data-theme-mode="light"] .hljs-built_in,
+[data-theme-mode="light"] .hljs-class .hljs-title,
+[data-theme-mode="light"] .class_ .hljs-title {
+    color: #c18401;
+}
+
+[data-theme-mode="light"] .hljs-type {
+    color: #c18401;
+}
+
+[data-theme-mode="light"] .hljs-section,
+[data-theme-mode="light"] .hljs-name,
+[data-theme-mode="light"] .hljs-selector-tag,
+[data-theme-mode="light"] .hljs-deletion,
+[data-theme-mode="light"] .hljs-subst {
+    color: #e45649;
+}
+
+[data-theme-mode="light"] .hljs-tag {
+    color: #e45649;
+}
+
+[data-theme-mode="light"] .hljs-tag .hljs-name {
+    color: #e45649;
+}
+
+[data-theme-mode="light"] .hljs-variable.language_ {
+    color: #0184bc;
+}
+
+[data-theme-mode="light"] .hljs-property {
+    color: #0184bc;
+}
+
+[data-theme-mode="light"] .hljs-params {
+    color: #383a42;
+}
+
+[data-theme-mode="light"] .hljs-punctuation {
+    color: #383a42;
+}
+
+[data-theme-mode="light"] .hljs-attribute {
+    color: #a626a4;
+}
+
+/* ─── Short-class aliases — Dark theme (One Dark) ──────────────── */
+/* Used in hand-written <span class="kw"> markup (homepage, API page) */
+
+.kw {
+    color: #c678dd;
+}
+.fn {
+    color: #61aeee;
+}
+.str {
+    color: #98c379;
+}
+.num {
+    color: #d19a66;
+}
+.prop {
+    color: #56b6c2;
+}
+.par {
+    color: #abb2bf;
+}
+.op {
+    color: #abb2bf;
+}
+.pun {
+    color: #abb2bf;
+}
+.cm {
+    color: #ffffff59;
+    font-style: italic;
+}
+.bool {
+    color: #d19a66;
+}
+.type {
+    color: #e6c07b;
+}
+
+/* ─── Short-class aliases — Light theme (One Light) ────────────── */
+
+[data-theme-mode="light"] .kw {
+    color: #a626a4;
+}
+[data-theme-mode="light"] .fn {
+    color: #4078f2;
+}
+[data-theme-mode="light"] .str {
+    color: #50a14f;
+}
+[data-theme-mode="light"] .num {
+    color: #986801;
+}
+[data-theme-mode="light"] .prop {
+    color: #0184bc;
+}
+[data-theme-mode="light"] .par {
+    color: #383a42;
+}
+[data-theme-mode="light"] .op {
+    color: #383a42;
+}
+[data-theme-mode="light"] .pun {
+    color: #383a42;
+}
+[data-theme-mode="light"] .cm {
+    color: #a0a1a7;
+}
+[data-theme-mode="light"] .bool {
+    color: #986801;
+}
+[data-theme-mode="light"] .type {
+    color: #c18401;
+}

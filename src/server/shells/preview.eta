@@ -1,8 +1,18 @@
-<!doctype html><html lang="en" data-theme="baseline" data-theme-mode="light"><head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Button preview</title>
+<!doctype html><html lang="en" data-theme="baseline" data-theme-mode="light" data-component="<%= it.slug %>"><head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title><%= it.component.name %> preview</title>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      try {
+        const saved = JSON.parse(localStorage.getItem('md3-preview-appearance') || '{}');
+        if (<%~ JSON.stringify(it.themes) %>.includes(saved?.theme)) root.dataset.theme = saved.theme;
+        root.dataset.themeMode = saved?.mode === 'dark' ? 'dark' : 'light';
+      } catch {}
+      root.style.colorScheme = root.dataset.themeMode;
+    })();
+  </script>
   <link rel="stylesheet" href="/dist/mtrl/styles/base.css" />
-  <link rel="stylesheet" href="/dist/mtrl/styles/progress.css" />
-  <link rel="stylesheet" href="/dist/mtrl/styles/button.css" />
+  <% it.component.styles.forEach(style => { %><link rel="stylesheet" href="/dist/mtrl/styles/<%= style %>.css" /><% }); %>
   <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/mtrl/themes/<%= theme %>.css" /><% }); %>
   <link rel="stylesheet" href="/styles/preview.css" />
   <script type="module" src="/dist/preview.js"></script>

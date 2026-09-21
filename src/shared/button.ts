@@ -39,9 +39,3 @@ export function buttonConfig(state: ButtonState) {
     ...(!state.text.trim() ? { ariaLabel: state.icon === 'none' ? 'Button' : state.icon } : {}),
   };
 }
-export function buttonCode(state: ButtonState): string {
-  const config = JSON.stringify(buttonConfig(state), null, 2).replace(/^  "([a-zA-Z]+)":/gm, '  $1:');
-  return `import { createButton } from 'mtrl';\nimport 'mtrl/styles/base';\nimport 'mtrl/styles/button';\n${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
-    `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `const button = createButton(${config});\n\ndocument.body.append(button.element);\n\n// When the view is removed:\n// button.destroy();\n`;
-}

@@ -14,10 +14,18 @@
   <link rel="stylesheet" href="/styles/shell.css" />
   <link rel="stylesheet" href="/styles/ui.css" />
   <link rel="stylesheet" href="/styles/content.css" />
+  <link rel="stylesheet" href="/styles/syntax.css" />
   <% if (it.isHome) { %><link rel="stylesheet" href="/styles/homepage.css" /><% } %>
   <link rel="stylesheet" href="/styles/site.css" />
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
+  </script>
+  <script>
+    (() => {
+      let mode = 'light';
+      try { mode = JSON.parse(localStorage.getItem('md3-preview-appearance') || '{}')?.mode; } catch {}
+      document.documentElement.dataset.previewMode = mode === 'dark' ? 'dark' : 'light';
+    })();
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>

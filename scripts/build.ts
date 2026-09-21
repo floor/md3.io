@@ -15,4 +15,4 @@ if (!result.success) {
 const mtrlDist = resolve(root, 'node_modules/mtrl/dist');
 await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'mtrl/styles'), { recursive: true });
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'mtrl/themes'), { recursive: true });
-console.log('Built site, Button playground, and Material preview assets.');
+console.log('Built site, Actions playgrounds, and Material preview assets.');
