@@ -26,6 +26,25 @@ try {
   await page.getByRole('status').filter({ hasText: 'Button clicked' }).waitFor();
   await page.screenshot({ animations: 'disabled', path: `${output}/button-desktop.png`, fullPage: true });
 
+  const originalButton = await button.elementHandle();
+  const previewHeight = (await page.locator('.preview-panel').boundingBox())!.height;
+  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  assert(await page.getByRole('tabpanel', { name: 'View code' }).isVisible(), 'Code did not open in the playground');
+  assert(await page.locator('.preview-heading #copy-code').isVisible() && !await page.locator('.preview-dot').isVisible(), 'Code view did not replace the dot with Copy code');
+  assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
+  assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
+  await page.getByRole('tab', { name: 'View code', exact: true }).press('ArrowLeft');
+  assert(await page.getByRole('tab', { name: 'Live preview' }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
+  assert(!await page.locator('#copy-code').isVisible() && await page.locator('.preview-dot').isVisible(), 'Live preview did not restore the dot');
+  assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
+  await page.getByRole('tab', { name: 'Live preview' }).press('End');
+  await page.getByLabel('Text', { exact: true }).fill('Code view update');
+  assert((await page.locator('#generated-code').textContent())?.includes('Code view update'), 'Code view does not update with the configuration');
+  await page.screenshot({ animations: 'disabled', path: `${output}/button-code-desktop.png`, fullPage: true });
+  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await preview.getByRole('button', { name: 'Code view update', exact: true }).waitFor();
+  await page.getByLabel('Text', { exact: true }).fill('Button');
+
   for (const variant of ['filled', 'tonal', 'outlined', 'elevated', 'text']) {
     await page.locator(`label.choice:has(input[name="variant"][value="${variant}"])`).click();
     await page.waitForFunction(value => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('button')?.classList.contains(`mtrl-button--${value}`), variant);
@@ -45,6 +64,7 @@ try {
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'dark', 'Preview changed site mode');
   await page.locator('#theme-toggle').click();
   assert(await preview.locator('html').getAttribute('data-theme-mode') === 'dark', 'Site theme changed preview mode');
+  await page.getByRole('tab', { name: 'View code', exact: true }).click();
   await page.getByRole('button', { name: 'Copy code', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
@@ -52,6 +72,7 @@ try {
   const parentHasMaterial = await page.evaluate(() => [...document.styleSheets].some(sheet => sheet.href?.includes('/mtrl/')));
   assert(!parentHasMaterial, 'Material CSS leaked into the site');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
+  await page.getByRole('tab', { name: 'Live preview' }).click();
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
   assert(await page.locator('#button-text').inputValue() === 'Button', 'Reset did not restore text');
@@ -69,6 +90,9 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/button-mobile.png`, fullPage: true });
   const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].map(element => ({ tag: element.tagName, class: element.className, width: element.getBoundingClientRect().width, right: element.getBoundingClientRect().right })).filter(item => item.right > innerWidth + 1));
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Mobile page overflows horizontally: ${JSON.stringify(overflow)}`);
+  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile code view overflows the page');
+  await page.screenshot({ animations: 'disabled', path: `${output}/button-code-mobile.png`, fullPage: true });
   await page.locator('#hamburger').click();
   assert(await page.locator('#hamburger').getAttribute('aria-expanded') === 'true', 'Mobile menu did not open');
   await page.locator('#sidebar .mobile-navigation').getByRole('link', { name: 'Documentation', exact: true }).click();
