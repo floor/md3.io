@@ -16,3 +16,13 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 @media (max-width: 400px) { #stage { padding: 20px; } }
 
 #stage > .mtrl-chips { width: fit-content; }
+
+html:is([data-component="navigation-rail"], [data-component="drawer"], [data-component="tabs"], [data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stage { width: 100%; min-width: 0; height: 100%; }
+html:is([data-component="navigation-rail"], [data-component="drawer"]) #stage { padding: 0; }
+.navigation-demo { position: relative; display: flex; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+.navigation-demo[data-position="end"] { justify-content: flex-end; }
+.navigation-trigger { position: absolute; right: 20px; bottom: 20px; }
+.navigation-trigger[hidden] { display: none; }
+#stage > .mtrl-tabs { width: min(100%, 560px); min-width: 0; }
+#stage > :is(.mtrl-top-app-bar, .mtrl-bottom-app-bar) { position: relative; top: auto; bottom: auto; width: 100%; min-width: 0; flex-shrink: 0; }
+html:is([data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stage { padding: 16px; overflow: hidden; }

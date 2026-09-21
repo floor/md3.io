@@ -20,7 +20,13 @@
           <% } else if (slug === 'select') { %><span>Apple ⌄</span>
           <% } else if (slug === 'search') { %><span>⌕ Search places</span>
           <% } else if (slug === 'datepicker') { %><span>Sep 21</span>
-          <% } else if (slug === 'timepicker') { %><span>09:30</span><% } %>
+          <% } else if (slug === 'timepicker') { %><span>09:30</span>
+          <% } else if (slug === 'navigation-rail') { %><span>☰<br>♡<br>↗</span>
+          <% } else if (slug === 'drawer') { %><span>☰ &nbsp; Inbox<br>♡ &nbsp; Favorites</span>
+          <% } else if (slug === 'tabs') { %><span>Inbox</span><span>Favorites</span>
+          <% } else if (slug === 'menu') { %><span>Save<br>Share<br>Download</span>
+          <% } else if (slug === 'top-app-bar') { %><span>☰ &nbsp; My library &nbsp; ♡</span>
+          <% } else if (slug === 'bottom-app-bar') { %><span>♡ &nbsp; ↗ &nbsp; ＋</span><% } %>
         </div>
         <div class="component-card__body"><div><h3><%= component.name %></h3><p><%= component.summary %></p></div><span aria-hidden="true">↗</span></div>
       </a>

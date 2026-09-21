@@ -74,12 +74,12 @@ function syncControls(next: ComponentState) {
   }
   for (const output of form.querySelectorAll<HTMLOutputElement>('[data-value-for]')) output.value = String(next[output.dataset.valueFor!]);
 }
-function update(send = true) {
+function update(send = true, reset = false) {
   state = readForm();
   syncControls(state);
   for (const input of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]')) input.disabled = state[input.dataset.enabledWhen!] !== true;
   code.innerHTML = hljs.highlight(componentCode(slug, state), { language: 'javascript' }).value;
-  if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state }, location.origin);
+  if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state, reset }, location.origin);
 }
 form.addEventListener('input', () => update());
 // Form-associated footer controls participate in FormData/reset, but events bubble through the footer.
@@ -90,11 +90,12 @@ document.querySelector('.preview-appearance')!.addEventListener('input', () => {
   catch { /* The controls still work when storage is unavailable. */ }
 });
 form.addEventListener('submit', event => event.preventDefault());
-form.addEventListener('reset', () => { setTimeout(() => { update(); status.textContent = 'Configuration reset'; }, 0); });
+form.addEventListener('reset', () => { setTimeout(() => { status.textContent = 'Resetting configuration…'; update(true, true); }, 0); });
 frame.addEventListener('load', () => update());
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
   if (event.data?.type === 'md3:ready') { update(); status.textContent = 'Ready to try'; }
+  if (event.data?.type === 'md3:reset') status.textContent = 'Configuration reset';
   if (event.data?.type === 'md3:click') status.textContent = `${components[slug].name} clicked · ${event.data.count}`;
   if (event.data?.type === 'md3:event' && typeof event.data.message === 'string') status.textContent = event.data.message;
   if (event.data?.type === 'md3:selected' && typeof event.data.selected === 'boolean') {

@@ -1,3 +1,9 @@
+import createNavigationRail from 'mtrl/components/navigation-rail';
+import createDrawer from 'mtrl/components/drawer';
+import createTabs from 'mtrl/components/tabs';
+import createMenu from 'mtrl/components/menu';
+import createTopAppBar from 'mtrl/components/top-app-bar';
+import createBottomAppBar from 'mtrl/components/bottom-app-bar';
 import createSwitch from 'mtrl/components/switch';
 import createRadios from 'mtrl/components/radios';
 import createSlider from 'mtrl/components/slider';
@@ -14,7 +20,7 @@ import createButtonGroup from 'mtrl/components/button-group';
 import createSplitButton from 'mtrl/components/split-button';
 import createFab from 'mtrl/components/fab';
 import createExtendedFab from 'mtrl/components/extended-fab';
-import { components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { appBarActions, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -23,19 +29,93 @@ let component: { element: HTMLElement; destroy: () => void } | undefined;
 let current: ComponentState | undefined;
 let clicks = 0;
 let disposing = false;
+let generation = 0;
 const stage = document.querySelector<HTMLElement>('#stage')!;
 const post = (data: Record<string, unknown>) => { if (!disposing) parent.postMessage(data, location.origin); };
 const clicked = () => post({ type: 'md3:click', count: ++clicks });
-const message = (value: string) => post({ type: 'md3:event', message: value });
+const report = (value: string) => post({ type: 'md3:event', message: value });
 
-const sync = (values: ComponentState) => {
+const syncValues = (values: ComponentState) => {
   if (disposing) return;
   if (current) Object.assign(current, values);
   post({ type: 'md3:values', values });
 };
 const dateValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 function create(state: ComponentState) {
+  const instance = generation;
+  const message = (value: string) => { if (instance === generation) report(value); };
+  const sync = (values: ComponentState) => { if (instance === generation) syncValues(values); };
   switch (slug) {
+    case 'navigation-rail': {
+      const control = createNavigationRail(components['navigation-rail'].config(state));
+      const host = document.createElement('div');
+      host.className = 'navigation-demo';
+      host.append(control.element);
+      const trigger = createButton({ text: 'Open navigation', variant: 'tonal' });
+      trigger.element.classList.add('navigation-trigger');
+      trigger.on('click', () => control.expand());
+      const updateTrigger = () => { trigger.element.hidden = control.isExpanded() || !(state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle); };
+      updateTrigger();
+      host.append(trigger.element);
+      control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
+      control.on('expand', () => { sync({ expanded: true }); updateTrigger(); message('Navigation expanded'); });
+      control.on('collapse', () => { sync({ expanded: false }); updateTrigger(); message('Navigation collapsed'); });
+      return { element: host, destroy: () => { trigger.destroy(); control.destroy(); } };
+    }
+    case 'drawer': {
+      const control = createDrawer(components.drawer.config(state));
+      const host = document.createElement('div');
+      host.className = 'navigation-demo';
+      host.dataset.position = String(state.position);
+      host.append(control.element);
+      const trigger = createButton({ text: 'Open drawer', variant: 'tonal' });
+      trigger.element.classList.add('navigation-trigger');
+      trigger.element.hidden = control.isOpen();
+      trigger.on('click', () => control.open());
+      host.append(trigger.element);
+      control.on('select', (event: { id: string; label: string }) => { sync({ active: event.id }); message(`Selected: ${event.label}`); });
+      control.on('open', () => { sync({ open: true }); trigger.element.hidden = true; message('Drawer opened'); });
+      control.on('close', () => { sync({ open: false }); trigger.element.hidden = false; message('Drawer closed'); });
+      return { element: host, destroy: () => { trigger.destroy(); control.destroy(); } };
+    }
+    case 'tabs': {
+      const control = createTabs(components.tabs.config(state));
+      control.element.setAttribute('aria-label', 'Mailbox views');
+      if (!state.scrollable) control.element.style.flexDirection = 'row';
+      control.on('change', (event: { value: string }) => { sync({ active: event.value }); message(`Selected: ${event.value}`); });
+      return control;
+    }
+    case 'menu': {
+      const trigger = createButton({ text: String(state.text), variant: 'tonal', ariaLabel: String(state.text).trim() || 'Open menu' });
+      const control = createMenu({ ...components.menu.config(state), opener: trigger.element });
+      control.on('select', event => message(`Selected: ${event.item.text}`));
+      control.on('open', () => message('Menu opened'));
+      control.on('close', () => message('Menu closed'));
+      return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
+    }
+    case 'top-app-bar': {
+      const control = createTopAppBar(components['top-app-bar'].config(state));
+      const buttons = appBarActions(state).map(config => createIconButton(config));
+      buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
+      if (state.leading) {
+        const navigation = createIconButton({ icon: componentIcons.menu, ariaLabel: 'Open navigation' });
+        navigation.on('click', () => message('Navigation clicked'));
+        control.addLeadingElement(navigation.element);
+        buttons.push(navigation);
+      }
+      control.setScrollState(state.scrolled === true);
+      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); control.destroy(); } };
+    }
+    case 'bottom-app-bar': {
+      const control = createBottomAppBar(components['bottom-app-bar'].config(state));
+      const buttons = appBarActions(state).map(config => createIconButton(config));
+      buttons.forEach(button => { control.addAction(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
+      const fab = state.hasFab ? createFab({ icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' }) : null;
+      if (fab) { control.addFab(fab.element); fab.on('click', () => message(`${String(state.fabLabel) || 'Compose'} clicked`)); }
+      if (!state.visible) control.hide();
+      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
+    }
+
     case 'switch': {
       const control = createSwitch(components.switch.config(state));
       control.on('change', () => { sync({ checked: control.isChecked() }); message(control.isChecked() ? 'Switch on' : 'Switch off'); });
@@ -181,12 +261,13 @@ function create(state: ComponentState) {
     }
   }
 }
-const fingerprint = (state: ComponentState) => JSON.stringify([components[slug].config(state), state.collapsed, state.lowered]);
-function render(state: ComponentState) {
+const fingerprint = ({ theme, mode, ...state }: ComponentState) => JSON.stringify(state);
+function render(state: ComponentState, reset = false) {
   document.documentElement.dataset.theme = String(state.theme);
   document.documentElement.dataset.themeMode = String(state.mode);
   document.documentElement.style.colorScheme = String(state.mode);
-  if (current && fingerprint(current) === fingerprint(state)) { current = state; return; }
+  if (!reset && current && fingerprint(current) === fingerprint(state)) { current = state; return; }
+  generation++;
   disposing = true;
   try { component?.destroy(); } finally { disposing = false; }
   component = create(state);
@@ -195,7 +276,10 @@ function render(state: ComponentState) {
 }
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== parent || event.data?.type !== 'md3:configure') return;
-  try { render(normalizeComponentState(slug, event.data.state)); }
+  try {
+    render(normalizeComponentState(slug, event.data.state), event.data.reset === true);
+    if (event.data.reset === true) post({ type: 'md3:reset' });
+  }
   catch (error) { console.error(error); post({ type: 'md3:error' }); }
 });
 window.addEventListener('pagehide', () => component?.destroy());

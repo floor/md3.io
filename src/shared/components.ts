@@ -1,3 +1,9 @@
+import type { NavigationRailConfig } from 'mtrl/components/navigation-rail';
+import type { DrawerConfig } from 'mtrl/components/drawer';
+import type { TabsConfig } from 'mtrl/components/tabs';
+import type { MenuConfig } from 'mtrl/components/menu';
+import type { TopAppBarConfig } from 'mtrl/components/top-app-bar';
+import type { BottomAppBarConfig } from 'mtrl/components/bottom-app-bar';
 import type { SwitchConfig } from 'mtrl/components/switch';
 import type { RadiosConfig } from 'mtrl/components/radios';
 import type { ChipsConfig } from 'mtrl/components/chips';
@@ -19,6 +25,8 @@ import { buttonConfig, icons as buttonIcons, normalizeState, sizes, themes, vari
 const svg = (path: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 export const componentIcons: Record<string, string> = {
   ...buttonIcons,
+  menu: svg('<path d="M4 6h16M4 12h16M4 18h16"/>'),
+  inbox: svg('<path d="M4 4h16v16H4Z M4 13h5l1 3h4l1-3h5"/>'),
   add: svg('<path d="M12 5v14M5 12h14"/>'),
   edit: svg('<path d="m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5"/>'),
   bold: svg('<path d="M7 4h6a4 4 0 0 1 0 8H7V4Zm0 8h7a4 4 0 0 1 0 8H7v-8Z"/>'),
@@ -62,6 +70,9 @@ const iconMarkup = (state: ComponentState) => componentIcons[string(state, 'icon
 const fabPosition = (state: ComponentState) => state.position === 'center' ? {} : { position: string(state, 'position') };
 const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'Italic' }, { value: 'underline', text: 'Underline' }];
 
+const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
+const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
+export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: componentIcons[icon], ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon], variant: 'standard' }));
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -305,6 +316,79 @@ export const components = {
       orientation: state.orientation === 'horizontal' ? TIME_PICKER_ORIENTATION.HORIZONTAL : TIME_PICKER_ORIENTATION.VERTICAL,
       title: string(state, 'title'), value: string(state, 'value'), showSeconds: bool(state, 'showSeconds'), minuteStep: Number(state.minuteStep), closeOnSelect: bool(state, 'closeOnSelect'), name: 'time' }),
   },
+  'navigation-rail': {
+    group: 'Navigation', name: 'Navigation rail', factory: 'createNavigationRail', variable: 'rail',
+    description: 'Move between destinations. Explore collapsed, expanded, and modal navigation.',
+    summary: 'Primary destinations in an expressive rail.', styles: ['navigation-rail', 'button', 'progress'],
+    controls: [
+      ...section('Layout', [choose('layout', 'Layout', ['standard', 'modal'], 'standard'), toggle('expanded', 'Expanded'), { ...range('expandedWidth', 'Expanded width', '280'), min: 220, max: 360, step: 20 }, toggle('hideWhenCollapsed', 'Hide collapsed')]),
+      ...section('Content', [activeDestination, toggle('badges', 'Badges', true), toggle('showToggle', 'Menu button', true)]),
+      ...section('Behavior', [toggle('disableSent', 'Disable Sent'), toggle('ripple', 'Ripple', true)]),
+    ],
+    config: (state: ComponentState): NavigationRailConfig => ({ layout: pick(state, 'layout', ['standard', 'modal'], 'standard'), expanded: bool(state, 'expanded'), expandedWidth: Number(state.expandedWidth), hideWhenCollapsed: bool(state, 'hideWhenCollapsed'), showToggle: bool(state, 'showToggle'), ripple: bool(state, 'ripple'), ariaLabel: 'Mail navigation',
+      items: destinations.map(item => ({ ...item, active: state.active === item.id, disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.badges && item.id === 'inbox' ? { badge: 8, badgeLabel: '8 unread messages' } : {}) })) }),
+  },
+  drawer: {
+    group: 'Navigation', name: 'Drawer', factory: 'createDrawer', variable: 'drawer',
+    description: 'Explore a navigation drawer with destinations, section labels, and badges.',
+    summary: 'Grouped destinations in a side panel.', styles: ['drawer', 'button', 'progress'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'standard'), toggle('dense', 'Dense')]),
+      ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'start'), { ...range('width', 'Width', '280'), min: 220, max: 360, step: 20 }]),
+      ...section('Content', [text('headline', 'Headline', 'Mail'), activeDestination, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true), toggle('sections', 'Section labels', true)]),
+      ...section('Behavior', [toggle('open', 'Open', true), toggle('dismissible', 'Dismissible', true), toggle('disableSent', 'Disable Sent')]),
+    ],
+    config: (state: ComponentState): DrawerConfig => ({ variant: string(state, 'variant'), position: string(state, 'position'), width: Number(state.width), dense: bool(state, 'dense'), headline: string(state, 'headline'), open: bool(state, 'open'), dismissible: bool(state, 'dismissible'),
+      items: [...(state.sections ? [{ type: 'section' as const, sectionLabel: 'Your mailbox' }] : []), ...destinations.map(item => ({ id: item.id, label: item.label, ...(state.icons ? { icon: item.icon } : {}), active: state.active === item.id, disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.badges && item.id === 'inbox' ? { badge: '8' } : {}) }))] }),
+  },
+  tabs: {
+    group: 'Navigation', name: 'Tabs', factory: 'createTabs', variable: 'tabs',
+    description: 'Switch between related views. Try primary and secondary tabs, icons, and badges.',
+    summary: 'Related views, one active tab.', styles: ['progress', 'button', 'badge', 'tabs'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['primary', 'secondary'], 'primary'), toggle('showDivider', 'Divider', true)]),
+      ...section('Content', [{ ...activeDestination, options: ['inbox', 'favorites', 'sent', 'drafts', 'archive', 'trash'] }, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), choose('count', 'Tab count', ['3', '6'], '3')]),
+      ...section('Behavior', [toggle('scrollable', 'Scrollable'), toggle('disableSent', 'Disable Sent')]),
+    ],
+    config: (state: ComponentState): TabsConfig => ({ variant: string(state, 'variant'), showDivider: bool(state, 'showDivider'), scrollable: bool(state, 'scrollable'), tabs: [...destinations, ...(state.count === '6' ? ['Drafts', 'Archive', 'Trash'].map(label => ({ id: label.toLowerCase(), label, icon: componentIcons.inbox! })) : [])].map(item => ({ text: item.label, value: item.id, state: state.active === item.id ? 'active' : 'inactive', disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.icons ? { icon: item.icon } : {}), ...(state.badges && item.id === 'inbox' ? { badge: 8 } : {}) })) }),
+  },
+  menu: {
+    group: 'Navigation', name: 'Menu', factory: 'createMenu', variable: 'menu',
+    description: 'Open a menu of actions. Explore placement, color, supporting text, and nested choices.',
+    summary: 'Actions and nested choices on demand.', styles: ['menu', 'button', 'progress'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'vibrant', 'gap', 'baseline'], 'standard', 'select'), toggle('dense', 'Dense')]),
+      ...section('Layout', [choose('position', 'Position', ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'], 'bottom-start', 'select')]),
+      ...section('Content', [text('text', 'Button label', 'Open menu'), toggle('icons', 'Icons', true), toggle('supportingText', 'Supporting text'), toggle('submenu', 'Submenu')]),
+      ...section('Behavior', [toggle('closeOnSelect', 'Close on selection', true), toggle('disableDownload', 'Disable download')]),
+    ],
+    config: (state: ComponentState): MenuConfig => ({ opener: '#menu-trigger', variant: state.variant === 'baseline' ? 'baseline' : 'vertical', color: state.variant === 'vibrant' ? 'vibrant' : 'standard', position: pick(state, 'position', ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'], 'bottom-start'), dense: bool(state, 'dense'), closeOnSelect: bool(state, 'closeOnSelect'), items: [
+      { id: 'save', text: 'Save', ...(state.icons ? { icon: componentIcons.bookmark } : {}), ...(state.supportingText ? { supportingText: 'Keep for later' } : {}) },
+      { id: 'share', text: 'Share', ...(state.icons ? { icon: componentIcons.send } : {}), ...(state.submenu ? { hasSubmenu: true, submenu: [{ id: 'link', text: 'Copy link' }, { id: 'email', text: 'Email' }] } : {}) },
+      { type: state.variant === 'gap' ? 'gap' : 'divider' }, { id: 'download', text: 'Download', disabled: bool(state, 'disableDownload'), ...(state.icons ? { icon: componentIcons.download } : {}) },
+    ] }),
+  },
+  'top-app-bar': {
+    group: 'Navigation', name: 'Top app bar', factory: 'createTopAppBar', variable: 'topBar',
+    description: 'Give a view its title and actions. Explore bar sizes and the scrolled appearance.',
+    summary: 'A title, navigation, and contextual actions.', styles: ['top-app-bar', 'icon-button'],
+    controls: [
+      ...section('Appearance', [choose('type', 'Type', ['small', 'center', 'medium', 'large'], 'small', 'select'), toggle('scrolled', 'Scrolled state'), toggle('compressible', 'Compressible', true)]),
+      ...section('Content', [text('title', 'Title', 'My library'), toggle('leading', 'Navigation button', true), choose('actions', 'Action count', ['0', '1', '2'], '1')]),
+    ],
+    config: (state: ComponentState): TopAppBarConfig => ({ type: pick(state, 'type', ['small', 'center', 'medium', 'large'], 'small'), title: string(state, 'title'), compressible: bool(state, 'compressible'), scrollable: false }),
+  },
+  'bottom-app-bar': {
+    group: 'Navigation', name: 'Bottom app bar', factory: 'createBottomAppBar', variable: 'bottomBar',
+    description: 'Keep frequent actions within reach. Try a floating action button and different placements.',
+    summary: 'Frequent actions with an optional FAB.', styles: ['bottom-app-bar', 'icon-button', 'fab'],
+    controls: [
+      ...section('Layout', [toggle('hasFab', 'Show FAB', true), choose('fabPosition', 'FAB position', ['center', 'end'], 'end')]),
+      ...section('Content', [choose('actions', 'Action count', ['1', '2', '3'], '2'), text('fabLabel', 'FAB label', 'Compose')]),
+      ...section('Behavior', [toggle('visible', 'Visible', true)]),
+    ],
+    config: (state: ComponentState): BottomAppBarConfig => ({ hasFab: bool(state, 'hasFab'), fabPosition: pick(state, 'fabPosition', ['center', 'end'], 'end'), autoHide: false }),
+  },
 };
 export type ComponentSlug = keyof typeof components;
 export const componentSlugs = Object.keys(components) as ComponentSlug[];
@@ -329,6 +413,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     if (control.kind === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
     if (control.kind === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(String(state[control.key]))) state[control.key] = control.initial;
   }
+  if (['navigation-rail', 'drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
+  if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
   if (slug === 'slider') {
     const step = Number(state.step);
     state.value = String(Math.round(Number(state.value) / step) * step);
@@ -349,6 +435,7 @@ export function initialComponentState(slug: ComponentSlug): ComponentState {
   return normalizeComponentState(slug, Object.fromEntries(components[slug].controls.map(control => [control.key, control.initial])));
 }
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
+  if (components[slug].group === 'Navigation') return navigationCode(slug, state);
   const component = components[slug];
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const checkboxSetup = slug === 'checkbox'
@@ -368,4 +455,49 @@ export function componentCode(slug: ComponentSlug, state: ComponentState): strin
   return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : slug === 'datepicker' ? '// calendarObserver.disconnect();\n' : ''}// ${component.variable}.destroy();\n`;
+}
+
+function navigationCode(slug: ComponentSlug, state: ComponentState): string {
+  const component = components[slug];
+  const literal = (value: unknown) => JSON.stringify(value, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  const imports = [component.factory];
+  let before = '';
+  let after = '';
+  let cleanup = '';
+  if (slug === 'menu') {
+    imports.push('createButton');
+    before = `const trigger = createButton(${literal({ text: state.text, variant: 'tonal', ariaLabel: String(state.text).trim() || 'Open menu' })});\ntrigger.element.id = 'menu-trigger';\ndocument.body.append(trigger.element);\n\n`;
+    after = `menu.on('select', event => console.log(event.item.text));\n`;
+    cleanup = '// trigger.destroy();\n';
+  }
+  if (slug === 'drawer' || slug === 'navigation-rail') {
+    imports.push('createButton');
+    const method = slug === 'drawer' ? 'open' : 'expand';
+    after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n${component.variable}.on('select', event => console.log(event.id));\n`;
+    cleanup = '// trigger.destroy();\n';
+  }
+  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', 'Mailbox views');\n${!state.scrollable ? "// Keep fixed tabs in a horizontal row with the current stylesheet.\ntabs.element.style.flexDirection = 'row';\n" : ''}tabs.on('change', event => console.log(event.value));\n`;
+  if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
+    imports.push('createIconButton');
+    after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
+    cleanup = '// actions.forEach(button => button.destroy());\n';
+    if (slug === 'top-app-bar') {
+      if (state.leading) {
+        after += `const navigation = createIconButton(${literal({ icon: componentIcons.menu, ariaLabel: 'Open navigation' })});\ntopBar.addLeadingElement(navigation.element);\n`;
+        cleanup += '// navigation.destroy();\n';
+      }
+      after += `topBar.setScrollState(${state.scrolled});\n`;
+    } else {
+      if (state.hasFab) {
+        imports.push('createFab');
+        after += `const fab = createFab(${literal({ icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' })});\nbottomBar.addFab(fab.element);\n`;
+        cleanup += '// fab.destroy();\n';
+      }
+      if (!state.visible) after += 'bottomBar.hide();\n';
+    }
+  }
+  const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
+  return `import { ${imports.join(', ')} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+    `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
+    `${before}const ${component.variable} = ${component.factory}(${literal(component.config(state))});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;
 }

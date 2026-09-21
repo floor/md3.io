@@ -169,3 +169,6 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .component-card__visual--slider span { background: transparent; color: var(--accent-text); font: 28px var(--font-mono); }
 .component-card__visual--textfield span, .component-card__visual--select span { border-radius: 4px; background: transparent; border: 1px solid var(--accent-text); color: var(--accent-text); min-width: 180px; }
 .component-card__visual--datepicker span, .component-card__visual--timepicker span { border-radius: 12px; font-size: 28px; }
+.component-card__visual--navigation-rail span, .component-card__visual--drawer span, .component-card__visual--menu span { border-radius: 12px; line-height: 1.8; }
+.component-card__visual--tabs span { border-radius: 0; background: transparent; color: var(--accent-text); border-bottom: 2px solid var(--accent-text); }
+.component-card__visual--top-app-bar span, .component-card__visual--bottom-app-bar span { border-radius: 8px; min-width: 240px; }
