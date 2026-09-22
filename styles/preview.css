@@ -29,7 +29,7 @@ html:is([data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stag
 
 html:is([data-component="card"], [data-component="list"], [data-component="carousel"], [data-component="divider"], [data-component="dialog"], [data-component="bottom-sheet"], [data-component="side-sheet"]) #stage { width: 100%; min-width: 0; }
 #stage > .mtrl-card { width: min(100%, 340px); flex-shrink: 0; }
-#stage > .mtrl-list { width: min(100%, 400px); height: auto; min-height: 0; max-height: 100%; }
+#stage > .mtrl-list { width: min(100%, 560px); height: auto; min-height: 0; max-height: calc(100dvh - 64px); flex-shrink: 0; }
 html[data-component="carousel"] #stage { height: 100%; padding: 24px 0; }
 #stage > .mtrl-carousel { width: 100%; height: min(100%, 360px); }
 .mtrl-dialog:not(.mtrl-dialog--fullscreen) { max-width: calc(100vw - 32px); max-height: calc(100dvh - 24px); }

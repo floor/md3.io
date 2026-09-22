@@ -81,3 +81,27 @@ describe('preview configuration and generated code', () => {
     expect(code).toContain('extendedFab.lower();');
   });
 });
+
+
+describe('list anatomy playground', () => {
+  test('structural entries retain data IDs and copied code matches the configured anatomy', () => {
+    const state = normalizeComponentState('list', { ...initialComponentState('list'), lines: '3', leading: 'image', trailing: 'control', subheader: true, overline: true, dividers: 'inset', count: '5', selection: 'multi', fifth: true, disableLast: true });
+    const config = components.list.config(state);
+    expect(config.items.filter(item => item.kind === 'divider')).toHaveLength(4);
+    expect(config.items.filter(item => item.id).map(item => item.id)).toEqual(['1', '2', '3', '4', '5']);
+    expect(config.initialSelection).toEqual(['1', '5']);
+    expect(config.items.at(-1)?.disabled).toBe(true);
+    const code = componentCode('list', state);
+    const literal = code.split('const list = createList(')[1]!.split(');')[0]!;
+    expect(new Function(`return (${literal})`)()).toEqual(config);
+    expect(code).toContain("list.element.removeEventListener('click', onListAction)");
+    expect(code).toContain('Replace the demo image paths');
+  });
+  test('one-line examples omit text slots without losing their configured values', () => {
+    const state = normalizeComponentState('list', { ...initialComponentState('list'), lines: '1', overline: true, supportingText: 'Keep this for later' });
+    expect(components.list.config(state).items[0]?.supportingText).toBeUndefined();
+    expect(components.list.config(state).items[0]?.overline).toBeUndefined();
+    expect(state.supportingText).toBe('Keep this for later');
+    expect(state.hasSupporting).toBe(false);
+  });
+});

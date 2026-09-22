@@ -46,3 +46,5 @@ Fixed Tabs also apply a horizontal flex direction in both the preview and copied
 Card and Carousel use bundled SVG artwork in `assets/playground/`. Copied examples identify these demo image paths so they can be replaced with application assets. Dialog and sheet examples include their open buttons; Divider includes a sized container so both orientations and insets can be demonstrated.
 
 Communication previews cover the current library variants, including flat/wavy progress and determinate/indeterminate loading indicators. Badge and Tooltip examples include their target icon buttons, and Snackbar includes its show button and cleanup. Tooltip’s rich variant currently changes its surface styling; the library accepts plain text content.
+
+The List playground requires the full list anatomy API from mtrl PR #181 or newer. It uses typed text/media/control slots, structural dividers/subheaders, and native list actions. Selection stays synchronized with View code; the Save controls act independently of row selection.

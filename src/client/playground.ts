@@ -87,7 +87,7 @@ function update(send = true, reset = false) {
 form.addEventListener('input', event => {
   const target = event.target;
   if (slug === 'list' && state.selection === 'single' && target instanceof HTMLInputElement && target.checked && ['first', 'second', 'third', 'fourth', 'fifth'].includes(target.name)) {
-    for (const input of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) if (input !== target) input.checked = false;
+    for (const input of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) if (input !== target && ['first', 'second', 'third', 'fourth', 'fifth'].includes(input.name)) input.checked = false;
   }
   update();
 });

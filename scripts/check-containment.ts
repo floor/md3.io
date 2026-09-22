@@ -43,18 +43,52 @@ try {
       await frame.getByText('A little time outside').click();
       await page.locator('#playground-status').filter({ hasText: 'Card clicked' }).waitFor();
     } else if (slug === 'list') {
+      for (const [lines, height] of [['1', 56], ['2', 72], ['3', 88]] as const) {
+        await choose('lines', lines);
+        await frame.locator(`.mtrl-list__item[data-lines="${lines}"]`).first().waitFor();
+        assert(await frame.locator('.mtrl-list__item').first().evaluate(el => el.getBoundingClientRect().height) === height, `Wrong ${lines}-line height`);
+      }
+      for (const leading of ['none', 'icon', 'avatar', 'image', 'video']) {
+        await choose('leading', leading);
+        if (leading === 'none') await frame.locator('.mtrl-list__leading').waitFor({ state: 'hidden' });
+        else await frame.locator(`.mtrl-list__leading--${leading}`).first().waitFor();
+      }
+      await choose('leading', 'avatar');
+      await toggle('overline');
+      await frame.locator('.mtrl-list__overline').first().waitFor();
+      await toggle('subheader');
+      await frame.locator('.mtrl-list__subheader').waitFor();
+      await choose('dividers', 'inset');
+      await frame.locator('.mtrl-list__divider--inset').first().waitFor();
+      await choose('trailing', 'control');
+      await frame.getByRole('button', { name: 'Save Morning walk', exact: true }).click();
+      await page.locator('#playground-status').filter({ hasText: 'Saved: Morning walk' }).waitFor();
+      assert(await frame.getByRole('button', { name: 'Morning walk', exact: true }).getAttribute('aria-pressed') === 'true', 'Save changed selection');
       await toggle('third');
+      assert(await page.locator('#configuration [name="overline"]').isChecked() && await page.locator('#configuration [name="subheader"]').isChecked(), 'Selecting a row cleared anatomy toggles');
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="third"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration [name="first"]')?.checked);
-      await frame.locator('.mtrl-list-item--selected[data-id="3"]').waitFor();
-      await frame.getByText('Read a chapter', { exact: true }).click();
+      await frame.locator('.mtrl-list__item--selected[data-id="3"]').waitFor();
+      await frame.getByRole('button', { name: 'Read a chapter', exact: true }).click();
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="second"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration [name="first"]')?.checked);
       await choose('selection', 'multi');
-      await frame.getByText('Try a new recipe', { exact: true }).click();
+      await frame.getByRole('button', { name: 'Try a new recipe', exact: true }).click();
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="second"]')?.checked && document.querySelector<HTMLInputElement>('#configuration [name="third"]')?.checked);
       await choose('selection', 'none');
       await page.locator('#configuration [name="first"]:disabled').waitFor({ state: 'attached' });
       await frame.getByText('Morning walk', { exact: true }).click();
-      assert(await frame.locator('[aria-selected="true"]').count() === 0, 'Selection stayed active in non-selectable list');
+      assert(await frame.locator('[aria-pressed="true"]').count() === 0, 'Selection stayed active in non-selectable list');
+      await choose('selection', 'single');
+      await toggle('disableLast');
+      await frame.locator('[data-id="3"] .mtrl-list__action:disabled').waitFor();
+      await page.locator('.configuration-body').evaluate(el => { el.scrollTop = 0; });
+      await page.screenshot({ path: `${output}/list-anatomy-desktop.png`, fullPage: true, animations: 'disabled' });
+      await page.locator('.preview-appearance label:has(input[name="mode"][value="dark"])').click();
+      await frame.locator('html[data-theme-mode="dark"]').waitFor({ state: 'attached' });
+      await page.screenshot({ path: `${output}/list-anatomy-dark.png`, fullPage: true, animations: 'disabled' });
+      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      const configuredCode = await page.locator('#generated-code').textContent();
+      assert(configuredCode?.includes('headline:') && configuredCode.includes('supportingText:') && configuredCode.includes('overline:') && configuredCode.includes('onListAction') && configuredCode.includes('kind: "divider"'), 'Code is missing configured list anatomy');
+      await page.getByRole('tab', { name: 'Live preview' }).click();
     } else if (slug === 'carousel') {
       await frame.locator('.mtrl-carousel__item').first().press('ArrowRight');
       await valueIs('initialSlide', '1');

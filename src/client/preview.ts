@@ -105,9 +105,14 @@ function create(state: ComponentState) {
       control.on('select', () => queueMicrotask(() => {
         const selected = control.getSelectedItemIds();
         sync(Object.fromEntries(['first', 'second', 'third', 'fourth', 'fifth'].map((key, index) => [key, selected.includes(String(index + 1))])));
-        message(selected.length ? `Selected: ${control.getSelectedItems().map(item => item.text).join(', ')}` : 'Selection cleared');
+        message(selected.length ? `Selected: ${control.getSelectedItems().map(item => item.headline).join(', ')}` : 'Selection cleared');
       }));
-      return control;
+      const onAction = (event: MouseEvent) => {
+        const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-list-action]') : null;
+        if (target) message(`Saved: ${target.dataset.listAction}`);
+      };
+      control.element.addEventListener('click', onAction);
+      return { element: control.element, destroy: () => { control.element.removeEventListener('click', onAction); control.destroy(); } };
     }
     case 'carousel': {
       const control = createCarousel(components.carousel.config(state));

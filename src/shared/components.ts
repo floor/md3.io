@@ -4,7 +4,7 @@ import type { LoadingIndicatorConfig } from 'mtrl/components/loading-indicator';
 import type { SnackbarConfig } from 'mtrl/components/snackbar';
 import type { TooltipConfig } from 'mtrl/components/tooltip';
 import type { CardSchema } from 'mtrl/components/card';
-import type { ListConfig } from 'mtrl/components/list';
+import type { ListConfig, ListItem, ListSlot } from 'mtrl/components/list';
 import type { CarouselConfig } from 'mtrl/components/carousel';
 import type { DividerConfig } from 'mtrl/components/divider';
 import type { DialogConfig } from 'mtrl/components/dialog';
@@ -84,9 +84,35 @@ const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'I
 
 const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
 const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
-export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: componentIcons[icon], ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon], variant: 'standard' }));
+export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: componentIcons[icon], ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon] ?? icon, variant: 'standard' }));
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
+function listConfig(state: ComponentState): ListConfig<ListItem> {
+  const labels = (state.content === 'places'
+    ? ['Mountain trail', 'Botanical garden', 'City museum', 'Riverside park', 'Local market']
+    : ['Morning walk', 'Read a chapter', 'Try a new recipe', 'Call a friend', 'Plan a weekend']).slice(0, Number(state.count));
+  const items: ListItem[] = [];
+  if (state.subheader) items.push({ kind: 'subheader', headline: state.content === 'places' ? 'Places to explore' : 'Ideas for today' });
+  labels.forEach((headline, index) => {
+    if (index && state.dividers !== 'none') items.push({ kind: 'divider', ...(state.dividers === 'inset' ? { inset: true } : {}) });
+    let leading: ListSlot | undefined;
+    if (state.leading === 'icon') leading = { type: 'icon', content: componentIcons[['heart', 'bookmark', 'download'][index % 3]!]! };
+    if (state.leading === 'avatar') leading = { type: 'avatar', content: headline.split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase() };
+    if (state.leading === 'image' || state.leading === 'video') leading = { type: state.leading, content: `<img src="${landscape(index)}" alt="">` };
+    let trailing: ListSlot | undefined;
+    if (state.trailing === 'text') trailing = { type: 'text', content: `${(index + 1) * 5} min` };
+    if (state.trailing === 'icon') trailing = { type: 'icon', content: componentIcons.bookmark! };
+    if (state.trailing === 'control') trailing = { type: 'control', content: `<button type="button" data-list-action="${headline}" aria-label="Save ${headline}" style="color:inherit;font:inherit;min-width:48px;min-height:48px;background:transparent;border:0;cursor:pointer">Save</button>` };
+    items.push({ id: String(index + 1), headline, lines: Number(state.lines) as 1 | 2 | 3,
+      ...(state.lines !== '1' ? { supportingText: string(state, 'supportingText') } : {}),
+      ...(state.lines === '3' && state.overline ? { overline: state.content === 'places' ? 'Explore nearby' : 'Daily inspiration' } : {}),
+      ...(leading ? { leading } : {}), ...(trailing ? { trailing } : {}),
+      ...(state.disableLast && index === labels.length - 1 ? { disabled: true } : {}),
+    });
+  });
+  return { items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
+    initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < labels.length && state.selection !== 'none' ? [String(index + 1)] : []) };
+}
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -416,13 +442,14 @@ export const components = {
   },
   list: {
     group: 'Containment', name: 'List', factory: 'createList', variable: 'list',
-    description: 'Browse a set of items. Try single and multiple selection with different content.',
-    summary: 'A simple list with optional selection.', styles: ['list'],
+    description: 'Explore Material list anatomy. Configure text lines, media, supporting actions, and selection.',
+    summary: 'One, two, or three lines with flexible content slots.', styles: ['list'],
     controls: [
-      ...section('Content', [choose('content', 'Items', ['activities', 'places'], 'activities'), choose('count', 'Item count', ['3', '5'], '3'), text('ariaLabel', 'Accessible label', 'Ideas for today')]),
-      ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'single'), toggle('first', 'First selected', true, 'selectable'), toggle('second', 'Second selected', false, 'selectable'), toggle('third', 'Third selected', false, 'selectable'), toggle('fourth', 'Fourth selected', false, 'extraSelectable'), toggle('fifth', 'Fifth selected', false, 'extraSelectable')]),
+      ...section('Layout', [choose('lines', 'Text lines', ['1', '2', '3'], '2'), choose('leading', 'Leading', ['none', 'icon', 'avatar', 'image', 'video'], 'icon', 'select'), choose('trailing', 'Trailing', ['none', 'text', 'icon', 'control'], 'text', 'select'), choose('dividers', 'Dividers', ['none', 'full-width', 'inset'], 'none', 'select'), toggle('subheader', 'Subheader')]),
+      ...section('Content', [choose('content', 'Items', ['activities', 'places'], 'activities'), choose('count', 'Item count', ['3', '5'], '3'), { ...text('supportingText', 'Supporting text', 'Make a little time for yourself'), enabledWhen: 'hasSupporting' }, toggle('overline', 'Overline', false, 'threeLines'), text('ariaLabel', 'Accessible label', 'Ideas for today')]),
+      ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'single'), toggle('disableLast', 'Disable last item'), toggle('first', 'First selected', true, 'selectable'), toggle('second', 'Second selected', false, 'selectable'), toggle('third', 'Third selected', false, 'selectable'), toggle('fourth', 'Fourth selected', false, 'extraSelectable'), toggle('fifth', 'Fifth selected', false, 'extraSelectable')]),
     ],
-    config: (state: ComponentState): Omit<ListConfig<{ id: string; text: string }>, 'renderItem'> => ({ items: (state.content === 'places' ? ['Mountain trail', 'Botanical garden', 'City museum', 'Riverside park', 'Local market'] : ['Morning walk', 'Read a chapter', 'Try a new recipe', 'Call a friend', 'Plan a weekend']).slice(0, Number(state.count)).map((text, index) => ({ id: String(index + 1), text })), ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi', initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < Number(state.count) && state.selection !== 'none' ? [String(index + 1)] : []) }),
+    config: (state: ComponentState): ListConfig<ListItem> => listConfig(state),
   },
   carousel: {
     group: 'Containment', name: 'Carousel', factory: 'createCarousel', variable: 'carousel',
@@ -570,6 +597,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.linearDeterminate = state.linear && state.determinate;
   }
   if (slug === 'list') {
+    state.hasSupporting = state.lines !== '1';
+    state.threeLines = state.lines === '3';
     state.selectable = state.selection !== 'none';
     state.extraSelectable = state.selectable && state.count === '5';
     let selected = false;
@@ -699,6 +728,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
   let setup = '';
+  if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
   if (hasTrigger) setup = `const trigger = createButton({ text: 'Open ${component.name.toLowerCase()}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${slug === 'bottom-sheet' ? 'expand' : 'open'}());\ndocument.body.append(trigger.element);\n`;
   else {
     if (slug === 'divider') setup += `const container = document.createElement('div');\ncontainer.style.cssText = 'display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}';\ndivider.element.style.flex = '1';\ncontainer.append(divider.element);\ndocument.body.append(container);\n`;
@@ -707,5 +737,5 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   }
   return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `${slug === 'card' && state.media || slug === 'carousel' ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
+    `${slug === 'card' && state.media || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
 }
