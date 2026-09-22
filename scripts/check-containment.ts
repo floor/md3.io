@@ -149,7 +149,7 @@ try {
         }
         if ((slug === 'bottom-sheet' || slug === 'side-sheet') && key === 'variant') {
           await frame.getByRole('button', { name: `Open ${components[slug].name.toLowerCase()}` }).click();
-          const sheet = frame.locator(`.mtrl-${slug}-container`);
+          const sheet = frame.locator(`.mtrl-${slug}__container`);
           await sheet.waitFor();
           assert(await sheet.getAttribute('role') === (option === 'modal' ? 'dialog' : slug === 'bottom-sheet' ? 'region' : 'complementary'), 'Wrong sheet semantics');
           await page.screenshot({ path: `${output}/${slug}-${option}.png`, fullPage: true, animations: 'disabled' });

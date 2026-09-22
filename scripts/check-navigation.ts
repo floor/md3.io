@@ -119,9 +119,9 @@ try {
           await menu.waitFor();
           assert(await menu.evaluate(element => element.classList.contains('mtrl-menu--vertical')) === (option !== 'baseline'), `${option}: wrong menu layout`);
           assert(await menu.evaluate(element => element.classList.contains('mtrl-menu--vibrant')) === (option === 'vibrant'), `${option}: wrong menu color`);
-          assert(await menu.locator('.mtrl-menu-group').count() === (option === 'gap' ? 2 : 0), `${option}: wrong grouping`);
+          assert(await menu.locator('.mtrl-menu__group').count() === (option === 'gap' ? 2 : 0), `${option}: wrong grouping`);
           if (option === 'gap') {
-            const groups = menu.locator('.mtrl-menu-group');
+            const groups = menu.locator('.mtrl-menu__group');
             const first = await groups.nth(0).boundingBox();
             const second = await groups.nth(1).boundingBox();
             assert(first && second && second.y > first.y + first.height, 'Gap groups must have visible separation');

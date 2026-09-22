@@ -53,7 +53,7 @@ try {
 
   await choose('variant', 'outlined');
   await frame.locator('.mtrl-checkbox--outlined').waitFor();
-  assert(await frame.locator('.mtrl-checkbox-icon').evaluate(element => getComputedStyle(element).backgroundColor) === 'rgba(0, 0, 0, 0)', 'Outlined variant is not visually applied');
+  assert(await frame.locator('.mtrl-checkbox__icon').evaluate(element => getComputedStyle(element).backgroundColor) === 'rgba(0, 0, 0, 0)', 'Outlined variant is not visually applied');
   for (const state of ['indeterminate', 'unchecked', 'checked']) {
     await stateControl.selectOption(state);
     await assertState(state);
@@ -74,8 +74,8 @@ try {
 
   await choose('labelPosition', 'start');
   await frame.locator('.mtrl-checkbox--label-start').waitFor();
-  const labelBox = await frame.locator('.mtrl-checkbox-label').boundingBox();
-  const iconBox = await frame.locator('.mtrl-checkbox-icon').boundingBox();
+  const labelBox = await frame.locator('.mtrl-checkbox__label').boundingBox();
+  const iconBox = await frame.locator('.mtrl-checkbox__icon').boundingBox();
   assert(labelBox && iconBox && labelBox.x < iconBox.x, 'Start label is not before the checkbox');
   await page.getByLabel('Label', { exact: true }).fill('Receive updates');
   await frame.getByRole('checkbox', { name: 'Receive updates' }).waitFor();
