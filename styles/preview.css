@@ -8,11 +8,9 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 #stage > :is(.mtrl-switch, .mtrl-slider, .mtrl-textfield, .mtrl-select, .mtrl-search) { width: min(100%, 360px); min-width: 0; }
 #stage > :is(.mtrl-chips, .mtrl-radios) { max-width: 100%; }
 .mtrl-time-picker-dialog { min-width: 0; min-height: 0; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; }
-.mtrl-datepicker-calendar { max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; }
-/* Keep a docked calendar inside the isolated preview, including short frames. */
-.mtrl-datepicker-docked { position: relative; top: auto; width: fit-content; max-width: 100%; max-height: calc(100dvh - 112px); }
-.mtrl-datepicker-calendar:not(.mtrl-datepicker-docked) { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); margin-top: 0; height: auto; }
-#stage > .mtrl-datepicker-container { min-width: 0; }
+/* The docked calendar expands inside the isolated preview, including short frames. */
+.mtrl-datepicker--docked { position: relative; inset: auto; width: 100%; max-width: 100%; max-height: calc(100dvh - 156px); }
+#stage > .mtrl-datepicker { min-width: 0; }
 @media (max-width: 400px) { #stage { padding: 20px; } }
 
 #stage > .mtrl-chips { width: fit-content; }

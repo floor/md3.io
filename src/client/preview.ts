@@ -275,21 +275,14 @@ function create(state: ComponentState) {
     }
     case 'datepicker': {
       const control = createDatePicker(components.datepicker.config(state));
-      control.input.setAttribute('aria-label', String(state.label).trim() || 'Choose a date');
-      // The current calendar renderer emits disabled="false" on selectable days.
-      const syncCalendarButtons = () => control.element.querySelectorAll('button[disabled="false"]').forEach(button => button.removeAttribute('disabled'));
-      const calendarObserver = new MutationObserver(syncCalendarButtons);
-      calendarObserver.observe(control.element, { childList: true, subtree: true });
-      syncCalendarButtons();
       control.on('change', () => {
         const value = control.getValue();
-        if (value) sync(Array.isArray(value) ? { value: dateValue(value[0]), endDate: dateValue(value[1]) } : { value: dateValue(value) });
-        if (state.closeOnSelect && (!state.range || Array.isArray(value))) control.close();
-        message(`Selected: ${control.getFormattedValue()}`);
+        sync(value ? Array.isArray(value) ? { value: dateValue(value[0]), endDate: dateValue(value[1]) } : { value: dateValue(value), ...(state.range ? { endDate: '' } : {}) } : { value: '', endDate: '' });
+        message(value ? `Selected: ${control.getFormattedValue()}` : 'Selection cleared');
       });
       control.on('open', () => message('Calendar opened'));
       control.on('close', () => message('Calendar closed'));
-      return { element: control.element, destroy: () => { calendarObserver.disconnect(); control.destroy(); } };
+      return control;
     }
     case 'timepicker': {
       const control = createTimePicker(components.timepicker.config(state));

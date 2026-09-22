@@ -105,3 +105,15 @@ describe('list anatomy playground', () => {
     expect(state.hasSupporting).toBe(false);
   });
 });
+
+
+test('date picker clearing and partial ranges stay reproducible in View code', () => {
+  const empty = normalizeComponentState('datepicker', { ...initialComponentState('datepicker'), value: '', endDate: '' });
+  expect(empty.value).toBe('');
+  expect(components.datepicker.config(empty).value).toBeUndefined();
+  const partial = normalizeComponentState('datepicker', { ...empty, range: true, value: '2026-09-22' });
+  expect(components.datepicker.config(partial).value).toBe('2026-09-22');
+  const code = componentCode('datepicker', empty);
+  expect(code).toContain("import 'mtrl/styles/datepicker'");
+  expect(code).not.toContain('MutationObserver');
+});

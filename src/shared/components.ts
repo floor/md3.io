@@ -65,7 +65,6 @@ const toggle = (key: string, label: string, initial = false, enabledWhen?: strin
 const text = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'text' });
 const range = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'range', min: 0, max: 100, step: 1 });
 const date = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'date' });
-const localDate = (value: string | boolean | undefined) => `${value}T12:00:00`;
 const size = choose('size', 'Size', sizes, 's');
 const square = toggle('square', 'Square shape');
 const disabled = toggle('disabled', 'Disabled');
@@ -331,16 +330,16 @@ export const components = {
   },
   datepicker: {
     group: 'Selection & input', name: 'Date picker', factory: 'createDatePicker', variable: 'datePicker',
-    description: 'Choose a date or a range. Open the calendar to explore month, year, and modal views.',
-    summary: 'Dates and ranges from a calendar.', styles: ['full'],
+    description: 'Choose a date or enter one by keyboard. Explore calendar and input modes, ranges, and selection limits.',
+    summary: 'Calendar and keyboard entry for dates and ranges.', styles: ['datepicker'],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input'], 'docked', 'select'), choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day')]),
-      ...section('Content', [text('label', 'Accessible label', 'Choose a date'), date('value', 'Date', '2026-09-21'), { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'range' }, choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select')]),
-      ...section('Behavior', [toggle('range', 'Date range'), toggle('closeOnSelect', 'Close on selection', true), disabled]),
+      ...section('Content', [text('label', 'Label', 'Choose a date'), date('value', 'Date', '2026-09-21'), { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'range' }, choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select')]),
+      ...section('Behavior', [toggle('range', 'Date range'), toggle('closeOnSelect', 'Close on selection'), disabled, toggle('bounded', 'Limit dates'), { ...date('minDate', 'Earliest date', '2026-09-01'), enabledWhen: 'bounded' }, { ...date('maxDate', 'Latest date', '2026-10-31'), enabledWhen: 'bounded' }]),
     ],
     config: (state: ComponentState): DatePickerConfig => ({ variant: string(state, 'variant'), initialView: string(state, 'initialView'), selectionMode: bool(state, 'range') ? 'range' : 'single',
-      value: bool(state, 'range') ? [localDate(state.value), localDate(state.endDate)] : localDate(state.value), dateFormat: string(state, 'dateFormat'),
-      label: string(state, 'label'), closeOnSelect: bool(state, 'closeOnSelect'), disabled: bool(state, 'disabled') }),
+      ...(state.value ? { value: bool(state, 'range') && state.endDate ? [string(state, 'value'), string(state, 'endDate')] as [string, string] : string(state, 'value') } : {}), dateFormat: string(state, 'dateFormat'),
+      label: string(state, 'label'), closeOnSelect: bool(state, 'closeOnSelect'), disabled: bool(state, 'disabled'), ...(state.bounded ? { minDate: string(state, 'minDate'), maxDate: string(state, 'maxDate') } : {}) }),
   },
   timepicker: {
     group: 'Selection & input', name: 'Time picker', factory: 'createTimePicker', variable: 'timePicker',
@@ -584,7 +583,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
       const value = Number(state[control.key]);
       state[control.key] = String(Number.isFinite(value) ? Math.min(control.max!, Math.max(control.min!, value)) : control.initial);
     }
-    if (control.kind === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
+    if (control.kind === 'date' && !(slug === 'datepicker' && ['value', 'endDate'].includes(control.key) && state[control.key] === '') && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
     if (control.kind === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(String(state[control.key]))) state[control.key] = control.initial;
   }
   if (['navigation-rail', 'drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
@@ -617,7 +616,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     let selected = false;
     for (const key of ['hiking', 'music', 'food']) { const keep: boolean = !!state[key] && !selected; selected ||= keep; state[key] = keep; }
   }
-  if (slug === 'datepicker' && String(state.endDate) < String(state.value)) state.endDate = state.value!;
+  if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
   state.theme = themes.find(theme => theme === raw.theme) ?? 'baseline';
@@ -641,15 +640,12 @@ export function componentCode(slug: ComponentSlug, state: ComponentState): strin
     slug === 'radios' ? `radios.element.setAttribute('aria-label', 'Delivery method');\n` :
     slug === 'textfield' && !string(state, 'label').trim() ? `textfield.input.setAttribute('aria-label', 'Text field');\n` :
     slug === 'select' && !string(state, 'label').trim() ? `select.textfield.input.setAttribute('aria-label', 'Select an option');\n` :
-    slug === 'datepicker' ? `datePicker.input.setAttribute('aria-label', ${JSON.stringify(string(state, 'label').trim() || 'Choose a date')});\n` +
-      `// Compatibility with the current calendar renderer's boolean attributes.\nconst syncCalendarButtons = () => {\n  datePicker.element.querySelectorAll('button[disabled="false"]').forEach(button => button.removeAttribute('disabled'));\n};\nconst calendarObserver = new MutationObserver(syncCalendarButtons);\ncalendarObserver.observe(datePicker.element, { childList: true, subtree: true });\nsyncCalendarButtons();\n` +
-      (state.closeOnSelect ? `// Refresh calendar visibility after a completed selection.\ndatePicker.on('change', () => {\n  ${state.range ? 'if (Array.isArray(datePicker.getValue())) ' : ''}datePicker.close();\n});\n` : '') :
     slug === 'timepicker' ? `const openButton = createButton({ text: 'Choose time', variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.element.append(openButton.element);\n` : '');
   const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
   const styles = component.styles.includes('full') ? "import 'mtrl/styles';\n" : ["base", ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
   return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : slug === 'datepicker' ? '// calendarObserver.disconnect();\n' : ''}// ${component.variable}.destroy();\n`;
+    `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
 }
 
 function navigationCode(slug: ComponentSlug, state: ComponentState): string {

@@ -85,19 +85,34 @@ try {
       await frame.getByText('Paris', { exact: true }).click();
       await valueIs('value', 'Paris');
     } else if (slug === 'datepicker') {
-      await frame.locator('input').click();
+      await frame.locator('[data-action="open"]').click();
       await frame.getByRole('dialog').waitFor();
       assert(await calendarFits(), 'Docked calendar extends outside the preview');
       await page.screenshot({ path: `${output}/datepicker-open.png`, fullPage: true, animations: 'disabled' });
-      await frame.locator('.mtrl-datepicker-day:not(.outside-month):not(.disabled)').filter({ hasText: /^22$/ }).first().click();
+      await frame.locator('[data-date="2026-09-22"]').click();
       await valueIs('value', '2026-09-22');
-      await frame.getByRole('dialog').waitFor({ state: 'hidden' });
       await choose('variant', 'modal');
       await frame.locator('input').click();
       await frame.getByRole('dialog').waitFor();
       assert(await calendarFits(), 'Modal calendar extends outside the preview');
+      await frame.locator('[data-date="2026-09-23"]').click();
+      await valueIs('value', '2026-09-22');
+      await frame.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await valueIs('value', '2026-09-22');
+      await choose('variant', 'modal-input');
+      await frame.locator('[data-action="open"]').click();
+      await frame.locator('[data-entry="start"]').fill('02/30/2026');
+      assert(await frame.getByRole('button', { name: 'OK', exact: true }).isDisabled(), 'Invalid date could be confirmed');
+      await frame.locator('[data-entry="start"]').fill('09/24/2026');
+      await page.screenshot({ path: `${output}/datepicker-input.png`, fullPage: true, animations: 'disabled' });
+      await frame.getByRole('button', { name: 'OK', exact: true }).click();
+      await valueIs('value', '2026-09-24');
+      await frame.getByRole('dialog').waitFor({ state: 'hidden' });
       await reset();
       assert(await frame.getByRole('dialog').isVisible() === false, 'Reconfiguring date picker left a calendar open');
+      await frame.getByRole('textbox').fill('');
+      await frame.getByRole('textbox').press('Tab');
+      await valueIs('value', '');
     } else if (slug === 'timepicker') {
       await choose('type', 'input');
       await choose('format', '24h');
@@ -144,7 +159,7 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
     if (slug === 'datepicker') {
-      await frame.locator('input').click();
+      await frame.locator('[data-action="open"]').click();
       await frame.getByRole('dialog').waitFor();
       assert(await calendarFits(), 'Mobile calendar extends outside the preview');
       await page.screenshot({ path: `${output}/datepicker-mobile-open.png`, fullPage: true, animations: 'disabled' });

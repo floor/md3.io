@@ -39,7 +39,7 @@ The site includes a compact landing page, a component catalog, all six Actions p
 
 The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local mtrl dependency; deployment is not configured in this iteration.
 
-The Date picker preview and copied example include compatibility handling for the current mtrl build: selectable calendar buttons receive `disabled="false"`, and closing after selection needs an explicit visibility refresh. Its styles currently come from the full mtrl stylesheet because the package has no separate Date picker CSS export.
+The Date picker playground requires mtrl PR #182 or newer. It uses the selective Date picker stylesheet and the native calendar/input modes, with configurable date limits and modal confirmation by default. The preview and copied example use the component API directly.
 
 Fixed Tabs also apply a horizontal flex direction in both the preview and copied example to compensate for the current stylesheet's column direction. Navigation previews include application-owned triggers and actions with matching cleanup in their code examples. App bar scroll/visibility states are controlled directly from the configuration panel.
 
