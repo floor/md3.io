@@ -1,13 +1,13 @@
 export const variants = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
 export const sizes = ['xs', 's', 'm', 'l', 'xl'] as const;
 export const themes = ['baseline', 'ocean', 'forest', 'desert', 'sunset', 'spring', 'summer', 'autumn', 'winter', 'brownbeige', 'browngreen', 'sageivory', 'tealcaramel', 'material', 'legacy', 'highcontrast'] as const;
-const svg = (path: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+import { symbols } from './icons';
 export const icons = {
   none: '',
-  download: svg('<path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4"/>'),
-  bookmark: svg('<path d="M6 3h12v18l-6-4-6 4z"/>'),
-  send: svg('<path d="m22 2-7 20-4-9L2 9ZM22 2 11 13"/>'),
-  heart: svg('<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>'),
+  download: symbols.download,
+  bookmark: symbols.bookmark,
+  send: symbols.send,
+  heart: symbols.heart,
 };
 export interface ButtonState {
   variant: typeof variants[number];

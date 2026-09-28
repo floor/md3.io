@@ -32,18 +32,18 @@ import type { ButtonGroupConfig } from 'mtrl/components/button-group';
 import type { SplitButtonConfig } from 'mtrl/components/split-button';
 import type { FabConfig } from 'mtrl/components/fab';
 import type { ExtendedFabConfig } from 'mtrl/components/extended-fab';
+import { symbols } from './icons';
 import { buttonConfig, icons as buttonIcons, normalizeState, sizes, themes, variants } from './button';
 
-const svg = (path: string) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 export const componentIcons: Record<string, string> = {
   ...buttonIcons,
-  menu: svg('<path d="M4 6h16M4 12h16M4 18h16"/>'),
-  inbox: svg('<path d="M4 4h16v16H4Z M4 13h5l1 3h4l1-3h5"/>'),
-  add: svg('<path d="M12 5v14M5 12h14"/>'),
-  edit: svg('<path d="m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5"/>'),
-  bold: svg('<path d="M7 4h6a4 4 0 0 1 0 8H7V4Zm0 8h7a4 4 0 0 1 0 8H7v-8Z"/>'),
-  italic: svg('<path d="M10 4h10M4 20h10M15 4 9 20"/>'),
-  underline: svg('<path d="M6 3v7a6 6 0 0 0 12 0V3M4 21h16"/>'),
+  menu: symbols.menu,
+  inbox: symbols.inbox,
+  add: symbols.add,
+  edit: symbols.edit,
+  bold: symbols.bold,
+  italic: symbols.italic,
+  underline: symbols.underline,
 };
 export type ComponentState = Record<string, string | boolean>;
 export interface Control {

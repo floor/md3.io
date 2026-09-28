@@ -7,6 +7,7 @@
     "dev": "bun run build && bun --watch server.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
+    "icons": "bun scripts/icons.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
     "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts"
