@@ -270,7 +270,7 @@ export const components = {
     controls: [
       // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
       // avatar for input chips; selection for filter and input chips.
-      ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType')]),
+      ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType'), toggle('trailingMenu', 'Trailing menu', false, 'filterType'), toggle('draggable', 'Draggable')]),
       ...section('Content', [text('label', 'Group label', 'Interests')]),
       ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('selectionRequired', 'Selection required', false, 'selectable'), toggle('hiking', 'Hiking selected', true, 'selectable'), toggle('music', 'Music selected', false, 'selectable'), toggle('food', 'Food selected', false, 'selectable'), disabled]),
     ],
@@ -278,6 +278,7 @@ export const components = {
       chips: ['hiking', 'music', 'food'].map((value, index) => ({ value, label: ['Hiking', 'Music', 'Food'][index], type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], 'filter'),
         ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
         ...(state.selectable ? { selected: bool(state, value) } : {}), disabled: bool(state, 'disabled'),
+        ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
         ...(state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}) })) }),
   },
   slider: {
@@ -630,6 +631,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.selectable = state.type === 'filter' || state.type === 'input';
     state.elevatedAllowed = state.type !== 'input';
     state.inputType = state.type === 'input';
+    state.filterType = state.type === 'filter';
   }
   if (slug === 'chips' && !state.multiSelect) {
     let selected = false;
@@ -650,12 +652,18 @@ export function componentCode(slug: ComponentSlug, state: ComponentState): strin
   if (components[slug].group === 'Containment') return containmentCode(slug, state);
   if (components[slug].group === 'Communication') return communicationCode(slug, state);
   const component = components[slug];
-  const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  // A filter chip's trailing menu needs its handler, which JSON cannot carry.
+  const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
+    .replace(/^(\s*)trailingMenu: true/gm, '$1trailingMenu: true,\n$1onTrailingClick: (chip) => openMenu(chip)');
+  const chipsSetup = slug === 'chips'
+    ? `${state.filterType && state.trailingMenu ? "// Anchor an mtrl menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
+      `${state.draggable ? 'chips.getChips().forEach(chip => { chip.element.draggable = true; });\n' : ''}`
+    : '';
   const checkboxSetup = slug === 'checkbox'
     ? `${!string(state, 'label').trim() ? "checkbox.input.setAttribute('aria-label', 'Checkbox');\n" : ''}` +
       `// Clear mixed state for keyboard changes as well as clicks.\ncheckbox.on('change', () => checkbox.setIndeterminate(false));\n`
     : '';
-  const setup = checkboxSetup + (
+  const setup = checkboxSetup + chipsSetup + (
     slug === 'radios' ? `radios.element.setAttribute('aria-label', 'Delivery method');\n` :
     slug === 'textfield' && !string(state, 'label').trim() ? `textfield.input.setAttribute('aria-label', 'Text field');\n` :
     slug === 'select' && !string(state, 'label').trim() ? `select.textfield.input.setAttribute('aria-label', 'Select an option');\n` :

@@ -24,7 +24,7 @@ import createSelect from 'mtrl/components/select';
 import createSearch from 'mtrl/components/search';
 import createDatePicker from 'mtrl/components/datepicker';
 import createTimePicker from 'mtrl/components/timepicker';
-import { createChips } from 'mtrl/components/chips';
+import { createChips, type ChipComponent } from 'mtrl/components/chips';
 import createCheckbox from 'mtrl/components/checkbox';
 import createButton from 'mtrl/components/button';
 import createIconButton from 'mtrl/components/icon-button';
@@ -233,7 +233,11 @@ function create(state: ComponentState) {
       return control;
     }
     case 'chips': {
-      const control = createChips(components.chips.config(state));
+      const config = components.chips.config(state);
+      // The trailing menu's handler lives here: the shared config is data.
+      config.chips = config.chips?.map(chip => chip.trailingMenu ? { ...chip, onTrailingClick: (c: ChipComponent) => message(`Open the ${c.getLabel()} menu`) } : chip);
+      const control = createChips(config);
+      if (state.draggable) control.getChips().forEach(chip => { chip.element.draggable = true; });
       control.on('change', () => {
         const values = control.getSelectedValues();
         sync(Object.fromEntries(['hiking', 'music', 'food'].map(value => [value, values.includes(value)])));
