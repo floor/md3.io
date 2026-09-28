@@ -114,7 +114,7 @@ The Slider component provides the following methods:
 | `setColor(color)` | `color: 'primary' \| 'secondary' \| 'tertiary' \| 'error'` | `SliderComponent` | Sets the slider color |
 | `getColor()` | none | `string` | Gets the current slider color |
 | `setSize(size)` | `size: 'XS' \| 'S' \| 'M' \| 'L' \| 'XL' \| number` | `SliderComponent` | Sets the slider size |
-| `getSize()` | none | `string` | Gets the current slider size |
+| `getSize()` | none | `SliderSize` | Gets the size as it was set: a size name, or a track height in pixels |
 | `showTicks(show)` | `show: boolean` | `SliderComponent` | Shows or hides tick marks |
 | `showCurrentValue(show)` | `show: boolean` | `SliderComponent` | Shows or hides value bubble during interaction |
 
