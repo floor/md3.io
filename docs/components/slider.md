@@ -541,51 +541,25 @@ function announceToScreenReader(message) {
 
 ## Functional Composition
 
-The Slider component is built using functional composition, combining multiple features:
-
-### Core Features
-
-- **Base Component (`createBase`)**: Provides the foundation with component creation utilities.
-- **Event Handling (`withEvents`)**: Enables event listening and emission.
-- **Layout Structure (`withLayout`)**: Creates the declarative DOM structure definition.
-- **Icon Support (`withIcon`)**: Adds optional icon display capability.
-- **Label Support (`withLabel`)**: Adds optional label text capability.
-- **Range Support (`withRange`)**: Extends single slider to support range (two handles).
-- **DOM Creation (`withDom`)**: Materializes the structure definition into actual DOM elements.
-- **Canvas Rendering (`withCanvas`)**: High-performance canvas-based rendering for tracks and ticks.
-- **State Management (`withStates`)**: Manages appearance and disabled states.
-- **Controller (`withController`)**: Handles user interactions, value management, and UI updates.
-- **Lifecycle Management (`withLifecycle`)**: Handles component lifecycle including destruction and cleanup.
-- **Public API (`withAPI`)**: Exposes a clean, chainable API for users.
-
-### How Composition Works
-
-The slider component is created by "piping" these features together:
+The Slider is built by piping features onto a base component:
 
 ```javascript
 const slider = pipe(
-  createBase,                    // Start with base component
-  withEvents(),                  // Add event capability
-  withLayout(baseConfig),        // Define DOM structure
-  withIcon(baseConfig),          // Add icon support
-  withLabel(baseConfig),         // Add label support
-  withRange(baseConfig),         // Add range capability
-  withDom(),                     // Create actual DOM elements
-  withCanvas(baseConfig),        // Add canvas rendering
-  withStates(baseConfig),        // Add state management
-  withController(baseConfig),    // Add interaction handling
-  withLifecycle(),               // Add lifecycle management
-  comp => withAPI(config)(comp)  // Apply public API
-)(baseConfig);
+  createBase,                     // the base component
+  withEvents(),                   // event emitter
+  withElement(elementConfig),     // the root element and its classes
+  withRange(config),              // the second handle, for range sliders
+  withDom(config),                // container, handles and value indicators
+  withTextLabel(config),          // optional visible label
+  withIcon(config),               // optional icon beside the slider
+  withLifecycle(),                // destroy and cleanup
+  withStates(config),             // disabled state and appearance
+  withTracks(config),             // track, stops, ticks and inset icon
+  withController(config, get),    // values, keyboard, pointer and rendering
+)(config);
 ```
 
-This composition pattern allows for:
-- Modular, testable code
-- Clean separation of concerns
-- High-performance canvas rendering
-- Lightweight bundles (only include what you need)
-- Easy extension and customization
-- Smooth interactions without DOM manipulation overhead
+`withAPI` then wraps the result in the public API. The track is decorative DOM (`aria-hidden`); the handles are real elements with the slider role.
 
 ## Rendering and Motion
 
@@ -602,156 +576,82 @@ Per-slider colors can be overridden in CSS with `--mtrl-slider-color`, `--mtrl-s
 
 ## Accessibility
 
-The Slider component follows accessibility best practices:
-
-- Proper semantic HTML with ARIA attributes
-- `role="slider"` for screen reader compatibility
-- `aria-valuemin`, `aria-valuemax`, and `aria-valuenow` attributes
-- `aria-orientation="horizontal"` for proper screen reader behavior
-- `aria-disabled` when component is disabled
-- Full keyboard navigation support (Arrow keys, Home, End, Page Up/Down)
-- Focus management with visual indicators
-- Value announcements during interaction
+- Each handle is an element with `role="slider"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and `aria-valuetext` when a `valueFormatter` is set.
+- `aria-orientation` follows `orientation`.
+- On a range slider each handle's limit is the other handle: the first handle's `aria-valuemax` is the second value, and the second handle's `aria-valuemin` is the first.
+- `aria-disabled` and `tabindex="-1"` when disabled.
+- Focus narrows the handle and shows the value indicator.
 
 ### Keyboard Navigation
 
-The component provides comprehensive keyboard support:
-
 | Keys | Action |
 |------|--------|
-| `Arrow Left/Down` | Decrease value by one step |
-| `Arrow Right/Up` | Increase value by one step |
-| `Shift + Arrows` | Increase/decrease by 10x step size |
-| `Home` | Set to minimum value |
-| `End` | Set to maximum value |
-| `Page Up` | Increase by large increment (10 steps) |
-| `Page Down` | Decrease by large increment (10 steps) |
-| `Tab` | Move focus between handles (range sliders) |
+| Arrows along the track | One step in the direction of the track as drawn: `Right` raises, except in right-to-left layouts; `Up` raises on a vertical slider, except with `topToBottom` |
+| Arrows across the track | `Up` / `Right` raise, `Down` / `Left` lower |
+| `Shift` + arrows | Ten steps |
+| `Page Up` / `Page Down` | A tenth of the steps, between one and ten of them |
+| `Home` / `End` | The minimum / maximum, or the other handle on a range slider |
+| `Tab` | Moves between the handles of a range slider |
+
+Range handles never cross: keys, dragging and `setValue()` / `setSecondValue()` stop a handle at the other one.
 
 ### Screen Reader Support
 
-The component provides appropriate information to assistive technologies:
-
 ```html
-<!-- Single handle slider -->
-<div class="mtrl-slider" tabindex="-1">
-  <div role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42"
-       aria-orientation="horizontal" tabindex="0">
-    <!-- Canvas rendering -->
-  </div>
-</div>
-
-<!-- Range slider -->
-<div class="mtrl-slider mtrl-slider--range" tabindex="-1">
-  <div role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25"
-       aria-orientation="horizontal" tabindex="0" data-handle-index="0">
-    <!-- First handle -->
-  </div>
-  <div role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75"
-       aria-orientation="horizontal" tabindex="0" data-handle-index="1">
-    <!-- Second handle -->
+<div class="mtrl-slider mtrl-slider--range">
+  <div class="mtrl-slider__container">
+    <div class="mtrl-slider__visual" aria-hidden="true"><!-- track, stops, ticks --></div>
+    <div class="mtrl-slider__handle" role="slider" aria-valuemin="0" aria-valuemax="75"
+         aria-valuenow="25" aria-orientation="horizontal" tabindex="0"></div>
+    <div class="mtrl-slider__handle" role="slider" aria-valuemin="25" aria-valuemax="100"
+         aria-valuenow="75" aria-orientation="horizontal" tabindex="0"></div>
   </div>
 </div>
 ```
 
 ## CSS Customization
 
-The Slider component uses BEM-style CSS classes for easy customization:
+The slider's classes follow BEM:
 
 ```css
-/* Base slider styles */
-.mtrl-slider { /* ... */ }
+.mtrl-slider { }                    /* root */
+.mtrl-slider__label { }             /* visible label */
+.mtrl-slider__icon { }              /* icon beside the slider */
+.mtrl-slider__container { }         /* holds the track and the handles */
+.mtrl-slider__track { }             /* clips the outer corners */
+.mtrl-slider__segment { }           /* a piece of track; --active for the active one */
+.mtrl-slider__ticks { }             /* stops; --active on the active track */
+.mtrl-slider__dot { }               /* stop indicator at an end; --start at the start */
+.mtrl-slider__inset-icon { }        /* --inactive when on the inactive track */
+.mtrl-slider__handle { }            /* --focused while focused */
+.mtrl-slider__value { }             /* value indicator; --visible while shown */
 
-/* Slider container */
-.mtrl-slider-container { /* ... */ }
-
-/* Slider handle */
-.mtrl-slider-handle { /* ... */ }
-
-/* Value bubble */
-.mtrl-slider-value { /* ... */ }
-
-/* Slider states */
-.mtrl-slider--disabled { /* ... */ }
-.mtrl-slider--dragging { /* ... */ }
-.mtrl-slider--discrete { /* ... */ }  /* added when step marks are shown */
-
-/* Focus lands on a handle, so the focus class goes on the handle */
-.mtrl-slider-handle--focused { /* ... */ }
-
-/* Slider variants */
-.mtrl-slider--range { /* ... */ }
-.mtrl-slider--centered { /* ... */ }
-
-/* Size variants. The default size (XS) adds no class, so style the base
-   selector for it rather than .mtrl-slider--xs */
-.mtrl-slider--s { /* ... */ }
-.mtrl-slider--m { /* ... */ }
-.mtrl-slider--l { /* ... */ }
-.mtrl-slider--xl { /* ... */ }
-
-/* Color variants. The default colour (primary) adds no class, so style the
-   base selector for it rather than .mtrl-slider--primary */
-.mtrl-slider--secondary { /* ... */ }
-.mtrl-slider--tertiary { /* ... */ }
-.mtrl-slider--error { /* ... */ }
-
-/* Label and icon */
-.mtrl-slider-label { /* ... */ }
-.mtrl-slider-icon { /* ... */ }
-
-/* Canvas element */
-.mtrl-slider-canvas { /* ... */ }
+/* Modifiers on the root */
+.mtrl-slider--range, .mtrl-slider--centered, .mtrl-slider--vertical { }
+.mtrl-slider--s, .mtrl-slider--m, .mtrl-slider--l, .mtrl-slider--xl { }   /* XS adds none */
+.mtrl-slider--secondary, .mtrl-slider--tertiary, .mtrl-slider--error { }   /* primary adds none */
+.mtrl-slider--disabled, .mtrl-slider--discrete { }
+.mtrl-slider--dragging { }          /* while a handle is dragged */
+.mtrl-slider--settling { }          /* while a value change settles on its spring */
 ```
 
 ### CSS Custom Properties
 
-The component supports CSS custom properties for theming:
+Override the colors of one slider without a new theme:
 
 ```css
-:root {
-  --mtrl-primary: #6750A4;                    /* Active track and handle color */
-  --mtrl-primary-rgb: 103, 80, 164;          /* RGB values for alpha */
-  --mtrl-outline-variant: rgba(0,0,0,0.12);  /* Inactive track color */
-  --mtrl-on-surface: #1C1B1F;                /* Handle border and text */
-  --mtrl-surface: #FFFBFE;                   /* Value bubble background */
+.volume {
+  --mtrl-slider-color: #006a6a;            /* active track, handle, stops */
+  --mtrl-slider-container-color: #cce8e7;  /* inactive track, ticks on the active track */
+  --mtrl-slider-on-color: #ffffff;         /* ticks on the active track only */
 }
 ```
 
-## Performance Considerations
-
-The Slider component is designed for optimal performance:
-
-### Canvas Rendering Benefits
-- **No DOM Reflows**: Canvas updates don't trigger layout recalculations
-- **Hardware Acceleration**: GPU-accelerated rendering when available
-- **Efficient Interactions**: RequestAnimationFrame-based rendering
-- **Memory Efficient**: Single canvas element vs. multiple DOM track elements
-
-### Optimization Features
-- **Debounced Resize**: Smart resize handling to prevent excessive redraws
-- **Animation Cleanup**: Proper cleanup of animation loops to prevent memory leaks
-- **Pixel Ratio Awareness**: Automatic scaling for high-DPI displays
-- **Selective Redraws**: Only redraws when values actually change
-- **Event Throttling**: Efficient handling of high-frequency input events
-
-### Best Practices for Performance
-- Avoid creating many slider instances simultaneously
-- Use appropriate step sizes to prevent excessive value changes
-- Clean up components when no longer needed
-- Consider using `snapToSteps: false` for smoother real-time interactions
-- Debounce rapid value updates when connecting to external APIs
+The rest comes from the theme's color roles (`--mtrl-sys-color-*`).
 
 ## Browser Support
 
-The Slider component works in all modern browsers that support:
-- HTML5 Canvas API
-- CSS Custom Properties
-- ES6+ JavaScript features
-- Pointer Events or Mouse/Touch Events
-- RequestAnimationFrame API
-
-For older browsers, consider using polyfills or alternative solutions for environments that don't support these modern web standards.
+Any current browser with CSS custom properties, `ResizeObserver` and ES2020. The spring motion uses the CSS `linear()` easing function; where it is missing, the value change still happens, without the overshoot.
 
 ## Best Practices
 
@@ -794,24 +694,13 @@ For older browsers, consider using polyfills or alternative solutions for enviro
 
 ## Error Handling
 
-The Slider component includes robust error handling:
-
 ```javascript
-// Safe value setting with validation
-slider.setValue(150); // Automatically clamped to max value
-slider.setValue(-10); // Automatically clamped to min value
+slider.setValue(150); // clamped to max
+slider.setValue(-10); // clamped to min
 
-// Range validation for range sliders
-rangeSlider.setValue(80);      // First handle
-rangeSlider.setSecondValue(60); // Automatically maintains proper order
-
-// Component handles canvas initialization gracefully
-const slider = createSlider({
-  size: 'M',
-  value: 50
-});
-
-// Component will retry canvas initialization if needed
+// Range handles never cross: each stops at the other
+rangeSlider.setSecondValue(60);
+rangeSlider.setValue(80);  // stays at 60
 ```
 
 ## TypeScript Support
@@ -837,19 +726,21 @@ slider.setSize('L'); // TypeScript will validate size options
 
 ## Migration Guide
 
-If you're migrating from DOM-based track rendering to the new canvas-based system:
+The Material 3 update (mtrl #190, #193) changes how the slider looks and moves; the API only grew.
 
 ### What Changed
-- Track segments are now rendered on canvas instead of DOM elements
-- Tick marks are canvas-rendered for better performance
-- Handle and value bubble positioning is more precise
-- Animation performance is significantly improved
+- Colors follow M3: the inactive track takes the container color (`secondary-container` for primary) instead of the primary color at low opacity.
+- The handle keeps a 6px gap from the track, narrows to 2px when pressed or focused, and has no outline ring.
+- Centered and range sliders carry a stop indicator at each end.
+- The value indicator uses the inverse surface and grows out of the handle.
+- A tap, a key or `setValue()` settles on a spring; the first render and a drag no longer animate.
+- Range handles stop at each other instead of swapping; `Page Up` / `Page Down` move a tenth of the steps.
+- Right-to-left layouts are supported.
 
-### What Stayed the Same
-- All public API methods remain unchanged
-- Event system works exactly the same
-- Accessibility features are preserved and enhanced
-- Configuration options are backward compatible
+### What Is New
+- `orientation: 'vertical'` and `topToBottom`
+- `insetIcon`, `insetIconAtMin` and `setInsetIcon()`
+- `--mtrl-slider-container-color`
 
 ### Updating Your Code
-No code changes are required for basic usage. Advanced customizations that relied on DOM track elements should be updated to use CSS custom properties or canvas-based styling options.
+No code changes are needed. Styles that targeted the old unprefixed element classes (`.mtrl-slider-handle`, `.mtrl-slider-value`) should use the BEM ones above.
