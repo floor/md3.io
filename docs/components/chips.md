@@ -176,12 +176,14 @@ const actions = ['Directions', 'Call', 'Share'].map(label => createAssistChip({ 
 
 ## Accessibility
 
-- A set is a `group`, named by its visible label through `aria-labelledby`.
-- Filter and input chips are `role="checkbox"` with `aria-checked`; assist and suggestion chips are plain buttons.
-- Space and Enter activate the focused chip. In a set, the arrow keys move between chips (left and right, or up and down when `vertical`), following the reading direction in right-to-left layouts; they also work from a remove button.
+- A set follows the web roles of the m3.material.io chips accessibility page: a `grid` named by its visible label through `aria-labelledby`, a `row`, and a `gridcell` for each chip. `aria-multiselectable` tells whether several chips can be selected.
+- The set is one Tab stop. The arrow keys move between chips (left and right, or up and down when `vertical`), following the reading direction in right-to-left layouts; Home and End go to the first and last chip.
+- A chip with one action is its cell: the cell takes focus and carries `aria-selected`, and Space or Enter activates it. A chip with two actions, an input chip with its remove button or a filter chip with its trailing button, keeps two native buttons inside its cell, and the arrows reach both.
+- A chip on its own keeps its native button: filter and input chips are `role="checkbox"` with `aria-checked`, assist and suggestion chips are plain buttons.
 - Backspace or Delete removes a focused input chip, and focus moves to the chip that took its place, or the previous one when it was the last.
 - An input chip's remove button is named "Remove {label}", or `removeLabel`.
-- Chips and remove buttons have 48px touch targets; the focus layer shows for keyboard focus only.
+- Chips and remove buttons have 48px touch targets. Keyboard focus draws Material's 3px focus ring, 2px outside the chip, and the focus layer shows for keyboard focus only.
+- The ripple is the press: it draws the pressed layer (0.10), as in Compose.
 
 ## Styling
 
