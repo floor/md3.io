@@ -224,8 +224,10 @@ export const components = {
     styles: ['checkbox'],
     controls: [
       ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
-      ...section('Content', [text('label', 'Label', 'Remember me'), text('name', 'Name', 'remember'), text('value', 'Value', 'on')]),
-      ...section('Behavior', [choose('state', 'State', ['unchecked', 'checked', 'indeterminate'], 'unchecked', 'select'), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
+      // The m3.material.io checkbox guidelines' parent and children: the label names
+      // the parent, the children are the guideline's own. FLO-269.
+      ...section('Content', [toggle('family', 'Parent and children', true), text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), text('value', 'Value', 'on')]),
+      ...section('Behavior', [choose('state', 'State', ['unchecked', 'checked', 'indeterminate'], 'indeterminate', 'select'), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
     ],
     config: (state: ComponentState): CheckboxConfig => ({
       label: string(state, 'label'), name: string(state, 'name'), value: string(state, 'value') || 'on',
@@ -662,9 +664,9 @@ export function componentCode(slug: ComponentSlug, state: ComponentState): strin
     ? `${state.filterType && state.trailingMenu ? "// Anchor an mtrl menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
       `${state.draggable ? 'chips.getChips().forEach(chip => { chip.element.draggable = true; });\n' : ''}`
     : '';
-  const checkboxSetup = slug === 'checkbox'
-    ? `${!string(state, 'label').trim() ? "checkbox.input.setAttribute('aria-label', 'Checkbox');\n" : ''}` +
-      `// Clear mixed state for keyboard changes as well as clicks.\ncheckbox.on('change', () => checkbox.setIndeterminate(false));\n`
+  if (slug === 'checkbox' && state.family === true) return checkboxFamilyCode(state);
+  const checkboxSetup = slug === 'checkbox' && !string(state, 'label').trim()
+    ? "checkbox.input.setAttribute('aria-label', 'Checkbox');\n"
     : '';
   const setup = checkboxSetup + chipsSetup + (
     slug === 'radios' ? `radios.element.setAttribute('aria-label', 'Delivery method');\n` :
@@ -676,6 +678,38 @@ export function componentCode(slug: ComponentSlug, state: ComponentState): strin
   return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
+}
+
+/** The children of the checkbox playground's parent, from the m3.material.io guidelines. */
+export const checkboxChildren = [
+  { label: 'Pickles', value: 'pickles' }, { label: 'Tomato', value: 'tomato' },
+  { label: 'Lettuce', value: 'lettuce' }, { label: 'Cheese', value: 'cheese' },
+] as const;
+
+/** Whether a child starts checked: all when the parent is, Tomato alone when it is mixed. */
+export const checkboxChildChecked = (state: ComponentState, value: string): boolean =>
+  state.state === 'checked' || (state.state === 'indeterminate' && value === 'tomato');
+
+function checkboxFamilyCode(state: ComponentState): string {
+  // The options every box shares, as the playground sets them.
+  const rest = `${state.labelPosition === 'start' ? ", labelPosition: 'start'" : ''}${bool(state, 'error') ? ', error: true' : ''}` +
+    `${bool(state, 'required') ? ', required: true' : ''}${bool(state, 'disabled') ? ', disabled: true' : ''}`;
+  const children = checkboxChildren.map(child => `  { label: '${child.label}', value: '${child.value}'${checkboxChildChecked(state, child.value) ? ', checked: true' : ''} }`).join(',\n');
+  const theme = state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`;
+  return `import { createCheckbox } from 'mtrl';\nimport 'mtrl/styles/base';\nimport 'mtrl/styles/checkbox';\n${theme}\n` +
+    `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
+    `// A parent over its children (m3.material.io checkbox guidelines): checking the\n// parent checks every child, and a mix makes it indeterminate.\n` +
+    `const children = [\n${children}\n].map(child => createCheckbox({ ...child, name: '${string(state, 'name') || 'additions'}'${rest} }));\n` +
+    `const parent = createCheckbox({ label: '${string(state, 'label') || 'Additions'}'${state.state === 'checked' ? ', checked: true' : state.state === 'indeterminate' ? ', indeterminate: true' : ''}${rest} });\n` +
+    `parent.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));\n\n` +
+    `const reflect = () => {\n  const on = children.filter(child => child.isChecked()).length;\n` +
+    `  if (on === children.length) parent.check();\n  else if (on === 0) parent.uncheck();\n  else { parent.uncheck(); parent.setIndeterminate(true); }\n};\n` +
+    `// Only user changes: check() and uncheck() emit change too, without nativeEvent.\n` +
+    `parent.on('change', ({ checked, nativeEvent }) => {\n  if (nativeEvent) children.forEach(child => (checked ? child.check() : child.uncheck()));\n});\n` +
+    `children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));\n\n` +
+    `const group = document.createElement('div');\nconst list = document.createElement('div');\nlist.style.paddingInlineStart = '24px';\n` +
+    `list.append(...children.map(child => child.element));\ngroup.append(parent.element, list);\ndocument.body.append(group);\n\n` +
+    `// When the view is removed:\n// parent.destroy(); children.forEach(child => child.destroy());\n`;
 }
 
 function navigationCode(slug: ComponentSlug, state: ComponentState): string {

@@ -57,21 +57,31 @@ document.querySelector('form').append(terms.element);
 
 ## Examples
 
-### Select all
+### A parent and its children
+
+The m3.material.io checkbox guidelines: checking the parent checks every child, unchecking it unchecks them, and a mix makes it indeterminate. Checking an indeterminate parent checks every child.
 
 ```javascript
-const all = createCheckbox({ label: 'All toppings' });
-const items = toppings.map(label => createCheckbox({ label }));
+const children = ['Pickles', 'Tomato', 'Lettuce', 'Cheese']
+  .map(label => createCheckbox({ label, name: 'additions', value: label.toLowerCase() }));
+const parent = createCheckbox({ label: 'Additions' });
+parent.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));
 
-const sync = () => {
-  const on = items.filter(item => item.isChecked()).length;
-  if (on === 0) all.uncheck();
-  else if (on === items.length) all.check();
-  else all.setIndeterminate(true);
+const reflect = () => {
+  const on = children.filter(child => child.isChecked()).length;
+  if (on === children.length) parent.check();
+  else if (on === 0) parent.uncheck();
+  else { parent.uncheck(); parent.setIndeterminate(true); }
 };
-items.forEach(item => item.on('change', sync));
-all.on('change', ({ checked }) => items.forEach(item => checked ? item.check() : item.uncheck()));
+
+// Only user changes: check() and uncheck() emit change too, without nativeEvent.
+parent.on('change', ({ checked, nativeEvent }) => {
+  if (nativeEvent) children.forEach(child => (checked ? child.check() : child.uncheck()));
+});
+children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
 ```
+
+Indent the children under the parent, and leave the parent unchecked while it is indeterminate, so a click checks everything.
 
 ### A required checkbox in error
 

@@ -114,7 +114,7 @@ window.addEventListener('message', event => {
     const selected = form.querySelector<HTMLInputElement>('[name="selected"]');
     if (selected) { selected.checked = event.data.selected; update(false); }
   }
-  if (event.data?.type === 'md3:checkbox' && slug === 'checkbox' && ['checked', 'unchecked'].includes(event.data.state)) {
+  if (event.data?.type === 'md3:checkbox' && slug === 'checkbox' && ['checked', 'unchecked', 'indeterminate'].includes(event.data.state)) {
     const control = form.querySelector<HTMLSelectElement>('[name="state"]')!;
     control.value = event.data.state;
     update(false);

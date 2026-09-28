@@ -32,7 +32,7 @@ import createButtonGroup from 'mtrl/components/button-group';
 import createSplitButton from 'mtrl/components/split-button';
 import createFab from 'mtrl/components/fab';
 import createExtendedFab from 'mtrl/components/extended-fab';
-import { appBarActions, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { appBarActions, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -309,16 +309,50 @@ function create(state: ComponentState) {
       return { element: control.element, destroy: () => { trigger.destroy(); control.destroy(); } };
     }
     case 'checkbox': {
-      const checkbox = createCheckbox(components.checkbox.config(state));
-      if (!String(state.label).trim()) checkbox.input.setAttribute('aria-label', 'Checkbox');
-      checkbox.on('change', () => {
-        checkbox.setIndeterminate(false);
-        const nextState = checkbox.isChecked() ? 'checked' : 'unchecked';
+      const report = (nextState: string) => {
         if (current) current.state = nextState;
         post({ type: 'md3:checkbox', state: nextState });
-        message(`Checkbox ${nextState}`);
+      };
+      if (state.family !== true) {
+        const checkbox = createCheckbox(components.checkbox.config(state));
+        if (!String(state.label).trim()) checkbox.input.setAttribute('aria-label', 'Checkbox');
+        checkbox.on('change', () => {
+          const nextState = checkbox.isChecked() ? 'checked' : 'unchecked';
+          report(nextState);
+          message(`Checkbox ${nextState}`);
+        });
+        return checkbox;
+      }
+      // The m3.material.io checkbox guidelines' parent and children (FLO-269):
+      // checking the parent checks every child, unchecking it unchecks them, and a mix
+      // makes it indeterminate; checking an indeterminate parent checks them all.
+      const { label, value: _value, checked: _checked, indeterminate: _indeterminate, name, ...common } = components.checkbox.config(state);
+      const children = checkboxChildren.map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
+      const parentBox = createCheckbox({ ...common, label: label || 'Additions', checked: state.state === 'checked', indeterminate: state.state === 'indeterminate' });
+      parentBox.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));
+      const reflect = () => {
+        const on = children.filter(child => child.isChecked()).length;
+        // uncheck() first: a mixed parent must not also be checked, or a click would uncheck it.
+        if (on === children.length) parentBox.check();
+        else if (on === 0) parentBox.uncheck();
+        else { parentBox.uncheck(); parentBox.setIndeterminate(true); }
+        const nextState = on === children.length ? 'checked' : on === 0 ? 'unchecked' : 'indeterminate';
+        report(nextState);
+        message(on === 0 ? 'No additions' : `${on} of ${children.length} additions`);
+      };
+      // Only user changes: check() and uncheck() emit change as well, without nativeEvent.
+      parentBox.on('change', ({ checked, nativeEvent }) => {
+        if (!nativeEvent) return;
+        children.forEach(child => (checked ? child.check() : child.uncheck()));
+        reflect();
       });
-      return checkbox;
+      children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
+      const host = document.createElement('div');
+      const list = document.createElement('div');
+      list.style.paddingInlineStart = '24px';
+      list.append(...children.map(child => child.element));
+      host.append(parentBox.element, list);
+      return { element: host, destroy: () => { parentBox.destroy(); children.forEach(child => child.destroy()); } };
     }
     case 'button': {
       const button = createButton(components.button.config(state));
