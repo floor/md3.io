@@ -707,7 +707,9 @@ function checkboxFamilyCode(state: ComponentState): string {
     `// Only user changes: check() and uncheck() emit change too, without nativeEvent.\n` +
     `parent.on('change', ({ checked, nativeEvent }) => {\n  if (nativeEvent) children.forEach(child => (checked ? child.check() : child.uncheck()));\n});\n` +
     `children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));\n\n` +
-    `const group = document.createElement('div');\nconst list = document.createElement('div');\nlist.style.paddingInlineStart = '24px';\n` +
+    `// A checkbox is inline-flex: stack the children in a column, indented under the parent.\n` +
+    `const group = document.createElement('div');\ngroup.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start';\n` +
+    `const list = document.createElement('div');\nlist.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; padding-inline-start: 24px';\n` +
     `list.append(...children.map(child => child.element));\ngroup.append(parent.element, list);\ndocument.body.append(group);\n\n` +
     `// When the view is removed:\n// parent.destroy(); children.forEach(child => child.destroy());\n`;
 }

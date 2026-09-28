@@ -347,9 +347,11 @@ function create(state: ComponentState) {
         reflect();
       });
       children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
+      // A checkbox is inline-flex: the children stack in a column, indented under the parent.
       const host = document.createElement('div');
+      host.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start';
       const list = document.createElement('div');
-      list.style.paddingInlineStart = '24px';
+      list.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;padding-inline-start:24px';
       list.append(...children.map(child => child.element));
       host.append(parentBox.element, list);
       return { element: host, destroy: () => { parentBox.destroy(); children.forEach(child => child.destroy()); } };

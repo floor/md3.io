@@ -81,7 +81,19 @@ parent.on('change', ({ checked, nativeEvent }) => {
 children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
 ```
 
-Indent the children under the parent, and leave the parent unchecked while it is indeterminate, so a click checks everything.
+```javascript
+// A checkbox is inline-flex: stack the parent and children in columns, the children
+// indented under the parent.
+const group = document.createElement('div');
+group.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start';
+const list = document.createElement('div');
+list.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; padding-inline-start: 24px';
+list.append(...children.map(child => child.element));
+group.append(parent.element, list);
+document.querySelector('form').append(group);
+```
+
+Leave the parent unchecked while it is indeterminate, as `reflect` does, so a click on it checks everything.
 
 ### A required checkbox in error
 
