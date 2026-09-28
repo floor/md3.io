@@ -1,11 +1,6 @@
-# Checkbox
+# Checkbox Component
 
-A checkbox lets someone select any number of items from a set, or turn a single
-option on or off. Reach for it when the choice is one of several that are
-submitted together — a form, a filter panel, a list of permissions. If the
-choice takes effect the moment it is made, a [Switch](switch.md) says that
-better. The checkbox also carries a third, indeterminate state for the "select
-all" row above a partially selected list.
+Checkboxes let users select one or more items from a list, or turn a single item on or off in a form that is saved later. A checkbox can be selected, unselected or indeterminate (a parent whose children are partly selected), each of them also in error.
 
 ## Import
 
@@ -13,275 +8,112 @@ all" row above a partially selected list.
 import { createCheckbox } from 'mtrl';
 ```
 
-To pull in only this component, import it directly instead: `import createCheckbox from 'mtrl/components/checkbox'`.
-
 ## Basic Usage
 
 ```javascript
-const terms = createCheckbox({
-  label: 'Accept terms and conditions',
-  name: 'accept-terms'
-});
-
-document.querySelector('.form').appendChild(terms.element);
-
-terms.on('change', () => {
-  console.log('accepted:', terms.isChecked());
-});
+const terms = createCheckbox({ label: 'I accept the terms', name: 'terms' });
+terms.on('change', ({ checked }) => submit.disabled = !checked);
+document.querySelector('form').append(terms.element);
 ```
 
 ## Configuration
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `label` | `string` | — | Label text rendered next to the control. Also becomes the input's `aria-label` |
-| `name` | `string` | — | Input `name` attribute, used for form submission |
-| `value` | `string` | `'on'` | Input `value` attribute, used for form submission |
-| `checked` | `boolean` | `false` | Initial checked state |
-| `indeterminate` | `boolean` | `false` | Sets `input.indeterminate`, which screen readers announce as "mixed". It does **not** add the `--indeterminate` class, so the box is painted unchecked until you call `setIndeterminate(true)` |
-| `required` | `boolean` | `false` | Marks the input required for native form validation |
-| `disabled` | `boolean` | `false` | Renders the checkbox non-interactive |
-| `variant` | `'filled' \| 'outlined'` | `'filled'` | Accepted by the config type; **inert**. Nothing in the composition pipe reads it, so `mtrl-checkbox--outlined` is never applied and `outlined` renders exactly like `filled`. Add the class yourself if you want the outlined styling |
-| `labelPosition` | `'start' \| 'end'` | `'end'` | Whether the label sits before or after the box |
-| `class` | `string` | — | Extra CSS classes on the root element |
-| `prefix` | `string` | `'mtrl'` | Class-name prefix |
-| `componentName` | `string` | `'checkbox'` | Component name used in class generation |
+| `label` | `string` | `undefined` | The label, which names the checkbox; a click on it toggles too |
+| `labelPosition` | `'start' \| 'end'` | `'end'` | Which side of the box the label sits on, in the reading direction |
+| `checked` | `boolean` | `false` | Whether it starts selected |
+| `indeterminate` | `boolean` | `false` | Whether it starts indeterminate |
+| `error` | `boolean` | `false` | The error state: error outline, container and state layers, and `aria-invalid` |
+| `disabled` | `boolean` | `false` | Whether it starts disabled |
+| `name` | `string` | `undefined` | The input's name, for forms |
+| `value` | `string` | `'on'` | The value submitted when selected |
+| `required` | `boolean` | `false` | Whether the form requires it selected |
+| `ariaLabel` | `string` | `undefined` | Accessible name when there is no visible label |
+| `class` | `string` | `undefined` | Additional CSS classes |
 
-`variant` and `labelPosition` have constants exported alongside the factory, so
-you do not have to spell the strings: `CHECKBOX_VARIANTS.OUTLINED`,
-`CHECKBOX_LABEL_POSITION.START`. Constants are **not** re-exported from the
-package root — import them from the component:
-`import { CHECKBOX_VARIANTS } from 'mtrl/components/checkbox'`.
+`variant` is deprecated and has no effect: Material 3 has one checkbox.
 
 ## Component API
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `element` | `HTMLElement` | The root container |
-| `input` | `HTMLInputElement` | The native `<input type="checkbox">` |
-
-### Value
-
-`getValue()` returns the *checked state*, not the `value` attribute — that is
-what a form binding almost always wants. The attribute has its own pair of
-accessors for the rare case you need it.
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getValue()` | none | `boolean` | Whether the checkbox is checked |
-| `setValue(value)` | `value: boolean \| string` | `CheckboxComponent` | Checks or unchecks. Strings `"true"` and `"1"` check, anything else unchecks |
-| `getValueAttribute()` | none | `string` | The input's `value` attribute |
-| `setValueAttribute(value)` | `value: string` | `CheckboxComponent` | Sets the input's `value` attribute |
-
-### State
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `check()` | none | `CheckboxComponent` | Checks the box |
-| `uncheck()` | none | `CheckboxComponent` | Unchecks the box |
-| `toggle()` | none | `CheckboxComponent` | Flips the checked state |
-| `isChecked()` | none | `boolean` | Current checked state |
-| `setIndeterminate(state)` | `state: boolean` | `CheckboxComponent` | Sets or clears the mixed state |
-| `enable()` | none | `CheckboxComponent` | Makes the checkbox interactive |
-| `disable()` | none | `CheckboxComponent` | Makes the checkbox non-interactive |
-
-### Label, events and lifecycle
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `setLabel(text)` | `text: string` | `CheckboxComponent` | Replaces the label text |
-| `getLabel()` | none | `string` | Current label text |
-| `on(event, handler)` | `event: string, handler: Function` | `CheckboxComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `CheckboxComponent` | Removes an event listener |
-| `destroy()` | none | `void` | Tears the component down and releases listeners |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `check()` / `uncheck()` / `toggle()` | `CheckboxComponent` | Changes the state, clears indeterminate and emits `change` |
+| `isChecked()` | `boolean` | Whether it is selected |
+| `setIndeterminate(state)` | `CheckboxComponent` | Sets or clears the indeterminate state |
+| `setError(error)` | `CheckboxComponent` | Sets or clears the error state |
+| `getValue()` / `setValue(value)` | `boolean` / `CheckboxComponent` | The selected state; `'true'` and `'1'` read as selected |
+| `getValueAttribute()` / `setValueAttribute(value)` | `string` / `CheckboxComponent` | The input's `value` attribute |
+| `setLabel(text)` / `getLabel()` | `CheckboxComponent` / `string` | The label |
+| `enable()` / `disable()` | `CheckboxComponent` | Disabled state |
+| `on(event, handler)` / `off(event, handler)` | `CheckboxComponent` | Events: `change` |
+| `destroy()` | `void` | Removes the checkbox |
 
 ## Events
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `change` | `{ checked, value, nativeEvent }` from a click or keypress; `{ checked, value }` from a programmatic change | The checked state changed |
-
-`change` is the only event the component emits. For anything else — `focus`,
-`blur`, `click` — listen on `checkbox.input` directly.
-
-**Setting the state in code fires `change` too.** `check()` and `uncheck()`
-emit it when the state actually changes, `toggle()` always emits, and
-`setValue()` emits through them; only `nativeEvent` is missing from the
-payload, so `data.nativeEvent === undefined` is how you tell a programmatic
-change from a user one. Nothing is dispatched on the native input, so a
-listener added with `checkbox.input.addEventListener('change', …)` does *not*
-see these. A handler that writes back into the checkbox needs a guard.
+| `change` | `{ checked, value, nativeEvent? }` | The state changed. `nativeEvent` is present when the user toggled it, absent for the methods |
 
 ## Examples
 
-### A row of checkboxes
-
-The showcase builds exactly this set:
+### Select all
 
 ```javascript
-createCheckbox({ label: 'Default' });
-createCheckbox({ label: 'Checked', checked: true });
-createCheckbox({ label: 'Disabled', disabled: true });
-createCheckbox({ label: 'Disabled', disabled: true, checked: true });
-```
+const all = createCheckbox({ label: 'All toppings' });
+const items = toppings.map(label => createCheckbox({ label }));
 
-### Select all, with an indeterminate parent
-
-The parent is checked when every child is, unchecked when none are, and
-indeterminate in between. Two things to know before copying this: `indeterminate`
-in the config paints nothing, so call `setIndeterminate(true)` once the component
-exists; and because `check()`/`uncheck()` emit `change`, the two handlers below
-call each other. The `syncing` flag is what stops the round trip — without it,
-`check()` on a child re-enters `syncParent`.
-
-```javascript
-const parent = createCheckbox({ label: 'Select All Items' });
-parent.setIndeterminate(true);
-
-let syncing = false;
-const children = [
-  createCheckbox({ label: 'Item 1' }),
-  createCheckbox({ label: 'Item 2' }),
-  createCheckbox({ label: 'Item 3' })
-];
-
-const syncParent = () => {
-  if (syncing) return;
-  const checked = children.filter((child) => child.isChecked()).length;
-
-  if (checked === 0) {
-    parent.uncheck();
-    parent.setIndeterminate(false);
-  } else if (checked === children.length) {
-    parent.check();
-    parent.setIndeterminate(false);
-  } else {
-    parent.setIndeterminate(true);
-  }
+const sync = () => {
+  const on = items.filter(item => item.isChecked()).length;
+  if (on === 0) all.uncheck();
+  else if (on === items.length) all.check();
+  else all.setIndeterminate(true);
 };
-
-children.forEach((child) => child.on('change', syncParent));
-
-parent.on('change', () => {
-  const checked = parent.isChecked();
-  parent.setIndeterminate(false);
-  syncing = true;
-  children.forEach((child) => (checked ? child.check() : child.uncheck()));
-  syncing = false;
-});
+items.forEach(item => item.on('change', sync));
+all.on('change', ({ checked }) => items.forEach(item => checked ? item.check() : item.uncheck()));
 ```
 
-### Label before the box
+### A required checkbox in error
 
 ```javascript
-createCheckbox({ label: 'Label at Start', labelPosition: 'start' });
-```
+const consent = createCheckbox({ label: 'Share usage data', required: true });
 
-### Outlined variant
-
-The stylesheet ships `--outlined`, but the component never applies it, so
-passing `variant` alone changes nothing on screen. Add the class yourself until
-the option is wired up:
-
-```javascript
-import { CHECKBOX_VARIANTS } from 'mtrl/components/checkbox';
-
-const remember = createCheckbox({
-  label: 'Remember me',
-  variant: CHECKBOX_VARIANTS.OUTLINED // recorded in the config, not applied
+form.addEventListener('submit', (event) => {
+  consent.setError(!consent.isChecked());
+  if (!consent.isChecked()) event.preventDefault();
 });
-
-remember.element.classList.add('mtrl-checkbox--outlined'); // what actually paints it
 ```
 
 ## Accessibility
 
-The component renders a real `<input type="checkbox">` and hides it with
-`opacity: 0` rather than `display: none`, so it stays focusable and keeps every
-native behaviour: `Tab` reaches it, form submission and validation work, and
-screen readers announce it as a checkbox with its checked state. `Space` and
-`Enter` both toggle it, both through the component's own `keydown` handler: it
-calls `preventDefault()` on either key and flips `checked` itself, so `Space`
-never reaches the browser's native toggle.
-
-**What the component sets for you**
-
-- `aria-label` on the input, from `label`. The visible `<label>` element is not
-  associated with the input by `for`/`id`, so this attribute is what carries the
-  name to assistive technology.
-- `role="checkbox"` on the input and `role="presentation"` on the root, so the
-  wrapper does not add a second node to the accessibility tree.
-- `disabled` on the input when `disabled: true`, and `required` when
-  `required: true`.
-- `input.indeterminate`, which is what a screen reader reads as "mixed". The
-  `--indeterminate` class that paints the bar is added only by
-  `setIndeterminate()`, never by the `indeterminate` config option, so a
-  checkbox built with that option announces as mixed while looking unchecked.
-- A visible focus ring on `:focus-visible`, drawn as an outline around the box.
-
-**What you still have to supply**
-
-- A name, if you do not pass `label`. Nothing is set in that case — give the
-  input one yourself: `checkbox.input.setAttribute('aria-label', 'Select row')`.
-- Grouping. A set of related checkboxes needs a `<fieldset>` and `<legend>`, or
-  a container with `role="group"` and `aria-labelledby`; the component does not
-  create one.
-- The relationship between a "select all" parent and its children, if you want
-  it announced. `aria-controls` on the parent input is the usual choice.
-- Error text. The checkbox has no supporting-text slot; render your own and
-  point at it with `aria-describedby`.
-
-Clicking the label text *does* toggle the box, but not because the label is
-associated with the input: there is no `for`/`id` pair. The input is stretched
-to `width: 100%; height: 100%` over the whole 40px-tall root at `z-index: 1`, so
-every click inside the root — box or text — lands on the input itself. The
-missing association still costs you the screen-reader relationship, which is why
-the `aria-label` above is doing the naming, and it means a label rewritten in
-the DOM by hand will not be announced.
+- The input is a native checkbox, named by its label; the indeterminate state reaches assistive tech as "mixed", and the error state as `aria-invalid`.
+- Tab focuses the checkbox and Space toggles it. Enter is left to the form, which it submits, as with a native checkbox.
+- Keyboard focus draws a 0.10 state layer and Material's 3dp focus ring around it; a pointer shows no ring.
+- The whole 48dp area and the label toggle the checkbox.
 
 ## Styling
 
 ```css
-.mtrl-checkbox { /* root, inline-flex, 40px minimum height */ }
-.mtrl-checkbox-input { /* the native input, transparent, covers the root */ }
-.mtrl-checkbox-icon { /* the 18px box and its check mark */ }
-.mtrl-checkbox-label { /* the label text */ }
-
-/* Variants — styled here, but never applied by the component; see `variant` */
-.mtrl-checkbox--outlined { }
-
-/* Label placement */
-.mtrl-checkbox--label-start { }
-.mtrl-checkbox--label-end { }
-
-/* States */
-.mtrl-checkbox--indeterminate { }
-.mtrl-checkbox--disabled { }
-
-/* Layout helper for a set of checkboxes */
-.mtrl-checkbox-group { }
-.mtrl-checkbox-group--horizontal { }
+.mtrl-checkbox { }                 /* the root */
+.mtrl-checkbox--indeterminate, .mtrl-checkbox--error, .mtrl-checkbox--disabled { }
+.mtrl-checkbox--label-start, .mtrl-checkbox--label-end { }
+.mtrl-checkbox__input { }          /* the native input, over the whole checkbox */
+.mtrl-checkbox__icon { }           /* the box; ::before is the state layer, ::after the dash */
+.mtrl-checkbox__label { }
 ```
-
-The box, its border and the state layer are painted from the theme's
-`primary`, `on-primary`, `outline`, `surface-container-highest` and `on-surface`
-colors, so a re-themed palette carries through without touching these classes.
 
 ## Measurements
 
-No M3 token is named anywhere in the checkbox source, so the table cites the
-declaration each value comes from in
-`mtrl/src/styles/components/_checkbox.scss` instead of a token it cannot prove.
+Following the m3.material.io checkbox specs, then Compose's `CheckboxTokens` and material-web:
 
-| Attribute | Value | Source |
-|-----------|-------|--------|
-| Root minimum height | 40px | `.mtrl-checkbox { min-height }` |
-| Box size | 18px square | `.mtrl-checkbox-icon { width, height }` |
-| Box corner | 2px | `f.get-shape('tiny')` |
-| Box border | 2px | `.mtrl-checkbox-icon { border }` |
-| Indeterminate bar | 10 x 2px | `.mtrl-checkbox-icon::after` |
-| Label gap | 12px | `.mtrl-checkbox-label { margin-left }` |
-| Label type | body-large | `@include m.typography('body-large')` |
-| State layer | 12px beyond the box, circular | `.mtrl-checkbox-icon::before` |
-| Disabled opacity | 0.38 | `.mtrl-checkbox--disabled { opacity }` |
-| Group gap | 8px stacked, 16px in a row | `.mtrl-checkbox-group` |
+| Attribute | Value |
+|-----------|-------|
+| Box | 18dp, 2dp corner, 2dp outline |
+| Unselected | No fill, `on-surface-variant` outline (`on-surface` on hover, focus and press) |
+| Selected and indeterminate | `primary` container, `on-primary` check or dash |
+| Error | `error` outline and container, `on-error` check |
+| Disabled | `on-surface` 38% outline or container, `surface` check and dash |
+| State layer | 40dp circle: `on-surface` when unselected, `primary` when selected; a press takes the colour of the state it leads to |
+| Touch target | 48dp |
+| Label | Body Large, `on-surface`, 12dp from the box |
+| Motion | The check draws in on the default spatial spring and leaves at once |

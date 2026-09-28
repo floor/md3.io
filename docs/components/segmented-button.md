@@ -71,7 +71,7 @@ document.querySelector('.toolbar').appendChild(view.element);
 | `density` | `Density \| string` | `'default'` | `'default'`, `'comfortable'` or `'compact'` |
 | `disabled` | `boolean` | `false` | Disables every segment |
 | `ripple` | `boolean` | `true` | Ripple on the segments |
-| `rippleConfig` | `{ duration, timing, opacity }` | — | Ripple tuning, passed to each segment |
+| `rippleConfig` | `{ duration, timing, opacity }` | — | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
 | `class` | `string` | — | Extra classes on the container |
 | `on` | `{ change }` | — | **Accepted but not applied.** Nothing reads it; register handlers with `.on()` after creation |
 | `prefix` | `string` | `'mtrl'` | Class-name prefix |

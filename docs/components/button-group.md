@@ -71,7 +71,7 @@ document.querySelector('.toolbar').appendChild(view.element);
 | `disabled` | `boolean` | `false` | Disables the whole group |
 | `equalWidth` | `boolean` | `false` | Gives every button the same width |
 | `ripple` | `boolean` | `true` | Ripple on the buttons |
-| `rippleConfig` | `{ duration, timing, opacity }` | — | Ripple tuning, passed to each button |
+| `rippleConfig` | `{ duration, timing, opacity }` | — | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
 | `ariaLabel` | `string` | `'Button group'` | Accessible name of the group |
 | `class` | `string` | — | Extra classes on the container |
 | `on` | `{ click, focus, blur, change }` | — | **Accepted but not applied.** Nothing reads it; register handlers with `.on()` after creation |

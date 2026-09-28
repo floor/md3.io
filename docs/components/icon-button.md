@@ -38,7 +38,7 @@ document.querySelector('.toolbar').appendChild(menu.element);
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The underlying button's type attribute |
 | `value` | `string` | `undefined` | Value attribute, for use in a form |
 | `ripple` | `boolean` | `true` | Whether to run the ripple effect on press |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Overrides for the ripple's duration, easing and start/end opacity |
+| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `tooltip` | `boolean` | `true` | Accepted but not applied. The option is declared and defaulted, but nothing in the component reads it and no tooltip is rendered. Use the `tooltip` component beside the button if you need one |
 

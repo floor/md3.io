@@ -66,7 +66,7 @@ document.body.appendChild(fab.element);
 | `iconSize` | `string` | — | Adds an `mtrl-icon--<value>` class to the icon element. You supply the rule |
 | `animate` | `boolean` | `false` | Scales the button in when it is added to the page |
 | `ripple` | `boolean` | `true` | Ripple on press |
-| `rippleConfig` | `{ duration, timing, opacity }` | — | Ripple tuning |
+| `rippleConfig` | `{ duration, timing, opacity }` | — | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The button's `type` attribute |
 | `value` | `string` | — | The button's `value` attribute, for form use |
 | `class` | `string` | — | Extra classes on the element |

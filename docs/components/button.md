@@ -54,9 +54,9 @@ The Button component accepts the following configuration options:
 | `class` | `string` | `undefined` | Additional CSS classes to add to the button |
 | `value` | `string` | `undefined` | Button value attribute |
 | `type` | `string` | `'button'` | Button type attribute (button, submit, reset) |
-| `ripple` | `boolean` | `true` | Whether to enable ripple effect on interaction |
+| `ripple` | `boolean` | `true` | Whether a press shows the ripple, which is the pressed state layer (0.10) as in Compose; without it, a static 0.10 layer shows the press |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-| `rippleConfig` | `object` | `undefined` | Configuration options for the ripple effect |
+| `rippleConfig` | `object` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
 | `ariaLabel` | `string` | `undefined` | ARIA label for accessibility (important for icon-only buttons) |
 | `progress` | `boolean\|object` | `undefined` | Progress indicator configuration |
 | `showProgress` | `boolean` | `false` | Whether to show progress initially |
