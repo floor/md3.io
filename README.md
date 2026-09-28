@@ -4,7 +4,7 @@ The presentation site for mtrl. Uses the vlist.io stack and shared styles: Bun, 
 
 ## Development
 
-Keep `mtrl` alongside this repository, update it to main including PR #184 or newer, and build it first:
+Keep `mtrl` alongside this repository, update it to main including PR #185 or newer, and build it first:
 
 ```sh
 cd ../mtrl

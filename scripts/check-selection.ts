@@ -125,7 +125,7 @@ try {
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration input[name="value"]')?.value.startsWith('14:'));
       await frame.getByRole('button', { name: /Choose time/ }).click();
       await reset();
-      assert(await frame.locator('.mtrl-time-picker-modal:visible').count() === 0, 'Reconfiguring time picker left a dialog open');
+      assert(await frame.locator('.mtrl-time-picker__modal:visible').count() === 0, 'Reconfiguring time picker left a dialog open');
     }
 
     await reset();
@@ -167,8 +167,8 @@ try {
     }
     if (slug === 'timepicker') {
       await frame.getByRole('button', { name: /Choose time/ }).click();
-      await frame.locator('.mtrl-time-picker-dialog').waitFor();
-      assert(await frame.locator('.mtrl-time-picker-dialog').evaluate(element => {
+      await frame.locator('.mtrl-time-picker__dialog').waitFor();
+      assert(await frame.locator('.mtrl-time-picker__dialog').evaluate(element => {
         const bounds = element.getBoundingClientRect();
         return bounds.top >= 0 && bounds.bottom <= innerHeight && bounds.left >= 0 && bounds.right <= innerWidth;
       }), 'Mobile clock dialog extends outside the preview');
