@@ -399,9 +399,9 @@ export const components = {
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['primary', 'secondary'], 'primary'), toggle('showDivider', 'Divider', true)]),
       ...section('Content', [{ ...activeDestination, options: ['inbox', 'favorites', 'sent', 'drafts', 'archive', 'trash'] }, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), choose('count', 'Tab count', ['3', '6'], '3')]),
-      ...section('Behavior', [toggle('scrollable', 'Scrollable'), toggle('disableSent', 'Disable Sent')]),
+      ...section('Behavior', [toggle('scrollable', 'Scrollable'), toggle('autoActivate', 'Select on arrow keys'), toggle('disableSent', 'Disable Sent')]),
     ],
-    config: (state: ComponentState): TabsConfig => ({ variant: string(state, 'variant'), showDivider: bool(state, 'showDivider'), scrollable: bool(state, 'scrollable'), tabs: [...destinations, ...(state.count === '6' ? ['Drafts', 'Archive', 'Trash'].map(label => ({ id: label.toLowerCase(), label, icon: componentIcons.inbox! })) : [])].map(item => ({ text: item.label, value: item.id, state: state.active === item.id ? 'active' : 'inactive', disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.icons ? { icon: item.icon } : {}), ...(state.badges && item.id === 'inbox' ? { badge: 8 } : {}) })) }),
+    config: (state: ComponentState): TabsConfig => ({ variant: string(state, 'variant'), showDivider: bool(state, 'showDivider'), scrollable: bool(state, 'scrollable'), ...(state.autoActivate ? { autoActivate: true } : {}), tabs: [...destinations, ...(state.count === '6' ? ['Drafts', 'Archive', 'Trash'].map(label => ({ id: label.toLowerCase(), label, icon: componentIcons.inbox! })) : [])].map(item => ({ text: item.label, value: item.id, state: state.active === item.id ? 'active' : 'inactive', disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.icons ? { icon: item.icon } : {}), ...(state.badges && item.id === 'inbox' ? { badge: 8 } : {}) })) }),
   },
   menu: {
     group: 'Navigation', name: 'Menu', factory: 'createMenu', variable: 'menu',
@@ -694,7 +694,7 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n${component.variable}.on('select', event => console.log(event.id));\n`;
     cleanup = '// trigger.destroy();\n';
   }
-  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', 'Mailbox views');\n${!state.scrollable ? "// Keep fixed tabs in a horizontal row with the current stylesheet.\ntabs.element.style.flexDirection = 'row';\n" : ''}tabs.on('change', event => console.log(event.value));\n`;
+  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', 'Mailbox views');\ntabs.on('change', event => console.log(event.value));\n`;
   if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
     after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;

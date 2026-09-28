@@ -1,21 +1,12 @@
 # Tabs Component
 
-The Tabs component switches between sibling views that sit at the same level of a
-hierarchy. Reach for it when the user is choosing which of several equal things to
-look at, not when they are moving to a different part of the app: that is
-navigation's job. Tabs come in two variants, primary for the top level of a
-screen and secondary for a subdivision inside one of those.
+Tabs organize content across different screens, data sets and other interactions that sit at the same level. Material 3 has two variants: **primary** tabs sit at the top of the content pane, under a top app bar, and **secondary** tabs subdivide one of those views. Use tabs for related content, not for sequential steps, and keep to four tabs or fewer where you can; beyond that, make the row scrollable.
 
 ## Import
 
 ```javascript
 import { createTabs } from 'mtrl';
-
-import {
-  TAB_VARIANTS,
-  TAB_STATES,
-  TAB_INDICATOR_WIDTH_STRATEGIES
-} from 'mtrl/components/tabs';
+import { TAB_VARIANTS, TAB_INDICATOR_WIDTH_STRATEGIES } from 'mtrl/components/tabs/constants';
 ```
 
 ## Basic Usage
@@ -23,259 +14,202 @@ import {
 ```javascript
 const tabs = createTabs({
   tabs: [
-    { text: 'Home', value: 'home', state: 'active' },
-    { text: 'Favorites', value: 'favorites' },
-    { text: 'Profile', value: 'profile' }
-  ]
+    { text: 'Flights', value: 'flights', state: 'active' },
+    { text: 'Trips', value: 'trips' },
+    { text: 'Explore', value: 'explore' }
+  ],
+  on: { change: (event) => showPanel(event.value) }
 });
-
-container.appendChild(tabs.element);
-
-tabs.on('change', (event) => {
-  showPanel(event.value);
-});
+tabs.element.setAttribute('aria-label', 'Travel');
+document.querySelector('.travel').append(tabs.element);
 ```
 
-Exactly one tab should start with `state: 'active'`. The component does not pick
-one for you.
+Start one tab with `state: 'active'`; the component does not pick one for you. Name the tab row with `aria-label` (or `aria-labelledby`) when nothing else on the page does.
 
 ## Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `tabs` | `TabConfig[]` | `undefined` | Tabs created at construction, in order |
-| `variant` | `'primary' \| 'secondary'` | `'primary'` | Tabs variant. Primary indicators track the label width, secondary ones span the tab |
-| `scrollable` | `boolean` | `true` | Wrap the tabs in a horizontally scrolling container |
-| `showDivider` | `boolean` | `true` | Draw the 1px divider under the tab row |
-| `indicator` | `IndicatorConfig` | `undefined` | Indicator sizing and animation |
-| `on` | `{ change?: (event) => void, [key: string]: Function }` | `undefined` | Declared in `TabsConfig` but **accepted and not applied**: nothing in the component reads it. Register handlers with `tabs.on('change', ...)` after construction |
-| `class` | `string` | `undefined` | Additional CSS classes on the container |
-| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-
-`indicatorHeight` and `indicatorWidthStrategy` are still accepted at the top
-level but are deprecated; use the `indicator` object instead.
-
-### Tab configuration
-
-Each entry of `tabs`, and the argument to `addTab`, takes these options.
+### Tabs options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `text` | `string` | `undefined` | Label |
-| `icon` | `string` | `undefined` | Icon HTML, typically an inline SVG |
-| `value` | `string` | `undefined` | Identifier reported by the `change` event and accepted by `setActiveTab` |
-| `state` | `'active' \| 'inactive' \| 'disabled'` | `'inactive'` | Initial state |
+| `tabs` | `TabConfig[]` | `[]` | The tabs to build, in order |
+| `variant` | `'primary' \| 'secondary'` | `'primary'` | Primary or secondary tabs |
+| `scrollable` | `boolean` | `true` | A horizontally scrolling row, 52dp in from both edges. `false` divides the row evenly between the tabs (fixed tabs) |
+| `showDivider` | `boolean` | `true` | The 1dp divider along the bottom of the row |
+| `autoActivate` | `boolean` | `false` | Whether an arrow key also selects the tab it moves to. By default it only moves focus, and Space or Enter selects |
+| `indicator` | `IndicatorConfig` | `{}` | The active indicator (below) |
+| `groupId` | `string` | allocated | The id every tab's id is built from, `tab-<groupId>-<value>`. Pin it when ids must survive a re-render |
+| `on` | `{ [event]: Function }` | `undefined` | Event handlers registered at creation, as with `on()` |
+| `class` | `string` | `undefined` | Additional CSS classes on the row |
+
+### Tab options
+
+Each entry of `tabs`, and the argument to `addTab()`.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `text` | `string` | `undefined` | The label |
+| `icon` | `string` | `undefined` | Icon as SVG markup. With a label, the icon sits above it and the row is 64dp tall |
+| `ariaLabel` | `string` | `undefined` | The accessible name of a tab with an icon and no label, which otherwise has none |
+| `value` | `string` | `undefined` | Identifies the tab to `change`, `setActiveTab()` and its panel |
+| `state` | `'active' \| 'inactive'` | `'inactive'` | Whether the tab starts active |
 | `disabled` | `boolean` | `false` | Whether the tab starts disabled |
-| `badge` | `string \| number` | `undefined` | Badge content shown on the tab |
-| `badgeConfig` | `object` | `undefined` | Extra options forwarded to the badge: `variant`, `color`, `size`, `position`, `max` |
-| `iconSize` | `string` | `'24px'` (annotated, not applied) | Adds an `mtrl-icon--<value>` modifier class to the icon element. `TABS_DEFAULTS.ICON_SIZE` is never merged in, so unset means no class at all, and a value like `'24px'` yields `mtrl-icon--24px`, which no stylesheet defines |
-| `ripple` | `boolean` | `true` | Whether the tab ripples on press |
-| `rippleConfig` | `object` | `undefined` | Ripple `duration`, `timing` and `opacity` |
+| `badge` | `string \| number` | `undefined` | Badge content; keep it to four characters, including a "+" |
+| `badgeConfig` | `object` | `undefined` | Options for the badge: `variant`, `color`, `size`, `position`, `max` |
+| `ripple` | `boolean` | `true` | Whether pressing the tab shows the ripple |
 | `class` | `string` | `undefined` | Additional CSS classes on the tab |
-| `variant` | `string` | inherited | **Accepted and not applied.** It is merged into the tab's config, but `tab.ts` always builds a text button and adds no per-tab variant class. Set `variant` on the tabs component instead |
 
-### Indicator configuration
+### Indicator options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `height` | `number` | `3` | **Accepted and not applied.** The indicator never writes a height; `_tabs.scss` fixes it at 4px for primary tabs and 2px for secondary. The legacy top-level `indicatorHeight` is inert for the same reason |
-| `widthStrategy` | `'fixed' \| 'dynamic' \| 'content' \| 'auto'` | `'auto'` | How the indicator width is derived |
-| `fixedWidth` | `number` | `40` | Width in pixels for the `fixed` strategy |
-| `animationDuration` | `number` | `250` | Slide duration in milliseconds |
-| `animationTiming` | `string` | `'cubic-bezier(0.4, 0, 0.2, 1)'` | Timing function for the slide |
-| `color` | `string` | theme primary | Custom indicator colour |
-| `variant` | `string` | inherited | **Accepted and not applied.** The indicator is always given the tabs component's own `variant`, so this key is overwritten |
-
-`auto` resolves per variant: the text width for primary tabs, the full tab width
-for secondary ones. `dynamic` uses half the tab width and `content` matches the
-text regardless of variant.
+| `widthStrategy` | `'auto' \| 'content' \| 'dynamic' \| 'fixed'` | `'auto'` | `auto`: the label's width inset 2dp on each side (24dp at least) for primary tabs, the whole tab for secondary ones |
+| `height` | `number` | 3 primary, 2 secondary | Height in pixels |
+| `color` | `string` | theme `primary` | The indicator's colour |
+| `visible` | `boolean` | `true` | Whether it starts shown; `getIndicator().hide()` and `show()` change it later |
+| `fixedWidth` | `number` | `40` | Width for the `fixed` strategy |
+| `animationDuration` | `number` | spring | Replaces Material's default spatial spring with a fixed duration in milliseconds |
+| `animationTiming` | `string` | spring | An easing to use with `animationDuration` |
 
 ## Component API
 
-### Tab management
+### Tabs
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `addTab(config)` | `config: TabConfig` | `TabComponent` | Creates a tab, appends it, and returns the new tab |
-| `add(tab)` | `tab: TabComponent` | `TabsComponent` | Appends a tab built elsewhere |
-| `removeTab(tabOrValue)` | `tabOrValue: TabComponent \| string` | `TabsComponent` | Removes a tab by instance or by value and destroys it |
-| `getTabs()` | none | `TabComponent[]` | Every tab, in DOM order |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `addTab(config)` | `TabComponent` | Builds a tab and appends it |
+| `add(tab)` | `TabsComponent` | Appends a tab built with `createTab` |
+| `removeTab(tabOrValue)` | `TabsComponent` | Removes and destroys a tab |
+| `getTabs()` | `TabComponent[]` | The tabs, in order |
+| `getActiveTab()` | `TabComponent \| null` | The active tab |
+| `setActiveTab(tabOrValue)` | `TabsComponent` | Selects a tab, updates its panels and emits `change`. An unknown value clears the selection |
+| `getIndicator()` | `TabIndicator` | The indicator: `show()`, `hide()`, `setColor()`, `update()` |
+| `on(event, handler)` / `off(event, handler)` | `TabsComponent` | Events: `change` |
+| `destroy()` | `void` | Destroys every tab and the row |
 
-### Selection
+### Tab
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getActiveTab()` | none | `TabComponent \| null` | The active tab, or `null` when none is |
-| `setActiveTab(tabOrValue)` | `tabOrValue: TabComponent \| string` | `TabsComponent` | Deactivates the others, activates this one, and emits `change` |
-| `getIndicator()` | none | `TabIndicator` | The indicator instance, for direct control of its position |
-
-### Events and lifecycle
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `on(event, handler)` | `event: string, handler: Function` | `TabsComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `TabsComponent` | Removes an event listener |
-| `emit(event, data)` | `event: string, data: any` | `TabsComponent` | Emits an event on the tabs component |
-| `getClass(name)` | `name: string` | `string` | Prefixes a class name |
-| `destroy()` | none | `void` | Destroys every tab and the container |
-
-### The tab instance
-
-`addTab` and `getTabs` hand back tab components with their own API.
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getValue()` | none | `string` | The tab's value |
-| `setValue(value)` | `value: string` | `TabComponent` | Sets the value and the `aria-controls` it derives from it |
-| `activate()` | none | `TabComponent` | Marks the tab active and sets `aria-selected="true"` |
-| `deactivate()` | none | `TabComponent` | Marks the tab inactive |
-| `isActive()` | none | `boolean` | Whether the tab is active |
-| `enable()` | none | `TabComponent` | Removes the disabled state |
-| `disable()` | none | `TabComponent` | Disables the tab and sets `aria-disabled` |
-| `setText(content)` | `content: string` | `TabComponent` | Sets the label |
-| `getText()` | none | `string` | Reads the label |
-| `setIcon(icon)` | `icon: string` | `TabComponent` | Sets the icon HTML |
-| `getIcon()` | none | `string` | Reads the icon HTML |
-| `setBadge(content)` | `content: string \| number` | `TabComponent` | Sets or creates the badge |
-| `getBadge()` | none | `string` | Reads the badge content |
-| `showBadge()` | none | `TabComponent` | Shows the badge |
-| `hideBadge()` | none | `TabComponent` | Hides the badge |
-| `getBadgeComponent()` | none | `BadgeComponent \| undefined` | The underlying badge, for anything the shortcuts do not cover |
-| `updateLayoutStyle()` | none | `void` | Recomputes the icon-only, text-only or icon-and-text layout class |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` / `setValue(value)` | `string` / `TabComponent` | The tab's value |
+| `isActive()` | `boolean` | Whether the tab is selected |
+| `setText(text)` / `getText()` | `TabComponent` / `string` | The label |
+| `setIcon(icon)` / `getIcon()` | `TabComponent` / `string` | The icon |
+| `setBadge(content)` / `getBadge()` / `showBadge()` / `hideBadge()` | `TabComponent` / `string` | The badge |
+| `enable()` / `disable()` | `TabComponent` | Disabled state |
+| `on(event, handler)` / `off(event, handler)` | `TabComponent` | Events: `click`, `focus`, `blur` |
+| `destroy()` | `void` | Removes the tab |
 
 ## Events
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `change` | `{ tab, value }` | The active tab changed, whether by click, keyboard, or `setActiveTab` |
-
-`tab` is the newly active `TabComponent` and `value` its value string. Handlers
-have to be registered with `tabs.on('change', ...)` after construction: the `on`
-config option is accepted but never wired to the emitter, so a handler declared
-there is silently dropped.
+| `change` | `{ tab, value }` | The selected tab changed, by pointer, keyboard or `setActiveTab()`. `tab` and `value` are `null` when an unknown value cleared the selection |
 
 ## Examples
 
-### Tabs driving panels
+### Tabs with panels
 
-The showcase's basic example wires the `change` event to a set of panel elements.
-
-```javascript
-const tabs = createTabs({
-  tabs: [
-    { text: 'Home', value: 'home', state: 'active' },
-    { text: 'Favorites', value: 'favorites' },
-    { text: 'Profile', value: 'profile' }
-  ]
-});
-
-tabs.on('change', (event) => {
-  panels.forEach((panel) => panel.classList.add('hidden'));
-  document.querySelector(`#panel-${event.value}`)?.classList.remove('hidden');
-});
-```
-
-### Handlers after construction
-
-The `on` config option does not work, so register every handler on the instance:
+Give each panel `role="tabpanel"`, the id `tabpanel-<groupId>-<value>` and `aria-labelledby="tab-<groupId>-<value>"`. The tabs then point at their panels with `aria-controls`, and show and hide them as the selection changes.
 
 ```javascript
 const tabs = createTabs({
+  groupId: 'travel',
   tabs: [
-    { text: 'Dashboard', value: 'dashboard', state: 'active' },
-    { text: 'Analytics', value: 'analytics' },
-    { text: 'Reports', value: 'reports' }
+    { text: 'Flights', value: 'flights', state: 'active' },
+    { text: 'Trips', value: 'trips' }
   ]
 });
-
-// and not `on: { change }` in the config above, which is ignored
-tabs.on('change', (event) => log(`Tab changed to: ${event.value}`));
 ```
 
-### Changing tabs at runtime
+```html
+<div role="tabpanel" id="tabpanel-travel-flights" aria-labelledby="tab-travel-flights">…</div>
+<div role="tabpanel" id="tabpanel-travel-trips" aria-labelledby="tab-travel-trips" hidden>…</div>
+```
+
+### Fixed tabs with icons
 
 ```javascript
-// Disable a tab whose data has not loaded yet
-tabs.getTabs()
-  .find((tab) => tab.getValue() === 'reports')
-  ?.disable();
+const media = createTabs({
+  scrollable: false,
+  tabs: [
+    { text: 'Video', value: 'video', icon: videoIcon, state: 'active' },
+    { text: 'Photos', value: 'photos', icon: photoIcon },
+    { text: 'Audio', value: 'audio', icon: audioIcon }
+  ]
+});
+```
 
-// Draw attention to new data
-tabs.getTabs()
-  .find((tab) => tab.getValue() === 'analytics')
-  ?.setBadge(3);
+### Icon-only tabs
 
-// Add and select a tab
-const settings = tabs.addTab({ text: 'Settings', value: 'settings' });
-tabs.setActiveTab(settings);
+```javascript
+const views = createTabs({
+  scrollable: false,
+  tabs: [
+    { icon: gridIcon, ariaLabel: 'Grid', value: 'grid', state: 'active' },
+    { icon: listIcon, ariaLabel: 'List', value: 'list' }
+  ]
+});
 ```
 
 ### Secondary tabs
 
 ```javascript
-const subTabs = createTabs({
+const filters = createTabs({
   variant: 'secondary',
   tabs: [
-    { text: 'All', value: 'all', state: 'active' },
-    { text: 'Starred', value: 'starred' }
+    { text: 'Overview', value: 'overview', state: 'active' },
+    { text: 'Specifications', value: 'specs' }
   ]
 });
 ```
 
+### A responsive row
+
+`setupResponsiveBehavior` switches tabs with an icon and a label to icons only below 600px (the label stays as the accessible name), and back above it. It follows tabs added and labels changed later.
+
+```javascript
+import { setupResponsiveBehavior } from 'mtrl/components/tabs';
+
+setupResponsiveBehavior(media, { smallScreen: { layout: 'icon-only' } });
+```
+
 ## Accessibility
 
-- The container is a `tablist` with `aria-orientation="horizontal"`; each tab
-  takes `role="tab"` and keeps `aria-selected` in sync with its state.
-- Each tab sets `aria-controls` to `tabpanel-<value>`, so give each panel that ID
-  along with `role="tabpanel"` and `aria-labelledby="tab-<value>"`.
-  `updateTabPanels`, exported from the component, will then show and hide the
-  panels and manage their `tabindex` for you.
-- Arrow, Home and End handling is registered, but unreachable. It runs only when
-  the `tablist` container is itself the event target, and the container carries
-  no `tabindex`, so focus always lands on a tab `<button>` instead. In practice
-  keyboard users Tab onto each tab in turn and activate it with Enter or Space,
-  which works because every tab is a real button. Do not rely on roving focus.
-- A disabled tab sets `aria-disabled="true"` rather than being removed from the
-  tab order silently.
-- An icon-only tab ends up with no accessible name. `updateLayoutStyle` sets
-  `aria-label` only when a tab has both the icon-only layout and text, and a tab
-  with text is never icon-only, so the branch cannot run. Name icon tabs
-  yourself: `tab.element.setAttribute('aria-label', 'Home')`.
+- The row is a `tablist`, each tab a `tab` with `aria-selected`, and a panel supplied as above a `tabpanel` linked by `aria-controls`.
+- The row is one Tab stop, on the selected tab. The arrow keys move focus between tabs, following the reading direction in right-to-left layouts; Home and End go to the first and last tab. Disabled tabs are skipped.
+- Space or Enter selects the focused tab, as the m3.material.io tabs accessibility guidance has it: the arrows navigate, and Space and Enter act. `autoActivate: true` selects on every arrow press instead. When focus leaves the row, its Tab stop returns to the selected tab.
+- A tab with an icon and no label needs `ariaLabel`.
+- The focus ring is Material's 3dp ring, drawn inside the tab so the row's edge and the scroll container never clip it.
 
 ## Styling
 
 ```css
-.mtrl-tabs { }
-.mtrl-tabs--primary { }
-.mtrl-tabs--secondary { }
-.mtrl-tabs--scrollable { }
-.mtrl-tabs-scroll { }
-.mtrl-tabs-divider { }
-.mtrl-tabs-indicator { }
+.mtrl-tabs { }                          /* the row */
+.mtrl-tabs--primary, .mtrl-tabs--secondary, .mtrl-tabs--scrollable { }
+.mtrl-tabs__scroll { }                  /* the scrolling container */
+.mtrl-tabs__indicator, .mtrl-tabs__divider { }
+.mtrl-tabs--responsive-small { }        /* below the small breakpoint */
 
-.mtrl-tab { }
+.mtrl-tab { }                           /* one tab, a button */
 .mtrl-tab--active { }
-.mtrl-tab--inactive { }
-.mtrl-tab--disabled { }
-.mtrl-tab-container { }
-.mtrl-tab-text { }
-.mtrl-tab-icon { }
-.mtrl-tab-badge { }
-.mtrl-tab-ripple { }
+.mtrl-tab--text-only, .mtrl-tab--icon-only, .mtrl-tab--icon-and-text { }
+.mtrl-tab-panel { }
 ```
-
-The indicator is positioned with a `transform` transition, so animating it from
-CSS means overriding `transition` on `.mtrl-tabs-indicator` rather than adding
-another animation on top.
 
 ## Measurements
 
-| Attribute | Value | Token |
-|-----------|-------|-------|
-| Divider colour | theme outline variant | `outline-variant`, named `// MD3: Outline variant color` in `_tabs.scss` |
+Following the m3.material.io tabs specs, then Compose's `PrimaryNavigationTabTokens` and `SecondaryNavigationTabTokens`:
 
-The indicator is 4px tall on primary tabs and 2px on secondary, both fixed in
-`_tabs.scss`; the 3px `TABS_DEFAULTS.INDICATOR_HEIGHT` is never applied, and
-neither is the 24px `ICON_SIZE`. The defaults that do reach the indicator are its
-250ms `cubic-bezier(0.4, 0, 0.2, 1)` slide and its 40px fixed width. None of them
-names a Material token in the source, so none is claimed here.
+| Attribute | Value |
+|-----------|-------|
+| Height | 48dp with a label or an icon, 64dp with both |
+| Label | Title Small; `primary` (primary) or `on-surface` (secondary) when active, `on-surface-variant` when inactive |
+| Icon | 24dp |
+| Tab padding | 16dp on each side |
+| Primary indicator | 3dp, `primary`, top corners 3dp, the label's width inset 2dp on each side, 24dp at least |
+| Secondary indicator | 2dp, `primary`, the tab's full width |
+| Divider | 1dp `outline-variant`, inside the row's height |
+| Scrollable edge | 52dp before the first tab and after the last |
+| States | An inactive tab turns `on-surface` on hover, focus and press, over an `on-surface` layer; a press on a primary tab is `primary`, drawn by the ripple |
+| Motion | The indicator moves on the default spatial spring |

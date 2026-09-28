@@ -186,7 +186,6 @@ function create(state: ComponentState) {
     case 'tabs': {
       const control = createTabs(components.tabs.config(state));
       control.element.setAttribute('aria-label', 'Mailbox views');
-      if (!state.scrollable) control.element.style.flexDirection = 'row';
       control.on('change', (event: { value: string }) => { sync({ active: event.value }); message(`Selected: ${event.value}`); });
       return control;
     }
