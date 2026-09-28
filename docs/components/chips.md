@@ -61,6 +61,9 @@ Passed to the four factories, and to the `chips` array or `addChip()` of a set (
 | `disabled` | `boolean` | `false` | Whether the chip starts disabled |
 | `removeLabel` | `string` | `'Remove {label}'` | Input chips: the remove button's accessible name |
 | `onRemove` | `(chip) => void` | `undefined` | Input chips: called when the chip is removed |
+| `onTrailingClick` | `(chip) => void` | `undefined` | Filter chips: gives the trailing icon its own button, to open a menu or remove the chip |
+| `trailingMenu` | `boolean` | `false` | Filter chips: the trailing button opens a menu (`aria-haspopup`, a drop-down arrow) |
+| `trailingLabel` | `string` | `'{label} options'` or `'Remove {label}'` | Filter chips: the trailing button's accessible name |
 | `onClick` | `(chip) => void` | `undefined` | Called when the chip is activated |
 | `onChange` | `(selected, chip) => void` | `undefined` | Filter and input chips: called when the selected state changes |
 | `ripple` | `boolean` | `true` | Whether to run the ripple on press |
@@ -99,10 +102,12 @@ Passed to `createChips`.
 | `enable()` / `disable()` / `isDisabled()` | `ChipComponent` / `boolean` | Disabled state |
 | `getType()` | `ChipType` | The chip's type |
 | `focus()` | `ChipComponent` | Focuses the chip's action |
-| `on(event, handler)` / `off(event, handler)` | `ChipComponent` | Events: `click`, `change`, `remove`, `focus`, `blur`, `keydown` |
+| `on(event, handler)` / `off(event, handler)` | `ChipComponent` | Events: `click`, `change`, `remove`, `trailing`, `focus`, `blur`, `keydown` |
 | `destroy()` | `void` | Removes listeners and the element |
 
-`chip.action` is the chip's native button; an input chip's remove button is its sibling, never nested inside it.
+`chip.action` is the chip's native button. An input chip's remove button and a filter chip's trailing button (`chip.trailingAction`) are its siblings, never nested inside it.
+
+A chip your app makes `draggable` shows Material's dragged state (elevation 4, a stronger state layer) from `dragstart` to `dragend`; mtrl does not move chips itself.
 
 ### Chips
 
@@ -144,6 +149,25 @@ const recipients = createChips({
 recipients.on('remove', chip => unsend(chip.getValue()));
 ```
 
+### A filter chip that opens a menu
+
+```javascript
+const price = createFilterChip({
+  label: 'Price',
+  trailingMenu: true,
+  onTrailingClick: (chip) => {
+    chip.trailingAction.setAttribute('aria-expanded', 'true');
+    priceMenu.open();
+  }
+});
+
+// Anchored to the chip; opened by the chip's trailing button, not by a click on the opener
+const priceMenu = createMenu({ opener: price.element, manualOpen: true, items: priceRanges });
+priceMenu.on('close', () => price.trailingAction.setAttribute('aria-expanded', 'false'));
+```
+
+On compact screens, the guidelines ask for the whole chip to open the menu: call the same handler from `onClick` there.
+
 ### Elevated assist chips
 
 ```javascript
@@ -170,6 +194,8 @@ const actions = ['Directions', 'Call', 'Share'].map(label => createAssistChip({ 
 .mtrl-chip__action { }          /* the native button */
 .mtrl-chip__leading-icon, .mtrl-chip__checkmark, .mtrl-chip__label, .mtrl-chip__trailing-icon { }
 .mtrl-chip__remove { }          /* an input chip's remove button */
+.mtrl-chip__trailing-action { } /* a filter chip's trailing button */
+.mtrl-chip--dragged { }         /* while an app drags the chip */
 
 .mtrl-chips { }                 /* the set */
 .mtrl-chips--scrollable, .mtrl-chips--vertical, .mtrl-chips--with-label, .mtrl-chips--label-end { }
