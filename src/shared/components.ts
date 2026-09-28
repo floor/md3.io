@@ -265,16 +265,20 @@ export const components = {
   },
   chips: {
     group: 'Selection & input', name: 'Chips', factory: 'createChips', variable: 'chips',
-    description: 'Explore compact choices and actions. Try chip variants, icons, and single or multiple selection.',
+    description: 'Explore compact choices and actions. Try the four chip types, elevation, icons and avatars, and single or multiple selection.',
     summary: 'Compact choices, filters, and actions.', styles: ['chips'],
     controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['assist', 'filter', 'input', 'suggestion', 'filled', 'outlined', 'elevated'], 'filter', 'select'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons')]),
+      // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
+      // avatar for input chips; selection for filter and input chips.
+      ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType')]),
       ...section('Content', [text('label', 'Group label', 'Interests')]),
-      ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true), toggle('hiking', 'Hiking selected', true), toggle('music', 'Music selected'), toggle('food', 'Food selected'), disabled]),
+      ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('hiking', 'Hiking selected', true, 'selectable'), toggle('music', 'Music selected', false, 'selectable'), toggle('food', 'Food selected', false, 'selectable'), disabled]),
     ],
     config: (state: ComponentState): ChipsConfig => ({ label: string(state, 'label'), vertical: bool(state, 'vertical'), multiSelect: bool(state, 'multiSelect'),
-      chips: ['hiking', 'music', 'food'].map((value, index) => ({ value, text: ['Hiking', 'Music', 'Food'][index], variant: string(state, 'variant'), selected: bool(state, value), disabled: bool(state, 'disabled'),
-        ...(bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}) })) }),
+      chips: ['hiking', 'music', 'food'].map((value, index) => ({ value, label: ['Hiking', 'Music', 'Food'][index], type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], 'filter'),
+        ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
+        ...(state.selectable ? { selected: bool(state, value) } : {}), disabled: bool(state, 'disabled'),
+        ...(state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}) })) }),
   },
   slider: {
     group: 'Selection & input', name: 'Slider', factory: 'createSlider', variable: 'slider',
@@ -621,6 +625,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     const step = Number(state.step);
     state.value = String(Math.round(Number(state.value) / step) * step);
     state.secondValue = String(Math.max(Number(state.value), Math.round(Number(state.secondValue) / step) * step));
+  }
+  if (slug === 'chips') {
+    state.selectable = state.type === 'filter' || state.type === 'input';
+    state.elevatedAllowed = state.type !== 'input';
+    state.inputType = state.type === 'input';
   }
   if (slug === 'chips' && !state.multiSelect) {
     let selected = false;

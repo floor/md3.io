@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 
 // Symbol names exactly as fonts.google.com/icons spells them.
 const names = [
-  'add', 'bookmark', 'download', 'edit', 'favorite', 'format_bold', 'format_italic',
+  'account_circle', 'add', 'bookmark', 'download', 'edit', 'favorite', 'format_bold', 'format_italic',
   'format_underlined', 'inbox', 'menu', 'send', 'volume_off', 'volume_up',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the

@@ -1,6 +1,7 @@
 // The official Material Symbols (Rounded) the examples use, from icons/ — see
 // scripts/icons.ts. Keys are the names the playground state already stores; values are
 // the symbol each one shows.
+import accountCircle from '../../icons/account_circle-fill.svg' with { type: 'text' };
 import add from '../../icons/add.svg' with { type: 'text' };
 import bookmark from '../../icons/bookmark.svg' with { type: 'text' };
 import download from '../../icons/download.svg' with { type: 'text' };
@@ -17,7 +18,7 @@ import volumeUp from '../../icons/volume_up.svg' with { type: 'text' };
 
 const trim = (svg: string) => svg.trim();
 export const symbols = {
-  add: trim(add), bookmark: trim(bookmark), download: trim(download), edit: trim(edit), heart: trim(favorite),
+  accountCircle: trim(accountCircle), add: trim(add), bookmark: trim(bookmark), download: trim(download), edit: trim(edit), heart: trim(favorite),
   bold: trim(formatBold), italic: trim(formatItalic), underline: trim(formatUnderlined),
   inbox: trim(inbox), menu: trim(menu), send: trim(send), volumeOff: trim(volumeOff), volumeUp: trim(volumeUp),
 };
