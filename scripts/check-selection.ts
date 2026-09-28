@@ -57,12 +57,13 @@ try {
       await frame.getByText('Food', { exact: true }).click();
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration input[name="food"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration input[name="hiking"]')?.checked);
     } else if (slug === 'slider') {
+      // Step 10 by default.
       await frame.getByRole('slider').first().press('ArrowRight');
-      await valueIs('value', '41');
-      await toggle('range');
+      await valueIs('value', '50');
+      await choose('variant', 'range');
       await frame.getByRole('slider').nth(1).waitFor();
       await frame.getByRole('slider').nth(1).press('ArrowLeft');
-      await valueIs('secondValue', '79');
+      await valueIs('secondValue', '70');
     } else if (slug === 'textfield') {
       await frame.getByRole('textbox').fill('Ada Lovelace');
       await valueIs('value', 'Ada Lovelace');

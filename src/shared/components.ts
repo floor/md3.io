@@ -281,12 +281,19 @@ export const components = {
     description: 'Choose a value or a range. Explore track sizes, steps, colors, and value indicators.',
     summary: 'Values and ranges along a track.', styles: ['slider'],
     controls: [
-      ...section('Appearance', [choose('size', 'Size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), choose('color', 'Color', ['primary', 'secondary', 'tertiary', 'error'], 'primary', 'select'), toggle('ticks', 'Tick marks'), toggle('showValue', 'Value indicator', true)]),
-      ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }]),
-      ...section('Behavior', [toggle('range', 'Range slider'), choose('step', 'Step', ['1', '5', '10'], '1'), disabled]),
+      ...section('Appearance', [choose('size', 'Size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('color', 'Color', ['primary', 'secondary', 'tertiary', 'error'], 'primary', 'select'), toggle('ticks', 'Tick marks'), toggle('showValue', 'Value indicator', true)]),
+      ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }, toggle('insetIcon', 'Inset icon', false, 'insetIconAllowed')]),
+      ...section('Behavior', [choose('variant', 'Variant', ['standard', 'centered', 'range'], 'standard'), choose('step', 'Step', ['5', '10'], '10'), disabled]),
     ],
-    config: (state: ComponentState): SliderConfig => ({ min: 0, max: 100, value: Number(state.value), ...(bool(state, 'range') ? { secondValue: Number(state.secondValue) } : {}),
-      step: Number(state.step), range: bool(state, 'range'), size: pick(state, 'size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), color: pick(state, 'color', ['primary', 'secondary', 'tertiary', 'error'], 'primary'),
+    // The three M3 variants. A centred slider runs from -50 to 50 around zero, so the
+    // 0-100 value control is shifted onto that range.
+    config: (state: ComponentState): SliderConfig => ({
+      ...(state.variant === 'centered' ? { min: -50, max: 50, value: Number(state.value) - 50, centered: true } : { min: 0, max: 100, value: Number(state.value) }),
+      ...(state.variant === 'range' ? { secondValue: Number(state.secondValue) } : {}),
+      step: Number(state.step), range: state.variant === 'range',
+      ...(state.orientation === 'vertical' ? { orientation: 'vertical' as const } : {}),
+      // The guidelines' example: volume, swapping to mute at the minimum.
+      ...(state.insetIconAllowed && state.insetIcon ? { insetIcon: symbols.volumeUp, insetIconAtMin: symbols.volumeOff } : {}), size: pick(state, 'size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), color: pick(state, 'color', ['primary', 'secondary', 'tertiary', 'error'], 'primary'),
       ticks: bool(state, 'ticks'), showValue: bool(state, 'showValue'), label: string(state, 'label'), ariaLabel: string(state, 'label').trim() || 'Volume', disabled: bool(state, 'disabled'), name: 'volume' }),
   },
   textfield: {
@@ -608,6 +615,9 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     });
   }
   if (slug === 'slider') {
+    state.range = state.variant === 'range';
+    // Inset icons are for standard sliders at M, L and XL (m3.material.io guidelines).
+    state.insetIconAllowed = state.variant === 'standard' && ['M', 'L', 'XL'].includes(String(state.size));
     const step = Number(state.step);
     state.value = String(Math.round(Number(state.value) / step) * step);
     state.secondValue = String(Math.max(Number(state.value), Math.round(Number(state.secondValue) / step) * step));

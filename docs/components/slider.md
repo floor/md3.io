@@ -1,6 +1,6 @@
 # Slider Component
 
-The Slider component provides a Material Design 3 compliant input control that allows users to select a value or range of values by moving a handle along a track. It uses high-performance canvas rendering for smooth interactions and supports various configurations including range sliders, centered sliders, and discrete value selection.
+The Slider component provides a Material Design 3 compliant input control that allows users to select a value or range of values by moving a handle along a track. It supports the three M3 variants (standard, centered and range), discrete stops, five sizes, horizontal and vertical orientation, and an inset icon.
 
 ## Overview
 
@@ -13,7 +13,7 @@ Sliders are commonly used for:
 - Form inputs for numeric ranges
 - Accessibility controls (font size, zoom level)
 
-The component follows Material Design 3 guidelines with support for different sizes, colors, tick marks, value display, and smooth animations powered by canvas rendering for optimal performance.
+The component follows Material Design 3 guidelines with support for different sizes, colors, tick marks, value display, and M3 Expressive motion.
 
 ## Import
 
@@ -64,6 +64,10 @@ The Slider component accepts the following configuration options:
 | `snapToSteps` | `boolean` | `true` | Whether to snap to steps while dragging |
 | `range` | `boolean` | `false` | Whether the slider is a range slider (two handles) |
 | `centered` | `boolean` | `false` | Whether the slider is centered (active track from center) |
+| `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | A vertical slider takes its length from its CSS height |
+| `topToBottom` | `boolean` | `false` | A vertical slider's minimum at the top instead of the bottom |
+| `insetIcon` | `string` | `undefined` | SVG markup for an icon inside the track: standard sliders at M, L and XL |
+| `insetIconAtMin` | `string` | `undefined` | The inset icon shown at the minimum value, such as mute for volume |
 | `label` | `string` | `undefined` | Label text for the slider |
 | `labelPosition` | `'start' \| 'end'` | `'start'` | Position of the label |
 | `icon` | `string` | `undefined` | Icon to display with the slider |
@@ -120,6 +124,7 @@ The Slider component provides the following methods:
 |--------|------------|---------|-------------|
 | `setLabel(text)` | `text: string` | `SliderComponent` | Sets the label text |
 | `getLabel()` | none | `string` | Gets the label text |
+| `setInsetIcon(icon, atMin?)` | `icon: string, atMin?: string` | `SliderComponent` | Sets the inset icon, and optionally the one at the minimum; `''` removes it |
 | `setIcon(iconHtml)` | `iconHtml: string` | `SliderComponent` | Sets the icon HTML |
 | `getIcon()` | none | `string` | Gets the icon HTML |
 
@@ -298,6 +303,32 @@ const brightnessControl = createSlider({
   iconPosition: 'start',
   label: 'Brightness'
 });
+```
+
+### Inset Icon
+
+M3 Expressive sliders at size M, L or XL can carry an icon inside the track that shows what the slider controls. It sits at the start of the active track and moves onto the inactive track when the active one is too short to hold it. Only standard sliders take one: not range, not centered.
+
+```javascript
+const volume = createSlider({
+  size: 'M',
+  value: 40,
+  insetIcon: volumeUpSvg,       // 24px on M and L, 32px on XL
+  insetIconAtMin: volumeOffSvg, // shown at the minimum
+  ariaLabel: 'Volume'
+});
+```
+
+### Vertical Sliders
+
+A vertical slider runs from the bottom up, and takes its length from its height. Use standard or centered sliders vertically; the guidelines advise against vertical range sliders.
+
+```javascript
+const level = createSlider({ orientation: 'vertical', size: 'L', value: 60 });
+level.element.style.height = '240px';
+
+// Minimum at the top instead
+const drop = createSlider({ orientation: 'vertical', topToBottom: true });
 ```
 
 ### Discrete Sliders with Custom Labels
@@ -556,81 +587,18 @@ This composition pattern allows for:
 - Easy extension and customization
 - Smooth interactions without DOM manipulation overhead
 
-## Canvas Rendering
+## Rendering and Motion
 
-The Slider component uses HTML5 Canvas for high-performance rendering:
+The track is drawn with a few decorative DOM elements (`aria-hidden`) under handles that stay real, focusable elements with slider semantics. The geometry follows Material Design 3:
 
-### Benefits
-- **Smooth Interactions**: 60fps interactions without DOM reflows
-- **Pixel-Perfect Rendering**: Crisp visuals on all device pixel ratios
-- **Memory Efficient**: Single canvas element instead of multiple DOM track segments
-- **Flexible Styling**: Programmatic control over all visual aspects
+- **Sizes**: track 16 / 24 / 40 / 56 / 96px and handle 44 / 44 / 52 / 68 / 108px for XS–XL; outer track corners 8 / 8 / 12 / 16 / 28px, inside corners 2px.
+- **Handle**: 4px wide, narrowing to 2px while pressed or focused. The track keeps a 6px gap from the handle's edge.
+- **Colors**: the active track, handle and stop indicators take the slider color; the inactive track takes its container color (`secondary-container` for primary).
+- **Stop indicators**: a dot ends every inactive track, so centered and range sliders carry one at each end. With `ticks`, stops mark every step, and a discrete slider insets its interior steps by the corner radius.
+- **Value indicator**: inverse surface, 48×44px, 12px beyond the handle. It grows out of the handle and shrinks back into it.
+- **Motion**: a value change that doesn't follow the pointer (a tap on the track, a key, `setValue()`) settles on the M3 Expressive default spatial spring. A drag follows the pointer, and layout changes (the first render, a resize) never animate.
 
-### Rendering Features
-- **Material Design 3 Compliant**: Follows MD3 specifications for slider visuals
-- **Responsive Track Segments**: Dynamic active/inactive track rendering based on value
-- **Smart Gap Management**: Handle gaps reduce when pressed for better visual feedback
-- **Tick Mark Rendering**: High-performance tick mark display with active/inactive states
-- **End Dot Indicators**: Visual anchors at track ends for better contrast
-- **Range Support**: Complex track rendering for range sliders with proper handle interactions
-
-### Canvas Elements
-
-The canvas renders the following visual elements while keeping handles and value bubbles as DOM for accessibility:
-
-```javascript
-// Canvas renders:
-// - Track segments (active, inactive, start, remaining)
-// - Tick marks with active/inactive states
-// - End dots for visual anchoring
-// - Gap adjustments during interaction
-
-// DOM elements (for accessibility):
-// - Handles (with proper ARIA attributes)
-// - Value bubbles (for screen reader announcements)
-// - Labels and icons
-```
-
-### Size-Aware Rendering
-
-The canvas rendering adapts to different slider sizes:
-
-- **Track Height**: XS=16px, S=24px, M=40px, L=56px, XL=80px, or custom
-- **Handle Height**: Small sizes use 48px, larger sizes use track height + 16px offset
-- **External Radius**: Small sizes use 10px, larger sizes use proportional radius
-- **Gap Management**: Fixed pixel gaps with pressure reduction for visual feedback
-
-## Visual Enhancements
-
-The Slider component includes several visual refinements for improved user experience:
-
-### Smart Track Rendering
-
-The canvas-based track rendering provides:
-
-- **Active Track Segments**: Visually distinct filled portions
-- **Inactive Track Segments**: Subtle unfilled portions
-- **Handle Gaps**: Visual separation between handles and track
-- **Pressure Feedback**: Gap reduction when handles are pressed
-- **Range Support**: Complex rendering for dual-handle sliders
-
-### Centered Slider Support
-
-For centered sliders (like audio balance controls):
-
-- **Zero-Point Visualization**: Clear indication of the center position
-- **Bidirectional Fill**: Active track extends from center to current value
-- **Smooth Transitions**: Animated value changes maintain visual continuity
-- **Gap Management**: Special handling when handle approaches center
-
-### Tick Mark Intelligence
-
-Tick marks are rendered with smart behavior:
-
-- **Active State Indication**: Ticks show active/inactive based on current value
-- **Handle Avoidance**: Ticks are hidden when overlapping with handles
-- **Range Awareness**: For range sliders, ticks between handles show as active
-- **Centered Logic**: For centered sliders, tick activity follows the fill direction
+Per-slider colors can be overridden in CSS with `--mtrl-slider-color`, `--mtrl-slider-container-color` and `--mtrl-slider-on-color`.
 
 ## Accessibility
 

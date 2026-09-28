@@ -243,10 +243,14 @@ function create(state: ComponentState) {
     }
     case 'slider': {
       const control = createSlider(components.slider.config(state));
+      // A vertical slider takes its length from its height.
+      if (state.orientation === 'vertical') control.element.style.height = '240px';
       control.on('input', () => {
         const value = control.getValue();
         const second = control.getSecondValue();
-        sync({ value: String(value), ...(second !== null ? { secondValue: String(second) } : {}) });
+        // The value control is 0-100; a centred slider is shifted onto -50..50.
+        const offset = state.variant === 'centered' ? 50 : 0;
+        sync({ value: String(value + offset), ...(second !== null ? { secondValue: String(second) } : {}) });
         message(second === null ? `Value: ${value}` : `Range: ${value}–${second}`);
       });
       return control;
