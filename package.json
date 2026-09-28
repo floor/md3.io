@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run build && bun --watch server.ts",
+    "dev": "bun scripts/dev.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
     "icons": "bun scripts/icons.ts",

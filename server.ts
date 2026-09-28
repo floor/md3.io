@@ -59,6 +59,6 @@ export async function handleRequest(request: Request): Promise<Response> {
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
 }
 if (import.meta.main) {
-  const server = Bun.serve({ port: Number(process.env.PORT || 3339), hostname: process.env.HOST || '127.0.0.1', fetch: handleRequest });
+  const server = Bun.serve({ port: Number(process.env.PORT || 4300), hostname: process.env.HOST || '127.0.0.1', fetch: handleRequest });
   console.log(`md3.io ready at ${server.url}`);
 }

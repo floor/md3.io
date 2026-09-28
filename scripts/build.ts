@@ -1,5 +1,6 @@
 import { mkdir, cp } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 
 const root = resolve(import.meta.dir, '..');
 const outdir = resolve(root, 'dist');
@@ -12,7 +13,9 @@ if (!result.success) {
   for (const log of result.logs) console.error(log);
   process.exit(1);
 }
-const mtrlDist = resolve(root, 'node_modules/mtrl/dist');
+// Bun links node_modules/mtrl file by file; copy from the real checkout so cp never
+// has to recreate those links over files already in dist.
+const mtrlDist = resolve(dirname(realpathSync(resolve(root, 'node_modules/mtrl/package.json'))), 'dist');
 await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'mtrl/styles'), { recursive: true });
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'mtrl/themes'), { recursive: true });
 console.log('Built site, component playgrounds, and Material preview assets.');

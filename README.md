@@ -14,7 +14,7 @@ bun install
 bun run dev
 ```
 
-Open http://localhost:3339. `PORT` and `HOST` override the defaults. `bun run dev` builds client assets and watches the server. After editing client TypeScript or updating the local mtrl package, run `bun run build` again and reload the page. After rebuilding mtrl, run `bun install --force` to refresh the local file dependency before rebuilding this site.
+Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in the local mtrl checkout's `src` rebuilds mtrl, then this site, then restarts the server; a change in `src/client`, `src/shared` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server. Reload the page to see the result.
 
 ```sh
 bun run typecheck
