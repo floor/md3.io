@@ -54,7 +54,7 @@
       <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
-      <div class="sidebar__foot">mtrl · Material Design 3<br><a href="https://github.com/floor/mtrl/blob/main/LICENSE">MIT license</a></div>
+      <div class="sidebar__foot">mtrl · Material Design 3<br><a href="https://github.com/floor/mtrl/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a></div>
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>

@@ -6,6 +6,8 @@
 // The server serialises that spec (`ElementMeta`) from mtrl/elements, so the
 // browser bundle does not carry the elements themselves.
 
+import { createIconNamer, isMarkup } from './icon-code';
+
 export type Framework = 'html' | 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla';
 
 export const FRAMEWORKS: { id: Framework; label: string; language: 'xml' | 'typescript' | 'javascript' }[] = [
@@ -135,36 +137,27 @@ function plan(meta: ElementMeta, config: Config): Plan {
   return { attrs, model, props, text, children, omitted };
 }
 
-const isMarkup = (value: unknown): value is string => typeof value === 'string' && value.trimStart().startsWith('<svg');
-
-/** Frameworks bind markup (icons) from named constants instead of inlining it in attributes. */
-function hoist(meta: ElementMeta, p: Plan): [string, string][] {
-  const constants = new Map<string, string>();
-  const name = (base: string, attr: string): string => {
-    let candidate = camel(`${base}-${attr}`);
-    for (let n = 2; constants.has(candidate); n++) candidate = camel(`${base}-${attr}-${n}`);
-    return candidate;
-  };
+/** Frameworks import each icon (`editIcon`) instead of inlining SVG in attributes. */
+function hoist(meta: ElementMeta, p: Plan, indent = ''): string {
+  const icons = createIconNamer();
   for (const attr of p.attrs) {
-    if (isMarkup(attr.value)) constants.set(attr.ref = name(meta.name, attr.name), attr.value);
+    if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${meta.name}-${attr.name}`);
   }
   for (const child of p.children) {
     const base = String(child.attrs.find(a => a.name === 'value')?.value ?? meta.children!.name);
     for (const attr of child.attrs) {
-      if (isMarkup(attr.value)) constants.set(attr.ref = name(base, attr.name), attr.value);
+      if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${base}-${attr.name}`);
     }
   }
-  return [...constants];
+  return icons.imports(indent) + icons.declarations(indent);
 }
-
-const constantLines = (constants: [string, string][], indent = ''): string =>
-  constants.map(([name, value]) => `${indent}const ${name} = ${quoteJs(value)};\n`).join('');
 
 const omittedNote = (p: Plan, comment: (text: string) => string): string =>
   p.omitted.length ? `${comment(`Not yet exposed by the element: ${p.omitted.join(', ')}.`)}\n` : '';
 
+/** HTML attributes; an imported icon (`ref`) is set by the script instead. */
 const htmlAttrs = (attrs: Attr[]): string =>
-  attrs.map(a => (a.ref ? ` :${a.name}="${a.ref}"` : a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
+  attrs.filter(a => !a.ref).map(a => (a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
 
 /** JSX / Svelte props: camelCase, booleans bare, numbers in braces. */
 const jsxAttrs = (attrs: Attr[]): string =>
@@ -191,7 +184,6 @@ const kebab = (name: string): string => name.replace(/[A-Z]/g, c => `-${c.toLowe
 
 const literal = (value: unknown): string => (typeof value === 'string' ? quoteJs(value) : JSON.stringify(value));
 
-/** A framework component tag: self-closing when it has no content. */
 const element = (name: string, attributes: string, body: string): string =>
   body ? `<${name}${attributes}>${body}</${name}>` : `<${name}${attributes} />`;
 
@@ -205,16 +197,25 @@ const styleImports = (context: CodeContext): string =>
 
 function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const tag = `m-${meta.name}`;
+  // First: naming the icons marks the attributes the script sets instead of the markup.
+  const icons = hoist(meta, p, '  ');
   const modelAttr = p.model && p.model.value !== false && p.model.value !== undefined && p.model.value !== ''
     ? (p.model.value === true ? ` ${p.model.name}` : ` ${p.model.name}="${escapeAttr(String(p.model.value))}"`) : '';
   const children = p.children.map(c => `\n  <m-${meta.children!.name}${htmlAttrs(c.attrs)}>${escapeText(c.text)}</m-${meta.children!.name}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n` : '';
   const event = meta.events[0];
-  const host = event || p.props.length ? `\n  const ${camel(meta.name)} = document.querySelector('${tag}');\n` : '';
-  const props = p.props.map(prop => `  ${camel(meta.name)}.${prop.name} = ${literal(prop.value)};\n`).join('');
-  return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n\n  defineAll();\n` +
+  const variable = camel(meta.name);
+  const iconAttrs = p.attrs.filter(a => a.ref).map(a => `  ${variable}.setAttribute('${a.name}', ${a.ref});\n`).join('') +
+    p.children.flatMap(c => c.attrs.filter(a => a.ref).map(a => {
+      const value = c.attrs.find(v => v.name === 'value')?.value;
+      const selector = `m-${meta.children!.name}${value === undefined ? '' : `[value="${String(value)}"]`}`;
+      return `  ${variable}.querySelector('${selector}').setAttribute('${a.name}', ${a.ref});\n`;
+    })).join('');
+  const host = event || p.props.length || iconAttrs ? `\n  const ${variable} = document.querySelector('${tag}');\n` : '';
+  const props = p.props.map(prop => `  ${variable}.${prop.name} = ${literal(prop.value)};\n`).join('');
+  return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n${icons ? `\n${icons}` : ''}\n  defineAll();\n` +
     `  document.documentElement.dataset.theme = '${context.theme}';\n  document.documentElement.dataset.themeMode = '${context.mode}';\n` +
-    host + props +
+    host + iconAttrs + props +
     (event ? `  ${camel(meta.name)}.addEventListener('${event}', (event) => {\n    console.log(event.detail);\n  });\n` : '') +
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}<${tag}${modelAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
 }
@@ -233,7 +234,7 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const modelProps = p.model ? ` ${state}={${read}} on${pascal(event ?? 'change')}={(event) => ${setter}(event.detail.${state})}` : '';
   const children = p.children.map(c => `\n      <${Child}${jsxAttrs(c.attrs)}>${escapeText(c.text)}</${Child}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n    ` : '';
-  return `${imports}\n${constants.length ? `${constantLines(constants)}\n` : ''}${omittedNote(p, t => `// ${t}`)}export function Example() {\n` +
+  return `${imports}\n${constants ? `${constants}\n` : ''}${omittedNote(p, t => `// ${t}`)}export function Example() {\n` +
     (p.model ? `  const [${state}, ${setter}] = ${hook}(${literal(p.model.value)});\n` : '') +
     `  return (\n    ${element(Name, `${modelProps}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n  );\n}\n`;
 }
@@ -247,7 +248,7 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const model = p.model ? ` v-model="${p.model.name}"` : '';
   const tag = element(Name, `${model}${vueAttrs(p.attrs)}${vueProps(p.props)}`, body);
   return `<script setup lang="ts">\n${p.model ? `import { ref } from 'vue';\n` : ''}import { ${[Name, Child].filter(Boolean).join(', ')} } from 'mtrl/vue';\n${styleImports(context)}` +
-    (p.model || constants.length ? '\n' : '') + constantLines(constants) +
+    (p.model || constants ? '\n' : '') + constants + (constants && p.model ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
     `</script>\n\n<template>\n${omittedNote(p, t => `  <!-- ${t} -->`)}  ${tag}\n</template>\n`;
 }
@@ -255,12 +256,12 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
 function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const Name = pascal(meta.name);
   const Child = meta.children ? pascal(meta.children.name) : '';
-  const constants = hoist(meta, p);
+  const constants = hoist(meta, p, '  ');
   const children = p.children.map(c => `\n  <${Child}${jsxAttrs(c.attrs)}>${escapeText(c.text)}</${Child}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n` : '';
   const model = p.model ? ` bind:${p.model.name}` : '';
   return `<script lang="ts">\n  import { ${[Name, Child].filter(Boolean).join(', ')} } from 'mtrl/svelte';\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n` +
-    (p.model || constants.length ? '\n' : '') + constantLines(constants, '  ') +
+    (p.model || constants ? '\n' : '') + constants + (constants && p.model ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${element(Name, `${model}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n`;
 }

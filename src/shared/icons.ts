@@ -24,3 +24,15 @@ export const symbols = {
   bold: trim(formatBold), italic: trim(formatItalic), underline: trim(formatUnderlined),
   inbox: trim(inbox), menu: trim(menu), send: trim(send), volumeOff: trim(volumeOff), volumeUp: trim(volumeUp),
 };
+
+/** Each symbol's file in icons/, named as fonts.google.com/icons names the symbol (`-fill` when filled). */
+const files: Record<keyof typeof symbols, string> = {
+  accountCircle: 'account_circle-fill', add: 'add', bookmark: 'bookmark', check: 'check', close: 'close', download: 'download', edit: 'edit',
+  heart: 'favorite', bold: 'format_bold', italic: 'format_italic', underline: 'format_underlined', inbox: 'inbox', menu: 'menu',
+  send: 'send', volumeOff: 'volume_off', volumeUp: 'volume_up',
+};
+/** The icons/ file of a symbol's SVG (`edit`), when it is one of ours. */
+export const symbolFile = (svg: string): string | undefined => {
+  const key = (Object.keys(symbols) as (keyof typeof symbols)[]).find(k => symbols[k] === svg.trim());
+  return key && files[key];
+};
