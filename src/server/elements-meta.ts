@@ -2,7 +2,7 @@
 // generators (src/shared/frameworks.ts). Read on the server from mtrl/elements,
 // which imports safely there; the browser gets JSON, not the elements.
 import { elements, declarations } from 'mtrl/elements';
-import type { ChildrenMeta, ConfigKey, ElementMeta, SlottedMeta } from '../shared/frameworks';
+import type { ChildrenMeta, ConfigKey, ElementMeta, OpenMeta, SlottedMeta, TriggerMeta } from '../shared/frameworks';
 
 type Spec = {
   name: string;
@@ -47,21 +47,28 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
     counted: { lines: ['overline', 'supportingText'] },
   },
   carousel: { name: 'carousel-item', declaration: 'carouselItem', from: 'slides', text: 'title', keys: { image: 'src' } },
+  // A divider is an item whose `type` says so; a submenu is the item's own items.
+  menu: {
+    name: 'menu-item', declaration: 'menuItem', from: 'items', text: 'text', keys: { id: 'value' },
+    flags: { type: { divider: 'divider' } }, nested: { key: 'submenu', flag: 'hasSubmenu' },
+  },
+  select: { name: 'select-option', declaration: 'selectOption', from: 'options', text: 'text', keys: { id: 'value' } },
+  'split-button': { name: 'menu-item', declaration: 'menuItem', from: 'items', text: 'text', keys: { id: 'value' } },
 };
 
 // Config keys the spec does not map to an attribute, or maps otherwise.
 const keys: Record<string, Record<string, ConfigKey>> = {
   chips: { multiSelect: { attribute: 'selection', values: { true: 'multi', false: 'single' } } },
   list: {
-    trackSelection: { attribute: 'selection', values: { false: 'none' } },
-    multiSelect: { attribute: 'selection', values: { true: 'multiple' } },
+    trackSelection: { attribute: 'selection', values: { false: 'none' }, ignore: [true] },
+    multiSelect: { attribute: 'selection', values: { true: 'multiple' }, ignore: [false] },
     initialSelection: { model: true },
   },
-  'navigation-rail': { layout: { ignore: ['standard'] }, showToggle: { attribute: 'no-toggle', values: { false: true } }, ripple: { ignore: [true] } },
-  drawer: { variant: { ignore: ['standard'] }, dismissible: { ignore: [true] } },
+  'navigation-rail': { layout: { ignore: ['standard'] }, showToggle: { attribute: 'no-toggle', values: { false: true }, ignore: [true] }, ripple: { ignore: [true] } },
+  drawer: { variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] }, dismissible: { ignore: [true] } },
   'top-app-bar': {
-    compressible: { attribute: 'no-compress', values: { false: true } },
-    scrollable: { attribute: 'no-scroll', values: { false: true } },
+    compressible: { attribute: 'no-compress', values: { false: true }, ignore: [true] },
+    scrollable: { attribute: 'no-scroll', values: { false: true }, ignore: [true] },
     scrolled: { call: { method: 'setScrollState' }, ignore: [false] },
   },
   // The bar has a FAB when one is slotted.
@@ -74,6 +81,44 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     interactive: { same: 'clickable' },
   },
   carousel: { snap: { ignore: [true] } },
+  // The trigger is the anchor; closing on a choice is the menu's own behaviour.
+  menu: { opener: { ignore: ['#menu-trigger'] }, color: { ignore: ['standard'] }, closeOnSelect: { ignore: [true] } },
+  'split-button': { text: { text: true } },
+  tooltip: {
+    visible: { call: { method: 'show', when: true }, ignore: [false] },
+    showOnHover: { ignore: [true] },
+    showOnFocus: { ignore: [true] },
+  },
+  dialog: {
+    title: { attribute: 'headline' },
+    // Named by its headline; the label is the fallback without one.
+    ariaLabel: { attribute: 'aria-label', same: 'title' },
+    size: { attribute: 'fullscreen', values: { fullscreen: true }, ignore: ['medium'] },
+    closeButton: { follows: { key: 'size', equals: 'fullscreen' } },
+    animation: { ignore: ['scale'] },
+    footerAlignment: { ignore: ['right'] },
+    closeOnOverlayClick: { ignore: [true] },
+    closeOnEscape: { ignore: [true] },
+  },
+  'bottom-sheet': {
+    variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
+    title: { attribute: 'headline' },
+    dragHandle: { attribute: 'no-drag-handle', values: { false: true }, ignore: [true] },
+    // Open is the partial state; expanded is a call.
+    initialState: { call: { method: 'expand', when: 'expanded' }, ignore: ['hidden', 'partial'] },
+    peekHeight: { ignore: [56] },
+    maxWidth: { ignore: [640] },
+    closeOnScrimClick: { ignore: [true] },
+    closeOnEscape: { ignore: [true] },
+  },
+  'side-sheet': {
+    variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
+    title: { attribute: 'headline' },
+    closeButton: { attribute: 'no-close-button', values: { false: true }, ignore: [true] },
+    width: { ignore: [256] },
+    closeOnScrimClick: { ignore: [true] },
+    closeOnEscape: { ignore: [true] },
+  },
 };
 
 // Config values the element takes as child elements in its slots: the element
@@ -92,6 +137,38 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'actions', element: 'icon-button' },
     { from: 'fab', element: 'fab', slot: 'fab' },
   ],
+  dialog: [
+    { from: 'content', element: 'p', native: true, markup: true },
+    { from: 'buttons', element: 'button', slot: 'actions', closes: 'closeDialog' },
+  ],
+  'bottom-sheet': [{ from: 'content', element: 'p', native: true, markup: true }],
+  'side-sheet': [{ from: 'content', element: 'p', native: true, markup: true }],
+};
+
+// The button the preview puts beside the element (`elementConfig` adds its config):
+// one that opens it, or the target a tooltip describes. `for` is the element's
+// attribute naming it, when the element listens to it itself.
+type Trigger = Omit<TriggerMeta, 'attributes' | 'text'> & { attributes?: Record<string, string> };
+const triggers: Record<string, Trigger> = {
+  menu: { from: 'trigger', element: 'button', id: 'menu-trigger', for: 'anchor' },
+  dialog: { from: 'trigger', element: 'button', id: 'dialog-trigger' },
+  'bottom-sheet': { from: 'trigger', element: 'button', id: 'bottom-sheet-trigger' },
+  'side-sheet': { from: 'trigger', element: 'button', id: 'side-sheet-trigger' },
+  snackbar: { from: 'trigger', element: 'button', id: 'snackbar-trigger' },
+  drawer: { from: 'trigger', element: 'button', id: 'drawer-trigger' },
+  tooltip: { from: 'target', element: 'icon-button', id: 'tooltip-target', for: 'for' },
+};
+
+// `open` as state the element reflects: where its first value is, and the
+// methods the HTML opens and closes it with (the preview's trigger expands the
+// bottom sheet). The drawer has none: the HTML sets `open`.
+const open: Record<string, OpenMeta> = {
+  menu: { show: 'show', hide: 'hide' },
+  dialog: { config: 'open', show: 'show', hide: 'close' },
+  'bottom-sheet': { config: 'initialState', values: ['partial', 'expanded'], show: 'expand', hide: 'close' },
+  'side-sheet': { config: 'open', show: 'show', hide: 'close' },
+  snackbar: { config: 'open', show: 'show', hide: 'hide' },
+  drawer: { config: 'open' },
 };
 
 // The selection is multiple when this config key is true: the model is an
@@ -113,7 +190,7 @@ const propertyDefaults: Record<string, Record<string, unknown>> = {
 };
 
 /** A slotted mtrl element's attributes by config key, and its text's key, from its spec. */
-function slottedMeta(entry: Slotted): SlottedMeta {
+function slottedMeta<T extends Slotted | Trigger>(entry: T): Omit<T, 'attributes'> & Pick<SlottedMeta, 'attributes' | 'text'> {
   if (entry.native) return { ...entry, attributes: entry.attributes ?? {} };
   const spec = registry[camel(entry.element)]!.spec;
   const attributes = Object.fromEntries(Object.entries(spec.attributes ?? {})
@@ -153,5 +230,7 @@ export function elementMeta(slug: string): ElementMeta | null {
     ...(slotted[slug] ? { slotted: slotted[slug]!.map(slottedMeta) } : {}),
     ...(multiple[slug] ? { multiple: multiple[slug] } : {}),
     ...(styles[slug] ? { style: styles[slug] } : {}),
+    ...(triggers[slug] ? { trigger: slottedMeta(triggers[slug]!) } : {}),
+    ...(open[slug] ? { open: open[slug] } : {}),
   };
 }
