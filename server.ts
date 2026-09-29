@@ -60,7 +60,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!filePath.startsWith(base + sep) || !mime[extname(filePath)]) return new Response('Not found', { status: 404 });
     const file = Bun.file(filePath);
     if (!await file.exists()) return new Response('Not found', { status: 404 });
-    return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(filePath)]!, 'Cache-Control': 'no-cache' } });
+    // Fonts never change under a name (a new font gets a new file), so a reload
+    // uses the cached copy at once instead of revalidating and swapping late.
+    const cache = staticMatch[1] === 'fonts' ? 'public, max-age=31536000, immutable' : 'no-cache';
+    return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(filePath)]!, 'Cache-Control': cache } });
   }
   if (path === '/favicon.ico') return new Response(null, { status: 204 });
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });

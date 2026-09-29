@@ -10,6 +10,8 @@
   <meta property="og:description" content="<%= it.description %>" />
   <meta property="og:type" content="website" />
   <link rel="preload" href="/fonts/DIN-Alternate-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/styles/tokens.css" />
   <link rel="stylesheet" href="/styles/shell.css" />
   <link rel="stylesheet" href="/styles/ui.css" />
