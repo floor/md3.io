@@ -47,13 +47,15 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
     counted: { lines: ['overline', 'supportingText'] },
   },
   carousel: { name: 'carousel-item', declaration: 'carouselItem', from: 'slides', text: 'title', keys: { image: 'src' } },
-  // A divider is an item whose `type` says so; a submenu is the item's own items.
+  // A divider or a gap is an item whose `type` says so; a submenu is the item's own items.
   menu: {
     name: 'menu-item', declaration: 'menuItem', from: 'items', text: 'text', keys: { id: 'value' },
-    flags: { type: { divider: 'divider' } }, nested: { key: 'submenu', flag: 'hasSubmenu' },
+    flags: { type: { divider: 'divider', gap: 'gap' } }, nested: { key: 'submenu', flag: 'hasSubmenu' },
   },
   select: { name: 'select-option', declaration: 'selectOption', from: 'options', text: 'text', keys: { id: 'value' } },
   'split-button': { name: 'menu-item', declaration: 'menuItem', from: 'items', text: 'text', keys: { id: 'value' } },
+  // Suggestions are strings, each one's text.
+  search: { name: 'search-suggestion', declaration: 'searchSuggestion', from: 'suggestions', text: 'text' },
 };
 
 // Config keys the spec does not map to an attribute, or maps otherwise.
@@ -64,8 +66,12 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     multiSelect: { attribute: 'selection', values: { true: 'multiple' }, ignore: [false] },
     initialSelection: { model: true },
   },
-  'navigation-rail': { layout: { ignore: ['standard'] }, showToggle: { attribute: 'no-toggle', values: { false: true }, ignore: [true] }, ripple: { ignore: [true] } },
-  drawer: { variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] }, dismissible: { ignore: [true] } },
+  'navigation-rail': { showToggle: { attribute: 'no-toggle', values: { false: true }, ignore: [true] }, ripple: { ignore: [true] } },
+  drawer: {
+    variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
+    // Not dismissible: neither the scrim nor Escape closes it.
+    dismissible: { attribute: ['no-close-on-scrim-click', 'no-close-on-escape'], values: { false: true }, ignore: [true] },
+  },
   'top-app-bar': {
     compressible: { attribute: 'no-compress', values: { false: true }, ignore: [true] },
     scrollable: { attribute: 'no-scroll', values: { false: true }, ignore: [true] },
@@ -81,43 +87,52 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     interactive: { same: 'clickable' },
   },
   carousel: { snap: { ignore: [true] } },
-  // The trigger is the anchor; closing on a choice is the menu's own behaviour.
-  menu: { opener: { ignore: ['#menu-trigger'] }, color: { ignore: ['standard'] }, closeOnSelect: { ignore: [true] } },
+  // The trigger is the anchor.
+  menu: { opener: { ignore: ['#menu-trigger'] }, color: { ignore: ['standard'] }, closeOnSelect: { attribute: 'no-close-on-select', values: { false: true }, ignore: [true] } },
   'split-button': { text: { text: true } },
   tooltip: {
     visible: { call: { method: 'show', when: true }, ignore: [false] },
-    showOnHover: { ignore: [true] },
-    showOnFocus: { ignore: [true] },
+    showOnHover: { attribute: 'no-show-on-hover', values: { false: true }, ignore: [true] },
+    showOnFocus: { attribute: 'no-show-on-focus', values: { false: true }, ignore: [true] },
   },
   dialog: {
     title: { attribute: 'headline' },
     // Named by its headline; the label is the fallback without one.
     ariaLabel: { attribute: 'aria-label', same: 'title' },
-    size: { attribute: 'fullscreen', values: { fullscreen: true }, ignore: ['medium'] },
-    closeButton: { follows: { key: 'size', equals: 'fullscreen' } },
+    size: { ignore: ['medium'] },
     animation: { ignore: ['scale'] },
     footerAlignment: { ignore: ['right'] },
-    closeOnOverlayClick: { ignore: [true] },
-    closeOnEscape: { ignore: [true] },
+    closeOnOverlayClick: { attribute: 'no-close-on-scrim-click', values: { false: true }, ignore: [true] },
+    closeOnEscape: { attribute: 'no-close-on-escape', values: { false: true }, ignore: [true] },
   },
   'bottom-sheet': {
     variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
     title: { attribute: 'headline' },
     dragHandle: { attribute: 'no-drag-handle', values: { false: true }, ignore: [true] },
-    // Open is the partial state; expanded is a call.
-    initialState: { call: { method: 'expand', when: 'expanded' }, ignore: ['hidden', 'partial'] },
-    peekHeight: { ignore: [56] },
     maxWidth: { ignore: [640] },
-    closeOnScrimClick: { ignore: [true] },
-    closeOnEscape: { ignore: [true] },
+    closeOnScrimClick: { attribute: 'no-close-on-scrim-click', values: { false: true }, ignore: [true] },
+    closeOnEscape: { attribute: 'no-close-on-escape', values: { false: true }, ignore: [true] },
   },
   'side-sheet': {
     variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
     title: { attribute: 'headline' },
     closeButton: { attribute: 'no-close-button', values: { false: true }, ignore: [true] },
-    width: { ignore: [256] },
-    closeOnScrimClick: { ignore: [true] },
-    closeOnEscape: { ignore: [true] },
+    closeOnScrimClick: { attribute: 'no-close-on-scrim-click', values: { false: true }, ignore: [true] },
+    closeOnEscape: { attribute: 'no-close-on-escape', values: { false: true }, ignore: [true] },
+  },
+  // A range is one `start/end` string.
+  datepicker: { value: { join: '/' }, initialView: { ignore: ['day'] }, closeOnSelect: { ignore: [false] } },
+  // `step` is in seconds: a minute step, or with seconds shown their step, which needs a one-minute step.
+  timepicker: {
+    minuteStep: { attribute: 'step', values: { 5: 300, 15: 900 }, ignore: [1] },
+    showSeconds: { attribute: 'step', values: { true: 1 }, only: { key: 'minuteStep', equals: 1 }, ignore: [false] },
+  },
+  // The view open is the `open` state; the factory's defaults are the element's.
+  search: {
+    initialState: { attribute: 'open', values: { view: true }, ignore: ['bar'] },
+    showClearButton: { ignore: [true] },
+    expandOnFocus: { ignore: [true] },
+    collapseOnBlur: { ignore: [true] },
   },
 };
 
@@ -156,12 +171,16 @@ const triggers: Record<string, Trigger> = {
   'side-sheet': { from: 'trigger', element: 'button', id: 'side-sheet-trigger' },
   snackbar: { from: 'trigger', element: 'button', id: 'snackbar-trigger' },
   drawer: { from: 'trigger', element: 'button', id: 'drawer-trigger' },
+  'navigation-rail': { from: 'trigger', element: 'button', id: 'navigation-rail-trigger' },
+  // The time picker has no field: its opener shows the time.
+  timepicker: { from: 'trigger', element: 'button', id: 'timepicker-trigger', shows: ' · ' },
   tooltip: { from: 'target', element: 'icon-button', id: 'tooltip-target', for: 'for' },
 };
 
 // `open` as state the element reflects: where its first value is, and the
 // methods the HTML opens and closes it with (the preview's trigger expands the
-// bottom sheet). The drawer has none: the HTML sets `open`.
+// bottom sheet). The drawer has none: the HTML sets `open`. The rail's is
+// `expanded`, which its trigger expands and Escape collapses.
 const open: Record<string, OpenMeta> = {
   menu: { show: 'show', hide: 'hide' },
   dialog: { config: 'open', show: 'show', hide: 'close' },
@@ -169,6 +188,13 @@ const open: Record<string, OpenMeta> = {
   'side-sheet': { config: 'open', show: 'show', hide: 'close' },
   snackbar: { config: 'open', show: 'show', hide: 'hide' },
   drawer: { config: 'open' },
+  'navigation-rail': { config: 'expanded', property: 'expanded', events: ['expand', 'collapse'], show: 'expand', hide: 'collapse' },
+  timepicker: { show: 'show', hide: 'close' },
+};
+
+// Other state bound beside `open`: the bottom sheet's full height, which a drag changes too.
+const states: Record<string, NonNullable<ElementMeta['states']>> = {
+  'bottom-sheet': [{ property: 'expanded', events: ['expand', 'collapse'], config: 'initialState', values: ['expanded'] }],
 };
 
 // The selection is multiple when this config key is true: the model is an
@@ -232,5 +258,6 @@ export function elementMeta(slug: string): ElementMeta | null {
     ...(styles[slug] ? { style: styles[slug] } : {}),
     ...(triggers[slug] ? { trigger: slottedMeta(triggers[slug]!) } : {}),
     ...(open[slug] ? { open: open[slug] } : {}),
+    ...(states[slug] ? { states: states[slug] } : {}),
   };
 }

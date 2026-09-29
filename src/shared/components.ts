@@ -669,6 +669,9 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'menu': return { ...config, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
     case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
     case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
+    // The rail's while nothing else expands it, as the preview shows it.
+    case 'navigation-rail': return state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle ? { ...config, ...trigger('Open navigation') } : config;
+    case 'timepicker': return { ...config, ...trigger('Choose time') };
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
