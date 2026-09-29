@@ -12,7 +12,7 @@ import { createDatePicker } from 'mtrl';
 
 ```javascript
 const departure = createDatePicker({ label: 'Departure', variant: 'modal', minDate: new Date() });
-departure.on('change', ({ value }) => findFlights(value));
+departure.on('change', ({ value }) => search(value));
 document.querySelector('.trip').append(departure.element);
 ```
 

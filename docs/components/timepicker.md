@@ -14,7 +14,6 @@ To pull in only this component, import it directly instead: `import createTimePi
 
 ```javascript
 const timePicker = createTimePicker({ title: 'Select time', value: '14:30' });
-const timeButton = document.querySelector('.alarm-time');
 
 timeButton.addEventListener('click', () => timePicker.open());
 
@@ -129,7 +128,7 @@ The toggle at the bottom of the dialog switches between the dial and the fields,
 
 ```javascript
 const picker = createTimePicker({ title: 'Pickup', name: 'pickup', value: '08:00' });
-document.querySelector('form').append(picker.element); // submits pickup=08:00, updated as the time changes
+form.append(picker.element); // submits pickup=08:00, updated as the time changes
 ```
 
 ## Accessibility

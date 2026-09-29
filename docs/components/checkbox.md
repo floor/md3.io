@@ -12,7 +12,7 @@ import { createCheckbox } from 'mtrl';
 
 ```javascript
 const terms = createCheckbox({ label: 'I accept the terms', name: 'terms' });
-terms.on('change', ({ checked }) => { submitButton.disabled = !checked; });
+terms.on('change', ({ checked }) => submit.disabled = !checked);
 document.querySelector('form').append(terms.element);
 ```
 
@@ -100,7 +100,7 @@ Leave the parent unchecked while it is indeterminate, as `reflect` does, so a cl
 ```javascript
 const consent = createCheckbox({ label: 'Share usage data', required: true });
 
-document.querySelector('form').addEventListener('submit', (event) => {
+form.addEventListener('submit', (event) => {
   consent.setError(!consent.isChecked());
   if (!consent.isChecked()) event.preventDefault();
 });
