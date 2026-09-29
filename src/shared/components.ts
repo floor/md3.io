@@ -372,12 +372,12 @@ export const components = {
     controls: [
       ...section('Appearance', [choose('type', 'Input mode', ['dial', 'input'], 'dial'), choose('format', 'Clock format', ['12h', '24h'], '12h'), choose('orientation', 'Orientation', ['vertical', 'horizontal'], 'vertical')]),
       ...section('Content', [text('title', 'Title', 'Select time'), { ...text('value', 'Time', '09:30'), kind: 'time' }]),
-      ...section('Behavior', [toggle('showSeconds', 'Show seconds'), choose('minuteStep', 'Minute step', ['1', '5', '15'], '1'), toggle('closeOnSelect', 'Close on selection')]),
+      ...section('Behavior', [toggle('showSeconds', 'Show seconds'), choose('minuteStep', 'Minute step', ['1', '5', '15'], '1'), toggle('bounded', 'Limit times'), { ...text('minTime', 'Earliest time', '09:00'), kind: 'time', enabledWhen: 'bounded' }, { ...text('maxTime', 'Latest time', '17:30'), kind: 'time', enabledWhen: 'bounded' }]),
     ],
     config: (state: ComponentState): TimePickerConfig => ({ type: state.type === 'input' ? TIME_PICKER_TYPE.INPUT : TIME_PICKER_TYPE.DIAL,
       format: state.format === '24h' ? TIME_FORMAT.MILITARY : TIME_FORMAT.AMPM,
       orientation: state.orientation === 'horizontal' ? TIME_PICKER_ORIENTATION.HORIZONTAL : TIME_PICKER_ORIENTATION.VERTICAL,
-      title: string(state, 'title'), value: string(state, 'value'), showSeconds: bool(state, 'showSeconds'), minuteStep: Number(state.minuteStep), closeOnSelect: bool(state, 'closeOnSelect'), name: 'time' }),
+      title: string(state, 'title'), value: string(state, 'value'), showSeconds: bool(state, 'showSeconds'), minuteStep: Number(state.minuteStep), ...(state.bounded ? { minTime: string(state, 'minTime'), maxTime: string(state, 'maxTime') } : {}), name: 'time' }),
   },
   'navigation-rail': {
     group: 'Navigation', name: 'Navigation rail', factory: 'createNavigationRail', variable: 'rail',
