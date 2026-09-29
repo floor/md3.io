@@ -188,12 +188,12 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .component-page:is([data-component="card"], [data-component="dialog"], [data-component="bottom-sheet"], [data-component="side-sheet"]) .playground-space { height: 480px; min-height: 480px; }
 }
 
-/* Framework tabs in a playground's code view. */
-.framework-switch { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px 0; }
-.framework-switch .framework-tab { border: 0; background: transparent; color: var(--text-dim); border-radius: 6px; padding: 5px 10px;
+/* Framework tabs at the top of a component or example page. */
+.framework-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.framework-tab { border: 1px solid transparent; background: transparent; color: var(--text-dim); border-radius: 6px; padding: 5px 10px;
   font-size: var(--fs-2xs); font-weight: var(--fw-bold); letter-spacing: .6px; text-transform: uppercase; cursor: pointer; }
-.framework-switch .framework-tab:hover:not(:disabled) { color: var(--text); }
-.framework-switch .framework-tab[aria-selected="true"] { background: var(--accent); color: var(--bg); }
-.framework-switch .framework-tab:disabled { opacity: .45; cursor: not-allowed; }
-.framework-switch .framework-tab:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
-.framework-note { margin: 8px 18px 0; color: var(--text-dim); font-size: var(--fs-sm); }
+.framework-tab:hover:not(:disabled) { color: var(--text); }
+.framework-tab[aria-selected="true"] { background: var(--accent); color: var(--bg); }
+.framework-tab:disabled { opacity: .45; cursor: not-allowed; }
+.framework-tab:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.framework-note { margin: 12px 18px 0; color: var(--text-dim); font-size: var(--fs-sm); }
