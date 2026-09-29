@@ -350,7 +350,7 @@ export const components = {
     description: 'Choose a date or enter one by keyboard. Explore calendar and input modes, ranges, and selection limits.',
     summary: 'Calendar and keyboard entry for dates and ranges.', styles: ['datepicker'],
     controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input'], 'docked', 'select'), choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day')]),
+      ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input', 'fullscreen'], 'docked', 'select'), choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day')]),
       ...section('Content', [text('label', 'Label', 'Choose a date'), date('value', 'Date', '2026-09-21'), { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'range' }, choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select')]),
       ...section('Behavior', [toggle('range', 'Date range'), toggle('closeOnSelect', 'Close on selection'), disabled, toggle('bounded', 'Limit dates'), { ...date('minDate', 'Earliest date', '2026-09-01'), enabledWhen: 'bounded' }, { ...date('maxDate', 'Latest date', '2026-10-31'), enabledWhen: 'bounded' }]),
     ],
