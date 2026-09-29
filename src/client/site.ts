@@ -1,3 +1,4 @@
+import './search';
 const root = document.documentElement;
 const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
 function updateThemeLabel() {
