@@ -10,7 +10,8 @@
     "icons": "bun scripts/icons.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
-    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts"
+    "docs:check": "bun scripts/check-docs.ts",
+    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-docs.ts"
   },
   "dependencies": {
     "eta": "4.5.1",
