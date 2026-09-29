@@ -36,3 +36,9 @@ export const symbolFile = (svg: string): string | undefined => {
   const key = (Object.keys(symbols) as (keyof typeof symbols)[]).find(k => symbols[k] === svg.trim());
   return key && files[key];
 };
+
+/** The SVG of an icons/ file name (`favorite`), as the copied code imports it. */
+export const symbolByFile = (file: string): string | undefined => {
+  const key = (Object.keys(files) as (keyof typeof symbols)[]).find(k => files[k] === file);
+  return key && symbols[key];
+};

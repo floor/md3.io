@@ -3,6 +3,7 @@ import { handleRequest } from '../server';
 import { docGroups, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, initialComponentState, normalizeComponentState } from '../src/shared/components';
+import { symbolByFile } from '../src/shared/icons';
 
 const get = (path: string, method = 'GET') => handleRequest(new Request(`http://localhost${path}`, { method }));
 describe('site routes and documentation', () => {
@@ -60,8 +61,13 @@ describe('preview configuration and generated code', () => {
     const source = componentCode('button', state);
     expect(source).toContain("import 'mtrl/themes/ocean'");
     expect(source).toContain("dataset.themeMode = 'dark'");
+    expect(source).toContain("import favoriteIcon from './icons/favorite.svg?raw';");
+    // The icons are imports: bind each imported name to its file's SVG.
+    const imports = [...source.matchAll(/^import (\w+) from '\.\/icons\/([\w-]+)\.svg\?raw';$/gm)];
+    const names = imports.map(m => m[1]!);
+    const values = imports.map(m => symbolByFile(m[2]!));
     const literal = source.split('createButton(')[1]!.split(');')[0]!;
-    const actual = new Function(`return (${literal})`)();
+    const actual = new Function(...names, `return (${literal})`)(...values);
     expect(actual).toEqual(components.button.config(state));
   });
   test('an empty label has an accessible fallback', () => {
