@@ -2,7 +2,7 @@ import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
-import { components, componentCode, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
 hljs.registerLanguage('javascript', javascript);
@@ -38,8 +38,7 @@ try {
 function currentCode(): { text: string; language: string } {
   const language = FRAMEWORKS.find(f => f.id === framework)!.language;
   if (framework === 'vanilla' || !element) return { text: componentCode(slug, state), language: 'javascript' };
-  const config = components[slug].config(state) as Record<string, unknown>;
-  return { text: frameworkCode(framework, element, config, { theme: String(state.theme), mode: String(state.mode) }), language };
+  return { text: frameworkCode(framework, element, elementConfig(slug, state), { theme: String(state.theme), mode: String(state.mode) }), language };
 }
 // Only a choice made here is saved: a page without the element shows vanilla
 // without forgetting the framework picked elsewhere.
