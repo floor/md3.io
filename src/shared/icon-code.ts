@@ -4,7 +4,7 @@
 import { symbolFile } from './icons';
 
 /** The credit and the one bundler note every import of an icon carries. */
-export const ICON_CREDIT = 'Icons: Material Symbols Rounded by Google (Apache 2.0), 24px SVGs from fonts.google.com/icons';
+export const ICON_CREDIT = 'Material Symbols by Google, fonts.google.com/icons';
 
 const camel = (name: string): string => name.replace(/[-_]([a-z])/g, (_, c: string) => c.toUpperCase());
 
@@ -42,7 +42,7 @@ export function createIconNamer(): IconNamer {
     },
     imports(indent = '') {
       if (!imported.size) return '';
-      return `${indent}// ${ICON_CREDIT}.\n${indent}// ?raw imports the file as text (Vite; webpack: asset/source, Bun: with { type: 'text' }).\n` +
+      return `${indent}// ${ICON_CREDIT}\n` +
         [...imported].map(([name, file]) => `${indent}import ${name} from './icons/${file}.svg?raw';\n`).join('');
     },
     declarations(indent = '') {

@@ -157,7 +157,7 @@ function hoist(meta: ElementMeta, p: Plan, indent = ''): string {
 function iconNote(p: Plan): string {
   const names = [...p.attrs, ...p.children.flatMap(c => c.attrs)]
     .map(a => (isMarkup(a.value) ? symbolFile(a.value) : undefined)).filter((n): n is string => !!n);
-  return names.length ? `<!-- ${ICON_CREDIT}: ${[...new Set(names)].join(', ')}. -->\n` : '';
+  return names.length ? `<!-- ${ICON_CREDIT} (${[...new Set(names)].join(', ')}) -->\n` : '';
 }
 
 const omittedNote = (p: Plan, comment: (text: string) => string): string =>
