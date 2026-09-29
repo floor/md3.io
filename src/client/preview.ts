@@ -32,7 +32,7 @@ import createButtonGroup from 'mtrl/components/button-group';
 import createSplitButton from 'mtrl/components/split-button';
 import createFab from 'mtrl/components/fab';
 import createExtendedFab from 'mtrl/components/extended-fab';
-import { appBarActions, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -199,24 +199,26 @@ function create(state: ComponentState) {
     }
     case 'top-app-bar': {
       const control = createTopAppBar(components['top-app-bar'].config(state));
-      const buttons = appBarActions(state).map(config => createIconButton(config));
+      const content = appBarContent('top-app-bar', state);
+      const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
-      if (state.leading) {
-        const navigation = createIconButton({ icon: componentIcons.menu, ariaLabel: 'Open navigation' });
+      if (content.leading) {
+        const navigation = createIconButton(content.leading);
         navigation.on('click', () => message('Navigation clicked'));
         control.addLeadingElement(navigation.element);
         buttons.push(navigation);
       }
-      control.setScrollState(state.scrolled === true);
+      control.setScrollState(content.scrolled === true);
       return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); control.destroy(); } };
     }
     case 'bottom-app-bar': {
       const control = createBottomAppBar(components['bottom-app-bar'].config(state));
-      const buttons = appBarActions(state).map(config => createIconButton(config));
+      const content = appBarContent('bottom-app-bar', state);
+      const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addAction(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
-      const fab = state.hasFab ? createFab({ icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' }) : null;
+      const fab = content.fab ? createFab(content.fab) : null;
       if (fab) { control.addFab(fab.element); fab.on('click', () => message(`${String(state.fabLabel) || 'Compose'} clicked`)); }
-      if (!state.visible) control.hide();
+      if (!content.visible) control.hide();
       return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
     }
 

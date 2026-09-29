@@ -85,6 +85,12 @@ const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'I
 const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
 const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
 export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: componentIcons[icon], ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon] ?? icon, variant: 'standard' }));
+/** What an app bar preview adds beside its config: the icon buttons, the FAB, and the state it is put in. */
+export function appBarContent(slug: 'top-app-bar' | 'bottom-app-bar', state: ComponentState): { leading?: IconButtonConfig; actions: IconButtonConfig[]; fab?: FabConfig; scrolled?: boolean; visible?: boolean } {
+  return slug === 'top-app-bar'
+    ? { ...(state.leading ? { leading: { icon: componentIcons.menu, ariaLabel: 'Open navigation' } } : {}), actions: appBarActions(state), scrolled: state.scrolled === true }
+    : { actions: appBarActions(state), ...(state.hasFab ? { fab: { icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
+}
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
@@ -652,6 +658,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
 }
 export function initialComponentState(slug: ComponentSlug): ComponentState {
   return normalizeComponentState(slug, Object.fromEntries(components[slug].controls.map(control => [control.key, control.initial])));
+}
+/** The configuration the framework code is generated from: the config, and what the preview adds beside it. */
+export function elementConfig(slug: ComponentSlug, state: ComponentState): Record<string, unknown> {
+  const config = components[slug].config(state) as Record<string, unknown>;
+  return slug === 'top-app-bar' || slug === 'bottom-app-bar' ? { ...config, ...appBarContent(slug, state) } : config;
 }
 /** The vanilla code of a playground, with its icons as named constants (`editIcon`). */
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
