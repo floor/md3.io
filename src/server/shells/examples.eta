@@ -1,0 +1,13 @@
+<div class="page-wrap examples-page">
+  <header class="page-heading"><span class="eyebrow">EXAMPLES</span><h1>Examples</h1>
+    <p>The same interfaces in every framework. Each one runs the web components: directly in HTML, through the React, Vue, Svelte and Solid adapters, or as the factories they are built on.</p></header>
+  <ul class="example-grid">
+  <% it.examples.forEach(example => { %>
+    <li><a class="example-card" href="/examples/<%= example.slug %>/">
+      <span class="example-card__title"><%= example.title %></span>
+      <span class="example-card__description"><%= example.description %></span>
+      <span class="example-card__components"><%= example.components.join(' · ') %></span>
+    </a></li>
+  <% }); %>
+  </ul>
+</div>

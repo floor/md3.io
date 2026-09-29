@@ -6,7 +6,7 @@ const root = resolve(import.meta.dir, '..');
 const outdir = resolve(root, 'dist');
 await mkdir(outdir, { recursive: true });
 const result = await Bun.build({
-  entrypoints: ['site', 'playground', 'preview'].map(name => resolve(root, `src/client/${name}.ts`)),
+  entrypoints: ['site', 'playground', 'preview', 'examples'].map(name => resolve(root, `src/client/${name}.ts`)),
   outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external',
 });
 if (!result.success) {
@@ -18,4 +18,7 @@ if (!result.success) {
 const mtrlDist = resolve(dirname(realpathSync(resolve(root, 'node_modules/mtrl/package.json'))), 'dist');
 await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'mtrl/styles'), { recursive: true });
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'mtrl/themes'), { recursive: true });
+// Every example in every framework, into dist/examples.
+const examples = Bun.spawnSync(['bun', resolve(root, 'scripts/build-examples.ts')], { stdout: 'inherit', stderr: 'inherit' });
+if (examples.exitCode !== 0) process.exit(1);
 console.log('Built site, component playgrounds, and Material preview assets.');

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/styles/syntax.css" />
   <% if (it.isHome) { %><link rel="stylesheet" href="/styles/homepage.css" /><% } %>
   <link rel="stylesheet" href="/styles/site.css" />
+  <% if (it.section === 'Examples') { %><link rel="stylesheet" href="/styles/examples.css" /><script type="module" src="/dist/examples.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
   </script>
@@ -36,6 +37,7 @@
     <% if (it.section) { %><span class="header__sep">/</span><span class="header__section"><%= it.section %></span><% } %>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
+      <a href="/examples/" class="<%= it.section === 'Examples' ? 'active' : '' %>">Examples</a>
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
       <a href="https://github.com/floor/mtrl" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>

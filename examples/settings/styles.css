@@ -1,0 +1,7 @@
+/* Layout for the example only: the components bring their own styles. */
+.settings { display: flex; flex-direction: column; gap: 16px; width: min(100%, 420px); }
+.settings__panel { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+.settings__panel[hidden] { display: none; }
+.settings__panel > * { display: block; width: 100%; }
+.settings__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.settings__status { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
