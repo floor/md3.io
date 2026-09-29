@@ -36,7 +36,7 @@ box you meant. Give that container `position: relative`.
 ## Import
 
 ```javascript
-import { createTopAppBar } from 'mtrl';
+import { createTopAppBar, createIconButton } from 'mtrl';
 ```
 
 ## Basic Usage
@@ -47,9 +47,9 @@ const bar = createTopAppBar({
   type: 'small'
 });
 
-bar.addLeadingElement(backButton.element);
-bar.addTrailingElement(searchButton.element);
-bar.addTrailingElement(moreButton.element);
+bar.addLeadingElement(createIconButton({ icon: backIcon, ariaLabel: 'Back' }).element);
+bar.addTrailingElement(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);
+bar.addTrailingElement(createIconButton({ icon: moreIcon, ariaLabel: 'More options' }).element);
 
 document.querySelector('.screen').appendChild(bar.element);
 ```
@@ -109,12 +109,16 @@ the leading and trailing containers) for everything else.
 ### The four types side by side
 
 ```javascript
-for (const type of ['center', 'small', 'medium', 'large']) {
+const demo = document.querySelector('.demo');
+
+const addBar = (type) => {
   const bar = createTopAppBar({ type, title: 'Page title', scrollable: false });
-  bar.addLeadingElement(menuButton().element);
-  bar.addTrailingElement(moreButton().element);
+  bar.addLeadingElement(createIconButton({ icon: menuIcon, ariaLabel: 'Menu' }).element);
+  bar.addTrailingElement(createIconButton({ icon: moreIcon, ariaLabel: 'More options' }).element);
   demo.appendChild(bar.element);
-}
+};
+
+['center', 'small', 'medium', 'large'].forEach(addBar);
 ```
 
 `scrollable: false` matters here: several bars on one page would otherwise all
@@ -142,6 +146,7 @@ top row and shrinks to `title-large`, and the background changes to
 
 ```javascript
 const bar = createTopAppBar({ title: 'Messages', scrollable: false });
+const list = document.querySelector('.message-list');
 list.addEventListener('scroll', () => {
   bar.setScrollState(list.scrollTop > 4);
 });
@@ -149,7 +154,7 @@ list.addEventListener('scroll', () => {
 
 ### Switching type at runtime
 
-```javascript
+```javascript continued
 bar.setType('medium');
 ```
 
@@ -181,10 +186,10 @@ survives the switch.
 .mtrl-top-app-bar--scrolled { }
 
 /* the parts */
-.mtrl-top-app-bar-leading { }
-.mtrl-top-app-bar-headline { }
-.mtrl-top-app-bar-trailing { }
-.mtrl-top-app-bar-row { }   /* medium and large only */
+.mtrl-top-app-bar__leading { }
+.mtrl-top-app-bar__headline { }
+.mtrl-top-app-bar__trailing { }
+.mtrl-top-app-bar__row { }   /* medium and large only */
 ```
 
 The small type carries no modifier class — it is the base rule. Colours come

@@ -313,8 +313,8 @@ M3 Expressive sliders at size M, L or XL can carry an icon inside the track that
 const volume = createSlider({
   size: 'M',
   value: 40,
-  insetIcon: volumeUpSvg,       // 24px on M and L, 32px on XL
-  insetIconAtMin: volumeOffSvg, // shown at the minimum
+  insetIcon: volumeUpIcon,       // 24px on M and L, 32px on XL
+  insetIconAtMin: volumeOffIcon, // shown at the minimum
   ariaLabel: 'Volume'
 });
 ```
@@ -408,7 +408,7 @@ const contrastSlider = createSlider({
   valueFormatter: (value) => `${value > 0 ? '+' : ''}${value}%`
 });
 
-const imageElement = document.querySelector('#preview-image');
+const imageElement = document.getElementById('preview-image');
 
 contrastSlider.on('input', (event) => {
   // Real-time preview during dragging
@@ -500,6 +500,8 @@ settingsForm.addEventListener('submit', (event) => {
 
 ```javascript
 // Accessible slider with full keyboard support
+let instructed = false;
+
 const accessibleSlider = createSlider({
   min: 0,
   max: 100,
@@ -518,9 +520,9 @@ const accessibleSlider = createSlider({
     
     focus: (event) => {
       // Provide instructions on first focus
-      if (!accessibleSlider.hasReceivedFocus) {
+      if (!instructed) {
         announceToScreenReader('Use arrow keys to adjust zoom level');
-        accessibleSlider.hasReceivedFocus = true;
+        instructed = true;
       }
     }
   }
@@ -543,7 +545,7 @@ function announceToScreenReader(message) {
 
 The Slider is built by piping features onto a base component:
 
-```javascript
+```javascript fragment
 const slider = pipe(
   createBase,                     // the base component
   withEvents(),                   // event emitter
@@ -695,6 +697,9 @@ Any current browser with CSS custom properties, `ResizeObserver` and ES2020. The
 ## Error Handling
 
 ```javascript
+const slider = createSlider({ min: 0, max: 100, value: 50 });
+const rangeSlider = createSlider({ range: true, min: 0, max: 100, value: 20, secondValue: 40 });
+
 slider.setValue(150); // clamped to max
 slider.setValue(-10); // clamped to min
 

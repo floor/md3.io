@@ -130,9 +130,18 @@ The component system is designed for extension through several approaches:
 New features can be added to existing components through the composition pipeline:
 
 ```typescript
-const createCustomButton = (config) => pipe(
+import { pipe, createButton } from 'mtrl';
+import type { ButtonConfig, ButtonComponent } from 'mtrl';
+
+// A feature takes a component and returns it, enhanced
+const withTitle = (title: string) => (component: ButtonComponent) => {
+  component.element.title = title;
+  return component;
+};
+
+const createCustomButton = (config: ButtonConfig) => pipe(
   createButton,
-  withCustomFeature(config)
+  withTitle('Saves a draft')
 )(config);
 ```
 
@@ -141,9 +150,17 @@ const createCustomButton = (config) => pipe(
 New components can be created following the same pattern:
 
 ```typescript
-const createCustomComponent = (config) => {
+import { pipe, createBase, withEvents, withElement, withLifecycle } from 'mtrl';
+import type { ElementComponent } from 'mtrl';
+
+const withLabel = (label: string) => <C extends ElementComponent>(component: C) => {
+  component.element.textContent = label;
+  return component;
+};
+
+const createCustomComponent = (config: { label: string }) => {
   const baseConfig = {
-    ...defaultConfig,
+    prefix: 'mtrl',
     ...config,
     componentName: 'custom'
   };
@@ -151,9 +168,8 @@ const createCustomComponent = (config) => {
   return pipe(
     createBase,
     withEvents(),
-    withElement(elementConfig),
-    withFeature1(baseConfig),
-    withFeature2(baseConfig),
+    withElement({ tag: 'div', className: 'custom' }),
+    withLabel(baseConfig.label),
     withLifecycle()
   )(baseConfig);
 };
@@ -164,7 +180,9 @@ const createCustomComponent = (config) => {
 Existing component APIs can be extended with custom functionality:
 
 ```typescript
-const withCustomAPI = (component) => ({
+import { createButton } from 'mtrl';
+
+const withCustomAPI = <C extends object>(component: C) => ({
   ...component,
   customMethod() {
     // Custom implementation
@@ -172,7 +190,7 @@ const withCustomAPI = (component) => ({
   }
 });
 
-const enhancedButton = withCustomAPI(createButton(config));
+const enhancedButton = withCustomAPI(createButton({ text: 'Save' }));
 ```
 
 ## Component Features
@@ -244,13 +262,15 @@ All components implement accessibility best practices:
 
 ### Button Component
 
+<!-- check-docs untriggered 'click': the example destroys the button before anyone can click it -->
 ```typescript
+import { createButton } from 'mtrl';
+
 // Create a filled button with an icon
 const submitButton = createButton({
   text: 'Submit',
   variant: 'filled',
-  icon: '<svg>...</svg>',
-  iconPosition: 'start'
+  icon: '<svg>...</svg>'
 });
 
 // Add click handler
@@ -271,6 +291,8 @@ submitButton.destroy();
 ### Checkbox Component
 
 ```typescript
+import { createCheckbox } from 'mtrl';
+
 // Create a checkbox with label
 const consentCheckbox = createCheckbox({
   label: 'I agree to the terms and conditions',
@@ -297,16 +319,18 @@ consentCheckbox.setLabel('I consent to all terms of service');
 ### Menu Component
 
 ```typescript
+import { createMenu } from 'mtrl';
+
 // Create a menu with items
 const userMenu = createMenu({
-  anchor: document.getElementById('user-avatar'),
+  opener: document.getElementById('user-avatar')!,
   items: [
     { id: 'profile', text: 'Profile', icon: '<svg>...</svg>' },
     { id: 'settings', text: 'Settings' },
     { type: 'divider' },
     { id: 'logout', text: 'Log out' }
   ],
-  placement: 'bottom-end'
+  position: 'bottom-end'
 });
 
 // Listen for selections
@@ -323,13 +347,16 @@ userMenu.open();
 
 // Update items dynamically
 userMenu.setItems([
-  // New items...
+  { id: 'profile', text: 'Profile' },
+  { id: 'logout', text: 'Log out' }
 ]);
 ```
 
 ### Slider Component
 
 ```typescript
+import { createSlider } from 'mtrl';
+
 // Create a slider
 const volumeSlider = createSlider({
   min: 0,

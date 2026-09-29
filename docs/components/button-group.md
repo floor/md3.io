@@ -49,7 +49,7 @@ const view = createButtonGroup({
   ]
 });
 
-view.on('change', ({ values }) => load(values[0]));
+view.on('change', ({ values }) => showRange(values[0]));
 document.querySelector('.toolbar').appendChild(view.element);
 ```
 
@@ -238,13 +238,13 @@ const mode = createButtonGroup({
 .mtrl-button-group--connected { }
 .mtrl-button-group--standard { }
 .mtrl-button-group--tonal { }
-.mtrl-button-group--size-m { }
+.mtrl-button-group--size-s { }         /* and --size-xs, --size-m, --size-l, --size-xl */
 .mtrl-button-group--square { }
 .mtrl-button-group--vertical { }
 .mtrl-button-group--selectable { }
 .mtrl-button-group--labels-selected { }
 .mtrl-button-group--equal-width { }
-.mtrl-button-group--density-compact { }
+/* and --density-comfortable, --density-compact when density is set */
 .mtrl-button-group--disabled { }
 
 /* the buttons */

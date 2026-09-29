@@ -162,6 +162,12 @@ const fluid = createExtendedFab({
 });
 ```
 
+### The icon after the label
+
+```javascript
+const share = createExtendedFab({ icon: shareIcon, text: 'Share', iconPosition: 'end' });
+```
+
 ### Collapsing on scroll
 
 With `collapseOnScroll`, the component watches `window.scrollY` and collapses
@@ -186,8 +192,13 @@ showcase's is) will not react to that box's scrolling; drive it with
 ```javascript
 const fab = createExtendedFab({ icon: addIcon, text: 'Compose' });
 
-list.on('scroll-down', () => fab.collapse());
-list.on('scroll-up', () => fab.expand());
+const list = document.querySelector('.message-list');
+let lastTop = 0;
+list.addEventListener('scroll', () => {
+  if (list.scrollTop > lastTop) fab.collapse();
+  else fab.expand();
+  lastTop = list.scrollTop;
+});
 
 fab.element.addEventListener('collapse', () => track('fab-collapsed'));
 ```
@@ -233,8 +244,8 @@ fab.element.addEventListener('collapse', () => track('fab-collapsed'));
 .mtrl-extended-fab--bottom-right { }
 
 /* inside */
-.mtrl-extended-fab-icon { }
-.mtrl-extended-fab-text { }
+.mtrl-extended-fab__icon { }
+.mtrl-extended-fab__text { }
 ```
 
 Colours come from the theme, not from component properties: each style is the

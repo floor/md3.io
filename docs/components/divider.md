@@ -22,7 +22,7 @@ import {
 ```javascript
 const divider = createDivider();
 
-listElement.appendChild(divider.element);
+document.querySelector('.settings-list').appendChild(divider.element);
 ```
 
 The component renders an `<hr>` element, so it is a separator to assistive
@@ -85,7 +85,8 @@ const separator = createDivider({
   insetEnd: 8
 });
 
-toolbar.insertBefore(separator.element, overflowButton.element);
+const toolbar = document.querySelector('.toolbar');
+toolbar.insertBefore(separator.element, toolbar.lastElementChild);
 ```
 
 A vertical divider takes its height from its parent, so the parent needs a

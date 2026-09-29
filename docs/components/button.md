@@ -425,7 +425,9 @@ const button2 = createButton({
 
 For most UI interactions, use the synchronous methods:
 
-```typescript
+```javascript
+const button = createButton({ text: 'Save', progress: true });
+
 button.on('click', () => {
   // Show loading state
   button.setLoadingSync(true, 'Processing...');
@@ -448,7 +450,10 @@ button.on('click', () => {
 
 Use async methods when you need to ensure the progress is loaded:
 
-```typescript
+```javascript
+const button = createButton({ text: 'Import', progress: { indeterminate: false } });
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 button.on('click', async () => {
   // This ensures progress is loaded before continuing
   await button.setLoading(true, 'Starting...');
@@ -466,13 +471,12 @@ button.on('click', async () => {
 
 When using `progress: true`, default configuration is applied:
 
-```typescript
-{
-  variant: 'circular',
-  size: 20,
-  thickness: 2,
-  indeterminate: true
-}
+```javascript
+// The same as progress: true
+const button = createButton({
+  text: 'Submit',
+  progress: { variant: 'circular', size: 20, thickness: 2, indeterminate: true }
+});
 ```
 
 For custom configuration:
@@ -498,7 +502,7 @@ in `currentColor` and so takes the button variant's content colour. A circular
 
 #### File Upload with Progress
 
-```typescript
+```javascript
 const uploadBtn = createButton({
   text: 'Upload File',
   progress: { variant: 'circular', size: 18 }
@@ -519,20 +523,23 @@ uploadBtn.on('click', () => {
 
 #### Form Submission
 
-```typescript
+```javascript
 const submitBtn = createButton({
   text: 'Submit Form',
   type: 'submit',
   progress: true
 });
 
-form.on('submit', async (e) => {
+const form = document.querySelector('form');
+form.append(submitBtn.element);
+
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   
   submitBtn.setLoadingSync(true, 'Submitting...');
   
   try {
-    await submitForm(form.getData());
+    await submitForm(new FormData(form));
     submitBtn.setLoadingSync(false, 'Success!');
   } catch (error) {
     submitBtn.setLoadingSync(false, 'Try Again');
@@ -542,7 +549,7 @@ form.on('submit', async (e) => {
 
 #### Multi-step Process
 
-```typescript
+```javascript
 const processBtn = createButton({
   text: 'Start Process',
   progress: { indeterminate: false }
@@ -623,7 +630,7 @@ The Button component is built using functional composition, combining multiple f
 
 The button component is created by "piping" these features together:
 
-```javascript
+```javascript fragment
 const button = pipe(
   createBase,               // Start with base component
   withEvents(),             // Add event capability
@@ -637,6 +644,7 @@ const button = pipe(
   withProgress(config),     // Add progress functionality
   withRipple(config),       // Add ripple effect
   withLifecycle(),          // Add lifecycle management
+  comp => comp,             // (inline) add the --round or --square class
   comp => withAPI(config)(comp)  // Apply public API
 )(baseConfig);
 ```
@@ -698,14 +706,14 @@ The Button component uses BEM-style CSS classes for easy customization:
 
 /* Button with icon */
 .mtrl-button--icon { /* ... */ }
-.mtrl-button-icon { /* ... */ }
-.mtrl-button-text { /* ... */ }
+.mtrl-button__icon { /* ... */ }
+.mtrl-button__text { /* ... */ }
 
 /* Circular icon-only button */
 .mtrl-button--circular { /* ... */ }
 
 /* Progress integration */
-.mtrl-button-progress { /* ... */ }
+.mtrl-button__progress { /* ... */ }
 
 /* Ripple effect */
 .mtrl-ripple { /* ... */ }

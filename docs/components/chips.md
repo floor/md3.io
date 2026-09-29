@@ -12,7 +12,7 @@ Chips are compact elements that stand for one discrete thing: an action, a filte
 ## Import
 
 ```javascript
-import { createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips } from 'mtrl';
+import { createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createMenu } from 'mtrl';
 ```
 
 ## Basic Usage
@@ -162,7 +162,15 @@ const price = createFilterChip({
 });
 
 // Anchored to the chip; opened by the chip's trailing button, not by a click on the opener
-const priceMenu = createMenu({ opener: price.element, manualOpen: true, items: priceRanges });
+const priceMenu = createMenu({
+  opener: price.element,
+  manualOpen: true,
+  items: [
+    { id: 'under-50', text: 'Under $50' },
+    { id: '50-100', text: '$50 to $100' },
+    { id: 'over-100', text: 'Over $100' }
+  ]
+});
 priceMenu.on('close', () => price.trailingAction.setAttribute('aria-expanded', 'false'));
 ```
 

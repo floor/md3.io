@@ -10,7 +10,8 @@
     "icons": "bun scripts/icons.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
-    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-search.ts"
+    "docs:check": "bun scripts/check-docs.ts",
+    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-search.ts && bun scripts/check-docs.ts"
   },
   "dependencies": {
     "eta": "4.5.1",
@@ -27,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-preset-solid": "^1.9",
+    "mtrl-addons": "0.9.0-next.1",
     "playwright": "^1.63.0",
     "react": "^19",
     "react-dom": "^19",

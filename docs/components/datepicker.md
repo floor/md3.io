@@ -76,7 +76,9 @@ const stay = createDatePicker({
   selectionMode: 'range',
   minDate: new Date()
 });
-stay.on('change', ({ value: [checkIn, checkOut] }) => book(checkIn, checkOut));
+stay.on('change', ({ value }) => {
+  if (Array.isArray(value)) book(value[0], value[1]);
+});
 ```
 
 Tap the start date, then the end date; **Save** commits the range and the close (x) button discards it.

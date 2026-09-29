@@ -29,7 +29,7 @@ That is the whole integration: the tooltip is already in `document.body`, the ta
 
 `bottom` is the placement you get. To put a tooltip anywhere else, call `setPosition()` after creation — passing `position` in the config sets the CSS class but not the geometry, so the tooltip would still be placed below its target:
 
-```javascript
+```javascript continued
 tooltip.setPosition('top');
 ```
 
@@ -107,6 +107,8 @@ tooltips.forEach((tooltip) => tooltip.destroy());
 What you cannot do is stop it responding to the target as well: `showOnHover: false` and `showOnFocus: false` are accepted and ignored, so hovering or focusing the input below will also show the hint. Drive a tooltip yourself only where that extra behaviour is harmless; where it is not, the hint belongs in the field's own supporting text.
 
 ```javascript
+const input = document.querySelector('input'); // the email field
+
 const tooltip = createTooltip({
   text: 'Enter a valid email address',
   target: input
@@ -128,9 +130,10 @@ input.addEventListener('input', () => {
 const tooltip = createTooltip({});
 tooltip.setPosition('right');
 
+const list = document.querySelector('.results');
 list.addEventListener('pointerover', (event) => {
-  const row = event.target.closest('[data-title]');
-  if (!row) return;
+  const row = event.target instanceof Element ? event.target.closest('[data-title]') : null;
+  if (!(row instanceof HTMLElement)) return;
   tooltip.setText(row.dataset.title).setTarget(row);
 });
 ```
@@ -177,7 +180,7 @@ import { createTooltip, TooltipConfig, TooltipComponent } from 'mtrl';
 
 const config: TooltipConfig = {
   text: 'Delete item',
-  target: deleteButton
+  target: document.querySelector<HTMLElement>('#delete-button')!
 };
 
 const tooltip: TooltipComponent = createTooltip(config);

@@ -14,7 +14,7 @@ keylines it sits between as the scroll offset changes.
 ## Import
 
 ```javascript
-import { createCarousel } from 'mtrl';
+import { createCarousel, createCard, createIconButton } from 'mtrl';
 
 import {
   CAROUSEL_VARIANTS,
@@ -36,7 +36,7 @@ const carousel = createCarousel({
 });
 
 carousel.element.style.height = '280px';
-container.appendChild(carousel.element);
+document.querySelector('.featured').appendChild(carousel.element);
 
 carousel.on('change', ({ index }) => {
   console.log(index);
@@ -154,6 +154,12 @@ This is what the showcase renders: one section per variant, each carousel given
 an explicit height.
 
 ```javascript
+const slides = [
+  { image: '/art/bridge.jpg', title: 'Forest Bridge' },
+  { image: '/art/waters.jpg', title: 'Dark Waters' },
+  { image: '/art/dunes.jpg', title: 'Dunes' }
+];
+
 const mount = (container, config, height) => {
   const carousel = createCarousel({ slides, ...config });
   carousel.element.style.height = height;
@@ -161,15 +167,15 @@ const mount = (container, config, height) => {
   return carousel;
 };
 
-mount(section1, { variant: 'multi-browse', itemWidth: 280 }, '280px');
-mount(section2, { variant: 'hero', itemWidth: 480 }, '320px');
-mount(section3, { variant: 'hero-center', itemWidth: 480 }, '320px');
-mount(section4, { variant: 'uncontained', itemWidth: 280 }, '240px');
+mount(document.querySelector('#multi-browse'), { variant: 'multi-browse', itemWidth: 280 }, '280px');
+mount(document.querySelector('#hero'), { variant: 'hero', itemWidth: 480 }, '320px');
+mount(document.querySelector('#hero-center'), { variant: 'hero-center', itemWidth: 480 }, '320px');
+mount(document.querySelector('#uncontained'), { variant: 'uncontained', itemWidth: 280 }, '240px');
 ```
 
 The full-screen layout scrolls vertically, so it wants a tall, narrow frame:
 
-```javascript
+```javascript continued
 const carousel = createCarousel({ variant: 'full-screen', slides });
 carousel.element.style.height = '480px';
 carousel.element.style.maxWidth = '360px';
@@ -198,7 +204,9 @@ const carousel = createCarousel({
 `content` replaces the image and text, which is how you put a component inside a
 slide.
 
-```javascript
+```javascript continued
+const card = createCard({ variant: 'filled', header: { title: 'Gift cards' } });
+
 carousel.addSlide({ content: card.element });
 carousel.addSlide({ content: '<div class="promo">Coming soon</div>' });
 ```
@@ -208,7 +216,10 @@ what goes inside it is yours.
 
 ### External controls
 
-```javascript
+```javascript continued
+const prevButton = createIconButton({ icon: backIcon, ariaLabel: 'Previous slide' });
+const nextButton = createIconButton({ icon: forwardIcon, ariaLabel: 'Next slide' });
+
 nextButton.on('click', () => carousel.next());
 prevButton.on('click', () => carousel.prev());
 

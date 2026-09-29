@@ -171,6 +171,12 @@ const filters = createTabs({
 ```javascript
 import { setupResponsiveBehavior } from 'mtrl/components/tabs';
 
+const media = createTabs({
+  tabs: [
+    { text: 'Video', value: 'video', icon: videoIcon, state: 'active' },
+    { text: 'Photos', value: 'photos', icon: photoIcon }
+  ]
+});
 setupResponsiveBehavior(media, { smallScreen: { layout: 'icon-only' } });
 ```
 

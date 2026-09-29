@@ -81,7 +81,7 @@ parent.on('change', ({ checked, nativeEvent }) => {
 children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
 ```
 
-```javascript
+```javascript continued
 // A checkbox is inline-flex: stack the parent and children in columns, the children
 // indented under the parent.
 const group = document.createElement('div');

@@ -28,7 +28,7 @@ the bar pinned to its bottom edge.
 ## Import
 
 ```javascript
-import { createBottomAppBar } from 'mtrl';
+import { createBottomAppBar, createIconButton, createFab } from 'mtrl';
 ```
 
 ## Basic Usage
@@ -36,12 +36,12 @@ import { createBottomAppBar } from 'mtrl';
 ```javascript
 const bar = createBottomAppBar();
 
-bar.addAction(searchButton.element);
-bar.addAction(favoriteButton.element);
-bar.addAction(shareButton.element);
-bar.addFab(composeFab.element);
+bar.addAction(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);
+bar.addAction(createIconButton({ icon: heartOutlineIcon, ariaLabel: 'Favorite' }).element);
+bar.addAction(createIconButton({ icon: shareIcon, ariaLabel: 'Share' }).element);
+bar.addFab(createFab({ icon: addIcon, ariaLabel: 'Compose' }).element);
 
-screen.appendChild(bar.element);  // screen is position: relative
+document.querySelector('.screen').appendChild(bar.element);  // .screen is position: relative
 ```
 
 ## Configuration
@@ -102,8 +102,9 @@ The showcase's basic bar is four icon buttons; adding a FAB is one more call.
 ```javascript
 const bar = createBottomAppBar({ hasFab: true });
 
-for (const button of [searchButton, favoriteButton, shareButton, settingsButton]) {
-  bar.addAction(button.element);
+const actions = { Search: searchIcon, Favorite: heartOutlineIcon, Share: shareIcon, Settings: settingsIcon };
+for (const [ariaLabel, icon] of Object.entries(actions)) {
+  bar.addAction(createIconButton({ icon, ariaLabel }).element);
 }
 
 bar.addFab(createFab({ icon: addIcon, ariaLabel: 'Add item' }).element);
@@ -117,8 +118,8 @@ const bar = createBottomAppBar({
   fabPosition: 'center'
 });
 
-bar.addAction(menuButton.element);
-bar.addFab(scanFab.element);
+bar.addAction(createIconButton({ icon: menuIcon, ariaLabel: 'Menu' }).element);
+bar.addFab(createFab({ icon: photoIcon, ariaLabel: 'Scan' }).element);
 ```
 
 The FAB container becomes absolutely positioned at the centre of the bar, so
@@ -140,6 +141,10 @@ Auto-hide watches `window.scrollY`, so a bar inside its own scrolling box will
 not react to that box. Drive it with `show()` and `hide()` there:
 
 ```javascript
+const bar = createBottomAppBar();
+const list = document.querySelector('.message-list');
+let lastTop = 0;
+
 list.addEventListener('scroll', () => {
   const down = list.scrollTop > lastTop;
   lastTop = list.scrollTop;
@@ -172,8 +177,8 @@ list.addEventListener('scroll', () => {
 .mtrl-bottom-app-bar--hidden { }
 
 /* the parts */
-.mtrl-bottom-app-bar-actions { }
-.mtrl-bottom-app-bar-fab-container { }
+.mtrl-bottom-app-bar__actions { }
+.mtrl-bottom-app-bar__fab-container { }
 ```
 
 The background is the theme's `surface-container`. Hiding is a

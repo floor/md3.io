@@ -148,7 +148,11 @@ document.querySelector('.showcase').appendChild(list.element);
 
 ```javascript
 const list = createList({
-  items: countries,
+  items: [
+    { id: 'fr', headline: 'France' },
+    { id: 'de', headline: 'Germany' },
+    { id: 'jp', headline: 'Japan' }
+  ],
   multiSelect: true,
   initialSelection: ['fr', 'jp'],
   ariaLabel: 'Countries'
@@ -165,8 +169,16 @@ list.setSelection(['de']);
 ### Vetoing a selection
 
 ```javascript
+const list = createList({
+  items: [
+    { id: 'standard', headline: 'Standard delivery' },
+    { id: 'express', headline: 'Express delivery', supportingText: 'Sold out today' }
+  ]
+});
+
+// A disabled item never emits select; veto the ones that are only unavailable now
 list.on('select', (event) => {
-  if (event.item.disabled) {
+  if (event.item.id === 'express') {
     event.preventDefault();  // click is ignored, nothing is highlighted
   }
 });
@@ -176,7 +188,10 @@ list.on('select', (event) => {
 
 ```javascript
 const list = createList({
-  items: entries,
+  items: [
+    { id: 'plan', headline: 'Plan', supportingText: 'Pro, billed yearly' },
+    { id: 'renewal', headline: 'Renews', supportingText: 'March 3' }
+  ],
   trackSelection: false
 });
 ```
@@ -253,16 +268,21 @@ The typography is set through the theme's typescale rather than by size: `body-l
 
 ```typescript
 import { createList } from 'mtrl';
-import type { ListConfig, ListComponent, ListSelectEvent } from 'mtrl';
+import type { ListConfig, ListComponent, ListItem, ListSelectEvent } from 'mtrl';
 
-const list: ListComponent = createList({
-  items: entries,
+const config: ListConfig<ListItem> = {
+  items: [
+    { id: 'inbox', headline: 'Inbox' },
+    { id: 'sent', headline: 'Sent' }
+  ],
   multiSelect: true
-} as ListConfig);
+};
+
+const list: ListComponent = createList(config);
 
 list.on('select', (event: ListSelectEvent) => {
   console.log(event.item);
 });
 ```
 
-`ListConfig` and `ListComponent` are exported from the package root, along with `SelectEvent` under the name `ListSelectEvent`. `LoadEvent` is exported from the component's own types module.
+`ListConfig`, `ListComponent` and `ListItem` are exported from the package root, along with `SelectEvent` under the name `ListSelectEvent`. `LoadEvent` is exported from the component's own types module.

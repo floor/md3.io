@@ -138,8 +138,8 @@ the event and the data is on `event.detail`:
 
 | Event | Description | `event.detail` |
 |-------|-------------|------|
-| `change` | Fires when progress value changes | `{ value: number, max: number }` |
-| `complete` | Fires when progress reaches 100%. **Note:** With animated value changes (default), this event fires after the animation completes (~500ms). With immediate value changes (`setValue(100, false)`), it fires immediately. | `{ value: number, max: number }` |
+| `change` | Fires when progress value changes | A DOM `CustomEvent`; `event.detail` is `{ value: number, max: number }` |
+| `complete` | Fires when progress reaches 100%. **Note:** With animated value changes (default), this event fires after the animation completes (~500ms). With immediate value changes (`setValue(100, false)`), it fires immediately. | A DOM `CustomEvent`; `event.detail` is `{ value: number, max: number }` |
 
 ## Examples
 
@@ -348,10 +348,10 @@ function onUploadProgress(event) {
 }
 
 // User interaction with animated update
-button.onclick = () => {
+document.querySelector('.finish-button').addEventListener('click', () => {
   // Animated update for better UX on user actions
   progress.setValue(100);
-};
+});
 ```
 
 ### Task Progress with Dynamic States
@@ -441,17 +441,17 @@ The Progress component is built using functional composition, combining multiple
 
 The progress component is created by "piping" these features together:
 
-```javascript
-const progress = pipe(
-  createBase,                    // Start with base component
-  withEvents(),                  // Add event capability
-  withElement(config),           // Create DOM container
-  withVariant(config),           // Apply variant styling
-  withDisabled(config),          // Add disabled state
-  withState(config),             // Add state management
-  withCanvas(config),            // Add canvas rendering
-  comp => withAPI(config)(comp), // Apply public API
-  withLifecycle()                // Add lifecycle management
+```javascript fragment
+const component = pipe(
+  createBase,                      // Start with base component
+  withEvents(),                    // Add event capability
+  withElement(elementConfig),      // Create DOM container
+  withVariant(baseConfig),         // Apply variant styling
+  withDisabled(baseConfig),        // Add disabled state
+  withState(baseConfig),           // Add state management
+  withLifecycle(),                 // Before the canvas, so destroy() removes the element too
+  withCanvas(baseConfig),          // Add canvas rendering
+  comp => withAPI(apiConfig)(comp) // Apply public API
 )(baseConfig);
 ```
 
@@ -548,12 +548,12 @@ The component provides appropriate information to assistive technologies:
 ```html
 <!-- Determinate progress -->
 <div role="progressbar" aria-label="Uploading photo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42">
-  <canvas class="mtrl-progress-canvas" aria-hidden="true"></canvas>
+  <canvas class="mtrl-progress__canvas" aria-hidden="true"></canvas>
 </div>
 
 <!-- Indeterminate progress -->
 <div role="progressbar" aria-label="Loading news article" aria-valuemin="0" aria-valuemax="100">
-  <canvas class="mtrl-progress-canvas" aria-hidden="true"></canvas>
+  <canvas class="mtrl-progress__canvas" aria-hidden="true"></canvas>
 </div>
 ```
 
@@ -580,7 +580,7 @@ The Progress component uses BEM-style CSS classes for easy customization:
 .mtrl-progress__label { /* ... */ }
 
 /* Canvas element */
-.mtrl-progress-canvas { /* ... */ }
+.mtrl-progress__canvas { /* ... */ }
 ```
 
 ### CSS Custom Properties
@@ -680,15 +680,15 @@ For older browsers, the component requires these APIs to function properly. Cons
 The Progress component includes robust error handling:
 
 ```javascript
-// Safe value setting with validation
-progress.setValue(150); // Automatically clamped to max value
-progress.setValue(-10); // Automatically clamped to 0
-
 // Component handles canvas initialization gracefully
 const progress = createProgress({
   variant: 'circular',
   value: 50
 });
+
+// Safe value setting with validation
+progress.setValue(150); // Automatically clamped to max value
+progress.setValue(-10); // Automatically clamped to 0
 
 // Component will retry canvas initialization if needed
 ```

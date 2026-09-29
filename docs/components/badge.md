@@ -92,6 +92,7 @@ The badge emits no events of its own, and `on()`/`off()` do **not** attach DOM l
 If you genuinely need a listener on the badge, add it to the element yourself:
 
 ```javascript
+const badge = createBadge({ label: 5, target: document.querySelector('.notification-icon') });
 badge.element.addEventListener('mouseenter', showDetail);
 ```
 
@@ -183,7 +184,7 @@ marker.attachTo(document.getElementById('step-2'));
 .mtrl-badge--overflow { /* ... */ }   /* when a numeric label went over max */
 
 /* The wrapper created by a target or attachTo() */
-.mtrl-badge-wrapper { /* ... */ }
+.mtrl-badge__wrapper { /* ... */ }
 ```
 
 Colours come from the theme's `error`, `primary`, `secondary` and `tertiary` roles and their `on-` pairs, so a badge follows whatever the theme says.

@@ -20,7 +20,7 @@ Migrating is mostly a rename:
 ```javascript
 // segmented button
 createSegmentedButton({
-  mode: 'single',
+  mode: SelectionMode.SINGLE,
   segments: [{ text: 'List', value: 'list', selected: true }, { text: 'Grid', value: 'grid' }]
 });
 
@@ -35,22 +35,21 @@ createButtonGroup({
 ## Import
 
 ```javascript
-import { createSegmentedButton } from 'mtrl';
+import { createButtonGroup } from 'mtrl';
+import { createSegmentedButton, SelectionMode, Density } from 'mtrl/components/segmented-button';
 ```
 
-The source declares `SelectionMode` and `Density` as string enums, but neither
-is reachable from an application: the package exports only `mtrl` and
-`mtrl/styles`, so `mtrl/components/segmented-button` does not resolve, and the
-package root re-exports the component's types but not those two runtime values.
-Pass the strings instead — `'single'`, `'multi'`, and `'default'`,
-`'comfortable'`, `'compact'` — which is what the enums hold. Every example
-below does.
+`SelectionMode` and `Density` are string enums, exported by
+`mtrl/components/segmented-button` and not by the package root. The config types
+take the enums; plain JavaScript can pass the strings they hold — `'single'`,
+`'multi'`, and `'default'`, `'comfortable'`, `'compact'` — but the examples use
+the enums, which type-check.
 
 ## Basic Usage
 
 ```javascript
 const view = createSegmentedButton({
-  mode: 'single',
+  mode: SelectionMode.SINGLE,
   segments: [
     { text: 'List', value: 'list', selected: true },
     { text: 'Grid', value: 'grid' },
@@ -67,8 +66,8 @@ document.querySelector('.toolbar').appendChild(view.element);
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `segments` | `SegmentConfig[]` | — | The segments, in order |
-| `mode` | `SelectionMode \| 'single' \| 'multi'` | `'single'` | One selection at a time, or several |
-| `density` | `Density \| string` | `'default'` | `'default'`, `'comfortable'` or `'compact'` |
+| `mode` | `SelectionMode` | `SelectionMode.SINGLE` | One selection at a time, or several |
+| `density` | `Density` | `Density.DEFAULT` | `DEFAULT`, `COMFORTABLE` or `COMPACT` |
 | `disabled` | `boolean` | `false` | Disables every segment |
 | `ripple` | `boolean` | `true` | Ripple on the segments |
 | `rippleConfig` | `{ duration, timing, opacity }` | — | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
@@ -144,7 +143,7 @@ The showcase drives its view switcher this way, reading `event.value[0]`:
 
 ```javascript
 const views = createSegmentedButton({
-  mode: 'single',
+  mode: SelectionMode.SINGLE,
   segments: [
     { text: 'List', value: 'list', selected: true },
     { text: 'Grid', value: 'grid' },
@@ -153,18 +152,18 @@ const views = createSegmentedButton({
 });
 
 views.on('change', (event) => {
-  render(event.value[0]);
+  showView(event.value[0]);
 });
 
 // programmatic selection, which emits change too
-document.querySelector('#grid').onclick = () => views.select('grid');
+document.querySelector('#grid').addEventListener('click', () => views.select('grid'));
 ```
 
 ### Multi-select filters
 
 ```javascript
 const price = createSegmentedButton({
-  mode: 'multi',
+  mode: SelectionMode.MULTI,
   segments: [
     { text: '$', value: 'low' },
     { text: '$$', value: 'medium' },
@@ -187,7 +186,7 @@ How a segment shows selection depends on what it contains:
 
 ```javascript
 const transport = createSegmentedButton({
-  mode: 'single',
+  mode: SelectionMode.SINGLE,
   segments: [
     { icon: walkIcon, text: 'Walk', value: 'walk', selected: true },
     { icon: bikeIcon, text: 'Bike', value: 'bike' },
@@ -224,9 +223,8 @@ check.
 .mtrl-segmented-button--disabled { }
 
 /* the segments, which are buttons */
-.mtrl-segmented-button-segment { }
+.mtrl-segmented-button__segment { }
 .mtrl-segment--selected { }
-.mtrl-segment--disabled { }
 .mtrl-segment-checkmark { }
 ```
 

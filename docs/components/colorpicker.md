@@ -39,7 +39,7 @@ picker.setValue('#2196f3');
 
 // Listen for color changes
 picker.on('change', (color) => {
-  document.body.style.backgroundColor = color;
+  document.body.style.backgroundColor = String(color);
 });
 ```
 
@@ -163,32 +163,38 @@ The ColorPicker component emits the following events:
 
 ### HSVColor Interface
 
-```javascript
-{
-  h: number,  // Hue (0-360)
-  s: number,  // Saturation (0-100)
-  v: number   // Value/Brightness (0-100)
-}
+```typescript
+import type { HSVColor } from 'mtrl-addons';
+
+const orange: HSVColor = {
+  h: 14,   // Hue (0-360)
+  s: 86,   // Saturation (0-100)
+  v: 100   // Value/Brightness (0-100)
+};
 ```
 
 ### RGBColor Interface
 
-```javascript
-{
-  r: number,  // Red (0-255)
-  g: number,  // Green (0-255)
-  b: number   // Blue (0-255)
-}
+```typescript
+import type { RGBColor } from 'mtrl-addons';
+
+const orange: RGBColor = {
+  r: 255,  // Red (0-255)
+  g: 87,   // Green (0-255)
+  b: 34    // Blue (0-255)
+};
 ```
 
 ### ColorSwatch Interface
 
-```javascript
-{
-  color: string,      // Hex color value
-  label?: string,     // Optional tooltip label
-  selected?: boolean  // Whether selected
-}
+```typescript
+import type { ColorSwatch } from 'mtrl-addons';
+
+const swatch: ColorSwatch = {
+  color: '#ff5722',  // Hex color value
+  label: 'Orange',   // Optional tooltip label
+  selected: true     // Optional: whether selected
+};
 ```
 
 ## Examples
@@ -197,6 +203,8 @@ The ColorPicker component emits the following events:
 
 ```javascript
 // Basic inline picker - always visible
+const preview = document.getElementById('preview');
+
 const picker = createColorPicker({
   value: '#ff5722',
   swatches: ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5'],
@@ -206,7 +214,7 @@ const picker = createColorPicker({
   }
 });
 
-container.appendChild(picker.element);
+document.querySelector('.controls').appendChild(picker.element);
 ```
 
 ### Dropdown Color Picker
@@ -250,6 +258,8 @@ document.body.appendChild(dialogPicker.element);
 ```javascript
 // By default, dropdown/dialog pickers close when a swatch is selected.
 // Set closeOnSelect to false to keep the picker open.
+const preview = document.getElementById('preview');
+
 const picker = createColorPicker({
   variant: 'dropdown',
   trigger: document.getElementById('color-trigger'),
@@ -310,6 +320,8 @@ const defaultPicker = createColorPicker({
 
 ```javascript
 // Enable opacity/alpha selection
+const element = document.getElementById('preview');
+
 const picker = createColorPicker({
   value: '#ff5722',
   showOpacity: true,
@@ -352,21 +364,23 @@ const pickedColor = await picker.pickColor();
 const imagePicker = createColorPicker({
   value: '#ff5722',
   showPipette: true,
-  imageSource: document.getElementById('my-image')
+  imageSource: document.querySelector('img') // the image to sample
 });
 
 // Change image source dynamically
-picker.setImageSource('/path/to/image.jpg');
-picker.setImageSource(imageElement);
+imagePicker.setImageSource('/path/to/image.jpg');
+imagePicker.setImageSource(document.querySelector('img'));
 ```
 
 ### Swatches Only Picker
 
 ```javascript
 // Minimal picker with only swatches
+let selectedColor = '#f44336';
+
 const swatchPicker = createColorPicker({
   variant: 'dropdown',
-  trigger: myButton,
+  trigger: document.getElementById('color-button'),
   showArea: false,
   showHue: false,
   showInput: false,
@@ -431,6 +445,8 @@ picker.clearSwatches();
 ### Live Preview with Input Event
 
 ```javascript
+const previewElement = document.getElementById('preview');
+
 const picker = createColorPicker({
   value: '#673ab7',
   onInput: (color) => {
@@ -449,21 +465,21 @@ const picker = createColorPicker({
 ```javascript
 const picker = createColorPicker({
   variant: 'dropdown',
-  trigger: triggerButton
+  trigger: document.getElementById('color-button')
 });
 
 // Open programmatically
-openButton.addEventListener('click', () => {
+document.getElementById('open-button').addEventListener('click', () => {
   picker.open();
 });
 
 // Close programmatically
-closeButton.addEventListener('click', () => {
+document.getElementById('close-button').addEventListener('click', () => {
   picker.close();
 });
 
 // Toggle
-toggleButton.addEventListener('click', () => {
+document.getElementById('toggle-button').addEventListener('click', () => {
   picker.toggle();
 });
 
@@ -519,12 +535,12 @@ const picker = createColorPicker({
 });
 
 // Enable later
-enableButton.addEventListener('click', () => {
+document.getElementById('enable-button').addEventListener('click', () => {
   picker.enable();
 });
 
 // Disable again
-disableButton.addEventListener('click', () => {
+document.getElementById('disable-button').addEventListener('click', () => {
   picker.disable();
 });
 
@@ -540,7 +556,7 @@ if (picker.isDisabled()) {
 // Create picker for extracting colors from an image
 const imagePicker = createColorPicker({
   variant: 'dropdown',
-  trigger: extractButton,
+  trigger: document.getElementById('extract-button'),
   showPipette: true,
   imageSource: '/uploads/user-image.jpg',
   onPipetteEnd: (color) => {
@@ -552,8 +568,9 @@ const imagePicker = createColorPicker({
 });
 
 // Update when image changes
-imageInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
+const imageInput = document.querySelector('input');
+imageInput.addEventListener('change', () => {
+  const file = imageInput.files[0];
   if (file) {
     const url = URL.createObjectURL(file);
     imagePicker.setImageSource(url);
@@ -578,7 +595,7 @@ The ColorPicker component is built using functional composition, combining multi
 
 ### How Composition Works
 
-```javascript
+```javascript fragment
 const colorPicker = pipe(
   createBase,                  // Start with base
   withEvents(),                // Add event system
@@ -682,10 +699,10 @@ Eyedropper tool for color sampling:
 | `.mtrl-colorpicker__swatches` | Swatches container |
 | `.mtrl-colorpicker__swatch` | Individual swatch button |
 | `.mtrl-colorpicker__swatch--selected` | Selected swatch |
-| `.mtrl-colorpicker__swatch--add` | Add swatch button |
 | `.mtrl-colorpicker__preview` | Color preview square |
-| `.mtrl-colorpicker__value` | Value display container |
-| `.mtrl-colorpicker__value-input` | Hex input field |
+| `.mtrl-colorpicker__value` | Value row: the preview, the hex field and the pipette |
+| `.mtrl-colorpicker__textfield` | The hex field, an mtrl text field |
+| `.mtrl-colorpicker__pipette-btn` | The pipette, an mtrl icon button |
 
 ### CSS Custom Properties
 
@@ -780,12 +797,16 @@ The ColorPicker component includes comprehensive accessibility features:
        tabindex="0">
     <div class="mtrl-colorpicker__opacity-handle"></div>
   </div>
-  <input class="mtrl-colorpicker__value-input" 
-         type="text" 
-         aria-label="Hex color value">
-  <button class="mtrl-colorpicker__pipette"
-          aria-label="Pick color from screen">
-  </button>
+  <div class="mtrl-colorpicker__value">
+    <div class="mtrl-colorpicker__preview"></div>
+    <div class="mtrl-textfield mtrl-colorpicker__textfield">
+      <input class="mtrl-textfield__input" type="text" maxlength="7">
+      <label class="mtrl-textfield__label">Hex</label>
+    </div>
+    <button class="mtrl-icon-button mtrl-colorpicker__pipette-btn"
+            aria-label="Pick color from image">
+    </button>
+  </div>
 </div>
 ```
 
@@ -822,10 +843,10 @@ The ColorPicker component supports all modern browsers:
 
 ### Feature Detection
 
-```javascript
-import { isEyeDropperSupported } from 'mtrl-addons';
+The package does not export `isEyeDropperSupported`, so test for the API itself:
 
-if (isEyeDropperSupported()) {
+```javascript
+if ('EyeDropper' in window) {
   console.log('Native EyeDropper API available');
 } else {
   console.log('Using canvas-based fallback');
@@ -870,6 +891,8 @@ if (isEyeDropperSupported()) {
 The component handles edge cases gracefully:
 
 ```javascript
+const picker = createColorPicker({ value: '#ff5722' });
+
 // Invalid hex values are ignored
 picker.setValue('invalid');  // No change
 picker.setValue('#gg0000');  // No change
@@ -904,8 +927,7 @@ import {
   ColorPickerComponent,
   HSVColor,
   RGBColor,
-  ColorSwatch,
-  isEyeDropperSupported
+  ColorSwatch
 } from 'mtrl-addons';
 
 const config: ColorPickerConfig = {
@@ -956,11 +978,7 @@ import {
   normalizeHex,
   
   // Utilities
-  getContrastColor,
-  clamp,
-  
-  // Feature detection
-  isEyeDropperSupported
+  getContrastColor
 } from 'mtrl-addons';
 
 // Convert between formats
@@ -978,9 +996,6 @@ normalizeHex('abc');                        // '#aabbcc'
 getContrastColor('#ffffff');                // '#000000'
 getContrastColor('#000000');                // '#ffffff'
 
-// Clamp values
-clamp(150, 0, 100);                         // 100
-clamp(-10, 0, 100);                         // 0
 ```
 
 ## Constants
@@ -995,7 +1010,7 @@ import {
   COLORPICKER_DEFAULTS,
   SWATCH_SIZES,
   SIZE_DIMENSIONS
-} from 'mtrl-addons';
+} from 'mtrl-addons/components/colorpicker/constants';
 
 // Event names
 COLORPICKER_EVENTS.CHANGE;        // 'change'
