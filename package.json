@@ -10,12 +10,13 @@
     "icons": "bun scripts/icons.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
-    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts"
+    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-search.ts"
   },
   "dependencies": {
     "eta": "4.5.1",
     "highlight.js": "11.11.1",
     "marked": "17.0.2",
+    "minisearch": "^7.2.0",
     "mtrl": "file:../mtrl"
   },
   "devDependencies": {

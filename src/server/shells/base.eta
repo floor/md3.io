@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/styles/syntax.css" />
   <% if (it.isHome) { %><link rel="stylesheet" href="/styles/homepage.css" /><% } %>
   <link rel="stylesheet" href="/styles/site.css" />
+  <link rel="stylesheet" href="/styles/search.css" />
   <% if (it.section === 'Examples') { %><link rel="stylesheet" href="/styles/examples.css" /><script type="module" src="/dist/examples.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
@@ -43,6 +44,10 @@
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
       <a href="https://github.com/floor/mtrl" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>
+    <button type="button" class="header__search" id="search-trigger" aria-label="Search" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
+      <svg class="header__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
+    </button>
     <button type="button" class="header__theme" id="theme-toggle" aria-label="Toggle site theme">
       <svg class="header__theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
       <svg class="header__theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 13A9 9 0 0 1 11 3a9 9 0 1 0 10 10Z"/></svg>
@@ -60,4 +65,5 @@
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>
+  <%~ include('search') %>
 </body></html>
