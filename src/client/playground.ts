@@ -32,8 +32,9 @@ const codeTab = document.querySelector<HTMLButtonElement>('#code-tab')!;
 let framework: Framework = 'vanilla';
 try {
   const saved = localStorage.getItem(FRAMEWORK_KEY) as Framework | null;
-  framework = element ? (saved && FRAMEWORKS.some(f => f.id === saved) ? saved : 'html') : 'vanilla';
-} catch { framework = element ? 'html' : 'vanilla'; }
+  // Vanilla by default; a framework chosen on any page is remembered.
+  framework = element && saved && FRAMEWORKS.some(f => f.id === saved) ? saved : 'vanilla';
+} catch { framework = 'vanilla'; }
 
 function currentCode(): { text: string; language: string } {
   const language = FRAMEWORKS.find(f => f.id === framework)!.language;

@@ -11,12 +11,12 @@ import { createIconNamer, isMarkup } from './icon-code';
 export type Framework = 'html' | 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla';
 
 export const FRAMEWORKS: { id: Framework; label: string; language: 'xml' | 'typescript' | 'javascript' }[] = [
-  { id: 'html', label: 'HTML', language: 'xml' },
+  { id: 'vanilla', label: 'Vanilla', language: 'javascript' },
+  { id: 'html', label: 'Web Components', language: 'xml' },
   { id: 'react', label: 'React', language: 'typescript' },
   { id: 'vue', label: 'Vue', language: 'xml' },
   { id: 'svelte', label: 'Svelte', language: 'xml' },
-  { id: 'solid', label: 'Solid', language: 'typescript' },
-  { id: 'vanilla', label: 'Vanilla', language: 'javascript' },
+  { id: 'solid', label: 'SolidJS', language: 'typescript' },
 ];
 
 type AttributeType = 'string' | 'boolean' | 'number';

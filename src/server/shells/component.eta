@@ -1,6 +1,6 @@
 <div class="page-wrap component-page" data-component="<%= it.slug %>">
   <nav class="framework-tabs" role="tablist" aria-label="Framework">
-    <% [['html','HTML'],['react','React'],['vue','Vue'],['svelte','Svelte'],['solid','Solid'],['vanilla','Vanilla']].forEach(([id, label]) => { const available = id === 'vanilla' || !!it.element; %>
+    <% [['vanilla','Vanilla'],['html','Web Components'],['react','React'],['vue','Vue'],['svelte','Svelte'],['solid','SolidJS']].forEach(([id, label]) => { const available = id === 'vanilla' || !!it.element; %>
     <button type="button" class="framework-tab" role="tab" data-framework="<%= id %>" aria-selected="false" tabindex="-1" <%= available ? '' : 'disabled' %> <% if (!available) { %>title="Coming with the <%= it.component.name.toLowerCase() %> web component"<% } %>><%= label %></button>
     <% }); %>
   </nav>
@@ -18,7 +18,7 @@
       <div class="playground-space">
         <div id="live-panel" class="playground-view" role="tabpanel" aria-labelledby="live-tab"><iframe id="preview" title="Interactive mtrl <%= it.component.name.toLowerCase() %> preview" src="/preview/<%= it.slug %>/"></iframe></div>
         <div id="code-panel" class="playground-view code-panel" role="tabpanel" aria-labelledby="code-tab" tabindex="0" hidden>
-          <% if (!it.element) { %><p class="framework-note">React, Vue, Svelte and Solid come with the <%= it.component.name.toLowerCase() %> web component; the vanilla factory works in any of them today.</p><% } %>
+          <% if (!it.element) { %><p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the <%= it.component.name.toLowerCase() %> web component; the vanilla factory works in any of them today.</p><% } %>
           <pre><code id="generated-code" class="hljs language-javascript"></code></pre>
         </div>
         <% if (it.element) { %><script type="application/json" id="element-meta"><%~ JSON.stringify(it.element).replaceAll('<', '\\u003c') %></script><% } %>
