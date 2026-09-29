@@ -15,22 +15,33 @@ const groups: Record<string, string[]> = {
 const names: Record<string, string> = { fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar' };
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
+export const docSlugs = [...slugs];
 export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(slug => ({ slug, name: componentName(slug), href: `/docs/components/${slug}/` })) }));
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
+/** A document's markdown, without its front matter. */
+export const documentSource = (slug: string): string =>
+  readFileSync(resolve(docsDir, `${slug}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+/** One document's heading ids, in order: a slug of the title, numbered when it repeats. */
+export function headingIds(): (text: string) => { title: string; id: string } {
+  const ids = new Map<string, number>();
+  return text => {
+    const title = text.replace(/[`*_]/g, '');
+    const base = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-') || 'section';
+    const count = ids.get(base) ?? 0; ids.set(base, count + 1);
+    return { title, id: count ? `${base}-${count}` : base };
+  };
+}
 export function renderDocument(slug: string) {
   if (!slugs.has(slug)) return null;
-  const source = readFileSync(resolve(docsDir, `${slug}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  const source = documentSource(slug);
   const toc: { title: string; id: string }[] = [];
-  const ids = new Map<string, number>();
+  const headingId = headingIds();
   const parser = new Marked();
   parser.use({ renderer: {
     heading(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Heading) {
-      const title = token.text.replace(/[`*_]/g, '');
-      const base = title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-') || 'section';
-      const count = ids.get(base) ?? 0; ids.set(base, count + 1);
-      const id = count ? `${base}-${count}` : base;
+      const { title, id } = headingId(token.text);
       if (token.depth === 2) toc.push({ title, id });
       return `<h${token.depth} id="${id}">${this.parser.parseInline(token.tokens)}</h${token.depth}>\n`;
     },

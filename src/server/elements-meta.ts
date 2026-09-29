@@ -125,7 +125,6 @@ const keys: Record<string, Record<string, ConfigKey>> = {
   // `step` is in seconds: a minute step, or with seconds shown their step, which needs a one-minute step.
   timepicker: {
     minuteStep: { attribute: 'step', values: { 5: 300, 15: 900 }, ignore: [1] },
-    showSeconds: { attribute: 'step', values: { true: 1 }, only: { key: 'minuteStep', equals: 1 }, ignore: [false] },
   },
   // The view open is the `open` state; the factory's defaults are the element's.
   search: {

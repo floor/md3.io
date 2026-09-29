@@ -5,6 +5,7 @@ import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
+import { searchSite } from './src/server/search';
 import { readFileSync, existsSync } from 'node:fs';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
@@ -66,6 +67,13 @@ export async function handleRequest(request: Request): Promise<Response> {
     return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(filePath)]!, 'Cache-Control': cache } });
   }
   if (path === '/favicon.ico') return new Response(null, { status: 204 });
+  // GET /api/search?q=…&limit=… — the site search dialog's results.
+  if (path === '/api/search' || path === '/api/search/') {
+    const q = url.searchParams.get('q') ?? '';
+    const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 10));
+    const body = request.method === 'HEAD' ? null : JSON.stringify({ query: q, results: searchSite(q, limit) });
+    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' } });
+  }
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
