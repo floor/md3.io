@@ -180,6 +180,11 @@ describe('framework code for the overlay elements', () => {
     expect(react).toContain('const [expanded, setExpanded] = useState(true);');
     expect(react).toContain('expanded={expanded} onExpand={() => setExpanded(true)} onCollapse={() => setExpanded(false)} peekHeight={120}');
     expect(react).not.toContain('Once mounted');
+    // Its trigger opens it expanded, as the HTML's expand() does.
+    expect(react).toContain('onClick={() => { setOpen(true); setExpanded(true); }}>Open bottom sheet</Button>');
+    expect(code('bottom-sheet', 'vue')).toContain('@click="open = true; expanded = true">Open bottom sheet</MButton>');
+    expect(code('bottom-sheet', 'svelte')).toContain('onclick={() => { open = true; expanded = true; }}>Open bottom sheet</Button>');
+    expect(code('bottom-sheet', 'solid')).toContain('onClick={() => { setOpen(true); setExpanded(true); }}>Open bottom sheet</Button>');
     expect(code('bottom-sheet', 'html', { initialState: 'expanded', closeOnEscape: false })).toContain('<m-bottom-sheet open expanded peek-height="120" modal headline="Plan your visit" no-close-on-escape>');
   });
   test('pickers and search: values, their opener, and suggestions', () => {

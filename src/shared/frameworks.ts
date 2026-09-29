@@ -145,7 +145,7 @@ export interface ElementMeta {
   /** `open` as state the element reflects and reports. */
   open?: OpenMeta;
   /** Other state the element reflects, bound beside `open` and following both its events: the bottom sheet's `expanded`. */
-  states?: (OpenMeta & { property: string; events: [string, string] })[];
+  states?: (OpenMeta & { property: string; events: [string, string]; opens?: true })[];
 }
 
 type Config = Record<string, unknown>;
@@ -183,7 +183,7 @@ interface Plan {
   /** Open state, bound when the element has a trigger: its first value. */
   open?: boolean;
   /** Other state bound beside it, with its first value. */
-  states: { name: string; value: boolean; events: [string, string] }[];
+  states: { name: string; value: boolean; events: [string, string]; opens?: true }[];
   /** Methods the element is called with once it is there. */
   calls: { method: string; argument?: unknown }[];
   /** Config options the element does not expose yet: named in a comment, never dropped silently. */
@@ -238,7 +238,7 @@ function plan(meta: ElementMeta, config: Config): Plan {
   };
   if (meta.open && isRecord(triggerItem)) {
     open = firstValue(meta.open);
-    for (const state of meta.states ?? []) states.push({ name: state.property, value: firstValue(state), events: state.events });
+    for (const state of meta.states ?? []) states.push({ name: state.property, value: firstValue(state), events: state.events, ...(state.opens ? { opens: true as const } : {}) });
   }
   const stateNames = new Set(open === undefined ? [] : [openName(meta), ...states.map(state => state.name)]);
   let model: Plan['model'];
@@ -620,28 +620,30 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${trigger}<${tag}${modelAttr}${openAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
 }
 
-/** What each framework writes for a state (`open`): its value, the handler setting it, and how a prop and an event are named. */
+/** What each framework writes for a state (`open`): its value, the handler setting it (or several), and how a prop and an event are named. */
 interface OpenSyntax {
   read: (state: string) => string;
-  set: (state: string, value: boolean) => string;
+  set: (state: string | string[], value: boolean) => string;
   prop: (name: string, value: string) => string;
   on: (event: string, handler: string) => string;
 }
 const reactOpen = (solid: boolean): OpenSyntax => ({
   read: state => (solid ? `${state}()` : state),
-  set: (state, value) => `() => set${pascal(state)}(${value})`,
+  set: (state, value) => (typeof state === 'string' ? `() => set${pascal(state)}(${value})`
+    : `() => { ${state.map(name => `set${pascal(name)}(${value});`).join(' ')} }`),
   prop: (name, value) => ` ${name}={${value}}`,
   on: (event, handler) => ` on${pascal(event)}={${handler}}`,
 });
 const vueOpen: OpenSyntax = {
   read: state => state,
-  set: (state, value) => `${state} = ${value}`,
+  set: (state, value) => [state].flat().map(name => `${name} = ${value}`).join('; '),
   prop: (name, value) => ` :${kebab(name)}="${value}"`,
   on: (event, handler) => ` @${event}="${handler}"`,
 };
 const svelteOpen: OpenSyntax = {
   read: state => state,
-  set: (state, value) => `() => (${state} = ${value})`,
+  set: (state, value) => (typeof state === 'string' ? `() => (${state} = ${value})`
+    : `() => { ${state.map(name => `${name} = ${value};`).join(' ')} }`),
   prop: (name, value) => ` ${name}={${value}}`,
   on: (event, handler) => ` on${event}={${handler}}`,
 };
@@ -658,9 +660,12 @@ const openProps = (meta: ElementMeta, p: Plan, s: OpenSyntax): string => {
     p.states.map(state => `${s.prop(state.name, s.read(state.name))}${s.on(state.events[0], s.set(state.name, true))}${s.on(state.events[1], s.set(state.name, false))}`).join('');
 };
 
-/** A click on the trigger opens the element; one on a closing child closes it. */
-const clickOpens = (meta: ElementMeta, p: Plan, s: OpenSyntax, value: boolean): string =>
-  (value ? triggerOpens(meta, p) : p.open !== undefined) ? s.on('click', s.set(openName(meta), value)) : '';
+/** A click on the trigger opens the element, with the state it opens in (the bottom sheet expanded); one on a closing child closes it. */
+function clickOpens(meta: ElementMeta, p: Plan, s: OpenSyntax, value: boolean): string {
+  if (!(value ? triggerOpens(meta, p) : p.open !== undefined)) return '';
+  const also = value ? p.states.filter(state => state.opens).map(state => state.name) : [];
+  return s.on('click', s.set(also.length ? [openName(meta), ...also] : openName(meta), value));
+}
 
 /** The states a framework declares, open first, with their first values. */
 const stateValues = (meta: ElementMeta, p: Plan): { name: string; value: boolean }[] =>

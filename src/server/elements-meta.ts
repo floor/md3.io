@@ -193,8 +193,9 @@ const open: Record<string, OpenMeta> = {
 };
 
 // Other state bound beside `open`: the bottom sheet's full height, which a drag changes too.
+// Its trigger opens it expanded, as the preview's and the HTML's `expand()` do.
 const states: Record<string, NonNullable<ElementMeta['states']>> = {
-  'bottom-sheet': [{ property: 'expanded', events: ['expand', 'collapse'], config: 'initialState', values: ['expanded'] }],
+  'bottom-sheet': [{ property: 'expanded', events: ['expand', 'collapse'], config: 'initialState', values: ['expanded'], opens: true }],
 };
 
 // The selection is multiple when this config key is true: the model is an
