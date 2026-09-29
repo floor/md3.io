@@ -31,7 +31,7 @@ const drawer = createDrawer({
     { type: 'section', label: 'Labels' },
     { id: 'family', label: 'Family', icon: labelIcon }
   ],
-  onSelect: ({ id }) => navigate(id)
+  onSelect: ({ id }) => router.go(id)
 });
 
 document.body.appendChild(drawer.element);
@@ -120,7 +120,7 @@ Each entry in `items` is a `DrawerItemConfig`. The default `type` is `item`.
 
 `DrawerSelectEvent` is `{ id, label, index, originalEvent }`, where `index` counts destinations only — dividers and section labels do not take a position.
 
-```javascript
+```javascript continued
 drawer.on('select', ({ id, index }) => {
   router.go(id);
   if (drawer.isOpen()) drawer.close();
@@ -143,9 +143,9 @@ const drawer = createDrawer({
 
 document.body.appendChild(drawer.element);
 
-menuButton.addEventListener('click', () => drawer.toggle());
+document.querySelector('.menu-button').addEventListener('click', () => drawer.toggle());
 drawer.on('select', ({ id }) => {
-  navigate(id);
+  router.go(id);
   drawer.close();
 });
 ```
@@ -155,6 +155,10 @@ A modal drawer locks the page behind it while it is open and restores scrolling 
 ### Keeping a badge current
 
 ```javascript
+const drawer = createDrawer({
+  items: [{ id: 'inbox', label: 'Inbox', icon: inboxIcon, active: true }]
+});
+
 inbox.subscribe((unread) => {
   drawer.setBadge('inbox', unread > 0 ? String(unread) : '');
 });
@@ -164,7 +168,7 @@ inbox.subscribe((unread) => {
 
 `setItems()` re-renders everything, which is the way to reflect a change in what the destinations are — a signed-in user gaining a section, a set of labels loading late.
 
-```javascript
+```javascript continued
 labels.then((names) => {
   drawer.setItems([
     { id: 'inbox', label: 'Inbox', icon: inboxIcon, active: true },
@@ -180,19 +184,27 @@ labels.then((names) => {
 `dense` shrinks the item height and the indicator with it, for a sidebar in an admin layout where the standard destination is too tall.
 
 ```javascript
-const drawer = createDrawer({ variant: 'standard', dense: true, open: true, items });
+const drawer = createDrawer({
+  variant: 'standard',
+  dense: true,
+  open: true,
+  items: [
+    { id: 'users', label: 'Users', active: true },
+    { id: 'billing', label: 'Billing' },
+    { id: 'audit', label: 'Audit log' }
+  ]
+});
 ```
 
 ## Accessibility
 
 - The root is an `<aside>`. A `standard` drawer is `role="navigation"`; a `modal` drawer is `role="dialog"` with `aria-modal="true"`.
-- The destinations container is `role="tablist"` with `aria-orientation="vertical"`, and each destination is a `role="tab"` carrying `aria-selected`. Only the selected destination is in the tab order — the rest are `tabindex="-1"` — so Tab enters the list once and lands on the current destination.
-- Arrow Down and Arrow Up move between destinations and wrap; Home and End jump to the ends; Enter and Space activate the focused one. Disabled destinations are skipped and carry `aria-disabled`.
+- Each destination is a `<button>`, and the current one carries `aria-current="page"`. Every enabled destination is in the tab order; disabled ones are `tabindex="-1"`.
+- Arrow Down and Arrow Up also move between destinations and wrap; Home and End jump to the ends; Enter and Space activate the focused one. Disabled destinations are skipped and carry `aria-disabled`.
 - Dividers are `role="separator"`.
 - Opening moves focus to the destination in the tab order, or to the drawer itself when there is none.
 - Escape closes a `modal` drawer while `dismissible` is on, as does a click on the scrim. Neither applies to a `standard` drawer, which is part of the layout.
-- The tab semantics come from the implementation, not from the specification: a drawer whose destinations are real page navigations, rather than panels within one page, will read to a screen reader as tabs. If that matters for your app, wrap the destinations in your own links and use the drawer for its state and layout.
-- The root takes no accessible name of its own. Give it one — a `headline` is visible text, not a label — which matters most when a page has more than one navigation landmark. The component reads an `ariaLabel` config option and sets `aria-label` from it, but `DrawerConfig` does not declare the property, so TypeScript rejects it: from TypeScript, use `drawer.element.setAttribute('aria-label', 'Main')` instead.
+- The root's `aria-label` is the `headline`, or `"Navigation"` without one. Name it deliberately when a page has more than one navigation landmark. The component reads an `ariaLabel` config option and sets `aria-label` from it, but `DrawerConfig` does not declare the property, so TypeScript rejects it: from TypeScript, use `drawer.element.setAttribute('aria-label', 'Main')` instead.
 
 ## Styling
 

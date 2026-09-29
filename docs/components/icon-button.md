@@ -114,8 +114,11 @@ document.querySelector('.toolbar').appendChild(menu.element);
 `toggle` is not. It is a native `CustomEvent` dispatched straight onto the DOM element, and `on()` subscribes to a separate internal emitter that nothing ever publishes `toggle` to. Registering it with `on('toggle', ...)` silently does nothing. Listen on the element instead:
 
 ```javascript
+const button = createIconButton({ icon: heartOutlineIcon, selectedIcon: heartFilledIcon, toggle: true, ariaLabel: 'Favorite' });
+
+// The DOM also has a native `toggle` event (popovers), so check it is this one
 button.element.addEventListener('toggle', (event) => {
-  console.log(event.detail.selected);
+  if (event instanceof CustomEvent) console.log(event.detail.selected);
 });
 ```
 
@@ -144,13 +147,13 @@ const favorite = createIconButton({
 });
 
 // `toggle` is a DOM CustomEvent, not one of the events `on()` carries
-favorite.element.addEventListener('toggle', (event) => {
-  if (event.detail.selected) addToFavorites(itemId);
-  else removeFromFavorites(itemId);
+favorite.element.addEventListener('toggle', () => {
+  if (favorite.isSelected()) addToFavorites();
+  else removeFromFavorites();
 });
 
 // Reflect state loaded from elsewhere
-if (isFavorited) favorite.select();
+if (isFavorite()) favorite.select();
 ```
 
 The unselected icon should be outlined and the selected one filled, so the state reads at a glance rather than only from the colour.
@@ -159,15 +162,15 @@ The unselected icon should be outlined and the selected one filled, so the state
 
 ```javascript
 // A round button morphs to a square while selected, and a square one to a circle
-const dense = createIconButton({ icon, size: 'xs', ariaLabel: 'Filter' });
-const hero = createIconButton({ icon, size: 'xl', variant: 'filled', ariaLabel: 'Record' });
-const square = createIconButton({ icon, shape: 'square', variant: 'tonal', ariaLabel: 'Grid view' });
+const dense = createIconButton({ icon: searchIcon, size: 'xs', ariaLabel: 'Search' });
+const hero = createIconButton({ icon: micIcon, size: 'xl', variant: 'filled', ariaLabel: 'Record' });
+const square = createIconButton({ icon: gridIcon, shape: 'square', variant: 'tonal', ariaLabel: 'Grid view' });
 ```
 
 ### Changing a button after it is built
 
 ```javascript
-const button = createIconButton({ icon, ariaLabel: 'Play' });
+const button = createIconButton({ icon: playIcon, ariaLabel: 'Play' });
 
 button
   .setVariant('filled')
@@ -187,7 +190,7 @@ button
 
 ```html
 <button class="mtrl-icon-button mtrl-icon-button--toggle" aria-label="Add to favorites" aria-pressed="false">
-  <span class="mtrl-icon mtrl-icon-button-icon"><svg aria-hidden="true">…</svg></span>
+  <span class="mtrl-icon mtrl-icon-button__icon"><svg aria-hidden="true">…</svg></span>
 </button>
 ```
 
@@ -197,7 +200,7 @@ button
 /* Base */
 .mtrl-icon-button { /* ... */ }
 .mtrl-icon { /* ... */ }                  /* the icon span, shared with every component */
-.mtrl-icon-button-icon { /* ... */ }      /* the same span, scoped to this component */
+.mtrl-icon-button__icon { /* ... */ }     /* the same span, scoped to this component */
 
 /* Variants */
 .mtrl-icon-button--filled { /* ... */ }

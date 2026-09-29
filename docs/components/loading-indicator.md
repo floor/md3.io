@@ -18,7 +18,7 @@ The component follows the Material Design 3 loading indicator specification: a 4
 ## Import
 
 ```javascript
-import { createLoadingIndicator } from 'mtrl';
+import { createLoadingIndicator, createButton } from 'mtrl';
 ```
 
 ## Basic Usage

@@ -12,7 +12,7 @@ import { createDatePicker } from 'mtrl';
 
 ```javascript
 const departure = createDatePicker({ label: 'Departure', variant: 'modal', minDate: new Date() });
-departure.on('change', ({ value }) => search(value));
+departure.on('change', ({ value }) => findFlights(value));
 document.querySelector('.trip').append(departure.element);
 ```
 
@@ -76,7 +76,9 @@ const stay = createDatePicker({
   selectionMode: 'range',
   minDate: new Date()
 });
-stay.on('change', ({ value: [checkIn, checkOut] }) => book(checkIn, checkOut));
+stay.on('change', ({ value }) => {
+  if (Array.isArray(value)) book(value[0], value[1]);
+});
 ```
 
 Tap the start date, then the end date; **Save** commits the range and the close (x) button discards it.

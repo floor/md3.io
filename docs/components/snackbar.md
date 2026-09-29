@@ -108,7 +108,7 @@ The pattern the action exists for. The snackbar stays until the user takes it or
 createSnackbar({
   message: 'Message archived',
   action: 'Undo',
-  onAction: () => restore(message)
+  onAction: () => undoArchive()
 }).show();
 ```
 
@@ -172,9 +172,9 @@ createSnackbar({ message: 'Snackbar at the start', position: 'start', action: 'O
 .mtrl-snackbar--dismissible { /* a close icon is present */ }
 .mtrl-snackbar--action-below { /* the action is too wide to sit beside the text */ }
 
-.mtrl-snackbar-text { /* the message, clamped to two lines */ }
-.mtrl-snackbar-action { /* the text button */ }
-.mtrl-snackbar-close { /* the icon button */ }
+.mtrl-snackbar__text { /* the message, clamped to two lines */ }
+.mtrl-snackbar__action { /* the text button */ }
+.mtrl-snackbar__close { /* the icon button */ }
 ```
 
 Colours come from the inverse roles, so a snackbar reads as a surface from the opposite theme and does not need its own palette.

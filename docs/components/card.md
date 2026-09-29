@@ -14,7 +14,8 @@ import {
   createCardHeader,
   createCardContent,
   createCardMedia,
-  createCardActions
+  createCardActions,
+  createButton
 } from 'mtrl';
 
 import { CARD_VARIANTS } from 'mtrl/components/card/constants';
@@ -223,6 +224,9 @@ Use `contain: true` for square media so the crop does not cut faces off.
 ### Actions
 
 ```javascript
+const discardButton = createButton({ text: 'Discard', variant: 'text' });
+const publishButton = createButton({ text: 'Publish', variant: 'filled' });
+
 const card = createCard({
   variant: 'outlined',
   header: { title: 'Unsaved changes' },
@@ -269,15 +273,15 @@ microtask after `createCard` returns, so do not read it back synchronously.
 .mtrl-card--focused { }
 .mtrl-card--dragging { }
 
-.mtrl-card-header { }
-.mtrl-card-header-text { }
-.mtrl-card-header-title { }
-.mtrl-card-header-subtitle { }
-.mtrl-card-header-avatar { }
-.mtrl-card-header-action { }
-.mtrl-card-media { }
-.mtrl-card-content { }
-.mtrl-card-actions { }
+.mtrl-card__header { }
+.mtrl-card__header-text { }
+.mtrl-card__header-title { }
+.mtrl-card__header-subtitle { }
+.mtrl-card__header-avatar { }
+.mtrl-card__header-action { }
+.mtrl-card__media { }
+.mtrl-card__content { }
+.mtrl-card__actions { }
 ```
 
 Every card sets `--card-elevation` on the element as an inline custom property

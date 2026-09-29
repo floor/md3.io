@@ -25,7 +25,7 @@ import { createMenu } from 'mtrl';
 ```javascript
 // Create a menu with items
 const menu = createMenu({
-  opener: document.querySelector('#menu-button'),
+  opener: document.getElementById('menu-button'),
   items: [
     { id: 'edit', text: 'Edit' },
     { id: 'duplicate', text: 'Duplicate' },
@@ -87,7 +87,10 @@ Each menu item can have the following properties:
 An item can carry a second line under its label, for a short explanation. Supporting text is part of the vertical menu's anatomy, though the two lines stack in either variant.
 
 ```javascript
-{ id: 'share', text: 'Share', supportingText: 'Anyone with the link' }
+const menu = createMenu({
+  opener: document.getElementById('share-button'),
+  items: [{ id: 'share', text: 'Share', supportingText: 'Anyone with the link' }]
+});
 ```
 
 ## Menu Positions
@@ -206,7 +209,7 @@ const copyIcon = '<svg>...</svg>';
 const deleteIcon = '<svg>...</svg>';
 
 const menu = createMenu({
-  opener: contextButton,
+  opener: document.getElementById('context-button'),
   items: [
     { id: 'edit', text: 'Edit', icon: editIcon },
     { id: 'copy', text: 'Copy', icon: copyIcon },
@@ -220,7 +223,7 @@ const menu = createMenu({
 
 ```javascript
 const menu = createMenu({
-  opener: editButton,
+  opener: document.getElementById('edit-button'),
   items: [
     { id: 'cut', text: 'Cut', shortcut: '⌘X' },
     { id: 'copy', text: 'Copy', shortcut: '⌘C' },
@@ -235,7 +238,7 @@ const menu = createMenu({
 
 ```javascript
 const menu = createMenu({
-  opener: moreButton,
+  opener: document.getElementById('more-button'),
   items: [
     { id: 'profile', text: 'View Profile' },
     { id: 'settings', text: 'Settings' },
@@ -252,7 +255,7 @@ const menu = createMenu({
 
 ```javascript
 const menu = createMenu({
-  opener: fileButton,
+  opener: document.getElementById('file-button'),
   items: [
     { id: 'new', text: 'New' },
     { 
@@ -275,7 +278,7 @@ const menu = createMenu({
 
 ```javascript
 const menu = createMenu({
-  opener: editButton,
+  opener: document.getElementById('edit-button'),
   items: [
     { id: 'undo', text: 'Undo', disabled: true },
     { id: 'redo', text: 'Redo', disabled: true },
@@ -292,13 +295,15 @@ const menu = createMenu({
 When using a menu inside a dialog or modal, use the `container` option to ensure proper z-index stacking:
 
 ```javascript
+import { createDialog } from 'mtrl';
+
 const dialog = createDialog({
   title: 'Settings',
-  content: '<div id="settings-content"></div>'
+  content: '<button>Theme</button>'
 });
 
 const menu = createMenu({
-  opener: settingsButton,
+  opener: dialog.element.querySelector('button'),
   container: dialog.element, // Menu stays within dialog's stacking context
   items: [
     { id: 'option1', text: 'Option 1' },
@@ -311,7 +316,7 @@ const menu = createMenu({
 
 ```javascript
 const menu = createMenu({
-  opener: menuButton,
+  opener: document.getElementById('menu-button'),
   items: [
     { id: 'item1', text: 'Item 1' },
     { id: 'item2', text: 'Item 2' }
@@ -336,15 +341,14 @@ if (menu.isOpen()) {
 
 ```javascript
 const menu = createMenu({
-  opener: dynamicButton,
+  opener: document.getElementById('context-actions'),
   items: []
 });
 
 // Update items based on context
 function updateMenuItems(context) {
-  const items = [
-    { id: 'action1', text: 'Action 1' }
-  ];
+  const items = [];
+  items.push({ id: 'action1', text: 'Action 1' });
   
   if (context.canEdit) {
     items.push({ id: 'edit', text: 'Edit' });
@@ -404,7 +408,7 @@ The expressive menu, recommended for new designs. A 16dp container holds 44dp it
 
 ```javascript
 const menu = createMenu({
-  opener: button,
+  opener: document.getElementById('share-button'),
   variant: 'vertical',
   items: [
     { id: 'share', text: 'Share', icon: shareIcon, supportingText: 'Anyone with the link' },
@@ -418,7 +422,12 @@ const menu = createMenu({
 **Colour mappings.** `standard` is surface-based and carries lower emphasis; `vibrant` is tertiary-based, is more prominent, and should be used sparingly.
 
 ```javascript
-const vibrant = createMenu({ opener: button, items, variant: 'vertical', color: 'vibrant' });
+const vibrant = createMenu({
+  opener: document.getElementById('share-button'),
+  variant: 'vertical',
+  color: 'vibrant',
+  items: [{ id: 'share', text: 'Share' }, { id: 'copy', text: 'Copy link' }]
+});
 ```
 
 | Role | Standard | Vibrant |
@@ -436,21 +445,29 @@ const vibrant = createMenu({ opener: button, items, variant: 'vertical', color: 
 A divider draws a line across the one surface:
 
 ```javascript
-items: [
-  { id: 'share', text: 'Share' },
-  { type: 'divider' },
-  { id: 'delete', text: 'Delete' }
-]
+const menu = createMenu({
+  opener: document.getElementById('share-button'),
+  variant: 'vertical',
+  items: [
+    { id: 'share', text: 'Share' },
+    { type: 'divider' },
+    { id: 'delete', text: 'Delete' }
+  ]
+});
 ```
 
 A gap splits the menu into separate surfaces, each with its own rounded container and shadow, so the page shows through between them:
 
 ```javascript
-items: [
-  { id: 'share', text: 'Share' },
-  { type: 'gap' },
-  { id: 'delete', text: 'Delete' }
-]
+const menu = createMenu({
+  opener: document.getElementById('share-button'),
+  variant: 'vertical',
+  items: [
+    { id: 'share', text: 'Share' },
+    { type: 'gap' },
+    { id: 'delete', text: 'Delete' }
+  ]
+});
 ```
 
 The grouping is presentational. Items keep their `menuitem` role and the keyboard walks across a gap as if it were not there. A submenu is always one surface, so a gap inside one is simply space, as it is in the baseline menu.
@@ -504,29 +521,28 @@ The Menu component uses BEM-style CSS classes for easy customization:
 /* Visible state */
 .mtrl-menu--visible { /* ... */ }
 
-/* Position variants */
-.mtrl-menu--position-top { /* ... */ }
+/* Position, one class per position: --position-bottom-start, --position-top, … */
 .mtrl-menu--position-bottom { /* ... */ }
-.mtrl-menu--position-left { /* ... */ }
-.mtrl-menu--position-right { /* ... */ }
 
 /* Menu list */
-.mtrl-menu-list { /* ... */ }
+.mtrl-menu__list { /* ... */ }
 
 /* Menu items */
-.mtrl-menu-item { /* ... */ }
-.mtrl-menu-item--disabled { /* ... */ }
-.mtrl-menu-item--selected { /* ... */ }
-.mtrl-menu-item--submenu { /* ... */ }
+.mtrl-menu__item { /* ... */ }
+.mtrl-menu__item--disabled { /* ... */ }
+.mtrl-menu__item--selected { /* ... */ }
+.mtrl-menu__item--submenu { /* ... */ }
 
 /* Item content */
-.mtrl-menu-item-content { /* ... */ }
-.mtrl-menu-item-icon { /* ... */ }
-.mtrl-menu-item-text { /* ... */ }
-.mtrl-menu-item-shortcut { /* ... */ }
+.mtrl-menu__item-content { /* ... */ }
+.mtrl-menu__item-icon { /* ... */ }
+.mtrl-menu__item-text { /* ... */ }
+.mtrl-menu__item-shortcut { /* ... */ }
+.mtrl-menu__item-supporting { /* ... */ }
 
-/* Divider */
-.mtrl-menu-divider { /* ... */ }
+/* Divider, and the gap between groups */
+.mtrl-menu__divider { /* ... */ }
+.mtrl-menu__group { /* ... */ }
 ```
 
 ## Container Option
@@ -536,15 +552,15 @@ The `container` option is important for proper z-index stacking when the menu is
 ```javascript
 // Default: menu appended to document.body
 const menu1 = createMenu({
-  opener: button1,
-  items: [/* ... */]
+  opener: document.getElementById('toolbar-button'),
+  items: [{ id: 'refresh', text: 'Refresh' }]
 });
 
 // Custom container: menu appended to specified element
 const menu2 = createMenu({
-  opener: button2,
-  container: dialogElement, // Inherits dialog's stacking context
-  items: [/* ... */]
+  opener: document.getElementById('theme-button'),
+  container: document.getElementById('settings-dialog'), // Inherits the dialog's stacking context
+  items: [{ id: 'reset', text: 'Reset' }]
 });
 ```
 

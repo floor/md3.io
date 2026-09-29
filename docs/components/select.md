@@ -478,24 +478,23 @@ The Select component uses BEM-style CSS classes for easy customization:
 .mtrl-select--small { /* ... */ }
 .mtrl-select--large { /* ... */ }
 
-/* Variant styles */
-.mtrl-select--filled { /* ... */ }
-.mtrl-select--outlined { /* ... */ }
+/* The select is a text field: its root carries both sets of classes */
+.mtrl-select.mtrl-textfield { /* ... */ }
 
-/* Textfield within select */
-.mtrl-select .mtrl-textfield { /* ... */ }
-.mtrl-select .mtrl-textfield-input { /* ... */ }
-.mtrl-select .mtrl-textfield-label { /* ... */ }
-.mtrl-select .mtrl-textfield-trailing-icon { /* ... */ }
+/* Variant styles, the text field's */
+.mtrl-select.mtrl-textfield--filled { /* ... */ }
+.mtrl-select.mtrl-textfield--outlined { /* ... */ }
 
-/* Menu when child of select */
+/* The text field's parts */
+.mtrl-select .mtrl-textfield__input { /* ... */ }
+.mtrl-select .mtrl-textfield__label { /* ... */ }
+.mtrl-select .mtrl-textfield__trailing-icon { /* ... */ }
+
+/* The menu, a child of the select */
 .mtrl-select > .mtrl-menu { /* ... */ }
 
-/* Select-specific menu class */
-.mtrl-select-menu { /* ... */ }
-
 /* Selected menu item */
-.mtrl-menu-item--selected { /* ... */ }
+.mtrl-menu__item--selected { /* ... */ }
 ```
 
 ## Container Behavior

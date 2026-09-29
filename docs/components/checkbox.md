@@ -12,7 +12,7 @@ import { createCheckbox } from 'mtrl';
 
 ```javascript
 const terms = createCheckbox({ label: 'I accept the terms', name: 'terms' });
-terms.on('change', ({ checked }) => submit.disabled = !checked);
+terms.on('change', ({ checked }) => { submitButton.disabled = !checked; });
 document.querySelector('form').append(terms.element);
 ```
 
@@ -81,7 +81,7 @@ parent.on('change', ({ checked, nativeEvent }) => {
 children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
 ```
 
-```javascript
+```javascript continued
 // A checkbox is inline-flex: stack the parent and children in columns, the children
 // indented under the parent.
 const group = document.createElement('div');
@@ -100,7 +100,7 @@ Leave the parent unchecked while it is indeterminate, as `reflect` does, so a cl
 ```javascript
 const consent = createCheckbox({ label: 'Share usage data', required: true });
 
-form.addEventListener('submit', (event) => {
+document.querySelector('form').addEventListener('submit', (event) => {
   consent.setError(!consent.isChecked());
   if (!consent.isChecked()) event.preventDefault();
 });

@@ -102,7 +102,7 @@ const search = createSearch({
 createSearch({
   placeholder: 'Search your mail',
   trailingItems: [
-    { id: 'voice', type: 'icon', content: micSvg, ariaLabel: 'Search by voice', onClick: startVoice },
+    { id: 'voice', type: 'icon', content: micIcon, ariaLabel: 'Search by voice', onClick: startVoice },
     { id: 'me', type: 'avatar', content: '<img src="me.jpg" alt="">' },
   ],
 });

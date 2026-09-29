@@ -22,7 +22,8 @@ Form is part of the `mtrl-addons` package and provides:
 ## Import
 
 ```javascript
-import { createForm, DATA_STATE, FORM_EVENTS } from 'mtrl-addons';
+import { createForm } from 'mtrl-addons';
+import { DATA_STATE, FORM_EVENTS } from 'mtrl-addons/components/form/constants';
 ```
 
 ## Basic Usage
@@ -177,12 +178,14 @@ Fields that should be tracked for data must be prefixed:
 - `file.fieldName` - File upload fields
 
 ```javascript
-// ✅ Tracked fields
-[createTextfield, 'info.username', { label: 'Username' }]
-[createTextfield, 'data.email', { label: 'Email' }]
+const layout = [
+  // ✅ Tracked fields
+  [createTextfield, 'info.username', { label: 'Username' }],
+  [createTextfield, 'data.email', { label: 'Email' }],
 
-// ❌ Not tracked (no prefix)
-[createTextfield, 'username', { label: 'Username' }]
+  // ❌ Not tracked (no prefix)
+  [createTextfield, 'username', { label: 'Username' }]
+];
 ```
 
 ### Control Button Names
@@ -190,8 +193,10 @@ Fields that should be tracked for data must be prefixed:
 Buttons named `submit` and `cancel` are automatically wired:
 
 ```javascript
-[createButton, 'submit', { text: 'Save' }]   // Auto-wired to form submit
-[createButton, 'cancel', { text: 'Cancel' }] // Auto-wired to form reset
+const controls = [
+  [createButton, 'submit', { text: 'Save' }],   // Auto-wired to form submit
+  [createButton, 'cancel', { text: 'Cancel' }]  // Auto-wired to form reset
+];
 ```
 
 ### Example Layout
@@ -218,9 +223,9 @@ const layout = [
     [createChips, 'info.role', {
       label: 'Role',
       chips: [
-        { text: 'User', value: 'user' },
-        { text: 'Admin', value: 'admin' },
-        { text: 'Editor', value: 'editor' }
+        { label: 'User', value: 'user' },
+        { label: 'Admin', value: 'admin' },
+        { label: 'Editor', value: 'editor' }
       ]
     }],
     [createSwitch, 'info.enabled', { label: 'Enabled' }]
@@ -256,12 +261,15 @@ When `useChanges: true` (default):
 
 **Event Deduplication:** The form automatically deduplicates change events. For components that emit both `input` and `change` events (like textfields), the form tracks the last emitted value and only triggers state updates when the value actually changes. This prevents duplicate processing and ensures accurate dirty state tracking.
 
+<!-- check-docs untriggered 'state:change': mtrl-addons bug, isModified() on a new form reports dirty, so the first edit emits no state:change -->
 ```javascript
-import { createForm, DATA_STATE } from 'mtrl-addons';
+import { createForm } from 'mtrl-addons';
+import { DATA_STATE } from 'mtrl-addons/components/form/constants';
 
 const form = createForm({
   useChanges: true, // Default - enables automatic state management
-  // ...
+  layout: [[createTextfield, 'info.name', { label: 'Name' }]],
+  container: document.querySelector('#form-container')
 });
 
 // Check current state
@@ -325,7 +333,7 @@ const form = createForm({
 });
 
 // Or enable both with shorthand:
-const form = createForm({
+const protectedForm = createForm({
   protectChanges: true,  // Enables both beforeUnload and onDataOverwrite
   // ...
 });
@@ -358,14 +366,12 @@ import { createForm } from 'mtrl-addons';
 import { createDialog } from 'mtrl';
 
 // Create a reusable handler (recommended)
-const createUnsavedChangesHandler = (options = {}) => {
-  const {
-    title = 'Unsaved Changes',
-    content = 'You have unsaved changes. Do you want to discard them?',
-    keepEditingText = 'Keep Editing',
-    discardText = 'Discard Changes'
-  } = options;
-
+const createUnsavedChangesHandler = ({
+  title = 'Unsaved Changes',
+  content = 'You have unsaved changes. Do you want to discard them?',
+  keepEditingText = 'Keep Editing',
+  discardText = 'Discard Changes'
+} = {}) => {
   let isDialogOpen = false;
 
   return (event) => {
@@ -525,8 +531,9 @@ const form = createForm({
 |--------|---------|-------------|
 | `isModified()` | `boolean` | Check if form has been modified |
 | `getDataState()` | `string` | Get current data state ('pristine' or 'dirty') |
-| `reset()` | `Form` | Reset to initial/snapshot data |
-| `clear()` | `Form` | Clear all field values |
+| `reset(force?)` | `boolean` | Reset to initial/snapshot data; `false` when change protection cancelled it |
+| `clear(force?)` | `boolean` | Clear all field values; `false` when change protection cancelled it |
+| `snapshot()` | `void` | Take the current data as the new baseline: the form is pristine again |
 
 ### Control Methods
 
@@ -573,6 +580,10 @@ const form = createForm({
 ### Change Events
 
 ```javascript
+const form = createForm({
+  layout: [[createTextfield, 'info.name', { label: 'Name' }]]
+});
+
 form.on('change', ({ name, value }) => {
   console.log(`Field ${name} changed to:`, value);
 });
@@ -584,7 +595,7 @@ form.on('field:change', ({ name, value }) => {
 
 ### State Events
 
-```javascript
+```javascript continued
 form.on('state:change', ({ modified, state }) => {
   console.log(`State: ${state}`); // 'pristine' or 'dirty'
   console.log(`Modified: ${modified}`); // true or false
@@ -593,7 +604,7 @@ form.on('state:change', ({ modified, state }) => {
 
 ### Data Events
 
-```javascript
+```javascript continued
 form.on('data:set', (data) => {
   console.log('Data set:', data);
 });
@@ -609,7 +620,7 @@ form.on('reset', () => {
 
 ### Submit Events
 
-```javascript
+```javascript continued
 form.on('submit', (data) => {
   console.log('Form submitting with:', data);
 });
@@ -626,22 +637,32 @@ form.on('submit:error', (error) => {
 ### Protection Events
 
 ```javascript
-// Emitted when blocking overlay is clicked (requires protectChanges.onDataOverwrite: true)
-form.on('data:conflict', (event) => {
-  console.log('Current data:', event.currentData);
-  console.log('New data:', event.newData);
-  
-  // Cancel the operation (keep editing)
-  event.cancel();
-  
-  // Or proceed (discard changes and reset form)
-  // event.proceed();
+const form = createForm({
+  protectChanges: { onDataOverwrite: true },
+  on: {
+    // Emitted when blocking overlay is clicked (requires protectChanges.onDataOverwrite: true)
+    'data:conflict': (event) => {
+      console.log('Current data:', event.currentData);
+      console.log('New data:', event.newData);
+
+      // Cancel the operation (keep editing)
+      event.cancel();
+
+      // Or proceed (discard changes and reset form)
+      // event.proceed();
+    }
+  }
 });
 ```
 
 ### Validation Events
 
 ```javascript
+const form = createForm({
+  layout: [[createTextfield, 'info.email', { label: 'Email' }]],
+  validation: [{ field: 'email', validate: (value) => !!value, message: 'Email is required' }]
+});
+
 form.on('validation:error', (errors) => {
   console.log('Validation errors:', errors);
 });
@@ -658,7 +679,7 @@ const form = createForm({
       field: 'email',
       validate: (value) => {
         if (!value) return 'Email is required';
-        if (!value.includes('@')) return 'Invalid email format';
+        if (!String(value).includes('@')) return 'Invalid email format';
         return true;
       }
     },
@@ -666,7 +687,7 @@ const form = createForm({
       field: 'password',
       validate: (value, data) => {
         if (!value) return 'Password is required';
-        if (value.length < 8) return 'Password must be at least 8 characters';
+        if (String(value).length < 8) return 'Password must be at least 8 characters';
         return true;
       },
       message: 'Password validation failed' // Fallback message
@@ -689,7 +710,7 @@ When validation fails, the form automatically:
 2. **Clears errors when valid** - When a field with an error changes and becomes valid, the error is automatically cleared
 3. **Clears on reset/cancel** - All errors are cleared when the form is reset or cancelled
 
-```javascript
+```javascript continued
 // Errors are shown automatically on fields when validate() is called
 const result = form.validate();
 
@@ -702,23 +723,24 @@ const result = form.validate();
 By default, error messages are shown in the field's helper/supporting text. To show only the error state (red border) without the message:
 
 ```javascript
+import { createSnackbar } from 'mtrl';
+
 const form = createForm({
   showFieldErrorMessages: false, // Only show error state, not message text
   validation: [
     { field: 'email', validate: (v) => !!v, message: 'Email is required' }
-  ],
-  on: {
-    'validation:error': (errors) => {
-      // Show errors in a snackbar instead
-      createSnackbar({ message: Object.values(errors).join('. ') }).show();
-    }
-  }
+  ]
+});
+
+// Show errors in a snackbar instead
+form.on('validation:error', (errors) => {
+  createSnackbar({ message: Object.values(errors).join('. ') }).show();
 });
 ```
 
 ### Manual Validation
 
-```javascript
+```javascript continued
 const result = form.validate();
 
 if (result.valid) {
@@ -792,10 +814,10 @@ const form = createForm({
 
 Or pass a handler to `submit()`:
 
-```javascript
+```javascript continued
 await form.submit({
   handler: async (data, formComponent) => {
-    const response = await myCustomApi.updateUser(data);
+    const response = await myApi.updateUser(data);
     return response;
   }
 });
@@ -830,9 +852,9 @@ const accountForm = createForm({
       [createChips, 'info.role', {
         label: 'Role',
         chips: [
-          { text: 'User', value: 'user' },
-          { text: 'Admin', value: 'admin' },
-          { text: 'Premium', value: 'premium' }
+          { label: 'User', value: 'user' },
+          { label: 'Admin', value: 'admin' },
+          { label: 'Premium', value: 'premium' }
         ]
       }],
       [createSwitch, 'info.enabled', { label: 'Enabled' }]
@@ -895,7 +917,7 @@ async function loadUser(userId) {
   accountForm.setData(user, true);
   
   // Take snapshot for change detection
-  accountForm.state.initialData = { ...accountForm.getData() };
+  accountForm.snapshot();
 }
 ```
 
@@ -936,7 +958,7 @@ const loginForm = createForm({
       field: 'email',
       validate: (value) => {
         if (!value) return 'Email is required';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) {
           return 'Please enter a valid email';
         }
         return true;
@@ -968,21 +990,23 @@ For compatibility with class-based layout systems:
 
 ```javascript
 import { createForm } from 'mtrl-addons';
-import emitter from 'your-emitter-mixin';
+import { createEmitter } from 'mtrl';
 
 class AccountForm {
-  constructor(options = {}) {
-    Object.assign(this, emitter);
-    
+  events = createEmitter();
+  element;
+  _form;
+
+  constructor(container) {
     this._form = createForm({
       action: '/api/users',
       method: 'PUT',
-      container: options.container,
+      container,
       
       on: {
-        'submit:success': (result) => this.emit('updated', result),
-        'submit:error': (error) => this.emit('error', error),
-        change: (data) => this.emit('changed', data)
+        'submit:success': (result) => this.events.emit('updated', result),
+        'submit:error': (error) => this.events.emit('error', error),
+        change: (data) => this.events.emit('changed', data)
       },
       
       layout: [
@@ -997,9 +1021,14 @@ class AccountForm {
     return this._form.isModified();
   }
   
+  on(event, handler) {
+    this.events.on(event, handler);
+    return this;
+  }
+  
   async set(data) {
     this._form.setData(data, true);
-    this._form.state.initialData = { ...this._form.getData() };
+    this._form.snapshot();
   }
   
   getData() {
@@ -1153,7 +1182,7 @@ const createCustomField = (config) => {
 ### DATA_STATE
 
 ```javascript
-import { DATA_STATE } from 'mtrl-addons';
+import { DATA_STATE } from 'mtrl-addons/components/form/constants';
 
 DATA_STATE.PRISTINE  // 'pristine' - No changes from initial data
 DATA_STATE.DIRTY     // 'dirty' - Data has been modified
@@ -1162,7 +1191,7 @@ DATA_STATE.DIRTY     // 'dirty' - Data has been modified
 ### FORM_EVENTS
 
 ```javascript
-import { FORM_EVENTS } from 'mtrl-addons';
+import { FORM_EVENTS } from 'mtrl-addons/components/form/constants';
 
 FORM_EVENTS.CHANGE           // 'change'
 FORM_EVENTS.SUBMIT           // 'submit'
@@ -1184,11 +1213,13 @@ FORM_EVENTS.DATA_CONFLICT    // 'data:conflict' - Emitted when protection overla
 Ensure field names are prefixed with `info.` or `data.`:
 
 ```javascript
-// ✅ Correct - field will be tracked
-[createTextfield, 'info.email', { label: 'Email' }]
+const layout = [
+  // ✅ Correct - field will be tracked
+  [createTextfield, 'info.email', { label: 'Email' }],
 
-// ❌ Wrong - field won't be tracked for data
-[createTextfield, 'email', { label: 'Email' }]
+  // ❌ Wrong - field won't be tracked for data
+  [createTextfield, 'email', { label: 'Email' }]
+];
 ```
 
 ### Buttons Not Working
@@ -1196,12 +1227,14 @@ Ensure field names are prefixed with `info.` or `data.`:
 Ensure buttons are named `submit` and `cancel`:
 
 ```javascript
-// ✅ Correct - buttons will be auto-wired
-[createButton, 'submit', { text: 'Save' }]
-[createButton, 'cancel', { text: 'Cancel' }]
+const controls = [
+  // ✅ Correct - buttons will be auto-wired
+  [createButton, 'submit', { text: 'Save' }],
+  [createButton, 'cancel', { text: 'Cancel' }],
 
-// ❌ Wrong - buttons won't be auto-wired
-[createButton, 'saveBtn', { text: 'Save' }]
+  // ❌ Wrong - buttons won't be auto-wired
+  [createButton, 'saveBtn', { text: 'Save' }]
+];
 ```
 
 ### Form Not Submitting
@@ -1216,7 +1249,11 @@ Check that:
 This was fixed - setting data with `silent: true` now properly sets switch values without triggering change events. The form also syncs the internal change tracker, so subsequent user changes are correctly detected:
 
 ```javascript
-form.setData(userData, true); // Silent - won't trigger dirty state, syncs tracker
+const form = createForm({
+  layout: [[createSwitch, 'info.active', { label: 'Active' }]]
+});
+
+form.setData({ active: true }, true); // Silent - won't trigger dirty state, syncs tracker
 ```
 
 Additionally, the textfield's `--empty` class is now properly updated during silent updates, ensuring the label is positioned correctly.
@@ -1236,14 +1273,16 @@ const form = createForm({
 
 Check event name spelling:
 
-```javascript
+```javascript continued
 // ✅ Correct
-form.on('submit:success', (response) => { ... });
-form.on('state:change', ({ modified, state }) => { ... });
+form.on('submit:success', (response) => console.log(response));
+form.on('state:change', ({ modified, state }) => console.log(state, modified));
+```
 
-// ❌ Wrong event names
-form.on('submitSuccess', (response) => { ... });
-form.on('mode:change', ({ mode }) => { ... }); // Old API - use state:change
+```javascript fragment
+// ❌ Wrong event names: never emitted
+form.on('submitSuccess', (response) => console.log(response));
+form.on('mode:change', ({ mode }) => console.log(mode)); // Old API - use state:change
 ```
 
 ## Migration from FORM_MODES

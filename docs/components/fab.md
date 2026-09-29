@@ -119,6 +119,8 @@ both the native event and `element` is the FAB's button.
 The showcase renders one FAB per colour style:
 
 ```javascript
+const container = document.querySelector('.fab-styles');
+
 for (const variant of ['primary-container', 'secondary-container', 'tertiary-container', 'primary', 'secondary', 'tertiary']) {
   const fab = createFab({
     icon: addIcon,
@@ -145,13 +147,16 @@ const large = createFab({ icon: addIcon, size: 'large', ariaLabel: 'Add' });
 ```javascript
 const fab = createFab({ icon: addIcon, ariaLabel: 'Add' });
 
-editMode.on('change', (editing) => {
+function setEditing(editing) {
   fab.setIcon(editing ? editIcon : addIcon);
   fab.element.setAttribute('aria-label', editing ? 'Save changes' : 'Add');
-});
+}
 
-save.on('start', () => fab.lower().disable());
-save.on('done', () => fab.raise().enable());
+async function saveChanges() {
+  fab.lower().disable();
+  await save();
+  fab.raise().enable();
+}
 ```
 
 ## Accessibility
@@ -194,7 +199,7 @@ save.on('done', () => fab.raise().enable());
 .mtrl-fab--bottom-right { }
 
 /* the icon inside */
-.mtrl-fab-icon { }
+.mtrl-fab__icon { }
 ```
 
 Colours are theme colours, not component properties: each style is the role it

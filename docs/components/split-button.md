@@ -109,6 +109,11 @@ button.on('change', ({ expanded }) => {
 ### Sizes
 
 ```javascript
+const items = [
+  { id: 'pdf', text: 'PDF' },
+  { id: 'csv', text: 'CSV' }
+];
+
 // The default is small; scale up in large windows or for emphasis
 const hero = createSplitButton({ text: 'Get started', size: 'xl', items });
 const compact = createSplitButton({ text: 'Filter', size: 'xs', items });
@@ -117,9 +122,12 @@ const compact = createSplitButton({ text: 'Filter', size: 'xs', items });
 ### Colour
 
 ```javascript
-for (const variant of ['filled', 'tonal', 'outlined', 'elevated']) {
-  createSplitButton({ text: 'Save', variant, items });
-}
+const items = [{ id: 'save-as', text: 'Save as…' }];
+
+const filled = createSplitButton({ text: 'Save', variant: 'filled', items });
+const tonal = createSplitButton({ text: 'Save', variant: 'tonal', items });
+const outlined = createSplitButton({ text: 'Save', variant: 'outlined', items });
+const elevated = createSplitButton({ text: 'Save', variant: 'elevated', items });
 ```
 
 Unlike a toggle button, a split button's colour does not change when its menu opens. Only a state layer and the shape do.

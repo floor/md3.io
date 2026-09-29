@@ -79,7 +79,7 @@ const sync = createSwitch({ label: 'Sync over mobile data', labelPosition: 'end'
 const backup = createSwitch({ label: 'Back up photos', supportingText: 'Uses about 2 GB' });
 
 backup.on('change', ({ checked }) => {
-  if (checked && !online()) backup.setSupportingText('Connect to back up', true);
+  if (checked && !navigator.onLine) backup.setSupportingText('Connect to back up', true);
   else backup.setSupportingText('Uses about 2 GB');
 });
 ```

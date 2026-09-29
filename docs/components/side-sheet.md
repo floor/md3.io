@@ -86,7 +86,7 @@ const details = createSideSheet({
   content: '<p>The page behind this sheet still scrolls.</p>'
 });
 
-toggleButton.addEventListener('click', () => details.toggle());
+document.querySelector('.details-toggle').addEventListener('click', () => details.toggle());
 ```
 
 Applying work when the sheet closes, however it was dismissed:

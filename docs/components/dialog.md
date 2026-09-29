@@ -25,7 +25,7 @@ const dialog = createDialog({
   content: '<p>This is a basic dialog with a title, content, and standard buttons.</p>',
   buttons: [
     { text: 'Cancel', variant: 'text', closeDialog: true },
-    { text: 'OK', variant: 'text', closeDialog: true, onClick: () => save() }
+    { text: 'OK', variant: 'text', closeDialog: true, onClick: () => { save(); } }
   ]
 });
 
@@ -143,8 +143,10 @@ Each entry in `buttons` is a `DialogButton`:
 `beforeclose` is the hook for a dialog that should not close yet:
 
 ```javascript
+const dialog = createDialog({ title: 'Rename', content: '<form><input name="name" required></form>' });
+
 dialog.on('beforeclose', (event) => {
-  if (!form.checkValidity()) event.preventDefault();
+  if (!dialog.element.querySelector('form').checkValidity()) event.preventDefault();
 });
 ```
 
@@ -188,7 +190,7 @@ Give the accepting button `closeDialog: false` and close it yourself when the fo
 ```javascript
 const dialog = createDialog({
   title: 'Settings',
-  content: '<div id="settings-form"></div>',
+  content: '<form id="settings-form"></form>',
   divider: true,
   buttons: [
     { text: 'Cancel', variant: 'text', closeDialog: true },
@@ -197,7 +199,7 @@ const dialog = createDialog({
       variant: 'filled',
       closeDialog: false,
       onClick: (event, dialog) => {
-        const form = document.getElementById('settings-form');
+        const form = dialog.element.querySelector('form');
         if (form.checkValidity()) {
           save(form);
           dialog.close();
@@ -249,7 +251,7 @@ for (const animation of ['scale', 'fade', 'slide-up', 'slide-down']) {
 
 ```css
 .mtrl-dialog { /* the surface */ }
-.mtrl-dialog-overlay { /* the scrim */ }
+.mtrl-dialog__overlay { /* the scrim */ }
 .mtrl-dialog--visible { /* while open */ }
 .mtrl-dialog--small,
 .mtrl-dialog--medium,
@@ -261,18 +263,18 @@ for (const animation of ['scale', 'fade', 'slide-up', 'slide-down']) {
 .mtrl-dialog--slide-up,
 .mtrl-dialog--slide-down { /* animations */ }
 
-.mtrl-dialog-header { /* ... */ }
-.mtrl-dialog-header-title { /* ... */ }
-.mtrl-dialog-header-subtitle { /* ... */ }
-.mtrl-dialog-header-close { /* ... */ }
-.mtrl-dialog-content { /* ... */ }
-.mtrl-dialog-content--scrollable { /* opt-in, 60vh cap */ }
-.mtrl-dialog-footer { /* ... */ }
-.mtrl-dialog-footer--left,
-.mtrl-dialog-footer--center,
-.mtrl-dialog-footer--space-between { /* alignments */ }
-.mtrl-dialog-header-divider,
-.mtrl-dialog-footer-divider { /* ... */ }
+.mtrl-dialog__header { /* ... */ }
+.mtrl-dialog__header-title { /* ... */ }
+.mtrl-dialog__header-subtitle { /* ... */ }
+.mtrl-dialog__header-close { /* ... */ }
+.mtrl-dialog__content { /* ... */ }
+.mtrl-dialog__content--scrollable { /* opt-in, 60vh cap */ }
+.mtrl-dialog__footer { /* ... */ }
+.mtrl-dialog__footer--left,
+.mtrl-dialog__footer--center,
+.mtrl-dialog__footer--space-between { /* alignments */ }
+.mtrl-dialog__header-divider,
+.mtrl-dialog__footer-divider { /* ... */ }
 ```
 
 ## Measurements

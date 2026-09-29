@@ -183,7 +183,7 @@ const email = createTextfield({
 
 Validating on blur is the usual shape:
 
-```javascript
+```javascript continued
 email.on('blur', ({ isEmpty }) => {
   if (isEmpty) return email.setError(false);
 
@@ -314,26 +314,27 @@ text editing inside it, and `Enter` to submit the surrounding form (except in
 .mtrl-textfield--disabled { }
 
 /* Parts */
-.mtrl-textfield-input { }
-.mtrl-textfield-label { }
-.mtrl-textfield-leading-icon { }
-.mtrl-textfield-trailing-icon { }
-.mtrl-textfield-prefix { /* prefixText; the element is `-prefix`, not `-prefix-text` */ }
-.mtrl-textfield-suffix { }
-.mtrl-textfield-helper { /* supportingText */ }
-.mtrl-textfield-helper--error { }
+.mtrl-textfield__input { }
+.mtrl-textfield__label { }
+.mtrl-textfield__leading-icon { }
+.mtrl-textfield__trailing-icon { }
+.mtrl-textfield__prefix { /* prefixText; the element is `__prefix`, not `__prefix-text` */ }
+.mtrl-textfield__suffix { }
+.mtrl-textfield__helper { /* supportingText */ }
+.mtrl-textfield__helper--error { }
+.mtrl-textfield__outline { /* outlined only: the border, around the notch */ }
+.mtrl-textfield__outline--notched { }
 ```
 
-Two class names that look like they should exist do not. There is no
-`--floating` modifier on the label: the raised, shrunken position is applied by
+One class name that looks like it should exist does not: there is no
+`--floating` modifier on the label. The raised, shrunken position is applied by
 CSS selectors on the input's state (`:focus ~ label`,
 `:not(:placeholder-shown) ~ label`) and, for the filled variant, by the
 `--focused` and `--empty` classes on the root — so there is no class to hook a
-"is the label up?" style onto. There is no `.mtrl-textfield-outline` element
-either: the outlined variant draws its border on the input itself, and the notch
-is the label's own background colour, painted inline by JavaScript from the
-inherited background. Note also that `TEXTFIELD_CLASSES` in the source still
-names `textfield-supporting-text` and `textfield-outline`; the DOM does not.
+"is the label up?" style onto. The outlined variant draws its border with an
+`.mtrl-textfield__outline` element of three segments (`__outline-leading`,
+`__outline-notch`, `__outline-trailing`); JavaScript sizes the notch from the
+label's width, and `__outline--notched` opens it while the label is up.
 
 Icon and affix padding is computed in JavaScript rather than fixed in CSS: the
 `withPlacement` feature measures the icons and writes the input's padding and
@@ -348,11 +349,11 @@ declaration each value comes from in
 
 | Attribute | Value | Source |
 |-----------|-------|--------|
-| Field height | 56px | `.mtrl-textfield-input { height }` |
+| Field height | 56px | `.mtrl-textfield__input { height }` |
 | Field height, compact | 40px | `--density-compact` input rule |
 | Container corner | 4px | `f.get-shape('extra-small')` |
 | Filled corner | 4px top only | `border-radius: … … 0 0` on the filled variant |
-| Input padding | 13px 16px | `.mtrl-textfield-input { padding }` |
+| Input padding | 13px 16px | `.mtrl-textfield__input { padding }` |
 | Filled input padding | 20px 16px 7px | filled variant input rule |
 | Icon size | 24px, 20px inside it | leading/trailing icon rules |
 | Icon size, compact | 20px, 16px inside it | `--density-compact` icon rules |
