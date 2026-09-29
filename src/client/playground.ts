@@ -28,6 +28,7 @@ const elementMetaScript = document.querySelector<HTMLScriptElement>('#element-me
 const element: ElementMeta | null = elementMetaScript ? JSON.parse(elementMetaScript.textContent || 'null') : null;
 const frameworkTabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
 const FRAMEWORK_KEY = 'md3-example-framework';
+const codeTab = document.querySelector<HTMLButtonElement>('#code-tab')!;
 let framework: Framework = 'vanilla';
 try {
   const saved = localStorage.getItem(FRAMEWORK_KEY) as Framework | null;
@@ -40,7 +41,9 @@ function currentCode(): { text: string; language: string } {
   const config = components[slug].config(state) as Record<string, unknown>;
   return { text: frameworkCode(framework, element, config, { theme: String(state.theme), mode: String(state.mode) }), language };
 }
-function selectFramework(next: Framework, focus = false) {
+// Only a choice made here is saved: a page without the element shows vanilla
+// without forgetting the framework picked elsewhere.
+function selectFramework(next: Framework, focus = false, save = false) {
   framework = element || next === 'vanilla' ? next : 'vanilla';
   for (const tab of frameworkTabs) {
     const on = tab.dataset.framework === framework;
@@ -48,7 +51,9 @@ function selectFramework(next: Framework, focus = false) {
     tab.tabIndex = on ? 0 : -1;
     if (on && focus) tab.focus();
   }
-  try { localStorage.setItem(FRAMEWORK_KEY, framework); } catch { /* Storage may be unavailable. */ }
+  if (save) {
+    try { localStorage.setItem(FRAMEWORK_KEY, framework); } catch { /* Storage may be unavailable. */ }
+  }
   renderCode();
 }
 function renderCode() {
@@ -57,7 +62,8 @@ function renderCode() {
   code.innerHTML = hljs.highlight(text, { language }).value;
 }
 frameworkTabs.forEach(tab => {
-  tab.addEventListener('click', () => selectFramework(tab.dataset.framework as Framework));
+  // The preview is the same in every framework: picking one shows its code.
+  tab.addEventListener('click', () => { selectFramework(tab.dataset.framework as Framework, false, true); selectTab(codeTab, true); });
   tab.addEventListener('keydown', event => {
     const enabled = frameworkTabs.filter(t => !t.disabled);
     const index = enabled.indexOf(tab);
@@ -66,7 +72,8 @@ frameworkTabs.forEach(tab => {
       : event.key === 'Home' ? enabled[0] : event.key === 'End' ? enabled.at(-1) : undefined;
     if (!target) return;
     event.preventDefault();
-    selectFramework(target.dataset.framework as Framework, true);
+    selectFramework(target.dataset.framework as Framework, true, true);
+    selectTab(codeTab, true);
   });
 });
 const appearanceKey = 'md3-preview-appearance';
@@ -84,7 +91,8 @@ try {
   applyAppearance(normalizeComponentState(slug, JSON.parse(localStorage.getItem(appearanceKey) || '{}')));
 } catch { /* Keep the default appearance when storage is unavailable or invalid. */ }
 
-function selectTab(selected: HTMLButtonElement) {
+const VIEW_KEY = 'md3-playground-view';
+function selectTab(selected: HTMLButtonElement, save = false) {
   for (const tab of tabs) {
     const active = tab === selected;
     tab.setAttribute('aria-selected', String(active));
@@ -94,9 +102,12 @@ function selectTab(selected: HTMLButtonElement) {
   const showingCode = selected.id === 'code-tab';
   copyButton.hidden = !showingCode;
   previewDot.hidden = showingCode;
+  if (save) {
+    try { localStorage.setItem(VIEW_KEY, showingCode ? 'code' : 'preview'); } catch { /* Storage may be unavailable. */ }
+  }
 }
 for (const tab of tabs) {
-  tab.addEventListener('click', () => selectTab(tab));
+  tab.addEventListener('click', () => selectTab(tab, true));
   tab.addEventListener('keydown', event => {
     const index = tabs.indexOf(tab);
     const target = event.key === 'ArrowRight' ? tabs[(index + 1) % tabs.length]
@@ -104,7 +115,7 @@ for (const tab of tabs) {
       : event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs.at(-1) : undefined;
     if (!target) return;
     event.preventDefault();
-    selectTab(target);
+    selectTab(target, true);
     target.focus();
   });
 }
@@ -188,4 +199,5 @@ copyButton.addEventListener('click', async () => {
   }
 });
 selectFramework(framework);
+try { if (localStorage.getItem(VIEW_KEY) === 'code') selectTab(codeTab); } catch { /* Storage may be unavailable. */ }
 update();

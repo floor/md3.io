@@ -1,9 +1,3 @@
-.framework-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
-.framework-tab { border: 1px solid transparent; background: transparent; color: var(--text-dim); border-radius: 6px; padding: 5px 10px;
-  font-size: var(--fs-2xs); font-weight: var(--fw-bold); letter-spacing: .6px; text-transform: uppercase; cursor: pointer; }
-.framework-tab:hover { color: var(--text); }
-.framework-tab[aria-selected="true"] { background: var(--accent); color: var(--bg); }
-.framework-tab:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .example-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
 .example-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .example-preview iframe { display: block; width: 100%; height: 440px; border: 0; background: transparent; }
