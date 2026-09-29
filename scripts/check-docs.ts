@@ -17,6 +17,13 @@
 //   ```javascript fragment    not checked: a signature, a sketch, a partial line
 //   ```javascript continued   continues the previous block, in its scope
 //
+// A neutral ```example block (src/server/example-block.ts) is rendered in all six
+// frameworks, and a block a framework cannot render is a failure. Its Vanilla
+// rendering joins the units above, checked and run as any block; its Web Components
+// rendering runs in Chromium, each handler's event triggered and its payload fields
+// read from the event's detail; each action is called. The React, Vue, Svelte and
+// SolidJS renderings go through their frameworks' compilers (check-docs/compile.ts).
+//
 // A listener the check cannot make fire is named, with the reason, in a comment on the
 // line before its fence: <!-- check-docs untriggered 'event': why -->. Any other listener
 // that never fires is a failure.
@@ -28,6 +35,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { chromium } from 'playwright';
+import { exampleCode, parseExample, type ExampleBlock, type ExampleCode } from '../src/server/example-block';
+import { FRAMEWORKS } from '../src/shared/frameworks';
+import { compileFramework } from './check-docs/compile';
 
 const root = resolve(import.meta.dir, '..');
 const docsDir = resolve(root, 'docs/components');
@@ -41,7 +51,8 @@ const run = (level: string) => levels.length === 0 || levels.includes(level);
 const only = args.filter(arg => !arg.startsWith('--'));
 
 type Block = { page: string; line: number; lang: string; flags: string[]; code: string; untriggered: Map<string, string> };
-type Unit = { id: string; page: string; line: number; lang: string; source: string; runtime: string; lines: number[]; untriggered: Map<string, string> };
+/** `tail`: runtime code after the unit's own, not type-checked: an example's actions, exposed to be called. */
+type Unit = { id: string; page: string; line: number; lang: string; source: string; runtime: string; lines: number[]; untriggered: Map<string, string>; tail?: string };
 type Failure = { page: string; line: number; level: string; message: string };
 const failures: Failure[] = [];
 const fail = (page: string, line: number, level: string, message: string) => failures.push({ page, line, level, message });
@@ -66,9 +77,32 @@ for (const page of pages) {
 }
 const scripts = blocks.filter(block => block.lang === 'javascript' || block.lang === 'typescript');
 
-// Units: a block and the blocks that continue it
+// Example blocks, rendered in every framework
+type Rendered = { block: Block; example: ExampleBlock; code: ExampleCode['code'] };
+const examples: Rendered[] = [];
+for (const block of blocks.filter(block => block.lang === 'example')) {
+  try {
+    const example = parseExample(block.code);
+    const { element, code } = exampleCode(example);
+    examples.push({ block, example, code });
+    if (!element) console.log(`  ${block.page}.md:${block.line} ${example.slug}: no element, Vanilla only`);
+  } catch (error) {
+    fail(block.page, block.line, 'example', (error as Error).message);
+  }
+}
+const actionsTail = (example: ExampleBlock) =>
+  example.actions.length ? `\nObject.assign(window.__docsActions, { ${example.actions.map(action => action.name).join(', ')} });\n` : '';
+
+// Units: a block and the blocks that continue it; an example's Vanilla rendering is one
 const units: Unit[] = [];
-for (const block of scripts) {
+for (const block of blocks) {
+  const rendered = examples.find(example => example.block === block);
+  if (rendered) {
+    const source = rendered.code.vanilla!;
+    units.push({ id: `${block.page}/${block.line}`, page: block.page, line: block.line, lang: 'javascript', source, runtime: '', lines: source.split('\n').map(() => block.line), untriggered: new Map(block.untriggered), tail: actionsTail(rendered.example) });
+    continue;
+  }
+  if (!scripts.includes(block)) continue;
   if (block.flags.includes('fragment')) continue;
   const lines = block.code.split('\n').map((_, i) => block.line + i);
   const previous = units.at(-1);
@@ -138,7 +172,7 @@ for (const unit of units) {
   const header = [...(pageImports.get(unit.page) ?? [])].filter(([name]) => !own.has(name)).map(([, binding]) => binding);
   const body = `${unit.source}\nexport {};\n`;
   unit.source = [...header.map(binding => binding.types), body].join('\n');
-  unit.runtime = [...header.map(binding => binding.runtime), body].join('\n');
+  unit.runtime = [...header.map(binding => binding.runtime), body + (unit.tail ?? '')].join('\n');
   unit.lines = [...header.map(() => unit.line - 1), ...unit.lines];
 }
 const docLine = (unit: Unit, line: number) => unit.lines[Math.min(line, unit.lines.length - 1)] ?? unit.line;
@@ -408,6 +442,38 @@ async function trigger(record) {
     if (record.calls.length > before) break;
   }
 }
+// An example's actions, called once its listeners have run
+window.__docsActions = {};
+async function runActions() {
+  for (const action of Object.values(window.__docsActions)) { await action(); await wait(50); }
+}
+// The listeners an example's web component code adds, recognised by the call they make
+const expected = [];
+const addEventListener = EventTarget.prototype.addEventListener;
+EventTarget.prototype.addEventListener = function (type, listener, options) {
+  const record = this instanceof Element && typeof listener === 'function'
+    ? expected.find(r => r.tag === this.localName && r.event === type && String(listener).includes(r.call + '(')) : undefined;
+  if (!record) return addEventListener.call(this, type, listener, options);
+  record.registered = true;
+  return addEventListener.call(this, type, function (event) {
+    record.calls.push(event.detail);
+    inHandler++;
+    try { return listener.call(this, event); } finally { inHandler--; }
+  }, options);
+};
+window.__runElement = async (id, handlers) => {
+  expected.push(...handlers.map(handler => ({ ...handler, calls: [], registered: false })));
+  await import('/element/' + id + '.js');
+  await wait(100);
+  // Through the element's component, as a user would: its events reach the element's listeners
+  for (const record of expected) {
+    record.target = document.querySelector(record.tag)?.component;
+    if (record.target) await trigger(record);
+  }
+  await runActions();
+  await wait(50);
+  return expected.map(({ event, fields, registered, calls }) => ({ event, fields, registered, calls: calls.map(detail => detail == null ? null : Object.fromEntries(fields.map(field => [field, field in Object(detail)]))) }));
+};
 window.__run = async (id, source) => {
   scaffold(source);
   const done = import('/unit/' + id + '.js');
@@ -420,6 +486,7 @@ window.__run = async (id, source) => {
   await wait(50);
   // Every listener, even one already called: a cascade from another may carry less
   for (const record of listeners) await trigger(record);
+  await runActions();
   await wait(50);
   const listens = listeners.map(({ event, fields, line, calls, config }) => ({ event, fields, line, config, calls: calls.map(payload => payload == null ? null : Object.fromEntries(fields.map(field => [field, field in Object(payload)]))) }));
   // and what the elements carry at the end, markup parsed from strings included
@@ -439,6 +506,21 @@ async function checkBehaviour() {
       fail(unit.page, unit.line, 'behaviour', `does not compile: ${(error as Error).message}`);
     }
   }
+  // Each example's web component rendering: its markup in the page, the elements
+  // defined, then its script
+  const elementModules = new Map<string, { rendered: Rendered; code: string }>();
+  for (const rendered of examples) {
+    const html = rendered.code.html;
+    if (html === undefined) continue;
+    const script = /<script type="module">\n([\s\S]*?)<\/script>/.exec(html)?.[1] ?? '';
+    const markup = html.replace(/<script type="module">[\s\S]*?<\/script>\n?/, '').trim();
+    const source = `import 'mtrl/elements/css';\nimport { defineAll } from 'mtrl/elements';\ndocument.body.insertAdjacentHTML('beforeend', ${JSON.stringify(markup)});\ndefineAll();\n${script}${actionsTail(rendered.example)}`;
+    try {
+      elementModules.set(`${rendered.block.page}/${rendered.block.line}`, { rendered, code: browserModule(source, 'javascript') });
+    } catch (error) {
+      fail(rendered.block.page, rendered.block.line, 'behaviour', `Web Components: does not compile: ${(error as Error).message}`);
+    }
+  }
   const prelude = transpiler.transformSync(readFileSync(preludePath, 'utf8'));
   const server = Bun.serve({
     port: 0, hostname: '127.0.0.1',
@@ -446,6 +528,10 @@ async function checkBehaviour() {
       const path = new URL(request.url).pathname;
       if (path === '/') return new Response(harness, { headers: { 'content-type': 'text/html' } });
       if (path === '/prelude.js') return new Response(prelude, { headers: { 'content-type': 'text/javascript' } });
+      if (path.startsWith('/element/')) {
+        const module = elementModules.get(path.slice(9, -3));
+        return module ? new Response(module.code, { headers: { 'content-type': 'text/javascript' } }) : new Response('', { status: 404 });
+      }
       if (path.startsWith('/unit/')) {
         const module = modules.get(path.slice(6, -3));
         return module ? new Response(module.code, { headers: { 'content-type': 'text/javascript' } }) : new Response('', { status: 404 });
@@ -467,7 +553,7 @@ async function checkBehaviour() {
     },
   });
   const browser = await chromium.launch();
-  const stats = { units: 0, listeners: 0, exercised: 0, configUncalled: 0, untriggered: [] as string[], classes: new Set<string>() };
+  const stats = { units: 0, listeners: 0, exercised: 0, configUncalled: 0, untriggered: [] as string[], classes: new Set<string>(), elements: 0, elementListeners: 0 };
   try {
     const queue = [...modules.values()];
     const worker = async () => {
@@ -524,6 +610,45 @@ async function checkBehaviour() {
     for (const name of missing) fail('(prelude)', 0, 'behaviour', `${name} is declared but has no value`);
     await page.close();
     await Promise.all(Array.from({ length: 6 }, worker));
+    // The web component renderings: every handler's event fires, with its fields in the detail
+    const elementQueue = [...elementModules];
+    const elementWorker = async () => {
+      for (let job = elementQueue.shift(); job; job = elementQueue.shift()) {
+        const [id, { rendered }] = job;
+        const { page: slug, line } = rendered.block;
+        const page = await browser.newPage();
+        const problems: string[] = [];
+        page.on('pageerror', error => problems.push(error.message.split('\n')[0]!));
+        page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') problems.push(`console.${message.type()}: ${message.text().split('\n')[0]}`); });
+        page.on('response', response => { if (response.status() >= 400) problems.push(`${response.status()} ${response.url()}`); });
+        const tag = `m-${rendered.example.slug}`;
+        const handlers = rendered.example.handlers.map(handler => ({ tag, event: handler.event, call: handler.call, fields: [...new Set(handler.args.filter(arg => /^[A-Za-z_$][\w$]*$/.test(arg) && !['true', 'false', 'null'].includes(arg)))] }));
+        try {
+          await page.goto(`${server.url}`);
+          await page.waitForFunction(() => (window as unknown as { __ready?: boolean }).__ready);
+          type Result = { event: string; fields: string[]; registered: boolean; calls: (Record<string, boolean> | null)[] }[];
+          const results = await page.evaluate(([id, handlers]) => (window as unknown as { __runElement: (id: string, handlers: unknown) => Promise<Result> }).__runElement(id as string, handlers), [id, handlers] as const);
+          for (const result of results) {
+            stats.elementListeners++;
+            const reason = rendered.block.untriggered.get(result.event);
+            if (!result.registered) fail(slug, line, 'behaviour', `Web Components: no '${result.event}' listener was added`);
+            else if (!result.calls.length) {
+              if (reason) stats.untriggered.push(`${slug}.md:${line} Web Components '${result.event}' (${reason})`);
+              else fail(slug, line, 'behaviour', `Web Components: '${result.event}' was never dispatched: the check could not make it fire`);
+            } else {
+              const missing = result.fields.filter(field => !result.calls.some(call => call?.[field]));
+              if (missing.length) fail(slug, line, 'behaviour', `Web Components: '${result.event}' detail has no ${missing.map(field => `\`${field}\``).join(', ')}`);
+            }
+          }
+        } catch (error) {
+          problems.push((error as Error).message.split('\n')[0]!);
+        }
+        for (const problem of [...new Set(problems)]) fail(slug, line, 'behaviour', `Web Components: ${problem}`);
+        stats.elements++;
+        await page.close();
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, elementWorker));
   } finally {
     await browser.close();
     server.stop(true);
@@ -549,13 +674,28 @@ function checkClasses(rendered = new Set<string>()) {
   return count;
 }
 
+// The React, Vue, Svelte and SolidJS renderings, through their compilers
+async function checkCompile() {
+  let count = 0;
+  for (const { block, code } of examples) {
+    for (const { id, label } of FRAMEWORKS) {
+      if (id === 'vanilla' || id === 'html' || code[id] === undefined) continue;
+      count++;
+      try { await compileFramework(id, code[id]!); } catch (error) { fail(block.page, block.line, 'compile', `${label}: ${(error as Error).message.split('\n')[0]}`); }
+    }
+  }
+  return count;
+}
+
 const summary: string[] = [];
+if (examples.length || blocks.some(block => block.lang === 'example')) summary.push(`examples: ${blocks.filter(block => block.lang === 'example').length} blocks, ${examples.length} rendered in every framework they have`);
+if (run('types')) summary.push(`compile: ${await checkCompile()} React, Vue, Svelte and SolidJS renderings`);
 let rendered: Set<string> | undefined;
-if (run('types')) { checkTypes(); summary.push(`types: ${units.length} units from ${scripts.length} blocks (${scripts.filter(block => block.flags.includes('fragment')).length} fragments)`); }
+if (run('types')) { checkTypes(); summary.push(`types: ${units.length} units from ${scripts.length} blocks (${scripts.filter(block => block.flags.includes('fragment')).length} fragments) and ${examples.length} examples' Vanilla`); }
 if (run('behaviour')) {
   const stats = await checkBehaviour();
   rendered = stats.classes;
-  summary.push(`behaviour: ${stats.units} units run, ${stats.exercised}/${stats.listeners} event handlers exercised (${stats.configUncalled} config handlers not reached)`);
+  summary.push(`behaviour: ${stats.units} units run, ${stats.exercised}/${stats.listeners} event handlers exercised (${stats.configUncalled} config handlers not reached); ${stats.elements} web component renderings, ${stats.elementListeners} listeners`);
   if (stats.untriggered.length) summary.push(`  untriggered by comment: ${stats.untriggered.join('; ')}`);
 }
 if (run('classes')) summary.push(`classes: ${checkClasses(rendered)} class names in ${blocks.filter(block => block.lang !== 'javascript' && block.lang !== 'typescript').length} css and html blocks, and the scripts`);

@@ -31,6 +31,9 @@
       document.documentElement.dataset.previewMode = mode === 'dark' ? 'dark' : 'light';
     })();
   </script>
+  <script>
+    (() => { let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {} if (['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'].includes(framework)) document.documentElement.dataset.framework = framework; })();
+  </script>
   <script type="module" src="/dist/site.js"></script>
 </head>
 <body class="<%= it.isHome ? 'home' : '' %>">
