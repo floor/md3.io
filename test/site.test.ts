@@ -2,8 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { docGroups, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
-import { components, componentSlugs, componentCode, initialComponentState, normalizeComponentState } from '../src/shared/components';
+import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
 import { symbolByFile } from '../src/shared/icons';
+import { frameworkCode } from '../src/shared/frameworks';
+import { elementMeta } from '../src/server/elements-meta';
 
 const get = (path: string, method = 'GET') => handleRequest(new Request(`http://localhost${path}`, { method }));
 describe('site routes and documentation', () => {
@@ -122,4 +124,48 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   const code = componentCode('datepicker', empty);
   expect(code).toContain("import 'mtrl/styles/datepicker'");
   expect(code).not.toContain('MutationObserver');
+});
+
+describe('framework code for the overlay elements', () => {
+  const code = (slug: Parameters<typeof initialComponentState>[0], framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', input: Record<string, unknown> = {}) => {
+    const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...input });
+    return frameworkCode(framework, elementMeta(slug)!, elementConfig(slug, state), { theme: 'baseline', mode: 'light' });
+  };
+  test('a dialog opens from its trigger, and its actions and close event close it', () => {
+    const html = code('dialog', 'html');
+    expect(html).toContain('<m-button id="dialog-trigger" variant="tonal">Open dialog</m-button>');
+    expect(html).toContain("document.querySelector('#dialog-trigger').addEventListener('click', () => dialog.show());");
+    expect(html).toContain(`dialog.querySelectorAll('m-button[slot="actions"]').forEach((child) => child.addEventListener('click', () => dialog.close()));`);
+    expect(html).toContain('<m-dialog headline="Save your changes?">\n  <p>Keep your changes before leaving this view.</p>');
+    const react = code('dialog', 'react');
+    expect(react).toContain('const [open, setOpen] = useState(false);');
+    expect(react).toContain('<Dialog open={open} onClose={() => setOpen(false)} headline="Save your changes?">');
+    expect(react).toContain('<Button slot="actions" variant="text" onClick={() => setOpen(false)}>Cancel</Button>');
+    expect(code('dialog', 'vue')).toContain('<MDialog :open="open" @close="open = false"');
+    expect(code('dialog', 'svelte')).toContain('<Dialog open={open} onclose={() => (open = false)}');
+    // Full screen brings the close button the playground asks for.
+    expect(code('dialog', 'html', { size: 'fullscreen', closeButton: true })).not.toContain('Not yet exposed');
+  });
+  test('a menu is anchored to its trigger, with its submenu nested and a gap named', () => {
+    const html = code('menu', 'html', { submenu: true, variant: 'gap' });
+    expect(html).toContain('<m-button id="menu-trigger" variant="tonal">Open menu</m-button>');
+    expect(html).toContain('anchor="menu-trigger"');
+    expect(html).toContain('<m-menu-item value="share">\n    Share\n    <m-menu-item value="link">Copy link</m-menu-item>');
+    expect(html).toContain('Not yet exposed by the element: items[].type (gap).');
+    expect(html).not.toContain('<m-menu-item></m-menu-item>');
+    // The anchor opens it: the state follows the element both ways.
+    expect(code('menu', 'react')).toContain('<Menu open={open} onOpen={() => setOpen(true)} onClose={() => setOpen(false)}');
+  });
+  test('the modal drawer and a tooltip target are generated, not noted', () => {
+    const drawer = code('drawer', 'html', { variant: 'modal' });
+    expect(drawer).toContain(' modal>');
+    expect(drawer).not.toContain('Not yet exposed');
+    expect(code('tooltip', 'html')).toContain('<m-icon-button id="tooltip-target" aria-label="Favorite" variant="tonal"></m-icon-button>');
+    expect(code('tooltip', 'html')).toContain('for="tooltip-target"');
+  });
+  test('values that need quoting stay valid code', () => {
+    expect(code('switch', 'html')).toContain("const switchElement = document.querySelector('m-switch');");
+    expect(code('textfield', 'react', { label: 'Say "hi" {now}' })).toContain('label={"Say \\"hi\\" {now}"}');
+    expect(code('button', 'svelte', { text: 'a {b}' })).toContain('>a &#123;b&#125;</Button>');
+  });
 });

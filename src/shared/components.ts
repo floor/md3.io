@@ -662,7 +662,18 @@ export function initialComponentState(slug: ComponentSlug): ComponentState {
 /** The configuration the framework code is generated from: the config, and what the preview adds beside it. */
 export function elementConfig(slug: ComponentSlug, state: ComponentState): Record<string, unknown> {
   const config = components[slug].config(state) as Record<string, unknown>;
-  return slug === 'top-app-bar' || slug === 'bottom-app-bar' ? { ...config, ...appBarContent(slug, state) } : config;
+  if (slug === 'top-app-bar' || slug === 'bottom-app-bar') return { ...config, ...appBarContent(slug, state) };
+  // The button beside an overlay that opens it: the drawer's while it is modal or closed.
+  const trigger = (text: string, ariaLabel?: string) => ({ trigger: { text, variant: 'tonal', ...(ariaLabel ? { ariaLabel } : {}) } });
+  switch (slug) {
+    case 'menu': return { ...config, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
+    case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
+    case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
+    case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
+    case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
+    case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
+    default: return config;
+  }
 }
 /** The vanilla code of a playground, with its icons as named constants (`editIcon`). */
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
