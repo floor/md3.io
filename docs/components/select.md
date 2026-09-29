@@ -459,6 +459,8 @@ The Select component follows accessibility best practices:
 
 ## CSS Customization
 
+A select fills its container's width (`width: 100%`); size it with a width on the select or its container.
+
 The Select component uses BEM-style CSS classes for easy customization:
 
 ```css
