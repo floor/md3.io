@@ -6,8 +6,8 @@
 // The server serialises that spec (`ElementMeta`) from mtrl/elements, so the
 // browser bundle does not carry the elements themselves.
 
-import { createIconNamer, isMarkup } from './icon-code';
-import { symbolName } from './icons';
+import { createIconNamer, ICON_CREDIT, isMarkup } from './icon-code';
+import { symbolFile } from './icons';
 
 export type Framework = 'html' | 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla';
 
@@ -138,7 +138,7 @@ function plan(meta: ElementMeta, config: Config): Plan {
   return { attrs, model, props, text, children, omitted };
 }
 
-/** Frameworks bind icons from named constants (`editIcon`) instead of inlining SVG in attributes. */
+/** Frameworks import each icon (`editIcon`) instead of inlining SVG in attributes. */
 function hoist(meta: ElementMeta, p: Plan, indent = ''): string {
   const icons = createIconNamer();
   for (const attr of p.attrs) {
@@ -150,14 +150,14 @@ function hoist(meta: ElementMeta, p: Plan, indent = ''): string {
       if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${base}-${attr.name}`);
     }
   }
-  return icons.declarations(indent);
+  return icons.imports(indent) + icons.declarations(indent);
 }
 
 /** HTML keeps icons inline in attributes: a comment names the symbols they are. */
 function iconNote(p: Plan): string {
   const names = [...p.attrs, ...p.children.flatMap(c => c.attrs)]
-    .map(a => (isMarkup(a.value) ? symbolName(a.value) : undefined)).filter((n): n is string => !!n);
-  return names.length ? `<!-- Material Symbols Rounded (fonts.google.com/icons): ${[...new Set(names)].join(', ')}. -->\n` : '';
+    .map(a => (isMarkup(a.value) ? symbolFile(a.value) : undefined)).filter((n): n is string => !!n);
+  return names.length ? `<!-- ${ICON_CREDIT}: ${[...new Set(names)].join(', ')}. -->\n` : '';
 }
 
 const omittedNote = (p: Plan, comment: (text: string) => string): string =>
@@ -246,7 +246,7 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const model = p.model ? ` v-model="${p.model.name}"` : '';
   const tag = element(Name, `${model}${vueAttrs(p.attrs)}${vueProps(p.props)}`, body);
   return `<script setup lang="ts">\n${p.model ? `import { ref } from 'vue';\n` : ''}import { ${[Name, Child].filter(Boolean).join(', ')} } from 'mtrl/vue';\n${styleImports(context)}` +
-    (p.model || constants ? '\n' : '') + constants +
+    (p.model || constants ? '\n' : '') + constants + (constants && p.model ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
     `</script>\n\n<template>\n${omittedNote(p, t => `  <!-- ${t} -->`)}  ${tag}\n</template>\n`;
 }
@@ -259,7 +259,7 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n` : '';
   const model = p.model ? ` bind:${p.model.name}` : '';
   return `<script lang="ts">\n  import { ${[Name, Child].filter(Boolean).join(', ')} } from 'mtrl/svelte';\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n` +
-    (p.model || constants ? '\n' : '') + constants +
+    (p.model || constants ? '\n' : '') + constants + (constants && p.model ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${element(Name, `${model}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n`;
 }

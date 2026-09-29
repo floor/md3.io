@@ -1,14 +1,19 @@
-// Icons in the playground's code: each SVG becomes one constant named after its
-// Material Symbol (`editIcon`), declared once however often it is used, under a
-// comment naming the source, instead of a path inlined in every attribute.
-import { symbolName } from './icons';
+// Icons in the playground's code: each Material Symbol is imported from its SVG file
+// (`import editIcon from './icons/edit.svg?raw'`), once however often it is used, under
+// a line crediting Google; an SVG that is not one of ours stays a named constant.
+import { symbolFile } from './icons';
+
+/** The credit and the one bundler note every import of an icon carries. */
+export const ICON_CREDIT = 'Icons: Material Symbols Rounded by Google (Apache 2.0), 24px SVGs from fonts.google.com/icons';
 
 const camel = (name: string): string => name.replace(/[-_]([a-z])/g, (_, c: string) => c.toUpperCase());
 
 export interface IconNamer {
   /** The constant for this SVG; `fallback` names it when it is not a known symbol. */
   name: (svg: string, fallback: string) => string;
-  /** The declarations, one per icon, under the source comment; empty without icons. */
+  /** The icon imports under the credit, as `import` lines; empty without symbols. */
+  imports: (indent?: string) => string;
+  /** Constants for SVGs that are not symbols; empty without them. */
   declarations: (indent?: string) => string;
 }
 
@@ -16,25 +21,32 @@ export const isMarkup = (value: unknown): value is string => typeof value === 's
 
 export function createIconNamer(): IconNamer {
   const bySvg = new Map<string, string>();
+  const imported = new Map<string, string>();
+  const constants = new Map<string, string>();
   const used = new Set<string>();
-  const symbolsUsed: string[] = [];
+  const unique = (base: string): string => {
+    let name = camel(`${base}-icon`);
+    for (let n = 2; used.has(name); n++) name = camel(`${base}-icon-${n}`);
+    used.add(name);
+    return name;
+  };
   return {
     name(svg, fallback) {
       const known = bySvg.get(svg);
       if (known) return known;
-      const symbol = symbolName(svg);
-      if (symbol) symbolsUsed.push(symbol);
-      let name = camel(`${symbol ?? fallback}-icon`);
-      for (let n = 2; used.has(name); n++) name = camel(`${symbol ?? fallback}-icon-${n}`);
-      used.add(name);
+      const file = symbolFile(svg);
+      const name = unique(file ?? fallback);
+      if (file) imported.set(name, file); else constants.set(name, svg);
       bySvg.set(svg, name);
       return name;
     },
+    imports(indent = '') {
+      if (!imported.size) return '';
+      return `${indent}// ${ICON_CREDIT}.\n${indent}// ?raw imports the file as text (Vite; webpack: asset/source, Bun: with { type: 'text' }).\n` +
+        [...imported].map(([name, file]) => `${indent}import ${name} from './icons/${file}.svg?raw';\n`).join('');
+    },
     declarations(indent = '') {
-      if (!bySvg.size) return '';
-      const source = symbolsUsed.length
-        ? `${indent}// Material Symbols Rounded (fonts.google.com/icons): ${symbolsUsed.join(', ')}.\n` : '';
-      return source + [...bySvg].map(([svg, name]) => `${indent}const ${name} = ${JSON.stringify(svg)};\n`).join('');
+      return [...constants].map(([name, svg]) => `${indent}const ${name} = ${JSON.stringify(svg)};\n`).join('');
     },
   };
 }
@@ -45,12 +57,23 @@ export function createIconNamer(): IconNamer {
  */
 export function nameIcons(code: string): string {
   const icons = createIconNamer();
-  const named = code.replace(/^(\s*)(\w+): ("<svg(?:[^"\\]|\\.)*")/gm, (_, indent: string, key: string, literal: string) =>
+  let named = code.replace(/^(\s*)(\w+): ("<svg(?:[^"\\]|\\.)*")/gm, (_, indent: string, key: string, literal: string) =>
     `${indent}${key}: ${icons.name(JSON.parse(literal) as string, key)}`);
+  const imports = icons.imports();
   const declarations = icons.declarations();
-  if (!declarations) return code;
-  const anchor = /^document\.documentElement\.dataset\.themeMode = .*\n\n/m.exec(named) ?? /\n\n/.exec(named);
-  if (!anchor) return `${declarations}\n${named}`;
-  const at = anchor.index + anchor[0].length;
-  return `${named.slice(0, at)}${declarations}\n${named.slice(at)}`;
+  if (!imports && !declarations) return code;
+  if (declarations) {
+    const anchor = /^document\.documentElement\.dataset\.themeMode = .*\n\n/m.exec(named) ?? /\n\n/.exec(named);
+    const at = anchor ? anchor.index + anchor[0].length : 0;
+    named = `${named.slice(0, at)}${declarations}\n${named.slice(at)}`;
+  }
+  if (imports) {
+    // After the last top-level import line.
+    const lines = named.split('\n');
+    let last = -1;
+    lines.forEach((line, i) => { if (line.startsWith('import ')) last = i; });
+    lines.splice(last + 1, 0, '', imports.replace(/\n$/, ''));
+    named = lines.join('\n');
+  }
+  return named;
 }
