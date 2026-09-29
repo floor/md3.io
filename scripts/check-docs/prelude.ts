@@ -60,6 +60,7 @@ declare global {
   function saveColor(color: string): void;
   function search(date: Date | [Date, Date] | null): void;
   function saveSettings(settings: Record<string, number>): void;
+  function setPriceRange(low: number, high: number): void;
   function setSize(size: string): void;
   function setSystemVolume(volume: number): void;
   function setWifi(on: boolean): void;
@@ -88,7 +89,7 @@ const noops = `
   addEvent addToFavorites applyFilters applyMarks applyThemeColor book choose commitArchive
   createItem deleteItem exportPdf filterByPrice hideExportPanel loadAllFilters
   logoutUser openMenu refreshResults removeFromFavorites runSearch saveColor search saveSettings
-  setSize setSystemVolume setWifi showDetail showExportPanel showPanel showRange showView
+  setPriceRange setSize setSystemVolume setWifi showDetail showExportPanel showPanel showRange showView
   startVoice track undoArchive unsend updateEqualizer watchLater
 `;
 const noop = () => {};

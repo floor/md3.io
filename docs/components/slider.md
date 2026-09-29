@@ -1,51 +1,76 @@
-# Slider Component
+# Slider
 
-The Slider component provides a Material Design 3 compliant input control that allows users to select a value or range of values by moving a handle along a track. It supports the three M3 variants (standard, centered and range), discrete stops, five sizes, horizontal and vertical orientation, and an inset icon.
+A slider lets people choose a value, or a range of values, along a track: a volume, a
+brightness, a price range. M3 has three: **standard**, **centered** (from a midpoint, for
+values either side of zero) and **range** (two handles). See the
+[M3 sliders guidelines](https://m3.material.io/components/sliders/overview).
 
-## Overview
+## Usage
 
-Sliders are commonly used for:
+`input` fires while the value moves, `change` once the interaction ends.
 
-- Volume controls and audio settings
-- Image filters and adjustments (brightness, contrast)
-- Price range selection in e-commerce
-- Data visualization with interactive filtering
-- Form inputs for numeric ranges
-- Accessibility controls (font size, zoom level)
-
-The component follows Material Design 3 guidelines with support for different sizes, colors, tick marks, value display, and M3 Expressive motion.
-
-## Import
-
-```javascript
-import { createSlider } from 'mtrl';
+```example
+slider:
+  label: Volume
+  value: 40
+  on change: setSystemVolume(value)
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-// Create a basic slider
-const slider = createSlider({
-  min: 0,
-  max: 100,
-  value: 50
-});
+### Discrete steps
 
-// Add to your page
-document.querySelector('.controls').appendChild(slider.element);
+With `step`, the handle snaps to the steps; `ticks` marks each one on the track.
 
-// Update slider value
-slider.setValue(75);
-
-// Listen for value changes
-slider.on('change', (event) => {
-  console.log('New value:', event.value);
-});
+```example
+slider:
+  label: Brightness
+  min: 0
+  max: 10
+  step: 1
+  ticks: true
+  value: 6
 ```
 
-## Configuration
+### A range
 
-The Slider component accepts the following configuration options:
+`range` adds a second handle, whose value is `secondValue`. The handles never cross.
+
+```example
+slider:
+  label: Price
+  range: true
+  min: 0
+  max: 1000
+  step: 10
+  value: 100
+  secondValue: 500
+  on change: setPriceRange(value, secondValue)
+```
+
+### Setting the value
+
+An action sets the value; out of bounds, it is clamped to `min` or `max`.
+
+```example
+slider:
+  label: Volume
+  value: 40
+  action mute:
+    set value: 0
+```
+
+`centered: true` fills the track from its midpoint. `orientation: 'vertical'` stands it up,
+taking its length from its CSS height; `insetIcon` puts an icon inside the track of a standard
+slider at size `M`, `L` or `XL`. Recipes such as a photo filter, an equalizer or a settings
+form are planned for [Examples](/examples/).
+
+## API
+
+<!-- API: generated from mtrl's types and <m-slider>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -75,11 +100,9 @@ The Slider component accepts the following configuration options:
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-## Component API
+### Methods
 
-The Slider component provides the following methods:
-
-### Value Methods
+#### Value Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
@@ -88,7 +111,7 @@ The Slider component provides the following methods:
 | `getSecondValue()` | none | `number \| null` | Gets the secondary slider value (range sliders only) |
 | `setSecondValue(value, triggerEvent?)` | `value: number, triggerEvent?: boolean` | `SliderComponent` | Sets the secondary slider value |
 
-### Range Methods
+#### Range Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
@@ -99,7 +122,7 @@ The Slider component provides the following methods:
 | `getStep()` | none | `number` | Gets the slider step size |
 | `setStep(step)` | `step: number` | `SliderComponent` | Sets the slider step size |
 
-### State Methods
+#### State Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
@@ -107,7 +130,7 @@ The Slider component provides the following methods:
 | `disable()` | none | `SliderComponent` | Disables the slider |
 | `isDisabled()` | none | `boolean` | Checks if the slider is disabled |
 
-### Appearance Methods
+#### Appearance Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
@@ -118,7 +141,7 @@ The Slider component provides the following methods:
 | `showTicks(show)` | `show: boolean` | `SliderComponent` | Shows or hides tick marks |
 | `showCurrentValue(show)` | `show: boolean` | `SliderComponent` | Shows or hides value bubble during interaction |
 
-### Label and Icon Methods
+#### Label and Icon Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
@@ -128,22 +151,20 @@ The Slider component provides the following methods:
 | `setIcon(iconHtml)` | `iconHtml: string` | `SliderComponent` | Sets the icon HTML |
 | `getIcon()` | none | `string` | Gets the icon HTML |
 
-### Event Methods
+#### Event Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `on(event, handler)` | `event: string, handler: Function` | `SliderComponent` | Adds an event listener |
 | `off(event, handler)` | `event: string, handler: Function` | `SliderComponent` | Removes an event listener |
 
-### Lifecycle Methods
+#### Lifecycle Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `destroy()` | none | `void` | Destroys the slider component and cleans up resources |
 
-## Events
-
-The Slider component emits the following events:
+### Events
 
 | Event | Description | Data |
 |-------|-------------|------|
@@ -154,437 +175,17 @@ The Slider component emits the following events:
 | `start` | Fires when interaction starts (mouse down, touch start) | `{ value: number, secondValue: number \| null }` |
 | `end` | Fires when interaction ends (mouse up, touch end) | `{ value: number, secondValue: number \| null }` |
 
-Every slider event carries the same object: `{ slider, value, secondValue,
-originalEvent, preventDefault, defaultPrevented }`.
-
-## Examples
-
-### Basic Slider Variants
-
-```javascript
-// Simple value slider
-const volumeSlider = createSlider({
-  min: 0,
-  max: 100,
-  value: 50,
-  label: 'Volume'
-});
-
-// Discrete slider with steps
-const brightnessSlider = createSlider({
-  min: 0,
-  max: 10,
-  value: 5,
-  step: 1,
-  ticks: true,
-  label: 'Brightness'
-});
-
-// Price range slider
-const priceSlider = createSlider({
-  min: 0,
-  max: 1000,
-  value: 100,
-  secondValue: 500,
-  range: true,
-  label: 'Price Range',
-  valueFormatter: (value) => `$${value}`
-});
-```
-
-### Different Sizes
-
-```javascript
-// Extra small (16px track height)
-const compactSlider = createSlider({
-  size: 'XS',
-  value: 30,
-  label: 'Compact'
-});
-
-// Medium (40px track height)
-const mediumSlider = createSlider({
-  size: 'M',
-  value: 50,
-  label: 'Medium'
-});
-
-// Extra large (96px track height)
-const largeSlider = createSlider({
-  size: 'XL',
-  value: 70,
-  label: 'Large'
-});
-
-// Custom size (32px track height)
-const customSlider = createSlider({
-  size: 32,
-  value: 60,
-  label: 'Custom Size'
-});
-```
-
-### Color Variants
-
-```javascript
-// Primary color (default)
-const primarySlider = createSlider({
-  color: 'primary',
-  value: 40,
-  label: 'Primary'
-});
-
-// Secondary color
-const secondarySlider = createSlider({
-  color: 'secondary',
-  value: 60,
-  label: 'Secondary'
-});
-
-// Error color
-const errorSlider = createSlider({
-  color: 'error',
-  value: 80,
-  label: 'Error State'
-});
-```
-
-### Centered Sliders
-
-```javascript
-// Audio balance control
-const balanceSlider = createSlider({
-  min: -10,
-  max: 10,
-  value: 0,
-  centered: true,
-  label: 'Audio Balance',
-  valueFormatter: (value) => {
-    if (value === 0) return 'Center';
-    return value > 0 ? `R${value}` : `L${Math.abs(value)}`;
-  }
-});
-
-// Temperature adjustment
-const temperatureSlider = createSlider({
-  min: -20,
-  max: 20,
-  value: 5,
-  step: 1,
-  centered: true,
-  ticks: true,
-  label: 'Temperature',
-  valueFormatter: (value) => `${value > 0 ? '+' : ''}${value}°C`
-});
-```
-
-### Sliders with Icons
-
-```javascript
-// Volume control with icon
-const volumeControl = createSlider({
-  min: 0,
-  max: 100,
-  value: 75,
-  icon: `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-  </svg>`,
-  label: 'Volume'
-});
-
-// Brightness control with icon
-const brightnessControl = createSlider({
-  min: 0,
-  max: 100,
-  value: 60,
-  icon: `<svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31Z"/>
-  </svg>`,
-  iconPosition: 'start',
-  label: 'Brightness'
-});
-```
-
-### Inset Icon
-
-M3 Expressive sliders at size M, L or XL can carry an icon inside the track that shows what the slider controls. It sits at the start of the active track and moves onto the inactive track when the active one is too short to hold it. Only standard sliders take one: not range, not centered.
-
-```javascript
-const volume = createSlider({
-  size: 'M',
-  value: 40,
-  insetIcon: volumeUpIcon,       // 24px on M and L, 32px on XL
-  insetIconAtMin: volumeOffIcon, // shown at the minimum
-  ariaLabel: 'Volume'
-});
-```
-
-### Vertical Sliders
-
-A vertical slider runs from the bottom up, and takes its length from its height. Use standard or centered sliders vertically; the guidelines advise against vertical range sliders.
-
-```javascript
-const level = createSlider({ orientation: 'vertical', size: 'L', value: 60 });
-level.element.style.height = '240px';
-
-// Minimum at the top instead
-const drop = createSlider({ orientation: 'vertical', topToBottom: true });
-```
-
-### Discrete Sliders with Custom Labels
-
-```javascript
-// Quality selector
-const qualitySlider = createSlider({
-  min: 0,
-  max: 4,
-  value: 2,
-  step: 1,
-  ticks: true,
-  tickLabels: {
-    0: 'Low',
-    1: 'Medium',
-    2: 'High',
-    3: 'Very High',
-    4: 'Ultra'
-  },
-  label: 'Video Quality'
-});
-
-// Font size selector
-const fontSizeSlider = createSlider({
-  min: 12,
-  max: 24,
-  value: 16,
-  step: 2,
-  ticks: true,
-  label: 'Font Size',
-  valueFormatter: (value) => `${value}px`
-});
-```
-
-### Advanced Range Slider
-
-```javascript
-// Time range picker
-const timeRangeSlider = createSlider({
-  min: 0,
-  max: 24,
-  value: 9,
-  secondValue: 17,
-  step: 0.5,
-  range: true,
-  label: 'Working Hours',
-  valueFormatter: (value) => {
-    const hours = Math.floor(value);
-    const minutes = (value % 1) * 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  }
-});
-
-// Age range filter
-const ageRangeSlider = createSlider({
-  min: 18,
-  max: 65,
-  value: 25,
-  secondValue: 45,
-  range: true,
-  step: 1,
-  label: 'Age Range',
-  valueFormatter: (value) => `${value} years`
-});
-```
-
-### Interactive Examples
-
-```javascript
-// Image filter control
-const contrastSlider = createSlider({
-  min: -100,
-  max: 100,
-  value: 0,
-  centered: true,
-  label: 'Contrast',
-  valueFormatter: (value) => `${value > 0 ? '+' : ''}${value}%`
-});
-
-const imageElement = document.getElementById('preview-image');
-
-contrastSlider.on('input', (event) => {
-  // Real-time preview during dragging
-  const contrast = 100 + event.value;
-  imageElement.style.filter = `contrast(${contrast}%)`;
-});
-
-contrastSlider.on('change', (event) => {
-  // Save final value
-  console.log('Final contrast:', event.value);
-});
-
-// Audio equalizer
-const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000];
-const eqSliders = frequencies.map((freq, index) => {
-  const slider = createSlider({
-    min: -12,
-    max: 12,
-    value: 0,
-    step: 0.5,
-    centered: true,
-    size: 'S',
-    label: freq >= 1000 ? `${freq/1000}kHz` : `${freq}Hz`,
-    valueFormatter: (value) => `${value > 0 ? '+' : ''}${value}dB`
-  });
-  
-  slider.on('change', (event) => {
-    updateEqualizer(index, event.value);
-  });
-  
-  return slider;
-});
-```
-
-### Form Integration
-
-```javascript
-// Settings form with sliders
-const settingsForm = document.querySelector('#settings-form');
-
-const settings = {
-  volume: createSlider({
-    min: 0,
-    max: 100,
-    value: 75,
-    label: 'Master Volume'
-  }),
-  
-  timeout: createSlider({
-    min: 5,
-    max: 60,
-    value: 30,
-    step: 5,
-    ticks: true,
-    label: 'Session Timeout (minutes)'
-  }),
-  
-  fontSize: createSlider({
-    min: 12,
-    max: 20,
-    value: 14,
-    step: 1,
-    label: 'Font Size',
-    valueFormatter: (value) => `${value}px`
-  })
-};
-
-// Add sliders to form
-Object.values(settings).forEach(slider => {
-  settingsForm.appendChild(slider.element);
-});
-
-// Form submission
-settingsForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  
-  const formData = {
-    volume: settings.volume.getValue(),
-    timeout: settings.timeout.getValue(),
-    fontSize: settings.fontSize.getValue()
-  };
-  
-  console.log('Settings:', formData);
-  saveSettings(formData);
-});
-```
-
-### Accessibility Example
-
-```javascript
-// Accessible slider with full keyboard support
-let instructed = false;
-
-const accessibleSlider = createSlider({
-  min: 0,
-  max: 100,
-  value: 50,
-  step: 1,
-  label: 'Zoom Level',
-  showValue: true,
-  valueFormatter: (value) => `${value}%`,
-  
-  // Event handlers for screen reader announcements
-  on: {
-    change: (event) => {
-      // Announce final value to screen readers
-      announceToScreenReader(`Zoom level set to ${event.value} percent`);
-    },
-    
-    focus: (event) => {
-      // Provide instructions on first focus
-      if (!instructed) {
-        announceToScreenReader('Use arrow keys to adjust zoom level');
-        instructed = true;
-      }
-    }
-  }
-});
-
-function announceToScreenReader(message) {
-  const announcement = document.createElement('div');
-  announcement.setAttribute('aria-live', 'polite');
-  announcement.setAttribute('aria-atomic', 'true');
-  announcement.style.position = 'absolute';
-  announcement.style.left = '-10000px';
-  announcement.textContent = message;
-  
-  document.body.appendChild(announcement);
-  setTimeout(() => document.body.removeChild(announcement), 1000);
-}
-```
-
-## Functional Composition
-
-The Slider is built by piping features onto a base component:
-
-```javascript fragment
-const slider = pipe(
-  createBase,                     // the base component
-  withEvents(),                   // event emitter
-  withElement(elementConfig),     // the root element and its classes
-  withRange(config),              // the second handle, for range sliders
-  withDom(config),                // container, handles and value indicators
-  withTextLabel(config),          // optional visible label
-  withIcon(config),               // optional icon beside the slider
-  withLifecycle(),                // destroy and cleanup
-  withStates(config),             // disabled state and appearance
-  withTracks(config),             // track, stops, ticks and inset icon
-  withController(config, get),    // values, keyboard, pointer and rendering
-)(config);
-```
-
-`withAPI` then wraps the result in the public API. The track is decorative DOM (`aria-hidden`); the handles are real elements with the slider role.
-
-## Rendering and Motion
-
-The track is drawn with a few decorative DOM elements (`aria-hidden`) under handles that stay real, focusable elements with slider semantics. The geometry follows Material Design 3:
-
-- **Sizes**: track 16 / 24 / 40 / 56 / 96px and handle 44 / 44 / 52 / 68 / 108px for XS–XL; outer track corners 8 / 8 / 12 / 16 / 28px, inside corners 2px.
-- **Handle**: 4px wide, narrowing to 2px while pressed or focused. The track keeps a 6px gap from the handle's edge.
-- **Colors**: the active track, handle and stop indicators take the slider color; the inactive track takes its container color (`secondary-container` for primary).
-- **Stop indicators**: a dot ends every inactive track, so centered and range sliders carry one at each end. With `ticks`, stops mark every step, and a discrete slider insets its interior steps by the corner radius.
-- **Value indicator**: inverse surface, 48×44px, 12px beyond the handle. It grows out of the handle and shrinks back into it.
-- **Motion**: a value change that doesn't follow the pointer (a tap on the track, a key, `setValue()`) settles on the M3 Expressive default spatial spring. A drag follows the pointer, and layout changes (the first render, a resize) never animate.
-
-Per-slider colors can be overridden in CSS with `--mtrl-slider-color`, `--mtrl-slider-container-color` and `--mtrl-slider-on-color`.
+Every slider event carries the same object: `{ slider, value, secondValue, originalEvent,
+preventDefault, defaultPrevented }`. The web component's `input` and `change` carry
+`{ value }`, and `secondValue` on a range.
 
 ## Accessibility
 
-- Each handle is an element with `role="slider"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and `aria-valuetext` when a `valueFormatter` is set.
-- `aria-orientation` follows `orientation`.
-- On a range slider each handle's limit is the other handle: the first handle's `aria-valuemax` is the second value, and the second handle's `aria-valuemin` is the first.
-- `aria-disabled` and `tabindex="-1"` when disabled.
-- Focus narrows the handle and shows the value indicator.
-
-### Keyboard Navigation
+- Each handle has `role="slider"`, with `aria-valuemin`, `aria-valuemax`, `aria-valuenow`,
+  `aria-orientation`, and `aria-valuetext` when a `valueFormatter` is set.
+- The handles are named by `label`; the web component's `aria-label` names them instead. On a
+  range, each handle's limit is the other handle's value.
+- Disabled, the handles have `aria-disabled` and leave the tab order.
 
 | Keys | Action |
 |------|--------|
@@ -595,51 +196,10 @@ Per-slider colors can be overridden in CSS with `--mtrl-slider-color`, `--mtrl-s
 | `Home` / `End` | The minimum / maximum, or the other handle on a range slider |
 | `Tab` | Moves between the handles of a range slider |
 
-Range handles never cross: keys, dragging and `setValue()` / `setSecondValue()` stop a handle at the other one.
+## Styling
 
-### Screen Reader Support
-
-```html
-<div class="mtrl-slider mtrl-slider--range">
-  <div class="mtrl-slider__container">
-    <div class="mtrl-slider__visual" aria-hidden="true"><!-- track, stops, ticks --></div>
-    <div class="mtrl-slider__handle" role="slider" aria-valuemin="0" aria-valuemax="75"
-         aria-valuenow="25" aria-orientation="horizontal" tabindex="0"></div>
-    <div class="mtrl-slider__handle" role="slider" aria-valuemin="25" aria-valuemax="100"
-         aria-valuenow="75" aria-orientation="horizontal" tabindex="0"></div>
-  </div>
-</div>
-```
-
-## CSS Customization
-
-The slider's classes follow BEM:
-
-```css
-.mtrl-slider { }                    /* root */
-.mtrl-slider__label { }             /* visible label */
-.mtrl-slider__icon { }              /* icon beside the slider */
-.mtrl-slider__container { }         /* holds the track and the handles */
-.mtrl-slider__track { }             /* clips the outer corners */
-.mtrl-slider__segment { }           /* a piece of track; --active for the active one */
-.mtrl-slider__ticks { }             /* stops; --active on the active track */
-.mtrl-slider__dot { }               /* stop indicator at an end; --start at the start */
-.mtrl-slider__inset-icon { }        /* --inactive when on the inactive track */
-.mtrl-slider__handle { }            /* --focused while focused */
-.mtrl-slider__value { }             /* value indicator; --visible while shown */
-
-/* Modifiers on the root */
-.mtrl-slider--range, .mtrl-slider--centered, .mtrl-slider--vertical { }
-.mtrl-slider--s, .mtrl-slider--m, .mtrl-slider--l, .mtrl-slider--xl { }   /* XS adds none */
-.mtrl-slider--secondary, .mtrl-slider--tertiary, .mtrl-slider--error { }   /* primary adds none */
-.mtrl-slider--disabled, .mtrl-slider--discrete { }
-.mtrl-slider--dragging { }          /* while a handle is dragged */
-.mtrl-slider--settling { }          /* while a value change settles on its spring */
-```
-
-### CSS Custom Properties
-
-Override the colors of one slider without a new theme:
+The custom properties set one slider's colors, in the factory and the web component alike; the
+classes are the factory's, inside the web component's shadow root.
 
 ```css
 .volume {
@@ -647,105 +207,25 @@ Override the colors of one slider without a new theme:
   --mtrl-slider-container-color: #cce8e7;  /* inactive track, ticks on the active track */
   --mtrl-slider-on-color: #ffffff;         /* ticks on the active track only */
 }
+
+.mtrl-slider { }
+.mtrl-slider__label, .mtrl-slider__icon, .mtrl-slider__container, .mtrl-slider__track { }
+.mtrl-slider__segment, .mtrl-slider__segment--active, .mtrl-slider__ticks, .mtrl-slider__dot { }
+.mtrl-slider__handle, .mtrl-slider__handle--focused, .mtrl-slider__value, .mtrl-slider__inset-icon { }
+.mtrl-slider--range, .mtrl-slider--vertical, .mtrl-slider--discrete, .mtrl-slider--disabled { }
+.mtrl-slider--dragging, .mtrl-slider--settling { }
 ```
 
-The rest comes from the theme's color roles (`--mtrl-sys-color-*`).
+## Measurements
 
-## Browser Support
+| Size | Track | Handle | Outer corners |
+|------|-------|--------|---------------|
+| `XS` (default) | 16dp | 44dp | 8dp |
+| `S` | 24dp | 44dp | 8dp |
+| `M` | 40dp | 52dp | 12dp |
+| `L` | 56dp | 68dp | 16dp |
+| `XL` | 96dp | 108dp | 28dp |
 
-Any current browser with CSS custom properties, `ResizeObserver` and ES2020. The spring motion uses the CSS `linear()` easing function; where it is missing, the value change still happens, without the overshoot.
-
-## Best Practices
-
-### When to Use Sliders
-- **Continuous Values**: When precise value selection within a range is needed
-- **Visual Feedback**: When users benefit from seeing the relative position of a value
-- **Range Selection**: When users need to select a range of values
-- **Real-time Adjustment**: When immediate visual feedback enhances the user experience
-
-### Design Guidelines
-- Use appropriate sizes for the context (compact for forms, larger for main controls)
-- Provide clear labels that describe what the slider controls
-- Use tick marks for discrete values or important reference points
-- Consider using icons to reinforce the slider's purpose
-- Ensure sufficient color contrast for accessibility
-- Use consistent slider styling throughout your application
-
-### Interaction Guidelines
-- Provide immediate visual feedback during interaction
-- Use value bubbles for sliders where precise values matter
-- Consider the appropriate step size for your use case
-- For range sliders, ensure handles can be easily distinguished
-- Test keyboard navigation thoroughly
-- Provide alternative input methods for users who struggle with dragging
-
-### Accessibility Guidelines
-- Always provide meaningful labels for screen readers
-- Ensure sliders are keyboard accessible
-- Test with screen readers to verify proper value announcements
-- Don't rely solely on color to convey state
-- Provide sufficient touch targets for mobile users
-- Consider users with motor disabilities when setting step sizes
-
-### Value Management Guidelines
-- Use appropriate min/max ranges that make sense for your use case
-- Consider providing input fields alongside sliders for precise entry
-- Validate values and provide helpful error messages
-- Store and restore slider states appropriately
-- Consider the impact of frequent value changes on performance
-
-## Error Handling
-
-```javascript
-const slider = createSlider({ min: 0, max: 100, value: 50 });
-const rangeSlider = createSlider({ range: true, min: 0, max: 100, value: 20, secondValue: 40 });
-
-slider.setValue(150); // clamped to max
-slider.setValue(-10); // clamped to min
-
-// Range handles never cross: each stops at the other
-rangeSlider.setSecondValue(60);
-rangeSlider.setValue(80);  // stays at 60
-```
-
-## TypeScript Support
-
-The Slider component includes full TypeScript definitions:
-
-```typescript
-import { createSlider, SliderConfig, SliderComponent } from 'mtrl';
-
-const slider: SliderComponent = createSlider({
-  min: 0,
-  max: 100,
-  value: 50,
-  size: 'M',
-  color: 'primary'
-} as SliderConfig);
-
-// Type-safe method calls
-slider.setValue(75); // TypeScript will validate the number type
-slider.setColor('secondary'); // TypeScript will validate color options
-slider.setSize('L'); // TypeScript will validate size options
-```
-
-## Migration Guide
-
-The Material 3 update (mtrl #190, #193) changes how the slider looks and moves; the API only grew.
-
-### What Changed
-- Colors follow M3: the inactive track takes the container color (`secondary-container` for primary) instead of the primary color at low opacity.
-- The handle keeps a 6px gap from the track, narrows to 2px when pressed or focused, and has no outline ring.
-- Centered and range sliders carry a stop indicator at each end.
-- The value indicator uses the inverse surface and grows out of the handle.
-- A tap, a key or `setValue()` settles on a spring; the first render and a drag no longer animate.
-- Range handles stop at each other instead of swapping; `Page Up` / `Page Down` move a tenth of the steps.
-- Right-to-left layouts are supported.
-
-### What Is New
-- `orientation: 'vertical'` and `topToBottom`
-- `insetIcon`, `insetIconAtMin` and `setInsetIcon()`
-- `--mtrl-slider-container-color`
-
-### Updating Your Code
-No code changes are needed. Styles that targeted the old unprefixed element classes (`.mtrl-slider-handle`, `.mtrl-slider-value`) should use the BEM ones above.
+The handle is 4dp wide, 2dp while pressed or focused, with a 6dp gap to the track; inside
+corners are 2dp. The value indicator is 48×44dp, 12dp beyond the handle. A value change that
+does not follow the pointer settles on the M3 Expressive default spatial spring.
