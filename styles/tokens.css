@@ -19,9 +19,10 @@
     font-display: swap;
 }
 
+/* Latin, punctuation, arrows and box drawing: what code shows (the full font is 480 KB). */
 @font-face {
     font-family: "Ioskeley Mono";
-    src: url("/fonts/IoskeleyMono-Regular.woff2") format("woff2");
+    src: url("/fonts/IoskeleyMono-Regular.latin.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
@@ -29,7 +30,7 @@
 
 @font-face {
     font-family: "Ioskeley Mono";
-    src: url("/fonts/IoskeleyMono-Bold.woff2") format("woff2");
+    src: url("/fonts/IoskeleyMono-Bold.latin.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
