@@ -3,6 +3,8 @@ import { resolve, extname, sep } from 'node:path';
 import { root, docGroups, renderDocument } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
+import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
+import { readFileSync, existsSync } from 'node:fs';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
 const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' };
@@ -10,15 +12,33 @@ const html = (body: string, status = 200) => new Response(body, { status, header
 const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
+  const isExamples = path.startsWith('/examples');
   const isHome = path === '/';
   const sidebarGroups = isDocs
     ? [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Component architecture', href: '/docs/components/components/' }] }, ...docGroups]
-    : componentGroups;
+    : isExamples ? exampleGroups : componentGroups;
   return html(eta.render('base', {
-    path, title, description, isHome, section: isDocs ? 'Documentation' : isHome ? '' : 'Components', sidebarGroups,
+    path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isHome ? '' : 'Components', sidebarGroups,
     content: eta.render(template, { ...data, docGroups, components, playgroundGroups }),
   }), status);
 }
+const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
+
+// mtrl's light-DOM stylesheets for a set of components, dependencies first: each
+// dist/mtrl/styles/<name>.js imports the stylesheets its component needs.
+function styleClosure(names: string[]): string[] {
+  const order: string[] = [];
+  const visit = (name: string) => {
+    if (order.includes(name)) return;
+    const module = resolve(root, 'dist/mtrl/styles', `${name}.js`);
+    const source = existsSync(module) ? readFileSync(module, 'utf8') : '';
+    for (const [, dependency] of source.matchAll(/import "\.\/([a-z-]+)\.js"/g)) if (dependency !== name) visit(dependency!);
+    order.push(name);
+  };
+  names.forEach(visit);
+  return order;
+}
+
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };
 export async function handleRequest(request: Request): Promise<Response> {
   if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
@@ -26,6 +46,12 @@ export async function handleRequest(request: Request): Promise<Response> {
   let path: string;
   try { path = decodeURIComponent(url.pathname); } catch { return new Response('Bad request', { status: 400 }); }
   if (/(?:^|\/)\.[^/]/.test(path)) return new Response('Not found', { status: 404 });
+  // An example's own layout CSS lives beside its code: /examples-styles/<slug>.css.
+  const exampleStyle = /^\/examples-styles\/([a-z-]+)\.css$/.exec(path);
+  if (exampleStyle && exampleBySlug(exampleStyle[1]!)) {
+    const file = Bun.file(resolve(root, 'examples', exampleStyle[1]!, 'styles.css'));
+    return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': 'text/css', 'Cache-Control': 'no-cache' } });
+  }
   const staticMatch = /^\/(styles|fonts|dist|assets)\/(.+)$/.exec(path);
   if (staticMatch) {
     const base = resolve(root, staticMatch[1]!);
@@ -47,6 +73,19 @@ export async function handleRequest(request: Request): Promise<Response> {
     response = componentMatch[1] === 'preview'
       ? html(eta.render('preview', { themes, slug, component }))
       : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: componentIcons, themes });
+  }
+  else if (path === '/examples/') response = page(path, 'Examples — mtrl', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
+  else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
+    const [, slug, , framework] = /^\/examples\/([a-z-]+)\/(frame\/([a-z]+)\/)?$/.exec(path)!;
+    const example = exampleBySlug(slug!);
+    const variants = example ? exampleVariants(slug!) : null;
+    if (!example || !variants) response = page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
+    else if (framework) {
+      response = variants.some(v => v.id === framework)
+        ? html(eta.render('example-frame', { example, framework, themes, styles: styleClosure(example.components) }))
+        : page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
+    }
+    else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
   }
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else {
