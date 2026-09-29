@@ -150,6 +150,7 @@ Following the m3.material.io date picker specs and their tokens, then Compose:
 
 | Attribute | Value |
 |-----------|-------|
+| Field | Fills its container up to 360dp; 280dp where it shrinks to fit, as the text field (Compose `TextFieldDefaults.MinWidth`) |
 | Modal | 360dp wide, `surface-container-high`, 28dp corners, elevation 3, a 0.32 scrim |
 | Header | 120dp (128dp for a range); title Label Large, headline Headline Large (Title Large for a range) |
 | Full screen | The viewport, no corners or elevation, a 128dp header with close (x) and Save, subheads Title Small |

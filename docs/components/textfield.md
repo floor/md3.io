@@ -363,3 +363,8 @@ declaration each value comes from in
 | Input type | body-large | `@include m.typography('body-large')` |
 | Supporting text type | body-small | `@include m.typography('body-small')` |
 | Multiline minimum height | 100px | `--multiline` input rule |
+| Width, unsized | 280px (Compose `TextFieldDefaults.MinWidth`) | `contain-intrinsic-inline-size: v.textfield('width')` on `.mtrl-textfield` |
+
+Without a width from the page, a text field is 280px wide on every platform, not as wide as
+its input's default size, which Chrome measures differently on macOS and Linux for the same
+font. Any width you give the field, or a stretching layout, still wins.
