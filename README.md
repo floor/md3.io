@@ -25,7 +25,7 @@ bun run test:browser
 
 The browser check uses Playwright Chromium and writes screenshots to `analysis/browser/`. Install its browser once with `bunx playwright install chromium` if needed. To serve a built site, run `bun start`.
 
-`bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against mtrl, and mtrl-addons from the sibling `../mtrl-addons` checkout: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app.
+`bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against mtrl, and against the published mtrl-addons (a pinned devDependency) for form and colorpicker: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app.
 
 ## Structure
 

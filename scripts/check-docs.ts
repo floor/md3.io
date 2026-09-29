@@ -33,22 +33,8 @@ const root = resolve(import.meta.dir, '..');
 const docsDir = resolve(root, 'docs/components');
 const preludePath = resolve(import.meta.dir, 'check-docs/prelude.ts');
 const mtrlDir = resolve(root, 'node_modules/mtrl');
-// form and colorpicker document mtrl-addons, checked against the sibling checkout, as
-// mtrl itself comes from ../mtrl
-const addonsDir = resolve(root, '../mtrl-addons');
-if (!Bun.file(resolve(addonsDir, 'dist/index.mjs')).size) throw new Error(`docs:check needs a built mtrl-addons checkout at ${addonsDir}`);
-const addonsExports = JSON.parse(readFileSync(resolve(addonsDir, 'package.json'), 'utf8')).exports as Record<string, string | Record<string, string>>;
-const addonsFile = (specifier: string, condition: 'types' | 'import') => {
-  const subpath = `.${specifier.slice('mtrl-addons'.length)}`;
-  for (const [pattern, target] of Object.entries(addonsExports)) {
-    const file = typeof target === 'string' ? target : target[condition];
-    if (!file) continue;
-    if (pattern === subpath) return resolve(addonsDir, file);
-    const [before, after] = pattern.split('*');
-    if (after !== undefined && subpath.startsWith(before!) && subpath.endsWith(after)) return resolve(addonsDir, file.replace('*', subpath.slice(before!.length, subpath.length - after.length)));
-  }
-  throw new Error(`${specifier} is not exported by mtrl-addons`);
-};
+// form and colorpicker document mtrl-addons: the published package, a devDependency
+const addonsDir = resolve(root, 'node_modules/mtrl-addons');
 const args = process.argv.slice(2);
 const levels = ['types', 'behaviour', 'classes'].filter(level => args.includes(`--${level}`));
 const run = (level: string) => levels.length === 0 || levels.includes(level);
@@ -178,12 +164,6 @@ function checkTypes() {
     host.fileExists = file => virtual.has(resolve(file)) || fileExists(file);
     const readFile = host.readFile.bind(host);
     host.readFile = file => virtual.get(resolve(file))?.source ?? readFile(file);
-    host.resolveModuleNameLiterals = (literals, containingFile, redirect, compilerOptions) => literals.map(literal => {
-      if (literal.text === 'mtrl-addons' || literal.text.startsWith('mtrl-addons/')) {
-        try { return { resolvedModule: { resolvedFileName: addonsFile(literal.text, 'types'), extension: ts.Extension.Dts, isExternalLibraryImport: true } }; } catch { return { resolvedModule: undefined }; }
-      }
-      return { resolvedModule: ts.resolveModuleName(literal.text, containingFile, compilerOptions, host, undefined, redirect).resolvedModule };
-    });
     const program = ts.createProgram([preludePath, ...files], options, host);
     for (const diagnostic of ts.getPreEmitDiagnostics(program)) {
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n  ');
@@ -277,19 +257,21 @@ function instrument(unit: Unit) {
 const transpiler = new Bun.Transpiler({ loader: 'ts', target: 'browser' });
 // TypeScript drops imports that only name types; JavaScript keeps every import
 const typescript = new Bun.Transpiler({ loader: 'ts', target: 'browser', trimUnusedImports: true });
-const distPrefixes = [resolve(mtrlDir, 'dist'), resolve(Bun.resolveSync('mtrl', root), '..')];
+// Where each package's modules are served from, by the directories they resolve into
+const served = [
+  { url: '/mtrl/', dirs: [resolve(mtrlDir, 'dist'), resolve(Bun.resolveSync('mtrl', root), '..')] },
+  { url: '/addons/', dirs: [resolve(addonsDir, 'dist'), resolve(Bun.resolveSync('mtrl-addons', root), '..')] },
+];
 function browserModule(source: string, lang: string) {
   return (lang === 'typescript' ? typescript : transpiler).transformSync(source).replace(/((?:from|import)\s*\(?\s*)(["'])(mtrl(?:-addons)?(?:\/[^"']*)?)\2/g, (_, before: string, quote: string, specifier: string) => {
     if (specifier === 'mtrl/styles' || specifier === 'mtrl-addons/styles') return `${before}${quote}data:text/javascript,${quote}`;
-    if (specifier.startsWith('mtrl-addons')) return `${before}${quote}/addons/${relative(addonsDir, addonsFile(specifier, 'import'))}${quote}`;
     const file = Bun.resolveSync(specifier, root);
-    const prefix = distPrefixes.find(prefix => file.startsWith(prefix + '/'));
-    if (!prefix) throw new Error(`${specifier} resolves outside mtrl/dist: ${file}`);
-    return `${before}${quote}/mtrl/${file.slice(prefix.length + 1)}${quote}`;
+    for (const { url, dirs } of served) for (const dir of dirs) if (file.startsWith(dir + '/')) return `${before}${quote}${url}${file.slice(dir.length + 1)}${quote}`;
+    throw new Error(`${specifier} resolves outside the served packages: ${file}`);
   });
 }
 
-const harness = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/mtrl/styles.css"><link rel="stylesheet" href="/addons/dist/styles.css"></head><body><script type="module">
+const harness = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/mtrl/styles.css"><link rel="stylesheet" href="/addons/styles.css"></head><body><script type="module">
 import '/prelude.js';
 const listeners = [];
 // What an example's own handler logs is the example talking, not a failure
@@ -473,7 +455,7 @@ async function checkBehaviour() {
         if (await file.exists()) return new Response(file);
       }
       if (path.startsWith('/addons/')) {
-        const file = Bun.file(resolve(addonsDir, path.slice(8)));
+        const file = Bun.file(resolve(addonsDir, 'dist', path.slice(8)));
         if (!(await file.exists())) return new Response('', { status: 404 });
         if (!path.endsWith('.mjs')) return new Response(file);
         // Its mtrl is ours

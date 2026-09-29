@@ -28,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-preset-solid": "^1.9",
+    "mtrl-addons": "0.9.0-next.1",
     "playwright": "^1.63.0",
     "react": "^19",
     "react-dom": "^19",
