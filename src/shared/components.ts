@@ -33,6 +33,7 @@ import type { SplitButtonConfig } from 'mtrl/components/split-button';
 import type { FabConfig } from 'mtrl/components/fab';
 import type { ExtendedFabConfig } from 'mtrl/components/extended-fab';
 import { symbols } from './icons';
+import { nameIcons } from './icon-code';
 import { buttonConfig, icons as buttonIcons, normalizeState, sizes, themes, variants } from './button';
 
 export const componentIcons: Record<string, string> = {
@@ -652,7 +653,12 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
 export function initialComponentState(slug: ComponentSlug): ComponentState {
   return normalizeComponentState(slug, Object.fromEntries(components[slug].controls.map(control => [control.key, control.initial])));
 }
+/** The vanilla code of a playground, with its icons as named constants (`editIcon`). */
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
+  return nameIcons(buildComponentCode(slug, state));
+}
+
+function buildComponentCode(slug: ComponentSlug, state: ComponentState): string {
   if (components[slug].group === 'Navigation') return navigationCode(slug, state);
   if (components[slug].group === 'Containment') return containmentCode(slug, state);
   if (components[slug].group === 'Communication') return communicationCode(slug, state);

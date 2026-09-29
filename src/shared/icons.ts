@@ -24,3 +24,15 @@ export const symbols = {
   bold: trim(formatBold), italic: trim(formatItalic), underline: trim(formatUnderlined),
   inbox: trim(inbox), menu: trim(menu), send: trim(send), volumeOff: trim(volumeOff), volumeUp: trim(volumeUp),
 };
+
+/** Each symbol's name as fonts.google.com/icons spells it, for the code the playground shows. */
+const officialNames: Record<keyof typeof symbols, string> = {
+  accountCircle: 'account_circle', add: 'add', bookmark: 'bookmark', check: 'check', close: 'close', download: 'download', edit: 'edit',
+  heart: 'favorite', bold: 'format_bold', italic: 'format_italic', underline: 'format_underlined', inbox: 'inbox', menu: 'menu',
+  send: 'send', volumeOff: 'volume_off', volumeUp: 'volume_up',
+};
+/** The official name of a symbol's SVG, when it is one of ours. */
+export const symbolName = (svg: string): string | undefined => {
+  const key = (Object.keys(symbols) as (keyof typeof symbols)[]).find(k => symbols[k] === svg.trim());
+  return key && officialNames[key];
+};
