@@ -24,6 +24,8 @@ timePicker.on('confirm', (time) => {
 
 The value is always 24-hour `HH:MM`, or `HH:MM:SS` with `showSeconds`, whatever the picker displays: `format: '12h'` changes the dial and the AM/PM selector, not the string you get back. `getTimeObject()` gives the same time as numbers.
 
+While the picker is open, the dial, fields and AM/PM edit a **draft**: **OK** commits it, and **Cancel**, `Escape` or a click on the scrim discard it, as M3 specifies. The value, `getValue()` and the form keep the committed time until OK.
+
 ## Configuration
 
 | Option | Type | Default | Description |
@@ -38,13 +40,14 @@ The value is always 24-hour `HH:MM`, or `HH:MM:SS` with `showSeconds`, whatever 
 | `minuteStep` / `secondStep` | `number` | `1` | The minute and second steps |
 | `name` | `string` | — | Submits the value with a form the picker's element is in |
 | `isOpen` | `boolean` | `false` | Whether the dialog opens as soon as it is created |
+| `disabled` | `boolean` | `false` | A disabled picker does not open |
 | `cancelText` / `confirmText` | `string` | `'Cancel'` / `'OK'` | The action buttons |
 | `clockIcon` / `keyboardIcon` | `string` | built-in | SVG for the mode toggle |
-| `container` | `string \| HTMLElement` | `document.body` | Where the dialog is appended |
+| `container` | `string \| HTMLElement` | the component's element | Where the dialog is appended. By default it stays in `picker.element`; `open()` puts that element in the page if you never did |
 | `class` | `string` | — | Extra classes on the component's element |
 | `closeOnSelect` | `boolean` | — | Deprecated, no effect: the picker is confirmed with OK, as M3 specifies |
 
-Callbacks fire alongside the events, if one handler reads better than `on()`: `onChange(time)`, `onConfirm(time)`, `onCancel()`, `onOpen()`, `onClose()`.
+Callbacks fire alongside the events, if one handler reads better than `on()`: `onChange(time)`, `onInput(time)`, `onConfirm(time)`, `onCancel()`, `onOpen()`, `onClose()`.
 
 `TIME_PICKER_TYPE`, `TIME_FORMAT`, `TIME_PICKER_ORIENTATION` and `TIME_PERIOD` are exported as enums from `'mtrl/components/timepicker'`, so `format: TIME_FORMAT.MILITARY` reads better than `'24h'` at a call site.
 
@@ -56,9 +59,10 @@ Callbacks fire alongside the events, if one handler reads better than `on()`: `o
 | `dialogElement` | `HTMLElement` | The native `<dialog>`. `modalElement` is the same element |
 | `isOpen` | `boolean` | Whether the dialog is open, kept current |
 | `open()` / `close()` / `toggle()` | `TimePickerComponent` | Shows or hides the dialog |
-| `getValue()` | `string` | The time, 24-hour `HH:MM` (or `HH:MM:SS`) |
+| `getValue()` | `string` | The committed time, 24-hour `HH:MM` (or `HH:MM:SS`) |
 | `setValue(time)` | `TimePickerComponent` | Sets the time from a 24-hour string; an invalid one is logged and ignored. Not held to `minTime` and `maxTime` |
-| `getTimeObject()` | `TimeValue` | `{ hours, minutes, seconds, period }`, `hours` 0–23 |
+| `getTimeObject()` | `TimeValue` | The committed time as `{ hours, minutes, seconds, period }`, `hours` 0–23 |
+| `enable()` / `disable()` / `isDisabled()` | `TimePickerComponent` / `boolean` | Disabled state; `disable()` cancels an open picker |
 | `setType(type)` / `getType()` | `TimePickerComponent` / `TIME_PICKER_TYPE` | Dial or keyboard entry |
 | `setFormat(format)` / `getFormat()` | `TimePickerComponent` / `TIME_FORMAT` | 12- or 24-hour display |
 | `setOrientation(o)` / `getOrientation()` | `TimePickerComponent` / `TIME_PICKER_ORIENTATION` | The layout |
@@ -70,12 +74,13 @@ Callbacks fire alongside the events, if one handler reads better than `on()`: `o
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `change` | `string` | The time changed: a pick on the dial (once, when a drag is released), a keystroke in a field, AM/PM, or `setValue` with a different time |
-| `confirm` | `string` | OK was pressed; the payload is the value |
-| `cancel` | none | Cancel, `Escape` or a click on the scrim closed the picker |
+| `input` | `string` | The draft changed while the picker is open: a pick on the dial (once, when a drag is released), a keystroke in a field, AM/PM |
+| `change` | `string` | The committed time changed: OK with a different draft, or `setValue` with a different time |
+| `confirm` | `string` | OK was pressed, after `change`, while the picker is still open |
+| `cancel` | none | Cancel, `Escape` or a click on the scrim discarded the draft, while the picker is still open |
 | `open` / `close` | none | The dialog opened or closed |
 
-`change` fires once per new value, event and callback together. Changing the display format is not a change of value and emits nothing, and neither does `setValue` with the time the picker already has. Commit on `confirm`; use `change` for a live preview.
+`input` and `change` are the native pair: `input` as the draft moves, for a live preview; `change` once the time is committed. Changing the display format changes neither, and `setValue` with the time the picker already has emits nothing.
 
 ## Limits and steps
 
@@ -128,7 +133,7 @@ form.append(picker.element); // submits pickup=08:00, updated as the time change
 
 ## Accessibility
 
-- The picker is a native modal `<dialog>`: the page behind is inert, focus moves into the dialog when it opens and returns to whatever opened it when it closes, and `Escape` or a click on the scrim cancels it. Each picker's title has its own id and names the dialog, so pass a `title`.
+- The picker is a native modal `<dialog>`, kept in the component's own element: the page behind is inert, focus moves into the dialog when it opens and returns to whatever opened it when it closes, and `Escape` or a click on the scrim cancels it. Each picker's title has its own id and names the dialog, so pass a `title`.
 - The dial is a listbox named Hour, Minute or Second. Its numbers are options named as times ("9 o'clock", "20 hours", "15 minutes"); the arrows move between them and wrap, Home and End go to the ends, and Enter or Space selects. A pointer can click or drag. Numbers outside the limits or off the step are `aria-disabled`.
 - In dial mode the hour and minute boxes are a radiogroup: radios named "Select hour: 9 o'clock" and "Select minutes: 35 minutes", one Tab stop, the arrows moving the choice and the dial with it.
 - In keyboard entry the fields are number inputs named Hour, Minute and Second, labelled below.

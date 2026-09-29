@@ -1,20 +1,6 @@
 # Search Component
 
-The Search component provides a Material Design 3 compliant search interface that allows users to search through content using text queries. It implements the MD3 Search Bar and Search View patterns with support for suggestions, keyboard navigation, and seamless state transitions.
-
-## Overview
-
-Search is commonly used for:
-
-- Filtering lists and collections
-- Navigating to content
-- Finding specific items in large datasets
-- Global application search
-- Command palettes
-
-The component follows Material Design 3 guidelines with two distinct states:
-- **Search Bar**: Collapsed, pill-shaped input for initiating search
-- **Search View**: Expanded container displaying suggestions and results
+Search lets people enter a keyword or phrase to find information. It starts as a **search bar**; focusing it opens the **search view**, which shows suggestions or results in a list below the bar, **docked** under it on larger screens or **full screen** on compact ones. mtrl follows the two M3 styles: **contained**, M3 Expressive's recommendation and the default, and **divided**, the baseline.
 
 ## Import
 
@@ -25,626 +11,143 @@ import { createSearch } from 'mtrl';
 ## Basic Usage
 
 ```javascript
-// Create a basic search bar
 const search = createSearch({
-  placeholder: 'Search...',
-  onSubmit: (value) => {
-    console.log('Search for:', value);
-  }
+  placeholder: 'Search messages',
+  suggestions: ['Invoices', 'Travel', 'Team lunch'],
+  onSubmit: (query) => runSearch(query),
 });
+document.querySelector('.inbox-header').append(search.element);
 
-// Add to your page
-document.querySelector('.header').appendChild(search.element);
-
-// Listen for input changes
-search.on('input', (e) => {
-  console.log('Query:', e.value);
-});
+// Suggestions as the person types
+search.on('input', ({ value }) => search.setSuggestions(lookup(value)));
 ```
+
+Focusing the bar opens the view; Enter submits, a suggestion fills the bar and closes it, and the back arrow, Escape (after clearing the text) or a press outside close it.
 
 ## Configuration
 
-The Search component accepts the following configuration options:
-
-### State Options
-
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `initialState` | `'bar' \| 'view'` | `'bar'` | Initial component state (collapsed or expanded) |
-| `viewMode` | `'docked' \| 'fullscreen'` | `'docked'` | Display mode when expanded |
-| `disabled` | `boolean` | `false` | Whether the search is initially disabled |
+| `variant` | `'contained' \| 'divided'` | `'contained'` | The M3 style: a filled pill bar with results in their own container, or a bar that squares off above a divider |
+| `viewMode` | `'docked' \| 'fullscreen'` | `'docked'` | Where the view opens: under the bar, or over the whole screen. Compact windows open docked as full screen |
+| `initialState` | `'bar' \| 'view'` | `'bar'` | Whether it starts open |
+| `placeholder` | `string` | `'Search'` | The hinted text, and the input's accessible name |
+| `value` | `string` | `''` | The initial query |
+| `name` | `string` | — | Submits the query with a surrounding form |
+| `suggestions` | `SearchSuggestion[] \| string[]` | `[]` | The list in the view: `{ text, value?, icon?, group? }`; a change of `group` adds a divider |
+| `leadingIcon` | `string` | search icon | SVG for the leading icon (the view shows a back arrow) |
+| `trailingItems` | `SearchTrailingItem[]` | — | Up to two trailing icon buttons, or one and an avatar: `{ id, type: 'icon' \| 'avatar', content, ariaLabel?, onClick? }` |
+| `showClearButton` | `boolean` | `true` | A clear button while there is text |
+| `expandOnFocus` | `boolean` | `true` | Open the view when the bar is focused |
+| `collapseOnBlur` | `boolean` | `true` | Close the view when focus leaves the search |
+| `collapseDelay` | `number` | `150` | Milliseconds before closing on blur |
+| `minWidth` / `maxWidth` | `number` | `360` / `720` | The bar's width range, in pixels |
+| `fullWidth` | `boolean` | `false` | Fill the container instead |
+| `disabled` | `boolean` | `false` | Whether it starts disabled |
+| `class` | `string` | — | Additional CSS classes |
 
-### Content Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `placeholder` | `string` | `'Search'` | Placeholder/supporting text |
-| `value` | `string` | `''` | Initial input value |
-| `leadingIcon` | `string` | `undefined` | Custom leading icon HTML |
-| `trailingItems` | `SearchTrailingItem[]` | `undefined` | Trailing icons or avatar |
-| `suggestions` | `SearchSuggestion[] \| string[]` | `undefined` | Suggestions to display |
-
-### Behavior Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `showClearButton` | `boolean` | `true` | Show clear button when input has value |
-| `expandOnFocus` | `boolean` | `true` | Auto-expand to view on focus |
-| `collapseOnBlur` | `boolean` | `true` | Auto-collapse when blurred |
-| `collapseDelay` | `number` | `150` | Delay (ms) before collapsing on blur |
-
-### Sizing Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `minWidth` | `number` | `360` | Minimum width in pixels |
-| `maxWidth` | `number` | `720` | Maximum width in pixels |
-| `fullWidth` | `boolean` | `false` | Ignore min/max width constraints |
-
-### Event Handlers
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `onSubmit` | `(value: string) => void` | Called when search is submitted |
-| `onInput` | `(value: string) => void` | Called when input value changes |
-| `onClear` | `() => void` | Called when input is cleared |
-| `onExpand` | `() => void` | Declared in `SearchConfig` but never called — the `expand` event is emitted without invoking this handler. Use `search.on('expand', ...)` |
-| `onCollapse` | `() => void` | Declared in `SearchConfig` but never called — the `collapse` event is emitted without invoking this handler. Use `search.on('collapse', ...)` |
-| `onSuggestionSelect` | `(suggestion: SearchSuggestion) => void` | Called when a suggestion is selected |
-
-## Search States
-
-The Search component has two primary states following MD3 specifications:
-
-### Search Bar (Collapsed)
-
-The default collapsed state showing a pill-shaped input field.
-
-- Height: 56px
-- Width: 360-720px (configurable)
-- Shape: Pill (full rounded corners)
-- Leading icon: Search magnifying glass
-- Trailing: Optional icons or avatar
-
-### Search View (Expanded)
-
-The expanded state showing the input with suggestions/results below.
-
-- **Docked mode**: Inline expansion (360-720px width, max 2/3 screen height)
-- **Fullscreen mode**: Full-screen overlay (72px header height)
+Callbacks fire alongside the events: `onInput(value)`, `onSubmit(value)`, `onClear()`, `onExpand()`, `onCollapse()`, `onSuggestionSelect(suggestion)`; `on` takes a map of event handlers.
 
 ## Component API
 
-The Search component provides the following methods:
-
-### Value Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getValue()` | none | `string` | Gets the current search value |
-| `setValue(value, trigger?)` | `value: string, trigger?: boolean` | `SearchComponent` | Sets the search value |
-| `getPlaceholder()` | none | `string` | Gets the current placeholder text |
-| `setPlaceholder(text)` | `text: string` | `SearchComponent` | Sets the placeholder text |
-
-### State Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `expand()` | none | `SearchComponent` | Expands to search view |
-| `collapse()` | none | `SearchComponent` | Collapses to search bar |
-| `getState()` | none | `'bar' \| 'view'` | Gets the current state |
-| `isExpanded()` | none | `boolean` | Checks if currently expanded |
-| `setViewMode(mode)` | `mode: 'docked' \| 'fullscreen'` | `SearchComponent` | Sets the view mode |
-| `getViewMode()` | none | `'docked' \| 'fullscreen'` | Gets the current view mode |
-
-### Input Control Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `focus()` | none | `SearchComponent` | Focuses the search input |
-| `blur()` | none | `SearchComponent` | Blurs the search input |
-| `clear()` | none | `SearchComponent` | Clears the search input |
-| `submit()` | none | `SearchComponent` | Submits the current search value |
-
-### Suggestion Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `setSuggestions(items)` | `items: SearchSuggestion[] \| string[]` | `SearchComponent` | Sets suggestions list |
-| `getSuggestions()` | none | `SearchSuggestion[]` | Gets current suggestions |
-| `clearSuggestions()` | none | `SearchComponent` | Clears all suggestions |
-
-### Disabled State Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `enable()` | none | `SearchComponent` | Enables the component |
-| `disable()` | none | `SearchComponent` | Disables the component |
-| `isDisabled()` | none | `boolean` | Checks if disabled |
-
-### Event Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `on(event, handler)` | `event: string, handler: Function` | `SearchComponent` | Adds event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `SearchComponent` | Removes event listener |
-
-### Lifecycle Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `destroy()` | none | `void` | Destroys the component and cleans up |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getValue()` / `setValue(value, triggerEvent?)` | `string` / `SearchComponent` | The query |
+| `getPlaceholder()` / `setPlaceholder(text)` | `string` / `SearchComponent` | The hinted text |
+| `expand()` / `collapse()` | `SearchComponent` | Opens or closes the view |
+| `isExpanded()` / `getState()` | `boolean` / `'bar' \| 'view'` | Whether it is open |
+| `setViewMode(mode)` / `getViewMode()` | `SearchComponent` / `string` | Docked or full screen, also while open |
+| `setVariant(variant)` / `getVariant()` | `SearchComponent` / `string` | Contained or divided |
+| `setSuggestions(list)` / `getSuggestions()` / `clearSuggestions()` | `SearchComponent` / `SearchSuggestion[]` | The list in the view |
+| `setLeadingIcon(svg)` | `SearchComponent` | The bar's leading icon |
+| `setTrailingItems(items)` / `addTrailingItem(item)` / `removeTrailingItem(id)` | `SearchComponent` | Trailing icons and avatar |
+| `focus()` / `blur()` / `clear()` / `submit()` | `SearchComponent` | Input actions |
+| `enable()` / `disable()` / `isDisabled()` | `SearchComponent` / `boolean` | Disabled state |
+| `on(event, handler)` / `off(event, handler)` | `SearchComponent` | Events |
+| `destroy()` | `void` | Closes the view and removes the search |
 
 ## Events
 
-The Search component emits the following events:
+Handlers receive `{ component, value, originalEvent, suggestion?, preventDefault(), defaultPrevented }`.
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `focus` | `SearchEvent` | Input received focus |
-| `blur` | `SearchEvent` | Input lost focus |
-| `input` | `SearchEvent` | Input value changed |
-| `submit` | `SearchEvent` | Search submitted (Enter key) |
-| `clear` | `SearchEvent` | Input cleared (clear button) |
-| `expand` | `SearchEvent` | Expanded to view state |
-| `collapse` | `SearchEvent` | Collapsed to bar state |
-| `suggestionSelect` | `SearchEvent` | Suggestion was selected |
-
-### SearchEvent Object
-
-```text
-{
-  component: SearchComponent,  // The search component instance
-  value: string,               // Current search value
-  originalEvent: Event | null, // Original DOM event
-  suggestion?: SearchSuggestion, // Selected suggestion (for suggestionSelect)
-  preventDefault: () => void,  // Prevent default behavior
-  defaultPrevented: boolean    // Whether default was prevented
-}
-```
-
-`expand` and `collapse` are the exception: they carry
-`{ component, state, viewMode }` only — no `value`, `originalEvent`,
-`preventDefault` or `defaultPrevented`.
-
+| Event | Description |
+|-------|-------------|
+| `input` | The query changed as the person typed |
+| `submit` | Enter was pressed with a query |
+| `clear` | The clear button or Escape cleared the query |
+| `suggestionSelect` | A suggestion was chosen; `suggestion` carries it |
+| `expand` / `collapse` | The view opened or closed |
+| `focus` / `blur` | The input gained or lost focus |
 
 ## Examples
 
-### Basic Search Bar
+### Full screen on a phone, divided
 
 ```javascript
 const search = createSearch({
-  placeholder: 'Search products...',
-  onSubmit: (value) => {
-    performSearch(value);
-  }
-});
-
-document.querySelector('.toolbar').appendChild(search.element);
-```
-
-### Search with Suggestions
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search...',
-  suggestions: [
-    { text: 'Apple', icon: fruitIcon },
-    { text: 'Banana', icon: fruitIcon },
-    { text: 'Cherry', icon: fruitIcon }
-  ],
-  onSuggestionSelect: (suggestion) => {
-    console.log('Selected:', suggestion.text);
-  }
-});
-```
-
-### Search with String Suggestions
-
-```javascript
-// Simple string array - automatically converted to SearchSuggestion objects
-const search = createSearch({
-  placeholder: 'Search cities...',
-  suggestions: ['New York', 'Los Angeles', 'Chicago', 'Houston']
-});
-```
-
-### Search with Grouped Suggestions
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search...',
-  suggestions: [
-    { text: 'Recent: Document.pdf', group: 'recent', icon: historyIcon },
-    { text: 'Recent: Photo.jpg', group: 'recent', icon: historyIcon },
-    { text: 'Suggested: Reports', group: 'suggested', icon: folderIcon },
-    { text: 'Suggested: Images', group: 'suggested', icon: folderIcon }
-  ]
-});
-```
-
-### Fullscreen Search (Mobile)
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search...',
+  placeholder: 'Search places',
   viewMode: 'fullscreen',
-  expandOnFocus: true
+  variant: 'divided',
+  suggestions: [
+    { text: 'Lisbon', group: 'Recent' },
+    { text: 'Tokyo', group: 'Recent' },
+    { text: 'Paris', group: 'Suggested' },
+  ],
 });
 ```
 
-### Inline Search (No Auto-Expand)
+### With a trailing action and an avatar
 
 ```javascript
-// Useful for filter bars where you don't want view expansion
-const search = createSearch({
-  placeholder: 'Filter items...',
-  expandOnFocus: false,
-  collapseOnBlur: false,
-  fullWidth: true
-});
-```
-
-### Search with Trailing Items
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search...',
+createSearch({
+  placeholder: 'Search your mail',
   trailingItems: [
-    {
-      id: 'mic',
-      type: 'icon',
-      content: microphoneIcon,
-      ariaLabel: 'Voice search',
-      onClick: () => startVoiceSearch()
-    },
-    {
-      id: 'avatar',
-      type: 'avatar',
-      content: '<img src="user.jpg" alt="User">'
-    }
-  ]
+    { id: 'voice', type: 'icon', content: micSvg, ariaLabel: 'Search by voice', onClick: startVoice },
+    { id: 'me', type: 'avatar', content: '<img src="me.jpg" alt="">' },
+  ],
 });
-```
-
-### Dynamic Suggestions
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search users...'
-});
-
-// Update suggestions based on input
-search.on('input', async (e) => {
-  if (e.value.length >= 2) {
-    const results = await fetchUsers(e.value);
-    search.setSuggestions(results.map(user => ({
-      text: user.name,
-      value: user.id,
-      icon: userIcon
-    })));
-  } else {
-    search.clearSuggestions();
-  }
-});
-
-// Handle selection
-search.on('suggestionSelect', (e) => {
-  navigateToUser(e.suggestion.value);
-});
-```
-
-### Programmatic Control
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search...'
-});
-
-// Expand programmatically
-document.querySelector('.search-trigger').addEventListener('click', () => {
-  search.expand();
-  search.focus();
-});
-
-// Set value programmatically
-search.setValue('initial query');
-
-// Clear and refocus
-search.clear().focus();
-
-// Check state
-if (search.isExpanded()) {
-  search.collapse();
-}
-```
-
-### Event Handling
-
-```javascript
-const search = createSearch({
-  placeholder: 'Search...'
-});
-
-search
-  .on('focus', () => console.log('Search focused'))
-  .on('blur', () => console.log('Search blurred'))
-  .on('input', (e) => console.log('Input:', e.value))
-  .on('submit', (e) => console.log('Submit:', e.value))
-  .on('clear', () => console.log('Cleared'))
-  .on('expand', () => console.log('Expanded'))
-  .on('collapse', () => console.log('Collapsed'));
-```
-
-## Keyboard Support
-
-The Search component supports full keyboard navigation per MD3 specifications:
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Submit search or select highlighted suggestion |
-| `Escape` | Clear input (if has value) or collapse (if empty) |
-| `ArrowDown` | Move to next suggestion |
-| `ArrowUp` | Move to previous suggestion |
-| `Tab` | Select highlighted suggestion and move focus |
-
-## CSS Customization
-
-The Search component uses BEM-style class naming with the `mtrl-` prefix:
-
-### Root Element
-
-```css
-.mtrl-search { }                    /* Root container */
-.mtrl-search--bar { }               /* Bar state (collapsed) */
-.mtrl-search--view { }              /* View state (expanded) */
-.mtrl-search--docked { }            /* Docked view mode */
-.mtrl-search--fullscreen { }        /* Fullscreen view mode */
-.mtrl-search--focused { }           /* Input is focused */
-.mtrl-search--disabled { }          /* Component is disabled */
-.mtrl-search--populated { }         /* Input has value */
-.mtrl-search--full-width { }        /* Full width mode */
-```
-
-### Structure Elements
-
-```css
-.mtrl-search__container { }         /* Header/bar container */
-.mtrl-search__leading-icon { }      /* Leading icon button */
-.mtrl-search__input-wrapper { }     /* Input wrapper */
-.mtrl-search__input { }             /* Text input field */
-.mtrl-search__clear-button { }      /* Clear button */
-.mtrl-search__clear-button--hidden { } /* Hidden clear button */
-.mtrl-search__trailing-icon { }     /* Trailing icon button */
-.mtrl-search__avatar { }            /* Trailing avatar */
-.mtrl-search__divider { }           /* Header/content divider */
-.mtrl-search__content { }           /* Content area (view mode) */
-```
-
-### Suggestion Elements
-
-```css
-.mtrl-search__suggestions { }       /* Suggestions container */
-.mtrl-search__suggestion-list { }   /* Suggestions list (ul) */
-.mtrl-search__suggestion-item { }   /* Individual suggestion (li) */
-.mtrl-search__suggestion-item--selected { } /* Highlighted suggestion */
-.mtrl-search__suggestion-icon { }   /* Suggestion icon */
-.mtrl-search__suggestion-text { }   /* Suggestion text */
-.mtrl-search__suggestion-divider { } /* Divider between groups */
-```
-
-### Customization Example
-
-```css
-/* Custom search bar styling */
-.mtrl-search__container {
-  background-color: var(--my-surface-color);
-  border: 1px solid var(--my-border-color);
-}
-
-/* Custom input styling */
-.mtrl-search__input {
-  font-size: 14px;
-}
-
-/* Custom suggestion hover state */
-.mtrl-search__suggestion-item:hover {
-  background-color: var(--my-hover-color);
-}
-
-/* Reduce height for compact layouts */
-.my-compact-search .mtrl-search__container {
-  height: 40px;
-}
 ```
 
 ## Accessibility
 
-The Search component follows accessibility best practices:
+- The root is a `search` landmark. The input is a **combobox** (`aria-expanded` with the view, `aria-autocomplete="list"`) that controls the suggestions **listbox**; the arrows move `aria-activedescendant` through the options, Enter selects the one reached, and a polite status announces how many suggestions show.
+- The open view shows in the browser's top layer, over the page, whatever clips or stacks its ancestors. Docked, it is placed on the bar over a scrim, and a press outside closes it. Full screen, it is a modal `<dialog>` (`showModal()`): the page behind is inert and Escape closes it.
+- Moving focus to the view's own back or clear button keeps it open; it closes when focus leaves the search. Hovering a suggestion is only a look: the keyboard highlight is the arrows'.
+- Icon buttons are 48dp tap targets with labels ("Search", "Go back", "Clear search", and the `ariaLabel` of trailing items), and show the focus ring on keyboard focus.
+- Inside a shadow root, as in a web component, focus is read from the search's own root.
 
-- Uses `role="search"` on the root element
-- Provides `aria-label` on the input
-- Uses `role="listbox"` for suggestions list
-- Uses `role="option"` for suggestion items
-- Announces suggestion count to screen readers
-- Supports full keyboard navigation
-- Uses `aria-disabled` for disabled state
-- Clear button has descriptive `aria-label`
+## Styling
 
-### Minimum Touch Target
-
-All interactive elements (icons, buttons) meet the 48x48dp minimum touch target requirement.
-
-## MD3 Design Tokens
-
-The Search component uses these Material Design 3 tokens:
-
-### Colors
-
-| Element | Token |
-|---------|-------|
-| Container background | `md.sys.color.surface-container-high` |
-| Leading icon | `md.sys.color.on-surface` (bar), `md.sys.color.on-surface-variant` (view) |
-| Input text | `md.sys.color.on-surface` |
-| Placeholder text | `md.sys.color.on-surface-variant` |
-| Divider | `md.sys.color.outline-variant` |
-
-### Measurements
-
-| Element | Value |
-|---------|-------|
-| Bar height | 56px |
-| Bar min width | 360px |
-| Bar max width | 720px |
-| View docked header height | 56px |
-| View fullscreen header height | 72px |
-| View docked min height | 240px |
-| Horizontal padding | 16px |
-| Icon size | 24px |
-| Avatar size | 30px |
-| Icon spacing | 16px |
-
-## Best Practices
-
-1. **Use appropriate placeholder text** - Be descriptive but concise (e.g., "Search products..." not just "Search")
-
-2. **Provide suggestions when possible** - Help users find what they're looking for faster
-
-3. **Handle empty states** - Show helpful messaging when no results are found
-
-4. **Consider mobile** - Use `fullscreen` view mode on small screens for better UX
-
-5. **Disable auto-expand for inline filters** - Set `expandOnFocus: false` when using search as a filter in toolbars
-
-6. **Always handle the submit event** - Users expect Enter to perform the search
-
-7. **Debounce dynamic suggestions** - Avoid excessive API calls on every keystroke
-
-8. **Use clear button appropriately** - The clear button should clear input, not close search
-
-## Performance Considerations
-
-- **Lazy rendering**: Suggestion container is only added to DOM when expanded
-- **Efficient updates**: Only re-renders suggestions when data changes
-- **Debounce input handlers**: For API-based suggestions, implement debouncing
-- **Virtual scrolling**: For large suggestion lists, consider implementing virtual scrolling
-
-## TypeScript Types
-
-```typescript
-type SearchState = 'bar' | 'view';
-type SearchViewMode = 'docked' | 'fullscreen';
-type SearchEventType = 
-  | 'focus' | 'blur' | 'input' | 'submit' 
-  | 'clear' | 'expand' | 'collapse' | 'suggestionSelect';
-
-interface SearchSuggestion {
-  text: string;
-  value?: string;
-  icon?: string;
-  group?: string;
-}
-
-interface SearchTrailingItem {
-  id: string;
-  content: string;
-  type: 'icon' | 'avatar';
-  ariaLabel?: string;
-  onClick?: (event: MouseEvent) => void;
-}
-
-interface SearchConfig {
-  initialState?: SearchState;
-  viewMode?: SearchViewMode;
-  disabled?: boolean;
-  placeholder?: string;
-  value?: string;
-  leadingIcon?: string;
-  trailingItems?: SearchTrailingItem[];
-  suggestions?: SearchSuggestion[] | string[];
-  showClearButton?: boolean;
-  expandOnFocus?: boolean;
-  collapseOnBlur?: boolean;
-  collapseDelay?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  fullWidth?: boolean;
-  class?: string;
-  onSubmit?: (value: string) => void;
-  onInput?: (value: string) => void;
-  onClear?: () => void;
-  onExpand?: () => void;
-  onCollapse?: () => void;
-  onSuggestionSelect?: (suggestion: SearchSuggestion) => void;
-}
-
-interface SearchComponent {
-  element: HTMLElement;
-  setValue(value: string, triggerEvent?: boolean): SearchComponent;
-  getValue(): string;
-  setPlaceholder(text: string): SearchComponent;
-  getPlaceholder(): string;
-  expand(): SearchComponent;
-  collapse(): SearchComponent;
-  getState(): SearchState;
-  isExpanded(): boolean;
-  setViewMode(mode: SearchViewMode): SearchComponent;
-  getViewMode(): SearchViewMode;
-  focus(): SearchComponent;
-  blur(): SearchComponent;
-  clear(): SearchComponent;
-  submit(): SearchComponent;
-  setSuggestions(suggestions: SearchSuggestion[] | string[]): SearchComponent;
-  getSuggestions(): SearchSuggestion[];
-  clearSuggestions(): SearchComponent;
-  enable(): SearchComponent;
-  disable(): SearchComponent;
-  isDisabled(): boolean;
-  on(event: SearchEventType, handler: (e: SearchEvent) => void): SearchComponent;
-  off(event: SearchEventType, handler: (e: SearchEvent) => void): SearchComponent;
-  destroy(): void;
-}
+```css
+.mtrl-search { }                                       /* the root; keeps the bar's place */
+.mtrl-search--bar, .mtrl-search--view { }              /* closed, open */
+.mtrl-search--docked, .mtrl-search--fullscreen { }
+.mtrl-search--contained, .mtrl-search--divided { }
+.mtrl-search--populated, .mtrl-search--focused, .mtrl-search--disabled, .mtrl-search--full-width { }
+.mtrl-search__surface { }                              /* the bar and results; in the top layer while open */
+.mtrl-search__container, .mtrl-search__input-wrapper, .mtrl-search__input { }
+.mtrl-search__leading-icon, .mtrl-search__clear-button, .mtrl-search__trailing, .mtrl-search__trailing-icon, .mtrl-search__avatar { }
+.mtrl-search__divider, .mtrl-search__content, .mtrl-search__suggestions { }
+.mtrl-search__suggestion-list, .mtrl-search__suggestion-item, .mtrl-search__suggestion-item--selected { }
+.mtrl-search__suggestion-icon, .mtrl-search__suggestion-text, .mtrl-search__suggestion-divider { }
 ```
 
-## Migration from Previous Version
+`--mtrl-search-min-width` and `--mtrl-search-max-width` on the root set the bar's width range.
 
-If you're upgrading from the previous search component implementation:
+## Measurements
 
-### Breaking Changes
+Following the m3.material.io search specs and `SearchBarTokens` / `SearchViewTokens`, then Compose:
 
-1. **Removed variants**: `rail`, `drawer`, `modal`, `standard` variants removed
-   - Use `initialState: 'bar'` or `initialState: 'view'` instead
-
-2. **Renamed properties**:
-   - `variant` → `initialState` (for bar/view state)
-   - `trailingIcon` / `trailingIcon2` → `trailingItems` array
-
-3. **New class names** (BEM format):
-   - `.mtrl-search-container` → `.mtrl-search__container`
-   - `.mtrl-search-input` → `.mtrl-search__input`
-   - `.mtrl-search-leading-icon` → `.mtrl-search__leading-icon`
-   - etc.
-
-4. **New events**:
-   - `expand` and `collapse` events added
-   - `suggestionSelect` replaces suggestion click handling
-
-### Migration Example
-
-```javascript
-// Before
-const before = createSearch({
-  variant: 'bar',
-  trailingIcon: micIcon,
-  trailingIcon2: avatarHtml
-});
-
-// After
-const after = createSearch({
-  initialState: 'bar',
-  trailingItems: [
-    { id: 'mic', type: 'icon', content: micIcon },
-    { id: 'avatar', type: 'avatar', content: avatarHtml }
-  ]
-});
-```
+| Attribute | Value |
+|-----------|-------|
+| Bar | 56dp, full corners, `surface-container-high`; 360–720dp wide |
+| Input | Body Large, `on-surface`; hinted text `on-surface-variant` |
+| Icons | 24dp in 48dp tap targets, 4dp from the ends: icons centred 28dp in, text at 56dp; leading `on-surface`, trailing and clear `on-surface-variant`; a 30dp avatar |
+| States | Hover 8%, focus and pressed 10%; a 3dp `secondary` focus ring |
+| Contained, docked | The bar keeps its pill; results 2dp below it in their own `surface-container-high` container with 12dp corners, at least 240dp tall and at most 2/3 of the screen |
+| Contained, full screen | `surface-container-low`, the bar inset 12dp |
+| Divided, docked | The bar's lower corners square off above a 1dp `outline` divider; 28dp corners overall |
+| Divided, full screen | A 72dp header, no corners, `surface-container-high` |
+| Scrim | 0.32, docked |
+| Suggestions | 56dp one-line list items, Body Large, 16dp padding; the option the arrows reach at 10% with the focus ring |
+| Motion | The results reveal over 300ms on emphasized decelerate; not with reduced motion |
