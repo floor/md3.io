@@ -47,10 +47,14 @@ export interface ChildrenMeta {
 
 /** A config key the element's spec does not map, or maps otherwise. */
 export interface ConfigKey {
-  /** Written as this attribute. */
-  attribute?: string;
+  /** Written as this attribute, or these: the drawer's `dismissible` is both `no-close-on-*`. */
+  attribute?: string | string[];
   /** Config values (as strings) to attribute values: `true` is a bare attribute; a value neither listed nor ignored is not exposed. */
-  values?: Record<string, string | true>;
+  values?: Record<string, string | number | true>;
+  /** Written only when this other key has this value, and not exposed otherwise: the time picker's seconds need a one-minute step. */
+  only?: { key: string; equals: string | number | boolean };
+  /** An array value is the model as one string, joined by this: a date range's `start/end`. */
+  join?: string;
   /** The element's text content. */
   text?: true;
   /** The values the element's model selects. */
@@ -61,8 +65,6 @@ export interface ConfigKey {
   ignore?: (string | number | boolean)[];
   /** Nothing to write when equal to this other key's value, which implies it. */
   same?: string;
-  /** Nothing to write when true exactly when this other key has this value: the dialog's close button comes with full screen. */
-  follows?: { key: string; equals: string | number | boolean };
 }
 
 /** A config value the element takes as a child element in one of its slots (the card's actions). */
@@ -97,6 +99,8 @@ export interface TriggerMeta extends Omit<SlottedMeta, 'slot' | 'after' | 'marku
   id: string;
   /** The element's attribute naming that id, when the element listens to the trigger itself: the menu's `anchor`, the tooltip's `for`. */
   for?: string;
+  /** The trigger's text shows the model value after this separator: the time picker's `Choose time · 09:30`. */
+  shows?: string;
 }
 
 /**
@@ -108,9 +112,13 @@ export interface OpenMeta {
   /** The config key of its first value: open when true, or when one of `values`. */
   config?: string;
   values?: unknown[];
-  /** The methods the HTML opens and closes it with; without, it sets `open`. */
+  /** The methods the HTML opens and closes it with; without, it sets the state. */
   show?: string;
   hide?: string;
+  /** The state attribute, `open` unless named: the navigation rail's `expanded`. */
+  property?: string;
+  /** Its events as it opens and closes, `open` and `close` unless named: the rail's `expand` and `collapse`. */
+  events?: [string, string];
 }
 
 /** What the generators need from an element's spec: plain data, no functions. */
@@ -136,6 +144,8 @@ export interface ElementMeta {
   trigger?: TriggerMeta;
   /** `open` as state the element reflects and reports. */
   open?: OpenMeta;
+  /** Other state the element reflects, bound beside `open` and following both its events: the bottom sheet's `expanded`. */
+  states?: (OpenMeta & { property: string; events: [string, string]; opens?: true })[];
 }
 
 type Config = Record<string, unknown>;
@@ -156,6 +166,9 @@ const escapeText = (value: string): string =>
 const quoteJs = (value: string): string => JSON.stringify(value);
 /** The HTML script's name for the element: `switch` is a reserved word. */
 const hostVariable = (meta: ElementMeta): string => (meta.name === 'switch' ? 'switchElement' : camel(meta.name));
+/** The open state's attribute and its events: `open`, `open` and `close` unless the element names others. */
+const openName = (meta: ElementMeta): string => meta.open?.property ?? 'open';
+const openEvents = (meta: ElementMeta): [string, string] => meta.open?.events ?? ['open', 'close'];
 
 interface Plan {
   attrs: Attr[];
@@ -169,6 +182,8 @@ interface Plan {
   trigger?: Slotted & { id: string };
   /** Open state, bound when the element has a trigger: its first value. */
   open?: boolean;
+  /** Other state bound beside it, with its first value. */
+  states: { name: string; value: boolean; events: [string, string]; opens?: true }[];
   /** Methods the element is called with once it is there. */
   calls: { method: string; argument?: unknown }[];
   /** Config options the element does not expose yet: named in a comment, never dropped silently. */
@@ -215,11 +230,17 @@ function plan(meta: ElementMeta, config: Config): Plan {
   // With a trigger, `open` is state the frameworks bind, not an attribute.
   const triggerItem = meta.trigger ? config[meta.trigger.from] : undefined;
   let open: boolean | undefined;
+  const states: Plan['states'] = [];
+  const firstValue = (state: OpenMeta): boolean => {
+    const raw = state.config === undefined ? false : config[state.config];
+    if (state.config !== undefined) used.add(state.config);
+    return state.values ? state.values.includes(raw) : raw === true;
+  };
   if (meta.open && isRecord(triggerItem)) {
-    const raw = meta.open.config === undefined ? false : config[meta.open.config];
-    if (meta.open.config !== undefined) used.add(meta.open.config);
-    open = meta.open.values ? meta.open.values.includes(raw) : raw === true;
+    open = firstValue(meta.open);
+    for (const state of meta.states ?? []) states.push({ name: state.property, value: firstValue(state), events: state.events, ...(state.opens ? { opens: true as const } : {}) });
   }
+  const stateNames = new Set(open === undefined ? [] : [openName(meta), ...states.map(state => state.name)]);
   let model: Plan['model'];
   const attributes = meta.form && !meta.attributes.name
     ? { name: { type: 'string' as const, config: 'name' }, ...meta.attributes } : meta.attributes;
@@ -228,10 +249,12 @@ function plan(meta: ElementMeta, config: Config): Plan {
     used.add(attribute.config);
     const raw = config[attribute.config];
     if (meta.model && camel(name) === meta.model) {
-      if (raw !== undefined) model = { name: meta.model, value: raw };
+      const join = meta.keys?.[attribute.config]?.join;
+      if (raw !== undefined) model = { name: meta.model, value: join && Array.isArray(raw) ? raw.join(join) : raw };
       continue;
     }
-    if (open !== undefined && name === 'open') continue;
+    // A default the element has: nothing to write.
+    if (stateNames.has(name) || (meta.keys?.[attribute.config]?.ignore as unknown[] | undefined)?.includes(raw)) continue;
     const value = valueOf(attribute.type, raw);
     if (value !== undefined) attrs.push({ name, value });
   }
@@ -256,14 +279,15 @@ function plan(meta: ElementMeta, config: Config): Plan {
   for (const [path, key] of Object.entries(meta.keys ?? {})) {
     const raw = read(config, path);
     if (raw === undefined) continue;
-    const ignored = (key.ignore as unknown[] | undefined)?.includes(raw) || (key.same !== undefined && raw === config[key.same]) ||
-      (key.follows !== undefined && raw === (config[key.follows.key] === key.follows.equals));
+    const ignored = (key.ignore as unknown[] | undefined)?.includes(raw) || (key.same !== undefined && raw === config[key.same]);
     if (ignored) used.add(path);
     else if (key.attribute) {
       if (key.values && !Object.hasOwn(key.values, String(raw))) continue;
+      if (key.only && config[key.only.key] !== key.only.equals) continue;
       used.add(path);
-      const value = key.values ? key.values[String(raw)] : valueOf(meta.attributes[key.attribute]?.type ?? 'string', raw);
-      if (value !== undefined) setAttr(key.attribute, value);
+      const names = [key.attribute].flat();
+      const value = key.values ? key.values[String(raw)] : valueOf(meta.attributes[names[0]!]?.type ?? 'string', raw);
+      if (value !== undefined) for (const name of names) setAttr(name, value);
     } else if (key.text) {
       used.add(path);
       if (typeof raw === 'string' && raw) text = raw;
@@ -290,7 +314,9 @@ function plan(meta: ElementMeta, config: Config): Plan {
     const texts = [kids.text].flat();
     const known = new Set([...Object.values(itemKeys), ...texts, ...Object.keys(kids.typed ?? {}), ...Object.keys(kids.counted ?? {}),
       ...Object.keys(kids.flags ?? {}), ...(kids.selected ? [kids.selected.key] : []), ...(kids.nested ? [kids.nested.key, kids.nested.flag ?? kids.nested.key] : [])]);
-    const declare = (items: Config[], path: string): Child[] => items.flatMap(item => {
+    // An item given as a string is its text: search's suggestions.
+    const declare = (items: (Config | string)[], path: string): Child[] => items.flatMap(entry => {
+      const item: Config = typeof entry === 'string' ? { [texts[0]!]: entry } : entry;
       // An item whose flag the element has no attribute for is left out: the menu's gap.
       const unflagged = Object.entries(kids.flags ?? {}).find(([key, values]) => item[key] !== undefined && !values[String(item[key])]);
       if (unflagged) {
@@ -389,7 +415,7 @@ function plan(meta: ElementMeta, config: Config): Plan {
     } else if (!nested) omitted.push(key);
   }
   if (meta.style) attrs.push({ name: 'style', value: Object.entries(meta.style).map(([property, value]) => `${property}: ${value}`).join('; ') });
-  return { attrs, model, props, text, children, slotted, trigger, open, calls, omitted: omitted.concat(childOmitted) };
+  return { attrs, model, props, text, children, slotted, trigger, open, states, calls, omitted: omitted.concat(childOmitted) };
 }
 
 /** Declaration children and their own, depth first. */
@@ -424,7 +450,11 @@ const modelEvent = (meta: ElementMeta): string | undefined =>
 
 /** The event the HTML logs: the model's, or with open state (which its own events follow) the element's other one. */
 const logEvent = (meta: ElementMeta): string | undefined =>
-  meta.open ? meta.events.find(event => !['open', 'close', 'cancel'].includes(event)) : modelEvent(meta);
+  meta.open ? meta.events.find(event => ![...openEvents(meta), ...(meta.states ?? []).flatMap(state => state.events), 'cancel'].includes(event)) : modelEvent(meta);
+
+/** The trigger's text before the model value it shows, if it shows one. */
+const shownText = (meta: ElementMeta, p: Plan): string | undefined =>
+  p.trigger && meta.trigger?.shows !== undefined && p.model ? `${p.trigger.text}${meta.trigger.shows}` : undefined;
 
 /** Whether the trigger opens the element on click, rather than the element listening to it (the menu's anchor). */
 const triggerOpens = (meta: ElementMeta, p: Plan): boolean => !!p.trigger && p.open !== undefined && !meta.trigger?.for;
@@ -558,14 +588,18 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   // open without the attribute is shown.
   const setOpen = (value: boolean): string => {
     const method = value ? meta.open?.show : meta.open?.hide;
-    return method ? `${variable}.${method}()` : `${variable}.open = ${value}`;
+    return method ? `${variable}.${method}()` : `${variable}.${openName(meta)} = ${value}`;
   };
   const onClick = (value: boolean): string => (value ? meta.open?.show : meta.open?.hide) ? setOpen(value) : `{ ${setOpen(value)}; }`;
   const opening = triggerOpens(meta, p) ? `  document.querySelector('#${p.trigger!.id}').addEventListener('click', () => ${onClick(true)});\n` : '';
   const closers = [...new Set(p.slotted.filter(c => c.closes).map(slottedSelector))];
   const closing = closers.map(selector => `  ${variable}.querySelectorAll('${selector}').forEach((child) => child.addEventListener('click', () => ${onClick(false)}));\n`).join('');
-  const openAttr = p.open && meta.attributes.open ? ' open' : '';
-  const startOpen = p.open && !meta.attributes.open ? `  ${setOpen(true)};\n` : '';
+  const openAttr = (p.open && meta.attributes[openName(meta)] ? ` ${openName(meta)}` : '') +
+    p.states.filter(state => state.value && meta.attributes[state.name]).map(state => ` ${state.name}`).join('');
+  const startOpen = p.open && !meta.attributes[openName(meta)] ? `  ${setOpen(true)};\n` : '';
+  // A trigger showing the model value follows it; the element's events are otherwise logged.
+  const shown = shownText(meta, p);
+  const handler = shown !== undefined ? `document.querySelector('#${p.trigger!.id}').textContent = ${quoteJs(shown)} + event.detail.${p.model!.name};` : 'console.log(event.detail);';
   const hostLine = `  const ${variable} = document.querySelector('${tag}');\n`;
   const props = p.props.map(prop => `  ${variable}.${prop.name} = ${literal(prop.value)};\n`).join('');
   const calls = p.calls.map(call => `  ${variable}.${call.method}(${call.argument === undefined ? '' : literal(call.argument)});\n`).join('');
@@ -574,53 +608,74 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   // `value` with it).
   const early = iconAttrs && p.children.some(c => c.attrs.some(a => a.ref));
   const host = !early && (event || p.props.length || iconAttrs || p.calls.length || opening || closing || startOpen) ? `\n${hostLine}` : '';
+  const triggerText = escapeText(shown !== undefined ? `${shown}${String(modelValue ?? '')}` : p.trigger?.text ?? '');
   const trigger = p.trigger
-    ? `${p.trigger.native ? `<${p.trigger.element}${htmlAttrs(p.trigger.attrs)}>${escapeText(p.trigger.text)}</${p.trigger.element}>` : `<m-${p.trigger.element}${htmlAttrs(p.trigger.attrs)}>${escapeText(p.trigger.text)}</m-${p.trigger.element}>`}\n` : '';
+    ? `${p.trigger.native ? `<${p.trigger.element}${htmlAttrs(p.trigger.attrs)}>${triggerText}</${p.trigger.element}>` : `<m-${p.trigger.element}${htmlAttrs(p.trigger.attrs)}>${triggerText}</m-${p.trigger.element}>`}\n` : '';
   return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n${icons ? `\n${icons}` : ''}\n` +
     (early ? `${hostLine}${iconAttrs}\n` : '') + `  defineAll();\n` +
     `  document.documentElement.dataset.theme = '${context.theme}';\n  document.documentElement.dataset.themeMode = '${context.mode}';\n` +
     (triggerIcons ? `\n${triggerIcons}` : '') +
     host + (early ? '' : iconAttrs) + props + opening + closing + startOpen + calls +
-    (event ? `  ${variable}.addEventListener('${event}', (event) => {\n    console.log(event.detail);\n  });\n` : '') +
+    (event ? `  ${variable}.addEventListener('${event}', (event) => {\n    ${handler}\n  });\n` : '') +
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${trigger}<${tag}${modelAttr}${openAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
 }
 
-/** What each framework writes for open state: its value, the handler setting it, and how a prop and an event are named. */
+/** What each framework writes for a state (`open`): its value, the handler setting it (or several), and how a prop and an event are named. */
 interface OpenSyntax {
-  read: string;
-  set: (value: boolean) => string;
+  read: (state: string) => string;
+  set: (state: string | string[], value: boolean) => string;
   prop: (name: string, value: string) => string;
   on: (event: string, handler: string) => string;
 }
 const reactOpen = (solid: boolean): OpenSyntax => ({
-  read: solid ? 'open()' : 'open',
-  set: value => `() => setOpen(${value})`,
+  read: state => (solid ? `${state}()` : state),
+  set: (state, value) => (typeof state === 'string' ? `() => set${pascal(state)}(${value})`
+    : `() => { ${state.map(name => `set${pascal(name)}(${value});`).join(' ')} }`),
   prop: (name, value) => ` ${name}={${value}}`,
   on: (event, handler) => ` on${pascal(event)}={${handler}}`,
 });
 const vueOpen: OpenSyntax = {
-  read: 'open',
-  set: value => `open = ${value}`,
-  prop: (name, value) => ` :${name}="${value}"`,
+  read: state => state,
+  set: (state, value) => [state].flat().map(name => `${name} = ${value}`).join('; '),
+  prop: (name, value) => ` :${kebab(name)}="${value}"`,
   on: (event, handler) => ` @${event}="${handler}"`,
 };
 const svelteOpen: OpenSyntax = {
-  read: 'open',
-  set: value => `() => (open = ${value})`,
+  read: state => state,
+  set: (state, value) => (typeof state === 'string' ? `() => (${state} = ${value})`
+    : `() => { ${state.map(name => `${name} = ${value};`).join(' ')} }`),
   prop: (name, value) => ` ${name}={${value}}`,
   on: (event, handler) => ` on${event}={${handler}}`,
 };
 
 /**
  * The host's open state: bound one way, set back when it closes, and when it opens
- * itself from its trigger (the menu's anchor).
+ * itself from its trigger (the menu's anchor). Other state follows both its events.
  */
-const openProps = (meta: ElementMeta, p: Plan, s: OpenSyntax): string =>
-  p.open === undefined ? '' : `${s.prop('open', s.read)}${meta.trigger?.for ? s.on('open', s.set(true)) : ''}${s.on('close', s.set(false))}`;
+const openProps = (meta: ElementMeta, p: Plan, s: OpenSyntax): string => {
+  if (p.open === undefined) return '';
+  const name = openName(meta);
+  const [opened, closed] = openEvents(meta);
+  return `${s.prop(name, s.read(name))}${meta.trigger?.for ? s.on(opened, s.set(name, true)) : ''}${s.on(closed, s.set(name, false))}` +
+    p.states.map(state => `${s.prop(state.name, s.read(state.name))}${s.on(state.events[0], s.set(state.name, true))}${s.on(state.events[1], s.set(state.name, false))}`).join('');
+};
 
-/** A click on the trigger opens the element; one on a closing child closes it. */
-const clickOpens = (meta: ElementMeta, p: Plan, s: OpenSyntax, value: boolean): string =>
-  (value ? triggerOpens(meta, p) : p.open !== undefined) ? s.on('click', s.set(value)) : '';
+/** A click on the trigger opens the element, with the state it opens in (the bottom sheet expanded); one on a closing child closes it. */
+function clickOpens(meta: ElementMeta, p: Plan, s: OpenSyntax, value: boolean): string {
+  if (!(value ? triggerOpens(meta, p) : p.open !== undefined)) return '';
+  const also = value ? p.states.filter(state => state.opens).map(state => state.name) : [];
+  return s.on('click', s.set(also.length ? [openName(meta), ...also] : openName(meta), value));
+}
+
+/** The states a framework declares, open first, with their first values. */
+const stateValues = (meta: ElementMeta, p: Plan): { name: string; value: boolean }[] =>
+  p.open === undefined ? [] : [{ name: openName(meta), value: p.open }, ...p.states];
+
+/** The trigger's text, with the model value it shows as this expression. */
+const triggerBody = (meta: ElementMeta, p: Plan, expression: string): string => {
+  const shown = shownText(meta, p);
+  return shown === undefined ? escapeText(p.trigger!.text) : `${escapeText(shown)}${expression}`;
+};
 
 function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: boolean): string {
   const Name = pascal(meta.name);
@@ -643,10 +698,10 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   }, `      ${depth}`, `    ${depth}`);
   const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(p.attrs, !solid)}${jsxProps(p.props)}`, body);
   const trigger = p.trigger
-    ? element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid)}${clickOpens(meta, p, syntax, true)}`, escapeText(p.trigger.text)) : '';
+    ? element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid)}${clickOpens(meta, p, syntax, true)}`, triggerBody(meta, p, `{${read}}`)) : '';
   return `${imports}\n${constants ? `${constants}\n` : ''}${omittedNote(p, t => `// ${t}`)}${callsNote(meta, p, t => `// ${t}`)}export function Example() {\n` +
     (p.model ? `  const [${state}, ${setter}] = ${hook}(${literal(p.model.value)});\n` : '') +
-    (p.open !== undefined ? `  const [open, setOpen] = ${hook}(${p.open});\n` : '') +
+    stateValues(meta, p).map(state => `  const [${state.name}, set${pascal(state.name)}] = ${hook}(${state.value});\n`).join('') +
     (trigger ? `  return (\n    <>\n      ${trigger}\n      ${host}\n    </>\n  );\n}\n` : `  return (\n    ${host}\n  );\n}\n`);
 }
 
@@ -661,12 +716,12 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const model = p.model ? ` v-model="${p.model.name}"` : '';
   const tag = element(Name, `${model}${openProps(meta, p, vueOpen)}${vueAttrs(p.attrs)}${vueProps(p.props)}`, body);
   const trigger = p.trigger
-    ? `  ${element(p.trigger.native ? p.trigger.element : `M${pascal(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, escapeText(p.trigger.text))}\n` : '';
+    ? `  ${element(p.trigger.native ? p.trigger.element : `M${pascal(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, triggerBody(meta, p, `{{ ${p.model?.name} }}`))}\n` : '';
   const state = p.model || p.open !== undefined;
   return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'mtrl/vue';\n${styleImports(context)}` +
     (state || constants ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
-    (p.open !== undefined ? `const open = ref(${p.open});\n` : '') +
+    stateValues(meta, p).map(state => `const ${state.name} = ref(${state.value});\n`).join('') +
     `</script>\n\n<template>\n${omittedNote(p, t => `  <!-- ${t} -->`)}${callsNote(meta, p, t => `  <!-- ${t} -->`)}${trigger}  ${tag}\n</template>\n`;
 }
 
@@ -679,12 +734,12 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   }, '  ', '');
   const model = p.model ? ` bind:${p.model.name}` : '';
   const trigger = p.trigger
-    ? `${element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs)}${clickOpens(meta, p, svelteOpen, true)}`, escapeText(p.trigger.text))}\n` : '';
+    ? `${element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs)}${clickOpens(meta, p, svelteOpen, true)}`, triggerBody(meta, p, `{${p.model?.name}}`))}\n` : '';
   const state = p.model || p.open !== undefined;
   return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/svelte';\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n` +
     (state || constants ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
-    (p.open !== undefined ? `  let open = $state(${p.open});\n` : '') +
+    stateValues(meta, p).map(state => `  let ${state.name} = $state(${state.value});\n`).join('') +
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${callsNote(meta, p, t => `<!-- ${t} -->`)}${trigger}${element(pascal(meta.name), `${model}${openProps(meta, p, svelteOpen)}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n`;
 }
 

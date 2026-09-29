@@ -136,23 +136,26 @@ describe('framework code for the overlay elements', () => {
     expect(html).toContain('<m-button id="dialog-trigger" variant="tonal">Open dialog</m-button>');
     expect(html).toContain("document.querySelector('#dialog-trigger').addEventListener('click', () => dialog.show());");
     expect(html).toContain(`dialog.querySelectorAll('m-button[slot="actions"]').forEach((child) => child.addEventListener('click', () => dialog.close()));`);
-    expect(html).toContain('<m-dialog headline="Save your changes?">\n  <p>Keep your changes before leaving this view.</p>');
+    expect(html).toContain('<m-dialog size="small" close-button headline="Save your changes?">\n  <p>Keep your changes before leaving this view.</p>');
     const react = code('dialog', 'react');
     expect(react).toContain('const [open, setOpen] = useState(false);');
-    expect(react).toContain('<Dialog open={open} onClose={() => setOpen(false)} headline="Save your changes?">');
+    expect(react).toContain('<Dialog open={open} onClose={() => setOpen(false)} size="small" closeButton headline="Save your changes?">');
     expect(react).toContain('<Button slot="actions" variant="text" onClick={() => setOpen(false)}>Cancel</Button>');
     expect(code('dialog', 'vue')).toContain('<MDialog :open="open" @close="open = false"');
     expect(code('dialog', 'svelte')).toContain('<Dialog open={open} onclose={() => (open = false)}');
-    // Full screen brings the close button the playground asks for.
-    expect(code('dialog', 'html', { size: 'fullscreen', closeButton: true })).not.toContain('Not yet exposed');
+    // Its size, dividers, alignment and dismissal are attributes; the factory's defaults are left out.
+    const options = code('dialog', 'html', { size: 'medium', divider: true, footerAlignment: 'center', closeOnOverlayClick: false, closeOnEscape: false, subtitle: 'Draft' });
+    expect(options).toContain('<m-dialog subtitle="Draft" close-button divider footer-alignment="center" headline="Save your changes?" no-close-on-scrim-click no-close-on-escape>');
+    expect(options).not.toContain('Not yet exposed');
   });
-  test('a menu is anchored to its trigger, with its submenu nested and a gap named', () => {
+  test('a menu is anchored to its trigger, with its submenu nested and a gap', () => {
     const html = code('menu', 'html', { submenu: true, variant: 'gap' });
     expect(html).toContain('<m-button id="menu-trigger" variant="tonal">Open menu</m-button>');
     expect(html).toContain('anchor="menu-trigger"');
     expect(html).toContain('<m-menu-item value="share">\n    Share\n    <m-menu-item value="link">Copy link</m-menu-item>');
-    expect(html).toContain('Not yet exposed by the element: items[].type (gap).');
-    expect(html).not.toContain('<m-menu-item></m-menu-item>');
+    expect(html).toContain('<m-menu-item gap></m-menu-item>');
+    expect(html).not.toContain('Not yet exposed');
+    expect(code('menu', 'html', { variant: 'vibrant', closeOnSelect: false })).toContain('<m-menu position="bottom-start" variant="vertical" color="vibrant" no-close-on-select anchor="menu-trigger">');
     // The anchor opens it: the state follows the element both ways.
     expect(code('menu', 'react')).toContain('<Menu open={open} onOpen={() => setOpen(true)} onClose={() => setOpen(false)}');
   });
@@ -162,6 +165,42 @@ describe('framework code for the overlay elements', () => {
     expect(drawer).not.toContain('Not yet exposed');
     expect(code('tooltip', 'html')).toContain('<m-icon-button id="tooltip-target" aria-label="Favorite" variant="tonal"></m-icon-button>');
     expect(code('tooltip', 'html')).toContain('for="tooltip-target"');
+  });
+  test('the modal rail opens from its trigger, and its expanded state follows collapse', () => {
+    const html = code('navigation-rail', 'html', { layout: 'modal' });
+    expect(html).toContain('<m-button id="navigation-rail-trigger" variant="tonal">Open navigation</m-button>');
+    expect(html).toContain("document.querySelector('#navigation-rail-trigger').addEventListener('click', () => navigationRail.expand());");
+    expect(code('navigation-rail', 'react', { layout: 'modal' })).toContain('expanded={expanded} onCollapse={() => setExpanded(false)} layout="modal"');
+    expect(code('navigation-rail', 'vue', { layout: 'modal', expanded: true })).toContain('const expanded = ref(true);');
+    // A standard rail with its menu button expands itself: no trigger.
+    expect(code('navigation-rail', 'html', { expanded: true })).not.toContain('navigation-rail-trigger');
+  });
+  test('the bottom sheet binds its expanded state instead of calling expand()', () => {
+    const react = code('bottom-sheet', 'react', { initialState: 'expanded' });
+    expect(react).toContain('const [expanded, setExpanded] = useState(true);');
+    expect(react).toContain('expanded={expanded} onExpand={() => setExpanded(true)} onCollapse={() => setExpanded(false)} peekHeight={120}');
+    expect(react).not.toContain('Once mounted');
+    // Its trigger opens it expanded, as the HTML's expand() does.
+    expect(react).toContain('onClick={() => { setOpen(true); setExpanded(true); }}>Open bottom sheet</Button>');
+    expect(code('bottom-sheet', 'vue')).toContain('@click="open = true; expanded = true">Open bottom sheet</MButton>');
+    expect(code('bottom-sheet', 'svelte')).toContain('onclick={() => { open = true; expanded = true; }}>Open bottom sheet</Button>');
+    expect(code('bottom-sheet', 'solid')).toContain('onClick={() => { setOpen(true); setExpanded(true); }}>Open bottom sheet</Button>');
+    expect(code('bottom-sheet', 'html', { initialState: 'expanded', closeOnEscape: false })).toContain('<m-bottom-sheet open expanded peek-height="120" modal headline="Plan your visit" no-close-on-escape>');
+  });
+  test('pickers and search: values, their opener, and suggestions', () => {
+    expect(code('datepicker', 'html', { range: true })).toContain('<m-datepicker value="2026-09-21/2026-09-25" variant="docked" selection-mode="range"');
+    expect(code('datepicker', 'vue')).toContain('<MDatepicker v-model="value"');
+    const time = code('timepicker', 'html');
+    expect(time).toContain('<m-button id="timepicker-trigger" variant="tonal">Choose time · 09:30</m-button>');
+    expect(time).toContain("document.querySelector('#timepicker-trigger').addEventListener('click', () => timepicker.show());");
+    expect(time).toContain(`document.querySelector('#timepicker-trigger').textContent = "Choose time · " + event.detail.value;`);
+    expect(code('timepicker', 'solid')).toContain('onClick={() => setOpen(true)}>Choose time · {value()}</Button>');
+    expect(code('timepicker', 'html', { minuteStep: '15' })).toContain('step="900"');
+    // Seconds need a one-minute step: with another, they are named.
+    expect(code('timepicker', 'html', { showSeconds: true, minuteStep: '5' })).toContain('Not yet exposed by the element: showSeconds.');
+    const search = code('search', 'react', { initialState: 'view' });
+    expect(search).toContain('<Search value={value} onInput={(event) => setValue(event.detail.value)} name="query" placeholder="Search places" variant="contained" viewMode="docked" open>');
+    expect(search).toContain('<SearchSuggestion>Paris</SearchSuggestion>');
   });
   test('values that need quoting stay valid code', () => {
     expect(code('switch', 'html')).toContain("const switchElement = document.querySelector('m-switch');");
