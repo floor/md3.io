@@ -6,8 +6,7 @@
 // The server serialises that spec (`ElementMeta`) from mtrl/elements, so the
 // browser bundle does not carry the elements themselves.
 
-import { createIconNamer, ICON_CREDIT, isMarkup } from './icon-code';
-import { symbolFile } from './icons';
+import { createIconNamer, isMarkup } from './icon-code';
 
 export type Framework = 'html' | 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla';
 
@@ -153,18 +152,12 @@ function hoist(meta: ElementMeta, p: Plan, indent = ''): string {
   return icons.imports(indent) + icons.declarations(indent);
 }
 
-/** HTML keeps icons inline in attributes: a comment names the symbols they are. */
-function iconNote(p: Plan): string {
-  const names = [...p.attrs, ...p.children.flatMap(c => c.attrs)]
-    .map(a => (isMarkup(a.value) ? symbolFile(a.value) : undefined)).filter((n): n is string => !!n);
-  return names.length ? `<!-- ${ICON_CREDIT} (${[...new Set(names)].join(', ')}) -->\n` : '';
-}
-
 const omittedNote = (p: Plan, comment: (text: string) => string): string =>
   p.omitted.length ? `${comment(`Not yet exposed by the element: ${p.omitted.join(', ')}.`)}\n` : '';
 
+/** HTML attributes; an imported icon (`ref`) is set by the script instead. */
 const htmlAttrs = (attrs: Attr[]): string =>
-  attrs.map(a => (a.ref ? ` :${a.name}="${a.ref}"` : a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
+  attrs.filter(a => !a.ref).map(a => (a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
 
 /** JSX / Svelte props: camelCase, booleans bare, numbers in braces. */
 const jsxAttrs = (attrs: Attr[]): string =>
@@ -204,18 +197,27 @@ const styleImports = (context: CodeContext): string =>
 
 function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const tag = `m-${meta.name}`;
+  // First: naming the icons marks the attributes the script sets instead of the markup.
+  const icons = hoist(meta, p, '  ');
   const modelAttr = p.model && p.model.value !== false && p.model.value !== undefined && p.model.value !== ''
     ? (p.model.value === true ? ` ${p.model.name}` : ` ${p.model.name}="${escapeAttr(String(p.model.value))}"`) : '';
   const children = p.children.map(c => `\n  <m-${meta.children!.name}${htmlAttrs(c.attrs)}>${escapeText(c.text)}</m-${meta.children!.name}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n` : '';
   const event = meta.events[0];
-  const host = event || p.props.length ? `\n  const ${camel(meta.name)} = document.querySelector('${tag}');\n` : '';
-  const props = p.props.map(prop => `  ${camel(meta.name)}.${prop.name} = ${literal(prop.value)};\n`).join('');
-  return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n\n  defineAll();\n` +
+  const variable = camel(meta.name);
+  const iconAttrs = p.attrs.filter(a => a.ref).map(a => `  ${variable}.setAttribute('${a.name}', ${a.ref});\n`).join('') +
+    p.children.flatMap(c => c.attrs.filter(a => a.ref).map(a => {
+      const value = c.attrs.find(v => v.name === 'value')?.value;
+      const selector = `m-${meta.children!.name}${value === undefined ? '' : `[value="${String(value)}"]`}`;
+      return `  ${variable}.querySelector('${selector}').setAttribute('${a.name}', ${a.ref});\n`;
+    })).join('');
+  const host = event || p.props.length || iconAttrs ? `\n  const ${variable} = document.querySelector('${tag}');\n` : '';
+  const props = p.props.map(prop => `  ${variable}.${prop.name} = ${literal(prop.value)};\n`).join('');
+  return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n${icons ? `\n${icons}` : ''}\n  defineAll();\n` +
     `  document.documentElement.dataset.theme = '${context.theme}';\n  document.documentElement.dataset.themeMode = '${context.mode}';\n` +
-    host + props +
+    host + iconAttrs + props +
     (event ? `  ${camel(meta.name)}.addEventListener('${event}', (event) => {\n    console.log(event.detail);\n  });\n` : '') +
-    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${iconNote(p)}<${tag}${modelAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
+    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}<${tag}${modelAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
 }
 
 function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: boolean): string {
