@@ -37,15 +37,20 @@ export interface ChildrenMeta {
 export interface ElementMeta {
   name: string;
   attributes: Record<string, { type: AttributeType; config?: string }>;
-  properties: string[];
+  /** Live properties; those with a config key are written when the config differs from `default`. */
+  properties: Record<string, { config?: string; default?: unknown }>;
   model?: string;
   events: string[];
+  /** Form-associated: the host's own `name` attribute names its value, as on native controls. */
+  form?: boolean;
   slot?: { attribute: string; config: string };
   children?: ChildrenMeta;
 }
 
 type Config = Record<string, unknown>;
 type Attr = { name: string; value: string | number | true; ref?: string };
+/** A live property: set in script for HTML, a prop in the frameworks. */
+type Prop = { name: string; value: string | number | boolean };
 
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 const pascal = (name: string): string => camel(name).replace(/^./, c => c.toUpperCase());
@@ -57,6 +62,7 @@ interface Plan {
   attrs: Attr[];
   /** The model property and its initial value, when the config sets it. */
   model?: { name: string; value: unknown };
+  props: Prop[];
   text?: string;
   children: { attrs: Attr[]; text: string }[];
   /** Config options the element does not expose yet: named in a comment, never dropped silently. */
@@ -74,7 +80,9 @@ function plan(meta: ElementMeta, config: Config): Plan {
   const used = new Set<string>();
   const attrs: Attr[] = [];
   let model: Plan['model'];
-  for (const [name, attribute] of Object.entries(meta.attributes)) {
+  const attributes = meta.form && !meta.attributes.name
+    ? { name: { type: 'string' as const, config: 'name' }, ...meta.attributes } : meta.attributes;
+  for (const [name, attribute] of Object.entries(attributes)) {
     if (!attribute.config || !(attribute.config in config)) continue;
     used.add(attribute.config);
     const raw = config[attribute.config];
@@ -84,6 +92,16 @@ function plan(meta: ElementMeta, config: Config): Plan {
     }
     const value = valueOf(attribute.type, raw);
     if (value !== undefined) attrs.push({ name, value });
+  }
+  const props: Prop[] = [];
+  const attributeNames = new Set(Object.keys(meta.attributes).map(camel));
+  for (const [name, property] of Object.entries(meta.properties)) {
+    if (!property.config || name === meta.model || attributeNames.has(name) || !(property.config in config)) continue;
+    used.add(property.config);
+    const raw = config[property.config];
+    const fallback = property.default ?? false;
+    if (raw === undefined || raw === null || raw === fallback || (raw === '' && fallback === false)) continue;
+    if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') props.push({ name, value: raw });
   }
   let text: string | undefined;
   if (meta.slot && typeof config[meta.slot.config] === 'string') {
@@ -108,7 +126,7 @@ function plan(meta: ElementMeta, config: Config): Plan {
   }
   const omitted = Object.keys(config).filter(key => !used.has(key) && !['prefix', 'class', 'ariaLabel'].includes(key)
     && config[key] !== undefined && config[key] !== '' && config[key] !== false);
-  return { attrs, model, text, children, omitted };
+  return { attrs, model, props, text, children, omitted };
 }
 
 const isMarkup = (value: unknown): value is string => typeof value === 'string' && value.trimStart().startsWith('<svg');
@@ -155,7 +173,21 @@ const jsxAttrs = (attrs: Attr[]): string =>
 const vueAttrs = (attrs: Attr[]): string =>
   attrs.map(a => (a.ref ? ` :${a.name}="${a.ref}"` : a.value === true ? ` ${a.name}` : typeof a.value === 'number' ? ` :${a.name}="${a.value}"` : ` ${a.name}="${escapeAttr(a.value)}"`)).join('');
 
+/** Live properties as JSX / Svelte props: `true` bare, anything else in braces. */
+const jsxProps = (props: Prop[]): string =>
+  props.map(p => (p.value === true ? ` ${p.name}` : ` ${p.name}={${literal(p.value)}}`)).join('');
+
+/** Live properties as Vue props, bound so booleans and numbers keep their type. */
+const vueProps = (props: Prop[]): string =>
+  props.map(p => (p.value === true ? ` ${kebab(p.name)}` : ` :${kebab(p.name)}="${escapeAttr(literal(p.value)).replaceAll('&quot;', "'")}"`)).join('');
+
+const kebab = (name: string): string => name.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`);
+
 const literal = (value: unknown): string => (typeof value === 'string' ? quoteJs(value) : JSON.stringify(value));
+
+/** A framework component tag: self-closing when it has no content. */
+const element = (name: string, attributes: string, body: string): string =>
+  body ? `<${name}${attributes}>${body}</${name}>` : `<${name}${attributes} />`;
 
 export interface CodeContext {
   theme: string;
@@ -172,9 +204,12 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const children = p.children.map(c => `\n  <m-${meta.children!.name}${htmlAttrs(c.attrs)}>${escapeText(c.text)}</m-${meta.children!.name}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n` : '';
   const event = meta.events[0];
+  const host = event || p.props.length ? `\n  const ${camel(meta.name)} = document.querySelector('${tag}');\n` : '';
+  const props = p.props.map(prop => `  ${camel(meta.name)}.${prop.name} = ${literal(prop.value)};\n`).join('');
   return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n\n  defineAll();\n` +
     `  document.documentElement.dataset.theme = '${context.theme}';\n  document.documentElement.dataset.themeMode = '${context.mode}';\n` +
-    (event ? `\n  document.querySelector('${tag}').addEventListener('${event}', (event) => {\n    console.log(event.detail);\n  });\n` : '') +
+    host + props +
+    (event ? `  ${camel(meta.name)}.addEventListener('${event}', (event) => {\n    console.log(event.detail);\n  });\n` : '') +
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}<${tag}${modelAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
 }
 
@@ -194,7 +229,7 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n    ` : '';
   return `${imports}\n${constants.length ? `${constantLines(constants)}\n` : ''}${omittedNote(p, t => `// ${t}`)}export function Example() {\n` +
     (p.model ? `  const [${state}, ${setter}] = ${hook}(${literal(p.model.value)});\n` : '') +
-    `  return (\n    <${Name}${modelProps}${jsxAttrs(p.attrs)}>${body}</${Name}>\n  );\n}\n`;
+    `  return (\n    ${element(Name, `${modelProps}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n  );\n}\n`;
 }
 
 function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
@@ -204,10 +239,11 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const children = p.children.map(c => `\n    <${Child}${vueAttrs(c.attrs)}>${escapeText(c.text)}</${Child}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n  ` : '';
   const model = p.model ? ` v-model="${p.model.name}"` : '';
+  const tag = element(Name, `${model}${vueAttrs(p.attrs)}${vueProps(p.props)}`, body);
   return `<script setup lang="ts">\n${p.model ? `import { ref } from 'vue';\n` : ''}import { ${[Name, Child].filter(Boolean).join(', ')} } from 'mtrl/vue';\n${styleImports(context)}` +
     (p.model || constants.length ? '\n' : '') + constantLines(constants) +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
-    `</script>\n\n<template>\n${omittedNote(p, t => `  <!-- ${t} -->`)}  <${Name}${model}${vueAttrs(p.attrs)}>${body}</${Name}>\n</template>\n`;
+    `</script>\n\n<template>\n${omittedNote(p, t => `  <!-- ${t} -->`)}  ${tag}\n</template>\n`;
 }
 
 function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
@@ -220,7 +256,7 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   return `<script lang="ts">\n  import { ${[Name, Child].filter(Boolean).join(', ')} } from 'mtrl/svelte';\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n` +
     (p.model || constants.length ? '\n' : '') + constantLines(constants, '  ') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
-    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}<${Name}${model}${jsxAttrs(p.attrs)}>${body}</${Name}>\n`;
+    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${element(Name, `${model}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n`;
 }
 
 /** The component's code in a framework other than vanilla. */
