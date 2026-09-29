@@ -18,6 +18,7 @@ type Spec = {
 // spec cannot say, because the factories take arrays and the elements children.
 const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration: keyof typeof declarations }> = {
   tabs: { name: 'tab', declaration: 'tab', from: 'tabs', text: 'text', selected: { key: 'state', equals: 'active', value: 'value' } },
+  radios: { name: 'radio', declaration: 'radio', from: 'options', text: 'label' },
 };
 
 // Live properties that do not start false: a playground value equal to the

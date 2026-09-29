@@ -109,6 +109,7 @@ function plan(meta: ElementMeta, config: Config): Plan {
     text = config[meta.slot.config] as string;
   }
   const children: Plan['children'] = [];
+  const childOmitted: string[] = [];
   const kids = meta.children;
   if (kids && Array.isArray(config[kids.from])) {
     used.add(kids.from);
@@ -119,13 +120,18 @@ function plan(meta: ElementMeta, config: Config): Plan {
         if (value !== undefined) childAttrs.push({ name: key, value });
       }
       children.push({ attrs: childAttrs, text: String(item[kids.text] ?? '') });
+      for (const [key, value] of Object.entries(item)) {
+        const known = key in kids.attributes || key === kids.text || key === kids.selected?.key;
+        const name = `${kids.from}[].${key}`;
+        if (!known && value !== undefined && value !== '' && value !== false && !childOmitted.includes(name)) childOmitted.push(name);
+      }
       if (kids.selected && item[kids.selected.key] === kids.selected.equals && meta.model) {
         model = { name: meta.model, value: item[kids.selected.value] };
       }
     }
   }
   const omitted = Object.keys(config).filter(key => !used.has(key) && !['prefix', 'class', 'ariaLabel'].includes(key)
-    && config[key] !== undefined && config[key] !== '' && config[key] !== false);
+    && config[key] !== undefined && config[key] !== '' && config[key] !== false).concat(childOmitted);
   return { attrs, model, props, text, children, omitted };
 }
 
@@ -199,7 +205,7 @@ const styleImports = (context: CodeContext): string =>
 
 function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const tag = `m-${meta.name}`;
-  const modelAttr = p.model && p.model.value !== false && p.model.value !== undefined
+  const modelAttr = p.model && p.model.value !== false && p.model.value !== undefined && p.model.value !== ''
     ? (p.model.value === true ? ` ${p.model.name}` : ` ${p.model.name}="${escapeAttr(String(p.model.value))}"`) : '';
   const children = p.children.map(c => `\n  <m-${meta.children!.name}${htmlAttrs(c.attrs)}>${escapeText(c.text)}</m-${meta.children!.name}>`).join('');
   const body = p.text !== undefined ? escapeText(p.text) : children ? `${children}\n` : '';
