@@ -196,8 +196,11 @@ describe('framework code for the overlay elements', () => {
     expect(time).toContain(`document.querySelector('#timepicker-trigger').textContent = "Choose time · " + event.detail.value;`);
     expect(code('timepicker', 'solid')).toContain('onClick={() => setOpen(true)}>Choose time · {value()}</Button>');
     expect(code('timepicker', 'html', { minuteStep: '15' })).toContain('step="900"');
-    // Seconds need a one-minute step: with another, they are named.
-    expect(code('timepicker', 'html', { showSeconds: true, minuteStep: '5' })).toContain('Not yet exposed by the element: showSeconds.');
+    // Seconds are their own attribute (#263), with any minute step.
+    const seconds = code('timepicker', 'html', { showSeconds: true, minuteStep: '5' });
+    expect(seconds).toContain('show-seconds');
+    expect(seconds).toContain('step="300"');
+    expect(seconds).not.toContain('Not yet exposed');
     const search = code('search', 'react', { initialState: 'view' });
     expect(search).toContain('<Search value={value} onInput={(event) => setValue(event.detail.value)} name="query" placeholder="Search places" variant="contained" viewMode="docked" open>');
     expect(search).toContain('<SearchSuggestion>Paris</SearchSuggestion>');
