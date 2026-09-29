@@ -1,8 +1,13 @@
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
 hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('xml', xml);
 
 const componentSlug = document.querySelector<HTMLElement>('[data-component]')!.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -16,6 +21,54 @@ const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
 const copyButton = document.querySelector<HTMLButtonElement>('#copy-code')!;
 const previewDot = document.querySelector<HTMLElement>('.preview-dot')!;
 let state: ComponentState = initialComponentState(slug);
+
+// Framework tabs in the code view: generated from the same configuration, through
+// the web component's spec. Without one, only vanilla is available.
+const elementMetaScript = document.querySelector<HTMLScriptElement>('#element-meta');
+const element: ElementMeta | null = elementMetaScript ? JSON.parse(elementMetaScript.textContent || 'null') : null;
+const frameworkTabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
+const FRAMEWORK_KEY = 'md3-example-framework';
+let framework: Framework = 'vanilla';
+try {
+  const saved = localStorage.getItem(FRAMEWORK_KEY) as Framework | null;
+  framework = element ? (saved && FRAMEWORKS.some(f => f.id === saved) ? saved : 'html') : 'vanilla';
+} catch { framework = element ? 'html' : 'vanilla'; }
+
+function currentCode(): { text: string; language: string } {
+  const language = FRAMEWORKS.find(f => f.id === framework)!.language;
+  if (framework === 'vanilla' || !element) return { text: componentCode(slug, state), language: 'javascript' };
+  const config = components[slug].config(state) as Record<string, unknown>;
+  return { text: frameworkCode(framework, element, config, { theme: String(state.theme), mode: String(state.mode) }), language };
+}
+function selectFramework(next: Framework, focus = false) {
+  framework = element || next === 'vanilla' ? next : 'vanilla';
+  for (const tab of frameworkTabs) {
+    const on = tab.dataset.framework === framework;
+    tab.setAttribute('aria-selected', String(on));
+    tab.tabIndex = on ? 0 : -1;
+    if (on && focus) tab.focus();
+  }
+  try { localStorage.setItem(FRAMEWORK_KEY, framework); } catch { /* Storage may be unavailable. */ }
+  renderCode();
+}
+function renderCode() {
+  const { text, language } = currentCode();
+  code.className = `hljs language-${language}`;
+  code.innerHTML = hljs.highlight(text, { language }).value;
+}
+frameworkTabs.forEach(tab => {
+  tab.addEventListener('click', () => selectFramework(tab.dataset.framework as Framework));
+  tab.addEventListener('keydown', event => {
+    const enabled = frameworkTabs.filter(t => !t.disabled);
+    const index = enabled.indexOf(tab);
+    const target = event.key === 'ArrowRight' ? enabled[(index + 1) % enabled.length]
+      : event.key === 'ArrowLeft' ? enabled[(index + enabled.length - 1) % enabled.length]
+      : event.key === 'Home' ? enabled[0] : event.key === 'End' ? enabled.at(-1) : undefined;
+    if (!target) return;
+    event.preventDefault();
+    selectFramework(target.dataset.framework as Framework, true);
+  });
+});
 const appearanceKey = 'md3-preview-appearance';
 const themeSelect = document.querySelector<HTMLSelectElement>('#preview-theme')!;
 const modeInputs = [...document.querySelectorAll<HTMLInputElement>('.preview-appearance input[name="mode"]')];
@@ -81,7 +134,7 @@ function update(send = true, reset = false) {
   state = readForm();
   syncControls(state);
   for (const input of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]')) input.disabled = state[input.dataset.enabledWhen!] !== true;
-  code.innerHTML = hljs.highlight(componentCode(slug, state), { language: 'javascript' }).value;
+  renderCode();
   if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state, reset }, location.origin);
 }
 form.addEventListener('input', event => {
@@ -126,7 +179,7 @@ window.addEventListener('message', event => {
   if (event.data?.type === 'md3:error') status.textContent = 'Preview could not load. Please reload the page.';
 });
 copyButton.addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(componentCode(slug, state)); status.textContent = 'Code copied'; }
+  try { await navigator.clipboard.writeText(currentCode().text); status.textContent = 'Code copied'; }
   catch {
     selectTab(document.querySelector<HTMLButtonElement>('#code-tab')!);
     const range = document.createRange(); range.selectNodeContents(code);
@@ -134,4 +187,5 @@ copyButton.addEventListener('click', async () => {
     status.textContent = 'Code selected. Use your copy shortcut.';
   }
 });
+selectFramework(framework);
 update();
