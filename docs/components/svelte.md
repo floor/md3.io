@@ -122,23 +122,35 @@ step when the user closes it:
 <Button onclick={() => (open = true)}>Delete</Button>
 <Dialog {open} headline="Delete draft?" onclose={() => (open = false)}>
   <p>The draft will be deleted for good.</p>
-  <Button {...{ slot: 'actions' }} variant="text" onclick={() => (open = false)}>Cancel</Button>
-  <Button {...{ slot: 'actions' }} variant="text" onclick={() => (open = false)}>Delete</Button>
+  {#snippet actions()}
+    <Button variant="text" onclick={() => (open = false)}>Cancel</Button>
+    <Button variant="text" onclick={() => (open = false)}>Delete</Button>
+  {/snippet}
 </Dialog>
 ```
 
 ## Snippets and children
 
 A component's children are its `children` snippet, which becomes the element's content: a
-button's label, a dialog's or a card's text. Named snippets are not supported: only `children`
-is rendered, and a snippet named like an attribute, such as `headline`, is passed to it.
+button's label, a dialog's or a card's text. A component's named regions, such as a dialog's
+`headline` and `actions`, a card's `header-action` or a top app bar's `leading` and `trailing`,
+are named snippets: `{#snippet actions()}`, as the dialog above does. A dashed name is
+camelCase: `{#snippet headerAction()}`. A region that also has a text prop, such as `headline`
+or `subhead`, takes either: the prop for plain text, the snippet for markup.
 
-A component's named regions, such as a dialog's `headline` and `actions` or a top app bar's
-`leading` and `trailing`, are the element's named slots, filled by a child with a `slot`
-attribute. Svelte reads `slot="actions"` on a component's direct child as its own legacy slot
-syntax and drops that child without a warning, so spread the attribute instead, as the dialog
-above does: `{...{ slot: 'actions' }}`. This goes for plain tags too: `<span {...{ slot:
-'headline' }}>`.
+```svelte
+<script lang="ts">
+  import { Button, Card } from 'mtrl/svelte';
+</script>
+
+<Card subhead="Updated today">
+  {#snippet headline()}Release <em>notes</em>{/snippet}
+  <p>What changed in this version.</p>
+  {#snippet actions()}
+    <Button variant="text">Read more</Button>
+  {/snippet}
+</Card>
+```
 
 Lists of items are declared with child components: `Tab`, `Radio`, `Chip`, `ListItem`,
 `MenuItem`, `SelectOption`, `SearchSuggestion`, `NavigationRailItem`, `DrawerItem`,
@@ -163,25 +175,23 @@ are fine: the parent reads them again when they change.
 
 ## Reaching the element
 
-`bind:this` on a component gives the component, not the element, and the components expose
-nothing yet. Most of what you would call a method for has a prop or a binding: `open` on a
-dialog, `bind:checked` rather than `toggle()`. For the rest, take the element from an event's
-`currentTarget`, or bind a wrapper and query it:
+`bind:this` on a component gives the component, whose `element` is the `<m-*>` element, with
+its properties and methods. It is `null` until the component mounts. An attachment,
+`{@attach}`, gets the element itself when it mounts:
 
 ```svelte
 <script lang="ts">
   import { Button, Textfield } from 'mtrl/svelte';
-  import type { TextfieldElement } from 'mtrl/elements';
 
-  let box: HTMLElement;
-  const selectName = () => box.querySelector<TextfieldElement>('m-textfield')?.select();
+  let field = $state<ReturnType<typeof Textfield>>();
 </script>
 
-<div bind:this={box}>
-  <Textfield label="Name" defaultValue="Ada Lovelace" />
-</div>
-<Button onclick={selectName}>Select the name</Button>
+<Textfield bind:this={field} label="Name" defaultValue="Ada Lovelace" {@attach (element) => element.focus()} />
+<Button onclick={() => field?.element?.select()}>Select the name</Button>
 ```
+
+Most of what you would call a method for has a prop or a binding, though: `open` on a dialog,
+`bind:checked` rather than `toggle()`.
 
 ## SvelteKit and server rendering
 
