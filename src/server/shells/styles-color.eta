@@ -1,0 +1,49 @@
+<%
+  const theme = 'baseline', mode = 'light';
+  const scheme = it.themeTokens[theme][mode];
+  const label = role => role.charAt(0).toUpperCase() + role.slice(1).replaceAll('-', ' ');
+  const title = name => name.charAt(0).toUpperCase() + name.slice(1);
+  // Compact JSON for the client: role → value, or [value, source] when inherited.
+  const data = Object.fromEntries(Object.entries(it.themeTokens).map(([name, modes]) => [name, Object.fromEntries(['light', 'dark'].map(m => [m, Object.fromEntries(Object.entries(modes[m]).map(([role, c]) => [role, c.inherited ? [c.value, c.from] : c.value]))]))]));
+%>
+<div class="page-wrap styles-page styles-color" data-styles-page="color">
+  <header class="page-heading"><span class="eyebrow">STYLES / COLOR</span><h1>Color</h1><p>The color roles mtrl components are painted with, in each theme and mode.</p></header>
+  <p class="styles-source">Values read from mtrl's compiled theme CSS · mtrl <%= it.mtrlVersion %></p>
+  <div class="styles-toolbar" role="group" aria-label="Color scheme">
+    <label for="color-theme">Theme</label>
+    <select id="color-theme" class="ui-select"><% it.themes.forEach(name => { %><option value="<%= name %>" <%= name === theme ? 'selected' : '' %>><%= title(name) %></option><% }); %></select>
+    <div class="ui-segmented choice-group choice-group--mode" role="radiogroup" aria-label="Mode">
+      <label class="choice"><input name="color-mode" type="radio" value="light" checked /><span class="ui-segmented__btn">Light</span></label>
+      <label class="choice"><input name="color-mode" type="radio" value="dark" /><span class="ui-segmented__btn">Dark</span></label>
+    </div>
+    <span class="styles-status sr-only" id="styles-status" role="status" aria-live="polite"></span>
+  </div>
+  <% it.colorGroups.forEach((group, g) => { %>
+  <section class="color-group" aria-labelledby="color-group-<%= g %>" <%= group.roles.some(role => scheme[role]) ? '' : 'hidden' %>>
+    <h2 class="catalog-label" id="color-group-<%= g %>"><%= group.label %></h2>
+    <% if (group.note) { %><p class="color-group__note"><%= group.note %></p><% } %>
+    <ul class="swatch-grid">
+      <% group.roles.forEach(role => {
+        const own = scheme[role];
+        const pair = own ? it.pairFor(role, scheme) : null;
+        const ink = pair ? scheme[pair].value : null;
+        const ratio = pair ? it.contrastRatio(own.value, ink) : null;
+      %>
+      <li class="swatch" data-role="<%= role %>" <%= own ? '' : 'hidden' %>>
+        <div class="swatch__chip" style="background:<%= own ? own.value : 'transparent' %>;color:<%= ink || 'inherit' %>">
+          <span class="swatch__name"><%= label(role) %></span>
+          <span class="swatch__hex"><%= own ? own.value : '' %></span>
+        </div>
+        <div class="swatch__info">
+          <div class="swatch__var"><code>--mtrl-sys-color-<%= role %></code><button type="button" class="ui-btn swatch__copy" data-copy="var(--mtrl-sys-color-<%= role %>)" aria-label="Copy var(--mtrl-sys-color-<%= role %>)">Copy</button></div>
+          <div class="swatch__contrast" <%= pair ? '' : 'hidden' %>><span class="swatch__ratio"><%= ratio ? ratio.toFixed(2) : '' %>:1</span> <span class="swatch__pair">with <%= pair || '' %></span> <span class="styles-badge <%= ratio >= it.AA_TEXT ? 'styles-badge--pass' : 'styles-badge--fail' %>"><%= ratio >= it.AA_TEXT ? 'AA pass' : 'AA fail' %></span></div>
+          <div class="swatch__inherited" <%= own && own.inherited ? '' : 'hidden' %>>Inherited from <span><%= own && own.from || '' %></span></div>
+        </div>
+      </li>
+      <% }); %>
+    </ul>
+  </section>
+  <% }); %>
+  <% if (it.missingGroups.length) { %><p class="styles-note">Not in mtrl yet: the M3 <%= it.missingGroups.join(', ').toLowerCase() %> roles. This page shows only the roles mtrl's CSS declares.</p><% } %>
+  <script type="application/json" id="color-tokens"><%~ JSON.stringify({ themes: data, aa: it.AA_TEXT }).replaceAll('<', '\\u003c') %></script>
+</div>

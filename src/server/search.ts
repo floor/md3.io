@@ -6,14 +6,17 @@
 //   - Docs:       every markdown document, one entry per section, so a match in a
 //                 section links to its heading's anchor.
 //   - Examples:   title, description, the components used, and the side panel text.
+//   - Styles:     the Styles pages, with the colour roles and type scale roles they list.
 import MiniSearch, { type SearchResult as Hit } from 'minisearch';
 import { Marked, type Token } from 'marked';
 import { componentName, docGroups, docSlugs, documentSource, headingIds } from './content';
 import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
+import { stylePages } from './styles';
+import { colorGroups, typescale } from './tokens';
 
-export const SECTIONS = ['Components', 'Docs', 'Examples'] as const;
+export const SECTIONS = ['Components', 'Styles', 'Docs', 'Examples'] as const;
 type Section = (typeof SECTIONS)[number];
 
 interface IndexDocument {
@@ -137,8 +140,29 @@ function exampleDocuments(): IndexDocument[] {
   }));
 }
 
+/** The Styles pages; the colour and typography pages list their roles, spaced and hyphenated. */
+function styleDocuments(): IndexDocument[] {
+  const roleWords = (role: string) => `${role} ${role.replaceAll('-', ' ')}`;
+  const extra: Record<string, { api: string; body: string }> = {
+    '/styles/': { api: '', body: 'Design tokens: color, typography. Coming: elevation, shape, motion, states, icons.' },
+    '/styles/color/': {
+      api: colorGroups.flatMap(group => group.roles.map(role => `--mtrl-sys-color-${role}`)).join(' '),
+      body: `Color roles, themes, light and dark, WCAG contrast. ${colorGroups.map(group => `${group.label}: ${group.roles.map(roleWords).join(', ')}.`).join(' ')}`,
+    },
+    '/styles/typography/': {
+      api: typescale.flatMap(style => [`mtrl-${style.role}`, `--mtrl-sys-typescale-${style.role}-font-size`]).join(' '),
+      body: `Typography, type scale, typescale, font, font size, line height, weight, tracking. ${typescale.map(style => roleWords(style.role)).join(', ')}.`,
+    },
+  };
+  return stylePages.map(page => ({
+    id: `styles:${page.href}`, section: 'Styles', title: page.title, heading: '', group: 'Styles',
+    description: page.description, tags: page.title.toLowerCase(), ...extra[page.href]!,
+    url: page.href, page: page.href,
+  }));
+}
+
 const started = performance.now();
-const documents = [...componentDocuments(), ...docDocuments(), ...exampleDocuments()];
+const documents = [...componentDocuments(), ...styleDocuments(), ...docDocuments(), ...exampleDocuments()];
 const titles = new Map(documents.filter(document => document.title).map(document => [document.page, document.title]));
 
 const index = new MiniSearch<IndexDocument>({
@@ -181,7 +205,7 @@ function textSnippet(body: string, description: string, terms: string[]): string
   return `${start > 0 ? '…' : ''}${body.slice(start, end).trim()}${end < body.length ? '…' : ''}`;
 }
 
-/** Ranked results, the best entry of each page, grouped Components · Docs · Examples. */
+/** Ranked results, the best entry of each page, grouped Components · Styles · Docs · Examples. */
 export function searchSite(query: string, limit = DEFAULT_LIMIT): SearchResult[] {
   const q = query.trim();
   if (!q) return [];

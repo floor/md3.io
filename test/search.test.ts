@@ -33,11 +33,15 @@ describe('site search', () => {
   test('an example is found by its name', () => {
     expect(searchSite('settings').find(result => result.section === 'Examples')?.url).toBe('/examples/settings/');
   });
-  test('results come one per page, grouped Components, Docs, Examples', () => {
+  test('results come one per page, grouped Components, Styles, Docs, Examples', () => {
     const results = searchSite('dialog', 50);
     expect(new Set(results.map(result => result.url.split('#')[0])).size).toBe(results.length);
-    const order = results.map(result => ['Components', 'Docs', 'Examples'].indexOf(result.section));
+    const order = results.map(result => ['Components', 'Styles', 'Docs', 'Examples'].indexOf(result.section));
     expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+  test('the Styles pages are found by what they list', () => {
+    expect(searchSite('typography')[0]).toMatchObject({ section: 'Styles', url: '/styles/typography/' });
+    expect(searchSite('primary container').find(result => result.section === 'Styles')?.url).toBe('/styles/color/');
   });
   test('an empty or blank query has no results', () => {
     expect(searchSite('')).toEqual([]);
