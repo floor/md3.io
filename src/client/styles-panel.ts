@@ -14,33 +14,50 @@ export async function copy(text: string, what: string): Promise<boolean> {
   catch { announce(`Could not copy ${what}`); return false; }
 }
 
+// ─── Frames of real mtrl ────────────────────────────────────────────
+
+// Every frame on the page that shows mtrl follows the store: data-theme-frame="theme"
+// with your overrides, "base" without them. A frame marked data-autosize takes the
+// height its content reports (the Shape page's gallery).
+const themeFrames = () => [...document.querySelectorAll<HTMLIFrameElement>('iframe[data-theme-frame]')];
+const sendTheme = (frame: HTMLIFrameElement, state = themeStore.get()) => {
+  if (!frame.getAttribute('src')) return;
+  const tokens = frame.dataset.themeFrame === 'theme' ? toTokens(state, themeBase) : {};
+  frame.contentWindow?.postMessage({ type: 'md3:theme', base: state.base, mode: state.mode, tokens }, location.origin);
+};
+addEventListener('message', event => {
+  if (event.origin !== location.origin) return;
+  const frame = themeFrames().find(candidate => candidate.contentWindow === event.source);
+  if (!frame) return;
+  if (event.data?.type === 'md3:frame-ready') sendTheme(frame);
+  if (event.data?.type === 'md3:frame-size' && frame.hasAttribute('data-autosize') && Number.isFinite(event.data.height)) frame.style.height = `${Math.min(4000, Math.max(80, event.data.height))}px`;
+});
+themeStore.subscribe(state => { for (const frame of themeFrames()) sendTheme(frame, state); });
+
 // ─── Preview ────────────────────────────────────────────────────────
 
 const panel = document.querySelector<HTMLElement>('#styles-preview');
 if (panel) {
   const frames = panel.querySelector<HTMLElement>('.styles-preview__frames')!;
-  const themeFrame = panel.querySelector<HTMLIFrameElement>('[data-frame="theme"] iframe')!;
   const baseFigure = panel.querySelector<HTMLElement>('[data-frame="base"]')!;
   const baseFrame = baseFigure.querySelector('iframe')!;
-  const payload = (frame: HTMLIFrameElement, state: ThemeState) => ({ type: 'md3:theme', base: state.base, mode: state.mode, tokens: frame === themeFrame ? toTokens(state, themeBase) : {} });
-  const send = (frame: HTMLIFrameElement) => frame.contentWindow?.postMessage(payload(frame, themeStore.get()), location.origin);
-  addEventListener('message', event => {
-    if (event.origin !== location.origin || event.data?.type !== 'md3:frame-ready') return;
-    for (const frame of [themeFrame, baseFrame]) if (event.source === frame.contentWindow) send(frame);
-  });
-  themeStore.subscribe(() => { send(themeFrame); if (baseFrame.src) send(baseFrame); });
 
-  // Narrow screens: a panel at the bottom that opens and closes, remembered here.
+  // Docked: a bar pinned to the bottom that opens upward. Always on narrow screens, and
+  // on a page that asks for a collapsible preview (data-collapsible) while it is closed.
   const toggle = panel.querySelector<HTMLButtonElement>('#styles-preview-toggle')!;
-  const OPEN_KEY = 'md3-styles-preview-open';
+  const narrow = matchMedia('(max-width: 1100px)');
+  const OPEN_KEY = panel.hasAttribute('data-collapsible') ? 'md3-styles-preview-open-wide' : 'md3-styles-preview-open';
+  const dock = () => panel.classList.toggle('styles-preview--docked', narrow.matches || (panel.hasAttribute('data-collapsible') && panel.dataset.open !== 'true'));
   const setOpen = (open: boolean, save = false) => {
     toggle.setAttribute('aria-expanded', String(open));
     panel.dataset.open = String(open);
+    dock();
     if (save) try { localStorage.setItem(OPEN_KEY, String(open)); } catch { /* Storage may be unavailable. */ }
   };
   let open = false;
   try { open = localStorage.getItem(OPEN_KEY) === 'true'; } catch { /* Closed by default. */ }
   setOpen(open);
+  narrow.addEventListener('change', dock);
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true', true));
 
   // Compare: the base theme beside yours, side by side where the panel is wide enough
@@ -49,7 +66,7 @@ if (panel) {
   compare.addEventListener('change', () => {
     panel.classList.toggle('styles-preview--compare', compare.checked);
     baseFigure.hidden = !compare.checked;
-    if (compare.checked && !baseFrame.src) baseFrame.src = baseFrame.dataset.src!;
+    if (compare.checked && !baseFrame.getAttribute('src')) baseFrame.src = baseFrame.dataset.src!;
     if (!compare.checked) frames.dataset.show = 'theme';
     for (const input of panel.querySelectorAll<HTMLInputElement>('input[name="styles-show"]')) input.checked = input.value === frames.dataset.show;
     announce(compare.checked ? 'Comparing your theme with the base theme' : 'Showing your theme');

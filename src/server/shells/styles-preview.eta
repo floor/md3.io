@@ -2,10 +2,11 @@
   /* The live preview and the export panel, shared by every Styles page. The preview is
      real mtrl in an isolated frame (/styles/frame/), as the playgrounds are; the store
      (src/client/theme-store.ts) sends it the base theme, the mode and the overrides.
-     it.themeBase: mtrl's values; it.appearance: false on a page with its own theme controls. */
+     it.themeBase: mtrl's values; it.appearance: false on a page with its own theme controls;
+     it.collapsible: true for a preview that starts closed on wide screens too. */
   const title = name => (name.charAt(0).toUpperCase() + name.slice(1)).replaceAll('-', ' ');
 %>
-<aside class="styles-preview" id="styles-preview" aria-label="Live preview">
+<aside class="styles-preview<%= it.collapsible ? " styles-preview--docked" : "" %>" id="styles-preview" aria-label="Live preview" <%~ it.collapsible ? "data-collapsible data-open=\"false\"" : "" %>>
   <div class="styles-preview__bar">
     <button type="button" class="styles-preview__toggle" id="styles-preview-toggle" aria-expanded="false" aria-controls="styles-preview-body">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>Preview
@@ -32,11 +33,11 @@
     <div class="styles-preview__frames" data-show="theme">
       <figure class="styles-preview__frame" data-frame="theme">
         <figcaption>Your theme</figcaption>
-        <iframe src="/styles/frame/" title="Live preview of your theme"></iframe>
+        <iframe src="/styles/frame/" data-theme-frame="theme" title="Live preview of your theme"></iframe>
       </figure>
       <figure class="styles-preview__frame" data-frame="base" hidden>
         <figcaption>Base theme</figcaption>
-        <iframe data-src="/styles/frame/" title="Live preview of the base theme, without your changes"></iframe>
+        <iframe data-src="/styles/frame/" data-theme-frame="base" title="Live preview of the base theme, without your changes"></iframe>
       </figure>
     </div>
   </div>
