@@ -41,8 +41,10 @@ describe('Styles pages', () => {
   });
   test('the typography page shows all 15 roles with copyable class and variable', async () => {
     const html = await (await get('/styles/typography/')).text();
-    expect(html.match(/class="type-row"/g)?.length).toBe(15);
+    expect(html.match(/class="type-card" data-role=/g)?.length).toBe(15);
     expect(html).toContain('data-copy="mtrl-display-large"');
-    expect(html).toContain('data-copy="var(--mtrl-sys-typescale-label-small-font-size)"');
+    // Where mtrl uses a role, read from its component styles, linked to the playground
+    expect(html).toMatch(/data-role="label-large"[\s\S]*?Used by [^<]*<a href="\/components\/button\/">Button<\/a>/);
+    expect(html).toContain('data-copy="mtrl-font-bold"');
   });
 });

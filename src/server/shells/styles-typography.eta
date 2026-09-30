@@ -1,30 +1,64 @@
 <%
   const label = role => role.charAt(0).toUpperCase() + role.slice(1).replaceAll('-', ' ');
   const px = value => value.replace(/px$/, '');
+  const inline = style => `font-family:${style.font};font-size:${style.fontSize};line-height:${style.lineHeight};letter-spacing:${style.letterSpacing};font-weight:${style.fontWeight}`;
   const sample = 'The quick brown fox jumps over the lazy dog';
-%>
-<div class="page-wrap styles-page styles-typography" data-styles-page="typography">
-  <header class="page-heading"><span class="eyebrow">STYLES / TYPOGRAPHY</span><h1>Typography</h1><p>The Material 3 type scale: five roles in three sizes, as mtrl ships them.</p></header>
-  <p class="styles-source">Values read from mtrl's compiled CSS · mtrl <%= it.mtrlVersion %></p>
-  <div class="styles-toolbar styles-toolbar--sample">
-    <label for="type-sample">Sample text</label>
-    <input id="type-sample" class="ui-input styles-sample-input" type="text" value="<%= sample %>" maxlength="120" autocomplete="off" spellcheck="false" />
-    <span class="styles-status sr-only" id="styles-status" role="status" aria-live="polite"></span>
-  </div>
-  <% if (it.unloadedFonts.length) { %><p class="styles-note">mtrl's type scale names <%= it.unloadedFonts.join(', ') %>, which md3.io does not load: the samples show <%= it.unloadedFonts.join(', ') %> if it is installed on your device, otherwise your browser's fallback in the same stack.</p><% } %>
-  <ol class="type-scale">
-    <% it.typescale.forEach(style => { %>
-    <li class="type-row" data-role="<%= style.role %>">
-      <div class="type-row__head">
-        <h2 class="type-row__name"><%= label(style.role) %></h2>
-        <p class="type-row__spec"><span><%= style.font %></span> · <span><%= px(style.fontSize) %>/<%= px(style.lineHeight) %> px</span> · <span>weight <%= style.fontWeight %></span> · <span>tracking <%= style.letterSpacing %></span></p>
-      </div>
-      <p class="type-row__sample" style="font-family:<%= style.font %>;font-size:<%= style.fontSize %>;line-height:<%= style.lineHeight %>;letter-spacing:<%= style.letterSpacing %>;font-weight:<%= style.fontWeight %>"><%= sample %></p>
-      <div class="type-row__copies">
-        <% if (style.utility) { %><span class="type-row__copy"><code>.mtrl-<%= style.role %></code><button type="button" class="ui-btn" data-copy="mtrl-<%= style.role %>" aria-label="Copy class mtrl-<%= style.role %>">Copy</button></span><% } %>
-        <span class="type-row__copy"><code>var(--mtrl-sys-typescale-<%= style.role %>-font-size)</code><button type="button" class="ui-btn" data-copy="var(--mtrl-sys-typescale-<%= style.role %>-font-size)" aria-label="Copy var(--mtrl-sys-typescale-<%= style.role %>-font-size)">Copy</button></span>
+  const display = it.typescale.filter(style => /^(display|headline|title)-/.test(style.role));
+  const text = it.typescale.filter(style => /^(body|label)-/.test(style.role));
+  const usedBy = role => (it.roleUsage[role] ?? []).map(slug => it.components[slug] ? `<a href="/components/${slug}/">${it.components[slug].name}</a>` : label(slug));
+  const card = (style, specimen) => { %>
+    <li class="type-card" data-role="<%= style.role %>">
+      <%~ specimen %>
+      <div class="type-card__meta">
+        <h3 class="type-card__name"><%= label(style.role) %></h3>
+        <p class="type-card__spec"><%= px(style.fontSize) %> / <%= px(style.lineHeight) %> px · <%= style.fontWeight %><% if (style.letterSpacing !== '0') { %> · <%= style.letterSpacing %><% } %></p>
+        <% const used = usedBy(style.role); if (used.length) { %><p class="type-card__used">Used by <%~ used.join(', ') %></p><% } %>
+        <% if (style.utility) { %><button type="button" class="type-card__copy" data-copy="mtrl-<%= style.role %>" aria-label="Copy class mtrl-<%= style.role %>"><code>.mtrl-<%= style.role %></code></button><% } %>
       </div>
     </li>
-    <% }); %>
-  </ol>
+<% }; %>
+<div class="page-wrap styles-page styles-typography" data-styles-page="typography">
+  <header class="page-heading"><span class="eyebrow">STYLES / TYPOGRAPHY</span><h1>Typography</h1><p>The Material 3 type scale: five roles in three sizes, as mtrl ships them.</p></header>
+  <p class="styles-source">Values read from mtrl's compiled CSS · mtrl <%= it.mtrlVersion %> · sizes in px: size / line height · weight · tracking</p>
+  <span class="styles-status sr-only" id="styles-status" role="status" aria-live="polite"></span>
+  <% if (it.unloadedFonts.length) { %><p class="styles-note">mtrl's type scale names <%= it.unloadedFonts.join(', ') %>, which md3.io does not load: the samples show your browser's fallback.</p><% } %>
+
+  <section class="type-section" aria-labelledby="type-display">
+    <h2 id="type-display">Display, headline and title</h2>
+    <p class="type-section__lead">Large, short text: a hero number, a page or dialog heading, an app bar or card title.</p>
+    <ul class="type-grid">
+      <% display.forEach(style => card(style, `<span class="type-card__aa" style="${inline(style)}" aria-hidden="true">Aa</span>`)); %>
+    </ul>
+  </section>
+
+  <section class="type-section" aria-labelledby="type-text">
+    <h2 id="type-text">Body and label</h2>
+    <p class="type-section__lead">Running text, and the text of buttons, chips, tabs and navigation.</p>
+    <div class="styles-toolbar styles-toolbar--sample">
+      <label for="type-sample">Sample text</label>
+      <input id="type-sample" class="ui-input styles-sample-input" type="text" value="<%= sample %>" maxlength="120" autocomplete="off" spellcheck="false" />
+    </div>
+    <ul class="type-grid">
+      <% text.forEach(style => card(style, style.role.startsWith('body') ? `<p class="type-card__text type-sample" style="${inline(style)}">${sample}</p>` : `<p class="type-card__text" style="${inline(style)}">Save changes</p>`)); %>
+    </ul>
+  </section>
+
+  <% if (it.fontWeights.length) { %>
+  <section class="type-section" aria-labelledby="type-weights">
+    <h2 id="type-weights">Font weights</h2>
+    <p class="type-section__lead">The scale uses regular (400) and medium (500); the other weights are utility classes for emphasis.</p>
+    <ul class="type-grid type-grid--weights">
+      <% it.fontWeights.forEach(({ name, weight }) => { %>
+      <li class="type-card type-card--weight">
+        <span class="type-card__aa" style="font-family:Roboto, sans-serif;font-size:36px;line-height:44px;font-weight:<%= weight %>" aria-hidden="true">Aa</span>
+        <div class="type-card__meta">
+          <h3 class="type-card__name"><%= label(name) %></h3>
+          <p class="type-card__spec"><%= weight %></p>
+          <button type="button" class="type-card__copy" data-copy="mtrl-font-<%= name %>" aria-label="Copy class mtrl-font-<%= name %>"><code>.mtrl-font-<%= name %></code></button>
+        </div>
+      </li>
+      <% }); %>
+    </ul>
+  </section>
+  <% } %>
 </div>

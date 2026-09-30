@@ -9,7 +9,7 @@ import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
-import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts } from './src/server/tokens';
+import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights } from './src/server/tokens';
 import { readFileSync, existsSync } from 'node:fs';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
@@ -108,7 +108,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   }
   else if (path === '/styles/') response = page(path, 'Styles — mtrl', stylePages[0].description, 'styles-overview', { stylePages, comingStyles });
   else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT });
-  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion });
+  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);

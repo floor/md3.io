@@ -61,15 +61,15 @@ try {
   assert(await page.evaluate(() => navigator.clipboard.readText()) === 'var(--mtrl-sys-color-primary)', 'Copy copies the CSS variable');
   await page.getByRole('status').filter({ hasText: 'Copied' }).waitFor();
 
-  // Typography: the sample text updates every row.
+  // Typography: the sample text updates the body samples.
   console.log('Checking /styles/typography/');
   await page.goto(`${base}/styles/typography/`);
   await page.getByLabel('Sample text').fill('Hamburgefonstiv');
-  const samples = await page.locator('.type-row__sample').allTextContents();
-  assert(samples.length === 15 && samples.every(text => text === 'Hamburgefonstiv'), 'Every sample shows the typed text');
-  const size = await page.locator('.type-row[data-role="display-large"] .type-row__sample').evaluate(element => getComputedStyle(element).fontSize);
+  const samples = await page.locator('.type-sample').allTextContents();
+  assert(samples.length === 3 && samples.every(text => text === 'Hamburgefonstiv'), 'Every body sample shows the typed text');
+  const size = await page.locator('.type-card[data-role="display-large"] .type-card__aa').evaluate(element => getComputedStyle(element).fontSize);
   assert(size === '57px', `Display large renders at mtrl's size, got ${size}`);
-  await page.locator('.type-row[data-role="body-medium"]').getByRole('button', { name: 'Copy class mtrl-body-medium' }).click();
+  await page.locator('.type-card[data-role="body-medium"]').getByRole('button', { name: 'Copy class mtrl-body-medium' }).click();
   assert(await page.evaluate(() => navigator.clipboard.readText()) === 'mtrl-body-medium', 'Copy copies the utility class');
 
   // Every page, 375 px wide, dark and light: no horizontal scroll, one swatch column.

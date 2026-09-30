@@ -6,7 +6,7 @@
 //     dist/themes/<theme>.css (`[data-theme=x]`, `[data-theme=x][data-theme-mode=dark]`).
 //     A role a theme leaves out is inherited, as the cascade does, and marked so.
 //   - Typescale: `--mtrl-sys-typescale-<role>-<property>`, with `var(--mtrl-ref-*)` resolved.
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { root } from './content';
 import { themes } from '../shared/button';
@@ -209,3 +209,28 @@ export const siteFonts: Set<string> = new Set(['styles/tokens.css', 'styles/robo
 /** Named families in mtrl's typescale that md3.io does not load. */
 export const unloadedFonts: string[] = [...new Set(typescale.flatMap(style => style.font.split(',').map(unquote)))]
   .filter(family => family && !GENERIC_FAMILIES.has(family.toLowerCase()) && !siteFonts.has(family));
+
+/**
+ * Where mtrl's components use each type role: the component stylesheets that include
+ * `m.typography('<role>')` literally (roles picked from a map at compile time are not
+ * seen). Read from mtrl's published SCSS, so the list follows the library.
+ */
+export const roleUsage: Record<string, string[]> = (() => {
+  const dir = resolve(mtrlDir, 'src/styles/components');
+  const usage: Record<string, Set<string>> = {};
+  if (!existsSync(dir)) return {};
+  for (const file of readdirSync(dir).filter(name => /^_[a-z-]+\.scss$/.test(name))) {
+    const component = file.slice(1, -5);
+    for (const [, role] of readFileSync(resolve(dir, file), 'utf8').matchAll(/typography\(\s*['"]([a-z]+-(?:large|medium|small))['"]/g)) (usage[role!] ??= new Set()).add(component);
+  }
+  return Object.fromEntries(Object.entries(usage).map(([role, components]) => [role, [...components].sort()]));
+})();
+
+/** mtrl's font-weight utility classes (`.mtrl-font-<name>`), lightest first. */
+export const fontWeights: { name: string; weight: string }[] = baseBlocks
+  .flatMap(block => {
+    const match = /^\.mtrl-font-([a-z]+)$/.exec(block.path.at(-1) ?? '');
+    const weight = block.declarations.get('font-weight');
+    return match && weight ? [{ name: match[1]!, weight }] : [];
+  })
+  .sort((a, b) => Number(a.weight) - Number(b.weight));

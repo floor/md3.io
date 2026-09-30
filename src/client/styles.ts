@@ -101,7 +101,7 @@ if (tokensScript) {
 
 const sampleInput = document.querySelector<HTMLInputElement>('#type-sample');
 if (sampleInput) {
-  const samples = [...document.querySelectorAll<HTMLElement>('.type-row__sample')];
+  const samples = [...document.querySelectorAll<HTMLElement>('.type-sample')];
   const fallback = sampleInput.defaultValue;
   sampleInput.addEventListener('input', () => {
     const text = sampleInput.value.trim() ? sampleInput.value : fallback;
