@@ -23,7 +23,7 @@ describe('component sizes', () => {
   test('show on the component page, one line per flavour', async () => {
     const page = await (await handleRequest(new Request('http://localhost/components/button/'))).text();
     const kb = (n: number) => (n / 1024).toFixed(1);
-    expect(page).toContain(`<span data-flavour="factory" ><strong>${kb(sizes.components.button!.factory.alone)} KB</strong> alone`);
-    expect(page).toContain(`<span data-flavour="element" hidden><strong>${kb(sizes.components.button!.element.alone)} KB</strong> alone`);
+    expect(page).toMatch(new RegExp(`<span data-flavour="factory" [^>]*><strong>${kb(sizes.components.button!.factory.added)} KB</strong> gzip`));
+    expect(page).toMatch(new RegExp(`<span data-flavour="element" hidden [^>]*><strong>${kb(sizes.components.button!.element.added)} KB</strong> gzip`));
   });
 });

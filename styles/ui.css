@@ -1176,7 +1176,5 @@ html[data-theme] .source__panel pre {
 
 /* A component's bundle size, beside its documentation link: the factory's on the
    Vanilla tab, the web component's on the others. */
-.page-heading__top:has(.component-size) { flex-wrap: wrap; }
-.component-size { margin-left: auto; color: var(--text-dim); font-size: var(--fs-xs); cursor: help; }
-@media (max-width: 700px) { .component-size { order: 3; flex-basis: 100%; margin-left: 0; } }
+.component-size { margin-left: auto; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; cursor: help; }
 .component-size strong { color: var(--text-muted); font-family: var(--font-mono); font-weight: var(--fw-bold, 600); }
