@@ -26,9 +26,9 @@ describe('site search', () => {
     expect(searchSite('createDialog')[0]!.url).toBe('/components/dialog/');
   });
   test('a docs heading links to its section, and the anchor exists', () => {
-    const [result] = searchSite('eyedropper');
-    expect(result).toMatchObject({ section: 'Docs', url: '/docs/components/colorpicker/#pipetteeyedropper-tool' });
-    expect(renderDocument('colorpicker')!.html).toContain('id="pipetteeyedropper-tool"');
+    const [result] = searchSite('swatches only');
+    expect(result).toMatchObject({ section: 'Docs', url: '/docs/components/colorpicker/#swatches-only' });
+    expect(renderDocument('colorpicker')!.html).toContain('id="swatches-only"');
   });
   test('an example is found by its name', () => {
     expect(searchSite('settings').find(result => result.section === 'Examples')?.url).toBe('/examples/settings/');
