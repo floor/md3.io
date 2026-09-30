@@ -406,7 +406,9 @@ async function trigger(record) {
   if (/change|input|select|remove|confirm|complete/i.test(event)) {
     if (field?.type === 'checkbox' || field?.type === 'radio') attempts.push(() => field.click());
     else if (field?.type === 'range') attempts.push(() => type(field, String(Number(field.value) + Number(field.step || 1))));
-    // a choice inside the component, a handle to move, a menu to open
+    // the component itself a choice (a toggle icon button), a choice inside it, a handle
+    // to move, a menu to open
+    if (element?.matches(choices) && visible(element)) attempts.push(() => element.click());
     if (element) attempts.push(() => pick(element, choices)?.click());
     if (element) attempts.push(() => { const handle = pick(element, '[role="slider"]'); if (handle) { handle.focus(); key(handle, 'ArrowRight'); } });
     if (element) attempts.push(() => pick(element, 'button[aria-expanded="false"]')?.click());
