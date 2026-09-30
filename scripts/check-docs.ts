@@ -411,12 +411,14 @@ async function trigger(record) {
     if (element) attempts.push(() => { const handle = pick(element, '[role="slider"]'); if (handle) { handle.focus(); key(handle, 'ArrowRight'); } });
     if (element) attempts.push(() => pick(element, 'button[aria-expanded="false"]')?.click());
     if (/remove/i.test(event) && element) attempts.push(() => pick(element, 'button[aria-label^="Remove" i], [aria-label^="Remove" i]')?.click());
-    // opened elsewhere: an item of a menu or list, a dialog's confirming button
-    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(document, choices)?.click(); });
-    const confirm = () => { const buttons = [...document.querySelectorAll('dialog[open] button, [role="dialog"] button')].filter(visible); (buttons.find(button => /^(ok|save|done|confirm)$/i.test(button.textContent.trim())) ?? buttons.at(-1))?.click(); };
+    // opened elsewhere: an item of a menu or list, a dialog's confirming button; in a
+    // web component, in its shadow root
+    const root = element?.getRootNode() instanceof ShadowRoot ? element.getRootNode() : document;
+    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(root, choices)?.click(); });
+    const confirm = () => { const buttons = [...root.querySelectorAll('dialog[open] button, [role="dialog"] button')].filter(visible); (buttons.find(button => /^(ok|save|done|confirm)$/i.test(button.textContent.trim())) ?? buttons.at(-1))?.click(); };
     attempts.push(async () => { if (has('open')) target.open(); await wait(150); confirm(); });
     // a range: two choices, then the confirming button
-    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(document, choices)?.click(); await wait(60); [...document.querySelectorAll(choices)].filter(visible).at(3)?.click(); await wait(60); confirm(); });
+    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(root, choices)?.click(); await wait(60); [...root.querySelectorAll(choices)].filter(visible).at(3)?.click(); await wait(60); confirm(); });
     // a field to type in
     if (field && field.type !== 'checkbox' && field.type !== 'radio' && field.type !== 'range' && !field.readOnly) attempts.push(() => type(field, 'x'));
   }
