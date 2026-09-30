@@ -15,9 +15,12 @@ const groups: Record<string, string[]> = {
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
   'Additional references': ['form', 'colorpicker', 'segmented-button'],
 };
-const names: Record<string, string> = { components: 'Architecture', fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar' };
-/** A document's URL: the architecture page has its own, the components are under /docs/components/. */
-export const docHref = (slug: string) => slug === 'components' ? '/docs/architecture/' : `/docs/components/${slug}/`;
+/** The guides, before the components: how to start, how mtrl is built, and one page per way of using it. */
+export const GUIDES = ['getting-started', 'architecture', 'vanilla', 'web-components', 'react', 'vue', 'svelte', 'solid', 'theming', 'server-rendering'];
+const names: Record<string, string> = { 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar' };
+export const isGuide = (slug: string) => GUIDES.includes(slug);
+/** A document's URL: a guide at /docs/<slug>/, a component under /docs/components/. */
+export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/components/${slug}/`;
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
 export const docSlugs = [...slugs];
@@ -38,7 +41,10 @@ function docSummary(slug: string): string {
   const text = paragraph.replace(/\s+/g, ' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '');
   return (/^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text).trim();
 }
-export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(slug => ({ slug, name: componentName(slug), href: docHref(slug), summary: docSummary(slug) })) }));
+const entry = (slug: string) => ({ slug, name: componentName(slug), href: docHref(slug), summary: docSummary(slug) });
+/** The guides that exist yet, in their order. */
+export const guideGroup = { label: 'Guides', items: GUIDES.filter(slug => slugs.has(slug)).map(entry) };
+export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) }));
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
@@ -94,7 +100,7 @@ export function renderDocument(slug: string) {
     },
   } });
   const html = parser.parse(source) as string;
-  return { html, toc, title: componentName(slug), frameworkSwitch: examples ? frameworkSwitch() : '' };
+  return { html, toc, title: componentName(slug), summary: docSummary(slug), frameworkSwitch: examples ? frameworkSwitch() : '' };
 }
 
 /**

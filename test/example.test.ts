@@ -51,7 +51,7 @@ describe('the example fence', () => {
     const document = renderDocument('slider')!;
     expect(document.html).not.toContain('framework-switch');
     expect(document.frameworkSwitch.match(/class="framework-tab framework-switch__option"/g)).toHaveLength(6);
-    expect(renderDocument('components')!.frameworkSwitch).toBe('');
+    expect(renderDocument('architecture')!.frameworkSwitch).toBe('');
     expect(document.html).not.toContain('doc-example__error');
   });
 });
