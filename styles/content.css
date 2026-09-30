@@ -459,3 +459,14 @@
         table-layout: fixed;
     }
 }
+
+/* The framework switch at the top of a documentation page: the tabs of the component
+   pages. The reader's framework is on :root[data-framework] before paint (base.eta);
+   Vanilla without it. */
+.framework-switch__option[data-framework="vanilla"],
+:root[data-framework="html"] .framework-switch__option[data-framework="html"],
+:root[data-framework="react"] .framework-switch__option[data-framework="react"],
+:root[data-framework="vue"] .framework-switch__option[data-framework="vue"],
+:root[data-framework="svelte"] .framework-switch__option[data-framework="svelte"],
+:root[data-framework="solid"] .framework-switch__option[data-framework="solid"] { background: var(--accent); color: var(--text); }
+:root[data-framework]:not([data-framework="vanilla"]) .framework-switch__option[data-framework="vanilla"] { background: transparent; color: var(--text-dim); }
