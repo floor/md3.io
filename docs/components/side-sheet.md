@@ -1,153 +1,127 @@
-# Side Sheet
+# Side sheet
 
-A side sheet is a surface docked to a vertical edge of the screen, holding content that supports the page rather than replacing it: filters beside a list of results, details beside a map, a form beside the record it edits. Reach for it when the reader needs the sheet and the page at once. If the content must be dealt with before anything else continues, a [dialog](dialog.md) is more direct; if it belongs at the bottom of the screen on a small window, a [bottom sheet](bottom-sheet.md) fits better.
+A side sheet holds content that supports the page, docked to its side: filters beside a list
+of results, the details of a selected item. A **modal** sheet covers the page with a scrim
+until it closes; a **standard** sheet has none, and the page stays usable beside it. See the
+[M3 side sheets guidelines](https://m3.material.io/components/side-sheets/overview).
 
-## Overview
+## Usage
 
-There are two variants, and the difference is what happens to the page behind them.
+`close` fires however it closed: its close button, the scrim, `Escape` or `close()`.
 
-- A **modal** sheet floats over the page behind a scrim, takes focus, and closes on Escape, on its close button, or on a click outside.
-- A **standard** sheet sits beside the page on a plain surface with no scrim, and leaves it usable.
-
-They differ in colour as well as behaviour: a standard sheet sits on `surface`, a modal one on `surface-container-low`.
-
-## Import
-
-```javascript
-import { createSideSheet } from 'mtrl';
-```
-
-## Basic Usage
-
-```javascript
-const filters = createSideSheet({
-  title: 'Filters',
-  content: '<p>Narrow the results.</p>'
-});
-
-filters.open();
-```
-
-## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `variant` | `'standard' \| 'modal'` | `'modal'` | Modal floats over the page and takes focus; standard docks beside it |
-| `position` | `'start' \| 'end'` | `'end'` | Which edge to dock to. Logical, so it follows the writing direction |
-| `title` | `string` | `undefined` | Headline, which also names the sheet through `aria-labelledby` |
-| `content` | `string \| HTMLElement` | `undefined` | Body of the sheet, as markup or an element |
-| `width` | `number` | `256` | Width in pixels, capped by `maxWidth` |
-| `maxWidth` | `number` | `400` | The sheet never grows past this |
-| `closeButton` | `boolean` | `true` | Whether the header carries a close button |
-| `closeOnScrimClick` | `boolean` | `true` | Whether a click on the scrim closes a modal sheet |
-| `closeOnEscape` | `boolean` | `true` | Whether Escape closes it |
-| `open` | `boolean` | `false` | Whether the sheet starts open |
-| `container` | `HTMLElement` | `document.body` | Where to mount the sheet |
-| `on` | `SideSheetEventHandlers` | `undefined` | Handlers registered at creation |
-| `class` | `string` | `undefined` | Extra classes for the root element |
-
-## Component API
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `open()` | none | `SideSheetComponent` | Opens the sheet |
-| `close()` | none | `SideSheetComponent` | Closes it |
-| `toggle()` | none | `SideSheetComponent` | Opens it if closed, closes it if open |
-| `isOpen()` | none | `boolean` | Whether the sheet is showing |
-| `setContent(content)` | `content: string \| HTMLElement` | `SideSheetComponent` | Replaces the body |
-| `setTitle(title)` | `title: string` | `SideSheetComponent` | Replaces the headline, adding one if absent |
-| `on(event, handler)` | `event: string, handler: Function` | `SideSheetComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `SideSheetComponent` | Removes one |
-| `destroy()` | none | `void` | Removes the sheet and releases its listeners |
-| `getClass(name)` | `name: string` | `string` | Prefixes a class name |
-
-## Events
-
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `open` | none | The sheet became visible |
-| `close` | none | The sheet was hidden, however it was dismissed |
-
-Handlers passed as `on` at creation are registered, so these two are equivalent:
-
-```javascript
-const sheet = createSideSheet({ on: { close: () => applyFilters() } });
-sheet.on('close', () => applyFilters());
+```example
+side-sheet:
+  variant: modal
+  title: Filters
+  content: Narrow the results by price and distance.
+  on close: refreshResults()
+  action showFilters:
+    open
 ```
 
 ## Examples
 
-A standard sheet toggled beside the page:
+### Standard, at the start
 
-```javascript
-const details = createSideSheet({
-  variant: 'standard',
-  title: 'Details',
-  content: '<p>The page behind this sheet still scrolls.</p>'
-});
+A standard sheet sits on `surface` without a scrim. `position` is logical: `start` is the left
+edge in a left-to-right page and the right edge in a right-to-left one.
 
-document.querySelector('.details-toggle').addEventListener('click', () => details.toggle());
+```example
+side-sheet:
+  variant: standard
+  position: start
+  title: Details
+  content: Created on 3 September by Ada.
 ```
 
-Applying work when the sheet closes, however it was dismissed:
+### Wider, without a close button
 
-```javascript
-const filters = createSideSheet({
-  title: 'Filters',
-  on: { close: () => refreshResults() }
-});
+`width` is in pixels, up to 400. Without its close button, a sheet needs another way to close:
+here the scrim and `Escape`.
+
+```example
+side-sheet:
+  variant: modal
+  width: 360
+  closeButton: false
+  title: Sections
+  content: Overview, specs, accessibility.
 ```
 
-A sheet docked to the leading edge, at a wider size:
+`toggle()` opens a closed sheet and closes an open one. Recipes such as filters applied on
+close are planned for [Examples](/examples/).
 
-```javascript
-const navigation = createSideSheet({
-  position: 'start',
-  width: 360,
-  title: 'Sections'
-});
-```
+## API
+
+<!-- API: generated from mtrl's types and <m-side-sheet>'s spec in a later step. Until then
+these tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `variant` | `'standard' \| 'modal'` | `'modal'` | Whether it covers the page; the web component is standard without `modal` |
+| `position` | `'start' \| 'end'` | `'end'` | The edge it docks to, in the reading direction |
+| `title` | `string` | `undefined` | The headline, which names the sheet |
+| `content` | `string \| HTMLElement` | `undefined` | The body, as HTML or an element |
+| `width` | `number` | `256` | Its width in pixels |
+| `maxWidth` | `number` | `400` | The widest it grows, in pixels |
+| `closeButton` | `boolean` | `true` | A close button in the header |
+| `closeOnScrimClick` | `boolean` | `true` | Whether a click on the scrim closes a modal sheet |
+| `closeOnEscape` | `boolean` | `true` | Whether `Escape` closes it |
+| `open` | `boolean` | `false` | Whether it starts open |
+| `layer` | `'top'` | `undefined` | Shows a modal sheet in the top layer, as a native `<dialog>` with `showModal()`; the web component's modal sheet always is |
+| `container` | `HTMLElement` | `document.body` | Where it is mounted |
+| `on` | `{ open?, close? }` | `undefined` | Event handlers registered at creation |
+| `class` | `string` | `undefined` | Additional CSS classes |
+
+### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `open()` / `close()` / `toggle()` | none | `SideSheetComponent` | Opens or closes it |
+| `isOpen()` | none | `boolean` | Whether it is open |
+| `setTitle(title)` / `setContent(content)` | `title: string`, `content: string \| HTMLElement` | `SideSheetComponent` | The headline, the body |
+| `on(event, handler)` / `off(event, handler)` | `event: 'open' \| 'close', handler: Function` | `SideSheetComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes it |
+
+### Events
+
+| Event | Description | Data |
+|-------|-------------|------|
+| `open` / `close` | It opened or closed | none |
+
+The web component dispatches them too, without a detail.
 
 ## Accessibility
 
-A modal sheet's container carries `role="dialog"` and `aria-modal="true"`. A standard sheet's carries `role="complementary"`, because it supports the page rather than interrupting it, and does not trap the reader.
-
-Giving a `title` sets `aria-labelledby` to it, which is how the sheet is announced. Without a title the sheet has no accessible name, so pass one or set `aria-label` on the container yourself.
-
-Opening a modal sheet moves focus to the container, and closing it returns focus to whatever had it before, so a keyboard user is not dropped at the top of the page.
-
-The close button is a real `<button type="button">` with `aria-label="Close"`, and its icon is `aria-hidden`, so the button is announced by its name rather than by its glyph. Its focus ring uses the secondary role.
-
-While the sheet is closed it is `aria-hidden` and takes no pointer events, so nothing inside it is reachable behind the page.
+- A modal sheet is a `dialog` with `aria-modal`, a standard one `complementary`; the title
+  names either. Without a title, give the web component an `aria-label`.
+- Opening a modal sheet focuses it, and closing it gives focus back. In the top layer, `Tab`
+  stays inside it and the page behind it is inert.
+- `Escape` closes it, and a click on the scrim closes a modal sheet, unless turned off. The
+  close button is named "Close".
 
 ## Styling
 
-| Class | Element |
-|-------|---------|
-| `.mtrl-side-sheet` | The fixed layer holding everything |
-| `.mtrl-side-sheet--modal`, `--standard` | The variant |
-| `.mtrl-side-sheet--start`, `--end` | Which edge it docks to |
-| `.mtrl-side-sheet--open` | Present while the sheet is showing |
-| `.mtrl-side-sheet-scrim` | The scrim, on modal sheets only |
-| `.mtrl-side-sheet-container` | The sheet surface |
-| `.mtrl-side-sheet-header`, `-title`, `-close` | The header |
-| `.mtrl-side-sheet-content` | The body |
-
-Positions are written with logical properties throughout, so a sheet docked to the end appears on the right in a left-to-right document and on the left in a right-to-left one, with its corners and its slide direction mirrored to match.
+```css
+.mtrl-side-sheet, .mtrl-side-sheet--open { }   /* the fixed layer, holding the scrim and the sheet */
+.mtrl-side-sheet--modal, .mtrl-side-sheet--standard { }
+.mtrl-side-sheet--start, .mtrl-side-sheet--end { }
+.mtrl-side-sheet__scrim { }                    /* a modal sheet's, outside the top layer */
+.mtrl-side-sheet__container { }                /* the sheet */
+.mtrl-side-sheet__header, .mtrl-side-sheet__title, .mtrl-side-sheet__close { }
+.mtrl-side-sheet__content { }
+```
 
 ## Measurements
 
-Compose has no side sheet tokens, so these come from the M3 side sheet specs and the Android implementation. Each row names its source rather than a token that does not exist.
-
-| Attribute | Value | Source |
-|-----------|-------|--------|
-| Container colour, standard | surface | Android `SideSheet` default `colorSurface` |
-| Container colour, modal | surface-container-low | Android `SideSheet` default `colorSurfaceContainerLow` |
-| Container shape | 16dp, on the two corners facing the page | Android `shapeAppearanceCornerLarge` |
-| Default width | 256dp | Android standard side sheet layout width |
-| Maximum width | 400dp | Side sheet specs, container maximum width |
-| Header padding | 24dp either side, 12dp between elements | Side sheet specs |
-| Header height | 72dp | Side sheet specs, bottom actions height |
-| Content padding | 24dp | Side sheet specs, start and end padding |
-
-The scrim is the scrim role at 32% opacity, matching the dialog and the bottom sheet. Modal sheets carry elevation level 1; standard sheets carry none, because they are docked rather than floating.
+| Attribute | Value |
+|-----------|-------|
+| Container | Standard `surface`, no elevation; modal `surface-container-low`, elevation 1 |
+| Corners | 16dp on the side facing the page |
+| Width | 256dp by default, 400dp at most |
+| Header | 72dp high, 16dp above and below, 24dp at the sides, 12dp gaps; Title Large, `on-surface` |
+| Close button | 40dp, `on-surface-variant` icon |
+| Content | Body Medium, `on-surface-variant`, 24dp at the sides |
+| Scrim | `scrim` at 32% |
