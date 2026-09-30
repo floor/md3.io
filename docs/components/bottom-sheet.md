@@ -72,12 +72,12 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `variant` | `'standard' \| 'modal'` | `'modal'` | Whether it covers the page; the web component is standard without `modal` |
 | `title` | `string` | `undefined` | The headline, which names the sheet |
 | `content` | `string \| HTMLElement` | `undefined` | The body, as HTML or an element |
-| `dragHandle` | `boolean` | `true` | The handle, and dragging with it |
+| `dragHandle` | `boolean` | `true` | The handle, a button, and dragging with it |
 | `peekHeight` | `number` | `undefined` | The partially expanded height in pixels; without it, the content up to half the screen |
 | `maxWidth` | `number` | `640` | The widest it grows, in pixels, past which it is centered |
 | `initialState` | `'hidden' \| 'partial' \| 'expanded'` | `'hidden'` | How far open it starts |
 | `closeOnScrimClick` | `boolean` | `true` | Whether a click on the scrim closes a modal sheet |
-| `closeOnEscape` | `boolean` | `true` | Whether `Escape` closes it |
+| `closeOnEscape` | `boolean` | `true` | Whether `Escape` closes it; a standard sheet only from inside it |
 | `layer` | `'top'` | `undefined` | Shows a modal sheet in the top layer, as a native `<dialog>` with `showModal()`; the web component's modal sheet always is |
 | `container` | `HTMLElement` | `document.body` | Where it is mounted |
 | `on` | `{ open?, close?, stateChange?, dragStart?, dragEnd? }` | `undefined` | Event handlers registered at creation |
@@ -110,11 +110,12 @@ The web component dispatches `open`, `close`, `expand` and `collapse`, without a
 
 - A modal sheet is a `dialog` with `aria-modal`, a standard one a `region`; the title names
   either. Without a title, give the web component an `aria-label`.
-- Opening a modal sheet focuses it, and closing it gives focus back. In the top layer, `Tab`
-  stays inside it and the page behind it is inert.
-- `Escape` closes it, and a click on the scrim closes a modal sheet, unless turned off.
-- The drag handle is decorative (`aria-hidden`): every height is reached by the methods too,
-  so give people a control for them.
+- Opening a modal sheet focuses it, and closing it gives focus back. `Tab` stays inside it and
+  the page behind it is inert, in the top layer or not.
+- `Escape` closes a modal sheet from anywhere, and a standard one from inside it; a click on
+  the scrim closes a modal sheet. Each can be turned off.
+- The drag handle is a button, as in Compose: it expands a partially open sheet and closes an
+  expanded one, and its name says which ("Expand sheet", "Close sheet").
 
 ## Styling
 
@@ -134,7 +135,7 @@ The web component dispatches `open`, `close`, `expand` and `collapse`, without a
 |-----------|-------|
 | Container | `surface-container-low`, 28dp top corners, elevation 1 |
 | Maximum width | 640dp |
-| Drag handle | 32×4dp, `on-surface-variant`, 16dp above and below |
+| Drag handle | A 48dp button drawing a 32×4dp bar in `on-surface-variant`; focus ring `secondary` |
 | Headline | Headline Small, `on-surface` |
 | Content | Body Medium, `on-surface-variant`, 24dp at the sides |
 | Scrim | `scrim` at 32% |

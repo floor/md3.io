@@ -68,7 +68,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `maxWidth` | `number` | `400` | The widest it grows, in pixels |
 | `closeButton` | `boolean` | `true` | A close button in the header |
 | `closeOnScrimClick` | `boolean` | `true` | Whether a click on the scrim closes a modal sheet |
-| `closeOnEscape` | `boolean` | `true` | Whether `Escape` closes it |
+| `closeOnEscape` | `boolean` | `true` | Whether `Escape` closes it; a standard sheet only from inside it |
 | `open` | `boolean` | `false` | Whether it starts open |
 | `layer` | `'top'` | `undefined` | Shows a modal sheet in the top layer, as a native `<dialog>` with `showModal()`; the web component's modal sheet always is |
 | `container` | `HTMLElement` | `document.body` | Where it is mounted |
@@ -97,10 +97,10 @@ The web component dispatches them too, without a detail.
 
 - A modal sheet is a `dialog` with `aria-modal`, a standard one `complementary`; the title
   names either. Without a title, give the web component an `aria-label`.
-- Opening a modal sheet focuses it, and closing it gives focus back. In the top layer, `Tab`
-  stays inside it and the page behind it is inert.
-- `Escape` closes it, and a click on the scrim closes a modal sheet, unless turned off. The
-  close button is named "Close".
+- Opening a modal sheet focuses it, and closing it gives focus back. `Tab` stays inside it and
+  the page behind it is inert, in the top layer or not.
+- `Escape` closes a modal sheet from anywhere, and a standard one from inside it; a click on
+  the scrim closes a modal sheet. Each can be turned off. The close button is named "Close".
 
 ## Styling
 
@@ -119,7 +119,7 @@ The web component dispatches them too, without a detail.
 | Attribute | Value |
 |-----------|-------|
 | Container | Standard `surface`, no elevation; modal `surface-container-low`, elevation 1 |
-| Corners | 16dp on the side facing the page |
+| Corners | Modal: 16dp on the side facing the page; standard: none |
 | Width | 256dp by default, 400dp at most |
 | Header | 72dp high, 16dp above and below, 24dp at the sides, 12dp gaps; Title Large, `on-surface` |
 | Close button | 40dp, `on-surface-variant` icon |

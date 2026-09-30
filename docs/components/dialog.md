@@ -119,7 +119,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `closeDialog` | `boolean` | `true` | Whether it closes the dialog |
 | `autofocus` | `boolean` | `false` | Focuses it when the dialog opens |
 | `attributes` | `Record<string, unknown>` | `undefined` | More of the [button's options](/docs/components/button/) |
-| `color` / `size` | `string` | `undefined` | Accepted, not applied |
+| `size` | `string` | `undefined` | The button's size |
+| `color` | `string` | `undefined` | Deprecated, never applied: the button has no colour option |
 
 ### Methods
 
@@ -135,7 +136,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `setSize(size)` / `setFooterAlignment(alignment)` | `size: DialogSize`, `alignment: DialogFooterAlignment` | `DialogComponent` | The width, where the actions sit |
 | `toggleDivider(show)` / `hasDivider()` | `show: boolean` | `DialogComponent` / `boolean` | The lines around the content |
 | `getHeaderElement()` / `getContentElement()` / `getFooterElement()` | none | `HTMLElement \| null` | Its regions |
-| `confirm(options)` | `{ message, title?, confirmText?, cancelText?, confirmVariant?, cancelVariant?, size? }` | `Promise<boolean>` | Replaces the content and actions with a question, opens it, and resolves when one of its two buttons is pressed; the confirming button comes first. Closed any other way, it stays pending |
+| `confirm(options)` | `{ message, title?, confirmText?, cancelText?, confirmVariant?, cancelVariant?, size? }` | `Promise<boolean>` | Replaces the content and actions with a question, opens it, and resolves to the button pressed: `true` for the confirming one, which comes last, `false` for the other. Closed any other way (`Escape`, the scrim, `close()`), it resolves `false`. The message is text |
 | `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `DialogComponent` | Adds or removes a listener |
 | `destroy()` | none | `void` | Removes it |
 
