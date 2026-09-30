@@ -1,0 +1,60 @@
+<%
+  const label = step => step.charAt(0).toUpperCase() + step.slice(1).replaceAll('-', ' ');
+  const usedBy = step => (it.shapeUsage[step] ?? []).map(slug => it.components[slug] ? `<a href="/components/${slug}/">${it.components[slug].name}</a>` : label(slug));
+  const scalable = radius => radius > 0 && radius < 100;
+%>
+<div class="styles-layout">
+<div class="page-wrap styles-page styles-shape" data-styles-page="shape">
+  <header class="page-heading"><span class="eyebrow">STYLES / SHAPE</span><h1>Shape</h1><p>How round your Material is: one corner scale, and every component picks a step from it.</p></header>
+  <p class="styles-source">Values read from mtrl's compiled CSS · mtrl <%= it.mtrlVersion %></p>
+
+  <section class="shape-roundness" aria-labelledby="shape-roundness-title">
+    <div class="shape-roundness__head">
+      <h2 id="shape-roundness-title" class="type-section__title">Roundness</h2>
+      <button type="button" class="ui-btn" data-theme-reset="shape">Reset shape</button>
+    </div>
+    <p class="type-section__lead">Scales the whole scale at once, from square to very round. None stays square and full stays fully round.</p>
+    <div class="control-range shape-roundness__control">
+      <label for="shape-roundness" class="sr-only">Roundness</label>
+      <span aria-hidden="true" class="shape-roundness__end">Square</span>
+      <input class="ui-slider" type="range" id="shape-roundness" min="<%= it.roundness.min %>" max="<%= it.roundness.max %>" step="<%= it.roundness.step %>" value="100" aria-describedby="shape-roundness-value" />
+      <span aria-hidden="true" class="shape-roundness__end">Round</span>
+      <output id="shape-roundness-value" for="shape-roundness">100%</output>
+    </div>
+  </section>
+
+  <section aria-labelledby="shape-scale-title" data-reset-scope tabindex="-1">
+    <h2 id="shape-scale-title" class="type-section__title">The corner scale</h2>
+    <p class="type-section__lead">Each step is a custom property. Fine-tune a step to set its radius on its own.</p>
+    <ul class="shape-scale">
+      <% Object.entries(it.shape).forEach(([step, radius]) => { const used = usedBy(step); %>
+      <li class="shape-step" data-step="<%= step %>">
+        <span class="shape-step__sample" style="border-radius:<%= radius %>px" aria-hidden="true"></span>
+        <div class="shape-step__meta">
+          <h3 class="shape-step__name"><%= label(step) %></h3>
+          <div class="swatch__var"><code>--mtrl-sys-shape-corner-<%= step %></code><button type="button" class="ui-btn swatch__copy" data-copy="var(--mtrl-sys-shape-corner-<%= step %>)" aria-label="Copy var(--mtrl-sys-shape-corner-<%= step %>)">Copy</button></div>
+          <p class="shape-step__spec">mtrl: <%= radius %>px<% if (!scalable(radius)) { %> · fixed<% } %></p>
+          <% if (used.length) { %><p class="type-card__used">Used by <%~ used.join(', ') %></p><% } %>
+        </div>
+        <div class="control-range shape-step__control">
+          <% if (scalable(radius)) { %><input class="ui-slider" type="range" id="shape-<%= step %>" data-step="<%= step %>" min="0" max="<%= it.cornerMax %>" step="1" value="<%= radius %>" aria-label="<%= label(step) %> corner radius" /><% } %>
+          <output <% if (scalable(radius)) { %>for="shape-<%= step %>"<% } %>><%= radius %>px</output>
+        </div>
+      </li>
+      <% }); %>
+    </ul>
+    <p class="styles-note">"Used by" lists the mtrl stylesheets that read each step. A round button is not among them: M3's round shape is half the button's height, so it stays a pill at any setting; square buttons follow the scale.</p>
+  </section>
+
+  <%/* M3's shape guidance, m3.material.io/styles/shape (overview and corner radius scale). */%>
+  <section aria-labelledby="shape-guidance-title">
+    <h2 id="shape-guidance-title" class="type-section__title">Using the scale</h2>
+    <ul class="shape-guidance">
+      <li><strong>Larger components, larger corners.</strong> Chips and text fields sit at the small end, cards in the middle, dialogs and sheets at extra large.</li>
+      <li><strong>Full for pills.</strong> Switches, sliders' handles, badges and round buttons use full, whatever the rest of the scale does.</li>
+      <li><strong>Few steps, used consistently.</strong> Shape reads as a system when a handful of steps repeat; tune the scale rather than single components.</li>
+    </ul>
+  </section>
+</div>
+<%~ include('styles-preview', it) %>
+</div>

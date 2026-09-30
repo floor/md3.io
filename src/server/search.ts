@@ -14,7 +14,7 @@ import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
 import { stylePages } from './styles';
-import { colorGroups, typescale } from './tokens';
+import { colorGroups, shapeScale, typescale } from './tokens';
 
 export const SECTIONS = ['Components', 'Styles', 'Docs', 'Examples'] as const;
 type Section = (typeof SECTIONS)[number];
@@ -143,7 +143,11 @@ function exampleDocuments(): IndexDocument[] {
 function styleDocuments(): IndexDocument[] {
   const roleWords = (role: string) => `${role} ${role.replaceAll('-', ' ')}`;
   const extra: Record<string, { api: string; body: string }> = {
-    '/styles/': { api: '', body: 'Design tokens: color, typography. Coming: elevation, shape, motion, states, icons.' },
+    '/styles/': { api: '', body: 'Shape your own Material: theme builder, live preview, export theme CSS, share link. Color, typography, shape. Coming: elevation, motion, states, icons.' },
+    '/styles/shape/': {
+      api: Object.keys(shapeScale).map(step => `--mtrl-sys-shape-corner-${step}`).join(' '),
+      body: `Shape, corner radius, border radius, rounded corners, roundness. ${Object.keys(shapeScale).map(roleWords).join(', ')}.`,
+    },
     '/styles/color/': {
       api: colorGroups.flatMap(group => group.roles.map(role => `--mtrl-sys-color-${role}`)).join(' '),
       body: `Color roles, themes, light and dark, WCAG contrast. ${colorGroups.map(group => `${group.label}: ${group.roles.map(roleWords).join(', ')}.`).join(' ')}`,
