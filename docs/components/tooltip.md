@@ -1,190 +1,120 @@
-# Tooltip Component
+# Tooltip
 
-A tooltip names a control that has no label of its own — an icon button, a compact toolbar item, a truncated cell — in a few words, on hover and on focus. It never holds anything the user has to act on, because it is not reachable by keyboard and it goes away as soon as the pointer leaves. Reach for it to identify; reach for something else to explain.
+A tooltip is a short label for another element, shown on hover and on focus: it names an icon
+button, or says what a control does, in a few words. It holds nothing to act on. See the
+[M3 tooltips guidelines](https://m3.material.io/components/tooltips/overview).
 
-## Overview
+## Usage
 
-A tooltip is created against a target element and attaches its own listeners to it. From then on it shows 300ms after `mouseenter` or `focus`, hides 100ms after `mouseleave` or `blur`, and repositions itself on scroll and resize while it is up. Those two delays are fixed in the implementation and the triggers cannot be turned off — see the configuration table.
+The tooltip describes its `target`: 300ms after the pointer enters it or it takes focus, the
+tooltip shows, below it by default. The web component's target is the element its `for`
+attribute names.
 
-The tooltip mounts itself: it appends its element to `document.body` at creation, which is what keeps an ancestor's `overflow` from clipping it. There is nothing to append, so the examples below do not. An extra `document.body.appendChild(tooltip.element)` is harmless — it moves the element to where it already is — but it is not needed and older code that does it can drop the line.
-
-Placement is computed against the target, then clamped horizontally to the window — never vertically, and the tooltip never flips to the opposite side. A tooltip near the top of the window can be placed off-screen above it.
-
-## Import
-
-```javascript
-import { createTooltip } from 'mtrl';
+```example
+tooltip:
+  text: Add to favorites
+  target: { icon: heartOutlineIcon, ariaLabel: Favorite }
 ```
-
-## Basic Usage
-
-```javascript
-const tooltip = createTooltip({
-  text: 'Delete item',
-  target: document.querySelector('#delete-button')
-});
-```
-
-That is the whole integration: the tooltip is already in `document.body`, the target is now described by it, and hover and focus do the rest.
-
-`bottom` is the placement you get. To put a tooltip anywhere else, call `setPosition()` after creation — passing `position` in the config sets the CSS class but not the geometry, so the tooltip would still be placed below its target:
-
-```javascript continued
-tooltip.setPosition('top');
-```
-
-## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `text` | `string` | `undefined` | The label to show |
-| `target` | `HTMLElement` | `undefined` | The element the tooltip describes |
-| `position` | `TooltipPosition` | `'bottom'` | **Applied to the CSS class only.** The placement maths ignores it and always computes `bottom`; call `setPosition()` after creation to move the tooltip |
-| `variant` | `'default' \| 'rich' \| 'plain'` | `'default'` | Visual style |
-| `visible` | `boolean` | `false` | Show immediately on creation |
-| `showDelay` | `number` | `300` | **Accepted but not applied.** The delay is hard-coded to 300ms |
-| `hideDelay` | `number` | `100` | **Accepted but not applied.** The delay is hard-coded to 100ms |
-| `showOnHover` | `boolean` | `true` | **Accepted but not applied.** `mouseenter` / `mouseleave` are always bound on the target |
-| `showOnFocus` | `boolean` | `true` | **Accepted but not applied.** `focus` / `blur` are always bound on the target |
-| `zIndex` | `number` | `undefined` | Stacking order, set inline on the element |
-| `class` | `string` | `undefined` | Extra CSS classes |
-| `prefix` | `string` | `'mtrl'` | Class-name prefix |
-| `componentName` | `string` | `'tooltip'` | Component name used in class generation |
-| `rich` | `boolean` | `false` | Declared for HTML content; see the note below |
-
-`position` is one of `top`, `right`, `bottom`, `left`, or any of those suffixed `-start` or `-end` for the twelve placements in `TOOLTIP_POSITIONS`.
-
-`rich` is declared and defaulted but nothing currently reads it: `setText()` inserts a text node, so markup passed to it is escaped. Use `variant: 'rich'`, which widens the padding and left-aligns the text, and treat rich HTML content as not yet supported.
-
-Four more options are in the same state, and they are marked in the table above. `showDelay`, `hideDelay`, `showOnHover` and `showOnFocus` are read from the config into the component's defaults and then ignored: the API layer keeps its own copies of all four as constants. `position` is half-read — the class is applied, the geometry is not. Everything else in the table works.
-
-## Component API
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `setText(text)` | `text: string` | `TooltipComponent` | Replaces the label; repositions if visible |
-| `getText()` | — | `string` | The current label, without the arrow |
-| `setPosition(position)` | `position: TooltipPosition` | `TooltipComponent` | Changes the preferred side |
-| `getPosition()` | — | `TooltipPosition` | The preferred side |
-| `setTarget(target)` | `target: HTMLElement` | `TooltipComponent` | Moves the tooltip to another element, rebinding its listeners |
-| `show(immediate)` | `immediate?: boolean` | `TooltipComponent` | Shows it, skipping `showDelay` when `true` |
-| `hide(immediate)` | `immediate?: boolean` | `TooltipComponent` | Hides it, skipping `hideDelay` when `true` |
-| `isVisible()` | — | `boolean` | Whether it is on screen |
-| `updatePosition()` | — | `TooltipComponent` | Recomputes placement against the target |
-| `getClass(name)` | `name: string` | `string` | A class name with the component prefix |
-| `destroy()` | — | `void` | Unbinds the target, removes the element, releases listeners |
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `element` | `HTMLElement` | The tooltip surface |
-| `target` | `HTMLElement \| null` | The element it describes |
-| `lifecycle` | `{ destroy() }` | Lifecycle handle |
-
-The tooltip does not emit events — it is composed without the event feature, so there is no `on()`. Drive it with `show()` and `hide()` if you need behaviour of your own.
 
 ## Examples
 
-### Labelling a row of icon buttons
+### Position
 
-```javascript
-const tooltips = [
-  ['#bold', 'Bold'],
-  ['#italic', 'Italic'],
-  ['#link', 'Insert link']
-].map(([selector, text]) => createTooltip({
-  text,
-  target: document.querySelector(selector)
-}));
+`position` is `top`, `right`, `bottom` or `left`, each also with `-start` or `-end` to align it
+with an edge of the target. It is kept inside the window's width.
 
-// Later
-tooltips.forEach((tooltip) => tooltip.destroy());
+```example
+tooltip:
+  text: Share
+  position: top
+  target: { icon: shareIcon, ariaLabel: Share }
 ```
 
-### Driving it yourself
+### Timing and triggers
 
-`show(true)` and `hide(true)` skip the delays, so a tooltip can be driven on your own terms — for a validation hint, say.
+`showDelay` and `hideDelay` are in milliseconds. `showOnHover: false` leaves it to focus, and
+`showOnFocus: false` to the pointer; `show()` and `hide()` drive it from script.
 
-What you cannot do is stop it responding to the target as well: `showOnHover: false` and `showOnFocus: false` are accepted and ignored, so hovering or focusing the input below will also show the hint. Drive a tooltip yourself only where that extra behaviour is harmless; where it is not, the hint belongs in the field's own supporting text.
-
-```javascript
-const input = document.querySelector('input'); // the email field
-
-const tooltip = createTooltip({
-  text: 'Enter a valid email address',
-  target: input
-});
-
-tooltip.setPosition('top');
-
-input.addEventListener('input', () => {
-  if (input.validity.valid) tooltip.hide(true);
-  else tooltip.show(true);
-});
+```example
+tooltip:
+  text: Settings
+  showDelay: 600
+  hideDelay: 0
+  showOnHover: false
+  target: { icon: settingsIcon, ariaLabel: Settings }
 ```
 
-### Reusing one tooltip across a list
+`setTarget()` moves a tooltip to another element, so one tooltip can serve a list. `layer:
+'top'` shows it in the browser's top layer, above any clipping or stacking; the web component
+always is.
 
-`setTarget()` rebinds the listeners, so a long list does not need a tooltip per row.
+## API
 
-```javascript
-const tooltip = createTooltip({});
-tooltip.setPosition('right');
+<!-- API: generated from mtrl's types and <m-tooltip>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
 
-const list = document.querySelector('.results');
-list.addEventListener('pointerover', (event) => {
-  const row = event.target instanceof Element ? event.target.closest('[data-title]') : null;
-  if (!(row instanceof HTMLElement)) return;
-  tooltip.setText(row.dataset.title).setTarget(row);
-});
-```
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `text` | `string` | `undefined` | The label |
+| `target` | `HTMLElement` | `undefined` | The element it describes |
+| `position` | `TooltipPosition` | `'bottom'` | Where it sits against the target |
+| `variant` | `'default' \| 'plain' \| 'rich'` | `'default'` | `default` on `inverse-surface`; `plain` on `surface-container-high` with an outline; `rich` with more padding, aligned to the start |
+| `visible` | `boolean` | `false` | Whether it shows at once |
+| `showDelay` / `hideDelay` | `number` | `300` / `100` | How long before it shows or hides, in ms |
+| `showOnHover` / `showOnFocus` | `boolean` | `true` | Whether the pointer, and focus, show it |
+| `layer` | `'top'` | `undefined` | Shows it in the top layer, after its target in the target's tree |
+| `zIndex` | `number` | `undefined` | Its z-index, outside the top layer |
+| `rich` | `boolean` | `false` | Accepted, not applied: the text is always text |
+| `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+
+The web component takes `for`, `text` (or its own text), `position`, `variant`, `show-delay`,
+`hide-delay`, `no-show-on-hover` and `no-show-on-focus`, and a `target` property that wins over
+`for`.
+
+### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `show(immediate?)` / `hide(immediate?)` | `immediate?: boolean` | `TooltipComponent` | Shows or hides it, at once when `immediate` |
+| `isVisible()` | none | `boolean` | Whether it is shown |
+| `getText()` / `setText(text)` | `text: string` | `string` / `TooltipComponent` | The label |
+| `getPosition()` / `setPosition(position)` | `position: TooltipPosition` | `string` / `TooltipComponent` | Where it sits |
+| `setTarget(target)` | `target: HTMLElement` | `TooltipComponent` | Describes another element |
+| `updatePosition()` | none | `TooltipComponent` | Places it again against its target |
+| `destroy()` | none | `void` | Releases its target and removes it |
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `element` | `HTMLElement` | The tooltip |
+| `target` | `HTMLElement \| null` | The element it describes |
+
+A tooltip has no events.
 
 ## Accessibility
 
-- The element is `role="tooltip"` with a generated `id`, and `setTarget()` puts that id in the target's `aria-describedby`. Assistive technology reads the tooltip as a description of the control, not as a separate thing to visit.
-- `aria-hidden` flips between `"true"` and `"false"` as it shows and hides, so a hidden tooltip is not announced.
-- Focus triggers it as well as hover, which is what makes it usable from a keyboard. This cannot be turned off, so the keyboard path is always there.
-- A tooltip is a description, not a name. A control identified only by a tooltip still needs its own `aria-label`; `aria-describedby` supplements a name, it does not supply one.
-- The tooltip is not focusable and has `pointer-events: none`, so it cannot be hovered, selected or dismissed — which is why it must not contain links, buttons or text worth copying. Anything of that kind belongs in a popover or a dialog.
-- There is no Escape handling, because there is nothing focusable to escape from.
+- A `tooltip`, and its target's `aria-describedby` names it: the label is read as the target's
+  description. It does not name the target; an icon button still needs its own `ariaLabel`.
+- Focus shows it as the pointer does, and `Escape` hides it without moving focus.
+- The pointer can move from the target onto the tooltip without it hiding.
+- Hidden, it is `aria-hidden`.
 
 ## Styling
 
 ```css
-.mtrl-tooltip { /* the surface */ }
-.mtrl-tooltip--visible { /* while shown */ }
-.mtrl-tooltip--default,
-.mtrl-tooltip--rich,
-.mtrl-tooltip--plain { /* variants */ }
-.mtrl-tooltip--top,
-.mtrl-tooltip--bottom,
-.mtrl-tooltip--left,
-.mtrl-tooltip--right { /* placement, including the -start and -end forms */ }
-.mtrl-tooltip__arrow { /* the pointer, with its own --top, --bottom, … modifiers */ }
+.mtrl-tooltip, .mtrl-tooltip--visible { }
+.mtrl-tooltip--default, .mtrl-tooltip--plain, .mtrl-tooltip--rich { }
+.mtrl-tooltip--top, .mtrl-tooltip--right, .mtrl-tooltip--bottom, .mtrl-tooltip--left { }
+.mtrl-tooltip__arrow { }
 ```
 
-The default and rich variants use the inverse surface roles; the plain variant sits on `surface-container-high` with an `outline` border and no shadow.
+## Measurements
 
-## Best Practices
-
-- Two or three words. If it needs a sentence, the control needs a label or the page needs help text.
-- Never put an action, a link, or anything the user must read to proceed in a tooltip — it cannot be reached.
-- Do not repeat a visible label. A tooltip that says what the button already says is noise for a screen reader, which will hear both.
-- The delays are fixed at 300ms in and 100ms out, which is what stops tooltips flashing as the pointer crosses a toolbar. Nothing to tune, and nothing to get wrong.
-- Leave it in `document.body`, where it puts itself. Moving a tooltip inside a scroll container or an `overflow: hidden` ancestor gets it clipped.
-- Call `destroy()` when the target goes away; the tooltip holds listeners on it.
-
-## TypeScript Support
-
-```typescript
-import { createTooltip, TooltipConfig, TooltipComponent } from 'mtrl';
-
-const config: TooltipConfig = {
-  text: 'Delete item',
-  target: document.querySelector<HTMLElement>('#delete-button')!
-};
-
-const tooltip: TooltipComponent = createTooltip(config);
-tooltip.setPosition('top-start');
-
-if (!tooltip.isVisible()) tooltip.show(true);
-```
+| Attribute | Value |
+|-----------|-------|
+| Container | `inverse-surface`, 4dp corners, 200dp wide at most |
+| Text | Body Small, `inverse-on-surface` |
+| Padding | 4dp above and below, 8dp at the sides; `rich` 8dp and 12dp |
+| Distance from the target | 8dp |
