@@ -228,3 +228,11 @@ describe('a trigger', () => {
     expect(errors).toEqual([]);
   });
 });
+
+describe('payload fields the factory names differently', () => {
+  test('a date picker handler reads the element\'s names, mapped in Vanilla', () => {
+    const source = 'datepicker:\n  label: Check-in\n  on change: showRange(value)\n';
+    expect(code(source, 'vanilla')).toContain("datePicker.on('change', ({ iso: value }) => showRange(value));");
+    expect(code(source, 'html')).toContain('showRange(event.detail.value)');
+  });
+});

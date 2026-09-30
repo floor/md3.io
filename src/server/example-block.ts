@@ -110,6 +110,13 @@ const setters: Record<string, (value: unknown) => string> = {
   disabled: value => (value ? 'disable()' : 'enable()'),
 };
 
+// Payload fields the factory names differently from the web component, which examples
+// use: the date picker's element sends the ISO string as `value` and the Date as `date`,
+// its factory the Date as `value` and the string as `iso` (FLO-320).
+const factoryFields: Record<string, Record<string, string>> = {
+  datepicker: { value: 'iso', date: 'value' },
+};
+
 // Factories that open and close with methods not named open() and close().
 const openers: Record<string, [open: string, close: string]> = {
   snackbar: ['show', 'hide'],
@@ -173,8 +180,10 @@ export function vanillaCode(block: ExampleBlock): string {
   const config = Object.keys(slotted.config).length ? vanillaValue(slotted.config) : '';
   const imports = addon(block.slug) ? `import { ${factory} } from 'mtrl-addons';`
     : `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';`;
+  const renamed = factoryFields[block.slug] ?? {};
   const handlers = block.handlers.map(h => {
-    const fields = [...new Set(h.args.filter(isField))];
+    // An example names the web component's payload fields; the factory's may differ
+    const fields = [...new Set(h.args.filter(isField))].map(field => renamed[field] ? `${renamed[field]}: ${field}` : field);
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
   }).join('');
   const [open, close] = openers[block.slug] ?? ['open', 'close'];
