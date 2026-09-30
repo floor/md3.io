@@ -124,10 +124,18 @@ export function DeleteDraft() {
   return (
     <>
       <Button onClick={() => setOpen(true)}>Delete</Button>
-      <Dialog open={open()} headline="Delete draft?" onClose={() => setOpen(false)}>
+      <Dialog
+        open={open()}
+        headline="Delete draft?"
+        actions={
+          <>
+            <Button variant="text" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="text" onClick={() => setOpen(false)}>Delete</Button>
+          </>
+        }
+        onClose={() => setOpen(false)}
+      >
         <p>The draft will be deleted for good.</p>
-        <Button slot="actions" variant="text" onClick={() => setOpen(false)}>Cancel</Button>
-        <Button slot="actions" variant="text" onClick={() => setOpen(false)}>Delete</Button>
       </Dialog>
     </>
   );
@@ -159,8 +167,9 @@ export function Name() {
 
 A component's children become the element's content: a button's label, a dialog's or a card's
 text. A component's named regions, such as a dialog's `headline` and `actions` or a top app
-bar's `leading` and `trailing`, are the element's named slots: give the child a `slot`
-attribute, as the dialog above does.
+bar's `leading` and `trailing`, are the element's named slots: pass them as props of those names
+taking JSX, as the dialog above does (a dashed slot is camelCased: `headerAction`). `headline`
+takes text for the attribute or JSX for the slot.
 
 Lists of items are declared with child components: `Tab`, `Radio`, `Chip`, `ListItem`,
 `MenuItem`, `SelectOption`, `SearchSuggestion`, `NavigationRailItem`, `DrawerItem`,
@@ -187,6 +196,19 @@ export function Size() {
 Solid sets a child's props as properties, often before mtrl has defined the elements. mtrl
 keeps them from 0.10.0-next.2 on; with an earlier version, a `<Tab>` rendered in the browser
 lost its `value`.
+
+## Bare tags in JSX
+
+To write the elements themselves (`<m-switch checked>`), with Solid's `prop:` and `on:` forms,
+import the tag types once, in any file TypeScript sees:
+
+```tsx
+import type {} from 'mtrl/solid/jsx';
+
+export const Wifi = () => <m-switch checked supporting-text="Saves battery">Wi-Fi</m-switch>;
+```
+
+It is types only; the element still needs `defineAll()` or its `define` function.
 
 ## SolidStart and server rendering
 

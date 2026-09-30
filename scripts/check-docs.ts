@@ -217,7 +217,14 @@ function checkTypes() {
   // JavaScript blocks are read as JavaScript is written: parameters without types, and
   // DOM lookups that may be null. TypeScript blocks are held to strict TypeScript.
   const loose: ts.CompilerOptions = { noImplicitAny: false, strictNullChecks: false };
-  const jsx: Record<string, ts.CompilerOptions> = { react: { jsx: ts.JsxEmit.ReactJSX, jsxImportSource: 'react' }, solid: { jsx: ts.JsxEmit.Preserve, jsxImportSource: 'solid-js' } };
+  // One copy of each framework's types: md3.io's local mtrl brings its own node_modules, and a
+  // `declare module "react"` in mtrl/react/jsx would otherwise augment that copy, not the app's
+  // (an npm install has one copy, as mtrl's consumer check proves).
+  const own = (name: string, dir = name) => ({ [name]: [resolve(root, 'node_modules', dir)], [`${name}/*`]: [resolve(root, 'node_modules', dir, '*')] });
+  const jsx: Record<string, ts.CompilerOptions> = {
+    react: { jsx: ts.JsxEmit.ReactJSX, jsxImportSource: 'react', paths: own('react', '@types/react') },
+    solid: { jsx: ts.JsxEmit.Preserve, jsxImportSource: 'solid-js', paths: own('solid-js') },
+  };
   const programs = new Map<string, { options: ts.CompilerOptions; roots: string[]; files: Map<string, Virtual> }>();
   const add = (kind: string, options: ts.CompilerOptions, roots: string[], file: string, virtual: Virtual) => {
     const program = programs.get(kind) ?? { options, roots, files: new Map() };

@@ -133,7 +133,9 @@ component pages list them. `focus()` is the host's, and moves focus to the contr
 
 Children go into the element, as in HTML. Text is the label of a button, switch or checkbox.
 A composite's items are declaration components, named as their tags: `Tab` for `<m-tab>`,
-`MenuItem`, `SelectOption`, `Radio`. A named slot is any child with a `slot` attribute.
+`MenuItem`, `SelectOption`, `Radio`. A named slot is a prop of its name that takes JSX, such as
+a dialog's `actions` or a card's `headerAction`; `headline` takes text for the attribute or JSX
+for the slot. Each component's page lists its slots.
 
 ```tsx
 import { useState } from 'react';
@@ -148,16 +150,32 @@ export function Library() {
         <Tab value="songs">Songs</Tab>
         <Tab value="albums">Albums</Tab>
       </Tabs>
-      <Dialog headline="Discard draft?" open={confirming} onClose={() => setConfirming(false)}>
+      <Dialog
+        headline={<strong>Discard draft?</strong>}
+        actions={<Button variant="text" onClick={() => setConfirming(false)}>Cancel</Button>}
+        open={confirming}
+        onClose={() => setConfirming(false)}
+      >
         Your changes will be lost.
-        <div slot="actions">
-          <Button variant="text" onClick={() => setConfirming(false)}>Cancel</Button>
-        </div>
       </Dialog>
     </>
   );
 }
 ```
+
+## Bare tags in JSX
+
+The components are the usual way. To write the elements themselves (`<m-switch checked>`),
+import the tag types once, in any file TypeScript sees:
+
+```tsx
+import type {} from 'mtrl/react/jsx';
+
+export const Wifi = () => <m-switch checked supporting-text="Saves battery">Wi-Fi</m-switch>;
+```
+
+It is types only, so nothing reaches the bundle; the element still needs `defineAll()` or its
+`define` function, as in [Web Components](../web-components/).
 
 ## React 18 and 19
 
