@@ -6,6 +6,7 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { searchSite } from './src/server/search';
+import { componentSize } from './src/server/sizes';
 import { readFileSync, existsSync } from 'node:fs';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
@@ -84,7 +85,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? html(eta.render('preview', { themes, slug, component }))
-      : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug) });
+      : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug) });
   }
   else if (path === '/examples/') response = page(path, 'Examples — mtrl', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
   else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {

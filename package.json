@@ -8,6 +8,7 @@
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",
     "icons": "bun scripts/icons.ts",
+    "sizes": "bun scripts/sizes.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
     "docs:check": "bun scripts/check-docs.ts",
