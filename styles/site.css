@@ -8,6 +8,12 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .header__logo { font-size: 23px; letter-spacing: -1px; white-space: nowrap; }
 /* The mark at the wordmark's cap height, its foot on the baseline. */
 .header__mark { display: inline-block; width: 20px; height: 20px; margin-right: 7px; vertical-align: -1px; }
+/* On a phone the mark costs the header its width: the logo gives up side padding, and the
+   section's name gives way (an ellipsis) before the buttons are pushed off the screen. */
+@media (max-width: 720px) {
+  .header__logo { padding: 3px 4px; }
+  .header__section { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 .brand-dot { color: var(--accent-text); }
 .header__section { font-size: var(--fs-base); }
 .sidebar__label { font-size: var(--fs-xs); color: var(--text); }
