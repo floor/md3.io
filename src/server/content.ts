@@ -14,7 +14,9 @@ const groups: Record<string, string[]> = {
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
   'Additional references': ['form', 'colorpicker', 'segmented-button'],
 };
-const names: Record<string, string> = { fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar' };
+const names: Record<string, string> = { components: 'Architecture', fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar' };
+/** A document's URL: the architecture page has its own, the components are under /docs/components/. */
+export const docHref = (slug: string) => slug === 'components' ? '/docs/architecture/' : `/docs/components/${slug}/`;
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
 export const docSlugs = [...slugs];
@@ -28,7 +30,7 @@ function docSummary(slug: string): string {
   const text = paragraph.replace(/\s+/g, ' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '');
   return (/^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text).trim();
 }
-export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(slug => ({ slug, name: componentName(slug), href: `/docs/components/${slug}/`, summary: docSummary(slug) })) }));
+export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(slug => ({ slug, name: componentName(slug), href: docHref(slug), summary: docSummary(slug) })) }));
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
@@ -71,7 +73,7 @@ export function renderDocument(slug: string) {
       if (local) {
         // The old sheet API was replaced by bottom-sheet and side-sheet.
         const target = local[1] === 'sheet' ? 'bottom-sheet' : local[1]!;
-        href = `/docs/components/${target}/${local[2] ?? ''}`;
+        href = `${docHref(target)}${local[2] ?? ''}`;
       }
       if (/^\s*(javascript|data|vbscript):/i.test(href)) return this.parser.parseInline(token.tokens);
       return `<a href="${escapeHTML(href)}"${token.title ? ` title="${escapeHTML(token.title)}"` : ''}>${this.parser.parseInline(token.tokens)}</a>`;

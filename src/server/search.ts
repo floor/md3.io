@@ -9,7 +9,7 @@
 //   - Styles:     the Styles pages, with the colour roles and type scale roles they list.
 import MiniSearch, { type SearchResult as Hit } from 'minisearch';
 import { Marked, type Token } from 'marked';
-import { componentName, docGroups, docSlugs, documentSource, headingIds } from './content';
+import { componentName, docGroups, docSlugs, documentSource, headingIds, docHref } from './content';
 import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
@@ -106,9 +106,8 @@ function docDocuments(): IndexDocument[] {
   const groupOf = new Map(docGroups.flatMap(group => group.items.map(item => [item.slug, group.label] as const)));
   const lexer = new Marked();
   return docSlugs.flatMap(slug => {
-    // The architecture page's sidebar name, not its slug's.
-    const title = slug === 'components' ? 'Component architecture' : componentName(slug);
-    const page = `/docs/components/${slug}/`;
+    const title = componentName(slug);
+    const page = docHref(slug);
     const group = groupOf.get(slug) ?? 'Documentation';
     const headingId = headingIds();
     const sections: { heading: string; id: string; text: string[] }[] = [{ heading: '', id: '', text: [] }];

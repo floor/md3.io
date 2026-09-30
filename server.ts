@@ -34,7 +34,7 @@ function page(path: string, title: string, description: string, template: string
   }), status);
 }
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
-const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Component architecture', href: '/docs/components/components/' }] }, ...docGroups];
+const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Architecture', href: '/docs/architecture/' }] }, ...docGroups];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** The previous and next links for a page, from the sidebar's items in order. */
 type PagerItem = { name: string; href: string; section?: string };
@@ -133,6 +133,11 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT });
   else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
+  else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
+  else if (path === '/docs/architecture/') {
+    const document = renderDocument('components')!;
+    response = page(path, 'Architecture — mtrl', 'How mtrl is built: components composed from features, the core API, and the web components and framework adapters on top.', 'document', { ...document, playground: null });
+  }
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
     const document = match ? renderDocument(match[1]!) : null;

@@ -1,4 +1,4 @@
-# Components Module Documentation
+# Architecture
 
 The Components module provides a collection of highly optimized, fully accessible UI components built using the functional composition pattern. Each component is crafted with a focus on performance, memory efficiency, and code reusability while adhering to Material Design 3 specifications.
 
