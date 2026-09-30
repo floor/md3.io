@@ -83,7 +83,7 @@ export function headingIds(): (text: string) => { title: string; id: string } {
     return { title, id: count ? `${base}-${count}` : base };
   };
 }
-/** A page's front matter (created, updated, status), as vlist.io's docs carry it. */
+/** A page's front matter (created, updated, status, and an optional description), as vlist.io's docs carry it. */
 export function documentMeta(slug: string): Record<string, string> {
   const head = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(readFileSync(resolve(docsDir, `${slug}.md`), 'utf8'))?.[1] ?? '';
   return Object.fromEntries(head.split(/\r?\n/).map(line => /^([a-z]+):\s*(.*)$/.exec(line.trim())).filter(Boolean).map(match => [match![1]!, match![2]!.trim()]));
@@ -139,8 +139,12 @@ export function renderDocument(slug: string) {
   } });
   const html = parser.parse(source) as string;
   // The metadata sits under the title
-  const withMeta = html.replace(/(<\/h1>\n?)/, `$1${metaHtml(documentMeta(slug))}`);
-  return { html: withMeta, toc, title: componentName(slug), summary: docSummary(slug), frameworkSwitch: examples ? frameworkSwitch() : '' };
+  const meta = documentMeta(slug);
+  const withMeta = html.replace(/(<\/h1>\n?)/, `$1${metaHtml(meta)}`);
+  const summary = docSummary(slug);
+  // The meta description: the summary, unless the front matter gives a shorter one for
+  // search results, which show about 160 characters.
+  return { html: withMeta, toc, title: componentName(slug), summary, description: meta.description ?? summary, frameworkSwitch: examples ? frameworkSwitch() : '' };
 }
 
 /**
