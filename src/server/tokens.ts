@@ -136,12 +136,14 @@ const M3_GROUPS: { label: string; roles: string[] }[] = [
   { label: 'Secondary', roles: ['secondary', 'on-secondary', 'secondary-container', 'on-secondary-container'] },
   { label: 'Tertiary', roles: ['tertiary', 'on-tertiary', 'tertiary-container', 'on-tertiary-container'] },
   { label: 'Error', roles: ['error', 'on-error', 'error-container', 'on-error-container'] },
-  { label: 'Surface', roles: ['surface', 'surface-dim', 'surface-bright', 'surface-container-lowest', 'surface-container-low', 'surface-container', 'surface-container-high', 'surface-container-highest', 'on-surface', 'on-surface-variant'] },
+  { label: 'Surface', roles: ['surface', 'surface-dim', 'surface-bright', 'surface-container-lowest', 'surface-container-low', 'surface-container', 'surface-container-high', 'surface-container-highest', 'on-surface', 'surface-variant', 'on-surface-variant'] },
   { label: 'Outline', roles: ['outline', 'outline-variant'] },
   { label: 'Inverse', roles: ['inverse-surface', 'inverse-on-surface', 'inverse-primary'] },
   { label: 'Fixed', roles: ['primary', 'secondary', 'tertiary'].flatMap(c => [`${c}-fixed`, `${c}-fixed-dim`, `on-${c}-fixed`, `on-${c}-fixed-variant`]) },
   { label: 'Other', roles: ['shadow', 'scrim'] },
 ];
+/** mtrl's status roles, beyond M3's scheme, in every theme since mtrl#291 (badges read them). */
+const STATUS_GROUP = { label: 'Status', note: 'mtrl adds these to every theme, beyond the M3 scheme.', roles: ['success', 'on-success', 'warning', 'on-warning', 'info', 'on-info'] };
 
 /** Every role any theme declares, in either mode. */
 export const allRoles: Set<string> = new Set([
@@ -150,12 +152,12 @@ export const allRoles: Set<string> = new Set([
 ]);
 
 export interface ColorGroup { label: string; note?: string; roles: string[] }
-const known = new Set(M3_GROUPS.flatMap(group => group.roles));
+const known = new Set([...M3_GROUPS, STATUS_GROUP].flatMap(group => group.roles));
 /** Roles outside M3's scheme (success, warning, info, accent…), X next to on-X. */
 const extraRoles = [...allRoles].filter(role => !known.has(role))
   .sort((a, b) => a.replace(/^on-/, '').localeCompare(b.replace(/^on-/, '')) || (a.startsWith('on-') ? 1 : -1));
 export const colorGroups: ColorGroup[] = [
-  ...M3_GROUPS.map(group => ({ ...group, roles: group.roles.filter(role => allRoles.has(role)) })),
+  ...[...M3_GROUPS, STATUS_GROUP].map(group => ({ ...group, roles: group.roles.filter(role => allRoles.has(role)) })),
   { label: 'Theme extras', note: 'Roles outside the M3 scheme that some themes add.', roles: extraRoles },
 ].filter(group => group.roles.length);
 /** M3 groups whose roles mtrl does not ship at all. */

@@ -47,7 +47,7 @@ try {
   assert(await page.locator('#preview-theme').inputValue() === 'ocean', 'The playground opens with the theme chosen on the Color page');
   await page.goto(`${base}/styles/color/`);
   await page.getByLabel('Theme', { exact: true }).selectOption('baseline');
-  assert(await page.locator('.color-group:has(.swatch[data-role="success"])').isHidden(), 'Baseline hides the extras group');
+  assert(await page.locator('.color-group:has(.swatch[data-role="success"])').isVisible(), 'Baseline shows the status roles (mtrl#291)');
   await page.locator('label.choice:has(input[value="light"])').click();
   // Keyboard: the theme select, then the mode radios, are reachable by Tab.
   await page.getByLabel('Theme', { exact: true }).focus();
