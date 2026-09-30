@@ -81,7 +81,8 @@ const visuals: Record<ComponentSlug, string> = {
   // Communication
   badge: ['inbox', 'heart'].map((icon, index) => div('catalog-badge',
     m('icon-button', { variant: 'tonal', icon: symbols[icon as 'inbox' | 'heart'], 'aria-label': index ? 'Favorites' : 'Inbox' }) + m('badge', index ? { variant: 'small' } : { label: 8 }))).join(''),
-  progress: div('catalog-stack catalog-stack--progress', m('progress', { value: 60, 'aria-label': 'Uploading files' }) + m('progress', { variant: 'circular', value: 60, 'aria-label': 'Uploading files' })),
+  // Wavy and indeterminate: the M3 Expressive form, and it shows the motion.
+  progress: div('catalog-stack catalog-stack--progress', m('progress', { shape: 'wavy', indeterminate: true, 'aria-label': 'Uploading files' }) + m('progress', { variant: 'circular', shape: 'wavy', indeterminate: true, 'aria-label': 'Uploading files' })),
   'loading-indicator': m('loading-indicator', { size: 48, 'aria-label': 'Loading your content' }) + m('loading-indicator', { size: 48, contained: true, 'aria-label': 'Loading your content' }),
   snackbar: `<${SURFACES.snackbar}></${SURFACES.snackbar}>`,
   tooltip: `<${SURFACES.tooltip}></${SURFACES.tooltip}>`,
