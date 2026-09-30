@@ -471,6 +471,21 @@
 :root[data-framework="solid"] .framework-switch__option[data-framework="solid"] { background: var(--accent); color: var(--text); }
 :root[data-framework]:not([data-framework="vanilla"]) .framework-switch__option[data-framework="vanilla"] { background: transparent; color: var(--text-dim); }
 
+/* An `install` block: one command per package manager, the reader's on :root[data-package-manager]
+   before paint (base.eta); npm without it. */
+.md .install__switch { margin-bottom: 8px; }
+.md .install__command { display: none; }
+.install__option[data-package-manager="npm"],
+:root[data-package-manager="pnpm"] .install__option[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .install__option[data-package-manager="yarn"],
+:root[data-package-manager="bun"] .install__option[data-package-manager="bun"] { background: var(--accent); color: var(--text); }
+:root[data-package-manager]:not([data-package-manager="npm"]) .install__option[data-package-manager="npm"] { background: transparent; color: var(--text-dim); }
+.md .install__command[data-package-manager="npm"],
+:root[data-package-manager="pnpm"] .md .install__command[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .md .install__command[data-package-manager="yarn"],
+:root[data-package-manager="bun"] .md .install__command[data-package-manager="bun"] { display: block; }
+:root[data-package-manager]:not([data-package-manager="npm"]) .md .install__command[data-package-manager="npm"] { display: none; }
+
 /* Previous and next at the end of a page, in sidebar order (as on vlist.io). */
 .page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); }
 .pager-wrap { padding-top: 0; }
