@@ -166,6 +166,14 @@ describe('slotted children a factory takes through a method', () => {
   });
 });
 
+describe('inline styles the element needs', () => {
+  test('Vanilla gives the factory element the same, as the web component has them', () => {
+    const carousel = 'carousel:\n  slides:\n    - { image: /a.svg, alt: A }\n';
+    expect(code(carousel, 'vanilla')).toContain("carousel.element.style.height = '320px';\n");
+    expect(code(carousel, 'html')).toContain('style="height: 320px"');
+  });
+});
+
 describe('a trigger', () => {
   const menu = "menu:\n  trigger: { text: Edit }\n  items:\n    - { id: cut, text: Cut }\n  on open: track('menu')\n";
   test('renders in all six frameworks: the button, then the menu it opens', () => {

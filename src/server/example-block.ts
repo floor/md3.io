@@ -163,7 +163,9 @@ export function vanillaCode(block: ExampleBlock): string {
   const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? 'open' : 'close'}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
-  return `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';\n\n${trigger.code}const ${variable} = ${factory}(${config});\n${slotted.code}${handlers}document.body.append(${variable}.element);\n${actions}`;
+  // Inline styles the element needs, as the playground's Vanilla code gives it: the carousel's height
+  const styles = Object.entries(elementMeta(block.slug)?.style ?? {}).map(([name, value]) => `${variable}.element.style.${camel(name)} = '${value}';\n`).join('');
+  return `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';\n\n${trigger.code}const ${variable} = ${factory}(${config});\n${slotted.code}${styles}${handlers}document.body.append(${variable}.element);\n${actions}`;
 }
 
 export interface ExampleCode {
