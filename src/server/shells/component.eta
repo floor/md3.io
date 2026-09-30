@@ -15,7 +15,7 @@
         <span class="preview-dot" aria-hidden="true"></span>
         <div class="preview-appearance" role="group" aria-label="Preview appearance">
           <label for="preview-theme">Theme</label>
-          <select id="preview-theme" class="ui-select" name="theme" form="configuration"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= theme.charAt(0).toUpperCase() + theme.slice(1) %></option><% }); %></select>
+          <select id="preview-theme" class="ui-select" name="theme" form="configuration"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' ') %></option><% }); %></select>
           <div class="ui-segmented choice-group choice-group--mode" role="group" aria-label="Preview mode">
             <label class="choice"><input name="mode" type="radio" value="light" form="configuration" checked /><span class="ui-segmented__btn">Light</span></label>
             <label class="choice"><input name="mode" type="radio" value="dark" form="configuration" /><span class="ui-segmented__btn">Dark</span></label>

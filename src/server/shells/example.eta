@@ -14,7 +14,7 @@
           <span id="example-status" role="status" aria-live="polite"></span>
           <div class="preview-appearance" role="group" aria-label="Example appearance">
             <label for="example-theme">Theme</label>
-            <select id="example-theme" class="ui-select"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= theme.charAt(0).toUpperCase() + theme.slice(1) %></option><% }); %></select>
+            <select id="example-theme" class="ui-select"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' ') %></option><% }); %></select>
             <div class="ui-segmented choice-group choice-group--mode" role="group" aria-label="Example mode">
               <label class="choice"><input name="example-mode" type="radio" value="light" checked /><span class="ui-segmented__btn">Light</span></label>
               <label class="choice"><input name="example-mode" type="radio" value="dark" /><span class="ui-segmented__btn">Dark</span></label>

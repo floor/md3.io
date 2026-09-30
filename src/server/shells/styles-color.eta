@@ -2,7 +2,7 @@
   const theme = 'baseline', mode = 'light';
   const scheme = it.themeTokens[theme][mode];
   const label = role => role.charAt(0).toUpperCase() + role.slice(1).replaceAll('-', ' ');
-  const title = name => name.charAt(0).toUpperCase() + name.slice(1);
+  const title = name => (name.charAt(0).toUpperCase() + name.slice(1)).replaceAll('-', ' ');
   // Compact JSON for the client: role → value, or [value, source] when inherited.
   const data = Object.fromEntries(Object.entries(it.themeTokens).map(([name, modes]) => [name, Object.fromEntries(['light', 'dark'].map(m => [m, Object.fromEntries(Object.entries(modes[m]).map(([role, c]) => [role, c.inherited ? [c.value, c.from] : c.value]))]))]));
 %>
