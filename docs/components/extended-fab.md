@@ -1,261 +1,157 @@
-# Extended FAB Component
+# Extended FAB
 
-An extended FAB is a floating action button that says what it does. It holds an
-icon and a label in a rounded container 56, 80 or 96dp high, and it is for the primary
-action on a screen where an icon alone would be a guess: "Create", "Add to
-cart", "Compose". Where the icon is unambiguous, use the plain
-[FAB](./fab.md) instead.
+An extended FAB is a floating action button with a label: for a screen's primary action where
+an icon alone would be a guess, such as "Compose" or "Add to cart". Where the icon is
+unambiguous, use the [FAB](/docs/components/fab/). See the
+[M3 extended FAB guidelines](https://m3.material.io/components/extended-fab/overview).
 
-## Overview
+## Usage
 
-It is a single `<button>` containing an icon element and a text element. The
-things that vary:
+The label names the button; `ariaLabel` replaces it when it would be ambiguous out of context.
 
-- **variant** — the colour styles of the [FAB](./fab.md): `primary-container`
-  (the default), `secondary-container` and `tertiary-container`, and the tone
-  styles `primary`, `secondary` and `tertiary`. `surface` is deprecated.
-- **size** — `small` (56dp, the default), `medium` (80dp) and `large` (96dp),
-  each with its own icon, spacing and label type style.
-- **width** — `fixed` sizes the button to its content; `fluid` stretches it to
-  the full width of its container, which suits a bottom sheet or a narrow
-  column.
-- **position** — the four corners. Setting `position` makes the element
-  `position: fixed`, pinned 16dp from both edges. Leave it unset to place the
-  button yourself.
-- **collapse** — an extended FAB can shrink to the FAB of its size, hiding its label,
-  and expand again. Do it yourself with `collapse()` and `expand()`, or hand it
-  to `collapseOnScroll`.
-
-Elevation works as it does on the FAB: level 3 at rest, 4 on hover, 3 focused and
-pressed, and `lower()` / `raise()` switch to and from the lowered ladder.
-
-## Import
-
-```javascript
-import { createExtendedFab } from 'mtrl';
+```example
+extended-fab:
+  icon: editIcon
+  text: Compose
+  on click: createItem()
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const fab = createExtendedFab({
-  icon: addIcon,
-  text: 'Create',
-  ariaLabel: 'Create new item',
-  position: 'bottom-right'
-});
+### Color, size and width
 
-fab.on('click', () => createItem());
-document.body.appendChild(fab.element);
+`variant` takes the [FAB](/docs/components/fab/)'s color styles. `size` is `small` (56dp, the
+default), `medium` or `large`, each with its own icon, spacing and label type. `width: 'fluid'`
+stretches it to its container, as in a bottom sheet; `fixed` sizes it to its content.
+
+```example
+extended-fab:
+  icon: addIcon
+  text: Add to cart
+  variant: secondary-container
+  size: medium
+  width: fluid
 ```
 
-## Configuration
+### The icon after the label
+
+`iconPosition: 'end'` puts the icon after the label, in reading order as on screen.
+
+```example
+extended-fab:
+  icon: shareIcon
+  text: Share
+  iconPosition: end
+```
+
+### Collapsing on scroll
+
+An extended FAB can shrink to the FAB of its size, hiding its label, and expand again. With
+`collapseOnScroll`, it collapses when the window scrolls more than 10px down, and expands on
+the way up and at the top. In a scrolling box of your own, call `collapse()` and `expand()`.
+
+```example
+extended-fab:
+  icon: editIcon
+  text: Compose
+  position: bottom-right
+  collapseOnScroll: true
+```
+
+`position` fixes it to a corner, 16dp from both edges. Elevation works as on the FAB, with
+`lower()` and `raise()`. Driving the collapse from a list's scrolling is planned for
+[Examples](/examples/).
+
+## API
+
+<!-- API: generated from mtrl's types and <m-extended-fab>'s spec in a later step. Until then
+these tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `text` | `string` | — | The label |
-| `icon` | `string` | — | Icon as an HTML string, usually an SVG |
-| `variant` | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary' \| 'surface'` | `'primary-container'` | Colour style; `surface` is deprecated |
+| `text` | `string` | `undefined` | The label |
+| `icon` | `string` | `undefined` | Icon as an HTML string, usually an SVG |
+| `variant` | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary' \| 'surface'` | `'primary-container'` | Color style; `surface` is deprecated |
 | `size` | `'small' \| 'medium' \| 'large'` | `'small'` | Height, icon, spacing and label type style |
 | `width` | `'fixed' \| 'fluid'` | `'fixed'` | Sized by its content, or by its container |
-| `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | — | Fixes it to a corner of the viewport |
+| `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `undefined` | Fixes it to a corner of the viewport |
 | `collapseOnScroll` | `boolean` | `false` | Collapses on scroll down, expands on scroll up and at the top |
 | `iconPosition` | `'start' \| 'end'` | `'start'` | Puts the icon before or after the label |
-| `ariaLabel` | `string` | the `text` | Accessible name |
+| `ariaLabel` | `string` | `undefined` | Accessible name, in place of the label |
 | `disabled` | `boolean` | `false` | Creates it disabled |
-| `iconSize` | `string` | — | Adds an `mtrl-icon--<value>` class to the icon element. You supply the rule |
-| `animate` | `boolean` | `false` | Scales the button in when it is added to the page |
-| `ripple` | `boolean` | `true` | Ripple on press |
-| `rippleConfig` | `{ duration, timing, opacity }` | — | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
+| `iconSize` | `string` | `undefined` | Adds an `mtrl-icon--<value>` class to the icon, for your own CSS; the stylesheet has no rules for it |
+| `animate` | `boolean` | `false` | Scales it in when it is added to the page |
+| `ripple` | `boolean` | `true` | Whether a press shows the ripple |
+| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The button's `type` attribute |
-| `value` | `string` | — | The button's `value` attribute, for form use |
-| `class` | `string` | — | Extra classes on the element |
-| `prefix` | `string` | `'mtrl'` | Class-name prefix |
-| `componentName` | `string` | `'extended-fab'` | Name used in class generation |
+| `value` | `string` | `undefined` | The button's `value` attribute, for forms |
+| `class` | `string` | `undefined` | Extra classes on the element |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-`iconPosition: 'end'` places the label before the icon in the DOM, so the icon
-follows it in reading order as well as on screen, and adds
-`mtrl-extended-fab--icon-end` to the root. `iconSize` is a hook rather than
-behaviour: it appends `mtrl-icon--<value>` and nothing more.
-
-## Component API
-
-### Content
+### Methods
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `setText(text)` | `text: string` | `ExtendedFabComponent` | Replaces the label |
-| `getText()` | — | `string` | The current label |
-| `setIcon(icon)` | `icon: string` | `ExtendedFabComponent` | Replaces the icon HTML |
-| `getIcon()` | — | `string` | The current icon HTML |
-
-### Shape and placement
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `collapse()` | — | `ExtendedFabComponent` | Shrinks to the FAB of its size and dispatches a `collapse` DOM event on the element |
-| `expand()` | — | `ExtendedFabComponent` | Reveals the label again and dispatches `expand` the same way |
+| `setText(text)` / `getText()` | `text: string` | `ExtendedFabComponent` / `string` | The label |
+| `setIcon(icon)` / `getIcon()` | `icon: string` | `ExtendedFabComponent` / `string` | The icon HTML |
+| `collapse()` / `expand()` | none | `ExtendedFabComponent` | Hides or shows the label, and dispatches a `collapse` or `expand` DOM event on the element |
 | `setPosition(position)` | `position: string` | `ExtendedFabComponent` | Moves it to another corner |
-| `getPosition()` | — | `string \| null` | The current corner, or `null` when unpositioned |
-| `lower()` | — | `ExtendedFabComponent` | Moves it to the lowered elevation ladder |
-| `raise()` | — | `ExtendedFabComponent` | Restores the normal elevation ladder |
-
-### State and lifecycle
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `enable()` | — | `ExtendedFabComponent` | Makes it interactive again |
-| `disable()` | — | `ExtendedFabComponent` | Disables it |
-| `setValue(value)` | `value: string` | `ExtendedFabComponent` | Sets the `value` attribute |
-| `getValue()` | — | `string` | Reads it |
-| `addClass(...classes)` | `classes: string[]` | `ExtendedFabComponent` | Adds classes to the element |
+| `getPosition()` | none | `string \| null` | The current corner, or `null` when unpositioned |
+| `lower()` / `raise()` | none | `ExtendedFabComponent` | The lowered or the normal elevation levels |
+| `enable()` / `disable()` | none | `ExtendedFabComponent` | The disabled state |
+| `setValue(value)` / `getValue()` | `value: string` | `ExtendedFabComponent` / `string` | The `value` attribute |
+| `addClass(...classes)` | `...classes: string[]` | `ExtendedFabComponent` | Adds classes to the element |
 | `getClass(name)` | `name: string` | `string` | Prefixes a name |
-| `on(event, handler)` | `event: string, handler: Function` | `ExtendedFabComponent` | Subscribes to a forwarded event (`click`, `focus`, `blur`) |
-| `off(event, handler)` | `event: string, handler: Function` | `ExtendedFabComponent` | Removes one |
-| `destroy()` | — | `void` | Removes the element, its listeners and any scroll handler |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `ExtendedFabComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes the element, its listeners and any scroll handler |
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `element` | `HTMLButtonElement` | The button |
 | `icon` | `{ setIcon, getIcon, getElement }` | The icon manager |
 | `text` | `{ setText, getText, getElement }` | The text manager |
-| `disabled` | `{ enable, disable, isDisabled }` | The disabled-state manager; `isDisabled()` lives here |
+| `disabled` | `{ enable, disable, isDisabled }` | The disabled-state manager |
 | `lifecycle` | `{ destroy }` | The lifecycle manager |
 
-## Events
+### Events
 
-Three native events are forwarded to `on()` — `click`, `focus` and `blur`. Any
-other name is accepted by `on()` and never fires. The handler is not given the
-DOM event: it receives `{ event, element, originalEvent }`, where `event` and
-`originalEvent` are both the native event.
-
-`collapse()` and `expand()` dispatch bubbling `CustomEvent`s of those names on
-the element. They are DOM events and do not reach `on()`, which is a separate
-emitter — listen for them with `element.addEventListener` only.
-
-| Event | Reached by | Payload | Description |
-|-------|------------|---------|-------------|
-| `click` | `on()` | `{ event, element, originalEvent }` | Pressed. Suppressed while disabled |
-| `focus` | `on()` | `{ event, element, originalEvent }` | Took focus |
-| `blur` | `on()` | `{ event, element, originalEvent }` | Lost focus |
-| `collapse` | `addEventListener` | `CustomEvent` | The label was hidden |
-| `expand` | `addEventListener` | `CustomEvent` | The label came back |
-
-## Examples
-
-### Fixed and fluid width
-
-The showcase puts both in a 400px box to make the difference visible: the fixed
-one is as wide as its label, the fluid one fills the box.
-
-```javascript
-const fixed = createExtendedFab({
-  icon: addIcon,
-  text: 'Fixed Width Example',
-  width: 'fixed'
-});
-
-const fluid = createExtendedFab({
-  icon: addIcon,
-  text: 'Fluid Width Example',
-  width: 'fluid'
-});
-```
-
-### The icon after the label
-
-```javascript
-const share = createExtendedFab({ icon: shareIcon, text: 'Share', iconPosition: 'end' });
-```
-
-### Collapsing on scroll
-
-With `collapseOnScroll`, the component watches `window.scrollY` and collapses
-once the page moves more than 10px down, expands on the way up, and always
-expands at the top of the page.
-
-```javascript
-const fab = createExtendedFab({
-  icon: addIcon,
-  text: 'Create',
-  ariaLabel: 'Create new item',
-  collapseOnScroll: true
-});
-```
-
-Because it listens on `window`, a demo inside its own scrolling box (as the
-showcase's is) will not react to that box's scrolling; drive it with
-`collapse()` and `expand()` there instead.
-
-### Driving it by hand
-
-```javascript
-const fab = createExtendedFab({ icon: addIcon, text: 'Compose' });
-
-const list = document.querySelector('.message-list');
-let lastTop = 0;
-list.addEventListener('scroll', () => {
-  if (list.scrollTop > lastTop) fab.collapse();
-  else fab.expand();
-  lastTop = list.scrollTop;
-});
-
-fab.element.addEventListener('collapse', () => track('fab-collapsed'));
-```
+| Event | Description | Data |
+|-------|-------------|------|
+| `click` | Pressed; not fired while disabled | `{ event, element, originalEvent }` |
+| `focus` / `blur` | Took or lost focus | `{ event, element, originalEvent }` |
+| `collapse` / `expand` | A DOM `CustomEvent` on `element`, not through `on()`: the label was hidden or shown | none |
 
 ## Accessibility
 
-- `ariaLabel` falls back to `text`, so a labelled extended FAB is already
-  readable. Set it explicitly when the label is short enough to be ambiguous
-  out of context — "Add" alone, say.
-- **When it collapses, the label disappears visually but the accessible name
-  does not change.** That is the behaviour you want, and it is a reason to keep
-  `ariaLabel` accurate rather than relying on the visible text alone.
-- The element is a real `<button>`: Tab reaches it, Space and Enter activate it,
-  and `disabled` takes it out of the tab order.
-- Focus shows as a 2dp `outline` ring offset 2dp from the edge.
-- The label is a single line that ellipsises past 280dp. Keep it to one or two
-  words so it never gets there.
+- A native `<button>`, named by its label, or by `ariaLabel`. Collapsed, the label is hidden
+  from view and still names the button.
+- `Tab` focuses it; `Space` and `Enter` activate it. Disabled, it leaves the tab order.
+- Focus shows as a 2dp `outline` ring, 2dp from the edge.
+- The label is one line, cut off with an ellipsis past 280dp: keep it to one or two words.
 
 ## Styling
 
+Colors are the theme's roles, as on the FAB; the state layer takes the label color.
+
 ```css
 .mtrl-extended-fab { }
-.mtrl-extended-fab--primary-container { }
-.mtrl-extended-fab--secondary-container { }
-.mtrl-extended-fab--tertiary-container { }
-.mtrl-extended-fab--primary { }
-.mtrl-extended-fab--secondary { }
-.mtrl-extended-fab--tertiary { }
-.mtrl-extended-fab--surface { }
-.mtrl-extended-fab--small { }
-.mtrl-extended-fab--medium { }
-.mtrl-extended-fab--large { }
-.mtrl-extended-fab--icon-end { }
-.mtrl-extended-fab--fixed { }
-.mtrl-extended-fab--fluid { }
-.mtrl-extended-fab--collapsed { }
-.mtrl-extended-fab--collapsible { }
-.mtrl-extended-fab--lowered { }
-.mtrl-extended-fab--disabled { }
-.mtrl-extended-fab--animate-enter { }
-
-/* the corners */
+.mtrl-extended-fab--primary-container, .mtrl-extended-fab--secondary-container,
+.mtrl-extended-fab--tertiary-container, .mtrl-extended-fab--primary,
+.mtrl-extended-fab--secondary, .mtrl-extended-fab--tertiary, .mtrl-extended-fab--surface { }
+.mtrl-extended-fab--small, .mtrl-extended-fab--medium, .mtrl-extended-fab--large { }
+.mtrl-extended-fab--fixed, .mtrl-extended-fab--fluid, .mtrl-extended-fab--icon-end { }
+.mtrl-extended-fab--collapsed, .mtrl-extended-fab--collapsible { }
+.mtrl-extended-fab--lowered, .mtrl-extended-fab--disabled, .mtrl-extended-fab--animate-enter { }
 .mtrl-extended-fab--bottom-right { }
-
-/* inside */
-.mtrl-extended-fab__icon { }
-.mtrl-extended-fab__text { }
+.mtrl-extended-fab__icon, .mtrl-extended-fab__text { }
 ```
-
-Colours come from the theme, not from component properties: each style is the
-role it is named after on its `on-` role, and `surface` takes a `primary` icon
-and label. The state layer uses the label colour.
 
 ## Measurements
 
-Values follow the Compose M3 token files named in the source column; the label
-type styles come from Android, where Compose leaves them as a TODO.
+From the Compose M3 token files named in the last column; the label type styles come from
+Android, where Compose leaves them as a TODO.
 
 | Attribute | Value | Source |
 |-----------|-------|--------|
@@ -269,11 +165,7 @@ type styles come from Android, where Compose leaves them as a TODO.
 | Label maximum width | 280dp | `max-width` on the text element |
 | Collapsed size | the FAB of the same size, 56 / 80 / 96dp | `_extended-fab.scss` |
 | Elevation, rest / hover / focus / pressed | levels 3 / 4 / 3 / 3 | `ExtendedFabPrimaryTokens` |
-| Lowered elevation, rest / hover / focus / pressed | levels 1 / 2 / 1 / 1 | `ExtendedFabPrimaryTokens` |
+| Lowered, rest / hover / focus / pressed | levels 1 / 2 / 1 / 1 | `ExtendedFabPrimaryTokens` |
 | Offset from the corner | 16dp | the position rules in `_extended-fab.scss` |
 | Collapse and expand | 0.3s and 0.25s | the transitions on the text element |
-| Entrance animation | 0.3s, emphasized decelerate | the `extended-fab-enter` keyframes |
-
-`EXTENDED_FAB_ANIMATIONS` in `constants.ts` gives 250ms and 200ms for the
-entrance and the collapse, but nothing reads it; the stylesheet's durations
-above are what run.
+| Entrance | 0.3s, emphasized decelerate | the `extended-fab-enter` keyframes |
