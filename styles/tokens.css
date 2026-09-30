@@ -93,6 +93,10 @@
     --header-height: 56px;
     --sidebar-width: 220px;
     --toc-width: 240px;
+    /* Widest the header and page shell grow, and the room they keep at each
+       side of the window (see the window size classes below) */
+    --layout-max-width: 1472px;
+    --layout-gutter: 0px;
 
     /* Radii */
     --radius: 8px;
@@ -176,4 +180,19 @@
     --sidebar-hover: rgba(0, 0, 0, 0.03);
     --overlay-bg: rgba(0, 0, 0, 0.3);
     --shadow-sidebar: rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Window size classes ────────────────────────────────────────── */
+/* MD3 window size classes (m3.material.io/foundations/layout): compact
+   < 600, medium 600–839, expanded 840–1199, large 1200–1599, extra-large
+   ≥ 1600. Extra-large widens the shell so very large screens are not two
+   thirds empty margin, but keeps a gutter at each side: at 1600 the shell is
+   1600 - 2 × 64 = 1472, the large cap, so it grows without a jump. */
+@media (min-width: 1600px) {
+    :root {
+        --layout-max-width: 1840px;
+        --layout-gutter: 64px;
+        --sidebar-width: 240px;
+        --toc-width: 260px;
+    }
 }

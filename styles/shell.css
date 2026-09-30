@@ -107,7 +107,7 @@ samp {
     display: flex;
     align-items: center;
     width: 100%;
-    max-width: 1472px;
+    max-width: min(var(--layout-max-width), 100% - 2 * var(--layout-gutter));
     padding: 0 12px 0 8px;
     gap: 16px;
 }
@@ -237,7 +237,7 @@ samp {
     display: flex;
     padding-top: var(--header-height);
     min-height: 100vh;
-    max-width: 1472px;
+    max-width: min(var(--layout-max-width), 100% - 2 * var(--layout-gutter));
     margin: 0 auto;
 }
 
