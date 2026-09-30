@@ -11,6 +11,7 @@ type Spec = {
   model?: string;
   events?: Record<string, unknown>;
   slot?: { attribute: string; config: string };
+  slots?: readonly string[];
   form?: unknown;
 };
 
@@ -248,6 +249,7 @@ export function elementMeta(slug: string): ElementMeta | null {
     events: Object.keys(spec.events ?? {}),
     ...(spec.form ? { form: true } : {}),
     ...(spec.slot ? { slot: { attribute: spec.slot.attribute, config: spec.slot.config } } : {}),
+    ...(spec.slots?.length ? { slots: [...spec.slots] } : {}),
     ...(kids && declared ? {
       children: {
         ...Object.fromEntries(Object.entries(kids).filter(([name]) => name !== 'declaration')) as Omit<ChildrenMeta, 'attributes'>,

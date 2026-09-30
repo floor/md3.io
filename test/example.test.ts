@@ -3,7 +3,8 @@ import { resolve } from 'node:path';
 import ts from 'typescript';
 import { exampleCode, parseExample, renderExample } from '../src/server/example-block';
 import { renderDocument } from '../src/server/content';
-import { appRef, type Framework } from '../src/shared/frameworks';
+import { appRef, frameworkCode, type Framework } from '../src/shared/frameworks';
+import { elementMeta } from '../src/server/elements-meta';
 
 const code = (source: string, framework: Framework) => exampleCode(parseExample(source)).code[framework]!;
 
@@ -182,6 +183,33 @@ describe('slotted children a factory takes through a method', () => {
   });
   test('the web component takes them in its slots', () => {
     expect(code(bar, 'html')).toContain('<m-icon-button slot="leading" aria-label="Back"></m-icon-button>');
+  });
+  test('Vue and Svelte fill each declared slot with their own syntax; React and Solid keep the attribute', () => {
+    expect(code(bar, 'vue')).toContain('<MTopAppBar headline="Inbox">\n    <template #leading>\n      <MIconButton :icon="backIcon" aria-label="Back" />\n    </template>\n    <template #trailing>\n      <MIconButton :icon="searchIcon" aria-label="Search" />\n    </template>\n  </MTopAppBar>');
+    expect(code(bar, 'svelte')).toContain('<TopAppBar headline="Inbox">\n  {#snippet leading()}\n    <IconButton icon={backIcon} ariaLabel="Back" />\n  {/snippet}\n  {#snippet trailing()}\n    <IconButton icon={searchIcon} ariaLabel="Search" />\n  {/snippet}\n</TopAppBar>');
+    expect(code(bar, 'react')).toContain('<IconButton slot="leading" icon={backIcon} ariaLabel="Back" />');
+    expect(code(bar, 'solid')).toContain('<IconButton slot="leading" icon={backIcon} ariaLabel="Back" />');
+  });
+  test("a slot's children share one block, and the default slot stays as it is", () => {
+    const card = 'card:\n  header: { title: Trip }\n  buttons:\n    - { text: Share }\n    - { text: Book }\n';
+    expect(code(card, 'vue')).toContain('<template #actions>\n      <MButton>Share</MButton>\n      <MButton>Book</MButton>\n    </template>');
+    expect(code(card, 'svelte')).toContain('{#snippet actions()}\n    <Button>Share</Button>\n    <Button>Book</Button>\n  {/snippet}');
+    const bottom = 'bottom-app-bar:\n  actions:\n    - { icon: searchIcon, ariaLabel: Search }\n  fab: { icon: addIcon, ariaLabel: Add }\n';
+    expect(code(bottom, 'vue')).toContain('<MBottomAppBar>\n    <MIconButton :icon="searchIcon" aria-label="Search" />\n    <template #fab>');
+    expect(code(bottom, 'svelte')).toContain('<BottomAppBar>\n  <IconButton icon={searchIcon} ariaLabel="Search" />\n  {#snippet fab()}');
+  });
+  test('a dashed slot is a camelCase snippet in Svelte, and keeps its name in Vue', () => {
+    const meta = elementMeta('card')!;
+    const withMore = { ...meta, slotted: [{ from: 'more', element: 'icon-button', slot: 'header-action', attributes: { ariaLabel: 'aria-label' } }] };
+    const render = (framework: 'vue' | 'svelte') => frameworkCode(framework, withMore, { more: { ariaLabel: 'More' } }, { theme: 'baseline', mode: 'light' });
+    expect(render('svelte')).toContain('{#snippet headerAction()}\n    <IconButton ariaLabel="More" />\n  {/snippet}');
+    expect(render('vue')).toContain('<template #header-action>\n      <MIconButton aria-label="More" />\n    </template>');
+  });
+  test('a slot the element does not declare keeps the attribute', () => {
+    const meta = { ...elementMeta('card')!, slots: [] };
+    const render = (framework: 'vue' | 'svelte') => frameworkCode(framework, meta, { buttons: [{ text: 'Book' }] }, { theme: 'baseline', mode: 'light' });
+    expect(render('vue')).toContain('<MButton slot="actions">Book</MButton>');
+    expect(render('svelte')).toContain("<Button {...{ slot: 'actions' }}>Book</Button>");
   });
 });
 

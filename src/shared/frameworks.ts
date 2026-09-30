@@ -136,6 +136,8 @@ export interface ElementMeta {
   /** Form-associated: the host's own `name` attribute names its value, as on native controls. */
   form?: boolean;
   slot?: { attribute: string; config: string };
+  /** The element's named slots (mtrl's `slots`), which Vue fills with `<template #name>` and Svelte with `{#snippet name()}`. */
+  slots?: string[];
   children?: ChildrenMeta;
   /** Config keys (`header.title` for a nested one) the spec does not map, or maps otherwise. */
   keys?: Record<string, ConfigKey>;
@@ -623,7 +625,8 @@ const jsxAttrs = (attrs: Attr[], react = false): string =>
 
 /**
  * Svelte takes `slot="…"` on a component's child as the component's own named
- * slot: spread, it reaches the element as an attribute.
+ * slot: spread, it reaches the element as an attribute. Only a slot the element
+ * does not declare is written so; a declared one is a snippet (`region`).
  */
 const svelteAttrs = (attrs: Attr[]): string => {
   const slot = attrs.find(a => a.name === 'slot');
@@ -660,7 +663,36 @@ interface Markup {
   slotted: (child: Slotted) => string;
   /** Text content bound to state, as the framework reads it: `{text}`. */
   text?: (state: string) => string;
+  /**
+   * The children of one of the element's named slots, each without its `slot`
+   * attribute, in the framework's own block: Vue's `<template #actions>`,
+   * Svelte's `{#snippet actions()}`. Without it, each child carries the attribute.
+   */
+  region?: { slots: string[]; wrap: (slot: string, lines: string[]) => string };
 }
+
+/** The slotted children as lines: with `region`, a named slot's children grouped where its first one is. */
+function slottedLines(children: Slotted[], markup: Markup): string[] {
+  const slotOf = (child: Slotted) => {
+    const slot = child.attrs.find(a => a.name === 'slot')?.value;
+    return typeof slot === 'string' && markup.region?.slots.includes(slot) ? slot : undefined;
+  };
+  const lines: string[] = [];
+  const done = new Set<string>();
+  for (const child of children) {
+    const slot = slotOf(child);
+    if (slot === undefined) { lines.push(markup.slotted(child)); continue; }
+    if (done.has(slot)) continue;
+    done.add(slot);
+    const own = children.filter(other => slotOf(other) === slot).map(other => markup.slotted({ ...other, attrs: other.attrs.filter(a => a.name !== 'slot') }));
+    lines.push(markup.region!.wrap(slot, own));
+  }
+  return lines;
+}
+
+/** A block around a named slot's children, each on its own line, indented. */
+const block = (open: string, lines: string[], close: string): string =>
+  `${open}${lines.map(line => `\n  ${line.replaceAll('\n', '\n  ')}`).join('')}\n${close}`;
 
 /** A declaration child; one with children of its own (a submenu) has its text on a line before them. */
 function childMarkup(markup: Markup['child'], child: Child): string {
@@ -674,10 +706,10 @@ function childMarkup(markup: Markup['child'], child: Child): string {
 function content(p: Plan, markup: Markup, indent: string, closing: string): string {
   const text = p.textState && markup.text ? markup.text(p.textState) : p.text !== undefined && p.text !== '' ? escapeText(p.text) : undefined;
   const lines = [
-    ...p.slotted.filter(s => !s.after).map(markup.slotted),
+    ...slottedLines(p.slotted.filter(s => !s.after), markup),
     ...(text !== undefined ? [text] : []),
     ...p.children.map(c => childMarkup(markup.child, c)),
-    ...p.slotted.filter(s => s.after).map(markup.slotted),
+    ...slottedLines(p.slotted.filter(s => s.after), markup),
   ];
   if ((p.text !== undefined || p.textState) && !p.slotted.length && !p.children.length) return text ?? '';
   return lines.length ? `${lines.map(line => `\n${indent}${line.replaceAll('\n', `\n${indent}`)}`).join('')}\n${closing}` : '';
@@ -919,6 +951,7 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
     child: { tag: Child, attrs: vueAttrs },
     slotted: child => element(child.native ? child.element : `M${pascal(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`, escapeText(child.text)),
     text: name => `{{ ${name} }}`,
+    region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`<template #${slot}>`, lines, '</template>') },
   }, '    ', '  ');
   const model = p.model ? ` v-model="${p.model.name}"` : '';
   const handlers = ownHandlers(meta, p).map(h => ` @${h.event}="${escapeAttr(handlerCall(h, field => `$event.detail.${field}`))}"`).join('');
@@ -943,6 +976,8 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
     slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`, escapeText(child.text)),
     text: name => `{${name}}`,
+    // a dashed slot is a camelCase snippet: `header-action` → `headerAction`
+    region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`{#snippet ${camel(slot)}()}`, lines, '{/snippet}') },
   }, '  ', '');
   const model = p.model ? ` bind:${p.model.name}` : '';
   const handlers = ownHandlers(meta, p).map(h => ` on${h.event}={${arrow(readsPayload(h), [handlerCall(h, field => `event.detail.${field}`)])}}`).join('');
