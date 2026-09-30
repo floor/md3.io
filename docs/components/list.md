@@ -1,288 +1,161 @@
-# List Component
+# List
 
-The List component renders a static array of data as a vertical, scrollable index of items, with optional single- or multi-select behaviour. Reach for it when you already hold the data in memory and want Material Design 3 list styling, selection state and a click event without writing the DOM plumbing yourself.
+A list is a continuous, vertical index of text and images: a headline per row, with an
+overline, supporting text, and leading and trailing content such as an icon, an avatar or a
+time. Rows are one, two or three lines tall, and can be selected, one at a time or several.
+See the [M3 list guidelines](https://m3.material.io/components/lists/overview).
 
-## Overview
+## Usage
 
-Lists are commonly used for:
+Each item has an `id` and a `headline`. By default a row is a button that selects it, and
+choosing another row moves the selection.
 
-- Settings and preference screens
-- Pickers where every choice is known up front
-- Navigation indexes and search results
-- Any short, finite collection the user selects from
-
-The component renders every item it is given, once, into a document fragment. It does **not** virtualise: there is no windowing, no recycling, and no data loading. `isLoading()` and `hasNextPage()` exist for interface compatibility and always return `false`. If you need virtual scrolling, pagination, or a data source behind the list, use the standalone `vlist` package instead. Virtual scrolling is not a Material Design 3 concern, so it lives outside this component.
-
-## Import
-
-```javascript
-import { createList } from 'mtrl';
+```example
+list:
+  ariaLabel: Ideas for today
+  items:
+    - { id: walk, headline: Morning walk }
+    - { id: read, headline: Read a chapter }
+    - { id: cook, headline: Try a new recipe }
 ```
-
-## Basic Usage
-
-```javascript
-const list = createList({
-  items: [
-    { id: '1', headline: 'List Item 1' },
-    { id: '2', headline: 'List Item 2' },
-    { id: '3', headline: 'List Item 3' }
-  ],
-  ariaLabel: 'Example list'
-});
-
-document.querySelector('.list-container').appendChild(list.element);
-
-list.on('select', (event) => {
-  console.log('Selected item:', event.item);
-});
-```
-
-`createList` throws if `items` is not an array and no `renderItem` is given: the component needs something to render.
-
-## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `items` | `any[]` | `[]` | Static array of items to display. Required unless `renderItem` is supplied |
-| `renderItem` | `(item: any, index: number) => HTMLElement` | built-in renderer | Renders one item. The returned element is given the item class and `role="listitem"` if it lacks them, and a `data-id` if it has none |
-| `trackSelection` | `boolean` | `true` | Whether clicks change selection. When `false`, every selection method becomes a no-op |
-| `multiSelect` | `boolean` | `false` | Whether more than one item can be selected at a time |
-| `initialSelection` | `(string \| number)[]` | `undefined` | Item IDs selected when the list is created |
-| `ariaLabel` | `string` | `undefined` | Sets `aria-label` on the container |
-| `class` | `string` | `undefined` | Additional CSS classes for the container element |
-| `animate` | `boolean` | `false` | Default scroll behaviour for `scrollToItem` and `scrollToIndex` when they are called without an explicit `animate` argument |
-| `prefix` | `string` | `'mtrl'` | Prefix used when generating CSS class names |
-| `componentName` | `string` | `'list'` | Component name used in CSS class generation |
-
-An item is also treated as selected at creation time when it carries `selected: true`, so `initialSelection` and per-item flags can be used interchangeably.
-
-Item IDs come from `item.id`. If an item has no `id`, its index is used as a string instead, and that is the value every selection method expects.
-
-## Component API
-
-### Data Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `refresh()` | none | `Promise<ListComponent>` | Re-renders every item from the array the list holds |
-| `getAllItems()` | none | `any[]` | The items the list was created with |
-| `getVisibleItems()` | none | `any[]` | Same as `getAllItems()`: nothing is windowed out |
-| `isLoading()` | none | `boolean` | Always `false`; the list has no async state |
-| `hasNextPage()` | none | `boolean` | Always `false`; the list does not paginate |
-
-The list keeps a reference to the array you pass in, so mutating that array in place (`push`, `splice`) and then calling `refresh()` updates the view. Assigning a new array to your own variable does not; create a new list instead.
-
-### Scroll Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `scrollToItem(itemId, position?, animate?)` | `itemId: string \| number, position?: 'start' \| 'center' \| 'end', animate?: boolean` | `ListComponent` | Scrolls the item with that `data-id` into view. Does nothing if no element matches |
-| `scrollToIndex(index, position?, animate?)` | `index: number, position?: 'start' \| 'center' \| 'end', animate?: boolean` | `Promise<ListComponent>` | Scrolls the nth rendered element into view. Out-of-range indices are ignored |
-
-`position` defaults to `'start'`. When `animate` is omitted, the `animate` config option decides, so a list created with `animate: true` scrolls smoothly everywhere.
-
-### Selection Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getSelectedItems()` | none | `any[]` | The item objects currently selected |
-| `getSelectedItemIds()` | none | `string[]` | The IDs currently selected, always as strings |
-| `isItemSelected(itemId)` | `itemId: string \| number` | `boolean` | Whether that item is selected |
-| `selectItem(itemId)` | `itemId: string \| number` | `ListComponent` | Selects an item. In single-select mode this does not clear other programmatic selections |
-| `deselectItem(itemId)` | `itemId: string \| number` | `ListComponent` | Deselects an item |
-| `clearSelection()` | none | `ListComponent` | Deselects everything |
-| `setSelection(itemIds)` | `itemIds: (string \| number)[]` | `ListComponent` | Replaces the whole selection and repaints every item's state |
-
-`setSelection` is the method to use when you want the selection to match a list exactly; `selectItem` only adds.
-
-The "Returns `ListComponent`" column above is optimistic: these methods return an inner component, not the one the factory handed you, and each hop returns something smaller than the last. `list.selectItem('1')` gives you an object that still has `deselectItem` but no `getAllItems`; `list.selectItem('1').deselectItem('2')` gives you one with neither. Treat every method as returning nothing useful and start a fresh statement — `list.selectItem('1'); list.deselectItem('2');` — rather than chaining.
-
-### Event and Lifecycle Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `on(event, handler)` | `event: string, handler: Function` | `ListComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `ListComponent` | Removes an event listener |
-| `destroy()` | none | `void` | Empties the list, removes the click handler and tears the component down |
-
-## Events
-
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `select` | `{ item, element, originalEvent, component, preventDefault, defaultPrevented }` | An item was clicked. Fires **before** the selection changes; call `preventDefault()` in the handler to leave the selection alone. Not emitted at all when `trackSelection: false`, since the click listener is what raises it |
-| `load` | `{ items, loading, hasNext, hasPrev, component }` | Items were rendered, on creation and on every `refresh()`. `loading`, `hasNext` and `hasPrev` are always `false` |
-| `scroll` | `{ event, element, originalEvent }` | The container scrolled. This is the shape the core event forwarder emits — note there is no `component`, and `event` and `originalEvent` are the same object |
-
-The container also forwards native `keydown` events, so `list.on('keydown', handler)` works if you implement your own key handling.
 
 ## Examples
 
-### Custom item rendering
+### Anatomy
 
-The showcase's basic list supplies its own renderer, which is the usual case once items are more than a line of text:
+`supportingText` and `overline` make a row two or three lines tall; `lines` sets it. `leading`
+and `trailing` are `{ type, content }`: an `icon`, `avatar`, `image` or `video` leading, and
+an `icon` or `text` trailing. `{ kind: 'subheader' }` titles a group and `{ kind: 'divider' }`
+separates one, `inset` to line up with the text. `trackSelection: false` makes the rows
+display only.
 
-```javascript
-const list = createList({
-  class: 'list--basic',
-  items: [
-    { id: '1', headline: 'List Item 1' },
-    { id: '2', headline: 'List Item 2' }
-  ],
-  renderItem: (item) => {
-    const element = document.createElement('div');
-    element.className = 'mtrl-list-item';
-    element.innerHTML = `
-      <div class="mtrl-list-item-content">
-        <span class="mtrl-list-item-text">${item.headline}</span>
-      </div>
-    `;
-    return element;
-  }
-});
-
-document.querySelector('.showcase').appendChild(list.element);
-```
-
-### Multi-select with an initial selection
-
-```javascript
-const list = createList({
-  items: [
-    { id: 'fr', headline: 'France' },
-    { id: 'de', headline: 'Germany' },
-    { id: 'jp', headline: 'Japan' }
-  ],
-  multiSelect: true,
-  initialSelection: ['fr', 'jp'],
-  ariaLabel: 'Countries'
-});
-
-list.on('select', () => {
-  console.log(list.getSelectedItemIds());
-});
-
-// Replace the selection wholesale
-list.setSelection(['de']);
-```
-
-### Vetoing a selection
-
-```javascript
-const list = createList({
-  items: [
-    { id: 'standard', headline: 'Standard delivery' },
-    { id: 'express', headline: 'Express delivery', supportingText: 'Sold out today' }
-  ]
-});
-
-// A disabled item never emits select; veto the ones that are only unavailable now
-list.on('select', (event) => {
-  if (event.item.id === 'express') {
-    event.preventDefault();  // click is ignored, nothing is highlighted
-  }
-});
-```
-
-### Display only
-
-```javascript
-const list = createList({
-  items: [
-    { id: 'plan', headline: 'Plan', supportingText: 'Pro, billed yearly' },
-    { id: 'renewal', headline: 'Renews', supportingText: 'March 3' }
-  ],
+```example
+list:
+  ariaLabel: Places
   trackSelection: false
-});
+  items:
+    - { kind: subheader, headline: Places to explore }
+    - { id: trail, headline: Mountain trail, supportingText: 5 km loop, leading: { type: icon, content: locationIcon }, trailing: { type: text, content: 40 min } }
+    - { kind: divider, inset: true }
+    - { id: garden, headline: Botanical garden, supportingText: Open until 6 pm, leading: { type: icon, content: locationIcon }, trailing: { type: text, content: 15 min } }
 ```
 
-With `trackSelection: false` clicks do nothing, `getSelectedItems()` returns `[]`, and the selection methods return the component unchanged. The `select` event does not fire either, so this mode is for display only — if you want the click without the highlight, keep `trackSelection` on and call `preventDefault()` as above.
+### Several selected
+
+`multiSelect` lets rows be selected together, and `initialSelection` (or an item's
+`selected`) sets the rows that start selected. A `disabled` row cannot be selected or focused.
+
+```example
+list:
+  ariaLabel: Countries
+  multiSelect: true
+  initialSelection: [fr, jp]
+  items:
+    - { id: fr, headline: France }
+    - { id: de, headline: Germany, disabled: true }
+    - { id: jp, headline: Japan }
+```
+
+A choice emits `select` with `{ item, element, originalEvent }` before the selection moves;
+`preventDefault()` leaves it where it was. Choosing the selected row again deselects it. The
+web component dispatches `activate` with `{ value }`, then `change` with `{ value, values }`
+when the selection moved. A trailing `control` or `custom` slot holds the app's own control,
+which a click on does not select the row. `renderItem(item, index)` renders a row the app's
+way. The list renders every item; for long or remote data, use
+[vlist](https://vlist.io).
+
+## API
+
+<!-- API: generated from mtrl's types and <m-list>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `items` | `ListItem[]` | `[]` | The rows, subheaders and dividers |
+| `renderItem` | `(item, index) => HTMLElement` | the anatomy | Renders a row's content |
+| `trackSelection` | `boolean` | `true` | Rows are buttons that select; `false`, display only |
+| `multiSelect` | `boolean` | `false` | Several rows selected at once |
+| `initialSelection` | `(string \| number)[]` | `undefined` | The ids selected at creation |
+| `ariaLabel` | `string` | `undefined` | The list's accessible name |
+| `animate` | `boolean` | `false` | Whether `scrollToItem()` and `scrollToIndex()` scroll smoothly by default |
+| `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+| `componentName` | `string` | `'list'` | Component name used in class generation |
+
+#### Items
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `kind` | `'item' \| 'subheader' \| 'divider'` | A row by default |
+| `id` | `string \| number` | The row's id; its index without one |
+| `headline` | `string` | The row's text; `text`, `title` or `name` stand in for it |
+| `overline` / `supportingText` | `string` | The line above and the lines below the headline |
+| `lines` | `1 \| 2 \| 3` | The row's height; inferred from the text without it |
+| `leading` | `ListSlot` | `{ type: 'icon' \| 'avatar' \| 'image' \| 'video' \| 'text' \| 'control' \| 'custom', content }` |
+| `trailing` | `ListSlot` | The same, at the end |
+| `selected` / `disabled` | `boolean` | Selected at creation; not selectable |
+| `inset` | `boolean` | A divider lined up with the text |
+
+### Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `getSelectedItems()` / `getSelectedItemIds()` | `ListItem[]` / `string[]` | The selection |
+| `isItemSelected(id)` | `boolean` | Whether a row is selected |
+| `selectItem(id)` / `deselectItem(id)` | `ListComponent` | Adds a row to the selection, or removes it |
+| `setSelection(ids)` / `clearSelection()` | `ListComponent` | Replaces or clears the selection |
+| `refresh()` | `Promise<ListComponent>` | Renders the items again, from the array the list holds |
+| `getAllItems()` / `getVisibleItems()` | `ListItem[]` | The items, all of them in both cases |
+| `scrollToItem(id, position?, animate?)` | `ListComponent` | Scrolls a row into view: `'start'`, `'center'` or `'end'` |
+| `scrollToIndex(index, position?, animate?)` | `Promise<ListComponent>` | The same, by index |
+| `isLoading()` / `hasNextPage()` | `boolean` | Always `false` |
+| `on(event, handler)` / `off(event, handler)` | `ListComponent` | Events |
+| `destroy()` | `void` | Removes the list and its listeners |
+
+### Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `select` | `{ item, element, originalEvent, component, preventDefault, defaultPrevented }` | A row was chosen, before the selection moves |
+| `load` | `{ items, loading, hasNext, hasPrev, component }` | The items were rendered, at creation and on `refresh()` |
+| `scroll` | `{ originalEvent, component }` | The list scrolled |
 
 ## Accessibility
 
-The component sets:
-
-- `role="list"` on the container element, and again on the inner content wrapper
-- `tabindex="0"` on the container, so it can be focused and scrolled by keyboard
-- `aria-label` on the container when `ariaLabel` is given
-- `role="listitem"` on every rendered item that does not already declare a role
-
-What the consumer still has to provide:
-
-- **Keyboard selection.** The component listens for clicks only. Arrow-key navigation and Enter/Space activation are not implemented; `keydown` is forwarded so you can add them.
-- **Selection semantics for assistive technology.** No `aria-selected`, `aria-multiselectable` or `role="option"` is set. If the list is a picker rather than a static index, set those attributes on the elements your `renderItem` returns.
-- **An accessible name.** Pass `ariaLabel`, or label the container yourself.
-
-Focus styling is provided: `:focus-visible` on an item draws a 2dp inset outline in the `primary` colour.
+- The list is a `list` named by `ariaLabel`, each row a `listitem`, a divider a `separator`.
+- A selectable row holds a button named by the headline and described by the supporting text,
+  with `aria-pressed` for its selection. `Up`, `Down`, `Home` and `End` move between the
+  enabled rows; `Enter` or `Space` selects.
+- A disabled row is `aria-disabled` and its button disabled. Leading icons are hidden from
+  assistive tech; a trailing control is the app's to name.
 
 ## Styling
 
-BEM classes a consumer may reasonably target:
+A selected row has the `secondary-container` color and 16dp corners.
 
-| Class | Element |
-|-------|---------|
-| `.mtrl-list-container` | Root, scrollable element |
-| `.mtrl-list-content` | Wrapper the items are rendered into |
-| `.mtrl-list-item` | One item |
-| `.mtrl-list-item--selected` | Selected item |
-| `.mtrl-list-item-content` | Item content column |
-| `.mtrl-list-item-text` | Item text, as used by the default renderer |
-| `.mtrl-list-item-headline` | Primary line of a two-line item |
-| `.mtrl-list-item-supporting` | Secondary line |
-| `.mtrl-list-item-overline` | Line above the headline |
-| `.mtrl-list-item-meta` | Trailing metadata |
-| `.mtrl-list-item-leading` | Leading icon slot, 24×24 |
-| `.mtrl-list-item-trailing` | Trailing icon slot |
-| `.mtrl-list-empty` | Placeholder shown when `items` is empty |
-| `.mtrl-list--dense` | Denser item height |
-| `.mtrl-list-divider` | Divider between items |
-
-The stylesheet exposes one CSS custom property, `--item-offset`, which is applied as a `translateY` on each item and defaults to `0px`.
-
-One caveat worth knowing about the item class. Every rendered element — yours or the built-in one — is given an **unprefixed** `list-item` class on top of whatever it already has, because the renderer checks for and adds the raw constant rather than the prefixed name. The class that carries the styling is `mtrl-list-item`, and the built-in renderer sets it correctly, so the default case looks right and simply carries a spare `list-item` alongside. A custom `renderItem` that does not set `mtrl-list-item` itself gets only the spare, and picks up none of the stylesheet — which is why the showcase's renderer sets `mtrl-list-item` explicitly, and why yours should too. The selected-state class is applied with the prefix and does match.
-
-Prefixing runs the other way for the `class` option: what you pass is prefixed for you, so `class: 'list--basic'` lands on the container as `mtrl-list--basic`. Pass a name that already starts with `mtrl-` to opt out.
-
-Colours come from the theme rather than from hard-coded values: the container uses `surface`, items use `on-surface`, secondary text uses `on-surface-variant`, and a selected item uses `secondary-container` with `on-secondary-container`.
+```css
+.mtrl-list { }
+.mtrl-list__content, .mtrl-list__subheader, .mtrl-list__divider, .mtrl-list__divider--inset, .mtrl-list__empty { }
+.mtrl-list__item, .mtrl-list__item--two-line, .mtrl-list__item--three-line { }
+.mtrl-list__item--selected, .mtrl-list__item--disabled, .mtrl-list__action { }
+.mtrl-list__text, .mtrl-list__overline, .mtrl-list__headline, .mtrl-list__supporting { }
+.mtrl-list__leading, .mtrl-list__leading--icon, .mtrl-list__leading--avatar, .mtrl-list__leading--image, .mtrl-list__leading--video { }
+.mtrl-list__trailing, .mtrl-list__trailing--icon, .mtrl-list__trailing--text { }
+```
 
 ## Measurements
 
-`_list.scss` does not name any Material Design 3 shape or size token, so these are the stylesheet's own declarations, cited by the SCSS variable that carries them. Anything not listed here has no named source in the component.
+From Compose's `ListItem` and `ListTokens`:
 
-| Attribute | Value | Source |
-|-----------|-------|--------|
-| Item min height | 48dp | `$list-item-height` (`_list.scss`) |
-| Dense item min height | 40dp | `$list-item-dense-height` (`_list.scss`) |
-| Item vertical padding | 8dp | `$list-padding` (`_list.scss`) |
-| Item horizontal padding | 16dp | `$list-item-padding` (`_list.scss`) |
-| Section title padding | 16dp | `$list-section-padding` (`_list.scss`) |
-| Container min height | 200dp | `$list-container-min-height` (`_list.scss`) |
-| Item content gap | 16dp | `gap` on `.mtrl-list-item` (`_list.scss`) |
-| Leading icon | 24×24dp | `.mtrl-list-item-leading` (`_list.scss`) |
-
-`$list-padding` is also declared as the vertical padding of a `.mtrl-list` block, but nothing is ever given that class — the container is `.mtrl-list-container` and the wrapper `.mtrl-list-content` — so that rule matches no element and only the item padding is real.
-
-The typography is set through the theme's typescale rather than by size: `body-large` for the headline, `body-medium` for supporting text, and `label-small` for the overline and metadata.
-
-## TypeScript Support
-
-```typescript
-import { createList } from 'mtrl';
-import type { ListConfig, ListComponent, ListItem, ListSelectEvent } from 'mtrl';
-
-const config: ListConfig<ListItem> = {
-  items: [
-    { id: 'inbox', headline: 'Inbox' },
-    { id: 'sent', headline: 'Sent' }
-  ],
-  multiSelect: true
-};
-
-const list: ListComponent = createList(config);
-
-list.on('select', (event: ListSelectEvent) => {
-  console.log(event.item);
-});
-```
-
-`ListConfig`, `ListComponent` and `ListItem` are exported from the package root, along with `SelectEvent` under the name `ListSelectEvent`. `LoadEvent` is exported from the component's own types module.
+| Attribute | Value |
+|-----------|-------|
+| Row | 56dp one line, 72dp two, 88dp three; 16dp between its parts |
+| Padding | 8dp top and bottom (12dp for three lines), 16dp at the sides |
+| Text | Headline Body Large `on-surface`; overline Label Small and supporting text Body Medium, `on-surface-variant` |
+| Leading | Icon 24dp; avatar 40dp; image 56dp; video 100 × 56dp (114 × 64dp in three lines) |
+| Trailing text | Label Small |
+| Subheader | Label Large, `on-surface-variant` |
+| Divider | 1dp `outline-variant`; inset 72dp from the start and 16dp from the end |
+| Focus | A 2dp `secondary` ring inside the row |
