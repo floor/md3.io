@@ -43,7 +43,7 @@ username.on('input', ({ value }) => {
 | `required` | `boolean` | `false` | Marks the input required for native form validation |
 | `disabled` | `boolean` | `false` | Renders the field non-interactive |
 | `readonly` | `boolean` | `false` | Accepted by the config type; set it yourself with `setAttribute('readonly', '')` |
-| `maxLength` | `number` | — | Native `maxlength` |
+| `maxLength` | `number` | — | Native `maxlength`, and a character counter (`count/max`) at the end of the supporting text row |
 | `pattern` | `string` | — | Native validation `pattern` |
 | `autocomplete` | `string` | — | Native `autocomplete` token |
 | `leadingIcon` | `string` | — | HTML (typically an inline `<svg>`) shown before the input |
@@ -60,11 +60,12 @@ username.on('input', ({ value }) => {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `element` | `HTMLElement` | The root container |
+| `element` | `HTMLElement` | The root: the field, then the supporting text row |
+| `field` | `HTMLElement` | The 56px container under the root: label, input, outline, icons and affixes. Anchor popovers to it, not to the root, so the supporting text row never pushes them down |
 | `input` | `HTMLInputElement \| HTMLTextAreaElement` | The native control |
 | `leadingIcon` | `HTMLElement \| null` | The leading icon element, when one exists |
 | `trailingIcon` | `HTMLElement \| null` | The trailing icon element, when one exists |
-| `supportingTextElement` | `HTMLElement \| null` | The supporting-text element, when one exists |
+| `supportingTextElement` | `HTMLElement \| null` | The supporting text on screen, when there is one (a live read) |
 | `prefixTextElement` | `HTMLElement \| null` | The prefix-text element, when one exists |
 | `suffixTextElement` | `HTMLElement \| null` | The suffix-text element, when one exists |
 
@@ -192,6 +193,21 @@ email.on('blur', ({ isEmpty }) => {
 });
 ```
 
+### A character counter
+
+```javascript
+const bio = createTextfield({
+  label: 'Bio',
+  maxLength: 160,
+  supportingText: 'A line about you'
+});
+```
+
+With a `maxLength`, the supporting text row ends with a counter, `0/160`, that follows typing and
+`setValue()`. A limit set or removed later on the input (`<m-textfield maxlength>` does this)
+adds or removes it. It describes the input, so a screen reader hears it with the field when it is
+focused, not on every keystroke, and it takes the error colour while the field is in error.
+
 ### Compact density
 
 ```javascript
@@ -253,46 +269,23 @@ The component renders a real `<input>` or `<textarea>` and forwards `name`,
 `required`, `maxlength`, `pattern` and `autocomplete` to it, so native
 validation and password managers behave as expected.
 
-**The label is the thing to watch.** The floating label is a `<label>` element
-with no `for` attribute, and the input is given no `id` and no `aria-label`.
-Visually the field is labelled; to a screen reader it is not. Give the input a
-name yourself — the component hands you both the escape hatches:
-
-```javascript
-const email = createTextfield({ label: 'Email', type: 'email' });
-
-// Simplest: mirror the visible label onto the input
-email.setAttribute('aria-label', 'Email');
-
-// Or associate an id with your own <label for="…"> elsewhere in the form
-email.setAttribute('id', 'signup-email');
-```
-
 **What the component sets for you**
 
+- The label is a `<label for>` pointing at the input, which gets an `id` if it has none, so the
+  field has an accessible name and a click on the label focuses it.
+- `aria-invalid="true"` while the field is in error (`setError(true)`, or `error: true`).
+- `aria-describedby` on the input, naming the supporting text and the counter while they are
+  shown, merged with any ids you set yourself.
 - The native attributes listed above, plus `disabled` when disabled.
-- A `placeholder` of a single space when you pass none, so the empty state can
-  be styled. It is invisible, and does not act as a label.
+- A `placeholder` of a single space when you pass none, so the empty state can be styled. It is
+  invisible, and does not act as a label; a placeholder you pass shows while the field is focused
+  or has no label.
 - The `--focused`, `--empty` and `--error` classes as the field's state changes.
 
 **What you still have to supply**
 
-- An accessible name, as above. This is the one thing the component cannot do
-  for you and the one thing every field needs.
-- `aria-invalid="true"` alongside `setError(true, …)`. The error state is
-  currently visual only.
-- `aria-describedby` pointing at the supporting text if you want it announced.
-  The element exists — `field.supportingTextElement` — but is not referenced;
-  give it an `id` and link it:
-
-  ```javascript
-  field.supportingTextElement.id = 'password-help';
-  field.setAttribute('aria-describedby', 'password-help');
-  ```
-
-- A label for icon buttons you place in `trailingIcon`. HTML you pass in is
-  inserted verbatim, so a clickable reveal or clear control needs its own
-  `role="button"`, `tabindex` and `aria-label`.
+- A label for icon buttons you place in `trailingIcon`. HTML you pass in is inserted verbatim, so
+  a clickable reveal or clear control needs its own `role="button"`, `tabindex` and `aria-label`.
 
 Keyboard behaviour is entirely the browser's: `Tab` to reach the field, normal
 text editing inside it, and `Enter` to submit the surrounding form (except in
@@ -314,23 +307,42 @@ text editing inside it, and `Enter` to submit the surrounding form (except in
 .mtrl-textfield--disabled { }
 
 /* Parts */
+.mtrl-textfield__field { /* the 56px container: everything below up to __supporting */ }
 .mtrl-textfield__input { }
 .mtrl-textfield__label { }
 .mtrl-textfield__leading-icon { }
 .mtrl-textfield__trailing-icon { }
 .mtrl-textfield__prefix { /* prefixText; the element is `__prefix`, not `__prefix-text` */ }
 .mtrl-textfield__suffix { }
-.mtrl-textfield__helper { /* supportingText */ }
+.mtrl-textfield__supporting { /* the row under the field */ }
+.mtrl-textfield__helper { /* supportingText, at the row's start */ }
 .mtrl-textfield__helper--error { }
+.mtrl-textfield__counter { /* maxLength, at the row's end */ }
 .mtrl-textfield__outline { /* outlined only: the border, around the notch */ }
 .mtrl-textfield__outline--notched { }
 ```
 
+The root holds two children: the field, then the supporting text row, which exists only while it
+holds a helper or a counter.
+
+```text
+.mtrl-textfield                root (element)
+├─ .mtrl-textfield__field      the container (field): label, input, outline, icons, affixes
+└─ .mtrl-textfield__supporting the row under it, in the flow
+   ├─ .mtrl-textfield__helper  start
+   └─ .mtrl-textfield__counter end
+```
+
+The row is in the flow: a helper that wraps pushes what follows down, and a field without one is
+56px. Since mtrl 0.10 (FLO-300) the label, input and slots are inside `__field`, not direct
+children of the root, so CSS written as `.mtrl-textfield > .mtrl-textfield__input` or
+`> .mtrl-textfield__label` now goes through the field: `.mtrl-textfield__field > …`. The filled
+indicator is `.mtrl-textfield__field::before`.
+
 One class name that looks like it should exist does not: there is no
-`--floating` modifier on the label. The raised, shrunken position is applied by
-CSS selectors on the input's state (`:focus ~ label`,
-`:not(:placeholder-shown) ~ label`) and, for the filled variant, by the
-`--focused` and `--empty` classes on the root — so there is no class to hook a
+`--floating` modifier on the label. The raised, shrunken position comes from the
+`--focused` and `--empty` classes on the root, and from the input's own state
+(a value or autofill, read with `:has()`) — so there is no class to hook a
 "is the label up?" style onto. The outlined variant draws its border with an
 `.mtrl-textfield__outline` element of three segments (`__outline-leading`,
 `__outline-notch`, `__outline-trailing`); JavaScript sizes the notch from the
@@ -355,13 +367,14 @@ declaration each value comes from in
 | Filled corner | 4px top only | `border-radius: … … 0 0` on the filled variant |
 | Input padding | 13px 16px | `.mtrl-textfield__input { padding }` |
 | Filled input padding | 20px 16px 7px | filled variant input rule |
-| Icon size | 24px, 20px inside it | leading/trailing icon rules |
+| Icon size | 24px | leading/trailing icon rules |
 | Icon size, compact | 20px, 16px inside it | `--density-compact` icon rules |
 | Input padding with an icon | 44px on that side | `--with-leading-icon` / `--with-trailing-icon` input rules |
 | Input padding with an affix | 48px on that side | `--with-prefix` / `--with-suffix` input rules (overwritten by `withPlacement` once measured) |
-| Active indicator | 2px | filled variant indicator rule |
+| Active indicator | 1px at rest, 2px focused | filled input `border-bottom` and `.mtrl-textfield__field::before` |
 | Input type | body-large | `@include m.typography('body-large')` |
 | Supporting text type | body-small | `@include m.typography('body-small')` |
+| Supporting text row | 4px above, 16px each side | `.mtrl-textfield__supporting { padding }` (`TextFieldDefaults.supportingTextPadding`) |
 | Multiline minimum height | 100px | `--multiline` input rule |
 | Width, unsized | 280px (Compose `TextFieldDefaults.MinWidth`) | `contain-intrinsic-inline-size: v.textfield('width')` on `.mtrl-textfield` |
 
