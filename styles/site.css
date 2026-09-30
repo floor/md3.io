@@ -18,7 +18,9 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .header__section { font-size: var(--fs-base); }
 .sidebar__label { font-size: var(--fs-xs); color: var(--text); }
 .sidebar__link { font-size: var(--fs-md); }
-.sidebar__foot { padding: 24px 20px; font-size: var(--fs-xs); color: var(--text-dim); }
+/* The credits sit at the foot of the sidebar, below the navigation however short it is. */
+.sidebar { display: flex; flex-direction: column; }
+.sidebar__foot { margin-top: auto; padding: 24px 20px 4px; font-size: var(--fs-xs); color: var(--text-dim); }
 .sidebar__foot a { color: inherit; }
 .mobile-navigation { display: none; }
 .page-wrap { padding: 8px 40px 64px; width: 100%; }
