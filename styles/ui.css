@@ -1173,3 +1173,11 @@ html[data-theme] .source__panel pre {
         width: 100%;
     }
 }
+
+/* A component's bundle size, at the right of the playground footer: the factory's
+   on the Vanilla tab, the web component's on the others. The theme controls sit in
+   the playground heading and the copy button over the code. */
+.component-size { margin-left: auto; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; cursor: help; }
+.playground-space > .preview-copy { position: absolute; top: 16px; right: 18px; z-index: 1; }
+@media (max-width: 400px) { .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; } }
+.component-size strong { color: var(--text-muted); font-family: var(--font-mono); font-weight: var(--fw-bold, 600); }

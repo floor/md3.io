@@ -11,6 +11,8 @@
       root.style.colorScheme = root.dataset.themeMode;
     })();
   </script>
+  <link rel="preload" href="/fonts/Roboto-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/styles/roboto.css" />
   <link rel="stylesheet" href="/dist/mtrl/styles/base.css" />
   <% it.component.styles.forEach(style => { %><link rel="stylesheet" href="/dist/mtrl/styles/<%= style %>.css" /><% }); %>
   <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/mtrl/themes/<%= theme %>.css" /><% }); %>

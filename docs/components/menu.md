@@ -58,6 +58,7 @@ The Menu component accepts the following configuration options:
 | `width` | `string` | `undefined` | Optional width (e.g., '200px', '100%') |
 | `maxHeight` | `string` | `undefined` | Optional maximum height with scroll |
 | `offset` | `number` | `0` | Offset from opener in pixels |
+| `positionTarget` | `HTMLElement` | the opener | The element the menu is placed against, when it isn't the opener; the opener still opens, closes and gets focus back. The select passes its text field's `field`, so the helper text row never pushes the menu down |
 | `autoFlip` | `boolean` | `true` | Whether to flip position to stay in viewport |
 | `visible` | `boolean` | `false` | Whether menu is initially visible |
 | `container` | `HTMLElement` | `document.body` | Container element to append menu to |

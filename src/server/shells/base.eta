@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="/styles/site.css" />
   <link rel="stylesheet" href="/styles/search.css" />
   <% if (it.section === 'Examples') { %><link rel="stylesheet" href="/styles/examples.css" /><script type="module" src="/dist/examples.js"></script><% } %>
+  <% if (it.section === 'Styles') { %><link rel="stylesheet" href="/styles/roboto.css" /><link rel="stylesheet" href="/styles/styles-pages.css" /><script type="module" src="/dist/styles.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
   </script>
@@ -43,6 +44,7 @@
     <% if (it.section) { %><span class="header__sep">/</span><span class="header__section"><%= it.section %></span><% } %>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
+      <a href="/styles/" class="<%= it.section === 'Styles' ? 'active' : '' %>">Styles</a>
       <a href="/examples/" class="<%= it.section === 'Examples' ? 'active' : '' %>">Examples</a>
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
       <a href="https://github.com/floor/mtrl" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
@@ -60,11 +62,11 @@
   <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
   <div class="layout">
     <nav class="sidebar <%= it.isHome ? 'sidebar--home' : '' %>" id="sidebar" aria-label="<%= it.section || 'Site' %> navigation">
-      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/mtrl">GitHub ↗</a></div>
+      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/styles/">Styles</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/mtrl">GitHub ↗</a></div>
       <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
-      <div class="sidebar__foot">mtrl · Material Design 3<br><a href="https://github.com/floor/mtrl/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a></div>
+      <div class="sidebar__foot">mtrl · Material Design 3<br><a href="https://github.com/floor/mtrl/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>

@@ -1,0 +1,24 @@
+<div class="page-wrap styles-page">
+  <header class="page-heading"><span class="eyebrow">STYLES</span><h1>Styles</h1><p>The design tokens behind every mtrl component, read from mtrl's own CSS.</p></header>
+  <section aria-labelledby="styles-available"><h2 class="catalog-label" id="styles-available">Foundations</h2>
+    <div class="styles-cards">
+      <a class="styles-card ui-card ui-card--interactive" href="/styles/color/">
+        <div class="styles-card__visual styles-card__visual--color" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="styles-card__body"><div><h3>Color</h3><p>Every color role in each theme, light and dark, with contrast checks.</p></div><span aria-hidden="true">↗</span></div>
+      </a>
+      <a class="styles-card ui-card ui-card--interactive" href="/styles/typography/">
+        <div class="styles-card__visual styles-card__visual--type" aria-hidden="true"><span>Aa</span></div>
+        <div class="styles-card__body"><div><h3>Typography</h3><p>The 15 type scale roles as live samples you can edit.</p></div><span aria-hidden="true">↗</span></div>
+      </a>
+    </div>
+  </section>
+  <section aria-labelledby="styles-coming"><h2 class="catalog-label" id="styles-coming">Coming</h2>
+    <ul class="styles-cards styles-cards--coming">
+      <% it.comingStyles.forEach(style => { %>
+      <li class="styles-card styles-card--coming ui-card" aria-disabled="true">
+        <div class="styles-card__body"><div><h3><%= style.name %></h3><p><%= style.summary %></p></div><span class="styles-badge">Coming</span></div>
+      </li>
+      <% }); %>
+    </ul>
+  </section>
+</div>

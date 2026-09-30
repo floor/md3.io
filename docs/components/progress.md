@@ -131,15 +131,24 @@ The Progress component provides the following methods:
 
 ## Events
 
-The Progress component emits the following events. They are native
-`CustomEvent`s dispatched on `progress.element`, and `on()`/`off()` are thin
-wrappers over `addEventListener`/`removeEventListener`, so the handler receives
-the event and the data is on `event.detail`:
+`on()` and `off()` subscribe through the component's emitter, as every mtrl component's do; handlers receive `{ value, max }`:
 
-| Event | Description | `event.detail` |
-|-------|-------------|------|
-| `change` | Fires when progress value changes | A DOM `CustomEvent`; `event.detail` is `{ value: number, max: number }` |
-| `complete` | Fires when progress reaches 100%. **Note:** With animated value changes (default), this event fires after the animation completes (~500ms). With immediate value changes (`setValue(100, false)`), it fires immediately. | A DOM `CustomEvent`; `event.detail` is `{ value: number, max: number }` |
+```javascript
+const progress = createProgress({ value: 20 });
+
+progress.on('change', ({ value, max }) => {
+  console.log(`${value} of ${max}`);
+});
+
+progress.setValue(60);
+```
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `change` | `{ value: number, max: number }` | The value was set |
+| `complete` | `{ value: number, max: number }` | The value reached the maximum: after the animation with animated changes (the default), at once with `setValue(100, false)` |
+
+Before mtrl 0.10.0-next.4 these were DOM `CustomEvent`s on `progress.element`, with the payload in `event.detail`.
 
 ## Examples
 

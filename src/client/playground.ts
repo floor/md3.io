@@ -51,6 +51,7 @@ function selectFramework(next: Framework, focus = false, save = false) {
     tab.tabIndex = on ? 0 : -1;
     if (on && focus) tab.focus();
   }
+  for (const size of document.querySelectorAll<HTMLElement>('.component-size [data-flavour]')) size.hidden = size.dataset.flavour !== (framework === 'vanilla' ? 'factory' : 'element');
   if (save) {
     try { localStorage.setItem(FRAMEWORK_KEY, framework); } catch { /* Storage may be unavailable. */ }
   }

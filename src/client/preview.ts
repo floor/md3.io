@@ -43,6 +43,7 @@ let clicks = 0;
 let disposing = false;
 let generation = 0;
 const stage = document.querySelector<HTMLElement>('#stage')!;
+
 const post = (data: Record<string, unknown>) => { if (!disposing) parent.postMessage(data, location.origin); };
 const clicked = () => post({ type: 'md3:click', count: ++clicks });
 const report = (value: string) => post({ type: 'md3:event', message: value });
