@@ -1,32 +1,67 @@
-# Navigation Rail
+# Navigation rail
 
-The navigation rail holds three to seven top-level destinations in a column along the side of a medium or expanded window. In Material 3 expressive it comes in two states of one component: **collapsed**, a 96dp column of icons with labels under them, and **expanded**, a 220 to 360dp panel with the labels beside the icons. The expanded rail replaces the navigation drawer.
+A navigation rail holds three to seven top-level destinations in a column along the side of a
+medium or expanded window. In M3 Expressive it has two states: **collapsed**, a 96dp column
+with the labels under the icons, and **expanded**, a 220 to 360dp panel with the labels beside
+them, which replaces the navigation drawer. See the
+[M3 navigation rail guidelines](https://m3.material.io/components/navigation-rail/overview).
 
-## Import
+## Usage
 
-```javascript
-import { createNavigationRail } from 'mtrl';
+Each destination has an `id`, a `label` and an `icon`; `active` marks the current one. A badge
+is a count or a short text, and `badgeLabel` says what it counts.
+
+```example
+navigation-rail:
+  ariaLabel: Mail
+  items:
+    - { id: inbox, label: Inbox, icon: inboxIcon, badge: 24, badgeLabel: 24 unread, active: true }
+    - { id: outbox, label: Outbox, icon: outboxIcon }
+    - { id: favorites, label: Favorites, icon: starIcon }
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const rail = createNavigationRail({
-  items: [
-    { id: 'inbox', label: 'Inbox', icon: inboxIcon, badge: 24, badgeLabel: '24 unread', active: true },
-    { id: 'outbox', label: 'Outbox', icon: outboxIcon, href: '/outbox' },
-    { id: 'favorites', label: 'Favorites', icon: starIcon, badge: true }
-  ],
-  onSelect: ({ id, originalEvent }) => {
-    originalEvent.preventDefault();
-    router.go(id);
-  }
-});
+### Expanded
 
-document.body.prepend(rail.element);
+The menu button at the top expands and collapses the rail; `expanded` sets the state it starts
+in, and `expandedWidth` its expanded width. A destination with `href` is a link, and keeps the
+browser's navigation.
+
+```example
+navigation-rail:
+  expanded: true
+  expandedWidth: 320
+  items:
+    - { id: inbox, label: Inbox, icon: inboxIcon, active: true }
+    - { id: outbox, label: Outbox, icon: outboxIcon, href: /outbox }
 ```
 
-## Configuration
+### Modal
+
+With `layout: 'modal'`, the collapsed rail is hidden and the expanded one opens over the page
+in a native modal dialog; `Escape` and the scrim collapse it. `hideWhenCollapsed` hides a
+standard rail while it is collapsed.
+
+```example
+navigation-rail:
+  layout: modal
+  items:
+    - { id: inbox, label: Inbox, icon: inboxIcon, active: true }
+    - { id: outbox, label: Outbox, icon: outboxIcon }
+```
+
+A selection emits `select` with `{ id, index, originalEvent }`; `originalEvent.preventDefault()`
+keeps a link's navigation to the app's router. The web component dispatches `change` with
+`{ value }`, the destination's id. `header` puts an element of the app's, such as a FAB, under
+the menu button; the web component takes it in its `header` slot.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-navigation-rail>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -43,10 +78,11 @@ document.body.prepend(rail.element);
 | `header` | `HTMLElement` | `undefined` | Application-owned element under the menu button, such as a FAB |
 | `ripple` | `boolean` | `true` | Press ripple, clipped to the active indicator |
 | `ariaLabel` | `string` | `'Primary navigation'` | Accessible name of the rail |
+| `class` | `string` | `undefined` | Additional CSS classes |
 | `onSelect` | `(event) => void` | `undefined` | Called with `{ id, index, originalEvent }` when a destination is selected |
 | `onExpand` / `onCollapse` | `() => void` | `undefined` | Called when the rail expands or collapses |
 
-### Items
+#### Items
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -58,34 +94,61 @@ document.body.prepend(rail.element);
 | `badge` | `string \| number \| boolean` | A large badge with text, or `true` for a dot |
 | `badgeLabel` | `string` | Accessible description of the badge |
 | `active` | `boolean` | Initially active |
-| `disabled` | `boolean` | Not selectable, still focusable as a link |
+| `disabled` | `boolean` | Not selectable, and out of the tab order |
 
-## API
+### Methods
 
-| Method | Description |
-|--------|-------------|
-| `expand()`, `collapse()`, `toggle()`, `isExpanded()` | Expansion state |
-| `setActive(id)`, `getActive()` | Active destination |
-| `setItems(items)`, `getItems()` | Replace or read the destinations |
-| `setBadge(id, badge, label?)` | Update a badge |
-| `on(event, handler)`, `off(event, handler)` | `select`, `expand`, `collapse` |
-| `destroy()` | Remove listeners and the element |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `expand()` / `collapse()` / `toggle()` | `NavigationRailComponent` | Expansion state |
+| `isExpanded()` | `boolean` | Whether it is expanded |
+| `setActive(id)` / `getActive()` | `NavigationRailComponent` / `string \| null` | The active destination; `setActive()` emits nothing |
+| `setItems(items)` / `getItems()` | `NavigationRailComponent` / `NavigationRailItemConfig[]` | Replace or read the destinations |
+| `setBadge(id, badge, label?)` | `NavigationRailComponent` | Update a badge |
+| `on(event, handler)` / `off(event, handler)` | `NavigationRailComponent` | Events |
+| `destroy()` | `void` | Remove listeners and the element |
 
-## Motion
+### Events
 
-Selecting a destination grows the secondary-container indicator out of the middle of the item on the spatial spring; the previous indicator shrinks back. Expanding glides the width, the item height, the icon and the indicator on the same spring, and the label swaps from under the icon to beside it at the midpoint behind a fade. Modal rails use the fast spatial spring. All of it is disabled under `prefers-reduced-motion`.
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `select` | `{ id, index, originalEvent }` | A destination was clicked or activated from the keyboard |
+| `expand` / `collapse` | `{ expanded }` | The rail expanded or collapsed |
+
+## Accessibility
+
+- A `nav` landmark (a `dialog` in the modal layout) named by `ariaLabel`; the active
+  destination has `aria-current="page"`.
+- A badge is in its destination's name: the label, then `badgeLabel`, the badge's text, or
+  "New activity" for a dot.
+- `Tab` reaches the destinations; `Up`, `Down`, `Home` and `End` move between the enabled ones.
+- The menu button has `aria-expanded`, and is named by `expandLabel` or `collapseLabel`. The
+  modal rail keeps focus inside while it is open.
 
 ## Styling
 
-Import the rail styles on their own with `mtrl/styles/navigation-rail`, or as part of `mtrl/styles`.
+Selecting a destination grows the `secondary-container` indicator out of the middle of the
+item on the spatial spring. Expanding glides the width, the items and the indicator on the
+same spring, and the label moves beside the icon at the midpoint behind a fade. None of it
+runs with reduced motion.
 
 ```css
-.mtrl-navigation-rail { /* container */ }
-.mtrl-navigation-rail--expanded { /* expanded state */ }
-.mtrl-navigation-rail--modal { /* modal dialog */ }
-.mtrl-navigation-rail__toggle { /* menu button */ }
-.mtrl-navigation-rail__item { /* destination */ }
-.mtrl-navigation-rail__item--active { /* active destination */ }
-.mtrl-navigation-rail__indicator { /* active indicator */ }
-.mtrl-navigation-rail__badge { /* large badge; --dot for the dot */ }
+.mtrl-navigation-rail { }                                   /* the rail */
+.mtrl-navigation-rail--expanded, .mtrl-navigation-rail--modal { }
+.mtrl-navigation-rail__toggle { }                           /* the menu button */
+.mtrl-navigation-rail__item, .mtrl-navigation-rail__item--active { }
+.mtrl-navigation-rail__indicator { }                        /* the active indicator */
+.mtrl-navigation-rail__badge { }                            /* --dot for the dot */
 ```
+
+## Measurements
+
+From the M3 Expressive rail tokens (Android `navigationrail`, version 34.0.0):
+
+| Attribute | Collapsed | Expanded |
+|-----------|-----------|----------|
+| Width | 96dp | 220–360dp, 280dp by default |
+| Destination | 64dp tall, the label under the icon | 56dp tall, the label beside the icon |
+| Active indicator | A 56 × 32dp pill | 56dp tall, the item's width less 40dp |
+| Icon | 24dp | 24dp |
+| Menu button | 48dp, 40dp above the destinations | 48dp |

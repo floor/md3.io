@@ -1,211 +1,114 @@
-# Bottom App Bar Component
+# Bottom app bar
 
-The bottom app bar puts a screen's actions within thumb reach on a phone: a row
-of icon buttons on the left and, usually, a [FAB](./fab.md) on the right. It
-pins itself to the bottom of its positioned container, and it can hide itself
-while the user scrolls down so the content gets the whole screen.
+A bottom app bar puts a screen's frequent actions within thumb reach on a phone: a row of icon
+buttons and, often, a [FAB](fab.md). M3 Expressive replaces it with the docked toolbar; this
+page describes the bar as mtrl ships it today. See the
+[M3 bottom app bar guidelines](https://m3.material.io/components/bottom-app-bar/overview).
 
-## Overview
+## Usage
 
-The component is a `role="toolbar"` container holding two slots it builds for
-you: an actions container on the leading side and a FAB container on the
-trailing side. You fill them with `addAction()` and `addFab()`; the bar owns
-nothing else about their contents.
+The actions sit at the leading side and the FAB at the trailing end. Icon buttons need
+`ariaLabel` to name them.
 
-Two things it does own:
-
-- **the FAB slot** — `fabPosition: 'end'` leaves the FAB at the trailing edge,
-  `'center'` absolutely centres it in the bar. Declaring `hasFab: true` at
-  creation switches the bar to its shorter with-FAB height even before a FAB is
-  added.
-- **auto-hide** — with `autoHide`, the bar listens on `window` and slides out of
-  view once the page scrolls more than 10px down, sliding back on the way up.
-
-The element is `position: absolute`, so the thing you put it in needs to be
-positioned. The showcase does exactly that: a `position: relative` demo box with
-the bar pinned to its bottom edge.
-
-## Import
-
-```javascript
-import { createBottomAppBar, createIconButton, createFab } from 'mtrl';
+```example
+bottom-app-bar:
+  actions:
+    - { icon: searchIcon, ariaLabel: Search }
+    - { icon: heartOutlineIcon, ariaLabel: Favorite }
+    - { icon: shareIcon, ariaLabel: Share }
+  fab: { icon: addIcon, ariaLabel: Compose }
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const bar = createBottomAppBar();
+### A centered FAB
 
-bar.addAction(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);
-bar.addAction(createIconButton({ icon: heartOutlineIcon, ariaLabel: 'Favorite' }).element);
-bar.addAction(createIconButton({ icon: shareIcon, ariaLabel: 'Share' }).element);
-bar.addFab(createFab({ icon: addIcon, ariaLabel: 'Compose' }).element);
+`fabPosition: 'center'` puts the FAB in the middle of the bar, and the actions keep the
+leading side.
 
-document.querySelector('.screen').appendChild(bar.element);  // .screen is position: relative
+```example
+bottom-app-bar:
+  fabPosition: center
+  actions:
+    - { icon: menuIcon, ariaLabel: Menu }
+  fab: { icon: photoIcon, ariaLabel: Scan }
 ```
 
-## Configuration
+### Hiding on scroll
+
+With `autoHide`, the bar slides out once the window scrolls more than 10px down, and back on
+the way up, over `transitionDuration` milliseconds.
+
+```example
+bottom-app-bar:
+  autoHide: true
+  transitionDuration: 200
+  actions:
+    - { icon: searchIcon, ariaLabel: Search }
+```
+
+Auto-hide follows the window; a bar over its own scrolling container is driven with `show()`
+and `hide()`. `onVisibilityChange(visible)` is called whenever the bar hides or shows,
+whatever caused it. The bar is `position: absolute` at the bottom of its container, so that
+container needs `position: relative`, and room at the end of its content for the bar.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-bottom-app-bar>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `hasFab` | `boolean` | `false` | Marks the bar as carrying a FAB from the start |
-| `fabPosition` | `'center' \| 'end'` | `'end'` | Where the FAB container sits |
+| `hasFab` | `boolean` | `false` | The bar's height with a FAB from the start; `addFab()` sets it too |
+| `fabPosition` | `'center' \| 'end'` | `'end'` | Where the FAB sits |
 | `autoHide` | `boolean` | `false` | Hide on scroll down, show on scroll up |
-| `transitionDuration` | `number` | `300` | Milliseconds for the show and hide slide. Only applied when `autoHide` is on |
-| `onVisibilityChange` | `(visible: boolean) => void` | — | Called when scrolling hides or shows the bar |
-| `tag` | `string` | `'div'` | Element to build the bar from |
+| `transitionDuration` | `number` | `300` | Milliseconds for the slide; applied with `autoHide` |
+| `onVisibilityChange` | `(visible: boolean) => void` | — | Called when the bar hides or shows |
+| `tag` | `string` | `'div'` | The element to build the bar from |
 | `class` | `string` | — | Extra classes on the element |
 | `prefix` | `string` | `'mtrl'` | Class-name prefix |
 | `componentName` | `string` | `'bottom-app-bar'` | Name used in class generation |
 
-## Component API
+### Methods
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `addAction(button)` | `button: HTMLElement` | `BottomAppBar` | Appends an element to the actions container |
-| `addFab(fab)` | `fab: HTMLElement` | `BottomAppBar` | Replaces whatever is in the FAB container and marks the bar as having one |
-| `show()` | — | `BottomAppBar` | Slides the bar back into view |
-| `hide()` | — | `BottomAppBar` | Slides it out of view |
-| `isVisible()` | — | `boolean` | Whether it is currently shown |
-| `getActionsContainer()` | — | `HTMLElement` | The actions container, for removing or reordering its children |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `addAction(button)` | `BottomAppBar` | Appends an element to the actions |
+| `addFab(fab)` | `BottomAppBar` | Replaces the FAB, and gives the bar its height with a FAB |
+| `show()` / `hide()` | `BottomAppBar` | Slides the bar into or out of view |
+| `isVisible()` | `boolean` | Whether it is shown |
+| `getActionsContainer()` | `HTMLElement` | The actions container, to remove or reorder actions |
+| `destroy()` | `void` | Removes the bar and its window scroll listener |
 
-The component is built on the library's base, so `element`, `getClass()`,
-`addClass()` and `lifecycle` (with `mount()`, `unmount()` and `destroy()`) are
-there as well. Tear it down with **`lifecycle.destroy()`**: that is the one that
-removes the `window` scroll listener. There is also a bare `destroy()` on the
-component, inherited from the base element; it removes the element and leaves
-the scroll handler bound to a bar that is no longer on the page.
+### Events
 
-There is no `removeAction()`: take children off `getActionsContainer()`
-directly. `addFab()` empties its container first, so calling it again swaps the
-FAB rather than adding a second one.
-
-## Events
-
-The bar emits nothing on its own emitter. Use `onVisibilityChange` for the
-auto-hide transitions, and listen on the buttons you put in the bar for
-everything else.
-
-| Callback | Payload | Description |
-|----------|---------|-------------|
-| `onVisibilityChange` | `visible: boolean` | Scrolling hid or showed the bar. Not called by `show()` or `hide()` |
-
-If you drive visibility yourself, call your own code alongside `show()` and
-`hide()` — they change the bar, not the callback.
-
-## Examples
-
-### Actions and a FAB
-
-The showcase's basic bar is four icon buttons; adding a FAB is one more call.
-
-```javascript
-const bar = createBottomAppBar({ hasFab: true });
-
-const actions = { Search: searchIcon, Favorite: heartOutlineIcon, Share: shareIcon, Settings: settingsIcon };
-for (const [ariaLabel, icon] of Object.entries(actions)) {
-  bar.addAction(createIconButton({ icon, ariaLabel }).element);
-}
-
-bar.addFab(createFab({ icon: addIcon, ariaLabel: 'Add item' }).element);
-```
-
-### A centred FAB
-
-```javascript
-const bar = createBottomAppBar({
-  hasFab: true,
-  fabPosition: 'center'
-});
-
-bar.addAction(createIconButton({ icon: menuIcon, ariaLabel: 'Menu' }).element);
-bar.addFab(createFab({ icon: photoIcon, ariaLabel: 'Scan' }).element);
-```
-
-The FAB container becomes absolutely positioned at the centre of the bar, so
-the actions keep the full leading side to themselves.
-
-### Hiding on scroll
-
-```javascript
-const bar = createBottomAppBar({
-  autoHide: true,
-  transitionDuration: 200,
-  onVisibilityChange: (visible) => {
-    document.body.classList.toggle('bar-hidden', !visible);
-  }
-});
-```
-
-Auto-hide watches `window.scrollY`, so a bar inside its own scrolling box will
-not react to that box. Drive it with `show()` and `hide()` there:
-
-```javascript
-const bar = createBottomAppBar();
-const list = document.querySelector('.message-list');
-let lastTop = 0;
-
-list.addEventListener('scroll', () => {
-  const down = list.scrollTop > lastTop;
-  lastTop = list.scrollTop;
-  if (down && bar.isVisible()) bar.hide();
-  else if (!down && !bar.isVisible()) bar.show();
-});
-```
+The bar emits no events: `onVisibilityChange` reports its visibility.
 
 ## Accessibility
 
-- The element is a `role="toolbar"` labelled `"Bottom app bar"`. That label is
-  fixed; set a better one on `element` yourself when a screen has more than one
-  toolbar.
-- `role="toolbar"` sets an expectation of arrow-key navigation between its
-  controls, and the component does not implement it. Either add roving tabindex
-  yourself or change the role on `element` to match what the bar actually does.
-- Icon-only actions need an accessible name; pass `ariaLabel` to each button.
-- Hiding the bar moves it out of the viewport with a transform, so it stays in
-  the tab order while hidden. If the bar is meant to be unreachable when
-  hidden, set `hidden` or `inert` on `element` alongside `hide()`.
-- The bar overlays the bottom of its container, so leave room at the end of
-  scrollable content for the last item not to sit underneath it.
+- The bar is a `toolbar` named "Bottom app bar"; the web component's `aria-label` names it
+  instead. Its buttons are each in the tab order: the toolbar has no arrow-key navigation.
+- Each icon button and the FAB need their `ariaLabel`.
+- Hidden, the bar is moved out of view and stays in the tab order.
 
 ## Styling
 
+The background is the theme's `surface-container`. Hiding is `transform: translateY(100%)`.
+
 ```css
 .mtrl-bottom-app-bar { }
-.mtrl-bottom-app-bar--with-fab { }
-.mtrl-bottom-app-bar--fab-center { }
-.mtrl-bottom-app-bar--hidden { }
-
-/* the parts */
-.mtrl-bottom-app-bar__actions { }
-.mtrl-bottom-app-bar__fab-container { }
+.mtrl-bottom-app-bar--with-fab, .mtrl-bottom-app-bar--fab-center, .mtrl-bottom-app-bar--hidden { }
+.mtrl-bottom-app-bar__actions, .mtrl-bottom-app-bar__fab-container { }
 ```
-
-The background is the theme's `surface-container`. Hiding is a
-`transform: translateY(100%)`, which is why the transition is on `transform`.
-
-Note that `BOTTOM_APP_BAR_CLASSES` in `constants.ts` lists a partly different
-set of names — `bottom-app-bar-fab` for the FAB container, for instance. The
-classes above are what the component writes and what the stylesheet matches.
 
 ## Measurements
 
-`_bottom-app-bar.scss` names no M3 token for these values, so the source column
-points at the declaration instead of at a token.
-
-| Attribute | Value | Source |
-|-----------|-------|--------|
-| Height | 80dp | commented "Default height as per specs" |
-| Height with a FAB | 72dp | the `--with-fab` rule |
-| Padding | 12dp top and bottom, 16dp trailing, 4dp leading | commented on the padding declaration |
-| Space between actions | 4dp | `gap` on `-actions` |
-| Elevation | level 2 | `elevation(2)` |
-| Scroll delta before hiding or showing | 10px | the `autoHide` handler in `bottom-app-bar.ts` |
-| Show and hide transition | 300ms | `DEFAULT_TRANSITION_DURATION` in `constants.ts` |
-
-One caveat on the corners: the stylesheet asks for `t.shape('medium')` on the
-two top corners, which expands to `var(--mtrl-sys-shape-medium)`. The token
-sheet defines `--mtrl-sys-shape-corner-medium`, not that name, so the variable
-is unset and the radius does not apply — the bar's top corners are square as
-shipped. Set `border-top-left-radius` and `border-top-right-radius` yourself if
-you want them rounded.
+| Attribute | Value |
+|-----------|-------|
+| Height | 80dp; 72dp with a FAB |
+| Padding | 12dp top and bottom, 4dp leading, 16dp trailing |
+| Space between actions | 4dp |
+| Elevation | Level 2 |
+| Corners | None |

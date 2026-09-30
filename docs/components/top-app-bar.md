@@ -1,223 +1,124 @@
-# Top App Bar Component
+# Top app bar
 
-The top app bar holds the current screen's identity and its actions: a
-navigation icon on the left, a headline, and up to a few actions on the right.
-It is a `<header role="banner">` that spans the width of its container and
-reacts to scrolling, either by raising itself or, on the taller types, by
-compressing down to the small one.
+A top app bar shows the current screen's title, a navigation button and the screen's most
+important actions. M3 has four types: **small** and **center-aligned**, one 64dp row, and
+**medium** and **large**, with the headline on a second row, which compress to the small bar
+as the page scrolls. See the
+[M3 top app bar guidelines](https://m3.material.io/components/app-bars/overview).
 
-## Overview
+## Usage
 
-Four types, differing in height and in where the headline sits:
+The leading button is the navigation icon; the actions go at the trailing end. Icon buttons
+need `ariaLabel` to name them.
 
-- **small** (64dp) — the default. Leading, headline and trailing in one row.
-  For sub-pages that need back navigation and a couple of actions.
-- **center** (64dp) — the same row, headline centred. For a root page showing
-  the app name.
-- **medium** (112dp) — two rows: leading and trailing on top, headline beneath
-  in `headline-small`.
-- **large** (152dp) — the same two rows with a `headline-medium` headline, for
-  maximum emphasis.
-
-The bar builds its own three containers and hands them to you; you fill the
-leading and trailing ones with whatever buttons the screen needs.
-
-Scrolling is on by default: the component listens on `window` and adds a
-scrolled state past `scrollThreshold` pixels, which changes the background to
-`surface-container` and raises the bar one elevation level. When `compressible`
-is on, which it is by default, a medium or large bar also collapses to 64dp and
-its headline shrinks back to `title-large`.
-
-The element is `position: absolute` at the top of its container, so the thing
-you put it in needs to be positioned — a plain `<div>` parent will leave the bar
-pinned to the nearest positioned ancestor, or to the page, rather than to the
-box you meant. Give that container `position: relative`.
-
-## Import
-
-```javascript
-import { createTopAppBar, createIconButton } from 'mtrl';
+```example
+top-app-bar:
+  title: Inbox
+  leading: { icon: backIcon, ariaLabel: Back }
+  actions:
+    - { icon: searchIcon, ariaLabel: Search }
+    - { icon: moreIcon, ariaLabel: More options }
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const bar = createTopAppBar({
-  title: 'Inbox',
-  type: 'small'
-});
+### A large bar that compresses
 
-bar.addLeadingElement(createIconButton({ icon: backIcon, ariaLabel: 'Back' }).element);
-bar.addTrailingElement(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);
-bar.addTrailingElement(createIconButton({ icon: moreIcon, ariaLabel: 'More options' }).element);
+Past `scrollThreshold` pixels of window scroll, the bar takes its scrolled state:
+`surface-container` and one level of elevation. A medium or large bar also compresses to
+64dp, its headline moving into the top row as Title Large; `compressible: false` keeps its
+height.
 
-document.querySelector('.screen').appendChild(bar.element);
+```example
+top-app-bar:
+  type: large
+  title: Photos
+  scrollThreshold: 8
 ```
 
-## Configuration
+### Following another scroller
+
+`scrollable: false` stops the bar following the window. A bar over its own scrolling
+container is driven with `setScrollState(scrolled)`; the web component follows the element
+whose id `scroll-target` names.
+
+```example
+top-app-bar:
+  type: medium
+  title: Messages
+  scrollable: false
+```
+
+The bar is `position: absolute` at the top of its container, so that container needs
+`position: relative`. `setType()` switches the type and keeps what is in the leading and
+trailing containers.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-top-app-bar>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `type` | `'small' \| 'medium' \| 'large' \| 'center'` | `'small'` | Height and headline placement |
-| `title` | `string` | — | Initial headline text |
-| `scrollable` | `boolean` | `true` | Watch `window` scrolling and toggle the scrolled state |
-| `compressible` | `boolean` | `true` | Let a medium or large bar collapse to small once scrolled |
+| `type` | `'small' \| 'center' \| 'medium' \| 'large'` | `'small'` | Height and headline placement |
+| `title` | `string` | — | The headline |
+| `scrollable` | `boolean` | `true` | Follow `window` scrolling and toggle the scrolled state |
+| `compressible` | `boolean` | `true` | Let a medium or large bar compress to small once scrolled |
 | `scrollThreshold` | `number` | `4` | Pixels of scroll before the scrolled state turns on |
 | `onScroll` | `(scrolled: boolean) => void` | — | Called each time the scrolled state flips |
-| `tag` | `string` | `'header'` | Element to build the bar from |
+| `tag` | `string` | `'header'` | The element to build the bar from |
 | `class` | `string` | — | Extra classes on the element |
 | `prefix` | `string` | `'mtrl'` | Class-name prefix |
 | `componentName` | `string` | `'top-app-bar'` | Name used in class generation |
 
-`scrollable` only wires the `window` listener. A bar inside its own scrolling
-container should leave it on or off as you like and drive the state itself with
-`setScrollState()`, which is what the showcase does for its boxed demos.
+### Methods
 
-## Component API
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `setTitle(title)` / `getTitle()` | `TopAppBar` / `string` | The headline |
+| `addLeadingElement(element)` | `TopAppBar` | Appends to the leading container |
+| `addTrailingElement(element)` | `TopAppBar` | Appends to the trailing container |
+| `setType(type)` | `TopAppBar` | Switches type, keeping the containers and their contents |
+| `setScrollState(scrolled)` | `TopAppBar` | Turns the scrolled state on or off |
+| `getHeadlineElement()` | `HTMLElement` | The `<h1>` holding the headline |
+| `getLeadingContainer()` / `getTrailingContainer()` | `HTMLElement` | The containers |
+| `destroy()` | `void` | Removes the bar and its window scroll listener |
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `setTitle(title)` | `title: string` | `TopAppBar` | Replaces the headline text |
-| `getTitle()` | — | `string` | The current headline text |
-| `addLeadingElement(element)` | `element: HTMLElement` | `TopAppBar` | Appends to the leading container |
-| `addTrailingElement(element)` | `element: HTMLElement` | `TopAppBar` | Appends to the trailing container |
-| `setType(type)` | `type: TopAppBarType` | `TopAppBar` | Switches type and rebuilds the rows, keeping the containers and their contents |
-| `setScrollState(scrolled)` | `scrolled: boolean` | `TopAppBar` | Turns the scrolled state on or off by hand |
-| `getHeadlineElement()` | — | `HTMLElement` | The `<h1>` holding the headline |
-| `getLeadingContainer()` | — | `HTMLElement` | The leading container, for removing or reordering its children |
-| `getTrailingContainer()` | — | `HTMLElement` | The trailing container |
+### Events
 
-The component is built on the library's base, so `element`, `getClass()`,
-`addClass()` and `lifecycle` (with `mount()`, `unmount()` and `destroy()`) are
-there as well. Tear it down with **`lifecycle.destroy()`**: that is the one that
-removes the `window` scroll listener. There is also a bare `destroy()` on the
-component, inherited from the base element; it removes the element and leaves
-the scroll handler bound to a bar that is no longer on the page.
-
-## Events
-
-The bar emits nothing on its own emitter. Use the `onScroll` callback for the
-scrolled state, and `element.addEventListener` (or the components you put in
-the leading and trailing containers) for everything else.
-
-| Callback | Payload | Description |
-|----------|---------|-------------|
-| `onScroll` | `scrolled: boolean` | The scrolled state changed; fires once per transition, not once per scroll event |
-
-## Examples
-
-### The four types side by side
-
-```javascript
-const demo = document.querySelector('.demo');
-
-const addBar = (type) => {
-  const bar = createTopAppBar({ type, title: 'Page title', scrollable: false });
-  bar.addLeadingElement(createIconButton({ icon: menuIcon, ariaLabel: 'Menu' }).element);
-  bar.addTrailingElement(createIconButton({ icon: moreIcon, ariaLabel: 'More options' }).element);
-  demo.appendChild(bar.element);
-};
-
-['center', 'small', 'medium', 'large'].forEach(addBar);
-```
-
-`scrollable: false` matters here: several bars on one page would otherwise all
-respond to the same window scroll.
-
-### A large bar that compresses
-
-```javascript
-const bar = createTopAppBar({
-  type: 'large',
-  title: 'Photos',
-  compressible: true,
-  scrollThreshold: 8,
-  onScroll: (scrolled) => {
-    document.body.classList.toggle('has-compact-bar', scrolled);
-  }
-});
-```
-
-Past 8px of scroll the bar drops from 152dp to 64dp, the headline moves into the
-top row and shrinks to `title-large`, and the background changes to
-`surface-container`.
-
-### Driving the state from a scrolling container
-
-```javascript
-const bar = createTopAppBar({ title: 'Messages', scrollable: false });
-const list = document.querySelector('.message-list');
-list.addEventListener('scroll', () => {
-  bar.setScrollState(list.scrollTop > 4);
-});
-```
-
-### Switching type at runtime
-
-```javascript continued
-bar.setType('medium');
-```
-
-`setType()` empties the element and rebuilds its rows, but the leading,
-headline and trailing containers are reused, so anything you added to them
-survives the switch.
+The bar emits no events: `onScroll` reports the scrolled state, once per change.
 
 ## Accessibility
 
-- The element is a `<header>` with `role="banner"` and `aria-label="Top app
-  bar"`. The label is fixed; set a better one on `element` yourself if a page
-  has more than one banner-like region.
-- The headline is an `<h1>`, so it is the page's top-level heading. If your
-  screen already has one, either use this bar's headline as it or change the
-  element's role — do not ship two `<h1>`s.
-- The bar contributes no keyboard behaviour of its own. Everything reachable in
-  it is a component you put there, so give icon-only buttons an accessible name.
-- The headline is a single line that ellipsises. A long title will be cut
-  visually, but it stays complete in the accessibility tree.
+- The bar is a `<header role="banner">` named "Top app bar"; the web component's `aria-label`
+  names it instead.
+- The headline is an `<h1>`: it is the screen's top-level heading, so the screen should not
+  have another. A long headline is cut with an ellipsis and stays whole for assistive tech.
+- The bar has no keyboard behaviour of its own: its buttons are in the tab order, and each
+  icon button needs its `ariaLabel`.
 
 ## Styling
 
+The small type has no modifier class. The colors are the theme's: `surface` behind
+`on-surface`, and `surface-container` once scrolled.
+
 ```css
 .mtrl-top-app-bar { }
-.mtrl-top-app-bar--center { }
-.mtrl-top-app-bar--medium { }
-.mtrl-top-app-bar--large { }
-.mtrl-top-app-bar--compressible { }
-.mtrl-top-app-bar--scrolled { }
-
-/* the parts */
-.mtrl-top-app-bar__leading { }
-.mtrl-top-app-bar__headline { }
-.mtrl-top-app-bar__trailing { }
+.mtrl-top-app-bar--center, .mtrl-top-app-bar--medium, .mtrl-top-app-bar--large { }
+.mtrl-top-app-bar--compressible, .mtrl-top-app-bar--scrolled { }
+.mtrl-top-app-bar__leading, .mtrl-top-app-bar__headline, .mtrl-top-app-bar__trailing { }
 .mtrl-top-app-bar__row { }   /* medium and large only */
 ```
 
-The small type carries no modifier class — it is the base rule. Colours come
-from the theme: `surface` behind `on-surface`, changing to `surface-container`
-once scrolled.
-
-Note that `TOP_APP_BAR_CLASSES` in `constants.ts` lists a different, unused set
-of names (`top-app-bar-section--leading`, `top-app-bar-title` and so on). The
-classes above are what the component actually writes and what the stylesheet
-matches.
-
 ## Measurements
 
-`_top-app-bar.scss` names no M3 token for these values, so the source column
-points at the declaration instead of at a token.
-
-| Attribute | Value | Source |
-|-----------|-------|--------|
-| Height, small and center | 64dp | commented "Default type (small) - 64dp height as per specs" |
-| Height, medium | 112dp | commented "Medium top app bar - 112dp height" |
-| Height, large | 152dp | commented "Large top app bar - 152dp height" |
-| Height once compressed | 64dp | the `--scrolled` compressible rule |
-| Horizontal padding | 16dp, 12dp below the `sm` breakpoint | `_top-app-bar.scss` |
-| Headline typography, small and center | `title-large` | the typography mixin |
-| Headline typography, medium | `headline-small` | the typography mixin |
-| Headline typography, large | `headline-medium` | the typography mixin |
-| Space after the leading container | 24dp | `margin-right` on `-leading` |
-| Space between trailing actions | 8dp | `gap` on `-trailing` |
-| Elevation once scrolled | level 1 | `elevation(1)` in the `--scrolled` rule |
-| Scroll threshold | 4px | `TOP_APP_BAR_DEFAULTS.SCROLL_THRESHOLD` |
-| Height and colour transition | 0.3s | the transition on the root rule |
+| Attribute | Value |
+|-----------|-------|
+| Height | 64dp small and center; 112dp medium; 152dp large; 64dp compressed |
+| Headline | Title Large (small, center, compressed); Headline Small (medium); Headline Medium (large) |
+| Horizontal padding | 16dp, 12dp below the `sm` breakpoint |
+| Space after the leading button | 24dp |
+| Space between actions | 8dp |
+| Scrolled | Elevation level 1 |

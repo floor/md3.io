@@ -70,6 +70,7 @@ declare global {
   function showExportPanel(): void;
   function showPanel(value: string): void;
   function showRange(range: string): void;
+  function showSlide(index: number): void;
   function showView(view: string): void;
   function startVoice(): void;
   function submitForm(data: FormData): Promise<void>;
@@ -91,7 +92,7 @@ const noops = `
   acceptTerms addEvent addToFavorites applyFilters applyMarks applyThemeColor book choose commitArchive
   createItem deleteItem exportPdf filterByPrice hideExportPanel loadAllFilters
   logoutUser openMenu refreshResults removeFromFavorites runSearch saveColor search saveSettings
-  setFavorite setPriceRange setSize setSystemVolume setWifi showDetail showExportPanel showPanel showRange showView
+  setFavorite setPriceRange setSize setSystemVolume setWifi showDetail showExportPanel showPanel showRange showSlide showView
   startVoice track undoArchive unsend updateEqualizer watchLater
 `;
 const noop = () => {};

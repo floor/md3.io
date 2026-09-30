@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { resolve } from 'node:path';
+import ts from 'typescript';
 import { exampleCode, parseExample, renderExample } from '../src/server/example-block';
 import { renderDocument } from '../src/server/content';
 import { appRef, type Framework } from '../src/shared/frameworks';
@@ -46,7 +48,7 @@ describe('the example fence', () => {
     const document = renderDocument('slider')!;
     expect(document.html).not.toContain('framework-switch');
     expect(document.frameworkSwitch.match(/class="framework-tab framework-switch__option"/g)).toHaveLength(6);
-    expect(renderDocument('drawer')!.frameworkSwitch).toBe('');
+    expect(renderDocument('components')!.frameworkSwitch).toBe('');
     expect(document.html).not.toContain('doc-example__error');
   });
 });
@@ -149,5 +151,61 @@ describe('open state and bound text', () => {
     expect(code(button, 'vue')).toContain('>{{ text }}</MButton>');
     expect(code(button, 'html')).toContain('button.textContent = "Sending";');
     expect(code(button, 'vanilla')).toContain("button.setText('Sending');");
+  });
+});
+
+describe('slotted children a factory takes through a method', () => {
+  const bar = 'top-app-bar:\n  title: Inbox\n  leading: { icon: backIcon, ariaLabel: Back }\n  actions:\n    - { icon: searchIcon, ariaLabel: Search }\n';
+  test('Vanilla creates each one and hands it to the method, not the config', () => {
+    const vanilla = code(bar, 'vanilla');
+    expect(vanilla).toContain("import { createTopAppBar, createIconButton } from 'mtrl';");
+    expect(vanilla).toContain("const topBar = createTopAppBar({ title: 'Inbox' });\ntopBar.addLeadingElement(createIconButton({ icon: backIcon, ariaLabel: 'Back' }).element);\ntopBar.addTrailingElement(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);\n");
+  });
+  test('the web component takes them in its slots', () => {
+    expect(code(bar, 'html')).toContain('<m-icon-button slot="leading" aria-label="Back"></m-icon-button>');
+  });
+});
+
+describe('inline styles the element needs', () => {
+  test('Vanilla gives the factory element the same, as the web component has them', () => {
+    const carousel = 'carousel:\n  slides:\n    - { image: /a.svg, alt: A }\n';
+    expect(code(carousel, 'vanilla')).toContain("carousel.element.style.height = '320px';\n");
+    expect(code(carousel, 'html')).toContain('style="height: 320px"');
+  });
+});
+
+describe('a trigger', () => {
+  const menu = "menu:\n  trigger: { text: Edit }\n  items:\n    - { id: cut, text: Cut }\n  on open: track('menu')\n";
+  test('renders in all six frameworks: the button, then the menu it opens', () => {
+    const { element, code: rendered } = exampleCode(parseExample(menu));
+    expect(element).toBe(true);
+    expect(Object.keys(rendered).sort()).toEqual(['html', 'react', 'solid', 'svelte', 'vanilla', 'vue']);
+    expect(rendered.html).toContain('<m-button id="menu-trigger">Edit</m-button>\n<m-menu anchor="menu-trigger">');
+    expect(rendered.react).toContain('<Button id="menu-trigger">Edit</Button>');
+  });
+  test('Vanilla creates the button and passes its element as the opener', () => {
+    const vanilla = code(menu, 'vanilla');
+    expect(vanilla).toContain("import { createMenu, createButton } from 'mtrl';");
+    expect(vanilla).toContain("const trigger = createButton({ text: 'Edit' });\ndocument.body.append(trigger.element);\n\nconst menu = createMenu({ opener: trigger.element,");
+    expect(vanilla).not.toContain('trigger: {');
+  });
+  test('the Vanilla rendering type-checks against mtrl', () => {
+    const root = resolve(import.meta.dir, '..');
+    const file = resolve(root, 'test', 'trigger-example.ts');
+    const options: ts.CompilerOptions = {
+      target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
+      lib: ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'], types: [], skipLibCheck: true, noEmit: true, strict: true,
+      noImplicitAny: false, strictNullChecks: false,
+    };
+    const source = code(menu, 'vanilla');
+    // The rendering as a virtual file beside the tests, with the docs check's prelude
+    const host = ts.createCompilerHost(options);
+    const getSourceFile = host.getSourceFile.bind(host);
+    host.getSourceFile = (name, language, ...rest) => resolve(name) === file ? ts.createSourceFile(name, source, language, true, ts.ScriptKind.TS) : getSourceFile(name, language, ...rest);
+    const fileExists = host.fileExists.bind(host);
+    host.fileExists = name => resolve(name) === file || fileExists(name);
+    const program = ts.createProgram([resolve(root, 'scripts/check-docs/prelude.ts'), file], options, host);
+    const errors = ts.getPreEmitDiagnostics(program).map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+    expect(errors).toEqual([]);
   });
 });

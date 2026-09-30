@@ -402,6 +402,8 @@ async function trigger(record) {
   if (event === 'focus') attempts.push(() => (field ?? element)?.focus());
   if (event === 'blur') attempts.push(() => { (field ?? element)?.focus(); (field ?? element)?.blur(); });
   if (/close|hide|dismiss/i.test(event)) attempts.push(async () => { has('open') ? target.open() : has('show') && target.show(); await wait(100); has('close') ? target.close() : has('hide') ? target.hide() : has('dismiss') && target.dismiss(); await wait(400); });
+  // A component with an opener (the menu) opens from it, as a user opens it: its trigger
+  else if (/open|show/i.test(event) && has('getOpener')) attempts.push(() => target.getOpener()?.click());
   else if (/open|show/i.test(event)) attempts.push(() => has('open') ? target.open() : has('show') && target.show());
   if (/change|input|select|remove|confirm|complete/i.test(event)) {
     if (field?.type === 'checkbox' || field?.type === 'radio') attempts.push(() => field.click());
@@ -413,15 +415,16 @@ async function trigger(record) {
     if (element) attempts.push(() => { const handle = pick(element, '[role="slider"]'); if (handle) { handle.focus(); key(handle, 'ArrowRight'); } });
     if (element) attempts.push(() => pick(element, 'button[aria-expanded="false"]')?.click());
     if (/remove/i.test(event) && element) attempts.push(() => pick(element, 'button[aria-label^="Remove" i], [aria-label^="Remove" i]')?.click());
-    // opened elsewhere: an item of a menu or list, a dialog's confirming button; or
-    // beside the component in its web component's shadow root, as a select's menu is
-    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(document, choices)?.click(); });
+    // opened elsewhere: an item of a menu or list, a dialog's confirming button; or in
+    // its web component's shadow root, as a select's menu and a date picker's dialog are
     const shadow = element?.getRootNode();
+    const root = shadow instanceof ShadowRoot ? shadow : document;
+    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(document, choices)?.click(); });
     if (shadow instanceof ShadowRoot) attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(shadow, choices)?.click(); });
-    const confirm = () => { const buttons = [...document.querySelectorAll('dialog[open] button, [role="dialog"] button')].filter(visible); (buttons.find(button => /^(ok|save|done|confirm)$/i.test(button.textContent.trim())) ?? buttons.at(-1))?.click(); };
+    const confirm = () => { const buttons = [...root.querySelectorAll('dialog[open] button, [role="dialog"] button')].filter(visible); (buttons.find(button => /^(ok|save|done|confirm)$/i.test(button.textContent.trim())) ?? buttons.at(-1))?.click(); };
     attempts.push(async () => { if (has('open')) target.open(); await wait(150); confirm(); });
     // a range: two choices, then the confirming button
-    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(document, choices)?.click(); await wait(60); [...document.querySelectorAll(choices)].filter(visible).at(3)?.click(); await wait(60); confirm(); });
+    attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(root, choices)?.click(); await wait(60); [...root.querySelectorAll(choices)].filter(visible).at(3)?.click(); await wait(60); confirm(); });
     // a field to type in
     if (field && field.type !== 'checkbox' && field.type !== 'radio' && field.type !== 'range' && !field.readOnly) attempts.push(() => type(field, 'x'));
   }

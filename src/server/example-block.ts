@@ -110,11 +110,52 @@ const setters: Record<string, (value: unknown) => string> = {
   disabled: value => (value ? 'disable()' : 'enable()'),
 };
 
+/**
+ * The button beside the element (`trigger:` in the example), as the playground's
+ * Vanilla code creates it: an mtrl button, placed first, whose element the
+ * factory takes as its opener (the menu's `opener`, the tooltip's `target`).
+ */
+function vanillaTrigger(block: ExampleBlock): { config: Record<string, unknown>; factory?: string; code: string } {
+  const trigger = elementMeta(block.slug)?.trigger;
+  const item = trigger ? block.config[trigger.from] : undefined;
+  if (!trigger || !isRecord(item)) return { config: block.config, code: '' };
+  if (!trigger.config) throw new Error(`Vanilla: <m-${block.slug}>'s trigger opens it, which the Vanilla rendering does not write yet`);
+  const factory = trigger.element === 'icon-button' ? 'createIconButton' : 'createButton';
+  const { [trigger.from]: _, ...rest } = block.config;
+  return {
+    config: { [trigger.config]: appRef('trigger.element'), ...rest },
+    factory,
+    code: `const trigger = ${factory}(${vanillaValue(item)});\ndocument.body.append(trigger.element);\n\n`,
+  };
+}
+
+/**
+ * Slotted children the factory takes through a method rather than its config (the
+ * app bars' icon buttons and FAB), as the playground's Vanilla code adds them: each
+ * created with its own factory and handed to the method.
+ */
+function vanillaSlotted(block: ExampleBlock, config: Record<string, unknown>, variable: string): { config: Record<string, unknown>; factories: string[]; code: string } {
+  const added = (elementMeta(block.slug)?.slotted ?? []).filter(slotted => slotted.add && config[slotted.from] !== undefined);
+  if (!added.length) return { config, factories: [], code: '' };
+  const rest = { ...config };
+  const factories = new Set<string>();
+  let code = '';
+  for (const slotted of added) {
+    delete rest[slotted.from];
+    const factory = `create${pascal(slotted.element)}`;
+    factories.add(factory);
+    for (const item of [config[slotted.from]].flat()) code += `${variable}.${slotted.add}(${factory}(${vanillaValue(item)}).element);\n`;
+  }
+  return { config: rest, factories: [...factories], code };
+}
+
 /** The Vanilla code: the factory, its handlers, the element placed, and the actions. */
 export function vanillaCode(block: ExampleBlock): string {
   const factory = isComponent(block.slug) ? components[block.slug].factory : `create${pascal(block.slug)}`;
   const variable = isComponent(block.slug) ? components[block.slug].variable : camel(block.slug);
-  const config = Object.keys(block.config).length ? vanillaValue(block.config) : '';
+  const trigger = vanillaTrigger(block);
+  const slotted = vanillaSlotted(block, trigger.config, variable);
+  const config = Object.keys(slotted.config).length ? vanillaValue(slotted.config) : '';
   const handlers = block.handlers.map(h => {
     const fields = [...new Set(h.args.filter(isField))];
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
@@ -122,7 +163,9 @@ export function vanillaCode(block: ExampleBlock): string {
   const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? 'open' : 'close'}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
-  return `import { ${factory} } from 'mtrl';\n\nconst ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
+  // Inline styles the element needs, as the playground's Vanilla code gives it: the carousel's height
+  const styles = Object.entries(elementMeta(block.slug)?.style ?? {}).map(([name, value]) => `${variable}.element.style.${camel(name)} = '${value}';\n`).join('');
+  return `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';\n\n${trigger.code}const ${variable} = ${factory}(${config});\n${slotted.code}${styles}${handlers}document.body.append(${variable}.element);\n${actions}`;
 }
 
 export interface ExampleCode {
