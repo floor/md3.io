@@ -26,7 +26,7 @@ function page(path: string, title: string, description: string, template: string
   // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
-  const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path) : '';
+  const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, components, playgroundGroups, pager });
   return html(eta.render('base', {
     path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
@@ -38,10 +38,12 @@ const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** The previous and next links for a page, from the sidebar's items in order. */
 type PagerItem = { name: string; href: string; section?: string };
-function pagerHtml(items: PagerItem[], path: string): string {
+function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
   const index = items.findIndex(item => item.href === path);
   if (index < 0) return '';
-  const [current, prev, next] = [items[index]!, items[index - 1], items[index + 1]];
+  // A cycle wraps: the last page leads back to the first (the last example to the documentation).
+  const at = (i: number) => cycle ? items[(i + items.length) % items.length] : items[i];
+  const [current, prev, next] = [items[index]!, at(index - 1), at(index + 1)];
   if (!prev && !next) return '';
   // Crossing into another section names it: "Styles: Overview".
   const title = (item: PagerItem) => item.section && item.section !== current.section ? `${item.section}: ${item.name}` : item.name;
@@ -50,7 +52,7 @@ function pagerHtml(items: PagerItem[], path: string): string {
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
-/** The reading order across sections: the documentation, then Styles, then Examples. */
+/** The reading order across sections, a cycle: the documentation, Styles, Examples, and back. */
 const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // mtrl's light-DOM stylesheets for a set of components, dependencies first: each
