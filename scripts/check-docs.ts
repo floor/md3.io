@@ -413,8 +413,11 @@ async function trigger(record) {
     if (element) attempts.push(() => { const handle = pick(element, '[role="slider"]'); if (handle) { handle.focus(); key(handle, 'ArrowRight'); } });
     if (element) attempts.push(() => pick(element, 'button[aria-expanded="false"]')?.click());
     if (/remove/i.test(event) && element) attempts.push(() => pick(element, 'button[aria-label^="Remove" i], [aria-label^="Remove" i]')?.click());
-    // opened elsewhere: an item of a menu or list, a dialog's confirming button
+    // opened elsewhere: an item of a menu or list, a dialog's confirming button; or
+    // beside the component in its web component's shadow root, as a select's menu is
     attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(document, choices)?.click(); });
+    const shadow = element?.getRootNode();
+    if (shadow instanceof ShadowRoot) attempts.push(async () => { if (has('open')) target.open(); await wait(150); pick(shadow, choices)?.click(); });
     const confirm = () => { const buttons = [...document.querySelectorAll('dialog[open] button, [role="dialog"] button')].filter(visible); (buttons.find(button => /^(ok|save|done|confirm)$/i.test(button.textContent.trim())) ?? buttons.at(-1))?.click(); };
     attempts.push(async () => { if (has('open')) target.open(); await wait(150); confirm(); });
     // a range: two choices, then the confirming button
