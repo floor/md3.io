@@ -6,6 +6,9 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { searchSite } from './src/server/search';
+import { comingStyles, stylePages } from './src/server/styles';
+import { AA_TEXT, contrastRatio } from './src/shared/color';
+import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts } from './src/server/tokens';
 import { readFileSync, existsSync } from 'node:fs';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
@@ -15,15 +18,17 @@ const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
   const isExamples = path.startsWith('/examples');
+  const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
   const sidebarGroups = isDocs
     ? [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Component architecture', href: '/docs/components/components/' }] }, ...docGroups]
-    : isExamples ? exampleGroups : componentGroups;
+    : isExamples ? exampleGroups : isStyles ? stylesGroups : componentGroups;
   return html(eta.render('base', {
-    path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isHome ? '' : 'Components', sidebarGroups,
+    path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
     content: eta.render(template, { ...data, docGroups, components, playgroundGroups }),
   }), status);
 }
+const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
 
 // mtrl's light-DOM stylesheets for a set of components, dependencies first: each
@@ -55,7 +60,8 @@ export async function handleRequest(request: Request): Promise<Response> {
     return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': 'text/css', 'Cache-Control': 'no-cache' } });
   }
   const staticMatch = /^\/(styles|fonts|dist|assets)\/(.+)$/.exec(path);
-  if (staticMatch) {
+  // /styles/ is also the Styles section: only a path with an extension is a file.
+  if (staticMatch && extname(path)) {
     const base = resolve(root, staticMatch[1]!);
     const filePath = resolve(base, staticMatch[2]!);
     if (!filePath.startsWith(base + sep) || !mime[extname(filePath)]) return new Response('Not found', { status: 404 });
@@ -99,6 +105,9 @@ export async function handleRequest(request: Request): Promise<Response> {
     }
     else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
   }
+  else if (path === '/styles/') response = page(path, 'Styles — mtrl', stylePages[0].description, 'styles-overview', { stylePages, comingStyles });
+  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT });
+  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);

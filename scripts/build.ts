@@ -6,7 +6,7 @@ const root = resolve(import.meta.dir, '..');
 const outdir = resolve(root, 'dist');
 await mkdir(outdir, { recursive: true });
 const result = await Bun.build({
-  entrypoints: ['site', 'playground', 'preview', 'examples'].map(name => resolve(root, `src/client/${name}.ts`)),
+  entrypoints: ['site', 'playground', 'preview', 'examples', 'styles'].map(name => resolve(root, `src/client/${name}.ts`)),
   outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external',
 });
 if (!result.success) {
