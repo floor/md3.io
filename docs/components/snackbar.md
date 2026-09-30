@@ -1,229 +1,153 @@
-# Snackbar Component
+# Snackbar
 
-A snackbar reports something that has already happened — a message archived, a photo saved, an upload finished — at the bottom of the screen, without taking focus and without asking for anything. It may carry one action, which is almost always the undo. Reach for it when the user should know, but does not need to decide. When they do need to decide, that is a [dialog](dialog.md).
+A snackbar tells people about something the app has done, at the bottom of the screen: a
+message archived, a photo saved. It doesn't take focus or ask for anything, and has one action
+at most, such as Undo. For a decision, use a [dialog](/docs/components/dialog/). See the
+[M3 snackbar guidelines](https://m3.material.io/components/snackbar/overview).
 
-## Overview
+## Usage
 
-Snackbars are announced politely and never focused, so a screen reader user hears the message after whatever they are doing rather than being pulled out of it. Only one is on screen at a time: the component keeps a single process-wide queue, and a snackbar shown while another is up waits its turn.
+`show()` puts it in a queue shared by every snackbar on the page: one shows at a time, the
+others wait their turn. Without an action it goes after 4 seconds.
 
-Two rules follow from the specification and shape most of the API:
-
-- A snackbar **with an action stays** until it is acted on or dismissed. Something that can be undone must not disappear before the user reaches it.
-- A snackbar **without an action goes** after four seconds. The countdown holds while the pointer is over it or focus is inside it, so it does not vanish mid-read.
-
-## Import
-
-```javascript
-import { createSnackbar, clearSnackbars } from 'mtrl';
-```
-
-## Basic Usage
-
-```javascript
-const snackbar = createSnackbar({ message: 'Photo saved to album' });
-snackbar.show();
-```
-
-`message` is required; without it the factory throws. The element mounts itself on `show()` and takes itself off the page when it has faded, so there is nothing to append.
-
-## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `message` | `string` | — | The text; required, up to two lines |
-| `action` | `string` | `undefined` | Label of the single text-button action |
-| `dismissible` | `boolean` | `false` | Adds a close icon button |
-| `closeLabel` | `string` | `'Dismiss'` | Accessible name of the close icon |
-| `duration` | `'short' \| 'long' \| 'indefinite' \| number` | `'short'`, or `'indefinite'` with an action | How long it stays; a number is milliseconds, `0` is indefinite |
-| `position` | `'center' \| 'start' \| 'end'` | `'center'` | Where it sits along the bottom edge |
-| `queueBehavior` | `'queue' \| 'replace'` | `'queue'` | Whether it waits its turn or evicts what is on screen |
-| `onAction` | `(event: SnackbarEvent) => void` | `undefined` | Called when the action is activated |
-| `onOpen` | `(event: SnackbarEvent) => void` | `undefined` | Called when it appears |
-| `onClose` | `(event: SnackbarEvent) => void` | `undefined` | Called when it leaves |
-| `on` | `Record<SnackbarEventType, handler>` | `undefined` | Handlers registered at creation |
-| `class` | `string` | `undefined` | Extra CSS classes |
-| `prefix` | `string` | `'mtrl'` | Class-name prefix |
-| `componentName` | `string` | `'snackbar'` | Component name used in class generation |
-
-The presets are `short` (4 s), `long` (10 s) and `indefinite` (stays). Passing `duration: 'short'` alongside an `action` is allowed and does what it says — it is a deliberate override of the default, not an oversight.
-
-## Component API
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `show()` | — | `SnackbarComponent` | Puts it in the queue and shows it when its turn comes |
-| `hide()` | — | `SnackbarComponent` | Dismisses it, with reason `api` |
-| `setMessage(text)` | `text: string` | `SnackbarComponent` | Replaces the message |
-| `getMessage()` | — | `string` | The current message |
-| `setAction(text)` | `text: string` | `SnackbarComponent` | Relabels the action |
-| `getAction()` | — | `string` | The current action label |
-| `setDuration(duration)` | `SnackbarDuration` | `SnackbarComponent` | Sets the duration; restarts the countdown if on screen |
-| `getDuration()` | — | `number` | Milliseconds, `0` for indefinite |
-| `setPosition(position)` | `SnackbarPosition` | `SnackbarComponent` | Moves it along the bottom edge |
-| `getPosition()` | — | `SnackbarPosition` | The current position |
-| `on(event, handler)` | `SnackbarEventType, handler` | `SnackbarComponent` | Adds a listener |
-| `off(event, handler)` | `SnackbarEventType, handler` | `SnackbarComponent` | Removes one |
-| `destroy()` | — | `void` | Removes it and releases the timer and buttons |
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `element` | `HTMLElement` | The snackbar surface |
-| `state` | `'visible' \| 'hidden'` | Where it is in its life |
-| `actionButton` | `HTMLElement` | The action button, when there is one |
-| `closeButton` | `HTMLElement` | The close icon button, when there is one |
-| `timer` | `SnackbarTimer` | The auto-dismiss countdown |
-
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `clearSnackbars()` | `void` | Dismisses the snackbar on screen and drops the ones waiting |
-
-`clearSnackbars` exists because messages belong to whatever raised them. A drawer that closes or an account that signs out should not leave a message about it on screen — and, since the queue shows one at a time, a stale message blocks the next one behind it.
-
-## Events
-
-Every handler receives a `SnackbarEvent`: `{ snackbar, reason?, originalEvent }`.
-
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `open` | `SnackbarEvent` | It is on screen |
-| `action` | `SnackbarEvent` | The action was activated |
-| `close` | `SnackbarEvent` | It is leaving; `reason` says why |
-| `dismiss` | `SnackbarEvent` | Fires with `close`; this is what the queue listens to |
-
-`reason` is one of `timeout`, `action`, `close-button`, `escape`, `api` or `queue` — the last meaning the queue replaced or cleared it.
-
-```javascript
-createSnackbar({ message: 'Message archived', action: 'Undo' })
-  .on('close', ({ reason }) => console.info(`snackbar closed: ${reason}`))
-  .show();
+```example
+snackbar:
+  message: Photo saved
+  action tell:
+    open
 ```
 
 ## Examples
 
 ### Undo
 
-The pattern the action exists for. The snackbar stays until the user takes it or dismisses it, and activating the action dismisses it for you.
+A snackbar with an action stays until it is acted on or dismissed, so there is time to reach
+it. The action closes it.
 
-```javascript
-createSnackbar({
-  message: 'Message archived',
-  action: 'Undo',
-  onAction: () => undoArchive()
-}).show();
+```example
+snackbar:
+  message: Message archived
+  action: Undo
+  on action: undoArchive()
+  action archive:
+    open
 ```
 
-### A close icon, and how long it stays
+### A close button, and how long it stays
 
-```javascript
-// Goes on its own after 4 s
-createSnackbar({ message: 'Photo saved to album' }).show();
+`dismissible` adds a close button. `duration` is `short` (4s), `long` (10s), `indefinite`, or
+milliseconds.
 
-// 10 s
-createSnackbar({ message: 'Photo saved to album', duration: 'long' }).show();
-
-// Exactly 2 s
-createSnackbar({ message: 'Copied to clipboard', duration: 2000 }).show();
-
-// Stays until the close icon is used
-createSnackbar({ message: 'Update available', dismissible: true }).show();
+```example
+snackbar:
+  message: Update available
+  dismissible: true
+  duration: long
+  action tell:
+    open
 ```
 
-### Several in a row, and replacing them
+### Replacing the one on screen
 
-Three snackbars shown at once appear one after another, in order. When only the newest message matters — a progress report, a counter — `queueBehavior: 'replace'` dismisses the current one, drops the backlog, and shows this one straight away.
+When only the newest message matters, `queueBehavior: 'replace'` closes the snackbar on screen
+and drops the waiting ones.
 
-```javascript
-['First message', 'Second message', 'Third message'].forEach((message) =>
-  createSnackbar({ message, duration: 1500 }).show()
-);
-
-createSnackbar({ message: 'Uploading 1 of 3', duration: 'long' }).show();
-createSnackbar({ message: 'Uploading 2 of 3', duration: 'long' }).show();
-createSnackbar({ message: 'Upload complete', queueBehavior: 'replace', action: 'View' }).show();
+```example
+snackbar:
+  message: Upload complete
+  queueBehavior: replace
+  action tell:
+    open
 ```
 
-### Position
+`position` places it at the `start`, `center` or `end` of the bottom edge. `layer: 'top'`
+shows it in the browser's top layer; while a modal dialog is open, it moves inside the dialog,
+so it can still be read and used. The web component always is in the top layer.
+`clearSnackbars()` closes the one on screen and drops the queue, for when what they were about
+goes away.
 
-Centred by default. In a wide layout a snackbar can sit at the leading or trailing edge instead; in a compact window every position collapses to the same fixed inset from each edge.
+## API
 
-```javascript
-createSnackbar({ message: 'Snackbar at the start', position: 'start', action: 'OK' }).show();
-```
+<!-- API: generated from mtrl's types and <m-snackbar>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `message` | `string` | required | The text, up to two lines |
+| `action` | `string` | `undefined` | The action's label |
+| `dismissible` | `boolean` | `false` | A close button |
+| `closeLabel` | `string` | `'Dismiss'` | The close button's accessible name |
+| `duration` | `'short' \| 'long' \| 'indefinite' \| number` | `'indefinite'` with an action, else `'short'` | How long it stays: 4s, 10s, until closed, or milliseconds (`0` is indefinite) |
+| `position` | `'center' \| 'start' \| 'end'` | `'center'` | Where along the bottom edge |
+| `queueBehavior` | `'queue' \| 'replace'` | `'queue'` | Whether it waits its turn or replaces the queue |
+| `layer` | `'top'` | `undefined` | Shows it in the top layer, inside the topmost modal dialog while one is open |
+| `onAction` / `onOpen` / `onClose` | `(event: SnackbarEvent) => void` | `undefined` | Handlers for `action`, `open` and `close` |
+| `on` | `{ open?, close?, action?, dismiss? }` | `undefined` | Event handlers registered at creation |
+| `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+
+### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `show()` / `hide()` | none | `SnackbarComponent` | Queues it to show, or closes it with reason `api` |
+| `getMessage()` / `setMessage(message)` | `message: string` | `string` / `SnackbarComponent` | The text |
+| `getAction()` / `setAction(text)` | `text: string` | `string` / `SnackbarComponent` | The action's label |
+| `getDuration()` / `setDuration(duration)` | `duration: SnackbarDuration` | `number` / `SnackbarComponent` | How long it stays, read in milliseconds; a change on screen starts the count again |
+| `getPosition()` / `setPosition(position)` | `position: 'center' \| 'start' \| 'end'` | `string` / `SnackbarComponent` | Where it sits |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `SnackbarComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes it |
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `element` | `HTMLElement` | The snackbar |
+| `state` | `'visible' \| 'hidden'` | Whether it is on screen |
+| `actionButton` / `closeButton` | `HTMLElement \| undefined` | Its buttons |
+
+`clearSnackbars()`, from `mtrl`, closes the snackbar on screen and drops the waiting ones.
+
+### Events
+
+| Event | Description | Data |
+|-------|-------------|------|
+| `open` | It is on screen | `{ snackbar, originalEvent }` |
+| `action` | The action was used | `{ snackbar, originalEvent }` |
+| `close` / `dismiss` | It closed | `{ snackbar, reason, originalEvent }` |
+
+`reason` is `timeout`, `action`, `close-button`, `escape`, `api` or `queue` (replaced or
+cleared). The web component dispatches `open`, `action` and `close`; its `close` carries
+`{ reason }`, and its `open` property is true from `show()` on, while it waits too.
 
 ## Accessibility
 
-- The container is `role="status"`: a polite, atomic live region. The message is announced when it appears, after whatever the user is doing, and focus is never moved.
-- Focus is not taken on open. If focus happens to be inside the snackbar when it closes — it can only get there by Tab — it is returned to where it came from.
-- Escape dismisses the snackbar when focus is inside it. The keydown is stopped there, so it does not also close whatever is behind.
-- The countdown pauses on `pointerenter` and `focusin` and resumes on the way out, which is the web's answer to the extended timeout Compose gets from the accessibility manager (WCAG 2.2.1).
-- An actionable snackbar defaults to indefinite for the same reason: a timed undo is a timed decision.
-- The close icon is labelled from `closeLabel`, default `Dismiss`.
-- The action's focus ring is drawn in `inverse-primary` rather than the button's usual colour, because secondary does not reach 3:1 against `inverse-surface` (WCAG 2.4.13).
+- A `status` live region: its message is announced politely, and focus is not moved to it.
+- `Escape` closes it while focus is inside it. If focus was inside when it closed, it goes back
+  where it came from.
+- Its countdown pauses while the pointer is over it or focus is inside it. With an action, it
+  stays until it is used or dismissed.
+- The close button is named by `closeLabel`.
 
 ## Styling
 
+Its colors are the inverse roles, so it reads as a surface of the opposite theme.
+
 ```css
-.mtrl-snackbar { /* the surface */ }
-.mtrl-snackbar--visible { /* while on screen */ }
-.mtrl-snackbar--center,
-.mtrl-snackbar--start,
-.mtrl-snackbar--end { /* positions */ }
-.mtrl-snackbar--with-action { /* an action is present */ }
-.mtrl-snackbar--dismissible { /* a close icon is present */ }
-.mtrl-snackbar--action-below { /* the action is too wide to sit beside the text */ }
-
-.mtrl-snackbar__text { /* the message, clamped to two lines */ }
-.mtrl-snackbar__action { /* the text button */ }
-.mtrl-snackbar__close { /* the icon button */ }
+.mtrl-snackbar, .mtrl-snackbar--visible { }
+.mtrl-snackbar--center, .mtrl-snackbar--start, .mtrl-snackbar--end { }
+.mtrl-snackbar--with-action, .mtrl-snackbar--dismissible { }
+.mtrl-snackbar--action-below { }   /* an action wider than 128dp, on its own line */
+.mtrl-snackbar__text, .mtrl-snackbar__action, .mtrl-snackbar__close { }
 ```
-
-Colours come from the inverse roles, so a snackbar reads as a surface from the opposite theme and does not need its own palette.
 
 ## Measurements
 
-Each row cites what `src/styles/components/_snackbar.scss` names for it; the file's own header attributes them to the Compose `SnackbarTokens.kt` and `Snackbar.kt`.
-
-| Attribute | Value | Token |
-|-----------|-------|-------|
-| Container colour | inverse-surface | `inverse-surface` |
-| Text colour | inverse-on-surface | `inverse-on-surface` |
-| Container elevation | level 3 | `elevation(3)` |
-| Container corner | extra small | `get-shape('extra-small')` |
-| Height, one line | 48dp | `min-height` |
-| Text typography | body-medium | `typography('body-medium')` |
-| Action colour | inverse-primary | `inverse-primary` |
-| Close icon colour | inverse-on-surface | `inverse-on-surface` |
-| Action moves below the text past | 128dp | `ACTION_INLINE_MAX_WIDTH` (`design_snackbar_action_inline_max_width`) |
-| Enter/exit | fade on fast effects, scale from 0.8 on fast spatial | `motion('spring-fast-effects-*')`, `motion('spring-fast-spatial-*')` |
-| Short duration | 4000 ms | `SNACKBAR_DURATION_MS.short` |
-| Long duration | 10000 ms | `SNACKBAR_DURATION_MS.long` |
-
-Spacing follows the same source: 16dp at the start, 8dp between the text and the action, 8dp after the action and none after the close icon, with 14dp above and below the text — which is what makes two lines come to 68dp. The vertical spacing is margin rather than padding, because the two-line clamp cuts at the padding box and a third line would otherwise show through.
-
-The 16dp inset from the window edges is the one number with no token behind it: the Android snackbar keeps 8dp and the Compose host 12dp, so the component picks one and says so rather than claiming a source it does not have.
-
-## Best Practices
-
-- One line if you can, two at most. A snackbar is not a place to explain.
-- One action, and make it the undo. Anything else is usually a dialog or a link in the page.
-- Never put information in a snackbar that is only available there — it leaves on its own.
-- Reach for `replace` when the messages supersede each other, and `queue` when each one is worth reading.
-- Call `clearSnackbars()` when the surface a message referred to goes away.
-
-## TypeScript Support
-
-```typescript
-import { createSnackbar, SnackbarConfig, SnackbarComponent } from 'mtrl';
-
-const config: SnackbarConfig = {
-  message: 'Message archived',
-  action: 'Undo',
-  position: 'start'
-};
-
-const snackbar: SnackbarComponent = createSnackbar(config);
-snackbar.on('close', ({ reason }) => {
-  if (reason === 'timeout') commitArchive();
-});
-snackbar.show();
-```
+| Attribute | Value |
+|-----------|-------|
+| Container | `inverse-surface`, 4dp corners, elevation 3 |
+| Height | 48dp, 68dp for two lines |
+| Text | Body Medium, `inverse-on-surface`, two lines at most |
+| Action | `inverse-primary`; below the text when wider than 128dp |
+| Padding | 16dp at the start, 8dp between the text and the action |
+| Motion | Fades on the fast effects spring, and scales from 0.8 on the fast spatial one |
