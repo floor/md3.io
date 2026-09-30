@@ -18,7 +18,17 @@ const names: Record<string, string> = { fab: 'FAB', 'extended-fab': 'Extended FA
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
 export const docSlugs = [...slugs];
-export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(slug => ({ slug, name: componentName(slug), href: `/docs/components/${slug}/` })) }));
+/**
+ * A page's summary: the first sentence of its opening paragraph, which the page
+ * template makes "what the component is", as plain text.
+ */
+function docSummary(slug: string): string {
+  const source = readFileSync(resolve(docsDir, `${slug}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  const paragraph = source.split(/\r?\n\s*\r?\n/).map(block => block.trim()).find(block => block && !/^(#|```|<|\||>|-|\*|\d+\.)/.test(block)) ?? '';
+  const text = paragraph.replace(/\s+/g, ' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '');
+  return (/^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text).trim();
+}
+export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(slug => ({ slug, name: componentName(slug), href: `/docs/components/${slug}/`, summary: docSummary(slug) })) }));
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }

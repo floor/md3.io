@@ -482,3 +482,8 @@
 .page-nav__label { color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .5px; text-transform: uppercase; }
 .page-nav__title { color: var(--accent-text); font-size: var(--fs-md); font-weight: var(--fw-bold); overflow-wrap: anywhere; }
 @media (max-width: 560px) { .page-nav { grid-template-columns: 1fr; } .page-nav__link--next { grid-column: 1; } }
+
+/* The documentation overview: each page's name and its opening sentence, the whole card a link. */
+.doc-entry { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 18px; text-decoration: none; }
+.doc-entry__name { color: var(--text); font-size: var(--fs-base); font-weight: var(--fw-bold); }
+.doc-entry__summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.5; }
