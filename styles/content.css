@@ -470,3 +470,15 @@
 :root[data-framework="svelte"] .framework-switch__option[data-framework="svelte"],
 :root[data-framework="solid"] .framework-switch__option[data-framework="solid"] { background: var(--accent); color: var(--text); }
 :root[data-framework]:not([data-framework="vanilla"]) .framework-switch__option[data-framework="vanilla"] { background: transparent; color: var(--text-dim); }
+
+/* Previous and next at the end of a page, in sidebar order (as on vlist.io). */
+.page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); }
+.pager-wrap { padding-top: 0; }
+.pager-wrap .page-nav { margin-top: 0; }
+.page-nav__link { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 20px 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); text-decoration: none; transition: border-color .15s, background-color .15s; }
+.page-nav__link:hover { border-color: var(--text-dim); background: var(--bg-card-hover); }
+.page-nav__link:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.page-nav__link--next { grid-column: 2; text-align: right; }
+.page-nav__label { color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .5px; text-transform: uppercase; }
+.page-nav__title { color: var(--accent-text); font-size: var(--fs-md); font-weight: var(--fw-bold); overflow-wrap: anywhere; }
+@media (max-width: 560px) { .page-nav { grid-template-columns: 1fr; } .page-nav__link--next { grid-column: 1; } }

@@ -24,12 +24,27 @@ function page(path: string, title: string, description: string, template: string
   const sidebarGroups = isDocs
     ? [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Component architecture', href: '/docs/components/components/' }] }, ...docGroups]
     : isExamples ? exampleGroups : isStyles ? stylesGroups : componentGroups;
+  // Previous and next, in sidebar order, as on vlist.io. Not on the playgrounds, which
+  // fill the window, nor outside the sidebar's pages.
+  const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(sidebarGroups.flatMap(group => group.items), path) : '';
+  const content = eta.render(template, { ...data, docGroups, components, playgroundGroups, pager });
   return html(eta.render('base', {
     path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
-    content: eta.render(template, { ...data, docGroups, components, playgroundGroups }),
+    content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
+const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+/** The previous and next links for a page, from the sidebar's items in order. */
+function pagerHtml(items: { name: string; href: string }[], path: string): string {
+  const index = items.findIndex(item => item.href === path);
+  if (index < 0) return '';
+  const [prev, next] = [items[index - 1], items[index + 1]];
+  if (!prev && !next) return '';
+  const link = (item: { name: string; href: string }, rel: 'prev' | 'next') =>
+    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? '← Previous' : 'Next →'}</span><span class="page-nav__title">${escapeHtml(item.name)}</span></a>`;
+  return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
+}
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
 
 // mtrl's light-DOM stylesheets for a set of components, dependencies first: each
