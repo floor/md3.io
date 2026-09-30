@@ -13,7 +13,14 @@
           <button type="button" class="preview-tab" id="code-tab" role="tab" aria-selected="false" aria-controls="code-panel" tabindex="-1">View code</button>
         </div>
         <span class="preview-dot" aria-hidden="true"></span>
-        <% if (it.size) { const kb = n => (n / 1024).toFixed(1); %><span class="component-size"><% [['factory', it.size.factory], ...(it.element ? [['element', it.size.element]] : [])].forEach(([flavour, size]) => { %><span data-flavour="<%= flavour %>" <%= flavour === 'factory' ? '' : 'hidden' %> title="What this component adds to an app: minified JS and CSS, gzip, on top of mtrl's shared core, which all components share and a page loads once.<% if (size.lazy) { %> Another <%= kb(size.lazy) %> KB loads later, only if a feature needs it.<% } %> Measured on mtrl <%= it.size.mtrl %>."><strong><%= kb(size.added) %> KB</strong> gzip</span><% }); %></span><% } %>
+        <div class="preview-appearance" role="group" aria-label="Preview appearance">
+          <label for="preview-theme">Theme</label>
+          <select id="preview-theme" class="ui-select" name="theme" form="configuration"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= theme.charAt(0).toUpperCase() + theme.slice(1) %></option><% }); %></select>
+          <div class="ui-segmented choice-group choice-group--mode" role="group" aria-label="Preview mode">
+            <label class="choice"><input name="mode" type="radio" value="light" form="configuration" checked /><span class="ui-segmented__btn">Light</span></label>
+            <label class="choice"><input name="mode" type="radio" value="dark" form="configuration" /><span class="ui-segmented__btn">Dark</span></label>
+          </div>
+        </div>
       </div>
       <div class="playground-space">
         <button class="ui-btn preview-copy" id="copy-code" type="button" hidden><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg> Copy code</button>
@@ -26,14 +33,7 @@
       </div>
       <div class="preview-footer">
         <span id="playground-status" role="status" aria-live="polite">Loading preview…</span>
-        <div class="preview-appearance" role="group" aria-label="Preview appearance">
-          <label for="preview-theme">Theme</label>
-          <select id="preview-theme" class="ui-select" name="theme" form="configuration"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= theme.charAt(0).toUpperCase() + theme.slice(1) %></option><% }); %></select>
-          <div class="ui-segmented choice-group choice-group--mode" role="group" aria-label="Preview mode">
-            <label class="choice"><input name="mode" type="radio" value="light" form="configuration" checked /><span class="ui-segmented__btn">Light</span></label>
-            <label class="choice"><input name="mode" type="radio" value="dark" form="configuration" /><span class="ui-segmented__btn">Dark</span></label>
-          </div>
-        </div>
+        <% if (it.size) { const kb = n => (n / 1024).toFixed(1); %><span class="component-size"><% [['factory', it.size.factory], ...(it.element ? [['element', it.size.element]] : [])].forEach(([flavour, size]) => { %><span data-flavour="<%= flavour %>" <%= flavour === 'factory' ? '' : 'hidden' %> title="What this component adds to an app: minified JS and CSS, gzip, on top of mtrl's shared core, which all components share and a page loads once.<% if (size.lazy) { %> Another <%= kb(size.lazy) %> KB loads later, only if a feature needs it.<% } %> Measured on mtrl <%= it.size.mtrl %>."><strong><%= kb(size.added) %> KB</strong> gzip</span><% }); %></span><% } %>
       </div>
     </div>
     <form class="split-panel configuration" id="configuration">
