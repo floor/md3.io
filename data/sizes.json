@@ -67,6 +67,18 @@
         "added": 1795
       }
     },
+    "fab-menu": {
+      "factory": {
+        "alone": 15390,
+        "lazy": 11248,
+        "added": 7129
+      },
+      "element": {
+        "alone": 19939,
+        "lazy": 11252,
+        "added": 7718
+      }
+    },
     "extended-fab": {
       "factory": {
         "alone": 10497,

@@ -55,6 +55,7 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
   },
   select: { name: 'select-option', declaration: 'selectOption', from: 'options', text: 'text', keys: { id: 'value' } },
   'split-button': { name: 'menu-item', declaration: 'menuItem', from: 'items', text: 'text', keys: { id: 'value' } },
+  'fab-menu': { name: 'fab-menu-item', declaration: 'fabMenuItem', from: 'items', text: 'text', keys: { id: 'value' } },
   // Suggestions are strings, each one's text.
   search: { name: 'search-suggestion', declaration: 'searchSuggestion', from: 'suggestions', text: 'text' },
 };
@@ -189,6 +190,7 @@ const triggers: Record<string, Trigger> = {
 // `expanded`, which its trigger expands and Escape collapses.
 const open: Record<string, OpenMeta> = {
   menu: { show: 'show', hide: 'hide' },
+  'fab-menu': { show: 'show', hide: 'hide' },
   dialog: { config: 'open', show: 'show', hide: 'close' },
   'bottom-sheet': { config: 'initialState', values: ['partial', 'expanded'], show: 'expand', hide: 'close' },
   'side-sheet': { config: 'open', show: 'show', hide: 'close' },

@@ -19,6 +19,7 @@ const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
   'split-button': () => import('./catalog/split-button'),
   fab: () => import('./catalog/fab'),
   'extended-fab': () => import('./catalog/extended-fab'),
+  'fab-menu': () => import('./catalog/fab-menu'),
   checkbox: () => import('./catalog/checkbox'),
   switch: () => import('./catalog/switch'),
   radios: () => import('./catalog/radios'),
