@@ -59,8 +59,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|------|---------|-------------|
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | The direction of the line |
 | `variant` | `'full-width' \| 'inset' \| 'middle-inset'` | `'full-width'` | Which ends are inset |
-| `insetStart` | `number` | `16` | The start inset in pixels, for the inset variants: left when horizontal, top when vertical |
-| `insetEnd` | `number` | `0` for `inset`, `16` for `middle-inset` | The end inset in pixels, for the inset variants: right when horizontal, bottom when vertical |
+| `insetStart` | `number` | `16` | The start inset in pixels, for the inset variants: the inline start when horizontal (right in a right-to-left page), the top when vertical |
+| `insetEnd` | `number` | `0` for `inset`, `16` for `middle-inset` | The end inset in pixels, for the inset variants: the inline end when horizontal, the bottom when vertical |
 | `thickness` | `number` | `1` | The line's thickness in pixels |
 | `color` | `string` | `undefined` | Any CSS color; the theme's `outline-variant` without one |
 | `class` | `string \| string[]` | `undefined` | Additional CSS classes |

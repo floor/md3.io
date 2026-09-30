@@ -45,7 +45,8 @@ progress:
 ### Setting the value
 
 An action sets the value, which animates to it over 500ms; `setValue(value, false)` jumps. A
-value out of range is drawn at `0` or `max`.
+value out of range is clamped to `0` or `max`, and that is the value drawn, announced,
+labelled and emitted.
 
 ```example
 progress:
@@ -99,7 +100,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `showLabel()` / `hideLabel()` | none | `ProgressComponent` | The label |
 | `setLabelFormatter(formatter)` | `formatter: (value, max) => string` | `ProgressComponent` | How the label is written |
 | `show()` / `hide()` / `isVisible()` | none | `ProgressComponent` / `boolean` | Shows or hides it; hidden, it stops animating |
-| `enable()` / `disable()` / `isDisabled()` | none | `ProgressComponent` / `boolean` | The disabled state |
+| `enable()` / `disable()` / `isDisabled()` | none | `ProgressComponent` / `boolean` | The disabled state, with `aria-disabled`, set the same way at creation |
 | `painted()` | none | `Promise<void>` | Resolves once it has been drawn |
 | `on(event, handler)` / `off(event, handler)` | `event: 'change' \| 'complete', handler: Function` | `ProgressComponent` | Adds or removes a listener |
 | `addClass(...classes)` | `...classes: string[]` | `ProgressComponent` | Adds CSS classes |

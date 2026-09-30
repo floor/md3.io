@@ -60,13 +60,13 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `text` | `string` | `undefined` | The label |
 | `target` | `HTMLElement` | `undefined` | The element it describes |
 | `position` | `TooltipPosition` | `'bottom'` | Where it sits against the target |
-| `variant` | `'default' \| 'plain' \| 'rich'` | `'default'` | `default` on `inverse-surface`; `plain` on `surface-container-high` with an outline; `rich` with more padding, aligned to the start |
+| `variant` | `'default' \| 'plain' \| 'rich'` | `'default'` | `default` and `plain` are M3's plain tooltip, on `inverse-surface`; `rich` is M3's rich tooltip, on `surface-container` |
 | `visible` | `boolean` | `false` | Whether it shows at once |
 | `showDelay` / `hideDelay` | `number` | `300` / `100` | How long before it shows or hides, in ms |
 | `showOnHover` / `showOnFocus` | `boolean` | `true` | Whether the pointer, and focus, show it |
 | `layer` | `'top'` | `undefined` | Shows it in the top layer, after its target in the target's tree |
 | `zIndex` | `number` | `undefined` | Its z-index, outside the top layer |
-| `rich` | `boolean` | `false` | Accepted, not applied: the text is always text |
+| `rich` | `boolean` | `false` | Deprecated, never applied: use `variant: 'rich'`; the text is always text |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
@@ -114,7 +114,8 @@ A tooltip has no events.
 
 | Attribute | Value |
 |-----------|-------|
-| Container | `inverse-surface`, 4dp corners, 200dp wide at most |
+| Container | `inverse-surface`, opaque, no elevation, 4dp corners, 200dp wide at most |
 | Text | Body Small, `inverse-on-surface` |
-| Padding | 4dp above and below, 8dp at the sides; `rich` 8dp and 12dp |
+| Padding | 4dp above and below, 8dp at the sides |
+| Rich | `surface-container`, 12dp corners, elevation 2, 320dp wide at most; Body Medium, `on-surface-variant`; 12dp above and below, 16dp at the sides |
 | Distance from the target | 8dp |
