@@ -62,6 +62,9 @@ describe('Vanilla', () => {
     expect(code('dialog:\n  title: Hi\n  action ask:\n    open\n', 'vanilla')).toContain('function ask() {\n  dialog.open();\n}');
     expect(code('snackbar:\n  message: Saved\n  action tell:\n    - open\n    - close\n', 'vanilla')).toContain('function tell() {\n  snackbar.show();\n  snackbar.hide();\n}');
   });
+  test('a tooltip\'s target is made by its own factory, and its element passed', () => {
+    expect(code('tooltip:\n  text: Save\n  target: { icon: saveIcon, ariaLabel: Save }\n', 'vanilla')).toBe("import { createTooltip, createIconButton } from 'mtrl';\n\nconst iconButton = createIconButton({ icon: saveIcon, ariaLabel: 'Save' });\ndocument.body.append(iconButton.element);\n\nconst tooltip = createTooltip({ text: 'Save', target: iconButton.element });\ndocument.body.append(tooltip.element);\n");
+  });
   test('children are the config array', () => {
     expect(code(withChildren, 'vanilla')).toContain("const tabs = createTabs({\n  tabs: [\n    { text: 'Flights', value: 'flights', state: 'active' },\n    { text: 'Trips', value: 'trips' },\n  ],\n});\ntabs.on('change', ({ value }) => showPanel(value));");
   });

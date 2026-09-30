@@ -113,14 +113,28 @@ const setters: Record<string, (value: unknown) => string> = {
 // Factories that open and close with methods not named open() and close().
 const openers: Record<string, [open: string, close: string]> = {
   snackbar: ['show', 'hide'],
-  tooltip: ['show', 'hide'],
 };
+
+// Factories that take another element, which an example declares as the web
+// component's trigger (a tooltip's target): the factory of that element makes
+// it first, and its element is passed.
+const targets: Record<string, string> = {
+  tooltip: 'target',
+};
+
+const factoryOf = (slug: string): { factory: string; variable: string } =>
+  isComponent(slug) ? components[slug] : { factory: `create${pascal(slug)}`, variable: camel(slug) };
 
 /** The Vanilla code: the factory, its handlers, the element placed, and the actions. */
 export function vanillaCode(block: ExampleBlock): string {
-  const factory = isComponent(block.slug) ? components[block.slug].factory : `create${pascal(block.slug)}`;
-  const variable = isComponent(block.slug) ? components[block.slug].variable : camel(block.slug);
-  const config = Object.keys(block.config).length ? vanillaValue(block.config) : '';
+  const { factory, variable } = factoryOf(block.slug);
+  const key = targets[block.slug];
+  const trigger = key && isRecord(block.config[key]) ? elementMeta(block.slug)?.trigger : undefined;
+  const target = trigger ? factoryOf(trigger.element) : undefined;
+  const settings = target ? { ...block.config, [key!]: appRef(`${target.variable}.element`) } : block.config;
+  const config = Object.keys(settings).length ? vanillaValue(settings) : '';
+  const before = target ? `const ${target.variable} = ${target.factory}(${vanillaValue(block.config[key!])});\ndocument.body.append(${target.variable}.element);\n\n` : '';
+  const imports = [factory, ...(target ? [target.factory] : [])].join(', ');
   const handlers = block.handlers.map(h => {
     const fields = [...new Set(h.args.filter(isField))];
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
@@ -129,7 +143,7 @@ export function vanillaCode(block: ExampleBlock): string {
   const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? open : close}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
-  return `import { ${factory} } from 'mtrl';\n\nconst ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
+  return `import { ${imports} } from 'mtrl';\n\n${before}const ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
 }
 
 export interface ExampleCode {
