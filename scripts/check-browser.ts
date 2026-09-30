@@ -32,12 +32,12 @@ try {
   assert(await page.getByRole('tabpanel', { name: 'View code' }).isVisible(), 'Code did not open in the playground');
   assert(await page.locator('#generated-code .hljs-keyword').count() > 0 && await page.locator('#generated-code .hljs-string').count() > 0, 'JavaScript syntax highlighting is missing');
   const darkKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
-  assert(await page.locator('.preview-heading #copy-code').isVisible() && !await page.locator('.preview-dot').isVisible(), 'Code view did not replace the dot with Copy code');
+  assert(await page.locator('.playground-space > #copy-code').isVisible(), 'Code view did not show Copy code over the code');
   assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
   assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
   await page.getByRole('tab', { name: 'View code', exact: true }).press('ArrowLeft');
   assert(await page.getByRole('tab', { name: 'Live preview' }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
-  assert(!await page.locator('#copy-code').isVisible() && await page.locator('.preview-dot').isVisible(), 'Live preview did not restore the dot');
+  assert(!await page.locator('#copy-code').isVisible(), 'Live preview still shows Copy code');
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
   await page.getByRole('tab', { name: 'Live preview' }).press('End');
   await page.getByLabel('Text', { exact: true }).fill('Code view update');
@@ -64,7 +64,7 @@ try {
   await page.getByText('Square shape', { exact: true }).click();
   await page.getByText('Disabled', { exact: true }).click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLButtonElement>('button')?.disabled);
-  assert(await page.locator('.preview-footer #preview-theme').count() === 1, 'Appearance controls are missing from preview footer');
+  assert(await page.locator('.preview-heading #preview-theme').count() === 1, 'Appearance controls are missing from the playground heading');
   await page.selectOption('#preview-theme', 'ocean');
   await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
