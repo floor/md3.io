@@ -150,8 +150,15 @@ describe('framework code for the overlay elements', () => {
     expect(react).toContain('const [open, setOpen] = useState(false);');
     expect(react).toContain('<Dialog open={open} onClose={() => setOpen(false)} size="small" closeButton headline="Save your changes?">');
     expect(react).toContain('<Button slot="actions" variant="text" onClick={() => setOpen(false)}>Cancel</Button>');
-    expect(code('dialog', 'vue')).toContain('<MDialog :open="open" @close="open = false"');
-    expect(code('dialog', 'svelte')).toContain('<Dialog open={open} onclose={() => (open = false)}');
+    // Vue and Svelte fill the declared actions slot with their own syntax
+    const vue = code('dialog', 'vue');
+    expect(vue).toContain('<MDialog :open="open" @close="open = false"');
+    expect(vue).toContain('    <template #actions>\n      <MButton variant="text" @click="open = false">Cancel</MButton>');
+    expect(vue).not.toContain('slot="actions"');
+    const svelte = code('dialog', 'svelte');
+    expect(svelte).toContain('<Dialog open={open} onclose={() => (open = false)}');
+    expect(svelte).toContain('  {#snippet actions()}\n    <Button variant="text" onclick={() => (open = false)}>Cancel</Button>');
+    expect(svelte).not.toContain('slot:');
     // Its size, dividers, alignment and dismissal are attributes; the factory's defaults are left out.
     const options = code('dialog', 'html', { size: 'medium', divider: true, footerAlignment: 'center', closeOnOverlayClick: false, closeOnEscape: false, subtitle: 'Draft' });
     expect(options).toContain('<m-dialog subtitle="Draft" close-button divider footer-alignment="center" headline="Save your changes?" no-close-on-scrim-click no-close-on-escape>');
