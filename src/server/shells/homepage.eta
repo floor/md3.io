@@ -4,7 +4,7 @@
     <h1 class="hero__name" id="hero-title">Material Design.<br><span class="hero__accent">Made for the web.</span></h1>
     <p class="hero__tagline">Expressive components. Your framework.<br>A little TypeScript, a lot of possibility.</p>
     <div class="hero__actions"><a class="btn btn--primary" href="/components/button/">Explore components <span aria-hidden="true">→</span></a><a class="btn btn--ghost" href="/docs/">Read the docs</a></div>
-    <div class="install"><code><span aria-hidden="true">$ </span><span id="install-command">bun add mtrl</span></code><button class="ui-btn" id="copy-install" type="button">Copy</button></div>
+    <div class="hero__install"><%~ it.install %></div>
     <div class="hero__notes"><span>Material Design 3</span><span>Zero runtime dependencies</span><span>Open source</span></div>
   </section>
   <div class="landing-features">

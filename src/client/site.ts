@@ -73,12 +73,3 @@ export async function copyText(text: string): Promise<boolean> {
   try { await navigator.clipboard.writeText(text); return true; }
   catch { return false; }
 }
-// The homepage's install command follows the package manager the reader chose in the docs; bun without one.
-const INSTALL: Record<string, string> = { bun: 'bun add mtrl', npm: 'npm install mtrl', pnpm: 'pnpm add mtrl', yarn: 'yarn add mtrl' };
-const installCommand = document.querySelector<HTMLElement>('#install-command');
-if (installCommand && root.dataset.packageManager && INSTALL[root.dataset.packageManager]) installCommand.textContent = INSTALL[root.dataset.packageManager]!;
-document.querySelector<HTMLButtonElement>('#copy-install')?.addEventListener('click', async event => {
-  const button = event.currentTarget as HTMLButtonElement;
-  button.textContent = await copyText(installCommand?.textContent ?? 'bun add mtrl') ? 'Copied!' : 'Select and copy the command';
-  setTimeout(() => { button.textContent = 'Copy'; }, 2000);
-});

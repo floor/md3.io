@@ -37,7 +37,7 @@ export const PACKAGE_MANAGERS = [
  * switch between them. The reader's choice is on :root[data-package-manager] before paint
  * (base.eta), and site.ts remembers it; bun without it.
  */
-function renderInstall(packages: string): string {
+export function renderInstall(packages: string): string {
   const options = PACKAGE_MANAGERS.map(({ id }) =>
     `<button type="button" class="doc-install__option" data-package-manager="${id}" aria-pressed="${id === 'bun'}">${id}</button>`).join('');
   const commands = PACKAGE_MANAGERS.map(({ id, command }) =>

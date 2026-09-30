@@ -661,5 +661,6 @@ footer a:hover {
     }
 }
 
-/* The install command itself keeps the text colour; only the "$ " prompt is dimmed. */
-.install code #install-command { color: inherit; }
+/* The install block, the documentation's, centred under the actions. */
+.hero__install { width: min(100%, 440px); margin: 28px auto 0; text-align: left; }
+.hero__install .doc-install { margin: 0; }
