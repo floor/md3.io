@@ -155,7 +155,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |-------|---------|-------------|
 | `open` | `{ menu, originalEvent?, preventDefault, defaultPrevented }` | The menu opened |
 | `close` | `{ menu, originalEvent?, restoreFocus, preventDefault, defaultPrevented }` | The menu closed; `restoreFocus` says whether focus went back to the opener |
-| `select` | `{ menu, item, itemId, itemData?, originalEvent?, preventDefault, defaultPrevented }` | An item was chosen |
+| `select` | `{ menu, item, itemId, value, itemData?, originalEvent?, preventDefault, defaultPrevented }` | An item was chosen |
 
 Opening a menu closes any other root menu that is open, whatever opened it; that one's
 `close` has `restoreFocus: false`.

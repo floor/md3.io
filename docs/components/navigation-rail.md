@@ -118,7 +118,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `select` | `{ id, index, originalEvent }` | A destination was clicked or activated from the keyboard |
+| `select` | `{ id, value, index, originalEvent }` | A destination was clicked or activated from the keyboard |
 | `expand` / `collapse` | `{ expanded }` | The rail expanded or collapsed |
 
 ## Accessibility

@@ -124,7 +124,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `select` | `{ item, element, originalEvent, component, preventDefault, defaultPrevented }` | A row was chosen, before the selection moves |
+| `select` | `{ item, value, element, originalEvent, component, preventDefault, defaultPrevented }` | A row was chosen, before the selection moves |
 | `load` | `{ items, loading, hasNext, hasPrev, component }` | The items were rendered, at creation and on `refresh()` |
 | `scroll` | `{ originalEvent, component }` | The list scrolled |
 

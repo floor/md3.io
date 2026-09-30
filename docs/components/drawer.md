@@ -133,7 +133,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `select` | `{ id, label, index, originalEvent }` | A destination was chosen |
+| `select` | `{ id, value, label, index, originalEvent }` | A destination was chosen |
 | `open` / `close` | none | The drawer opened or closed |
 
 ## Accessibility

@@ -127,13 +127,15 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `change` | `{ value, rangeEndDate, formattedValue }` | The committed value changed: `value` as `getValue()` returns it, `rangeEndDate` a range's end (`null` otherwise) |
+| `change` | `{ value, rangeEndDate, formattedValue, iso }` | The committed value changed: `value` as `getValue()` returns it, `rangeEndDate` a range's end (`null` otherwise), `iso` the value as ISO text |
 | `open` / `close` | `{ value }` | The calendar opened or closed |
 
 Every `change` has the same shape, whether the calendar, the field or `setValue()` committed
 it; a docked range emits once, when both its dates are chosen. The web component's `change`
-carries `{ value }` as an ISO date, `YYYY-MM-DD`, a range as `YYYY-MM-DD/YYYY-MM-DD`, and
-empty as `''`.
+carries `{ value, date }`: `value` as an ISO date, `YYYY-MM-DD`, a range as
+`YYYY-MM-DD/YYYY-MM-DD`, and empty as `''`, and `date` the `Date` form. So the factory's `value`
+is a `Date` and its `iso` the text, while the web component's `value` is the text and its `date`
+the `Date`.
 
 ## Accessibility
 
