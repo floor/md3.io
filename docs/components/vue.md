@@ -142,8 +142,10 @@ const open = ref(false);
   <MButton @click="open = true">Delete</MButton>
   <MDialog :open="open" headline="Delete draft?" @close="open = false">
     <p>The draft will be deleted for good.</p>
-    <MButton slot="actions" variant="text" @click="open = false">Cancel</MButton>
-    <MButton slot="actions" variant="text" @click="open = false">Delete</MButton>
+    <template #actions>
+      <MButton variant="text" @click="open = false">Cancel</MButton>
+      <MButton variant="text" @click="open = false">Delete</MButton>
+    </template>
   </MDialog>
 </template>
 ```
@@ -151,10 +153,26 @@ const open = ref(false);
 ## Slots and children
 
 The default slot becomes the element's children: a button's label, a dialog's or a card's
-content. A component's named regions, such as a dialog's `headline` and `actions` or a top app
-bar's `leading` and `trailing`, are the element's named slots. Give the child a `slot`
-attribute, as the dialog above does. Vue's own named slots (`<template #actions>`) are not
-rendered, so the `slot` attribute is the only way in.
+content. A component's named regions, such as a dialog's `headline` and `actions`, a card's
+`header-action` or a top app bar's `leading` and `trailing`, are Vue named slots: fill them with
+`<template #actions>`, as the dialog above does. A region that also has a text prop, such as
+`headline` or `subhead`, takes either: the prop for plain text, the slot for markup.
+
+```vue
+<script setup lang="ts">
+import { MButton, MCard } from 'mtrl/vue';
+</script>
+
+<template>
+  <MCard subhead="Updated today">
+    <template #headline>Release <em>notes</em></template>
+    <p>What changed in this version.</p>
+    <template #actions>
+      <MButton variant="text">Read more</MButton>
+    </template>
+  </MCard>
+</template>
+```
 
 Lists of items are declared with child components: `MTab`, `MRadio`, `MChip`, `MListItem`,
 `MMenuItem`, `MSelectOption`, `MSearchSuggestion`, `MNavigationRailItem`, `MDrawerItem`,

@@ -33,7 +33,8 @@
 //              says which: a block is Solid on solid.md and React on every other page,
 //              unless its fence names the framework: ```tsx solid, ```tsx react.
 //   vue        its script, then its template as TypeScript (check-docs/templates.ts): each
-//   svelte     component's props and listeners typed with mtrl/vue's or mtrl/svelte's types.
+//   svelte     component's props and listeners typed with mtrl/vue's or mtrl/svelte's types,
+//              and each `<template #name>` or `{#snippet name()}` as one of its slots.
 //
 // A jsx block, and a vue or svelte block whose script is not lang="ts", is typed loosely,
 // as a javascript block is.

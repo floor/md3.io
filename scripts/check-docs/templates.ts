@@ -5,8 +5,10 @@
 //
 // It is not the frameworks' language tools, which are not dependencies here, and it
 // types what the guides write: props and listeners, bindings, `v-for` and `{#each}`,
-// `v-if` and `{#if}`, interpolations. Anything else in a template throws, so a new
-// construct is added here rather than skipped.
+// `v-if` and `{#if}`, interpolations, and a component's named slots: Vue's
+// `<template #name>` and Svelte's `{#snippet name()}`, each typed as one of the slots or
+// snippet props the component declares, its content typed as any other. Anything else
+// in a template throws, so a new construct is added here rather than skipped.
 import ts from 'typescript';
 import { parse as parseSvelte } from 'svelte/compiler';
 import { parse as parseVue } from 'vue/compiler-sfc';
@@ -74,11 +76,19 @@ export function vueToTs(code: string): Generated {
   out.push(`((__scope: ReturnType<typeof __vueScope<typeof __bindings>>) => {`, 1);
   if (names.length) out.push(`let { ${names.join(', ')} } = __scope;`, 1);
   const expression = (text: string) => `(${text})`;
-  const element = (node: VueNode) => {
+  /** `<template #name>` or `v-slot:name`: the name must be one of the component's slots. */
+  const slotName = (slot: VueProp, component: VueNode | undefined) => {
+    const at = slot.loc.start.line;
+    if (!component) throw new TemplateError('a named slot outside a component is not typed by the docs check', at);
+    if (slot.arg && !slot.arg.isStatic) throw new TemplateError('a dynamic slot name is not typed by the docs check', at);
+    out.push(`__vueSlot(${pascal(component.tag!)}, ${JSON.stringify(slot.arg?.content ?? 'default')});`, at);
+  };
+  /** An element or a `<template>`; `parent` is the component it is a direct child of. */
+  const element = (node: VueNode, parent?: VueNode) => {
     const line = node.loc.start.line;
     const props = node.props ?? [];
     const directive = (name: string) => props.find(prop => prop.type === DIRECTIVE && prop.name === name);
-    // a scoped slot's props would need the slot's types
+    // a scoped slot's props would need the slot's types, and mtrl's slots take none
     const slot = directive('slot');
     if (slot?.exp) throw new TemplateError('a scoped slot is not typed by the docs check', slot.exp.loc.start.line);
     // v-if, v-else-if, v-else and v-for wrap the element, in that order
@@ -107,7 +117,8 @@ export function vueToTs(code: string): Generated {
         }
         // the wrapping ones, above
         if (['if', 'else-if', 'else', 'for'].includes(prop.name)) continue;
-        if (['slot', 'show', 'text', 'html', 'once', 'memo', 'pre', 'cloak'].includes(prop.name)) {
+        if (prop.name === 'slot') continue;
+        if (['show', 'text', 'html', 'once', 'memo', 'pre', 'cloak'].includes(prop.name)) {
           if (prop.exp) after.push([`void ${expression(prop.exp.content)};`, at]);
           continue;
         }
@@ -131,15 +142,17 @@ export function vueToTs(code: string): Generated {
       }
       out.push('});', line);
       for (const [statement, at] of after) out.push(statement, at);
-    }
-    children(node.children ?? []);
+      // `v-slot:name` on the component itself: its children fill that slot
+      if (slot && component) slotName(slot, node);
+    } else if (slot) slotName(slot, parent);
+    children(node.children ?? [], node.tagType === COMPONENT ? node : undefined);
     for (let i = 0; i < close; i++) out.push('}', line);
   };
-  const children = (nodes: VueNode[]) => {
+  const children = (nodes: VueNode[], parent?: VueNode) => {
     for (const node of nodes) {
       if (node.type === TEXT || node.type === COMMENT) continue;
       if (node.type === INTERPOLATION) out.push(`void ${expression(node.content!.content)};`, node.content!.loc.start.line);
-      else if (node.type === ELEMENT) element(node);
+      else if (node.type === ELEMENT) element(node, parent);
       else throw new TemplateError(`a node of type ${node.type} is not typed by the docs check`, node.loc.start.line);
     }
   };
@@ -179,24 +192,43 @@ export function svelteToTs(code: string): Generated {
         case 'Attribute': out.push(`${key(attribute.name)}: ${value(attribute.value)},`, at); break;
         case 'SpreadAttribute': out.push(`...(${text(attribute.expression)}),`, at); break;
         case 'BindDirective':
-          if (attribute.name === 'this') { if (!component) after.push([`${text(attribute.expression)} = __svelteThis(${JSON.stringify(node.name)});`, at]); }
+          // a component's instance is its exports: mtrl's `element`
+          if (attribute.name === 'this') after.push([`${text(attribute.expression)} = ${component ? `__svelteInstance(${node.name})` : `__svelteThis(${JSON.stringify(node.name)})`};`, at]);
           else out.push(`${key(attribute.name)}: (${text(attribute.expression)}),`, at);
           break;
-        case 'OnDirective': case 'ClassDirective': case 'UseDirective': case 'TransitionDirective': case 'AnimateDirective': case 'AttachTag':
+        // an attachment gets the element: a component's is its `<m-*>` element (mtrl#296)
+        case 'AttachTag': after.push([`__svelteAttach(${JSON.stringify(component ? '' : node.name)}, ${text(attribute.expression)});`, at]); break;
+        case 'OnDirective': case 'ClassDirective': case 'UseDirective': case 'TransitionDirective': case 'AnimateDirective':
           if (attribute.expression) after.push([`void (${text(attribute.expression)});`, at]);
           break;
         case 'StyleDirective': if (attribute.value !== true) after.push([`void ${value(attribute.value)};`, at]); break;
         default: throw new TemplateError(`${attribute.type} is not typed by the docs check`, at);
       }
     }
+    // A snippet among a component's children is its prop of that name: one of its slots
+    // (camelCase) or a prop that takes a snippet, typed as the attributes are
+    const snippets = component ? (node.fragment.nodes as SvelteNode[]).filter(child => child.type === 'SnippetBlock') : [];
+    for (const snippet of snippets) {
+      const name: string = snippet.expression.name;
+      const at = lineAt(snippet.start);
+      // mtrl reads an `on…` function as a listener, never as a snippet
+      if (/^on[a-z]/.test(name)) throw new TemplateError(`{#snippet ${name}()} is named as an event prop, not a slot`, at);
+      out.push(`${key(name)}: __svelteSnippet((${(snippet.parameters as SvelteNode[]).map(text).join(', ')}) => {`, at);
+      fragment(snippet.body);
+      out.push('}),', at);
+    }
     out.push('});', line);
     for (const [statement, at] of after) out.push(statement, at);
-    fragment(node.fragment);
+    fragment(node.fragment, component);
   };
-  const fragment = (node: SvelteNode | null | undefined) => {
+  /** A fragment's nodes; `props` when it is a component's children, whose snippets are its props (above). */
+  const fragment = (node: SvelteNode | null | undefined, props = false) => {
     for (const child of (node?.nodes ?? []) as SvelteNode[]) {
       const line = lineAt(child.start);
       switch (child.type) {
+        case 'SnippetBlock':
+          if (!props) throw new TemplateError('a snippet outside a component\'s children is not typed by the docs check', line);
+          break;
         case 'Text': case 'Comment': break;
         case 'ExpressionTag': case 'HtmlTag': case 'RenderTag': out.push(`void (${text(child.expression)});`, line); break;
         case 'RegularElement': case 'Component': element(child); break;
