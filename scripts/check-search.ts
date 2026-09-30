@@ -91,6 +91,13 @@ try {
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= 390), 'no horizontal scroll at 390px');
   await page.keyboard.press('Escape');
 
+  // /?q= opens the search on its term (the home page's SearchAction), and leaves the address.
+  await page.goto(`${base}/?q=dialog`);
+  await page.locator('.search-dialog__result').first().filter({ hasText: 'Dialog' }).waitFor();
+  assert(await isOpen() && await input.inputValue() === 'dialog', '/?q=dialog opens the search on "dialog"');
+  assert(new URL(page.url()).search === '', `the query leaves the address, got ${page.url()}`);
+  await page.keyboard.press('Escape');
+
   assert(!errors.length, `no console errors: ${errors.join('\n')}`);
   console.log('Search dialog checks passed.');
 }
