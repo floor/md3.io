@@ -88,7 +88,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `class` | `string` | — | Extra classes on the component's element |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 | `closeOnSelect` | `boolean` | — | Deprecated, no effect: the picker is confirmed with OK, as M3 specifies |
-| `onChange` / `onInput` / `onConfirm` | `(time: string) => void` | — | Called beside the events |
+| `onChange` / `onInput` | `({ value }) => void` | — | Called beside the events |
+| `onConfirm` | `(time: string) => void` | — | Called beside `confirm` |
 | `onCancel` / `onOpen` / `onClose` | `() => void` | — | Called beside the events |
 
 ### Methods
@@ -114,15 +115,15 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `input` | `string` | The draft changed while the picker is open: a pick on the dial (once, when a drag is released), a keystroke in a field, AM/PM |
-| `change` | `string` | The committed time changed: OK with a different draft, or `setValue` with a different time |
+| `input` | `{ value }` | The draft changed while the picker is open: a pick on the dial (once, when a drag is released), a keystroke in a field, AM/PM |
+| `change` | `{ value }` | The committed time changed: OK with a different draft, or `setValue` with a different time |
 | `confirm` | `string` | OK was pressed, after `change`, while the picker is still open |
 | `cancel` | none | Cancel, `Escape` or a click on the scrim discarded the draft, while the picker is still open |
 | `open` / `close` | none | The dialog opened or closed |
 
 Changing the display format emits neither `input` nor `change`, and `setValue()` with the time
 the picker already has emits nothing. The web component's `input` and `change` carry
-`{ value }`; its value is `''` until a time is set or confirmed, and the first OK dispatches
+the same `{ value }`; its value is `''` until a time is set or confirmed, and the first OK dispatches
 `change` even on the time the dial started on.
 
 ## Accessibility
