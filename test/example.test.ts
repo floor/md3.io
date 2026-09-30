@@ -154,6 +154,18 @@ describe('open state and bound text', () => {
   });
 });
 
+describe('slotted children a factory takes through a method', () => {
+  const bar = 'top-app-bar:\n  title: Inbox\n  leading: { icon: backIcon, ariaLabel: Back }\n  actions:\n    - { icon: searchIcon, ariaLabel: Search }\n';
+  test('Vanilla creates each one and hands it to the method, not the config', () => {
+    const vanilla = code(bar, 'vanilla');
+    expect(vanilla).toContain("import { createTopAppBar, createIconButton } from 'mtrl';");
+    expect(vanilla).toContain("const topBar = createTopAppBar({ title: 'Inbox' });\ntopBar.addLeadingElement(createIconButton({ icon: backIcon, ariaLabel: 'Back' }).element);\ntopBar.addTrailingElement(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);\n");
+  });
+  test('the web component takes them in its slots', () => {
+    expect(code(bar, 'html')).toContain('<m-icon-button slot="leading" aria-label="Back"></m-icon-button>');
+  });
+});
+
 describe('a trigger', () => {
   const menu = "menu:\n  trigger: { text: Edit }\n  items:\n    - { id: cut, text: Cut }\n  on open: track('menu')\n";
   test('renders in all six frameworks: the button, then the menu it opens', () => {

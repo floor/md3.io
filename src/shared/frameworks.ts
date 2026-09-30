@@ -88,6 +88,8 @@ export interface SlottedMeta {
   markup?: boolean;
   /** An item key that, true, makes a click on the child close the parent: the dialog's `closeDialog`. */
   closes?: string;
+  /** In Vanilla, the factory's method that takes each child's element, when its config does not: the top app bar's `addTrailingElement`. */
+  add?: string;
 }
 
 /**

@@ -144,12 +144,12 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'buttons', element: 'button', slot: 'actions', after: true },
   ],
   'top-app-bar': [
-    { from: 'leading', element: 'icon-button', slot: 'leading' },
-    { from: 'actions', element: 'icon-button', slot: 'trailing' },
+    { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
+    { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
   ],
   'bottom-app-bar': [
-    { from: 'actions', element: 'icon-button' },
-    { from: 'fab', element: 'fab', slot: 'fab' },
+    { from: 'actions', element: 'icon-button', add: 'addAction' },
+    { from: 'fab', element: 'fab', slot: 'fab', add: 'addFab' },
   ],
   dialog: [
     { from: 'content', element: 'p', native: true, markup: true },
