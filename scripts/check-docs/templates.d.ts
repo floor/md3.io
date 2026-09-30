@@ -13,6 +13,10 @@ declare function __vue<C>(component: C, props: NoInfer<__VueProps<C> & Omit<__Na
 declare function __vueElement(props: __NativeEvents & Record<string, unknown>): void;
 /** What `v-model` (`v-model:name`) writes back: the payload of the component's `update:` event. */
 declare function __vueModel<C, K extends string>(component: C, name: K): __VueProps<C> extends { [P in `onUpdate:${K}`]?: (value: infer V) => any } ? V : never;
+/** A Vue component's named slots (`$slots`): `default` and each slot its element declares. */
+type __VueSlots<C> = C extends abstract new (...args: any) => { $slots: infer S } ? S : Record<string, unknown>;
+/** `<template #name>` (`v-slot:name`) in a component: `name` must be one of its slots. */
+declare function __vueSlot<C>(component: C, name: keyof __VueSlots<C> & string): void;
 /** `v-for`: the item, the key or index, the index. */
 declare function __vueFor<T>(source: Iterable<T> | ArrayLike<T>): [T, number, number][];
 declare function __vueFor(source: number): [number, number, number][];
@@ -27,3 +31,7 @@ declare function __svelteElement<K extends string>(tag: K, props: K extends keyo
 declare function __svelteEach<T>(source: Iterable<T> | ArrayLike<T> | null | undefined): [T, number][];
 /** What `bind:this` on a plain element assigns. */
 declare function __svelteThis<K extends string>(tag: K): K extends keyof HTMLElementTagNameMap ? HTMLElementTagNameMap[K] : HTMLElement;
+/** `bind:this` on a component: its instance, which is its exports (`element` on mtrl's). */
+declare function __svelteInstance<X extends Record<string, any>>(component: import('svelte').Component<any, X, any>): X;
+/** A `{#snippet}` passed to a component: its parameters typed by the prop it fills. */
+declare function __svelteSnippet<A extends unknown[] = []>(render: (...args: A) => void): import('svelte').Snippet<A>;
