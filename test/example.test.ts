@@ -39,14 +39,15 @@ describe('the example fence', () => {
     const html = renderExample('form:\n  class: signup\n');
     expect(html.match(/class="framework-note"/g)).toHaveLength(5);
   });
-  test('renders six highlighted panels, and one switch above the first example of a page', () => {
+  test('renders six highlighted panels, and one switch at the top of a page with examples', () => {
     const html = renderExample(withEvent);
     expect(html.match(/class="doc-example__panel"/g)).toHaveLength(6);
     expect(html).toContain('data-framework="solid"><span class="doc-example__label">SolidJS</span><pre><code class="hljs language-typescript">');
-    const page = renderDocument('slider')!.html;
-    expect(page.match(/class="framework-switch"/g)).toHaveLength(1);
-    expect(page.indexOf('class="framework-switch"')).toBeLessThan(page.indexOf('class="doc-example"'));
-    expect(page).not.toContain('doc-example__error');
+    const document = renderDocument('slider')!;
+    expect(document.html).not.toContain('framework-switch');
+    expect(document.frameworkSwitch.match(/class="framework-tab framework-switch__option"/g)).toHaveLength(6);
+    expect(renderDocument('drawer')!.frameworkSwitch).toBe('');
+    expect(document.html).not.toContain('doc-example__error');
   });
 });
 
