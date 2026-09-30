@@ -96,6 +96,8 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     showOnFocus: { attribute: 'no-show-on-focus', values: { false: true }, ignore: [true] },
   },
   dialog: {
+    // The element's dialog is always in the top layer.
+    layer: { ignore: ['top'] },
     title: { attribute: 'headline' },
     // Named by its headline; the label is the fallback without one.
     ariaLabel: { attribute: 'aria-label', same: 'title' },
