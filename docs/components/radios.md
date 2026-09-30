@@ -1,44 +1,80 @@
-# Radios Component
+# Radio buttons
 
-Radio buttons let users select one option from a set. Use them when every option should be visible at once; keep to five options or fewer, stacked vertically, with one selected by default. For more, use a menu or a select.
+Radio buttons let people select one option from a set, when every option should be visible at
+once. Keep to five options or fewer, stacked vertically, with one selected by default; for
+more, use a [select](/docs/components/select/). See the
+[M3 radio button guidelines](https://m3.material.io/components/radio-button/overview).
 
-## Import
+## Usage
 
-```javascript
-import { createRadios } from 'mtrl';
+```example
+radios:
+  name: size
+  value: m
+  options:
+    - { value: s, label: Small }
+    - { value: m, label: Medium }
+    - { value: l, label: Large }
+  on change: setSize(value)
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const size = createRadios({
-  name: 'size',
-  value: 'm',
-  options: [
-    { value: 's', label: 'Small' },
-    { value: 'm', label: 'Medium' },
-    { value: 'l', label: 'Large' }
-  ]
-});
-size.element.setAttribute('aria-label', 'Size');
-size.on('change', ({ value }) => setSize(value));
-document.querySelector('.options').append(size.element);
+### In a row, one option disabled
+
+`direction: 'horizontal'` lays the options out in a row. An option's own `disabled` leaves the
+rest of the group usable.
+
+```example
+radios:
+  name: delivery
+  value: standard
+  direction: horizontal
+  options:
+    - { value: standard, label: Standard }
+    - { value: express, label: Express, disabled: true }
+    - { value: pickup, label: Pick up }
 ```
 
-Name the group with `aria-label` or `aria-labelledby`; a visible title above it is the usual source.
+### Setting the value
 
-## Configuration
+An action selects an option by its value. An unknown value clears the selection and emits
+`change`, with `value` `''` and `option` `null`.
+
+```example
+radios:
+  name: size
+  value: m
+  options:
+    - { value: s, label: Small }
+    - { value: m, label: Medium }
+    - { value: l, label: Large }
+  action reset:
+    set value: s
+```
+
+An option's `labelBefore` puts its label before the radio, in the reading direction.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-radios>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `name` | `string` | generated | The inputs' shared name, which makes them one group for the keyboard and forms |
+| `name` | `string` | required | The inputs' shared name, which makes them one group for the keyboard and forms; an empty name is replaced by a generated one |
 | `options` | `RadioOptionConfig[]` | `[]` | The options, in order |
 | `value` | `string` | `undefined` | The selected value |
 | `direction` | `'vertical' \| 'horizontal'` | `'vertical'` | How the options are laid out |
 | `disabled` | `boolean` | `false` | Whether the whole group starts disabled |
+| `ripple` | `boolean` | `true` | Whether each radio has its state layer |
 | `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+| `rippleConfig` | `object` | `undefined` | Deprecated, no effect |
 
-### Option
+#### Option
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -47,31 +83,37 @@ Name the group with `aria-label` or `aria-labelledby`; a visible title above it 
 | `disabled` | `boolean` | `false` | Whether the option starts disabled |
 | `labelBefore` | `boolean` | `false` | Places the label before the radio, in the reading direction |
 
-`rippleConfig` is deprecated and has no effect.
+### Methods
 
-## Component API
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `getValue()` | none | `string` | The selected value, or `''` |
+| `setValue(value)` | `value: string` | `RadiosComponent` | Selects an option; an unknown value clears the selection and emits `change` |
+| `getSelected()` | none | `RadioOptionConfig \| null` | The selected option |
+| `addOption(option)` | `option: RadioOptionConfig` | `RadiosComponent` | Adds an option |
+| `removeOption(value)` | `value: string` | `RadiosComponent` | Removes an option |
+| `enable()` / `disable()` | none | `RadiosComponent` | The whole group |
+| `enableOption(value)` / `disableOption(value)` | `value: string` | `RadiosComponent` | One option |
+| `on(event, handler)` / `off(event, handler)` | `event: 'change', handler: Function` | `RadiosComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes the group |
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `getValue()` / `setValue(value)` | `string` / `RadiosComponent` | The selected value. An unknown value clears the selection and emits `change` |
-| `getSelected()` | `RadioOptionConfig \| null` | The selected option |
-| `addOption(option)` / `removeOption(value)` | `RadiosComponent` | Adds or removes an option |
-| `enable()` / `disable()` | `RadiosComponent` | The whole group |
-| `enableOption(value)` / `disableOption(value)` | `RadiosComponent` | One option |
-| `on(event, handler)` / `off(event, handler)` | `RadiosComponent` | Events: `change` |
-| `destroy()` | `void` | Removes the group |
+### Events
 
-## Events
+| Event | Description | Data |
+|-------|-------------|------|
+| `change` | The user selected an option, or an unknown value cleared the selection | `{ value, option, originalEvent }` |
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `change` | `{ value, option, originalEvent? }` | The user selected an option, or an unknown value cleared the selection (`value` is `''` and `option` `null`) |
+`originalEvent` is the DOM event of a user's selection, `undefined` otherwise. The web
+component's `change` carries `{ value }`.
 
 ## Accessibility
 
-- The group is a `radiogroup` of native radio inputs, each named by its label.
-- Tab lands on the selected radio (or the first one); the arrow keys move and select, wrapping, and follow the reading direction in right-to-left layouts. Space selects the focused radio. This is the native behaviour of radios sharing a `name`, and what the m3.material.io radio button guidance describes.
-- Keyboard focus draws a 0.10 state layer and Material's 3dp focus ring; a pointer shows no ring.
+- A `radiogroup` of native radio inputs, each named by its label. Name the group: the factory's
+  element takes `aria-label` or `aria-labelledby`, the web component an `aria-label` attribute.
+- `Tab` lands on the selected radio, or the first; the arrow keys move and select, wrapping, and
+  follow the reading direction in right-to-left layouts; `Space` selects the focused radio. This
+  is the native behavior of radios sharing a `name`.
+- Keyboard focus draws a 0.10 state layer and a 3dp focus ring; a pointer shows no ring.
 
 ## Styling
 
@@ -89,7 +131,8 @@ Name the group with `aria-label` or `aria-labelledby`; a visible title above it 
 
 ## Measurements
 
-Following the m3.material.io radio button specs, then Compose's `RadioButtonTokens` and material-web:
+From the m3.material.io radio button specs, then Compose's `RadioButtonTokens` and
+material-web.
 
 | Attribute | Value |
 |-----------|-------|
@@ -97,7 +140,7 @@ Following the m3.material.io radio button specs, then Compose's `RadioButtonToke
 | Unselected | `on-surface-variant` ring (`on-surface` on hover, focus and press) |
 | Selected | `primary` ring and a 10dp `primary` dot |
 | Disabled | `on-surface` 38% |
-| State layer | 40dp circle: `on-surface` when unselected, `primary` when selected; a press takes the colour of the state it leads to |
+| State layer | 40dp circle: `on-surface` when unselected, `primary` when selected; a press takes the color of the state it leads to |
 | Item | 48dp tall |
 | Label | Body Medium, `on-surface`, 8dp from the control |
 | Motion | The dot springs in on the fast spatial spring |
