@@ -35,6 +35,7 @@ const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
   menu: () => import('./catalog/menu'),
   'top-app-bar': () => import('./catalog/top-app-bar'),
   'bottom-app-bar': () => import('./catalog/bottom-app-bar'),
+  toolbar: () => import('./catalog/toolbar'),
   card: () => import('./catalog/card'),
   list: () => import('./catalog/list'),
   carousel: () => import('./catalog/carousel'),
