@@ -28,7 +28,7 @@ Each component follows a consistent architectural pattern:
 
 The standard pattern used for creating components is:
 
-```
+```typescript fragment
 const component = pipe(
   createBase,
   withEvents(),

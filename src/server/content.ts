@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Marked, type Tokens } from 'marked';
+import hljs from 'highlight.js';
 import { renderExample } from './example-block';
 import { FRAMEWORKS } from '../shared/frameworks';
 
@@ -20,6 +21,13 @@ export const docHref = (slug: string) => slug === 'components' ? '/docs/architec
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
 export const docSlugs = [...slugs];
+/** A fence's language as highlight.js names it; nothing for a fence without one. */
+const LANGUAGES: Record<string, string> = { ts: 'typescript', js: 'javascript', html: 'xml', sh: 'bash', shell: 'bash', svelte: 'xml', vue: 'xml' };
+function codeLanguage(lang = ''): string {
+  const name = lang.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
+  const language = LANGUAGES[name] ?? name;
+  return language && hljs.getLanguage(language) ? language : '';
+}
 /**
  * A page's summary: the first sentence of its opening paragraph, which the page
  * template makes "what the component is", as plain text.
@@ -58,9 +66,15 @@ export function renderDocument(slug: string) {
   let examples = false;
   parser.use({ renderer: {
     code(token: Tokens.Code) {
-      if (token.lang !== 'example') return false;
-      examples = true;
-      return renderExample(token.text);
+      if (token.lang === 'example') {
+        examples = true;
+        return renderExample(token.text);
+      }
+      // Every other block highlighted like the examples: the fence's first word is the
+      // language (after it come docs:check's flags, such as `fragment`).
+      const language = codeLanguage(token.lang);
+      const body = language ? hljs.highlight(token.text, { language }).value : escapeHTML(token.text);
+      return `<pre><code class="hljs${language ? ` language-${language}` : ''}">${body}</code></pre>\n`;
     },
     heading(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Heading) {
       const { title, id } = headingId(token.text);
