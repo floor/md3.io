@@ -4,11 +4,11 @@
     <div class="styles-cards">
       <a class="styles-card ui-card ui-card--interactive" href="/styles/color/">
         <div class="styles-card__visual styles-card__visual--color" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-        <div class="styles-card__body"><div><h3>Color</h3><p>Every color role in each theme, light and dark, with contrast checks.</p></div><span aria-hidden="true">↗</span></div>
+        <div class="styles-card__body"><div><h3>Color</h3><p>Every color role in each theme, light and dark, with contrast checks.</p></div></div>
       </a>
       <a class="styles-card ui-card ui-card--interactive" href="/styles/typography/">
         <div class="styles-card__visual styles-card__visual--type" aria-hidden="true"><span>Aa</span></div>
-        <div class="styles-card__body"><div><h3>Typography</h3><p>The 15 type scale roles as live samples you can edit.</p></div><span aria-hidden="true">↗</span></div>
+        <div class="styles-card__body"><div><h3>Typography</h3><p>The 15 type scale roles as live samples you can edit.</p></div></div>
       </a>
     </div>
   </section>
