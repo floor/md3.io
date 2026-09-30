@@ -206,6 +206,17 @@ The base stylesheet also puts M3's system tokens on `:root`:
 }
 ```
 
-The components compile their own type, shape and state values in, so these tokens style your
-own CSS and the typescale classes; the components' colours are the part a theme changes.
-[Styles › Typography](/styles/typography/) shows the whole type scale.
+The components read the typefaces and the corner steps too, with M3's values as the fallback,
+so a brand face or rounder corners set on `:root`, or on one part of the page, reach every
+component there: factories and web components alike.
+
+```css
+.compact-app {
+  --mtrl-ref-typeface-plain: "Inter", sans-serif;
+  --mtrl-sys-shape-corner-medium: 6px;
+}
+```
+
+Sizes, weights and state-layer opacities stay M3's in the components, and a few components still
+draw their own corners (a dialog, a tooltip, a menu). [Styles › Typography](/styles/typography/)
+shows the whole type scale.
