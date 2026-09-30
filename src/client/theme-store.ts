@@ -64,7 +64,7 @@ export const themeStore = {
   get: (): ThemeState => state,
   /**
    * Changes the theme. Top-level keys replace: `set({ mode: 'dark' })`, or a whole
-   * section, `set({ shape: { roundness: 150 } })`. The result is validated.
+   * section, `set({ shape: { corners: { medium: 24 } } })`. The result is validated.
    */
   set(partial: Partial<ThemeState>) { commit(normalize({ ...state, ...partial }, themeBase)); },
   /** One section back to mtrl's values, or, without one, everything (base theme and mode too). */

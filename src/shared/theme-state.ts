@@ -18,9 +18,7 @@ export interface ThemeBase {
 export type Mode = 'light' | 'dark';
 
 export interface ShapeState {
-  /** Scales every scalable step, in percent: 0 is square, 100 is mtrl's scale. */
-  roundness?: number;
-  /** A step's own radius in px, which wins over roundness. */
+  /** A step's own radius in px, where it differs from mtrl's. */
   corners?: Record<string, number>;
 }
 /** The sections a page can change; each is optional. */
@@ -39,38 +37,35 @@ export interface ThemeSection<S> {
   summary(value: S, base: ThemeBase): string;
 }
 
-export const ROUNDNESS = { min: 0, max: 300, step: 5 } as const;
 export const CORNER_MAX = 120;
 const object = (value: unknown): Record<string, unknown> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 const clamp = (value: unknown, min: number, max: number): number | undefined =>
   typeof value === 'number' && Number.isFinite(value) ? Math.min(max, Math.max(min, Math.round(value))) : undefined;
 
 /**
- * Whether roundness scales a step. `none` stays square; `full` (9999px) and `pill`
- * (100px) are "fully round" at any component height, so they stay as they are.
+ * Whether a step can be edited. `none` is square by definition; `full` (9999px) and
+ * `pill` (100px) mean "fully round" at any component height, so a px value makes no sense.
  */
-export const isScalable = (radius: number) => radius > 0 && radius < 100;
+export const isEditable = (radius: number) => radius > 0 && radius < 100;
 /** A corner step's radius in px under this state. */
 export function cornerRadius(shape: ShapeState | undefined, base: ThemeBase, step: string): number {
   const radius = base.shape[step] ?? 0;
-  if (!isScalable(radius)) return radius;
-  return shape?.corners?.[step] ?? Math.round(radius * (shape?.roundness ?? 100) / 100);
+  return isEditable(radius) ? shape?.corners?.[step] ?? radius : radius;
 }
 
 export const sections: { [K in SectionKey]: ThemeSection<Sections[K]> } = {
   shape: {
     label: 'Shape',
     href: '/styles/shape/',
+    // Links made while the page had a global "roundness" carry it: it is dropped here.
     normalize(raw, base) {
-      const input = object(raw);
-      const roundness = clamp(input.roundness, ROUNDNESS.min, ROUNDNESS.max);
       const corners: Record<string, number> = {};
-      for (const [step, value] of Object.entries(object(input.corners))) {
+      for (const [step, value] of Object.entries(object(object(raw).corners))) {
         const radius = clamp(value, 0, CORNER_MAX);
-        if (radius !== undefined && Object.hasOwn(base.shape, step) && isScalable(base.shape[step]!)) corners[step] = radius;
+        const own = base.shape[step];
+        if (radius !== undefined && Object.hasOwn(base.shape, step) && isEditable(own!) && radius !== own) corners[step] = radius;
       }
-      const shape: ShapeState = { ...(roundness !== undefined && roundness !== 100 ? { roundness } : {}), ...(Object.keys(corners).length ? { corners } : {}) };
-      return Object.keys(shape).length ? shape : undefined;
+      return Object.keys(corners).length ? { corners } : undefined;
     },
     tokens(shape, base) {
       const tokens: Record<string, string> = {};
@@ -80,9 +75,8 @@ export const sections: { [K in SectionKey]: ThemeSection<Sections[K]> } = {
       }
       return tokens;
     },
-    summary(shape) {
-      const tuned = Object.keys(shape.corners ?? {}).length;
-      return [`Roundness ${shape.roundness ?? 100}%`, tuned ? `${tuned} step${tuned === 1 ? '' : 's'} fine-tuned` : ''].filter(Boolean).join(', ');
+    summary(shape, base) {
+      return Object.entries(shape.corners ?? {}).map(([step, radius]) => `${step.replaceAll('-', ' ')} ${base.shape[step]}→${radius}px`).join(', ');
     },
   },
 };
