@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-10-01
 status: published
 ---
 
@@ -164,8 +164,12 @@ asks it to close, which `preventDefault()` refuses.
 
 ## Accessibility
 
-- An `alertdialog`, or a `dialog` at `fullscreen`, with `aria-modal`. The title names it
-  (`aria-labelledby`), or `ariaLabel` without one; the content describes it.
+- An `alertdialog`, or a `dialog` at `fullscreen`, with `aria-modal`. The role follows M3: "On
+  web, basic dialogs should have the alert dialog role" ([M3 dialogs
+  accessibility](https://m3.material.io/components/dialogs/accessibility)). A full-screen dialog
+  holds a task rather than a prompt, so it is a plain `dialog`; `role` overrides either. The title
+  names it (`aria-labelledby`), or `ariaLabel` without one, and shows no tooltip; the content
+  describes it.
 - Opening it focuses its first focusable element, or the dialog; closing it gives focus back.
   `Tab` stays inside it, and the page behind it is inert.
 - `Escape` and a click on the scrim close it, unless turned off. The close button is named
