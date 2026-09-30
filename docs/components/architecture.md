@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Architecture
 
 mtrl is built in layers: small features compose into component factories, web components wrap

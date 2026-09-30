@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Top app bar
 
 A top app bar shows the current screen's title, a navigation button and the screen's most

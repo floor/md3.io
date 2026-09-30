@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Split button
 
 A split button pairs one action with a button that opens more choices: Save, with "Save a

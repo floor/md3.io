@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Bottom app bar
 
 A bottom app bar puts a screen's frequent actions within thumb reach on a phone: a row of icon

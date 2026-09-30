@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Button group
 
 A button group is a row, or a column, of buttons that belong together: a formatting toolbar, a

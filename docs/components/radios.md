@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Radio buttons
 
 Radio buttons let people select one option from a set, when every option should be visible at

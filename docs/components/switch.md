@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Switch
 
 A switch turns one setting on or off, with an immediate effect: Wi-Fi, notifications, dark

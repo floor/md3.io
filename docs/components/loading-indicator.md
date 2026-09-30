@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Loading indicator
 
 A loading indicator shows a short wait, between 200ms and 5 seconds, for content that is

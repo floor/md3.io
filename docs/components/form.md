@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Form
 
 A form builds a set of fields from a layout, and keeps their data: it reads and sets it,

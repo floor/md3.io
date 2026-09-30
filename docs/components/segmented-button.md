@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Segmented button
 
 A segmented button is one container split into two to five segments, each an option: a view

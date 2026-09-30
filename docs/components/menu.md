@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Menu
 
 A menu shows a list of choices on a temporary surface, opened from a button or another

@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Extended FAB
 
 An extended FAB is a floating action button with a label: for a screen's primary action where

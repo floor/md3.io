@@ -61,6 +61,21 @@ export function headingIds(): (text: string) => { title: string; id: string } {
     return { title, id: count ? `${base}-${count}` : base };
   };
 }
+/** A page's front matter (created, updated, status), as vlist.io's docs carry it. */
+export function documentMeta(slug: string): Record<string, string> {
+  const head = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(readFileSync(resolve(docsDir, `${slug}.md`), 'utf8'))?.[1] ?? '';
+  return Object.fromEntries(head.split(/\r?\n/).map(line => /^([a-z]+):\s*(.*)$/.exec(line.trim())).filter(Boolean).map(match => [match![1]!, match![2]!.trim()]));
+}
+const STATUS: Record<string, string> = { draft: 'Draft', review: 'In review', published: 'Published' };
+const formatDate = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+/** The status badge and the date under a page's title. */
+function metaHtml(meta: Record<string, string>): string {
+  const parts: string[] = [];
+  if (meta.status) parts.push(`<span class="meta__badge meta__badge--${STATUS[meta.status] ? meta.status : 'draft'}">${escapeHTML(STATUS[meta.status] ?? meta.status)}</span>`);
+  const date = meta.updated ?? meta.created;
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) parts.push(`<span class="meta__item">${meta.updated ? 'Updated' : 'Created'} <time datetime="${date}">${formatDate(date)}</time></span>`);
+  return parts.length ? `<div class="meta">${parts.join('')}</div>` : '';
+}
 export function renderDocument(slug: string) {
   if (!slugs.has(slug)) return null;
   const source = documentSource(slug);
@@ -100,7 +115,9 @@ export function renderDocument(slug: string) {
     },
   } });
   const html = parser.parse(source) as string;
-  return { html, toc, title: componentName(slug), summary: docSummary(slug), frameworkSwitch: examples ? frameworkSwitch() : '' };
+  // The metadata sits under the title
+  const withMeta = html.replace(/(<\/h1>\n?)/, `$1${metaHtml(documentMeta(slug))}`);
+  return { html: withMeta, toc, title: componentName(slug), summary: docSummary(slug), frameworkSwitch: examples ? frameworkSwitch() : '' };
 }
 
 /**

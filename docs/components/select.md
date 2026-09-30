@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Select
 
 A select lets people choose one option from a list, in a text field that opens a menu: a

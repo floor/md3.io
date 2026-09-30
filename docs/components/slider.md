@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-29
+status: published
+---
+
 # Slider
 
 A slider lets people choose a value, or a range of values, along a track: a volume, a

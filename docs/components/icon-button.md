@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Icon button
 
 An icon button is a button whose whole label is its icon: for an action people recognize

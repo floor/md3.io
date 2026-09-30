@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Dialog
 
 A dialog asks for a decision, or holds a short task, before anything else continues: discard

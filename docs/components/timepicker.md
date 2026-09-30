@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Time picker
 
 A time picker asks for a time of day, on a clock dial or by typing it, in a modal dialog: a

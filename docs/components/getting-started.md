@@ -1,3 +1,9 @@
+---
+created: 2026-09-30
+updated: 2026-09-30
+status: published
+---
+
 # Getting started
 
 mtrl is a Material Design 3 component library for the web, with no dependencies. The same

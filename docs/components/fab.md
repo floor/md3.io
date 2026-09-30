@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # FAB
 
 A floating action button (FAB) carries the one action a screen is for: compose, add, start. It

@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Tabs
 
 Tabs organize related content at the same level, one view at a time. M3 has two variants:

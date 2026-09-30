@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-29
+status: published
+---
+
 # Button
 
 A button lets people take an action with one tap: save, send, add to cart. M3 has five,

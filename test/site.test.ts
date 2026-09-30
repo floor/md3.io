@@ -211,3 +211,19 @@ describe('framework code for the overlay elements', () => {
     expect(code('button', 'svelte', { text: 'a {b}' })).toContain('>a &#123;b&#125;</Button>');
   });
 });
+
+import { documentMeta, docSlugs as allDocSlugs } from '../src/server/content';
+describe('documentation front matter', () => {
+  test('every page says when it was created and updated, and its status', () => {
+    for (const slug of allDocSlugs) {
+      const meta = documentMeta(slug);
+      expect([slug, /^\d{4}-\d{2}-\d{2}$/.test(meta.created ?? '')]).toEqual([slug, true]);
+      expect([slug, /^\d{4}-\d{2}-\d{2}$/.test(meta.updated ?? '') && meta.updated! >= meta.created!]).toEqual([slug, true]);
+      expect([slug, ['draft', 'review', 'published'].includes(meta.status ?? '')]).toEqual([slug, true]);
+    }
+  });
+  test('the badge and the date sit under the title', async () => {
+    const html = await (await handleRequest(new Request('http://localhost/docs/components/button/'))).text();
+    expect(html).toMatch(/<\/h1>\n?<div class="meta"><span class="meta__badge meta__badge--published">Published<\/span><span class="meta__item">Updated <time datetime="\d{4}-\d{2}-\d{2}">/);
+  });
+});

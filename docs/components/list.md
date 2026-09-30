@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # List
 
 A list is a continuous, vertical index of text and images: a headline per row, with an

@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Bottom sheet
 
 A bottom sheet holds secondary content anchored to the bottom of the screen: sharing

@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Tooltip
 
 A tooltip is a short label for another element, shown on hover and on focus: it names an icon

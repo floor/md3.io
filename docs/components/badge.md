@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Badge
 
 A badge shows a count or a status on another element: unread messages on an icon, a new

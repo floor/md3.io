@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Navigation rail
 
 A navigation rail holds three to seven top-level destinations in a column along the side of a

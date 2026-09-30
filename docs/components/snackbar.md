@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Snackbar
 
 A snackbar tells people about something the app has done, at the bottom of the screen: a

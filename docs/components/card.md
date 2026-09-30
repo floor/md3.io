@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Card
 
 A card groups the content and actions about one subject on one surface: a title, media,

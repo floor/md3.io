@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Progress
 
 A progress indicator shows how far a process has come, such as an upload, or that one is

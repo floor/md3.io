@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Side sheet
 
 A side sheet holds content that supports the page, docked to its side: filters beside a list

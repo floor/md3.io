@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Carousel
 
 A carousel shows a collection of items that scroll on and off the screen, changing size as

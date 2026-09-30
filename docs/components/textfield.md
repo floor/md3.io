@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Text field
 
 A text field lets people enter free-form text: a name, an email address, a password, a

@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Date picker
 
 A date picker lets people select a date, or a range of dates. M3 has four forms: a

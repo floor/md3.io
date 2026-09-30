@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Color picker
 
 A color picker lets people choose a color: in an area of saturation and brightness, on a hue

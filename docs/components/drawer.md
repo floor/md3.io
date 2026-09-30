@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Drawer
 
 A navigation drawer holds an app's top-level destinations in a vertical list along one edge,

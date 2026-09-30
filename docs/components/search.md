@@ -1,3 +1,9 @@
+---
+created: 2026-09-21
+updated: 2026-09-30
+status: published
+---
+
 # Search
 
 Search lets people enter a keyword or phrase and find what they are looking for. It starts as
