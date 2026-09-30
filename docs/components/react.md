@@ -171,11 +171,16 @@ import the tag types once, in any file TypeScript sees:
 ```tsx
 import type {} from 'mtrl/react/jsx';
 
-export const Wifi = () => <m-switch checked supporting-text="Saves battery">Wi-Fi</m-switch>;
+export const Wifi = () => (
+  <m-switch checked label="Wi-Fi" onchange={(event) => setWifi(event.detail.checked)} />
+);
 ```
 
 It is types only, so nothing reaches the bundle; the element still needs `defineAll()` or its
-`define` function, as in [Web Components](../web-components/).
+`define` function, as in [Web Components](../web-components/). On a bare tag, listen with the
+lowercase `onchange`: React 19 hands `onChange` its own synthetic event, without `detail`, and
+React 18 sets no event props on custom elements at all. The components (`<Switch onChange>`)
+have none of these differences.
 
 ## React 18 and 19
 
