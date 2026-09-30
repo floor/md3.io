@@ -1,133 +1,34 @@
 # Architecture
 
-The Components module provides a collection of highly optimized, fully accessible UI components built using the functional composition pattern. Each component is crafted with a focus on performance, memory efficiency, and code reusability while adhering to Material Design 3 specifications.
+mtrl is built in layers: small features compose into component factories, web components wrap
+the factories, and the React, Vue, Svelte and SolidJS components are generated from the web
+components. Each layer adds one thing and keeps the one below it intact, so a component looks and
+behaves the same whichever layer you use. The library has no runtime dependencies.
 
-## Overview
+```text
+core        pipe, events, lifecycle, DOM, state          mtrl/core
+  ↓
+factories   createButton, createMenu, …                  mtrl
+  ↓
+elements    <m-button>, <m-menu>, …                      mtrl/elements
+  ↓
+adapters    <Button>, <MButton>, …                       mtrl/react · vue · svelte · solid
 
-The Components module implements Material Design 3 principles using a lightweight, dependency-free architecture. Instead of relying on inheritance or heavy frameworks, components are constructed through functional composition, allowing for precisely tailored features with minimal overhead.
-
-Key characteristics of our component system include:
-
-- **Functional Composition**: Components are assembled from small, focused feature enhancers
-- **Zero Dependencies**: No external dependencies, keeping bundle size minimal
-- **TypeScript-First**: Full type safety with comprehensive interfaces
-- **Accessibility-Focused**: ARIA support and keyboard navigation built-in
-- **Performance-Optimized**: Minimal DOM operations and memory footprint
-- **Customizable**: Extensive configuration options without bloat
-
-## Component Architecture
-
-Each component follows a consistent architectural pattern:
-
-1. **Factory Function**: A creator function (e.g., `createButton`) serves as the primary API
-2. **Configuration Processing**: Default values are merged with user configuration
-3. **Feature Composition**: Multiple enhancers are applied in a specific order
-4. **Public API Creation**: A clean public API is exposed while hiding implementation details
-
-### Component Factory Pattern
-
-The standard pattern used for creating components is:
-
-```typescript fragment
-const component = pipe(
-  createBase,
-  withEvents(),
-  withElement(config),
-  withSpecificFeatures(config),
-  withLifecycle(),
-  withAPI(config)
-)(processedConfig);
+styles      tokens, themes, one stylesheet per component  mtrl/styles · mtrl/themes
 ```
 
-This pipeline provides a clean separation of concerns while ensuring each component only includes the features it needs.
+## Factories: features in a pipe
 
-## Core Components
+A factory takes a config and returns a component: an object with its `element` and an API. It
+is built by piping a base through features, each a function that takes the component and
+returns it with one more capability: events, an element, a ripple, a label, a lifecycle. The
+switch, for example, composes events, its element, the native input, a label, a track,
+supporting text, checked and disabled states, a lifecycle, and finally its public API.
 
-### Button
+A feature is only included when a factory uses it, which is what keeps bundles small: md3.io's
+component pages show each component's size, measured from the build.
 
-The Button component implements Material Design 3 button variants with ripple effects, states, and accessibility features.
-
-#### Variants
-
-- **Filled**: Primary action with solid background (high emphasis)
-- **Tonal**: Secondary action with semi-filled background (medium emphasis)
-- **Outlined**: Button with outline border (medium-low emphasis)
-- **Elevated**: Button with slight elevation/shadow
-- **Text**: Text-only button without background (low emphasis)
-
-#### Key Features
-
-- Touch ripple effects with configurable animation
-- Accessible keyboard navigation and ARIA attributes
-- Icon support with position control
-- Disabled state management
-- Focus, hover, and active states
-
-### Checkbox
-
-The Checkbox component provides a Material Design 3 compliant checkbox with support for indeterminate state.
-
-#### Key Features
-
-- Checked, unchecked, and indeterminate states
-- Label positioning (start/end)
-- Accessible keyboard interaction
-- Touch-friendly hit areas
-- Form integration with name/value
-
-### Menu
-
-The Menu component offers a dropdown menu system with support for nested submenus, keyboard navigation, and ARIA attributes.
-
-#### Key Features
-
-- Intelligent positioning with automatic flipping
-- Cursor-based focus management
-- Support for nested submenus
-- Icons and keyboard shortcuts
-- Dynamic item enabling/disabling
-- Keyboard navigation and screen reader support
-
-### Slider
-
-The Slider component implements a touch and keyboard accessible range input with support for discrete steps, custom thumb control, and accessibility features.
-
-#### Key Features
-
-- Continuous and discrete (stepped) modes
-- Range slider support (dual thumbs)
-- Customizable track and thumb appearance
-- Keyboard accessibility with fine/coarse adjustments
-- Touch and mouse input with accessible events
-- Value bubble for current selection
-
-## Component APIs
-
-Each component exposes a consistent public API with these characteristics:
-
-- **Element Access**: Direct access to the root DOM element
-- **State Methods**: Enable/disable and other state controls
-- **Content Methods**: Update text, icons, etc.
-- **Event Subscription**: Add/remove event listeners
-- **Lifecycle Control**: Mount, unmount, and destroy functionality
-- **Method Chaining**: Most methods return the component for chaining
-
-### Common API Patterns
-
-Most components implement these common API methods:
-
-- **Element Reference**: `component.element` provides access to the root DOM element
-- **Event Handling**: `component.on(event, handler)` and `component.off(event, handler)`
-- **State Management**: `component.enable()` and `component.disable()`
-- **Destruction**: `component.destroy()` for cleanup
-
-## Extending Components
-
-The component system is designed for extension through several approaches:
-
-### Feature Composition
-
-New features can be added to existing components through the composition pipeline:
+The same pattern extends a component. A feature that adds a title to any button:
 
 ```typescript
 import { pipe, createButton } from 'mtrl';
@@ -145,9 +46,7 @@ const createCustomButton = (config: ButtonConfig) => pipe(
 )(config);
 ```
 
-### Custom Components
-
-New components can be created following the same pattern:
+Or builds a new component from the core features:
 
 ```typescript
 import { pipe, createBase, withEvents, withElement, withLifecycle } from 'mtrl';
@@ -158,289 +57,69 @@ const withLabel = (label: string) => <C extends ElementComponent>(component: C) 
   return component;
 };
 
-const createCustomComponent = (config: { label: string }) => {
-  const baseConfig = {
-    prefix: 'mtrl',
-    ...config,
-    componentName: 'custom'
-  };
-
-  return pipe(
-    createBase,
-    withEvents(),
-    withElement({ tag: 'div', className: 'custom' }),
-    withLabel(baseConfig.label),
-    withLifecycle()
-  )(baseConfig);
-};
+const createCustomComponent = (config: { label: string }) => pipe(
+  createBase,
+  withEvents(),
+  withElement({ tag: 'div', className: 'custom' }),
+  withLabel(config.label),
+  withLifecycle()
+)({ prefix: 'mtrl', componentName: 'custom', ...config });
 ```
 
-### API Extension
-
-Existing component APIs can be extended with custom functionality:
-
-```typescript
-import { createButton } from 'mtrl';
-
-const withCustomAPI = <C extends object>(component: C) => ({
-  ...component,
-  customMethod() {
-    // Custom implementation
-    return this;
-  }
-});
-
-const enhancedButton = withCustomAPI(createButton({ text: 'Save' }));
-```
-
-## Component Features
-
-Components are built from composable features, including:
-
-### UI Features
-
-- **Text Content**: Adds and manages text through `withText`
-- **Icon Support**: Adds icon capabilities through `withIcon`
-- **Variant Styling**: Applies style variants through `withVariant`
-- **Size Variations**: Adds size options through `withSize`
-- **Ripple Effect**: Adds Material Design ripple through `withRipple`
-
-### Behavioral Features
-
-- **Event Handling**: Adds event system through `withEvents`
-- **Disabled State**: Adds disabled functionality through `withDisabled`
-- **Input Handling**: Adds form input behavior through `withInput`
-- **Checkable State**: Adds checked state through `withCheckable`
-- **Lifecycle Management**: Adds lifecycle methods through `withLifecycle`
-
-### Specialized Features
-
-- **Track/Thumb**: Adds slider/switch track elements through `withTrack`
-- **Label Management**: Adds label support through `withTextLabel`
-- **Badge Support**: Adds badge capability through `withBadge`
-- **Gesture Recognition**: Adds touch gestures through `withGestures`
-
-## Styling Approach
-
-Components use a consistent styling approach with these characteristics:
-
-- **External CSS**: Styles are defined in external SCSS files
-- **BEM Naming**: Block-Element-Modifier pattern for class names
-- **Prefixing**: All classes use the `mtrl-` prefix for namespacing
-- **States as Modifiers**: States like `--disabled` are applied as modifier classes
-- **Minimal Specificity**: Flat selector hierarchy to avoid specificity issues
-
-## Performance Considerations
-
-The component system includes numerous performance optimizations:
-
-### Rendering Performance
-
-- **Minimal DOM Operations**: Batch DOM changes and minimize reflow
-- **Efficient Event Handling**: Use event delegation where appropriate
-- **Class Toggle Optimization**: Efficient class manipulation with batch operations
-- **Lazy Initialization**: Components initialize features only when needed
-
-### Memory Management
-
-- **Proper Cleanup**: Components properly clean up resources on destruction
-- **Event Handler Management**: Centralized tracking of event handlers for removal
-- **Avoid Closure Leaks**: Careful management of closure references
-- **Reuse DOM Elements**: Recycle elements when possible
-
-## Accessibility
-
-All components implement accessibility best practices:
-
-- **ARIA Attributes**: Proper role and state attributes
-- **Keyboard Navigation**: Full keyboard support with expected behaviors
-- **Focus Management**: Visible focus indicators and logical focus order
-- **Screen Reader Support**: Meaningful text alternatives and announcements
-- **Touch Targets**: Appropriately sized touch targets for mobile use
-
-## Examples of Component Usage
-
-### Button Component
-
-<!-- check-docs untriggered 'click': the example destroys the button before anyone can click it -->
-```typescript
-import { createButton } from 'mtrl';
-
-// Create a filled button with an icon
-const submitButton = createButton({
-  text: 'Submit',
-  variant: 'filled',
-  icon: '<svg>...</svg>'
-});
-
-// Add click handler
-submitButton.on('click', () => {
-  console.log('Button clicked');
-});
-
-// Disable during async operation
-submitButton.disable();
-
-// Re-enable when done
-submitButton.enable();
-
-// Clean up when no longer needed
-submitButton.destroy();
-```
-
-### Checkbox Component
-
-```typescript
-import { createCheckbox } from 'mtrl';
-
-// Create a checkbox with label
-const consentCheckbox = createCheckbox({
-  label: 'I agree to the terms and conditions',
-  name: 'consent',
-  required: true,
-  labelPosition: 'end'
-});
-
-// Add change handler
-consentCheckbox.on('change', (e) => {
-  console.log('Checkbox state:', e.checked);
-});
-
-// Toggle checked state
-consentCheckbox.toggle();
-
-// Set indeterminate state for "some selected" UI
-consentCheckbox.setIndeterminate(true);
-
-// Update label text
-consentCheckbox.setLabel('I consent to all terms of service');
-```
-
-### Menu Component
-
-```typescript
-import { createMenu } from 'mtrl';
-
-// Create a menu with items
-const userMenu = createMenu({
-  opener: document.getElementById('user-avatar')!,
-  items: [
-    { id: 'profile', text: 'Profile', icon: '<svg>...</svg>' },
-    { id: 'settings', text: 'Settings' },
-    { type: 'divider' },
-    { id: 'logout', text: 'Log out' }
-  ],
-  position: 'bottom-end'
-});
-
-// Listen for selections
-userMenu.on('select', (e) => {
-  console.log('Selected item:', e.itemId);
-  
-  if (e.itemId === 'logout') {
-    logoutUser();
-  }
-});
-
-// Open the menu programmatically
-userMenu.open();
-
-// Update items dynamically
-userMenu.setItems([
-  { id: 'profile', text: 'Profile' },
-  { id: 'logout', text: 'Log out' }
-]);
-```
-
-### Slider Component
-
-```typescript
-import { createSlider } from 'mtrl';
-
-// Create a slider
-const volumeSlider = createSlider({
-  min: 0,
-  max: 100,
-  value: 50,
-  step: 1,
-  label: 'Volume',
-  showValue: true
-});
-
-// Listen for value changes
-volumeSlider.on('change', (e) => {
-  console.log('New volume:', e.value);
-  setSystemVolume(e.value);
-});
-
-// Update value programmatically
-volumeSlider.setValue(75);
-
-// Create a range slider
-const priceRangeSlider = createSlider({
-  min: 0,
-  max: 1000,
-  value: 200,
-  secondValue: 800,
-  range: true,
-  label: 'Price Range',
-  valueFormatter: (value) => `$${value}`
-});
-```
-
-## Best Practices
-
-When working with the component system, consider these best practices:
-
-1. **Resource Management**: Always call `destroy()` when a component is no longer needed
-2. **Event Handling**: Use the component's event system instead of direct DOM events
-3. **Component Configuration**: Configure components at creation time when possible
-4. **DOM Manipulation**: Avoid direct DOM manipulation of component elements
-5. **Performance**: For lists of components, use virtualization techniques
-6. **Accessibility**: Test with keyboard navigation and screen readers
-7. **State Management**: Use component state methods instead of class manipulation
-
-## Component Status and Roadmap
-
-The current component library includes these fully implemented components:
-
-- Button (all variants)
-- Checkbox
-- Menu (with nested submenus)
-- Slider (including range slider)
-- Switch
-- TextField
-- Radio Button
-- List
-- Card
-- Dialog
-- Snackbar
-
-Upcoming components on the roadmap include:
-
-- Tabs
-- Navigation Rail
-- Bottom App Bar
-- Chips
-- Date Picker
-- Time Picker
-- Segmented Button
-- Navigation Drawer
-- Progress Indicators
-
-## Contributing New Components
-
-When creating new components for the library, follow these guidelines:
-
-1. Use the established functional composition pattern
-2. Create a clear public API with comprehensive TypeScript types
-3. Add thorough accessibility support
-4. Include documentation with usage examples
-5. Write tests for component features
-6. Optimize for performance and memory usage
-7. Follow the Material Design 3 specification
-8. Use existing features when possible
-
-## Conclusion
-
-The Components module provides a comprehensive suite of UI components built on a foundation of functional composition. By assembling small, focused feature enhancers, each component includes precisely the functionality it needs without unnecessary overhead. This approach results in a lightweight, performant, and accessible implementation of the Material Design 3 specification.
+Every factory follows the same contract: `on()` and `off()` for events, setters and getters
+for its state, and `destroy()` to remove its element and every listener it added.
+
+## Styles and tokens
+
+Styles are plain CSS, written in Sass and compiled. Classes follow BEM, prefixed `mtrl-`:
+`.mtrl-button`, `.mtrl-button--filled`, `.mtrl-button__label`. Every value that M3 names is a
+token, a CSS custom property: colour roles (`--mtrl-sys-color-primary`), the type scale
+(`--mtrl-sys-typescale-body-large-font-size`), shapes and state layers.
+
+- `mtrl/styles/base` holds the tokens and the ripple; every app imports it once.
+- `mtrl/styles/<component>` is one component's stylesheet, for the factories.
+- `mtrl/themes/<name>` sets the colour roles for another theme, applied with `data-theme` and
+  `data-theme-mode` on any element. Most themes are generated from a seed colour with Google's
+  colour library, so their roles follow M3's schemes.
+
+The rules sit in CSS cascade layers (`mtrl.base`, `mtrl.button` …), so an app's own styles win
+without fighting specificity. [Styles](/styles/) shows every token as mtrl ships it.
+
+## Web components
+
+Each web component is declared by a spec that maps its attributes and properties to the
+factory's config and setters, its events to the factory's, and its child elements (`<m-tab>`,
+`<m-menu-item>`) to the factory's items. One element framework turns every spec into a custom
+element, so they all behave alike:
+
+- **Shadow DOM.** The element renders its factory inside a shadow root, with the component's
+  CSS as a shared, adopted stylesheet (a `<style>` where the browser lacks them), so page styles and mtrl's styles never collide. Tokens
+  still reach it, since custom properties inherit.
+- **Attributes as defaults.** An attribute gives the initial state; once the user or a script
+  changes it, the element's state wins, and a form reset returns to the attribute.
+- **Forms.** Inputs are form-associated: they submit a value, reset, restore and report
+  validity like native controls, and work with `<label for>`.
+- **Before upgrade.** Pre-upgrade rules give each element its final size before its script
+  runs, so server-rendered pages don't shift.
+
+## Framework components
+
+The React, Vue, Svelte and SolidJS components are generated from the element specs, never
+written by hand. Each renders its `<m-*>` element, passes props as properties or attributes,
+maps events to the framework's convention (`onChange`, `@change`, `onchange`), registers the
+element the first time it mounts, and loads its CSS. A fix in a factory or an element reaches
+every framework at once. The frameworks are optional peer dependencies of the one `mtrl`
+package, imported from `mtrl/react`, `mtrl/vue`, `mtrl/svelte` and `mtrl/solid`.
+
+## Overlays and the top layer
+
+Menus, selects, dialogs, sheets, snackbars and tooltips can open in the browser's top layer,
+above every stacking context, with the platform's own focus and dismissal. A snackbar shown
+while a modal dialog is open appears inside that dialog, so it stays visible and reachable.
+
+## Where to go next
+
+- [Getting started](../getting-started/) to add mtrl to an app.
+- The guide for your way of using it: [Vanilla](../vanilla/), [Web Components](../web-components/),
+  [React](../react/), [Vue](../vue/), [Svelte](../svelte/) or [SolidJS](../solid/).
+- [Theming](../theming/) for tokens and themes, [Server rendering](../server-rendering/) for SSR.
