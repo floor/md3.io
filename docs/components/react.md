@@ -195,6 +195,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
 ## Bundle size
 
-`mtrl/react` is one entry: importing any component brings every element and its CSS into your
-bundle. For an app that uses a few components and cares about every kilobyte, the
-[Vanilla](../vanilla/) factories are the smallest.
+Each component is its own module: importing `Switch` brings the switch element and its CSS, and
+nothing else. A component costs about 1 KB gzip more than its web component, and each component
+page shows its size. For the smallest bundles, the [Vanilla](../vanilla/) factories skip the
+element layer altogether.
