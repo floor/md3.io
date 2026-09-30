@@ -226,6 +226,26 @@ export const roleUsage: Record<string, string[]> = (() => {
   return Object.fromEntries(Object.entries(usage).map(([role, components]) => [role, [...components].sort()]));
 })();
 
+// ─── Scoped tokens ──────────────────────────────────────────────────
+
+/**
+ * mtrl's baseline tokens as CSS for a scope instead of `:root`: every custom
+ * property of base.css's `:root` (colour, state, typeface, typescale, shape) on
+ * `scope`, and the dark colour roles (`.dark-theme`) on `darkScope`. Custom
+ * properties inherit into shadow roots, so mtrl's elements inside the scope take
+ * them, while the page around it, which does not load base.css, keeps its own.
+ */
+export function scopedTokens(scope: string, darkScope: string): string {
+  const inMedia = (block: CssBlock) => block.path.some(part => part.startsWith('@media'));
+  const custom = (blocks: CssBlock[]) => new Map(blocks.flatMap(block => [...block.declarations].filter(([name]) => name.startsWith('--mtrl-'))));
+  const rule = (selector: string, scheme: Mode, declarations: Map<string, string>) =>
+    `${selector}{color-scheme:${scheme};${[...declarations].map(([name, value]) => `${name}:${value}`).join(';')}}`;
+  return [
+    rule(scope, 'light', custom(baseBlocks.filter(block => block.path.at(-1) === ':root' && !inMedia(block)))),
+    rule(darkScope, 'dark', custom(baseBlocks.filter(block => block.path.at(-1) === '.dark-theme'))),
+  ].join('\n');
+}
+
 /** mtrl's font-weight utility classes (`.mtrl-font-<name>`), lightest first. */
 export const fontWeights: { name: string; weight: string }[] = baseBlocks
   .flatMap(block => {
