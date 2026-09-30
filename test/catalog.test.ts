@@ -26,7 +26,8 @@ describe('the components overview', () => {
   });
   test('the page loads the elements, their pre-upgrade rules and the scoped tokens, and no arrow', async () => {
     const html = await get('/components/');
-    expect(html).toContain('<script type="module" src="/dist/catalog.js">');
+    // Versioned with the build (?v=), as every script and stylesheet is
+    expect(html).toMatch(/<script type="module" src="\/dist\/catalog\.js\?v=[a-z0-9]+">/);
     expect(html).toContain('/dist/mtrl/elements/preupgrade.css');
     expect(html).toContain(catalogTokens);
     expect(html).not.toContain('mtrl/styles/base.css');

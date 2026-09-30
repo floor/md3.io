@@ -1,9 +1,17 @@
-// The toolbar card: <m-toolbar>, with <m-icon-button> from that card's module.
+// The toolbar card: <md3-catalog-toolbar>, the toolbar factory in a surface (surface.ts).
+// <m-toolbar> gives each item host a tabindex for its arrow-key navigation, and a card
+// is a link, which must not hold one; in the surface's shadow root they stay out of it.
 import 'mtrl/elements/css/toolbar';
-import { defineToolbar } from 'mtrl/elements';
-import { define as defineIconButtonCard } from './icon-button';
+import createToolbar from 'mtrl/components/toolbar';
+import { symbols } from '../../shared/icons';
+import { surface } from './surface';
 
-export const define = (): void => {
-  defineIconButtonCard();
-  defineToolbar();
-};
+export const define = (): void => surface('md3-catalog-toolbar', ['button', 'icon-button', 'toolbar'], () => createToolbar({
+  variant: 'floating',
+  ariaLabel: 'Formatting',
+  items: [
+    { icon: symbols.bold, ariaLabel: 'Bold', toggle: true, selected: true },
+    { icon: symbols.italic, ariaLabel: 'Italic', toggle: true },
+    { icon: symbols.underline, ariaLabel: 'Underline', toggle: true },
+  ],
+}));

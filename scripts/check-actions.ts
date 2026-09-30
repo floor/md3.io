@@ -22,7 +22,8 @@ try {
     if (await select.count()) await select.selectOption(value);
     else await page.locator(`label.choice:has(input[name="${name}"][value="${value}"])`).click();
   };
-  for (const slug of componentSlugs.filter(value => value !== 'button' && components[value].group === 'Actions')) {
+  // The FAB menu is checked on its own below: it has no variant, disabled state or FAB placement controls.
+  for (const slug of componentSlugs.filter(value => value !== 'button' && value !== 'fab-menu' && components[value].group === 'Actions')) {
     await page.goto(`${server.url}components/${slug}/`);
     const root = frame.locator(`#stage > .mtrl-${slug}`);
     await root.waitFor();
@@ -115,6 +116,29 @@ try {
     await page.screenshot({ animations: 'disabled', path: `${output}/${slug}-mobile.png`, fullPage: true });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows`);
     await page.setViewportSize({ width: 1440, height: 900 });
+  }
+  // FAB menu: the list opens from the FAB, Escape closes it and gives focus back to the FAB,
+  // and each item count the configuration offers renders that many items
+  await page.goto(`${server.url}components/fab-menu/`);
+  console.log('Checking fab-menu');
+  const fabButton = frame.locator('#stage [aria-expanded]').first();
+  await fabButton.waitFor();
+  await choose('presentation', 'list');
+  await fabButton.click();
+  await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage [aria-expanded="true"]'));
+  const shown = frame.locator('#stage [role="menuitem"]');
+  assert(await shown.count() === 3, `fab-menu: the list shows ${await shown.count()} items, not 3`);
+  await page.waitForTimeout(600);
+  const boxes = await shown.evaluateAll(items => items.map(item => { const r = item.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, right: Math.round(r.right), height: r.height }; }));
+  assert(boxes.every(box => box.height >= 48), `fab-menu: an item is shorter than its 56dp target: ${JSON.stringify(boxes)}`);
+  assert(boxes.every(box => box.right === boxes[0]!.right), `fab-menu: the items are not end-aligned: ${JSON.stringify(boxes)}`);
+  assert(boxes.every((box, i) => i === 0 || box.top >= boxes[i - 1]!.bottom), `fab-menu: items overlap: ${JSON.stringify(boxes)}`);
+  await page.screenshot({ animations: 'disabled', path: `${output}/fab-menu-open.png` });
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage [aria-expanded="false"]'));
+  for (const count of ['2', '6']) {
+    await choose('items', count);
+    await page.waitForFunction(count => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll('#stage [role="menuitem"]').length === Number(count), count);
   }
   await page.goto(`${server.url}components/`);
   assert(await page.locator('.component-card').count() === componentSlugs.length, 'Catalog is missing a component');

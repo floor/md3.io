@@ -16,7 +16,7 @@ export const CATALOG_SCOPE = 'catalog-visual';
 export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`);
 
 /** The surface elements of the overlays, by component. */
-export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker' } as const;
+export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', toolbar: 'md3-catalog-toolbar' } as const;
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 type Attributes = Record<string, string | number | boolean | undefined>;
@@ -66,8 +66,8 @@ const visuals: Record<ComponentSlug, string> = {
   menu: `<${SURFACES.menu}></${SURFACES.menu}>`,
   'top-app-bar': m('top-app-bar', { headline: 'My library', 'no-scroll': true },
     m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })),
-  toolbar: m('toolbar', { variant: 'floating', 'aria-label': 'Formatting' },
-    [['bold', 'Bold'], ['italic', 'Italic'], ['underline', 'Underline']].map(([icon, label], index) => m('icon-button', { icon: symbols[icon as 'bold'], 'aria-label': label, toggle: true, ...(index === 0 ? { selected: true } : {}) })).join('')),
+  // A surface: <m-toolbar>'s item hosts take a tabindex, which a card's link must not hold.
+  toolbar: `<${SURFACES.toolbar}></${SURFACES.toolbar}>`,
   'bottom-app-bar': m('bottom-app-bar', {},
     m('icon-button', { icon: symbols.heart, 'aria-label': 'Favorite' }) + m('icon-button', { icon: symbols.bookmark, 'aria-label': 'Bookmark' })
     + m('fab', { slot: 'fab', icon: symbols.add, 'aria-label': 'Compose' })),

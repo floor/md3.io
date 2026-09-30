@@ -243,3 +243,21 @@ describe('documentation front matter', () => {
     expect(html).toMatch(/<\/h1>\n?<div class="meta"><span class="meta__badge meta__badge--published">Published<\/span><span class="meta__item">Updated <time datetime="\d{4}-\d{2}-\d{2}">/);
   });
 });
+
+test('scripts and stylesheets carry the build, and a versioned file is cached for good', async () => {
+  const { BUILD } = await import('../server');
+  const page = await (await get('/components/button/')).text();
+  const assets = [...page.matchAll(/(?:src|href)="(\/(?:dist|styles)\/[^"]+\.(?:js|css)[^"]*)"/g)].map(match => match[1]!);
+  expect(assets.length).toBeGreaterThan(5);
+  for (const asset of assets) expect(asset).toEndWith(`?v=${BUILD}`);
+  const versioned = await get(`/styles/site.css?v=${BUILD}`);
+  expect(versioned.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+  expect((await get('/styles/site.css')).headers.get('Cache-Control')).toBe('no-cache');
+  const preview = await (await get('/preview/button/')).text();
+  expect(preview).toContain(`?v=${BUILD}"`);
+  // Lazy chunks import their entry by its plain name: the import map sends it to the
+  // same versioned URL, so the entry runs once
+  const map = JSON.parse(/<script type="importmap">(.*?)<\/script>/.exec(preview)![1]!) as { imports: Record<string, string> };
+  expect(map.imports['/dist/preview.js']).toBe(`/dist/preview.js?v=${BUILD}`);
+  expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
+});

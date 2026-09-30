@@ -16,9 +16,24 @@ import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/serv
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
 const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' };
-const html = (body: string, status = 200) => new Response(body, { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' } });
+// Every script and stylesheet link carries the build it belongs to. Their names stay the
+// same between deploys, so without it a browser or Cloudflare (whose default browser
+// cache is 4 hours) kept last deploy's playground.js against a new page's components.
+// Each build restarts the server, so the start time identifies the build.
+export const BUILD = Date.now().toString(36);
+// Lazy chunks import their entry back by its plain name (`./preview.js`); an import map
+// sends that to the versioned URL the page loaded, or the entry would run twice.
+// Only the entries the page loads: a page names no bundle it does not use.
+const importMap = (body: string) => {
+  const entries = [...new Set([...body.matchAll(/src="(\/dist\/[^"/?#]+\.js)"/g)].map(match => match[1]!))];
+  return entries.length ? `<script type="importmap">${JSON.stringify({ imports: Object.fromEntries(entries.map(entry => [entry, `${entry}?v=${BUILD}`])) })}</script>` : '';
+};
+const versionAssets = (body: string) => body
+  .replace('<head>', `<head>\n  ${importMap(body)}`)
+  .replace(/((?:src|href)="\/(?:dist|styles)\/[^"?#]+\.(?:js|css))"/g, `$1?v=${BUILD}"`);
+const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' } });
 // Previews and example frames are pages inside pages: never a search result of their own.
-const internalHtml = (body: string) => new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
+const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
 const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
@@ -100,9 +115,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!filePath.startsWith(base + sep) || !mime[extname(filePath)]) return new Response('Not found', { status: 404 });
     const file = Bun.file(filePath);
     if (!await file.exists()) return new Response('Not found', { status: 404 });
-    // Fonts never change under a name (a new font gets a new file), so a reload
-    // uses the cached copy at once instead of revalidating and swapping late.
-    const cache = staticMatch[1] === 'fonts' ? 'public, max-age=31536000, immutable' : 'no-cache';
+    // Fonts never change under a name (a new font gets a new file), and a versioned
+    // script or stylesheet (?v=, see versionAssets) is a new URL each build: both are
+    // cached for good. The rest revalidates.
+    const cache = staticMatch[1] === 'fonts' || url.searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'no-cache';
     return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(filePath)]!, 'Cache-Control': cache } });
   }
   if (rootFiles.has(path)) {
