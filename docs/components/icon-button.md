@@ -1,52 +1,102 @@
-# Icon Button Component
+# Icon button
 
-An icon button is a button whose whole label is its icon. Reach for one when the action is recognisable without words and space is tight: a toolbar, an app bar, a card's corner, a row of media controls. It also has a mode a plain button does not, the toggle, where the button holds a binary state — favourited, bookmarked, muted — and swaps its icon to show which way the state is set. Because there is no text, an icon button is only as clear as its `ariaLabel`, which is the one option you should never leave out.
+An icon button is a button whose whole label is its icon: for an action people recognize
+without words, where space is tight, as in a toolbar, an app bar or media controls. As a
+toggle, it holds a binary state, such as favorited or muted, and swaps its icon to show it. See
+the [M3 icon buttons guidelines](https://m3.material.io/components/icon-buttons/overview).
 
-## Import
+## Usage
 
-```javascript
-import { createIconButton } from 'mtrl';
+`ariaLabel` is required: it is the button's only name.
+
+```example
+icon-button:
+  icon: menuIcon
+  ariaLabel: Open menu
+  on click: openMenu()
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const menu = createIconButton({
-  icon: '<svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>',
-  ariaLabel: 'Open menu'
-});
+### Variant, size, shape and width
 
-menu.on('click', () => openMenu());
+`variant` sets the emphasis, from `filled`, `tonal` and `outlined` to `standard`; `size` runs
+from `xs` to `xl`, `shape` is `round` or `square`, and `width` is `narrow`, `default` or `wide`.
 
-document.querySelector('.toolbar').appendChild(menu.element);
+```example
+icon-button:
+  icon: editIcon
+  ariaLabel: Edit
+  variant: tonal
+  size: m
+  shape: square
+  width: wide
 ```
 
-## Configuration
+### A toggle
+
+With `toggle`, a click flips the selected state and emits `change`; `selectedIcon` is shown
+while selected. Make the unselected icon outlined and the selected one filled, so the state
+reads without the color. `selectedIcon` alone does not turn toggle mode on.
+
+```example
+icon-button:
+  icon: heartOutlineIcon
+  selectedIcon: heartFilledIcon
+  toggle: true
+  selected: false
+  ariaLabel: Add to favorites
+  on change: setFavorite(selected)
+```
+
+The DOM `toggle` event the element also dispatches is deprecated and goes in the next release.
+
+### Changing it
+
+An action changes the icon and the label together.
+
+```example
+icon-button:
+  icon: playIcon
+  ariaLabel: Play
+  variant: filled
+  on click: playing()
+  action playing:
+    set icon: pauseIcon
+    set ariaLabel: Pause
+```
+
+## API
+
+<!-- API: generated from mtrl's types and <m-icon-button>'s spec in a later step. Until then
+these tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `icon` | `string` | `undefined` | The icon, as an HTML string |
-| `ariaLabel` | `string` | `undefined` | Accessible name; describes the action, not the icon |
+| `ariaLabel` | `string` | required | Accessible name; describes the action, not the icon |
 | `variant` | `'filled' \| 'tonal' \| 'outlined' \| 'standard'` | `'standard'` | Visual style, in descending order of emphasis |
 | `size` | `'xs' \| 's' \| 'm' \| 'l' \| 'xl'` | `'s'` | Container size |
 | `shape` | `'round' \| 'square'` | `'round'` | Resting corner shape |
 | `width` | `'narrow' \| 'default' \| 'wide'` | `'default'` | Width relative to the size's container |
-| `toggle` | `boolean` | `false` | Turns on toggle mode; required for `select()`, `deselect()` and the `toggle` event |
+| `toggle` | `boolean` | `false` | Toggle mode: a click selects and deselects, and emits `change` |
 | `selectedIcon` | `string` | `undefined` | Icon shown while selected, in toggle mode |
 | `selected` | `boolean` | `false` | Whether the button starts selected; only read when `toggle` is true |
+| `toggleOnClick` | `boolean` | `true` | Whether a click flips the selected state; `false` when a container, such as a button group, owns the selection |
 | `disabled` | `boolean` | `false` | Whether the button starts disabled |
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The underlying button's type attribute |
 | `value` | `string` | `undefined` | Value attribute, for use in a form |
-| `ripple` | `boolean` | `true` | Whether to run the ripple effect on press |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
+| `ripple` | `boolean` | `true` | Whether a press shows the ripple |
+| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
 | `class` | `string` | `undefined` | Additional CSS classes |
-| `tooltip` | `boolean` | `true` | Accepted but not applied. The option is declared and defaulted, but nothing in the component reads it and no tooltip is rendered. Use the `tooltip` component beside the button if you need one |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+| `tooltip` | `boolean` | `true` | Accepted but not applied: no tooltip is rendered. Use the tooltip component beside the button |
 
-`selectedIcon` on its own does not turn on toggle mode. Set `toggle: true` as well, or the button behaves like any other and the second icon is never shown.
+### Methods
 
-## Component API
-
-### Content
+#### Content
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
@@ -58,209 +108,89 @@ document.querySelector('.toolbar').appendChild(menu.element);
 | `setValue(value)` | `value: string` | `IconButtonComponent` | Sets the value attribute |
 | `getValue()` | none | `string` | The value attribute |
 
-### Appearance
+#### Appearance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `setVariant(variant)` | `variant: string` | `IconButtonComponent` | Swaps the variant |
-| `getVariant()` | none | `string` | The current variant |
-| `setSize(size)` | `size: string` | `IconButtonComponent` | Swaps the size |
-| `getSize()` | none | `string` | The current size |
-| `setShape(shape)` | `shape: string` | `IconButtonComponent` | Swaps the shape |
-| `getShape()` | none | `string` | The current shape |
-| `setWidth(width)` | `width: string` | `IconButtonComponent` | Swaps the width |
-| `getWidth()` | none | `string` | The current width |
+| `setVariant(variant)` / `getVariant()` | `variant: string` | `IconButtonComponent` / `string` | The variant |
+| `setSize(size)` / `getSize()` | `size: string` | `IconButtonComponent` / `string` | The size |
+| `setShape(shape)` / `getShape()` | `shape: string` | `IconButtonComponent` / `string` | The shape |
+| `setWidth(width)` / `getWidth()` | `width: string` | `IconButtonComponent` / `string` | The width |
 
-### State
+#### State
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `select()` | none | `IconButtonComponent` | Selects the button, in toggle mode |
-| `deselect()` | none | `IconButtonComponent` | Deselects it |
+| `select()` / `deselect()` | none | `IconButtonComponent` | Selects or deselects it, in toggle mode, without emitting `change` |
 | `toggleSelected()` | none | `IconButtonComponent` | Flips the selected state |
 | `isSelected()` | none | `boolean` | Whether it is selected |
 | `isToggle()` | none | `boolean` | Whether toggle mode is on |
-| `enable()` | none | `IconButtonComponent` | Enables the button |
-| `disable()` | none | `IconButtonComponent` | Disables it |
+| `enable()` / `disable()` | none | `IconButtonComponent` | The disabled state |
 
-### Events, styles and lifecycle
+#### Events, styles and lifecycle
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `on(event, handler)` | `event: string`, `handler: Function` | `IconButtonComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string`, `handler: Function` | `IconButtonComponent` | Removes one |
-| `addClass(...classes)` | `classes: string[]` | `IconButtonComponent` | Adds CSS classes |
-| `removeClass(...classes)` | `classes: string[]` | `IconButtonComponent` | Removes CSS classes |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `IconButtonComponent` | Adds or removes a listener |
+| `addClass(...classes)` / `removeClass(...classes)` | `...classes: string[]` | `IconButtonComponent` | Adds or removes CSS classes |
 | `destroy()` | none | `void` | Takes it off the page and releases its listeners |
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `element` | `HTMLButtonElement` | The button element |
-| `icon` | `IconAPI` | Direct access to the icon slot: `setIcon`, `getIcon`, `getElement` |
+| `icon` | `IconAPI` | The icon slot: `setIcon`, `getIcon`, `getElement` |
 | `disabled` | `object` | The disabled feature: `enable`, `disable`, `isDisabled` |
 | `lifecycle` | `object` | The lifecycle feature: `destroy` |
 
-## Events
+### Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `click` | the DOM event | The button was activated; not fired while disabled |
-| `toggle` | `{ selected }` on `event.detail` | The selected state changed, in toggle mode only. **Not delivered through `on()`** — see below |
-| `focus` | the DOM event | The button took focus |
-| `blur` | the DOM event | It lost focus |
+| Event | Description | Data |
+|-------|-------------|------|
+| `change` | A click changed a toggle button's selected state | `{ selected }` |
+| `click` | The button was activated; not fired while disabled | `{ event, element, originalEvent }` |
+| `focus` / `blur` | The button took or lost focus | `{ event, element, originalEvent }` |
 
-`click`, `focus` and `blur` are forwarded into the component's own event system, so `on()` and `off()` handle them.
-
-`toggle` is not. It is a native `CustomEvent` dispatched straight onto the DOM element, and `on()` subscribes to a separate internal emitter that nothing ever publishes `toggle` to. Registering it with `on('toggle', ...)` silently does nothing. Listen on the element instead:
-
-```javascript
-const button = createIconButton({ icon: heartOutlineIcon, selectedIcon: heartFilledIcon, toggle: true, ariaLabel: 'Favorite' });
-
-// The DOM also has a native `toggle` event (popovers), so check it is this one
-button.element.addEventListener('toggle', (event) => {
-  if (event instanceof CustomEvent) console.log(event.detail.selected);
-});
-```
-
-It bubbles, so a container above the button can listen for it too.
-
-## Examples
-
-### The four variants
-
-```javascript
-// Descending emphasis: reserve filled for the one action that matters most
-const save = createIconButton({ icon: saveIcon, variant: 'filled', ariaLabel: 'Save' });
-const edit = createIconButton({ icon: editIcon, variant: 'tonal', ariaLabel: 'Edit' });
-const share = createIconButton({ icon: shareIcon, variant: 'outlined', ariaLabel: 'Share' });
-const more = createIconButton({ icon: moreIcon, ariaLabel: 'More options' });
-```
-
-### A toggle button
-
-```javascript
-const favorite = createIconButton({
-  icon: heartOutlineIcon,
-  selectedIcon: heartFilledIcon,
-  toggle: true,
-  ariaLabel: 'Add to favorites'
-});
-
-// `toggle` is a DOM CustomEvent, not one of the events `on()` carries
-favorite.element.addEventListener('toggle', () => {
-  if (favorite.isSelected()) addToFavorites();
-  else removeFromFavorites();
-});
-
-// Reflect state loaded from elsewhere
-if (isFavorite()) favorite.select();
-```
-
-The unselected icon should be outlined and the selected one filled, so the state reads at a glance rather than only from the colour.
-
-### Sizes and shapes
-
-```javascript
-// A round button morphs to a square while selected, and a square one to a circle
-const dense = createIconButton({ icon: searchIcon, size: 'xs', ariaLabel: 'Search' });
-const hero = createIconButton({ icon: micIcon, size: 'xl', variant: 'filled', ariaLabel: 'Record' });
-const square = createIconButton({ icon: gridIcon, shape: 'square', variant: 'tonal', ariaLabel: 'Grid view' });
-```
-
-### Changing a button after it is built
-
-```javascript
-const button = createIconButton({ icon: playIcon, ariaLabel: 'Play' });
-
-button
-  .setVariant('filled')
-  .setSize('m')
-  .setIcon(pauseIcon)
-  .setAriaLabel('Pause');
-```
+The web component's `change` carries `{ selected }`.
 
 ## Accessibility
 
-- `ariaLabel` becomes the `aria-label` attribute and is the button's only name. Describe the action, not the picture: "Add to favorites", not "Heart"
-- In toggle mode the component writes `aria-pressed` and keeps it in step with the selected state. Do not set it yourself
-- Mark the icon's own SVG `aria-hidden="true"`, so a screen reader announces the label once
-- Tab moves focus to the button; Space and Enter activate it
-- Both `xs` (32dp) and `s` (40dp) fall under the 48dp minimum target. The stylesheet declares a 48×48 pseudo-element at `xs` only, and the base rule's `overflow: hidden` clips it back to the container, so in practice neither size gets a larger hit area than its own box. Pad around small icon buttons yourself on touch surfaces
-- A disabled button uses the native `disabled` attribute, so it is skipped by the tab order without any extra work
-
-```html
-<button class="mtrl-icon-button mtrl-icon-button--toggle" aria-label="Add to favorites" aria-pressed="false">
-  <span class="mtrl-icon mtrl-icon-button__icon"><svg aria-hidden="true">…</svg></span>
-</button>
-```
+- A native `<button>`, named only by `ariaLabel`. Describe the action, not the picture: "Add to
+  favorites", not "Heart".
+- A toggle has `aria-pressed`, kept in step with the selected state; don't set it yourself.
+- Mark the icon's own SVG `aria-hidden="true"`, so the name is announced once.
+- `Tab` focuses it; `Enter` and `Space` activate it. Disabled, it leaves the tab order.
+- The `xs` and `s` sizes keep a 48dp touch target beyond their container.
 
 ## Styling
 
-```css
-/* Base */
-.mtrl-icon-button { /* ... */ }
-.mtrl-icon { /* ... */ }                  /* the icon span, shared with every component */
-.mtrl-icon-button__icon { /* ... */ }     /* the same span, scoped to this component */
-
-/* Variants */
-.mtrl-icon-button--filled { /* ... */ }
-.mtrl-icon-button--tonal { /* ... */ }
-.mtrl-icon-button--outlined { /* ... */ }
-.mtrl-icon-button--standard { /* ... */ }
-
-/* Sizes; 's' is the default and adds no class */
-.mtrl-icon-button--xs { /* ... */ }
-.mtrl-icon-button--m { /* ... */ }
-.mtrl-icon-button--l { /* ... */ }
-.mtrl-icon-button--xl { /* ... */ }
-
-/* Shape; 'round' is the default and adds no class */
-.mtrl-icon-button--square { /* ... */ }
-
-/* Width; 'default' adds no class */
-.mtrl-icon-button--narrow { /* ... */ }
-.mtrl-icon-button--wide { /* ... */ }
-
-/* States */
-.mtrl-icon-button--toggle { /* ... */ }
-.mtrl-icon-button--selected { /* ... */ }
-.mtrl-icon-button--disabled { /* ... */ }
-```
-
-The press morph is driven by `:active` rather than a class, so there is no state class to hook for it.
-
-### CSS Custom Properties
-
-Three properties override the corner radius at each of the three shapes the button passes through. They are shared with the button, so setting one on a container affects both. `--mtrl-button-shape` is the fallback for the resting radius of every shape, so setting it also overrides a round button's 50%.
+The press morph is driven by `:active`, so it has no state class. The custom properties are
+shared with the button: `--mtrl-button-shape` sets the resting radius of both shapes.
 
 ```css
-.mtrl-icon-button {
-  --mtrl-button-shape: 12px;          /* the resting radius, round and square alike */
+.mtrl-icon-button { }
+.mtrl-icon-button__icon { }
+.mtrl-icon-button--filled, .mtrl-icon-button--tonal, .mtrl-icon-button--outlined,
+.mtrl-icon-button--standard { }
+.mtrl-icon-button--xs, .mtrl-icon-button--m, .mtrl-icon-button--l, .mtrl-icon-button--xl { }
+.mtrl-icon-button--square, .mtrl-icon-button--narrow, .mtrl-icon-button--wide { }
+.mtrl-icon-button--toggle, .mtrl-icon-button--selected, .mtrl-icon-button--disabled { }
+
+.toolbar {
+  --mtrl-button-shape: 12px;          /* at rest */
   --mtrl-button-shape-pressed: 8px;   /* while pressed */
-  --mtrl-button-shape-selected: 12px; /* while selected, in toggle mode */
+  --mtrl-button-shape-selected: 12px; /* while selected */
 }
 ```
 
-Colours come from the theme's `primary`, `secondary-container`, `surface-container` and `outline` roles, so an icon button follows whatever the theme says.
-
 ## Measurements
 
-Every value below is in the component's own source: the dp tables in `src/components/icon-button/constants.ts` and the `$sizes` and `$widths` maps in `src/styles/components/_icon-button.scss`, which agree. Neither names an M3 token for any individual value, so none is quoted here.
+In dp. `s` is the default size and `default` width equals the container; a round button's
+radius is half its height.
 
 | Size | Container | Icon | Square radius | Pressed radius | Narrow width | Wide width |
 |------|-----------|------|---------------|----------------|--------------|------------|
-| xs | 32 | 18 | 12 | 8 | 28 | 36 |
-| s | 40 | 24 | 12 | 8 | 32 | 48 |
-| m | 56 | 24 | 16 | 12 | 48 | 64 |
-| l | 96 | 36 | 28 | 16 | 80 | 112 |
-| xl | 136 | 48 | 28 | 16 | 112 | 160 |
-
-The default width at each size equals the container, so the middle column of the width scale is 32, 40, 56, 96 and 136. A round button's radius is always half its height; the square radius column applies only to `shape: 'square'`, and the pressed radius to both shapes while the button is held down.
-
-## Best Practices
-
-- Only use an icon whose meaning is already understood. If the action needs explaining, use a button with text
-- Keep one filled icon button at most in a group; the rest should be standard or outlined, or the emphasis means nothing
-- Use toggle mode for a state the button owns, not for navigation or for a choice among several options
-- Keep sizes consistent inside a toolbar, and let variant rather than size carry the emphasis
-- Call `destroy()` when you remove a button, so its listeners and ripple go with it
+| `xs` | 32 | 20 | 12 | 8 | 28 | 40 |
+| `s` | 40 | 24 | 12 | 8 | 32 | 52 |
+| `m` | 56 | 24 | 16 | 12 | 48 | 72 |
+| `l` | 96 | 32 | 28 | 16 | 64 | 128 |
+| `xl` | 136 | 40 | 28 | 16 | 104 | 184 |

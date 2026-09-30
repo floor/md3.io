@@ -1,22 +1,58 @@
-# Checkbox Component
+# Checkbox
 
-Checkboxes let users select one or more items from a list, or turn a single item on or off in a form that is saved later. A checkbox can be selected, unselected or indeterminate (a parent whose children are partly selected), each of them also in error.
+A checkbox lets people select one or more items from a list, or turn one item on or off in a
+form that is saved later. It is selected, unselected or indeterminate (a parent whose children
+are partly selected), and any of them in error. For a setting that takes effect at once, use a
+[switch](/docs/components/switch/). See the
+[M3 checkbox guidelines](https://m3.material.io/components/checkbox/overview).
 
-## Import
+## Usage
 
-```javascript
-import { createCheckbox } from 'mtrl';
+```example
+checkbox:
+  label: I accept the terms
+  name: terms
+  on change: acceptTerms(checked)
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const terms = createCheckbox({ label: 'I accept the terms', name: 'terms' });
-terms.on('change', ({ checked }) => submit.disabled = !checked);
-document.querySelector('form').append(terms.element);
+### Indeterminate
+
+A parent checkbox is indeterminate while some of its children are selected. Checking it
+selects every child, unchecking it clears them; keep it unchecked while indeterminate, so a
+click checks everything. Its children are the app's to keep in step: `check()`, `uncheck()` and
+`setValue()` clear the indeterminate state, and emit `change` when the state changes, without
+the `nativeEvent` a user's click carries.
+
+```example
+checkbox:
+  label: Additions
+  indeterminate: true
 ```
 
-## Configuration
+### Required, in error
+
+`error` draws the error colors and sets `aria-invalid`; set it when a required checkbox is left
+unselected.
+
+```example
+checkbox:
+  label: Share usage data
+  required: true
+  error: true
+  action clearError:
+    set error: false
+```
+
+A parent with its children, from the M3 guidelines, is planned for [Examples](/examples/).
+
+## API
+
+<!-- API: generated from mtrl's types and <m-checkbox>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -31,87 +67,42 @@ document.querySelector('form').append(terms.element);
 | `required` | `boolean` | `false` | Whether the form requires it selected |
 | `ariaLabel` | `string` | `undefined` | Accessible name when there is no visible label |
 | `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+| `variant` | `string` | `undefined` | Deprecated, no effect: M3 has one checkbox |
 
-`variant` is deprecated and has no effect: Material 3 has one checkbox.
+### Methods
 
-## Component API
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `check()` / `uncheck()` / `toggle()` | none | `CheckboxComponent` | Changes the state, clears indeterminate, and emits `change` when the state changes |
+| `isChecked()` | none | `boolean` | Whether it is selected |
+| `setIndeterminate(state)` | `state: boolean` | `CheckboxComponent` | Sets or clears the indeterminate state |
+| `setError(error)` | `error: boolean` | `CheckboxComponent` | Sets or clears the error state |
+| `getValue()` | none | `boolean` | The selected state |
+| `setValue(value)` | `value: boolean \| string` | `CheckboxComponent` | Selects or clears it; the strings `'true'` and `'1'` select |
+| `getValueAttribute()` / `setValueAttribute(value)` | `value: string` | `string` / `CheckboxComponent` | The input's `value` attribute |
+| `getLabel()` / `setLabel(text)` | `text: string` | `string` / `CheckboxComponent` | The label |
+| `enable()` / `disable()` | none | `CheckboxComponent` | The disabled state |
+| `on(event, handler)` / `off(event, handler)` | `event: 'change', handler: Function` | `CheckboxComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes the checkbox |
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `check()` / `uncheck()` / `toggle()` | `CheckboxComponent` | Changes the state, clears indeterminate and emits `change` |
-| `isChecked()` | `boolean` | Whether it is selected |
-| `setIndeterminate(state)` | `CheckboxComponent` | Sets or clears the indeterminate state |
-| `setError(error)` | `CheckboxComponent` | Sets or clears the error state |
-| `getValue()` / `setValue(value)` | `boolean` / `CheckboxComponent` | The selected state; `'true'` and `'1'` read as selected |
-| `getValueAttribute()` / `setValueAttribute(value)` | `string` / `CheckboxComponent` | The input's `value` attribute |
-| `setLabel(text)` / `getLabel()` | `CheckboxComponent` / `string` | The label |
-| `enable()` / `disable()` | `CheckboxComponent` | Disabled state |
-| `on(event, handler)` / `off(event, handler)` | `CheckboxComponent` | Events: `change` |
-| `destroy()` | `void` | Removes the checkbox |
+### Events
 
-## Events
+| Event | Description | Data |
+|-------|-------------|------|
+| `change` | The state changed | `{ checked, value, nativeEvent? }` |
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `change` | `{ checked, value, nativeEvent? }` | The state changed. `nativeEvent` is present when the user toggled it, absent for the methods |
-
-## Examples
-
-### A parent and its children
-
-The m3.material.io checkbox guidelines: checking the parent checks every child, unchecking it unchecks them, and a mix makes it indeterminate. Checking an indeterminate parent checks every child.
-
-```javascript
-const children = ['Pickles', 'Tomato', 'Lettuce', 'Cheese']
-  .map(label => createCheckbox({ label, name: 'additions', value: label.toLowerCase() }));
-const parent = createCheckbox({ label: 'Additions' });
-parent.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));
-
-const reflect = () => {
-  const on = children.filter(child => child.isChecked()).length;
-  if (on === children.length) parent.check();
-  else if (on === 0) parent.uncheck();
-  else { parent.uncheck(); parent.setIndeterminate(true); }
-};
-
-// Only user changes: check() and uncheck() emit change too, without nativeEvent.
-parent.on('change', ({ checked, nativeEvent }) => {
-  if (nativeEvent) children.forEach(child => (checked ? child.check() : child.uncheck()));
-});
-children.forEach(child => child.on('change', ({ nativeEvent }) => { if (nativeEvent) reflect(); }));
-```
-
-```javascript continued
-// A checkbox is inline-flex: stack the parent and children in columns, the children
-// indented under the parent.
-const group = document.createElement('div');
-group.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start';
-const list = document.createElement('div');
-list.style.cssText = 'display: flex; flex-direction: column; align-items: flex-start; padding-inline-start: 24px';
-list.append(...children.map(child => child.element));
-group.append(parent.element, list);
-document.querySelector('form').append(group);
-```
-
-Leave the parent unchecked while it is indeterminate, as `reflect` does, so a click on it checks everything.
-
-### A required checkbox in error
-
-```javascript
-const consent = createCheckbox({ label: 'Share usage data', required: true });
-
-form.addEventListener('submit', (event) => {
-  consent.setError(!consent.isChecked());
-  if (!consent.isChecked()) event.preventDefault();
-});
-```
+`nativeEvent` is there when the user toggled it, not for the methods. The web component's
+`change` carries `{ checked, value }`.
 
 ## Accessibility
 
-- The input is a native checkbox, named by its label; the indeterminate state reaches assistive tech as "mixed", and the error state as `aria-invalid`.
-- Tab focuses the checkbox and Space toggles it. Enter is left to the form, which it submits, as with a native checkbox.
-- Keyboard focus draws a 0.10 state layer and Material's 3dp focus ring around it; a pointer shows no ring.
-- The whole 48dp area and the label toggle the checkbox.
+- A native checkbox, named by its label, or by `ariaLabel` without one.
+- Indeterminate reaches assistive tech as "mixed"; error as `aria-invalid`.
+- `Tab` focuses it and `Space` toggles it. `Enter` is left to the form, which it submits, as
+  with a native checkbox.
+- Keyboard focus draws a 0.10 state layer and a 3dp focus ring; a pointer shows no ring.
+- The whole 48dp target and the label toggle it.
 
 ## Styling
 
@@ -126,7 +117,7 @@ form.addEventListener('submit', (event) => {
 
 ## Measurements
 
-Following the m3.material.io checkbox specs, then Compose's `CheckboxTokens` and material-web:
+From the m3.material.io checkbox specs, then Compose's `CheckboxTokens` and material-web.
 
 | Attribute | Value |
 |-----------|-------|
@@ -135,7 +126,7 @@ Following the m3.material.io checkbox specs, then Compose's `CheckboxTokens` and
 | Selected and indeterminate | `primary` container, `on-primary` check or dash |
 | Error | `error` outline and container, `on-error` check |
 | Disabled | `on-surface` 38% outline or container, `surface` check and dash |
-| State layer | 40dp circle: `on-surface` when unselected, `primary` when selected; a press takes the colour of the state it leads to |
+| State layer | 40dp circle: `on-surface` when unselected, `primary` when selected; a press takes the color of the state it leads to |
 | Touch target | 48dp |
 | Label | Body Large, `on-surface`, 12dp from the box |
 | Motion | The check draws in on the default spatial spring and leaves at once |

@@ -1,542 +1,169 @@
-# Select Component
+# Select
 
-The Select component provides a Material Design 3 compliant dropdown selection control that allows users to choose from a list of options. It combines a textfield display with a menu dropdown for a familiar and accessible selection experience.
+A select lets people choose one option from a list, in a text field that opens a menu: a
+country, a role, a sort order. Use it when the options don't need to be visible at once; for a
+few that do, use [radio buttons](/docs/components/radios/). See the
+[M3 menus guidelines](https://m3.material.io/components/menus/overview), where M3 describes the
+exposed dropdown menu.
 
-## Overview
+## Usage
 
-Selects are commonly used for:
+Each option has an `id`, which is the select's value, and a `text`.
 
-- Choosing from a predefined list of options
-- Form fields requiring single selection
-- Settings and preferences
-- Filtering and sorting controls
-
-The component follows Material Design 3 guidelines with support for filled and outlined variants, labels, icons, error states, and keyboard navigation.
-
-## Import
-
-```javascript
-import { createSelect } from 'mtrl';
+```example
+select:
+  label: Fruit
+  name: fruit
+  options:
+    - { id: apple, text: Apple }
+    - { id: banana, text: Banana }
+    - { id: cherry, text: Cherry }
+  on change: choose(value)
 ```
 
-## Basic Usage
-
-```javascript
-// Create a basic select
-const countrySelect = createSelect({
-  label: 'Country',
-  options: [
-    { id: 'us', text: 'United States' },
-    { id: 'uk', text: 'United Kingdom' },
-    { id: 'ca', text: 'Canada' },
-    { id: 'au', text: 'Australia' }
-  ]
-});
-
-// Add to your page
-document.querySelector('.form-container').appendChild(countrySelect.element);
-
-// Listen for changes
-countrySelect.on('change', (event) => {
-  console.log('Selected:', event.value, event.text);
-});
-```
-
-## Configuration
-
-The Select component accepts the following configuration options:
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `options` | `SelectOption[]` | `[]` | Array of options to display |
-| `value` | `string` | `undefined` | Initially selected option ID |
-| `variant` | `string` | `'filled'` | Visual style (filled, outlined) |
-| `density` | `string` | `'default'` | Density level (default, compact) |
-| `label` | `string` | `undefined` | Label text for the select |
-| `name` | `string` | `undefined` | Input name attribute for forms |
-| `required` | `boolean` | `false` | Whether selection is required |
-| `disabled` | `boolean` | `false` | Whether the select is disabled |
-| `supportingText` | `string` | `undefined` | Helper text below the select |
-| `error` | `boolean` | `false` | Whether to show error state |
-| `placement` | `string` | `'bottom-start'` | Menu placement relative to textfield |
-| `class` | `string` | `undefined` | Additional CSS classes |
-| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-
-## Option Configuration
-
-Each option in the `options` array can have the following properties:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | `string` | Unique identifier for the option (required) |
-| `text` | `string` | Display text for the option (required) |
-| `disabled` | `boolean` | Whether the option is disabled |
-| `icon` | `string` | HTML content (typically SVG) for an icon |
-| `data` | `any` | Additional data associated with the option |
-
-## Select Variants
-
-The select supports 2 Material Design 3 variants:
-
-- **`filled`** (default): Select with filled background and underline indicator
-- **`outlined`**: Select with outline border
-
-## Component API
-
-The Select component provides the following methods:
-
-### Value Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getValue()` | none | `string \| null` | Gets the selected option's ID |
-| `setValue(value)` | `value: string \| null` | `SelectComponent` | Sets the selected option by ID |
-| `clear()` | none | `SelectComponent` | Clears the current selection |
-| `getText()` | none | `string` | Gets the selected option's display text |
-| `getSelectedOption()` | none | `SelectOption \| null` | Gets the full selected option object |
-
-### Options Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getOptions()` | none | `SelectOption[]` | Gets all available options |
-| `setOptions(options)` | `options: SelectOption[]` | `SelectComponent` | Sets new options |
-
-### Menu Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `open(interactionType?)` | `interactionType?: 'mouse' \| 'keyboard'` | `SelectComponent` | Opens the dropdown menu |
-| `close()` | none | `SelectComponent` | Closes the dropdown menu |
-| `isOpen()` | none | `boolean` | Returns whether the menu is open |
-
-### State Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `enable()` | none | `SelectComponent` | Enables the select |
-| `disable()` | none | `SelectComponent` | Disables the select |
-| `setError(error, message?)` | `error: boolean, message?: string` | `SelectComponent` | Sets the error state |
-| `clearError()` | none | `SelectComponent` | Clears the error state |
-
-### Density Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `setDensity(density)` | `density: 'default' \| 'compact'` | `SelectComponent` | Sets the density level |
-| `getDensity()` | none | `string` | Gets the current density |
-
-### Event Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `on(event, handler)` | `event: string, handler: Function` | `SelectComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `SelectComponent` | Removes an event listener |
-
-### Lifecycle Methods
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `destroy()` | none | `void` | Destroys the select and cleans up resources |
-
-## Events
-
-The Select component emits the following events:
-
-| Event | Description | Data |
-|-------|-------------|------|
-| `change` | Fires when the selection changes | `{ select, value, text, option, originalEvent?, preventDefault, defaultPrevented }` |
-| `open` | Fires **only when the dropdown is opened from the keyboard** (Enter, Space or ArrowDown on the field). Opening by click, or by calling `open()`, emits nothing | `{ select, originalEvent?, preventDefault, defaultPrevented }` |
-| `close` | Fires when the dropdown closes | `{ select, originalEvent?, preventDefault, defaultPrevented }` |
+`variant` is `filled` (the default) or `outlined`, and `density: 'compact'` lowers the field,
+as on a [text field](/docs/components/textfield/). A select fills its container's width.
 
 ## Examples
 
-### Basic Select
+### A chosen option, a disabled one
 
-```javascript
-const roleSelect = createSelect({
-  label: 'Role',
-  options: [
-    { id: 'admin', text: 'Administrator' },
-    { id: 'editor', text: 'Editor' },
-    { id: 'viewer', text: 'Viewer' }
-  ]
-});
+`value` selects an option by its `id`. A disabled option stays in the list and can't be
+chosen.
 
-document.body.appendChild(roleSelect.element);
+```example
+select:
+  label: Plan
+  variant: outlined
+  value: pro
+  supportingText: Billed monthly
+  options:
+    - { id: free, text: Free }
+    - { id: pro, text: Professional }
+    - { id: enterprise, text: Enterprise, disabled: true }
 ```
 
-### Select with Pre-selected Value
+### Required, in error
 
-```javascript
-const statusSelect = createSelect({
-  label: 'Status',
-  value: 'active',
-  options: [
-    { id: 'active', text: 'Active' },
-    { id: 'pending', text: 'Pending' },
-    { id: 'inactive', text: 'Inactive' }
-  ]
-});
+`setError(true, message)` shows a message in place of the supporting text, and `clearError()`
+restores it. An action here chooses an option and clears the error.
 
-document.body.appendChild(statusSelect.element);
+```example
+select:
+  label: Role
+  value: ''
+  required: true
+  error: true
+  supportingText: Choose a role
+  options:
+    - { id: admin, text: Administrator }
+    - { id: editor, text: Editor }
+    - { id: viewer, text: Viewer }
+  action chooseEditor:
+    set value: editor
+    set error: false
 ```
 
-### Outlined Variant
+The menu is mounted in the select's own element. In a scrolling or clipping container, such as
+a drawer or a sheet, set `menu: { container: document.body, maxHeight: '320px' }`, or
+`layer: 'top'` to show it in the browser's top layer. `setOptions()` replaces the options, for
+a list loaded later. Validating a select in a form is planned for [Examples](/examples/).
 
-```javascript
-const categorySelect = createSelect({
-  label: 'Category',
-  variant: 'outlined',
-  options: [
-    { id: 'electronics', text: 'Electronics' },
-    { id: 'clothing', text: 'Clothing' },
-    { id: 'books', text: 'Books' }
-  ]
-});
+## API
 
-document.body.appendChild(categorySelect.element);
-```
+<!-- API: generated from mtrl's types and <m-select>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
 
-### Select with Icons
+### Options
 
-```javascript
-const priorityIcon = '<svg>...</svg>';
-const highIcon = '<svg>...</svg>';
-const mediumIcon = '<svg>...</svg>';
-const lowIcon = '<svg>...</svg>';
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `options` | `SelectOption[]` | `[]` | The options |
+| `value` | `string` | `undefined` | The `id` of the option selected at first |
+| `variant` | `'filled' \| 'outlined'` | `'filled'` | The text field's style |
+| `density` | `'default' \| 'compact'` | `'default'` | The field height |
+| `label` | `string` | `undefined` | The floating label |
+| `name` | `string` | `undefined` | The input's `name`, for forms |
+| `required` | `boolean` | `false` | Whether a selection is required |
+| `disabled` | `boolean` | `false` | Whether the select is disabled |
+| `supportingText` | `string` | `undefined` | Helper text under the field |
+| `error` | `boolean` | `false` | The error state |
+| `placement` | `string` | `'bottom-start'` | The menu's placement against the field |
+| `menu` | `{ container?, maxHeight?, autoFlip?, variant?, color? }` | `undefined` | Where the menu is mounted, its maximum height, whether it flips above the field, and its variant and colors |
+| `layer` | `'top'` | `undefined` | Renders the menu beside the field and shows it in the top layer; `menu.container` is then not used |
+| `on` | `{ change?, open?, close? }` | `undefined` | Event handlers registered at creation |
+| `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-const prioritySelect = createSelect({
-  label: 'Priority',
-  options: [
-    { id: 'high', text: 'High', icon: highIcon },
-    { id: 'medium', text: 'Medium', icon: mediumIcon },
-    { id: 'low', text: 'Low', icon: lowIcon }
-  ]
-});
+#### An option
 
-document.body.appendChild(prioritySelect.element);
-```
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `id` | `string` | required | The option's value |
+| `text` | `string` | required | Its text |
+| `disabled` | `boolean` | `false` | Whether it can be chosen |
+| `icon` | `string` | `undefined` | HTML, usually an SVG, before the text |
+| `hasSubmenu` / `submenu` | `boolean` / `SelectOption[]` | `undefined` | Nested options; a select with them is a menu button rather than a combobox |
+| `data` | `unknown` | `undefined` | Data of your own, carried with the option |
 
-### Required Select with Supporting Text
+### Methods
 
-```javascript
-const countrySelect = createSelect({
-  label: 'Country',
-  name: 'country',
-  required: true,
-  supportingText: 'Select your country of residence',
-  options: [
-    { id: 'us', text: 'United States' },
-    { id: 'uk', text: 'United Kingdom' },
-    { id: 'ca', text: 'Canada' }
-  ]
-});
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `getValue()` / `setValue(value)` | `value: string \| null \| undefined` | `string \| null` / `SelectComponent` | The selected option's `id` |
+| `clear()` | none | `SelectComponent` | Clears the selection |
+| `getText()` | none | `string` | The selected option's text |
+| `getSelectedOption()` | none | `SelectOption \| null` | The selected option |
+| `getOptions()` / `setOptions(options)` | `options: SelectOption[]` | `SelectOption[]` / `SelectComponent` | The options |
+| `open(interactionType?)` / `close()` | `interactionType?: 'mouse' \| 'keyboard'` | `SelectComponent` | Opens or closes the menu; a disabled select does not open |
+| `isOpen()` | none | `boolean` | Whether the menu is open |
+| `setDensity(density)` / `getDensity()` | `density: 'default' \| 'compact'` | `SelectComponent` / `string` | The field height |
+| `enable()` / `disable()` | none | `SelectComponent` | The disabled state |
+| `setError(error, message?)` / `clearError()` | `error: boolean, message?: string` | `SelectComponent` | The error state |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `SelectComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Destroys the select and releases its menu |
 
-document.body.appendChild(countrySelect.element);
-```
+| Property | Type | Description |
+|----------|------|-------------|
+| `element` | `HTMLElement` | The root, which is the text field's |
+| `textfield` | `TextfieldComponent` | The text field |
+| `menu` | `MenuComponent` | The menu |
 
-### Select with Error State
+### Events
 
-```javascript
-const languageSelect = createSelect({
-  label: 'Language',
-  required: true,
-  error: true,
-  supportingText: 'Please select a language',
-  options: [
-    { id: 'en', text: 'English' },
-    { id: 'es', text: 'Spanish' },
-    { id: 'fr', text: 'French' }
-  ]
-});
+| Event | Description | Data |
+|-------|-------------|------|
+| `change` | The selection changed | `{ select, value, text, option, originalEvent?, preventDefault, defaultPrevented }` |
+| `open` / `close` | The menu opened or closed, however it was | `{ select, originalEvent?, preventDefault, defaultPrevented }` |
 
-document.body.appendChild(languageSelect.element);
-```
-
-### Disabled Select
-
-```javascript
-const lockedSelect = createSelect({
-  label: 'Plan',
-  value: 'free',
-  disabled: true,
-  supportingText: 'Contact support to change your plan',
-  options: [
-    { id: 'free', text: 'Free' },
-    { id: 'pro', text: 'Professional' },
-    { id: 'enterprise', text: 'Enterprise' }
-  ]
-});
-
-document.body.appendChild(lockedSelect.element);
-```
-
-### Select with Disabled Options
-
-```javascript
-const tierSelect = createSelect({
-  label: 'Subscription Tier',
-  options: [
-    { id: 'basic', text: 'Basic' },
-    { id: 'pro', text: 'Professional' },
-    { id: 'enterprise', text: 'Enterprise', disabled: true }
-  ]
-});
-
-document.body.appendChild(tierSelect.element);
-```
-
-### Select Inside a Dialog
-
-When using a select inside a dialog or modal, the menu automatically stays within the dialog's stacking context:
-
-```javascript
-import { createDialog, createSelect } from 'mtrl';
-
-const dialog = createDialog({
-  title: 'User Settings',
-  content: '<div id="settings-form"></div>',
-  size: 'small'
-});
-
-dialog.open();
-
-dialog.on('open', () => {
-  const formContainer = dialog.getContentElement().querySelector('#settings-form');
-  
-  const themeSelect = createSelect({
-    label: 'Theme',
-    variant: 'outlined',
-    options: [
-      { id: 'light', text: 'Light' },
-      { id: 'dark', text: 'Dark' },
-      { id: 'auto', text: 'System Default' }
-    ]
-  });
-  
-  formContainer.appendChild(themeSelect.element);
-});
-```
-
-### Form Integration
-
-```javascript
-const form = document.getElementById('user-form');
-
-const roleSelect = createSelect({
-  label: 'Role',
-  name: 'role',
-  required: true,
-  options: [
-    { id: 'admin', text: 'Administrator' },
-    { id: 'editor', text: 'Editor' },
-    { id: 'viewer', text: 'Viewer' }
-  ]
-});
-
-form.appendChild(roleSelect.element);
-
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  
-  if (!roleSelect.getValue()) {
-    roleSelect.setError(true, 'Please select a role');
-    return;
-  }
-  
-  roleSelect.clearError();
-  console.log('Selected role:', roleSelect.getValue());
-});
-```
-
-### Dynamic Options
-
-```javascript
-const departmentSelect = createSelect({
-  label: 'Department',
-  options: []
-});
-
-document.body.appendChild(departmentSelect.element);
-
-// Fetch and update options dynamically
-async function loadDepartments() {
-  const response = await fetch('/api/departments');
-  const departments = await response.json();
-  
-  departmentSelect.setOptions(
-    departments.map(dept => ({
-      id: dept.id,
-      text: dept.name
-    }))
-  );
-}
-
-loadDepartments();
-```
-
-### Programmatic Control
-
-```javascript
-const colorSelect = createSelect({
-  label: 'Color',
-  options: [
-    { id: 'red', text: 'Red' },
-    { id: 'green', text: 'Green' },
-    { id: 'blue', text: 'Blue' }
-  ]
-});
-
-document.body.appendChild(colorSelect.element);
-
-// Set value programmatically
-colorSelect.setValue('blue');
-
-// Get current value
-console.log('Current value:', colorSelect.getValue()); // 'blue'
-console.log('Current text:', colorSelect.getText()); // 'Blue'
-
-// Clear selection
-colorSelect.clear();
-
-// Open/close dropdown programmatically
-colorSelect.open();
-setTimeout(() => colorSelect.close(), 2000);
-```
-
-### Validation
-
-```javascript
-const requiredSelect = createSelect({
-  label: 'Category',
-  name: 'category',
-  required: true,
-  options: [
-    { id: 'tech', text: 'Technology' },
-    { id: 'science', text: 'Science' },
-    { id: 'arts', text: 'Arts' }
-  ]
-});
-
-document.body.appendChild(requiredSelect.element);
-
-function validateSelect() {
-  if (!requiredSelect.getValue()) {
-    requiredSelect.setError(true, 'This field is required');
-    return false;
-  }
-  requiredSelect.clearError();
-  return true;
-}
-
-requiredSelect.on('change', () => {
-  validateSelect();
-});
-```
+The web component's `change` carries `{ value }`.
 
 ## Accessibility
 
-The Select component follows accessibility best practices:
+- With flat options, the input is a select-only combobox (`role="combobox"`, `aria-haspopup`,
+  `aria-expanded`, `aria-controls`) over a `listbox` of options. Focus stays on the input, which
+  names the active option with `aria-activedescendant`.
+- The label names the input, as on a text field.
 
-- `aria-haspopup`, `aria-expanded` and `aria-controls` on the field, linking it to the menu; the menu is `role="menu"` with `role="menuitem"` options (the component does not set `role="combobox"` or `role="listbox"`)
-- Keyboard navigation support
-- Focus management between textfield and menu
-- Screen reader announcements for selection changes
-- Proper labeling with associated label elements
+| Keys | Action |
+|------|--------|
+| `Enter` / `Space` | Opens the menu, or chooses the active option |
+| `Down` / `Up` | Opens the menu, or moves the active option |
+| `Alt` + `Down` / `Alt` + `Up` | Opens the menu / chooses the active option |
+| `Home` / `End` | The first / last option |
+| `Page Down` / `Page Up` | Moves several options |
+| A letter | The next option starting with what was typed |
+| `Escape` | Closes the menu without choosing |
+| `Tab` | Chooses the active option, and moves on |
 
-### Keyboard Navigation
+## Styling
 
-| Key | Action |
-|-----|--------|
-| `Enter` / `Space` | Open dropdown or select focused option |
-| `Escape` | Close dropdown |
-| `ArrowDown` | Open dropdown or move to next option |
-| `ArrowUp` | Move to previous option |
-| `Home` | Move to first option |
-| `End` | Move to last option |
-| `Tab` | Move focus out of select |
-
-## CSS Customization
-
-A select fills its container's width (`width: 100%`); size it with a width on the select or its container.
-
-The Select component uses BEM-style CSS classes for easy customization:
+The select is a text field: its root carries both sets of classes, and the menu is its child.
 
 ```css
-/* Base select styles */
-.mtrl-select { /* ... */ }
-
-/* Open state */
-.mtrl-select--open { /* ... */ }
-
-/* Disabled state */
-.mtrl-select--disabled { /* ... */ }
-
-/* Error state */
-.mtrl-select--error { /* ... */ }
-
-/* Size variants */
-.mtrl-select--small { /* ... */ }
-.mtrl-select--large { /* ... */ }
-
-/* The select is a text field: its root carries both sets of classes */
-.mtrl-select.mtrl-textfield { /* ... */ }
-
-/* Variant styles, the text field's */
-.mtrl-select.mtrl-textfield--filled { /* ... */ }
-.mtrl-select.mtrl-textfield--outlined { /* ... */ }
-
-/* The text field's parts */
-.mtrl-select .mtrl-textfield__input { /* ... */ }
-.mtrl-select .mtrl-textfield__label { /* ... */ }
-.mtrl-select .mtrl-textfield__trailing-icon { /* ... */ }
-
-/* The menu, a child of the select */
-.mtrl-select > .mtrl-menu { /* ... */ }
-
-/* Selected menu item */
-.mtrl-menu__item--selected { /* ... */ }
+.mtrl-select, .mtrl-select--open { }
+.mtrl-select.mtrl-textfield--filled, .mtrl-select.mtrl-textfield--outlined { }
+.mtrl-select .mtrl-textfield__input, .mtrl-select .mtrl-textfield__label { }
+.mtrl-select .mtrl-textfield__trailing-icon { }
+.mtrl-select > .mtrl-menu { }
 ```
-
-## Container Behavior
-
-The Select component's menu is automatically appended as a child of the select element. This ensures:
-
-- **Proper z-index stacking**: The menu inherits the select's stacking context
-- **Works inside dialogs**: No z-index conflicts when select is in a modal
-- **Correct positioning**: Menu positions relative to its parent select
-- **Simplified DOM structure**: Menu is logically part of the select
-
-This is different from standalone menus which append to `document.body` by default.
-
-## Best Practices
-
-- Use clear, concise option labels
-- Provide a sensible default selection when appropriate
-- Use supporting text to provide additional context
-- Show error states with helpful messages
-- Disable the select rather than hiding it when temporarily unavailable
-- Keep the number of options manageable (consider search for long lists)
-- Use consistent option formatting within a select
-- Order options logically (alphabetically, by frequency, or by importance)
-
-## Performance Considerations
-
-The Select component is designed to be lightweight and performant:
-
-- Menu elements are created on component initialization
-- Options are rendered efficiently using a single DOM update
-- Event delegation for option selection
-- Proper cleanup on destroy to prevent memory leaks
-- CSS transforms for smooth animations (GPU accelerated)
-- The menu element is built once and reused; it is inserted into the DOM on open and removed again shortly after close
-
-## Browser Compatibility
-
-The Select component is compatible with all modern browsers:
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)

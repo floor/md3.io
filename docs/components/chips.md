@@ -1,233 +1,233 @@
-# Chips Component
+# Chips
 
-Chips are compact elements that stand for one discrete thing: an action, a filter, a piece of text the user entered, or a suggestion. Material 3 defines four types, and mtrl has a factory for each, plus `createChips` for a set that manages selection, removal and keyboard navigation across the chips inside it.
+Chips are compact elements that stand for one discrete thing. M3 has four types: **assist**
+chips for a smart or automated action, **filter** chips to narrow content, **input** chips for
+something the user entered, such as a recipient, and **suggestion** chips for a generated
+suggestion, such as a reply. See the
+[M3 chips guidelines](https://m3.material.io/components/chips/overview).
 
-| Type | Factory | Use it for |
-|------|---------|------------|
-| Assist | `createAssistChip` | A smart or automated action, like adding an event to a calendar |
-| Filter | `createFilterChip` | Narrowing content; selectable, with a checkmark when selected |
-| Input | `createInputChip` | Something the user entered, like a recipient; selectable and always removable |
-| Suggestion | `createSuggestionChip` | A dynamically generated suggestion, like a reply |
+`createChips` builds a set, which owns the selection, removal and keyboard navigation of its
+chips; `createAssistChip`, `createFilterChip`, `createInputChip` and `createSuggestionChip`
+build one chip on its own.
 
-## Import
+## Usage
 
-```javascript
-import { createAssistChip, createFilterChip, createInputChip, createSuggestionChip, createChips, createMenu } from 'mtrl';
+A set is multi-select unless `multiSelect` is `false`. Its `chips` are configurations, which the
+set builds; without a `type`, a chip in a set is a filter chip.
+
+```example
+chips:
+  label: Categories
+  chips:
+    - { type: filter, label: JavaScript, value: js }
+    - { type: filter, label: TypeScript, value: ts }
+    - { type: filter, label: CSS, value: css }
 ```
 
-## Basic Usage
+`change` reports the selection: the factory calls its handlers with the selected values and the
+value that changed, the web component's detail has `value`, an array in a multi-select set and
+a string or `null` in a single-select one.
 
-A single chip:
+## Examples
 
-```javascript
-const chip = createAssistChip({ label: 'Add to calendar', leadingIcon: calendarIcon });
-chip.on('click', () => addEvent());
-document.querySelector('.actions').append(chip.element);
+### Single selection
+
+`selectionRequired` keeps the last selected chip selected, in either mode.
+
+```example
+chips:
+  label: Size
+  multiSelect: false
+  selectionRequired: true
+  chips:
+    - { type: filter, label: S, value: s }
+    - { type: filter, label: M, value: m, selected: true }
+    - { type: filter, label: L, value: l }
 ```
 
-A set, which owns the selection. Sets are multi-select unless `multiSelect: false`:
+### Input chips
 
-```javascript
-const filters = createChips({
-  label: 'Categories',
-  chips: [
-    { type: 'filter', label: 'JavaScript', value: 'js' },
-    { type: 'filter', label: 'TypeScript', value: 'ts' },
-    { type: 'filter', label: 'CSS', value: 'css' }
-  ],
-  onChange: (selectedValues) => applyFilters(selectedValues)
-});
-document.querySelector('.filters').append(filters.element);
+Every input chip has a remove button, and `Backspace` or `Delete` removes it when focused. In a
+set, the set removes it and emits `remove` with the chip; on its own, it leaves the page.
+`avatar` puts a 24dp round image in place of the leading icon.
+
+```example
+chips:
+  label: To
+  chips:
+    - { type: input, label: Ada Lovelace, value: ada@example.com }
+    - { type: input, label: Alan Turing, value: alan@example.com }
 ```
 
-The `chips` array holds `ChipConfig` objects, not chip instances: the set builds the chips and keeps the references. Without a `type`, a chip in a set is a filter chip.
+### Assist chips
 
-## Configuration
+`elevated` gives assist, filter and suggestion chips the elevated style in place of the
+outline.
 
-### Chip options
+```example
+chips:
+  label: Actions
+  chips:
+    - { type: assist, label: Add to calendar, value: calendar, leadingIcon: calendarIcon, elevated: true }
+    - { type: assist, label: Directions, value: directions, leadingIcon: locationIcon, elevated: true }
+```
 
-Passed to the four factories, and to the `chips` array or `addChip()` of a set (with `type`).
+A filter chip's `trailingMenu` gives it a trailing button that opens a menu; `onTrailingClick`
+handles it. A filter chip opening a price menu is planned for [Examples](/examples/). A chip
+your app makes `draggable` shows M3's dragged state from `dragstart` to `dragend`; mtrl does
+not move chips itself.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-chips>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
+
+#### A chip
+
+Passed to the four factories, and in a set's `chips` or `addChip()`, with `type`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `type` | `'assist' \| 'filter' \| 'input' \| 'suggestion'` | `'filter'` | In a set's `chips` or `addChip()`; the factories set it for you |
+| `type` | `'assist' \| 'filter' \| 'input' \| 'suggestion'` | `'filter'` | In a set's `chips` or `addChip()`; the factories set it |
 | `label` | `string` | `''` | The chip's label |
 | `value` | `string` | derived from the label | Identifies the chip to its set and to forms |
 | `leadingIcon` | `string` | `undefined` | Leading icon as SVG markup (`icon` is an alias) |
 | `trailingIcon` | `string` | `undefined` | Trailing icon as SVG markup; not on suggestion chips. On an input chip it replaces the remove icon |
-| `avatar` | `string` | `undefined` | Input chips: a 24px round avatar (markup), in place of the leading icon |
-| `elevated` | `boolean` | `false` | Assist, filter and suggestion chips: the elevated style instead of the outlined one |
+| `avatar` | `string` | `undefined` | Input chips: a 24dp round avatar (markup), in place of the leading icon |
+| `elevated` | `boolean` | `false` | Assist, filter and suggestion chips: the elevated style |
 | `selected` | `boolean` | `false` | Filter and input chips: whether the chip starts selected |
 | `disabled` | `boolean` | `false` | Whether the chip starts disabled |
 | `removeLabel` | `string` | `'Remove {label}'` | Input chips: the remove button's accessible name |
 | `onRemove` | `(chip) => void` | `undefined` | Input chips: called when the chip is removed |
-| `onTrailingClick` | `(chip) => void` | `undefined` | Filter chips: gives the trailing icon its own button, to open a menu or remove the chip |
+| `onTrailingClick` | `(chip) => void` | `undefined` | Filter chips: gives the trailing icon its own button |
 | `trailingMenu` | `boolean` | `false` | Filter chips: the trailing button opens a menu (`aria-haspopup`, a drop-down arrow) |
 | `trailingLabel` | `string` | `'{label} options'` or `'Remove {label}'` | Filter chips: the trailing button's accessible name |
 | `onClick` | `(chip) => void` | `undefined` | Called when the chip is activated |
-| `onChange` | `(selected, chip) => void` | `undefined` | Filter and input chips: called when the selected state changes |
-| `ripple` | `boolean` | `true` | Whether to run the ripple on press |
+| `onChange` | `(selected, chip) => void` | `undefined` | Filter and input chips: called when a click changes the selected state |
+| `onSelect` | `(chip) => void` | `undefined` | Filter and input chips: called with the chip after `onChange` |
+| `ripple` | `boolean` | `true` | Whether a press shows the ripple |
 | `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-Every input chip is removable: it has a remove button, and Backspace or Delete removes it when focused. On its own, a removed chip leaves the page; in a set, the set removes it and emits `remove`. `onRemove` is called either way.
-
-### Chips options
+#### A set
 
 Passed to `createChips`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `chips` | `ChipConfig[]` | `[]` | The chips to build and manage |
-| `multiSelect` | `boolean` | `true` | Whether several chips can be selected at once; `false` for single-select |
-| `selectionRequired` | `boolean` | `false` | Whether the last selected chip is kept selected, in either mode |
+| `multiSelect` | `boolean` | `true` | Whether several chips can be selected at once |
+| `selectionRequired` | `boolean` | `false` | Whether the last selected chip is kept selected |
 | `label` | `string` | `undefined` | A visible label that names the set |
 | `labelPosition` | `'start' \| 'end'` | `'start'` | Which side the label sits on |
 | `scrollable` | `boolean` | `false` | Whether the set scrolls horizontally instead of wrapping |
 | `vertical` | `boolean` | `false` | Whether the chips stack vertically |
-| `onChange` | `(selectedValues, changedValue) => void` | `undefined` | Called with every selected value and the one that just changed |
-| `on` | `{ [event]: Function }` | `undefined` | Event handlers registered at creation, as with `on()` |
+| `onChange` | `(selectedValues, changedValue) => void` | `undefined` | Called with every selected value and the one that changed |
+| `on` | `{ change?, add?, remove? }` | `undefined` | Event handlers registered at creation |
 | `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-## Component API
+### Methods
 
-### Chip
+#### A chip
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `setLabel(text)` / `getLabel()` | `ChipComponent` / `string` | The label (`setText` / `getText` are aliases) |
-| `setLeadingIcon(icon)` / `getIcon()` | `ChipComponent` / `string` | The leading icon (`setIcon` is an alias) |
-| `setTrailingIcon(icon)` | `ChipComponent` | The trailing icon, or an input chip's remove icon |
-| `setSelected(selected)` / `toggleSelected()` / `isSelected()` | `ChipComponent` / `boolean` | Selection, for filter and input chips |
-| `setValue(value)` / `getValue()` | `ChipComponent` / `string \| null` | The chip's value |
-| `enable()` / `disable()` / `isDisabled()` | `ChipComponent` / `boolean` | Disabled state |
-| `getType()` | `ChipType` | The chip's type |
-| `focus()` | `ChipComponent` | Focuses the chip's action |
-| `on(event, handler)` / `off(event, handler)` | `ChipComponent` | Events: `click`, `change`, `remove`, `trailing`, `focus`, `blur`, `keydown` |
-| `destroy()` | `void` | Removes listeners and the element |
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `setLabel(text)` / `getLabel()` | `text: string` | `ChipComponent` / `string` | The label (`setText` / `getText` are aliases) |
+| `setLeadingIcon(icon)` / `getIcon()` | `icon: string` | `ChipComponent` / `string` | The leading icon (`setIcon` is an alias) |
+| `setTrailingIcon(icon)` | `icon: string` | `ChipComponent` | The trailing icon, or an input chip's remove icon |
+| `setSelected(selected)` / `toggleSelected()` / `isSelected()` | `selected: boolean` | `ChipComponent` / `boolean` | Selection, for filter and input chips |
+| `setValue(value)` / `getValue()` | `value: string` | `ChipComponent` / `string \| null` | The chip's value |
+| `enable()` / `disable()` / `isDisabled()` | none | `ChipComponent` / `boolean` | The disabled state |
+| `getType()` | none | `ChipType` | The chip's type |
+| `focus()` | none | `ChipComponent` | Focuses the chip's action |
+| `addClass(...classes)` | `...classes: string[]` | `ChipComponent` | Adds classes to the chip |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `ChipComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes listeners and the element |
 
-`chip.action` is the chip's native button. An input chip's remove button and a filter chip's trailing button (`chip.trailingAction`) are its siblings, never nested inside it.
+`chip.action` is the chip's native button. An input chip's remove button and a filter chip's
+trailing button (`chip.trailingAction`) are its siblings, never inside it.
 
-A chip your app makes `draggable` shows Material's dragged state (elevation 4, a stronger state layer) from `dragstart` to `dragend`; mtrl does not move chips itself.
+#### A set
 
-### Chips
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `addChip(config)` / `removeChip(chipOrIndex)` | `config: ChipConfig` / `chipOrIndex: ChipComponent \| number` | `ChipsComponent` | Adds or removes a chip |
+| `getChips()` / `getSelectedChips()` | none | `ChipComponent[]` | The chips, or the selected ones |
+| `getSelectedValues()` | none | `(string \| null)[]` | The selected values, in either mode |
+| `getValue()` / `setValue(values)` | `values: string \| string[] \| null` | `string \| string[] \| null` / `ChipsComponent` | An array when multi-select, a string or `null` when single-select |
+| `selectByValue(values, triggerEvent?)` / `clearSelection()` | `values: string \| string[], triggerEvent?: boolean` | `ChipsComponent` | Programmatic selection |
+| `setScrollable(on)` / `setVertical(on)` | `on: boolean` | `ChipsComponent` | Layout |
+| `setLabel(text)` / `getLabel()` | `text: string` | `ChipsComponent` / `string` | The set's label |
+| `setLabelPosition(position)` / `getLabelPosition()` | `position: 'start' \| 'end'` | `ChipsComponent` / `string` | Which side the label sits on |
+| `scrollToChip(chipOrIndex)` | `chipOrIndex: ChipComponent \| number` | `ChipsComponent` | Scrolls a scrollable set to a chip |
+| `enableKeyboardNavigation()` | none | `ChipsComponent` | Enables the arrow-key navigation between chips |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `ChipsComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes the set |
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `addChip(config)` / `removeChip(chipOrIndex)` | `ChipsComponent` | Adds or removes a chip |
-| `getChips()` / `getSelectedChips()` | `ChipComponent[]` | The chips, or the selected ones |
-| `getSelectedValues()` | `(string \| null)[]` | The selected values, in either mode |
-| `getValue()` / `setValue(values)` | `string \| string[] \| null` / `ChipsComponent` | Form-style value: an array when multi-select, a string or `null` when single-select |
-| `selectByValue(values, triggerEvent?)` / `clearSelection()` | `ChipsComponent` | Programmatic selection |
-| `setScrollable(on)` / `setVertical(on)` | `ChipsComponent` | Layout |
-| `setLabel(text)` / `setLabelPosition(position)` | `ChipsComponent` | The set's label |
-| `scrollToChip(chipOrIndex)` | `ChipsComponent` | Scrolls a scrollable set to a chip |
-| `on(event, handler)` / `off(event, handler)` | `ChipsComponent` | Events: `change`, `add`, `remove` |
-| `destroy()` | `void` | Removes the set |
+### Events
 
-## Examples
+| Event | Description | Data |
+|-------|-------------|------|
+| Chip `click` | The chip was activated | `{ event, element, originalEvent }` |
+| Chip `change` | A click changed the selected state | `{ selected, chip }` |
+| Chip `remove` / `trailing` | Removed, or its trailing button activated | the chip |
+| Chip `focus` / `blur` / `keydown` | The chip's action took or lost focus, or a key went down | `{ event, element, originalEvent }` |
+| Set `change` | The selection changed | `(selectedValues, changedValue)`, `changedValue` `null` for programmatic changes |
+| Set `add` / `remove` | A chip was added, or is about to be removed | the chip |
 
-### Filter chips, single-select
-
-```javascript
-const size = createChips({
-  multiSelect: false,
-  selectionRequired: true,
-  label: 'Size',
-  chips: ['S', 'M', 'L'].map(label => ({ type: 'filter', label, value: label.toLowerCase() }))
-});
-size.setValue('m');
-size.getValue(); // 'm'
-```
-
-### Input chips the user can remove
-
-```javascript
-const recipients = createChips({
-  label: 'To',
-  chips: people.map(person => ({ type: 'input', label: person.name, value: person.email, avatar: person.avatar }))
-});
-recipients.on('remove', chip => unsend(chip.getValue()));
-```
-
-### A filter chip that opens a menu
-
-```javascript
-const price = createFilterChip({
-  label: 'Price',
-  trailingMenu: true,
-  onTrailingClick: (chip) => {
-    chip.trailingAction.setAttribute('aria-expanded', 'true');
-    priceMenu.open();
-  }
-});
-
-// Anchored to the chip; opened by the chip's trailing button, not by a click on the opener
-const priceMenu = createMenu({
-  opener: price.element,
-  manualOpen: true,
-  items: [
-    { id: 'under-50', text: 'Under $50' },
-    { id: '50-100', text: '$50 to $100' },
-    { id: 'over-100', text: 'Over $100' }
-  ]
-});
-priceMenu.on('close', () => price.trailingAction.setAttribute('aria-expanded', 'false'));
-```
-
-On compact screens, the guidelines ask for the whole chip to open the menu: call the same handler from `onClick` there.
-
-### Elevated assist chips
-
-```javascript
-const actions = ['Directions', 'Call', 'Share'].map(label => createAssistChip({ label, elevated: true }));
-```
+The web component's `change` carries `{ value }`, and `remove` the removed chip's `{ value }`.
 
 ## Accessibility
 
-- A set follows the web roles of the m3.material.io chips accessibility page: a `grid` named by its visible label through `aria-labelledby`, a `row`, and a `gridcell` for each chip. `aria-multiselectable` tells whether several chips can be selected.
-- The set is one Tab stop. The arrow keys move between chips (left and right, or up and down when `vertical`), following the reading direction in right-to-left layouts; Home and End go to the first and last chip.
-- A chip with one action is its cell: the cell takes focus and carries `aria-selected`, and Space or Enter activates it. A chip with two actions, an input chip with its remove button or a filter chip with its trailing button, keeps two native buttons inside its cell, and the arrows reach both.
-- A chip on its own keeps its native button: filter and input chips are `role="checkbox"` with `aria-checked`, assist and suggestion chips are plain buttons.
-- Backspace or Delete removes a focused input chip, and focus moves to the chip that took its place, or the previous one when it was the last.
-- An input chip's remove button is named "Remove {label}", or `removeLabel`.
-- Chips and remove buttons have 48px touch targets. Keyboard focus draws Material's 3px focus ring, 2px outside the chip, and the focus layer shows for keyboard focus only.
-- The ripple is the press: it draws the pressed layer (0.10), as in Compose.
+- A set is a `grid` named by its visible label through `aria-labelledby`, with a `row`, and a
+  `gridcell` for each chip; `aria-multiselectable` tells whether several can be selected.
+- The set is one `Tab` stop. The arrow keys move between chips, following the reading
+  direction; `Home` and `End` go to the first and last.
+- A chip with one action is its cell, which takes focus and carries `aria-selected`; `Space` and
+  `Enter` activate it. A chip with two actions keeps two native buttons in its cell, and the
+  arrows reach both.
+- On its own, a filter or input chip is `role="checkbox"` with `aria-checked`; assist and
+  suggestion chips are plain buttons.
+- A removed input chip's focus moves to the chip that took its place, or the previous one.
+- Chips and remove buttons have 48dp touch targets. Keyboard focus draws a 3dp focus ring, 2dp
+  outside the chip.
 
 ## Styling
 
+Colors come from the theme's roles; `--mtrl-chip-label-color`, `--mtrl-chip-leading-color`,
+`--mtrl-chip-trailing-color` and `--mtrl-chip-checkmark-color` set a chip's parts.
+
 ```css
-.mtrl-chip { }                  /* one chip */
+.mtrl-chip { }
 .mtrl-chip--assist, .mtrl-chip--filter, .mtrl-chip--input, .mtrl-chip--suggestion { }
-.mtrl-chip--elevated { }
-.mtrl-chip--selected, .mtrl-chip--disabled { }
-.mtrl-chip--leading, .mtrl-chip--trailing, .mtrl-chip--avatar { }  /* which parts are shown */
+.mtrl-chip--elevated, .mtrl-chip--selected, .mtrl-chip--disabled, .mtrl-chip--dragged { }
+.mtrl-chip--leading, .mtrl-chip--trailing, .mtrl-chip--avatar { }  /* the parts shown */
 .mtrl-chip__action { }          /* the native button */
 .mtrl-chip__leading-icon, .mtrl-chip__checkmark, .mtrl-chip__label, .mtrl-chip__trailing-icon { }
-.mtrl-chip__remove { }          /* an input chip's remove button */
-.mtrl-chip__trailing-action { } /* a filter chip's trailing button */
-.mtrl-chip--dragged { }         /* while an app drags the chip */
+.mtrl-chip__remove, .mtrl-chip__trailing-action { }
 
-.mtrl-chips { }                 /* the set */
+.mtrl-chips { }
 .mtrl-chips--scrollable, .mtrl-chips--vertical, .mtrl-chips--with-label, .mtrl-chips--label-end { }
 .mtrl-chips__container, .mtrl-chips__label { }
 ```
 
-Colours come from the theme's roles, and a chip exposes custom properties for its parts: `--mtrl-chip-label-color`, `--mtrl-chip-leading-color`, `--mtrl-chip-trailing-color` and `--mtrl-chip-checkmark-color`.
-
 ## Measurements
 
-Following the m3.material.io chips specs and Compose's chip tokens:
+From the m3.material.io chips specs and Compose's chip tokens.
 
 | Attribute | Value |
 |-----------|-------|
-| Height | 32px |
-| Corner | 8px |
-| Outline | 1px `outline-variant`, drawn inside the chip; none when selected or elevated |
-| Padding | 16px without icons, 8px beside an icon, 4px beside an avatar |
-| Icon | 18px, 8px from the label |
-| Avatar | 24px, round |
+| Height | 32dp |
+| Corner | 8dp |
+| Outline | 1dp `outline-variant`, inside the chip; none when selected or elevated |
+| Padding | 16dp without icons, 8dp beside an icon, 4dp beside an avatar |
+| Icon | 18dp, 8dp from the label |
+| Avatar | 24dp, round |
 | Label | Label Large |
 | Selected | `secondary-container` |
 | Elevated | `surface-container-low` at elevation 1 |
-| Touch target | 48px |
-| Motion | the checkmark and leading icon expand on the fast spatial spring and fade |
+| Touch target | 48dp |
+| Motion | The checkmark and leading icon expand on the fast spatial spring and fade |

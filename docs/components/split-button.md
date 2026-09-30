@@ -1,44 +1,59 @@
-# Split Button Component
+# Split button
 
-The Split Button pairs one action with a button that opens more choices. The leading button does the common thing; the trailing button opens a menu, and its chevron turns over while the menu is open. Both halves are the library's own button, so they share its colours, state layers, focus rings and touch targets.
+A split button pairs one action with a button that opens more choices: Save, with "Save a
+copy" behind the chevron; Send, with "Schedule send". Use it when one action is the obvious
+default and the rest are variations of it; for unrelated choices use a
+[menu](/docs/components/menu/), for alternatives of equal weight a
+[button group](/docs/components/button-group/). See the
+[M3 split button guidelines](https://m3.material.io/components/split-button/overview).
 
-## Overview
+## Usage
 
-Use a split button when one action is the obvious default and the rest are variations of it:
+The leading button does the common thing; the trailing one opens a menu of `items`, and its
+chevron turns over while the menu is open.
 
-- Save, with "Save a copy" and "Save as template" behind the chevron
-- Watch later, with "Add to queue" and "Save to playlist"
-- Send, with "Schedule send"
-
-If the choices are unrelated to each other, use a menu on its own. If they are alternatives of equal weight, use a button group.
-
-The component follows the Material 3 expressive split button specification: five sizes matching the button scale, a 2dp gap, small inner corners that grow when a half is hovered or pressed, and a trailing button whose inner corner becomes a circle while its menu is open.
-
-## Import
-
-```javascript
-import { createSplitButton } from 'mtrl';
+```example
+split-button:
+  text: Watch later
+  icon: watchIcon
+  trailingLabel: More watch options
+  items:
+    - { id: queue, text: Add to queue }
+    - { id: playlist, text: Save to playlist }
+  on click: watchLater()
 ```
 
-## Basic Usage
+A chosen item emits `select`: the factory's payload has the `item`, the web component's detail
+its `value`, the item's `id`.
 
-```javascript
-const button = createSplitButton({
-  text: 'Watch later',
-  icon: watchIcon,
-  trailingLabel: 'More watch options',
-  items: [
-    { id: 'queue', text: 'Add to queue' },
-    { id: 'playlist', text: 'Save to playlist' }
-  ],
-  onClick: () => watchLater(),
-  onSelect: ({ item }) => choose(item.id)
-});
+## Examples
 
-document.querySelector('.toolbar').appendChild(button.element);
+### Variant and size
+
+`variant` is `filled`, `tonal`, `outlined` or `elevated`, shared by both halves, and `size` runs
+from `xs` to `xl` like the button's. Opening the menu changes a state layer and the shape,
+never the color.
+
+```example
+split-button:
+  text: Save
+  variant: tonal
+  size: m
+  items:
+    - { id: save-as, text: Save as… }
+    - { id: save-copy, text: Save a copy }
 ```
 
-## Configuration
+`setText()` and `setIcon()` change the leading button. Without `items`, the factory only
+reports that the trailing button was activated, with `expand`, `collapse` and `change`, and the
+app opens whatever it likes. `layer: 'top'` shows the menu in the browser's top layer.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-split-button>'s spec in a later step. Until then
+these tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -51,24 +66,25 @@ document.querySelector('.toolbar').appendChild(button.element);
 | `ariaLabel` | `string` | `undefined` | Accessible name of the leading button, when its label is not enough |
 | `groupLabel` | `string` | `undefined` | Accessible name of the pair |
 | `items` | `MenuContent[]` | `undefined` | Menu items for the trailing button to open |
-| `onClick` | `function` | `undefined` | What the leading button does |
-| `onSelect` | `function` | `undefined` | Called with the chosen item |
+| `layer` | `'top'` | `undefined` | Renders the menu beside the trailing button and shows it in the top layer |
+| `onClick` | `(event: SplitButtonEvent) => void` | `undefined` | What the leading button does |
+| `onSelect` | `(event: SplitButtonEvent) => void` | `undefined` | Called with the chosen item |
+| `on` | `{ [event]: handler }` | `undefined` | Handlers for any of the events |
 | `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-## Component API
+### Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `setText(text)` | `SplitButtonComponent` | Sets the leading button's label |
-| `getText()` | `string` | The leading button's label |
-| `setIcon(icon)` | `SplitButtonComponent` | Sets the leading button's icon |
-| `expand()` | `SplitButtonComponent` | Opens whatever the trailing button opens |
-| `collapse()` | `SplitButtonComponent` | Closes it |
-| `isExpanded()` | `boolean` | Whether it is open |
-| `enable()` / `disable()` | `SplitButtonComponent` | Both halves together |
-| `isDisabled()` | `boolean` | Whether the leading button is disabled. `enable()` and `disable()` always move both halves together, so this stands for the pair |
-| `on(event, handler)` / `off(event, handler)` | `SplitButtonComponent` | Event listeners |
-| `destroy()` | `void` | Takes it off the page and releases the menu |
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `setText(text)` / `getText()` | `text: string` | `SplitButtonComponent` / `string` | The leading button's label |
+| `setIcon(icon)` | `icon: string` | `SplitButtonComponent` | The leading button's icon |
+| `expand()` / `collapse()` | none | `SplitButtonComponent` | Opens or closes what the trailing button opens |
+| `isExpanded()` | none | `boolean` | Whether it is open |
+| `enable()` / `disable()` | none | `SplitButtonComponent` | Both halves together |
+| `isDisabled()` | none | `boolean` | Whether the pair is disabled |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `SplitButtonComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Takes it off the page and releases the menu |
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -77,154 +93,58 @@ document.querySelector('.toolbar').appendChild(button.element);
 | `trailingElement` | `HTMLButtonElement` | The trailing button |
 | `menu` | `MenuComponent` | The menu, when the component was given items |
 
-## Events
+### Events
 
 | Event | Description | Data |
 |-------|-------------|------|
 | `click` | The leading button was activated | `{ splitButton, expanded, originalEvent }` |
-| `expand` | The trailing button opened its choices | `{ splitButton, expanded, originalEvent }` |
-| `collapse` | It closed them | `{ splitButton, expanded, originalEvent }` |
-| `change` | Either of the two, carrying the new state | `{ splitButton, expanded, originalEvent }` |
-| `select` | A menu item was chosen | `{ splitButton, item }` |
+| `expand` / `collapse` | The trailing button opened or closed its choices | `{ splitButton, expanded, originalEvent }` |
+| `change` | Either of the two, with the new state | `{ splitButton, expanded, originalEvent }` |
+| `select` | A menu item was chosen | `{ splitButton, expanded, originalEvent, item }` |
 
-## Examples
-
-### Without a menu
-
-Given no items, the component only reports that the trailing button was activated, and you open whatever you like. The guidelines allow other surfaces, though a menu is the usual one.
-
-```javascript
-const button = createSplitButton({
-  text: 'Export',
-  trailingLabel: 'More export formats',
-  onClick: () => exportPdf()
-});
-
-button.on('change', ({ expanded }) => {
-  if (expanded) showExportPanel();
-  else hideExportPanel();
-});
-```
-
-### Sizes
-
-```javascript
-const items = [
-  { id: 'pdf', text: 'PDF' },
-  { id: 'csv', text: 'CSV' }
-];
-
-// The default is small; scale up in large windows or for emphasis
-const hero = createSplitButton({ text: 'Get started', size: 'xl', items });
-const compact = createSplitButton({ text: 'Filter', size: 'xs', items });
-```
-
-### Colour
-
-```javascript
-const items = [{ id: 'save-as', text: 'Save as…' }];
-
-const filled = createSplitButton({ text: 'Save', variant: 'filled', items });
-const tonal = createSplitButton({ text: 'Save', variant: 'tonal', items });
-const outlined = createSplitButton({ text: 'Save', variant: 'outlined', items });
-const elevated = createSplitButton({ text: 'Save', variant: 'elevated', items });
-```
-
-Unlike a toggle button, a split button's colour does not change when its menu opens. Only a state layer and the shape do.
-
-Filled and tonal halves stay flat. A standalone filled or tonal button rises to elevation level 1 on hover, but in a split button that shadow falls across the 2dp gap and onto the other half, so whichever half the pointer is over appears to float above its neighbour and the pair stops reading as one control. Hover is left to the state layer and the inner corner morph, which is what the split button's own states describe. A connected button group flattens its segments for the same reason. An elevated split button keeps its elevation, since that is what the variant is.
-
-## Measurements
-
-Every number comes from the Material 3 split button tokens. Sizes are given in dp.
-
-| Size | Height | Leading padding | Trailing padding | Chevron | Inner corner | Inner corner, active |
-|------|--------|-----------------|------------------|---------|--------------|----------------------|
-| xs | 32 | 12 / 10 | 13 | 22 | 4 | 8 |
-| s | 40 | 16 / 12 | 13 | 22 | 4 | 12 |
-| m | 56 | 24 / 24 | 15 | 26 | 8 | 12 |
-| l | 96 | 48 / 48 | 29 | 38 | 12 | 20 |
-| xl | 136 | 64 / 64 | 43 | 50 | 16 | 20 |
-
-The gap between the halves is 2dp at every size, and the outer corners are always a full pill. The leading button keeps a 48dp minimum width.
-
-The resting inner corner is one departure from the token table, which gives 4dp at the three smallest sizes and 8 and 12dp at the two largest. Those hold at extra small and small, where they are about an eighth of the height and match the renders in the spec, but at the larger sizes a fixed 4 to 12dp corner reads as square beside a full pill: 4dp is a fourteenth of a 56dp button. The three larger sizes keep the proportion instead, so every size lands between a tenth and a seventh of its height. Set `--mtrl-split-button-inner-shape` to go back to the token value, and `--mtrl-split-button-inner-shape-active` for the hovered and pressed one.
-
-```css
-/* The strict token values */
-.mtrl-split-button--m { --mtrl-split-button-inner-shape: 4px; }
-.mtrl-split-button--l { --mtrl-split-button-inner-shape: 8px; }
-.mtrl-split-button--xl { --mtrl-split-button-inner-shape: 12px; }
-```
-
-While the menu is closed, the chevron sits 1 to 6dp off centre depending on the size, so it looks centred in a button whose two ends have different shapes. When the menu opens it centres properly and turns 180 degrees, on the standard motion scheme rather than the expressive one.
+The web component's `select` carries `{ value }`; its `click` is the leading button's.
 
 ## Accessibility
 
-- The two halves are a `group`, which `groupLabel` can name
-- The leading button is labelled like any button, by its text or by `ariaLabel`
-- The trailing button carries `aria-haspopup` and `aria-expanded`, and a label that should say how its choices relate to the action. Beside a "Watch later" button, "More watch options" reads better than "More options"
-- Tab moves from the leading button to the trailing one; Space and Enter activate the focused half
-- At the two sizes shorter than 48dp, each half still offers a 48dp target
-- The whole component mirrors under `direction: rtl`
+- The two halves are a `group`, named by `groupLabel`; the leading button is named by its label
+  or `ariaLabel`.
+- The trailing button has `aria-haspopup` and `aria-expanded`. Its label should say how its
+  choices relate to the action: "More watch options" beside "Watch later".
+- `Tab` moves from the leading button to the trailing one; `Space` and `Enter` activate the
+  focused half.
+- At `xs` and `s`, each half still offers a 48dp target. The component mirrors in right-to-left
+  layouts.
 
-```html
-<div class="mtrl-split-button mtrl-split-button--filled mtrl-split-button--s" role="group" aria-label="Watch options">
-  <button class="mtrl-button mtrl-split-button__leading">Watch later</button>
-  <button class="mtrl-button mtrl-split-button__trailing" aria-label="More watch options" aria-haspopup="menu" aria-expanded="false">
-    <svg class="mtrl-split-button__chevron" aria-hidden="true">…</svg>
-  </button>
-</div>
-```
+## Styling
 
-## CSS Customization
+Colors come from the button. Filled and tonal halves stay flat on hover, as in a connected
+button group, so the pair reads as one control; an elevated split button keeps its elevation.
 
 ```css
-/* The pair */
-.mtrl-split-button { /* ... */ }
-.mtrl-split-button--filled { /* ... */ }
-.mtrl-split-button--xl { /* ... */ }
+.mtrl-split-button { }
+.mtrl-split-button--filled, .mtrl-split-button--xl, .mtrl-split-button--expanded { }
+.mtrl-split-button__leading, .mtrl-split-button__trailing, .mtrl-split-button__chevron { }
 
-/* The halves */
-.mtrl-split-button__leading { /* ... */ }
-.mtrl-split-button__trailing { /* ... */ }
-.mtrl-split-button__chevron { /* ... */ }
-
-/* While the menu is open */
-.mtrl-split-button--expanded { /* ... */ }
-```
-
-### CSS Custom Properties
-
-```css
-.mtrl-split-button {
-  --mtrl-split-button-inner-shape: 8px;        /* the corners where the halves meet */
-  --mtrl-split-button-inner-shape-active: 12px; /* the same, hovered or pressed */
+.toolbar .mtrl-split-button {
+  --mtrl-split-button-inner-shape: 8px;          /* where the halves meet */
+  --mtrl-split-button-inner-shape-active: 12px;  /* the same, hovered or pressed */
 }
 ```
 
-Colours come from the button, so a split button follows whatever the button's tokens say.
+## Measurements
 
-## Best Practices
+From the M3 split button tokens, in dp.
 
-- Keep the leading label to one or two words, with an icon that matches the action
-- Leave the chevron alone: it turns to show the menu's state, and swapping it breaks that
-- Align the menu with the trailing button, 4dp away, which is what the component does with its own menu
-- Split buttons take more room than buttons, so they can be a size smaller than the primary control beside them
+| Size | Height | Leading padding | Trailing padding | Chevron | Inner corner | Inner corner, active |
+|------|--------|-----------------|------------------|---------|--------------|----------------------|
+| `xs` | 32 | 12 / 10 | 13 | 22 | 4 | 8 |
+| `s` | 40 | 16 / 12 | 13 | 22 | 4 | 12 |
+| `m` | 56 | 24 / 24 | 15 | 26 | 8 | 12 |
+| `l` | 96 | 48 / 48 | 29 | 38 | 12 | 20 |
+| `xl` | 136 | 64 / 64 | 43 | 50 | 16 | 20 |
 
-## TypeScript Support
-
-```typescript
-import { createSplitButton, SplitButtonConfig, SplitButtonComponent } from 'mtrl';
-
-const config: SplitButtonConfig = {
-  text: 'Watch later',
-  variant: 'tonal',
-  size: 'm',
-  items: [{ id: 'queue', text: 'Add to queue' }]
-};
-
-const button: SplitButtonComponent = createSplitButton(config);
-button.expand();
-button.on('select', ({ item }) => console.log(item?.id));
-```
+The halves are 2dp apart, the outer corners are a full pill, and the leading button is at least
+48dp wide. The resting inner corner departs from the tokens at `m`, `l` and `xl` (4, 8 and
+12dp), which read as square beside a full pill; set `--mtrl-split-button-inner-shape` to go
+back to them. While the menu is closed, the chevron sits 1 to 6dp off center, so it looks
+centered between two differently shaped ends; open, it centers and turns 180 degrees.
