@@ -57,9 +57,10 @@ const card = `<!doctype html><html><head><style>
     background: radial-gradient(ellipse 900px 700px at 12% 0%, #1b2042 0%, #0f1020 45%, #09090c 100%); position: relative; }
   .text { position: absolute; left: 90px; top: 92px; }
   .eyebrow { font-size: 28px; letter-spacing: 4px; color: #8a8fa8; }
-  .wordmark { font-size: 188px; font-weight: 700; letter-spacing: -6px; line-height: 1; margin: 30px 0 22px 0; display: flex; align-items: baseline; }
-  .mark { width: 132px; height: 132px; margin-right: 26px; }
-  .dot { width: 34px; height: 34px; border-radius: 50%; margin-left: 18px; background: linear-gradient(135deg, #8da0f2, #d0bcff); }
+  .wordmark { font-size: 188px; font-weight: 700; letter-spacing: -6px; line-height: 1; margin: 30px 0 22px 0; white-space: nowrap; }
+  /* About the cap height; middle centres it on the x-height (baseline + half the x-height). */
+  .mark { width: 132px; height: 132px; margin-right: 26px; vertical-align: middle; }
+  .dot { display: inline-block; width: 34px; height: 34px; border-radius: 50%; margin-left: 18px; background: linear-gradient(135deg, #8da0f2, #d0bcff); }
   .tagline { font-size: 44px; line-height: 1.3; color: #b4b8cc; }
   .pills { display: flex; gap: 12px; margin-top: 44px; }
   .pill { font-size: 20px; padding: 11px 18px; border-radius: 999px; border: 1.5px solid #262a3a; background: rgba(255,255,255,.03); color: #dcdde6; white-space: nowrap; }
