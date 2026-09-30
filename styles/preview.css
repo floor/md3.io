@@ -15,15 +15,13 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 
 #stage > .mtrl-chips { width: fit-content; }
 
-html:is([data-component="navigation-rail"], [data-component="drawer"], [data-component="tabs"], [data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stage { width: 100%; min-width: 0; height: 100%; }
+html:is([data-component="navigation-rail"], [data-component="drawer"], [data-component="tabs"]) #stage { width: 100%; min-width: 0; height: 100%; }
 html:is([data-component="navigation-rail"], [data-component="drawer"]) #stage { padding: 0; }
 .navigation-demo { position: relative; display: flex; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
 .navigation-demo[data-position="end"] { justify-content: flex-end; }
 .navigation-trigger { position: absolute; right: 20px; bottom: 20px; }
 .navigation-trigger[hidden] { display: none; }
 #stage > .mtrl-tabs { width: min(100%, 560px); min-width: 0; }
-#stage > :is(.mtrl-top-app-bar, .mtrl-bottom-app-bar) { position: relative; top: auto; bottom: auto; width: 100%; min-width: 0; flex-shrink: 0; }
-html:is([data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stage { padding: 16px; overflow: hidden; }
 
 html:is([data-component="card"], [data-component="list"], [data-component="carousel"], [data-component="divider"], [data-component="dialog"], [data-component="bottom-sheet"], [data-component="side-sheet"]) #stage { width: 100%; min-width: 0; }
 #stage > .mtrl-card { width: min(100%, 340px); flex-shrink: 0; }
@@ -35,3 +33,19 @@ html[data-component="carousel"] #stage { height: 100%; padding: 24px 0; }
 
 html:is([data-component="badge"], [data-component="progress"], [data-component="loading-indicator"], [data-component="snackbar"], [data-component="tooltip"]) #stage { width: 100%; min-width: 0; }
 #stage > .mtrl-progress--linear { width: min(100%, 360px); }
+
+/* Top and bottom app bars in an app: pinned to the preview's edge over scrollable content. */
+html:is([data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stage { display: block; width: 100%; height: auto; min-height: 100%; padding: 0; overflow: visible; }
+.app-demo { position: relative; min-height: 100%; }
+.app-demo > :is(.mtrl-top-app-bar, .mtrl-bottom-app-bar) { position: fixed; left: 0; right: 0; width: auto; }
+.app-demo[data-edge="top"] > .mtrl-top-app-bar { top: 0; bottom: auto; }
+.app-demo[data-edge="bottom"] > .mtrl-bottom-app-bar { top: auto; bottom: 0; }
+.app-demo__content { display: grid; gap: 8px; padding: 16px; }
+.app-demo[data-edge="top"] .app-demo__content { padding-top: calc(var(--app-demo-bar, 64px) + 16px); }
+.app-demo[data-edge="bottom"] .app-demo__content { padding-bottom: calc(var(--app-demo-bar, 80px) + 16px); }
+.app-demo__row { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 8px 16px; border-radius: 12px; background: var(--mtrl-sys-color-surface-container); }
+.app-demo__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--mtrl-sys-color-primary-container); }
+.app-demo__lines { display: grid; gap: 8px; flex: 1; }
+.app-demo__lines > span { display: block; height: 10px; border-radius: 5px; background: var(--mtrl-sys-color-surface-container-highest); }
+.app-demo__lines > span:first-child { width: 55%; }
+.app-demo__lines > span:last-child { width: 35%; opacity: .7; }
