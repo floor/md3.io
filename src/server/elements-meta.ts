@@ -164,7 +164,7 @@ const slotted: Record<string, Slotted[]> = {
 // attribute naming it, when the element listens to it itself.
 type Trigger = Omit<TriggerMeta, 'attributes' | 'text'> & { attributes?: Record<string, string> };
 const triggers: Record<string, Trigger> = {
-  menu: { from: 'trigger', element: 'button', id: 'menu-trigger', for: 'anchor' },
+  menu: { from: 'trigger', element: 'button', id: 'menu-trigger', for: 'anchor', config: 'opener' },
   dialog: { from: 'trigger', element: 'button', id: 'dialog-trigger' },
   'bottom-sheet': { from: 'trigger', element: 'button', id: 'bottom-sheet-trigger' },
   'side-sheet': { from: 'trigger', element: 'button', id: 'side-sheet-trigger' },
@@ -173,7 +173,7 @@ const triggers: Record<string, Trigger> = {
   'navigation-rail': { from: 'trigger', element: 'button', id: 'navigation-rail-trigger' },
   // The time picker has no field: its opener shows the time.
   timepicker: { from: 'trigger', element: 'button', id: 'timepicker-trigger', shows: ' · ' },
-  tooltip: { from: 'target', element: 'icon-button', id: 'tooltip-target', for: 'for' },
+  tooltip: { from: 'target', element: 'icon-button', id: 'tooltip-target', for: 'for', config: 'target' },
 };
 
 // `open` as state the element reflects: where its first value is, and the

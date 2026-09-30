@@ -402,6 +402,8 @@ async function trigger(record) {
   if (event === 'focus') attempts.push(() => (field ?? element)?.focus());
   if (event === 'blur') attempts.push(() => { (field ?? element)?.focus(); (field ?? element)?.blur(); });
   if (/close|hide|dismiss/i.test(event)) attempts.push(async () => { has('open') ? target.open() : has('show') && target.show(); await wait(100); has('close') ? target.close() : has('hide') ? target.hide() : has('dismiss') && target.dismiss(); await wait(400); });
+  // A component with an opener (the menu) opens from it, as a user opens it: its trigger
+  else if (/open|show/i.test(event) && has('getOpener')) attempts.push(() => target.getOpener()?.click());
   else if (/open|show/i.test(event)) attempts.push(() => has('open') ? target.open() : has('show') && target.show());
   if (/change|input|select|remove|confirm|complete/i.test(event)) {
     if (field?.type === 'checkbox' || field?.type === 'radio') attempts.push(() => field.click());

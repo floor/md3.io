@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { resolve } from 'node:path';
+import ts from 'typescript';
 import { exampleCode, parseExample, renderExample } from '../src/server/example-block';
 import { renderDocument } from '../src/server/content';
 import { appRef, type Framework } from '../src/shared/frameworks';
@@ -149,5 +151,41 @@ describe('open state and bound text', () => {
     expect(code(button, 'vue')).toContain('>{{ text }}</MButton>');
     expect(code(button, 'html')).toContain('button.textContent = "Sending";');
     expect(code(button, 'vanilla')).toContain("button.setText('Sending');");
+  });
+});
+
+describe('a trigger', () => {
+  const menu = "menu:\n  trigger: { text: Edit }\n  items:\n    - { id: cut, text: Cut }\n  on open: track('menu')\n";
+  test('renders in all six frameworks: the button, then the menu it opens', () => {
+    const { element, code: rendered } = exampleCode(parseExample(menu));
+    expect(element).toBe(true);
+    expect(Object.keys(rendered).sort()).toEqual(['html', 'react', 'solid', 'svelte', 'vanilla', 'vue']);
+    expect(rendered.html).toContain('<m-button id="menu-trigger">Edit</m-button>\n<m-menu anchor="menu-trigger">');
+    expect(rendered.react).toContain('<Button id="menu-trigger">Edit</Button>');
+  });
+  test('Vanilla creates the button and passes its element as the opener', () => {
+    const vanilla = code(menu, 'vanilla');
+    expect(vanilla).toContain("import { createMenu, createButton } from 'mtrl';");
+    expect(vanilla).toContain("const trigger = createButton({ text: 'Edit' });\ndocument.body.append(trigger.element);\n\nconst menu = createMenu({ opener: trigger.element,");
+    expect(vanilla).not.toContain('trigger: {');
+  });
+  test('the Vanilla rendering type-checks against mtrl', () => {
+    const root = resolve(import.meta.dir, '..');
+    const file = resolve(root, 'test', 'trigger-example.ts');
+    const options: ts.CompilerOptions = {
+      target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
+      lib: ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'], types: [], skipLibCheck: true, noEmit: true, strict: true,
+      noImplicitAny: false, strictNullChecks: false,
+    };
+    const source = code(menu, 'vanilla');
+    // The rendering as a virtual file beside the tests, with the docs check's prelude
+    const host = ts.createCompilerHost(options);
+    const getSourceFile = host.getSourceFile.bind(host);
+    host.getSourceFile = (name, language, ...rest) => resolve(name) === file ? ts.createSourceFile(name, source, language, true, ts.ScriptKind.TS) : getSourceFile(name, language, ...rest);
+    const fileExists = host.fileExists.bind(host);
+    host.fileExists = name => resolve(name) === file || fileExists(name);
+    const program = ts.createProgram([resolve(root, 'scripts/check-docs/prelude.ts'), file], options, host);
+    const errors = ts.getPreEmitDiagnostics(program).map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+    expect(errors).toEqual([]);
   });
 });

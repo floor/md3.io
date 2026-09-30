@@ -110,11 +110,31 @@ const setters: Record<string, (value: unknown) => string> = {
   disabled: value => (value ? 'disable()' : 'enable()'),
 };
 
+/**
+ * The button beside the element (`trigger:` in the example), as the playground's
+ * Vanilla code creates it: an mtrl button, placed first, whose element the
+ * factory takes as its opener (the menu's `opener`, the tooltip's `target`).
+ */
+function vanillaTrigger(block: ExampleBlock): { config: Record<string, unknown>; factory?: string; code: string } {
+  const trigger = elementMeta(block.slug)?.trigger;
+  const item = trigger ? block.config[trigger.from] : undefined;
+  if (!trigger || !isRecord(item)) return { config: block.config, code: '' };
+  if (!trigger.config) throw new Error(`Vanilla: <m-${block.slug}>'s trigger opens it, which the Vanilla rendering does not write yet`);
+  const factory = trigger.element === 'icon-button' ? 'createIconButton' : 'createButton';
+  const { [trigger.from]: _, ...rest } = block.config;
+  return {
+    config: { [trigger.config]: appRef('trigger.element'), ...rest },
+    factory,
+    code: `const trigger = ${factory}(${vanillaValue(item)});\ndocument.body.append(trigger.element);\n\n`,
+  };
+}
+
 /** The Vanilla code: the factory, its handlers, the element placed, and the actions. */
 export function vanillaCode(block: ExampleBlock): string {
   const factory = isComponent(block.slug) ? components[block.slug].factory : `create${pascal(block.slug)}`;
   const variable = isComponent(block.slug) ? components[block.slug].variable : camel(block.slug);
-  const config = Object.keys(block.config).length ? vanillaValue(block.config) : '';
+  const trigger = vanillaTrigger(block);
+  const config = Object.keys(trigger.config).length ? vanillaValue(trigger.config) : '';
   const handlers = block.handlers.map(h => {
     const fields = [...new Set(h.args.filter(isField))];
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
@@ -122,7 +142,7 @@ export function vanillaCode(block: ExampleBlock): string {
   const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? 'open' : 'close'}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
-  return `import { ${factory} } from 'mtrl';\n\nconst ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
+  return `import { ${[factory, trigger.factory].filter(Boolean).join(', ')} } from 'mtrl';\n\n${trigger.code}const ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
 }
 
 export interface ExampleCode {

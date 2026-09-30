@@ -99,6 +99,8 @@ export interface TriggerMeta extends Omit<SlottedMeta, 'slot' | 'after' | 'marku
   id: string;
   /** The element's attribute naming that id, when the element listens to the trigger itself: the menu's `anchor`, the tooltip's `for`. */
   for?: string;
+  /** The factory's option that takes the trigger's element, in Vanilla: the menu's `opener`, the tooltip's `target`. */
+  config?: string;
   /** The trigger's text shows the model value after this separator: the time picker's `Choose time · 09:30`. */
   shows?: string;
 }
