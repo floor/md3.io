@@ -1,24 +1,81 @@
-# Date Picker Component
+# Date picker
 
-Date pickers let people select a date, or a range of dates. mtrl follows the four forms of Material 3: a **docked** calendar under its field, a **modal** dialog, a **modal date input** for typing, and a **full-screen** picker, recommended on compact screens and the usual form of a range.
+A date picker lets people select a date, or a range of dates. M3 has four forms: a
+**docked** calendar under its field, a **modal** dialog, a **modal date input** for typing,
+and a **full-screen** picker, for compact screens and the usual form of a range. See the
+[M3 date picker guidelines](https://m3.material.io/components/date-pickers/overview).
 
-## Import
+## Usage
 
-```javascript
-import { createDatePicker } from 'mtrl';
+The picker is a text field with a calendar button, which opens the calendar. In the dialog
+forms a selection is a draft until **OK** (or **Save**); **Cancel**, **Close**, `Escape` and
+the scrim discard it. `change` fires once a date is committed; dates before `minDate` or after
+`maxDate` cannot be chosen.
+
+```example
+datepicker:
+  label: Departure
+  variant: modal
+  value: 2026-10-02
+  minDate: 2026-10-01
+  on change: search(value)
 ```
 
-## Basic Usage
+## Examples
 
-```javascript
-const departure = createDatePicker({ label: 'Departure', variant: 'modal', minDate: new Date() });
-departure.on('change', ({ value }) => search(value));
-document.querySelector('.trip').append(departure.element);
+### A range, full screen
+
+With `selectionMode: 'range'`, the first tap is the start and the second the end, and
+**Save** commits both. A lone date given as the value is the one-day range.
+
+```example
+datepicker:
+  label: Stay
+  variant: fullscreen
+  selectionMode: range
+  value: [2026-10-02, 2026-10-05]
 ```
 
-The element is a text field with a calendar button. Opening the picker shows the calendar; in the dialog forms a selection is a draft until **OK** (or **Save**), and **Cancel**, **Close**, `Escape` or a click on the scrim discard it.
+### Typing a date
 
-## Configuration
+`modal-input` opens on the keyboard entry, in `dateFormat`. The field rejects a date that does
+not exist (02/30) or falls outside the limits, and **OK** stays disabled until the entry is
+valid. The pencil and calendar buttons switch between typing and the calendar.
+
+```example
+datepicker:
+  label: Birthday
+  variant: modal-input
+  dateFormat: DD/MM/YYYY
+```
+
+### Read-only
+
+A read-only field keeps its value readable and focusable, as a native `readonly` input does,
+and its calendar closed.
+
+```example
+datepicker:
+  label: Check-in
+  value: 2026-10-02
+  readOnly: true
+  supportingText: Set by your booking
+```
+
+With `required`, `checkValidity()` answers whether a date is missing, and `reportValidity()`
+also marks the field invalid; the web component reports it to its form as `valueMissing`. The
+factory's `specialDates` marks dates, or makes them unselectable, each with an optional tooltip.
+
+Months swipe horizontally, by touch, trackpad or mouse wheel, and the arrows slide the same
+way. Tapping the year opens every year from `minDate` to `maxDate` (1900 to 2100 without
+limits). Full screen, the months are one vertical list that grows as it scrolls.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-datepicker>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -39,8 +96,9 @@ The element is a text field with a calendar button. Opening the picker shows the
 | `name` | `string` | `undefined` | The field's name, for forms |
 | `animate` | `boolean` | `true` | Whether the dialog fades in |
 | `class` | `string` | `undefined` | Additional CSS classes |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-## Component API
+### Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -48,7 +106,7 @@ The element is a text field with a calendar button. Opening the picker shows the
 | `getValue()` / `setValue(value)` | `Date \| null` (`[Date, Date] \| null` in range mode) / `DatePickerComponent` | The committed value; `setValue` takes what `value` does |
 | `getFormattedValue()` | `string` | The value as the field shows it |
 | `clear()` | `DatePickerComponent` | Clears the value |
-| `setMinDate(date)` / `setMaxDate(date)` | `DatePickerComponent` | The bounds |
+| `setMinDate(date)` / `setMaxDate(date)` | `DatePickerComponent` | The limits |
 | `enable()` / `disable()` | `DatePickerComponent` | Disabled state |
 | `setReadOnly(readOnly)` / `isReadOnly()` | `DatePickerComponent` / `boolean` | Read-only state |
 | `setRequired(required)` | `DatePickerComponent` | Whether a date is required |
@@ -59,75 +117,30 @@ The element is a text field with a calendar button. Opening the picker shows the
 | `on(event, handler)` / `off(event, handler)` | `DatePickerComponent` | Events |
 | `destroy()` | `void` | Removes the picker |
 
-## Events
+### Events
 
 | Event | Payload | Description |
 |-------|---------|-------------|
 | `change` | `{ value, rangeEndDate, formattedValue }` | The committed value changed: `value` as `getValue()` returns it, `rangeEndDate` a range's end (`null` otherwise) |
 | `open` / `close` | `{ value }` | The calendar opened or closed |
 
-Every `change` has the same shape, whether the calendar, the field or `setValue()` committed it. A docked range emits once, when both its dates are chosen.
-
-## Navigating the calendar
-
-- **Months** swipe horizontally, as the m3.material.io guidelines have it: a touch swipe, a trackpad or a mouse wheel pages to the neighbouring month, and the arrows slide the same way. With reduced motion, the arrows change the month at once.
-- **Years**: tapping the year opens a list of every year from `minDate` to `maxDate` (1900 to 2100 without bounds), scrolling vertically, opened on the selected year.
-- **Full screen**: the months form one vertically scrolling list, each under its month and year. The list grows as it is scrolled.
-
-## Examples
-
-### A range, full screen
-
-```javascript
-const stay = createDatePicker({
-  label: 'Stay',
-  variant: 'fullscreen',
-  selectionMode: 'range',
-  minDate: new Date()
-});
-stay.on('change', ({ value }) => {
-  if (value) book(value[0], value[1]);
-});
-```
-
-Tap the start date, then the end date; **Save** commits the range and the close (x) button discards it. With `selectionMode: 'range'`, TypeScript types the value as `[Date, Date] | null`; a lone date given to `setValue()` is the one-day range.
-
-### Typing a date
-
-```javascript
-const birthday = createDatePicker({ label: 'Birthday', variant: 'modal-input', maxDate: new Date() });
-```
-
-The field rejects dates that do not exist (02/30) or fall outside the bounds, with an error message, and OK stays disabled until the entry is valid. The pencil and calendar buttons switch between typing and the calendar.
-
-### A read-only or required field
-
-```javascript
-const checkIn = createDatePicker({ label: 'Check-in', value: '2026-10-02', readOnly: true, supportingText: 'Set by your booking' });
-const expiry = createDatePicker({ label: 'Expiry', required: true });
-form.addEventListener('submit', (event) => {
-  if (!expiry.reportValidity()) event.preventDefault();
-});
-```
-
-A read-only field keeps its value readable and focusable, as a native `readonly` input does, and its calendar closed. `checkValidity()` answers without showing anything; `reportValidity()` marks the field invalid and says what is missing.
-
-### Unavailable dates
-
-```javascript
-const appointment = createDatePicker({
-  variant: 'modal',
-  specialDates: holidays.map(date => ({ date, disabled: true, tooltip: 'Closed' }))
-});
-```
+Every `change` has the same shape, whether the calendar, the field or `setValue()` committed
+it; a docked range emits once, when both its dates are chosen. The web component's `change`
+carries `{ value }` as an ISO date, `YYYY-MM-DD`, a range as `YYYY-MM-DD/YYYY-MM-DD`, and
+empty as `''`.
 
 ## Accessibility
 
-- The dialog forms are native modal dialogs: the page behind is inert, focus stays inside, and it returns to the field on close. The docked calendar is a non-modal dialog that closes when focus or a click leaves it.
-- A month is a `grid` of its days with weekday column headers; each day is a button named by its full date, the selection is `aria-selected`, and today is `aria-current="date"`. A live region announces the month and year as they change.
-- The calendar has one Tab stop. The arrow keys move by day and week, Home and End to the ends of the week, Page Up and Page Down by month, with Shift by year. Enter or Space selects, and Escape closes.
-- Months not on show while swiping are inert and hidden from assistive tech.
-- The field accepts typing in the docked form; the dialog forms open the calendar from it.
+- The dialog forms are native modal dialogs: the page behind is inert, focus stays inside and
+  returns to the field on close. The docked calendar is a non-modal dialog that closes when
+  focus or a click leaves it.
+- A month is a `grid` with weekday column headers; each day is a button named by its full
+  date, the selection is `aria-selected` and today `aria-current="date"`. A live region
+  announces the month and year as they change; months swiped out of view are inert.
+- The calendar is one Tab stop: the arrows move by day and week, `Home` and `End` to the ends
+  of the week, `Page Up` and `Page Down` by month, and by year with `Shift`. `Enter` or
+  `Space` selects, `Escape` closes.
+- The docked field takes typing; in the dialog forms the field opens the calendar.
 
 ## Styling
 
@@ -146,7 +159,7 @@ const appointment = createDatePicker({
 
 ## Measurements
 
-Following the m3.material.io date picker specs and their tokens, then Compose:
+From the M3 date picker specs and their tokens:
 
 | Attribute | Value |
 |-----------|-------|
