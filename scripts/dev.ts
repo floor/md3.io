@@ -1,6 +1,7 @@
 // Local dev: one loop that owns every rebuild and the server.
 //
-//   mtrl/src changes         → build mtrl, then md3.io, then restart the server
+//   mtrl/src changes         → build mtrl, link any new dist files, build md3.io, then
+//                              restart the server
 //   src/client, src/shared,
 //   icons change             → build md3.io, then restart the server
 //   server.ts, src/server    → restart the server
@@ -9,7 +10,7 @@
 // used to run under `bun --watch`, which restarted it in the middle of mtrl's build --
 // mtrl deletes dist and renames the new one in -- so it died on a missing module and,
 // its watched files gone, never came back.
-import { realpathSync, watch } from 'node:fs';
+import { existsSync, readdirSync, realpathSync, watch } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import type { Subprocess } from 'bun';
 
@@ -18,8 +19,8 @@ const root = resolve(import.meta.dir, '..');
 // to find that checkout.
 const mtrlRoot = dirname(realpathSync(resolve(root, 'node_modules/mtrl/package.json')));
 
-type Step = 'mtrl' | 'site' | 'server';
-const order: Step[] = ['mtrl', 'site', 'server'];
+type Step = 'mtrl' | 'link' | 'site' | 'server';
+const order: Step[] = ['mtrl', 'link', 'site', 'server'];
 const pending = new Set<Step>();
 let running = false;
 let server: Subprocess | null = null;
@@ -42,6 +43,15 @@ const restart = async () => {
   return true;
 };
 
+// Bun links file:../mtrl file by file at install time, so a file mtrl's build adds (a new
+// component, a new chunk) is missing from node_modules/mtrl until the next install.
+const link = async () => {
+  const dist = resolve(mtrlRoot, 'dist');
+  const missing = readdirSync(dist, { recursive: true, withFileTypes: true })
+    .some(entry => entry.isFile() && !existsSync(resolve(root, 'node_modules/mtrl', entry.parentPath.slice(mtrlRoot.length + 1), entry.name)));
+  return !missing || build('mtrl link', ['bun', 'install'], root);
+};
+
 async function drain() {
   if (running) return;
   running = true;
@@ -49,6 +59,7 @@ async function drain() {
     const step = order.find(s => pending.has(s))!;
     pending.delete(step);
     const ok = step === 'mtrl' ? await build('mtrl', ['bun', 'run', 'build'], mtrlRoot)
+      : step === 'link' ? await link()
       : step === 'site' ? await build('md3.io', ['bun', 'scripts/build.ts'], root)
       : await restart();
     // Nothing downstream of a failed build should pick up its result.
