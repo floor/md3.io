@@ -25,9 +25,9 @@ done
 
 # pm2 pid prints 0 or nothing when the process is not there.
 if [ "$(pm2 pid md3.io)" -gt 0 ] 2>/dev/null; then
-  pm2 reload md3.io
+  pm2 reload md3.io > /dev/null
 else
-  pm2 start ecosystem.production.cjs
+  pm2 start ecosystem.production.config.cjs > /dev/null
 fi
 
 for attempt in $(seq 1 30); do
