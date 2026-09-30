@@ -21,12 +21,12 @@ function page(path: string, title: string, description: string, template: string
   const isExamples = path.startsWith('/examples');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
-  const sidebarGroups = isDocs
-    ? [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Component architecture', href: '/docs/components/components/' }] }, ...docGroups]
-    : isExamples ? exampleGroups : isStyles ? stylesGroups : componentGroups;
-  // Previous and next, in sidebar order, as on vlist.io. Not on the playgrounds, which
+  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : componentGroups;
+  // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
+  // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
-  const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(sidebarGroups.flatMap(group => group.items), path) : '';
+  const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
+  const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path) : '';
   const content = eta.render(template, { ...data, docGroups, components, playgroundGroups, pager });
   return html(eta.render('base', {
     path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
@@ -34,18 +34,24 @@ function page(path: string, title: string, description: string, template: string
   }), status);
 }
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
+const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }, { name: 'Component architecture', href: '/docs/components/components/' }] }, ...docGroups];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** The previous and next links for a page, from the sidebar's items in order. */
-function pagerHtml(items: { name: string; href: string }[], path: string): string {
+type PagerItem = { name: string; href: string; section?: string };
+function pagerHtml(items: PagerItem[], path: string): string {
   const index = items.findIndex(item => item.href === path);
   if (index < 0) return '';
-  const [prev, next] = [items[index - 1], items[index + 1]];
+  const [current, prev, next] = [items[index]!, items[index - 1], items[index + 1]];
   if (!prev && !next) return '';
-  const link = (item: { name: string; href: string }, rel: 'prev' | 'next') =>
-    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? '← Previous' : 'Next →'}</span><span class="page-nav__title">${escapeHtml(item.name)}</span></a>`;
+  // Crossing into another section names it: "Styles: Overview".
+  const title = (item: PagerItem) => item.section && item.section !== current.section ? `${item.section}: ${item.name}` : item.name;
+  const link = (item: PagerItem, rel: 'prev' | 'next') =>
+    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? '← Previous' : 'Next →'}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
+/** The reading order across sections: the documentation, then Styles, then Examples. */
+const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // mtrl's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/mtrl/styles/<name>.js imports the stylesheets its component needs.
