@@ -196,7 +196,9 @@ export function svelteToTs(code: string): Generated {
           if (attribute.name === 'this') after.push([`${text(attribute.expression)} = ${component ? `__svelteInstance(${node.name})` : `__svelteThis(${JSON.stringify(node.name)})`};`, at]);
           else out.push(`${key(attribute.name)}: (${text(attribute.expression)}),`, at);
           break;
-        case 'OnDirective': case 'ClassDirective': case 'UseDirective': case 'TransitionDirective': case 'AnimateDirective': case 'AttachTag':
+        // an attachment gets the element: a component's is its `<m-*>` element (mtrl#296)
+        case 'AttachTag': after.push([`__svelteAttach(${JSON.stringify(component ? '' : node.name)}, ${text(attribute.expression)});`, at]); break;
+        case 'OnDirective': case 'ClassDirective': case 'UseDirective': case 'TransitionDirective': case 'AnimateDirective':
           if (attribute.expression) after.push([`void (${text(attribute.expression)});`, at]);
           break;
         case 'StyleDirective': if (attribute.value !== true) after.push([`void ${value(attribute.value)};`, at]); break;

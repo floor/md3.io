@@ -35,3 +35,5 @@ declare function __svelteThis<K extends string>(tag: K): K extends keyof HTMLEle
 declare function __svelteInstance<X extends Record<string, any>>(component: import('svelte').Component<any, X, any>): X;
 /** A `{#snippet}` passed to a component: its parameters typed by the prop it fills. */
 declare function __svelteSnippet<A extends unknown[] = []>(render: (...args: A) => void): import('svelte').Snippet<A>;
+/** `{@attach}`: an attachment gets the element, a plain tag's own or, on a component (`''`), its host element. */
+declare function __svelteAttach<K extends string>(tag: K, attachment: import('svelte/attachments').Attachment<K extends keyof HTMLElementTagNameMap ? HTMLElementTagNameMap[K] : HTMLElement> | false | null | undefined): void;

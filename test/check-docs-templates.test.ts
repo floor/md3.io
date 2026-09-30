@@ -50,7 +50,7 @@ describe('a named slot, typed against mtrl', () => {
     '  let dialog: { element: HTMLElement | null } | undefined = $state();',
     '  const width = () => dialog?.element?.offsetWidth;',
     '</script>',
-    '<Dialog bind:this={dialog}>',
+    '<Dialog bind:this={dialog} {@attach (element) => element.focus()}>',
     `  {#snippet ${region}()}${child}{/snippet}`,
     '</Dialog>',
     '<Card>{#snippet headerAction()}x{/snippet}{#snippet subhead()}y{/snippet}</Card>',
@@ -60,7 +60,7 @@ describe('a named slot, typed against mtrl', () => {
     svelte('actions'), svelte('footer'), svelte('actions', '{nowhere}'),
   ]);
 
-  test('a declared slot types, and its content is typed', () => {
+  test('a declared slot types, its content is typed, and bind:this and {@attach} reach the element', () => {
     expect(declaredVue).toEqual([]);
     expect(declaredSvelte).toEqual([]);
     expect(badContentVue!.some(error => error.startsWith('6:') && error.includes("'nowhere'"))).toBe(true);
@@ -171,7 +171,7 @@ describe('a svelte block as TypeScript', () => {
       '  let dialog = $state();',
       '</script>',
       '',
-      '<Dialog bind:this={dialog} open>',
+      '<Dialog bind:this={dialog} open {@attach (element) => element.focus()}>',
       '  {#snippet headline()}Delete {name}?{/snippet}',
       '  <p>Gone for good.</p>',
       '  {#snippet actions()}',
@@ -185,6 +185,7 @@ describe('a svelte block as TypeScript', () => {
     expect(at(snippets, 'actions: __svelteSnippet(() => {')).toBe(9);
     expect(at(snippets, 'onclick: (close),')).toBe(10);
     expect(at(snippets, 'dialog = __svelteInstance(Dialog);')).toBe(6);
+    expect(at(snippets, '__svelteAttach("", (element) => element.focus());')).toBe(6);
     expect(at(snippets, 'headerAction: __svelteSnippet((size: number) => {')).toBe(13);
     expect(at(snippets, 'void (size);')).toBe(13);
     // the snippets are the component's props, before its children
