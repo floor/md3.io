@@ -141,26 +141,26 @@
     },
     "textfield": {
       "factory": {
-        "alone": 13435,
+        "alone": 13567,
         "lazy": 0,
-        "added": 4925
+        "added": 5057
       },
       "element": {
-        "alone": 18086,
+        "alone": 18225,
         "lazy": 0,
-        "added": 6096
+        "added": 6230
       }
     },
     "select": {
       "factory": {
-        "alone": 27985,
+        "alone": 28111,
         "lazy": 0,
-        "added": 19146
+        "added": 19272
       },
       "element": {
-        "alone": 32988,
+        "alone": 33108,
         "lazy": 0,
-        "added": 20766
+        "added": 20894
       }
     },
     "search": {
