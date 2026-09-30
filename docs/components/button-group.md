@@ -1,59 +1,95 @@
-# Button Group Component
+# Button group
 
-A button group is a row (or column) of ordinary buttons that belong together: a
-formatting toolbar, a set of view modes, a unit picker. The group owns the
-spacing, the shared height and, for connected groups, the corner shape of each
-position. The buttons keep everything else — their own colours, state layers,
-ripples and shape morphs — because they are the library's own button and icon
-button.
+A button group is a row, or a column, of buttons that belong together: a formatting toolbar, a
+set of views, a unit picker. **Standard** groups space their buttons apart, each its own
+control; **connected** groups join them into one, and are what M3 Expressive uses in place of
+the [segmented button](/docs/components/segmented-button/). See the
+[M3 button groups guidelines](https://m3.material.io/components/button-groups/overview).
 
-## Overview
+## Usage
 
-Material 3 defines two kinds, and the choice is about how tightly the actions
-belong together:
+`selection: 'single'` or `'multi'` turns the buttons into toggle buttons; `required` keeps the
+last selected one from being deselected.
 
-- **Standard** spaces its buttons apart (18, 12, 8, 8, 8dp by size). Each button
-  reads as its own control. Use it for independent actions, or for a selection
-  where the selected button should morph from round to square the way a
-  standalone toggle button does.
-- **Connected** puts 2dp between its buttons, rounds the outer ends and squares
-  the inner corners. The row reads as one control. This is what M3 expressive
-  uses in place of the [segmented button](./segmented-button.md), for both
-  single- and multi-select.
-
-Selection is a separate axis: `selection: 'none'` gives plain action buttons,
-`'single'` and `'multi'` turn them into toggle buttons and add the `change`
-event. A group has no colours of its own — `variant` is passed straight to every
-button, so a group looks like whatever `filled`, `tonal` or `outlined` buttons
-look like in your theme.
-
-## Import
-
-```javascript
-import { createButtonGroup } from 'mtrl';
+```example
+button-group:
+  kind: connected
+  selection: single
+  required: true
+  variant: tonal
+  ariaLabel: Period
+  buttons:
+    - { text: Day, value: day, selected: true }
+    - { text: Week, value: week }
+    - { text: Month, value: month }
 ```
 
-## Basic Usage
+`change` reports the selection: the factory's payload has `values`, the selected values in
+button order; the web component's detail has `value`, a string in a single group and an array
+in a multi group.
 
-```javascript
-const view = createButtonGroup({
-  kind: 'connected',
-  selection: 'single',
-  required: true,
-  variant: 'tonal',
-  ariaLabel: 'Period',
-  buttons: [
-    { text: 'Day', value: 'day', selected: true },
-    { text: 'Week', value: 'week' },
-    { text: 'Month', value: 'month' }
-  ]
-});
+## Examples
 
-view.on('change', ({ values }) => showRange(values[0]));
-document.querySelector('.toolbar').appendChild(view.element);
+### Multiple selection
+
+A group has no colors of its own: `variant` goes to every button. In a standard group, a
+pressed button widens by `expandedRatio` of its width, taken from its neighbors.
+
+```example
+button-group:
+  kind: standard
+  selection: multi
+  variant: outlined
+  ariaLabel: Formatting
+  buttons:
+    - { text: Bold, value: bold, selected: true }
+    - { text: Italic, value: italic }
+    - { text: Underline, value: underline }
 ```
 
-## Configuration
+### Labels on the selected button
+
+With `labels: 'selected'`, buttons with an icon and text show only the icon until they are
+selected. A button with an icon and no text is an icon button, and needs its own `ariaLabel`.
+
+```example
+button-group:
+  kind: connected
+  selection: single
+  required: true
+  labels: selected
+  variant: tonal
+  ariaLabel: Mode
+  buttons:
+    - { icon: searchIcon, text: Explore, value: explore, selected: true }
+    - { icon: locationIcon, text: Nearby, value: nearby }
+    - { icon: settingsIcon, text: Settings, value: settings }
+```
+
+### Size, shape and layout
+
+`size` runs from `xs` to `xl` and sets every button's height; `shape` rounds or squares the
+outer ends. `orientation`, `density` and `equalWidth` lay the group out.
+
+```example
+button-group:
+  kind: connected
+  size: m
+  shape: square
+  equalWidth: true
+  ariaLabel: Zoom
+  buttons:
+    - { text: Fit, value: fit }
+    - { text: 100%, value: actual }
+    - { text: 200%, value: double }
+```
+
+## API
+
+<!-- API: generated from mtrl's types and <m-button-group>'s spec in a later step. Until then
+these tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -62,243 +98,139 @@ document.querySelector('.toolbar').appendChild(view.element);
 | `selection` | `'none' \| 'single' \| 'multi'` | `'none'` | Plain actions, or toggle buttons |
 | `required` | `boolean` | `false` | With a selection, the last selected button cannot be deselected |
 | `shape` | `'round' \| 'square'` | `'round'` | Corner style of the outer ends |
-| `size` | `'xs' \| 's' \| 'm' \| 'l' \| 'xl'` | `'s'` | Material size token, shared by every button |
+| `size` | `'xs' \| 's' \| 'm' \| 'l' \| 'xl'` | `'s'` | Shared by every button |
 | `labels` | `'always' \| 'selected'` | `'always'` | `'selected'` keeps buttons icon-only until selected |
-| `expandedRatio` | `number` | `0.15` | Standard groups: share of its width a pressed button gains. `0` disables the motion |
+| `expandedRatio` | `number` | `0.15` | Standard groups: the share of its width a pressed button gains; `0` turns the motion off |
 | `variant` | `'filled' \| 'tonal' \| 'outlined' \| 'elevated' \| 'text'` | `'outlined'` | Applied to every button |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Row or column |
-| `density` | `'default' \| 'comfortable' \| 'compact'` | `'default'` | Lowers the container height by 4dp per step |
+| `density` | `'default' \| 'comfortable' \| 'compact'` | `'default'` | Lowers the height by 4dp per step |
 | `disabled` | `boolean` | `false` | Disables the whole group |
 | `equalWidth` | `boolean` | `false` | Gives every button the same width |
-| `ripple` | `boolean` | `true` | Ripple on the buttons |
-| `rippleConfig` | `{ duration, timing, opacity }` | — | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied: the wave is the 0.10 pressed state layer, drawn by the stylesheet |
+| `ripple` | `boolean` | `true` | Whether a press shows the ripple |
+| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
 | `ariaLabel` | `string` | `'Button group'` | Accessible name of the group |
-| `class` | `string` | — | Extra classes on the container |
-| `on` | `{ click, focus, blur, change }` | — | **Accepted but not applied.** Nothing reads it; register handlers with `.on()` after creation |
-| `prefix` | `string` | `'mtrl'` | Class-name prefix |
-| `componentName` | `string` | `'button-group'` | Name used in class generation |
+| `class` | `string` | `undefined` | Extra classes on the container |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+| `on` | `{ click?, focus?, blur?, change? }` | `undefined` | Accepted but not applied: register handlers with `on()` |
 
-### Each button
+#### Each button
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `text` | `string` | — | Label. A button with an icon and no text is created as an icon button |
-| `icon` | `string` | — | Icon as an HTML string |
-| `selectedIcon` | `string` | — | Icon shown while selected, on icon-only buttons |
-| `value` | `string` | — | Identifies the button in the selection API and the `change` event |
-| `id` | `string` | — | Alternative identifier; falls back to the index |
+| `text` | `string` | `undefined` | Label; a button with an icon and no text is an icon button |
+| `icon` | `string` | `undefined` | Icon as an HTML string |
+| `selectedIcon` | `string` | `undefined` | Icon shown while selected, on icon-only buttons |
+| `value` | `string` | `undefined` | Identifies the button in the selection methods and `change` |
+| `id` | `string` | `undefined` | Another identifier; falls back to the index |
 | `selected` | `boolean` | `false` | Initially selected, in a selection group |
 | `disabled` | `boolean` | `false` | Disables this button only |
-| `ariaLabel` | `string` | — | Needed on icon-only buttons. Nothing checks for it, so an unlabelled one ships silently unnamed |
-| `class` | `string` | — | Extra classes on this button |
+| `ariaLabel` | `string` | `undefined` | The name of an icon-only button; nothing checks that it is there |
+| `class` | `string` | `undefined` | Extra classes on this button |
 
-## Component API
+### Methods
 
-### Selection
+#### Selection
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getSelected()` | — | `string[]` | Values of the selected buttons, in button order |
+| `getSelected()` | none | `string[]` | Values of the selected buttons, in button order |
 | `isSelected(value)` | `value: string` | `boolean` | Whether that button is selected |
-| `select(value)` | `value: string` | `ButtonGroupComponent` | Selects it, deselecting the others in a single-select group |
+| `select(value)` | `value: string` | `ButtonGroupComponent` | Selects it, deselecting the others in a single group |
 | `deselect(value)` | `value: string` | `ButtonGroupComponent` | Deselects it, unless `required` would leave nothing selected |
 | `toggle(value)` | `value: string` | `ButtonGroupComponent` | Flips it |
-| `getSelection()` | — | `ButtonGroupSelection` | The configured selection mode |
-| `getKind()` | — | `ButtonGroupKind` | `'standard'` or `'connected'` |
+| `getSelection()` | none | `ButtonGroupSelection` | The selection mode |
+| `getKind()` | none | `ButtonGroupKind` | `'standard'` or `'connected'` |
 
-All three mutating calls emit `change` when they actually change something, with
-no `originalEvent`.
+`select()`, `deselect()` and `toggle()` emit `change` when they change something, without
+`originalEvent`.
 
-### Buttons and appearance
+#### Buttons and appearance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `getButton(index)` | `index: number` | `ButtonComponent \| undefined` | The button at that position |
 | `getButtonById(id)` | `id: string` | `ButtonComponent \| undefined` | Matched against the button's `id` or its `value` |
-| `getVariant()` | — | `ButtonGroupVariant` | Current variant |
-| `setVariant(variant)` | `variant: ButtonGroupVariant` | `ButtonGroupComponent` | Restyles every button |
-| `getOrientation()` | — | `ButtonGroupOrientation` | Current orientation |
-| `setOrientation(orientation)` | `orientation: ButtonGroupOrientation` | `ButtonGroupComponent` | Row or column |
-| `getDensity()` | — | `ButtonGroupDensity` | Current density |
-| `setDensity(density)` | `density: ButtonGroupDensity` | `ButtonGroupComponent` | Recomputes the height and spacing |
+| `getVariant()` / `setVariant(variant)` | `variant: ButtonGroupVariant` | `ButtonGroupVariant` / `ButtonGroupComponent` | Restyles every button |
+| `getOrientation()` / `setOrientation(orientation)` | `orientation: ButtonGroupOrientation` | `ButtonGroupOrientation` / `ButtonGroupComponent` | Row or column |
+| `getDensity()` / `setDensity(density)` | `density: ButtonGroupDensity` | `ButtonGroupDensity` / `ButtonGroupComponent` | Recomputes the height and spacing |
 
-### State and lifecycle
+#### State and lifecycle
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `enable()` | — | `ButtonGroupComponent` | Enables every button that was not individually disabled |
-| `disable()` | — | `ButtonGroupComponent` | Disables all of them |
-| `enableButton(index)` | `index: number` | `ButtonGroupComponent` | One button, by position |
-| `disableButton(index)` | `index: number` | `ButtonGroupComponent` | One button, by position |
-| `on(event, handler)` | `event: string, handler: Function` | `ButtonGroupComponent` | Adds a listener |
-| `off(event, handler)` | `event: string, handler: Function` | `ButtonGroupComponent` | Removes one |
-| `destroy()` | — | `void` | Destroys every button and releases the container |
+| `enable()` / `disable()` | none | `ButtonGroupComponent` | Every button; `enable()` leaves the individually disabled ones |
+| `enableButton(index)` / `disableButton(index)` | `index: number` | `ButtonGroupComponent` | One button, by position |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `ButtonGroupComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Destroys every button and releases the container |
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `element` | `HTMLElement` | The `role="group"` container |
 | `buttons` | `ButtonComponent[]` | The button components, in order |
 
-## Events
+### Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `click` | `{ buttonGroup, button, index, originalEvent }` | Any enabled button was activated |
-| `focus` | `{ buttonGroup, button, index, originalEvent }` | A button took focus |
-| `blur` | `{ buttonGroup, button, index, originalEvent }` | A button lost focus |
-| `change` | `{ buttonGroup, values, selected, button?, originalEvent? }` | The selection changed |
+| Event | Description | Data |
+|-------|-------------|------|
+| `click` | An enabled button was activated | `{ buttonGroup, button, index, originalEvent }` |
+| `focus` / `blur` | A button took or lost focus | `{ buttonGroup, button, index, originalEvent }` |
+| `change` | The selection changed | `{ buttonGroup, values, selected, button?, originalEvent? }` |
 
-`click` fires before `change`, so a selection group emits both for one press.
-`values` are the selected buttons' values in button order; `selected` are the
-button components themselves.
-
-## Examples
-
-### A connected group as a view switcher
-
-The showcase uses this shape for its unit picker: round outer ends, 8dp inner
-corners at size `s`, and the selected button becoming a full pill wherever it
-sits in the row.
-
-```javascript
-const size = createButtonGroup({
-  kind: 'connected',
-  selection: 'single',
-  variant: 'tonal',
-  buttons: [
-    { text: '8 oz', value: '8' },
-    { text: '12 oz', value: '12', selected: true },
-    { text: '16 oz', value: '16' },
-    { text: '20 oz', value: '20' }
-  ]
-});
-```
-
-### Multi-select formatting actions
-
-```javascript
-const format = createButtonGroup({
-  kind: 'standard',
-  selection: 'multi',
-  variant: 'outlined',
-  ariaLabel: 'Formatting',
-  buttons: [
-    { text: 'Bold', value: 'bold', selected: true },
-    { text: 'Italic', value: 'italic' },
-    { text: 'Underline', value: 'underline' }
-  ]
-});
-
-format.on('change', ({ values }) => applyMarks(values));
-```
-
-### Labels only on the selected button
-
-With `labels: 'selected'`, buttons that have both an icon and a text stay
-icon-only until they are selected; the selected one widens to reveal its label.
-
-```javascript
-const mode = createButtonGroup({
-  kind: 'connected',
-  selection: 'single',
-  required: true,
-  labels: 'selected',
-  variant: 'tonal',
-  ariaLabel: 'Mode',
-  buttons: [
-    { icon: searchIcon, text: 'Explore', value: 'explore', selected: true },
-    { icon: locationIcon, text: 'Taxi', value: 'taxi' },
-    { icon: settingsIcon, text: 'Islands', value: 'islands' }
-  ]
-});
-```
+`click` fires before `change`, so a press in a selection group emits both. `selected` holds the
+selected button components. The web component's `change` carries `{ value }`, and every press
+dispatches `action` with `{ value, index }`.
 
 ## Accessibility
 
-- The container is a `role="group"` and carries `aria-label`, which defaults to
-  `"Button group"`. Give it something meaningful.
-- In a selection group every button carries `aria-pressed`, kept in step with
-  the selection whether it changed by click or through `select()` /
-  `deselect()` / `toggle()`.
-- Icon-only buttons need `ariaLabel`, and nothing enforces it. The source has a
-  `validateConfig()` that would warn about an icon with no text and no label,
-  but it is never called, so a button with none of the three is created without
-  an accessible name and without a word said. Check them yourself.
-- Tab moves through the buttons, and Space and Enter activate the focused one —
-  they are real `<button>` elements. The group adds no roving-tabindex arrow-key
-  behaviour of its own.
-- A `required` single-select group refuses to deselect its last selection, so
-  the control can never end up saying nothing.
+- The container has `role="group"` and an `aria-label`, `"Button group"` unless you name it.
+- In a selection group every button has `aria-pressed`, kept in step whether the selection
+  changed by a press or a method.
+- Name icon-only buttons with `ariaLabel`; nothing warns when one is missing.
+- `Tab` moves through the buttons, native `<button>`s that `Space` and `Enter` activate. The
+  group adds no arrow-key navigation.
 
 ## Styling
 
+The component writes its measurements as custom properties **inline** on the container, so
+only a declaration with `!important`, or one on the element itself, overrides them.
+
 ```css
-/* the container */
 .mtrl-button-group { }
-.mtrl-button-group--connected { }
-.mtrl-button-group--standard { }
+.mtrl-button-group--standard, .mtrl-button-group--connected { }
 .mtrl-button-group--tonal { }
-.mtrl-button-group--size-s { }         /* and --size-xs, --size-m, --size-l, --size-xl */
-.mtrl-button-group--square { }
-.mtrl-button-group--vertical { }
-.mtrl-button-group--selectable { }
-.mtrl-button-group--labels-selected { }
-.mtrl-button-group--equal-width { }
-/* and --density-comfortable, --density-compact when density is set */
-.mtrl-button-group--disabled { }
-
-/* the buttons */
+.mtrl-button-group--size-s { }
+.mtrl-button-group--square, .mtrl-button-group--vertical, .mtrl-button-group--equal-width { }
+.mtrl-button-group--selectable, .mtrl-button-group--labels-selected, .mtrl-button-group--disabled { }
 .mtrl-button-group__button { }
-.mtrl-button-group__button--first { }
-.mtrl-button-group__button--middle { }
-.mtrl-button-group__button--last { }
-.mtrl-button-group__button--single { }
+.mtrl-button-group__button--first, .mtrl-button-group__button--middle,
+.mtrl-button-group__button--last, .mtrl-button-group__button--single { }
 .mtrl-button-group__button--selected { }
-```
 
-The component writes its measurements onto the container as custom properties.
-It writes them **inline**, on the element, so a rule in your stylesheet loses to
-them: retune a group by setting the property on the element itself, or by
-repeating the declaration with `!important`.
-
-```css
-/* wins only with !important — the component's own values are inline */
-.mtrl-button-group {
-  --button-group-height: 40px;
-  --button-group-icon: 20px;
-  --button-group-gap: 12px;
-  --button-group-inner-corner: 8px;
-  --button-group-pressed-corner: 4px;
-  --button-group-radius: 20px;
+.toolbar .mtrl-button-group {
+  --mtrl-button-group-height: 40px !important;
+  --mtrl-button-group-icon: 20px !important;
+  --mtrl-button-group-gap: 12px !important;
+  --mtrl-button-group-inner-corner: 8px !important;
+  --mtrl-button-group-pressed-corner: 4px !important;
+  --mtrl-button-group-radius: 20px !important;
 }
 ```
 
 ## Measurements
 
-Per size, from `BUTTON_GROUP_SIZE_TOKENS` in `constants.ts`, whose comment cites
-the M3 button group specs together with `ButtonGroupSmallTokens.kt` and
-`ConnectedButtonGroupSmallTokens.kt` for the `s` size:
+From the M3 button group specs, `ButtonGroupSmallTokens` and
+`ConnectedButtonGroupSmallTokens` (`BUTTON_GROUP_SIZE_TOKENS` in mtrl).
 
-| Size | Container height | Icon | Standard gap | Connected inner corner |
-|------|------------------|------|--------------|------------------------|
-| xs | 32dp | 20dp | 18dp | 4dp |
-| s | 40dp | 20dp | 12dp | 8dp |
-| m | 56dp | 24dp | 8dp | 8dp |
-| l | 96dp | 32dp | 8dp | 16dp |
-| xl | 136dp | 40dp | 8dp | 20dp |
+| Size | Height | Icon | Standard gap | Connected inner corner |
+|------|--------|------|--------------|------------------------|
+| `xs` | 32dp | 20dp | 18dp | 4dp |
+| `s` (default) | 40dp | 20dp | 12dp | 8dp |
+| `m` | 56dp | 24dp | 8dp | 8dp |
+| `l` | 96dp | 32dp | 8dp | 16dp |
+| `xl` | 136dp | 40dp | 8dp | 20dp |
 
-| Attribute | Value | Token |
-|-----------|-------|-------|
-| Connected inner corner, pressed | 4dp | `ConnectedButtonGroupSmallTokens.PressedInnerCornerCornerSize` |
-| Pressed width gain, standard | 0.15 | `ButtonGroupDefaults.ExpandedRatio` |
-
-Three more numbers name no token either. Connected groups use a 2dp gap at
-every size (`BUTTON_GROUP_CONNECTED_GAP`) and each density step removes 4dp of
-container height (`BUTTON_GROUP_DENSITY_STEP`); both constants are read by the
-component. The 48dp minimum width on connected `xs` and `s` buttons is
-hard-coded in `_button-group.scss` — `BUTTON_GROUP_CONNECTED_MIN_WIDTH` states
-the same number but nothing reads it, so change the stylesheet, not the
-constant. The container radius is always half the container height.
-
-The pressed expansion only runs on horizontal standard groups, and a neighbour
-never gives up more than the padding on its facing side, so labels cannot clip.
+Connected groups have a 2dp gap at every size, a 4dp inner corner while pressed
+(`ConnectedButtonGroupSmallTokens.PressedInnerCornerCornerSize`), and a 48dp minimum button
+width at `xs` and `s`. The container radius is half its height. The pressed expansion,
+`ButtonGroupDefaults.ExpandedRatio`, runs in horizontal standard groups only, and a neighbor
+never gives up more than the padding on its facing side.
