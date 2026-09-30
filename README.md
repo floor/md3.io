@@ -39,7 +39,11 @@ The browser check uses Playwright Chromium and writes screenshots to `analysis/b
 
 The site includes a compact landing page, a component catalog, all six Actions playgrounds (Button, Icon button, Button group, Split button, FAB, and Extended FAB), all ten Selection & input playgrounds (Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, and Time picker), all six Navigation playgrounds (Navigation rail, Drawer, Tabs, Menu, Top app bar, and Bottom app bar), all seven Containment playgrounds (Card, List, Carousel, Divider, Dialog, Bottom sheet, and Side sheet), all five Communication playgrounds (Badge, Progress, Loading indicator, Snackbar, and Tooltip), and all supplied component documentation. Each playground shares a configuration panel, independent Material theme controls, and preview/code tabs with contextual copying. View code uses a locally bundled highlight.js JavaScript grammar and the vlist.io syntax colors, following the site’s light/dark mode. No benchmark infrastructure is included. The docs include additional/legacy references such as form, colorpicker, and segmented button; their examples are checked by `bun run docs:check`.
 
-The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local mtrl dependency; deployment is not configured in this iteration.
+The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local mtrl dependency (`file:../mtrl`, a checkout beside this one).
+
+## Deploy
+
+md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.cjs`, port 4300). The server keeps an mtrl checkout beside md3.io, as locally. Push `main`, then run `scripts/deploy.sh`: it resets both checkouts to `origin/main`, builds mtrl and then md3.io, and reloads pm2 only when both builds succeed.
 
 The Date picker playground requires mtrl PR #182 or newer. It uses the selective Date picker stylesheet and the native calendar/input modes, with configurable date limits and modal confirmation by default. The preview and copied example use the component API directly.
 
