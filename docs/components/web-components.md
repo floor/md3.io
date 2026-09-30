@@ -192,5 +192,19 @@ The modals use `showModal()`, so the page outside is inert. A menu's `anchor` an
 </m-menu>
 ```
 
+## Many instances
+
+Each element styles its own shadow root. A browser shares computed styles between identical
+elements in the page, but largely not across separate shadow roots, so the first render of many
+elements costs more than the same factories in the page. Measured in Chromium with the CPU slowed
+four times, 1,000 text fields take about 300 ms to style as elements against about 150 ms as
+factories; layout costs the same. Material Web, which renders a text field with two shadow roots,
+measures about the same as mtrl's elements. The selectors are not the cost: matching them all
+takes a few milliseconds.
+
+For a form or a page this does not show. For hundreds of instances created at once, a long
+editable table for example, use the [Vanilla](../vanilla/) factories there; they mix with the
+elements on the same page.
+
 The React, Vue, Svelte and SolidJS components render these elements, so all of this holds there
 too; their guides cover what each framework adds.
