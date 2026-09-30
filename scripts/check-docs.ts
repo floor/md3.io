@@ -399,6 +399,8 @@ async function trigger(record) {
   const event = record.event;
   const attempts = [];
   if (event === 'click') attempts.push(() => (element?.querySelector('button, [role="button"]') ?? element)?.click());
+  // a snackbar's action: shown, then its action button pressed
+  if (event === 'action') attempts.push(async () => { if (has('show')) target.show(); await wait(150); target?.actionButton?.click(); });
   if (event === 'focus') attempts.push(() => (field ?? element)?.focus());
   if (event === 'blur') attempts.push(() => { (field ?? element)?.focus(); (field ?? element)?.blur(); });
   if (/close|hide|dismiss/i.test(event)) attempts.push(async () => { has('open') ? target.open() : has('show') && target.show(); await wait(100); has('close') ? target.close() : has('hide') ? target.hide() : has('dismiss') && target.dismiss(); await wait(400); });

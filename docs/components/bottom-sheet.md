@@ -1,161 +1,141 @@
-# Bottom Sheet
+# Bottom sheet
 
-A bottom sheet is a surface anchored to the bottom edge of the screen, holding content that is secondary to the page behind it. Reach for it when a task or a set of choices needs more room than a menu and less ceremony than a dialog. If the content is a short message, a [snackbar](snackbar.md) is lighter; if it demands a decision before anything else continues, a [dialog](dialog.md) is more direct.
+A bottom sheet holds secondary content anchored to the bottom of the screen: sharing
+options, filters, the details of a place on a map. A **modal** sheet covers the page with a
+scrim until it closes; a **standard** sheet leaves the page usable beside it. See the
+[M3 bottom sheets guidelines](https://m3.material.io/components/bottom-sheets/overview).
 
-## Overview
+## Usage
 
-There are two variants, and the difference is what happens to the page behind them.
+An open sheet is partially expanded, showing its content up to half the screen; dragging its
+handle up expands it to its full height, and down closes it.
 
-- A **modal** sheet covers the page with a scrim, takes focus, and closes on Escape or a click outside. Use it when the sheet's task must finish first.
-- A **standard** sheet has no scrim and leaves the page usable alongside it. Use it for content a reader refers to while working.
-
-A sheet opens to a peek height that shows what it holds, and expands to show the rest. Dragging the handle moves it between those heights, and dragging it down past the last one dismisses it.
-
-## Import
-
-```javascript
-import { createBottomSheet } from 'mtrl';
-```
-
-## Basic Usage
-
-```javascript
-const sheet = createBottomSheet({
-  title: 'Share this file',
-  content: '<p>Anyone with the link can open it.</p>'
-});
-
-sheet.open();
-```
-
-## Configuration
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `variant` | `'standard' \| 'modal'` | `'modal'` | Modal covers the page and takes focus; standard leaves it usable |
-| `title` | `string` | `undefined` | Headline, which also names the sheet through `aria-labelledby` |
-| `content` | `string \| HTMLElement` | `undefined` | Body of the sheet, as markup or an element |
-| `dragHandle` | `boolean` | `true` | The 32x4dp bar. Turning it off also turns off dragging |
-| `peekHeight` | `number` | `56` | Height of the partially expanded state, in pixels |
-| `maxWidth` | `number` | `640` | The sheet stops growing here and centres itself |
-| `initialState` | `'hidden' \| 'partial' \| 'expanded'` | `'hidden'` | State to start in |
-| `closeOnScrimClick` | `boolean` | `true` | Whether a click on the scrim closes a modal sheet |
-| `closeOnEscape` | `boolean` | `true` | Whether Escape closes it |
-| `container` | `HTMLElement` | `document.body` | Where to mount the sheet |
-| `on` | `BottomSheetEventHandlers` | `undefined` | Handlers registered at creation |
-| `class` | `string` | `undefined` | Extra classes for the root element |
-
-## Component API
-
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `open()` | none | `BottomSheetComponent` | Opens the sheet at the peek height |
-| `close()` | none | `BottomSheetComponent` | Closes the sheet |
-| `expand()` | none | `BottomSheetComponent` | Opens it to its full height |
-| `collapse()` | none | `BottomSheetComponent` | Returns it to the peek height |
-| `isOpen()` | none | `boolean` | Whether the sheet is showing at all |
-| `getState()` | none | `BottomSheetState` | `'hidden'`, `'partial'` or `'expanded'` |
-| `setContent(content)` | `content: string \| HTMLElement` | `BottomSheetComponent` | Replaces the body |
-| `setTitle(title)` | `title: string` | `BottomSheetComponent` | Replaces the headline, adding one if absent |
-| `on(event, handler)` | `event: string, handler: Function` | `BottomSheetComponent` | Adds an event listener |
-| `off(event, handler)` | `event: string, handler: Function` | `BottomSheetComponent` | Removes one |
-| `destroy()` | none | `void` | Removes the sheet and releases its listeners |
-| `getClass(name)` | `name: string` | `string` | Prefixes a class name |
-
-## Events
-
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `open` | none | The sheet became visible, whatever height it opened to |
-| `close` | none | The sheet was hidden |
-| `stateChange` | `{ state, previous }` | The sheet moved between hidden, partial and expanded |
-| `dragStart` | none | A drag on the handle began |
-| `dragEnd` | `{ state, previous }` | A drag ended and the sheet settled |
-
-Handlers passed as `on` at creation are registered, so these two are equivalent:
-
-```javascript
-const sheet = createBottomSheet({ on: { close: () => save() } });
-sheet.on('close', () => save());
+```example
+bottom-sheet:
+  variant: modal
+  title: Share
+  content: Anyone with the link can view it.
+  action share:
+    open
 ```
 
 ## Examples
 
-Reacting to how far the sheet is open:
+### Standard
 
-```javascript
-const sheet = createBottomSheet({
-  title: 'Filters',
-  on: {
-    stateChange: ({ state, previous }) => {
-      if (state === 'expanded') loadAllFilters();
-      console.info(`moved from ${previous} to ${state}`);
-    }
-  }
-});
+A standard sheet has no scrim, so the page behind it still takes clicks.
+
+```example
+bottom-sheet:
+  variant: standard
+  title: Nearby places
+  content: Three cafés within a five-minute walk.
 ```
 
-A standard sheet, which leaves the page usable:
+### Peek height
 
-```javascript
-const nearby = createBottomSheet({
-  variant: 'standard',
-  title: 'Nearby places',
-  content: '<p>The map behind this sheet still pans.</p>'
-});
+`peekHeight` sets the partially expanded height in pixels; `expand()` and `collapse()` move
+between the two heights.
 
-nearby.open();
+```example
+bottom-sheet:
+  variant: modal
+  title: Filters
+  peekHeight: 160
+  content: Price, distance and opening hours.
 ```
 
-A sheet that cannot be dismissed by accident, for a step that must be completed:
+### Only its content closes it
 
-```javascript
-const consent = createBottomSheet({
-  title: 'Before you continue',
-  closeOnScrimClick: false,
-  closeOnEscape: false,
+For a step that must be finished, the scrim, `Escape` and the drag handle can be kept from
+closing it.
+
+```example
+bottom-sheet:
+  variant: modal
+  title: Before you continue
+  content: Review the updated terms.
   dragHandle: false
-});
+  closeOnScrimClick: false
+  closeOnEscape: false
 ```
+
+## API
+
+<!-- API: generated from mtrl's types and <m-bottom-sheet>'s spec in a later step. Until then
+these tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `variant` | `'standard' \| 'modal'` | `'modal'` | Whether it covers the page; the web component is standard without `modal` |
+| `title` | `string` | `undefined` | The headline, which names the sheet |
+| `content` | `string \| HTMLElement` | `undefined` | The body, as HTML or an element |
+| `dragHandle` | `boolean` | `true` | The handle, and dragging with it |
+| `peekHeight` | `number` | `undefined` | The partially expanded height in pixels; without it, the content up to half the screen |
+| `maxWidth` | `number` | `640` | The widest it grows, in pixels, past which it is centered |
+| `initialState` | `'hidden' \| 'partial' \| 'expanded'` | `'hidden'` | How far open it starts |
+| `closeOnScrimClick` | `boolean` | `true` | Whether a click on the scrim closes a modal sheet |
+| `closeOnEscape` | `boolean` | `true` | Whether `Escape` closes it |
+| `layer` | `'top'` | `undefined` | Shows a modal sheet in the top layer, as a native `<dialog>` with `showModal()`; the web component's modal sheet always is |
+| `container` | `HTMLElement` | `document.body` | Where it is mounted |
+| `on` | `{ open?, close?, stateChange?, dragStart?, dragEnd? }` | `undefined` | Event handlers registered at creation |
+| `class` | `string` | `undefined` | Additional CSS classes |
+
+### Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `open()` / `close()` | none | `BottomSheetComponent` | Opens it partially expanded, or closes it |
+| `expand()` / `collapse()` | none | `BottomSheetComponent` | Moves it to its full or its partial height, opening it if it is closed |
+| `isOpen()` | none | `boolean` | Whether it is open at either height |
+| `getState()` | none | `'hidden' \| 'partial' \| 'expanded'` | How far open it is |
+| `setTitle(title)` / `setContent(content)` | `title: string`, `content: string \| HTMLElement` | `BottomSheetComponent` | The headline, the body |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `BottomSheetComponent` | Adds or removes a listener |
+| `destroy()` | none | `void` | Removes it |
+
+### Events
+
+| Event | Description | Data |
+|-------|-------------|------|
+| `open` / `close` | It opened or closed | none |
+| `stateChange` | It moved between hidden, partial and expanded | `{ state, previous }` |
+| `dragStart` / `dragEnd` | A drag on the handle began, or ended and settled | none / `{ state, previous }` |
+
+The web component dispatches `open`, `close`, `expand` and `collapse`, without a detail; its
+`expanded` attribute reflects the full height.
 
 ## Accessibility
 
-A modal sheet's container carries `role="dialog"` and `aria-modal="true"`; a standard sheet's carries `role="region"`, since it does not trap the reader. Giving a `title` sets `aria-labelledby` to it, which is how the sheet is announced. Without a title the sheet has no accessible name, so pass one or set `aria-label` on the container yourself.
-
-Opening a modal sheet moves focus to the container, and closing it returns focus to whatever had it before, so a keyboard user is not dropped at the top of the page. Escape closes the sheet unless `closeOnEscape` is false.
-
-The drag handle is `aria-hidden`, because dragging is a shortcut rather than the only way to reach a state. Every height is reachable through `open()`, `expand()` and `collapse()`, so bind those to real controls rather than relying on the gesture.
-
-While the sheet is hidden it is `aria-hidden` and takes no pointer events, so nothing inside it is reachable behind the page.
+- A modal sheet is a `dialog` with `aria-modal`, a standard one a `region`; the title names
+  either. Without a title, give the web component an `aria-label`.
+- Opening a modal sheet focuses it, and closing it gives focus back. In the top layer, `Tab`
+  stays inside it and the page behind it is inert.
+- `Escape` closes it, and a click on the scrim closes a modal sheet, unless turned off.
+- The drag handle is decorative (`aria-hidden`): every height is reached by the methods too,
+  so give people a control for them.
 
 ## Styling
 
-| Class | Element |
-|-------|---------|
-| `.mtrl-bottom-sheet` | The fixed layer holding everything |
-| `.mtrl-bottom-sheet--modal`, `--standard` | The variant |
-| `.mtrl-bottom-sheet--hidden`, `--partial`, `--expanded` | The current state |
-| `.mtrl-bottom-sheet-scrim` | The scrim, on modal sheets only |
-| `.mtrl-bottom-sheet-container` | The sheet surface |
-| `.mtrl-bottom-sheet-handle` | The drag handle |
-| `.mtrl-bottom-sheet-header`, `-title` | The headline |
-| `.mtrl-bottom-sheet-content` | The body |
+```css
+.mtrl-bottom-sheet { }                     /* the fixed layer, holding the scrim and the sheet */
+.mtrl-bottom-sheet--modal, .mtrl-bottom-sheet--standard { }
+.mtrl-bottom-sheet--hidden, .mtrl-bottom-sheet--partial, .mtrl-bottom-sheet--expanded { }
+.mtrl-bottom-sheet__scrim { }              /* a modal sheet's, outside the top layer */
+.mtrl-bottom-sheet__container { }          /* the sheet */
+.mtrl-bottom-sheet__handle, .mtrl-bottom-sheet__header, .mtrl-bottom-sheet__title { }
+.mtrl-bottom-sheet__content { }
+```
 
 ## Measurements
 
-Every value here comes from the token named beside it, so it can be checked rather than trusted.
-
-| Attribute | Value | Token |
-|-----------|-------|-------|
-| Container colour | surface-container-low | `SheetBottomTokens.DockedContainerColor` |
-| Container shape | 28dp, top corners only | `DockedContainerShape` (CornerExtraLargeTop) |
-| Container elevation | level 1 | `DockedStandardContainerElevation` |
-| Drag handle size | 32 x 4dp | `DockedDragHandleWidth` / `DockedDragHandleHeight` |
-| Drag handle colour | on-surface-variant | `DockedDragHandleColor` |
-| Focus ring colour | secondary | `SheetBottomTokens.FocusIndicatorColor` |
-| Peek height | 56dp | `BottomSheetDefaults.SheetPeekHeight` |
-| Maximum width | 640dp | `BottomSheetDefaults.SheetMaxWidth` |
-| Drag distance to settle | 56dp | `BottomSheetDefaults.PositionalThreshold` |
-| Drag speed to settle | 125dp/s | `BottomSheetDefaults.VelocityThreshold` |
-
-The scrim is the scrim role at 32% opacity, matching the dialog.
+| Attribute | Value |
+|-----------|-------|
+| Container | `surface-container-low`, 28dp top corners, elevation 1 |
+| Maximum width | 640dp |
+| Drag handle | 32×4dp, `on-surface-variant`, 16dp above and below |
+| Headline | Headline Small, `on-surface` |
+| Content | Body Medium, `on-surface-variant`, 24dp at the sides |
+| Scrim | `scrim` at 32% |
+| Settling a drag | 56dp, or a flick of 125dp/s |

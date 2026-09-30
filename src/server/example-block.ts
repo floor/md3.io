@@ -110,6 +110,22 @@ const setters: Record<string, (value: unknown) => string> = {
   disabled: value => (value ? 'disable()' : 'enable()'),
 };
 
+// Factories that open and close with methods not named open() and close().
+const openers: Record<string, [open: string, close: string]> = {
+  snackbar: ['show', 'hide'],
+};
+
+// The mtrl-addons components, from their own package, which has no web components.
+const addons: Record<string, { factory: string; variable: string; name: string }> = {
+  colorpicker: { factory: 'createColorPicker', variable: 'picker', name: 'color picker' },
+  form: { factory: 'createForm', variable: 'form', name: 'form' },
+};
+
+const addon = (slug: string) => (Object.hasOwn(addons, slug) ? addons[slug] : undefined);
+
+const factoryOf = (slug: string): { factory: string; variable: string } =>
+  addon(slug) ?? (isComponent(slug) ? components[slug] : { factory: `create${pascal(slug)}`, variable: camel(slug) });
+
 /**
  * The button beside the element (`trigger:` in the example), as the playground's
  * Vanilla code creates it: an mtrl button, placed first, whose element the
@@ -151,21 +167,23 @@ function vanillaSlotted(block: ExampleBlock, config: Record<string, unknown>, va
 
 /** The Vanilla code: the factory, its handlers, the element placed, and the actions. */
 export function vanillaCode(block: ExampleBlock): string {
-  const factory = isComponent(block.slug) ? components[block.slug].factory : `create${pascal(block.slug)}`;
-  const variable = isComponent(block.slug) ? components[block.slug].variable : camel(block.slug);
+  const { factory, variable } = factoryOf(block.slug);
   const trigger = vanillaTrigger(block);
   const slotted = vanillaSlotted(block, trigger.config, variable);
   const config = Object.keys(slotted.config).length ? vanillaValue(slotted.config) : '';
+  const imports = addon(block.slug) ? `import { ${factory} } from 'mtrl-addons';`
+    : `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';`;
   const handlers = block.handlers.map(h => {
     const fields = [...new Set(h.args.filter(isField))];
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
   }).join('');
-  const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? 'open' : 'close'}();`
+  const [open, close] = openers[block.slug] ?? ['open', 'close'];
+  const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? open : close}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
   // Inline styles the element needs, as the playground's Vanilla code gives it: the carousel's height
   const styles = Object.entries(elementMeta(block.slug)?.style ?? {}).map(([name, value]) => `${variable}.element.style.${camel(name)} = '${value}';\n`).join('');
-  return `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';\n\n${trigger.code}const ${variable} = ${factory}(${config});\n${slotted.code}${styles}${handlers}document.body.append(${variable}.element);\n${actions}`;
+  return `${imports}\n\n${trigger.code}const ${variable} = ${factory}(${config});\n${slotted.code}${styles}${handlers}document.body.append(${variable}.element);\n${actions}`;
 }
 
 export interface ExampleCode {
@@ -210,7 +228,9 @@ export function renderExample(source: string): string {
   }
   const highlight = (text: string, language: string) => `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
   const vanilla = highlight(rendered.code.vanilla!, 'javascript');
-  const note = `<p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the ${escapeHTML(componentName(slug).toLowerCase())} web component; the vanilla factory works in any of them today.</p>`;
+  const note = addon(slug)
+    ? `<p class="framework-note">The ${addon(slug)!.name} comes from mtrl-addons, which has no web components: its vanilla factory works in any framework.</p>`
+    : `<p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the ${escapeHTML(componentName(slug).toLowerCase())} web component; the vanilla factory works in any of them today.</p>`;
   const panels = FRAMEWORKS.map(({ id, label, language }) => {
     const code = rendered.code[id];
     const body = code !== undefined ? (id === 'vanilla' ? vanilla : highlight(code, language)) : `${vanilla}${note}`;

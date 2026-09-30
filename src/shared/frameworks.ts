@@ -506,6 +506,15 @@ function bindExample(meta: ElementMeta, p: Plan, config: Config, parts: ExampleP
       return { state: key, value, html: `${variable}.textContent = ${code};` };
     }
     const property = Object.entries(meta.properties).find(([, prop]) => prop.config === key)?.[0];
+    // A live property with an attribute of its own (a progress's `value`): the
+    // attribute holds the first value and is the state the frameworks bind; the
+    // web component's action sets the property.
+    const own = property && name && camel(name) === property ? p.attrs.find(a => a.name === name) : undefined;
+    if (own) {
+      own.state = key;
+      declare(key, config[key]);
+      return { state: key, value, html: `${variable}.${property} = ${code};` };
+    }
     if (property) {
       const prop = p.props.find(pr => pr.name === property);
       if (prop) prop.state = key;

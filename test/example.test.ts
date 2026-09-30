@@ -40,6 +40,9 @@ describe('the example fence', () => {
     expect(Object.keys(rendered)).toEqual(['vanilla']);
     const html = renderExample('form:\n  class: signup\n');
     expect(html.match(/class="framework-note"/g)).toHaveLength(5);
+    expect(html).toContain('The form comes from mtrl-addons, which has no web components');
+    expect(rendered.vanilla).toBe("import { createForm } from 'mtrl-addons';\n\nconst form = createForm({ class: 'signup' });\ndocument.body.append(form.element);\n");
+    expect(code('colorpicker:\n  value: red\n', 'vanilla')).toContain("import { createColorPicker } from 'mtrl-addons';\n\nconst picker = createColorPicker({ value: 'red' });");
   });
   test('renders six highlighted panels, and one switch at the top of a page with examples', () => {
     const html = renderExample(withEvent);
@@ -60,6 +63,14 @@ describe('Vanilla', () => {
   test('an action calls the setters', () => {
     expect(code(withAction, 'vanilla')).toContain('function mute() {\n  slider.setValue(0);\n  slider.disable();\n}\n');
   });
+  test('open and close are the factory\'s own methods', () => {
+    expect(code('dialog:\n  title: Hi\n  action ask:\n    open\n', 'vanilla')).toContain('function ask() {\n  dialog.open();\n}');
+    expect(code('snackbar:\n  message: Saved\n  action tell:\n    - open\n    - close\n', 'vanilla')).toContain('function tell() {\n  snackbar.show();\n  snackbar.hide();\n}');
+  });
+  test('a tooltip\'s target is made by its own factory, and its element passed', () => {
+    // The same trigger path as a menu's opener: the element is created first, as `trigger`
+    expect(code('tooltip:\n  text: Save\n  target: { icon: saveIcon, ariaLabel: Save }\n', 'vanilla')).toBe("import { createTooltip, createIconButton } from 'mtrl';\n\nconst trigger = createIconButton({ icon: saveIcon, ariaLabel: 'Save' });\ndocument.body.append(trigger.element);\n\nconst tooltip = createTooltip({ target: trigger.element, text: 'Save' });\ndocument.body.append(tooltip.element);\n");
+  });
   test('children are the config array', () => {
     expect(code(withChildren, 'vanilla')).toContain("const tabs = createTabs({\n  tabs: [\n    { text: 'Flights', value: 'flights', state: 'active' },\n    { text: 'Trips', value: 'trips' },\n  ],\n});\ntabs.on('change', ({ value }) => showPanel(value));");
   });
@@ -73,6 +84,14 @@ describe('Web Components', () => {
   });
   test('an action sets the live property and the attribute', () => {
     expect(code(withAction, 'html')).toContain("function mute() {\n    slider.value = 0;\n    slider.toggleAttribute('disabled', true);\n  }");
+  });
+  test('an action on a live property with an attribute of its own: one state, the property set', () => {
+    const source = 'progress:\n  value: 30\n  action advance:\n    set value: 75\n';
+    const html = code(source, 'html');
+    expect(html).toContain('<m-progress value="30"></m-progress>');
+    expect(html).toContain('function advance() {\n    progress.value = 75;\n  }');
+    expect(html).not.toContain('progress.value = false');
+    expect(code(source, 'react')).toContain('<Progress value={value} />');
   });
   test('children are elements', () => {
     expect(code(withChildren, 'html')).toContain('<m-tabs value="flights">\n  <m-tab value="flights">Flights</m-tab>\n  <m-tab value="trips">Trips</m-tab>\n</m-tabs>');
