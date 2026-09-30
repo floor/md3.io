@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
-import { docGroups, renderDocument } from '../src/server/content';
+import { docGroups, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
 import { symbolByFile } from '../src/shared/icons';
@@ -34,6 +34,15 @@ describe('site routes and documentation', () => {
     expect(document.html).toContain('/docs/components/menu/');
     for (const heading of document.toc) expect(document.html).toContain(`id="${heading.id}"`);
   });
+  test('an install block gives the command of each package manager, npm first', () => {
+    const html = renderDocument('getting-started')!.html;
+    const text = html.replace(/<[^>]+>/g, '');
+    for (const { command } of PACKAGE_MANAGERS) expect(text).toContain(`${command} mtrl`);
+    expect([...html.matchAll(/class="framework-tab install__option" data-package-manager="(\w+)" aria-pressed="(\w+)"/g)].map(m => [m[1], m[2]]))
+      .toEqual([['npm', 'true'], ['pnpm', 'false'], ['yarn', 'false'], ['bun', 'false']]);
+    expect(html).not.toContain('language-install');
+  });
+
   test('unknown documents and private paths are not served', async () => {
     for (const path of ['/docs/components/missing/', '/package.json', '/.git/config', '/styles/..%2Fpackage.json', '/dist/private.map']) {
       expect((await get(path)).status).toBe(404);

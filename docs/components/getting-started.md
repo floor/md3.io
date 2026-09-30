@@ -13,13 +13,12 @@ top shows every example in the way you use it.
 
 ## Install
 
-```bash
-npm install mtrl
+```install
+mtrl
 ```
 
-It works the same with `bun add mtrl`, `pnpm add mtrl` or `yarn add mtrl`. React, Vue, Svelte
-and SolidJS are optional peer dependencies: mtrl uses the one your app already has, and installs
-none of them itself.
+React, Vue, Svelte and SolidJS are optional peer dependencies: mtrl uses the one your app already
+has, and installs none of them itself.
 
 ## Choose how to use it
 

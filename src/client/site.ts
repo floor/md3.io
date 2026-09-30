@@ -46,6 +46,20 @@ for (const option of switchOptions) {
   });
 }
 
+// The package manager of the `install` blocks: one choice for every block, remembered.
+const managerOptions = [...document.querySelectorAll<HTMLButtonElement>('.install__option')];
+function showManager(manager: string) {
+  root.dataset.packageManager = manager;
+  for (const option of managerOptions) option.setAttribute('aria-pressed', String(option.dataset.packageManager === manager));
+}
+if (managerOptions.length) showManager(root.dataset.packageManager ?? 'npm');
+for (const option of managerOptions) {
+  option.addEventListener('click', () => {
+    showManager(option.dataset.packageManager!);
+    try { localStorage.setItem('md3-package-manager', option.dataset.packageManager!); } catch { /* Storage may be unavailable. */ }
+  });
+}
+
 export async function copyText(text: string): Promise<boolean> {
   try { await navigator.clipboard.writeText(text); return true; }
   catch { return false; }

@@ -35,6 +35,7 @@
   </script>
   <script>
     (() => { let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {} if (['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'].includes(framework)) document.documentElement.dataset.framework = framework; })();
+    (() => { let manager; try { manager = localStorage.getItem('md3-package-manager'); } catch {} if (['npm', 'pnpm', 'yarn', 'bun'].includes(manager)) document.documentElement.dataset.packageManager = manager; })();
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>
