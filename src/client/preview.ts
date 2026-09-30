@@ -16,6 +16,7 @@ import createTabs from 'mtrl/components/tabs';
 import createMenu from 'mtrl/components/menu';
 import createTopAppBar from 'mtrl/components/top-app-bar';
 import createBottomAppBar from 'mtrl/components/bottom-app-bar';
+import createToolbar from 'mtrl/components/toolbar';
 import createSwitch from 'mtrl/components/switch';
 import createRadios from 'mtrl/components/radios';
 import createSlider from 'mtrl/components/slider';
@@ -221,6 +222,14 @@ function create(state: ComponentState) {
       if (fab) { control.addFab(fab.element); fab.on('click', () => message(`${String(state.fabLabel) || 'Compose'} clicked`)); }
       if (!content.visible) control.hide();
       return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
+    }
+    case 'toolbar': {
+      const control = createToolbar(components.toolbar.config(state));
+      control.bar.addEventListener('click', (event) => {
+        const item = (event.target as Element).closest('[aria-label]');
+        if (item && item !== control.bar) message(`${item.getAttribute('aria-label')} clicked`);
+      });
+      return control;
     }
 
     case 'switch': {

@@ -78,6 +78,8 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     scrollable: { attribute: 'no-scroll', values: { false: true }, ignore: [true] },
     scrolled: { call: { method: 'setScrollState' }, ignore: [false] },
   },
+  // `flat` is the element's way of saying `elevated: false`.
+  toolbar: { elevated: { attribute: 'flat', values: { false: true }, ignore: [true] } },
   // The bar has a FAB when one is slotted.
   'bottom-app-bar': { hasFab: { ignore: [true, false] }, visible: { call: { method: 'hide', when: false }, ignore: [true] } },
   card: {
@@ -150,6 +152,8 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
   ],
+  // The factory takes its items in its config; the element as its children.
+  toolbar: [{ from: 'items', element: 'icon-button' }],
   'bottom-app-bar': [
     { from: 'actions', element: 'icon-button', add: 'addAction' },
     { from: 'fab', element: 'fab', slot: 'fab', add: 'addFab' },

@@ -10,7 +10,7 @@ export const docsDir = resolve(root, 'docs/components');
 const groups: Record<string, string[]> = {
   'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab'],
   'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'textfield', 'select', 'search', 'datepicker', 'timepicker'],
-  'Navigation': ['navigation-rail', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'navigation'],
+  'Navigation': ['navigation-rail', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
   'Additional references': ['form', 'colorpicker', 'segmented-button'],

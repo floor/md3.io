@@ -64,6 +64,8 @@ const visuals: Record<ComponentSlug, string> = {
   menu: `<${SURFACES.menu}></${SURFACES.menu}>`,
   'top-app-bar': m('top-app-bar', { headline: 'My library', 'no-scroll': true },
     m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })),
+  toolbar: m('toolbar', { variant: 'floating', 'aria-label': 'Formatting' },
+    [['bold', 'Bold'], ['italic', 'Italic'], ['underline', 'Underline']].map(([icon, label], index) => m('icon-button', { icon: symbols[icon as 'bold'], 'aria-label': label, toggle: true, ...(index === 0 ? { selected: true } : {}) })).join('')),
   'bottom-app-bar': m('bottom-app-bar', {},
     m('icon-button', { icon: symbols.heart, 'aria-label': 'Favorite' }) + m('icon-button', { icon: symbols.bookmark, 'aria-label': 'Bookmark' })
     + m('fab', { slot: 'fab', icon: symbols.add, 'aria-label': 'Compose' })),

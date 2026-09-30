@@ -16,6 +16,7 @@ import type { TabsConfig } from 'mtrl/components/tabs';
 import type { MenuConfig } from 'mtrl/components/menu';
 import type { TopAppBarConfig } from 'mtrl/components/top-app-bar';
 import type { BottomAppBarConfig } from 'mtrl/components/bottom-app-bar';
+import type { ToolbarConfig } from 'mtrl/components/toolbar';
 import type { SwitchConfig } from 'mtrl/components/switch';
 import type { RadiosConfig } from 'mtrl/components/radios';
 import type { ChipsConfig } from 'mtrl/components/chips';
@@ -91,6 +92,13 @@ export function appBarContent(slug: 'top-app-bar' | 'bottom-app-bar', state: Com
     ? { ...(state.leading ? { leading: { icon: componentIcons.menu, ariaLabel: 'Open navigation' } } : {}), actions: appBarActions(state), scrolled: state.scrolled === true }
     : { actions: appBarActions(state), ...(state.hasFab ? { fab: { icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
 }
+/** The toolbar preview's items: formatting toggles, or actions. */
+const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
+  (state.toggles
+    ? [['bold', 'Bold'], ['italic', 'Italic'], ['underline', 'Underline'], ['edit', 'Edit'], ['add', 'Add']]
+    : [['heart', 'Favorite'], ['bookmark', 'Bookmark'], ['send', 'Share'], ['inbox', 'Archive'], ['edit', 'Edit']])
+    .slice(0, Number(state.items))
+    .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
@@ -451,6 +459,25 @@ export const components = {
       ...section('Behavior', [toggle('visible', 'Visible', true)]),
     ],
     config: (state: ComponentState): BottomAppBarConfig => ({ hasFab: bool(state, 'hasFab'), fabPosition: pick(state, 'fabPosition', ['center', 'end'], 'end'), autoHide: false }),
+  },
+  toolbar: {
+    group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
+    description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
+    summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
+      ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
+      ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5'], '4'), toggle('toggles', 'Formatting toggles', true)]),
+    ],
+    config: (state: ComponentState): ToolbarConfig => ({
+      variant: pick(state, 'variant', ['docked', 'floating'], 'floating'),
+      color: pick(state, 'color', ['standard', 'vibrant'], 'standard'),
+      orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'),
+      arrangement: pick(state, 'arrangement', ['spread', 'center'], 'spread'),
+      ...(state.elevated ? {} : { elevated: false }),
+      ariaLabel: state.toggles ? 'Formatting' : 'Actions',
+      items: toolbarItems(state),
+    }),
   },
   card: {
     group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
