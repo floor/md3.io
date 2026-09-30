@@ -201,8 +201,9 @@ export const typescale: TypeStyle[] = TYPE_ROLES.flatMap(role => {
 
 const GENERIC_FAMILIES = new Set(['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-sans-serif', 'ui-serif', 'ui-monospace', 'math', 'emoji', 'fangsong']);
 const unquote = (family: string) => family.trim().replace(/^["']|["']$/g, '');
-/** The families md3.io declares with @font-face. */
-export const siteFonts: Set<string> = new Set(parseCss(readFileSync(resolve(root, 'styles/tokens.css'), 'utf8'))
+/** The families md3.io declares with @font-face: its own, and Roboto for mtrl's type scale. */
+export const siteFonts: Set<string> = new Set(['styles/tokens.css', 'styles/roboto.css']
+  .flatMap(file => parseCss(readFileSync(resolve(root, file), 'utf8')))
   .filter(block => block.path.at(-1) === '@font-face')
   .map(block => unquote(block.declarations.get('font-family') ?? '')).filter(Boolean));
 /** Named families in mtrl's typescale that md3.io does not load. */
