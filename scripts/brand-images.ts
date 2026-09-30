@@ -1,9 +1,12 @@
-// The site's raster images, drawn in a browser from sources kept here, and committed:
-// the server serves them from public/ and the deploy builds nothing. Run after changing
-// public/favicon.svg or the card below: `bun run brand-images`.
+// The site's icons and link preview, all from one mark (assets/brand/mark.svg, which the
+// header shows too), drawn in a browser and committed: the server serves them from
+// public/ and the deploy builds nothing. Run after changing the mark or the card below:
+// `bun run brand-images`.
 //
-//   - favicon.ico: favicon.svg at 16 and 32 px (PNG payloads in an ICO).
-//   - apple-touch-icon.png: 180 px, square: iOS rounds the corners itself.
+//   - favicon.svg: the mark as it is.
+//   - favicon.ico: the mark at 16 and 32 px (PNG payloads in an ICO).
+//   - apple-touch-icon.png: 180 px, the mark on the site's background with 12% padding,
+//     square: iOS rounds the corners itself.
 //   - og-image.png: the 1200×630 link preview, in vlist.io's card language.
 import { chromium, type Page } from 'playwright';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -12,13 +15,16 @@ import { componentSlugs } from '../src/shared/components';
 
 const root = resolve(import.meta.dir, '..');
 const publicDir = resolve(root, 'public');
-const svg = readFileSync(resolve(publicDir, 'favicon.svg'), 'utf8');
+const mark = readFileSync(resolve(root, 'assets/brand/mark.svg'), 'utf8');
+const dataUrl = `data:image/svg+xml;base64,${Buffer.from(mark).toString('base64')}`;
 const font = (file: string) => `url(data:font/woff2;base64,${readFileSync(resolve(root, 'fonts', file)).toString('base64')}) format("woff2")`;
 
-async function renderSvg(page: Page, source: string, size: number): Promise<Buffer> {
+/** The mark at a size, with padding on a background, or on nothing. */
+async function renderMark(page: Page, size: number, padding = 0, background = 'transparent'): Promise<Buffer> {
   await page.setViewportSize({ width: size, height: size });
-  await page.setContent(`<style>html,body{margin:0}svg{display:block;width:${size}px;height:${size}px}</style>${source}`);
-  return page.screenshot({ omitBackground: true });
+  await page.setContent(`<style>html,body{margin:0;background:${background}}img{display:block;box-sizing:border-box;width:${size}px;height:${size}px;padding:${padding}px}</style><img src="${dataUrl}" alt="">`);
+  await page.locator('img').evaluate((img: HTMLImageElement) => img.decode());
+  return page.screenshot({ omitBackground: background === 'transparent' });
 }
 /** An ICO of PNG images: a 6-byte header, a 16-byte entry per image, then the images. */
 function ico(images: { size: number; png: Buffer }[]): Buffer {
@@ -51,7 +57,8 @@ const card = `<!doctype html><html><head><style>
     background: radial-gradient(ellipse 900px 700px at 12% 0%, #1b2042 0%, #0f1020 45%, #09090c 100%); position: relative; }
   .text { position: absolute; left: 90px; top: 92px; }
   .eyebrow { font-size: 28px; letter-spacing: 4px; color: #8a8fa8; }
-  .wordmark { font-size: 188px; font-weight: 700; letter-spacing: -6px; line-height: 1; margin: 30px 0 22px -8px; display: flex; align-items: baseline; }
+  .wordmark { font-size: 188px; font-weight: 700; letter-spacing: -6px; line-height: 1; margin: 30px 0 22px 0; display: flex; align-items: baseline; }
+  .mark { width: 132px; height: 132px; margin-right: 26px; }
   .dot { width: 34px; height: 34px; border-radius: 50%; margin-left: 18px; background: linear-gradient(135deg, #8da0f2, #d0bcff); }
   .tagline { font-size: 44px; line-height: 1.3; color: #b4b8cc; }
   .pills { display: flex; gap: 12px; margin-top: 44px; }
@@ -81,7 +88,7 @@ const card = `<!doctype html><html><head><style>
 </style></head><body>
   <div class="text">
     <div class="eyebrow">MD3.IO</div>
-    <div class="wordmark">mtrl<span class="dot"></span></div>
+    <div class="wordmark"><img class="mark" src="${dataUrl}" alt="">mtrl<span class="dot"></span></div>
     <div class="tagline">Material Design 3<br>for every framework.</div>
     <div class="pills">${pills.map(pill => `<span class="pill">${pill}</span>`).join('')}</div>
   </div>
@@ -98,12 +105,13 @@ const card = `<!doctype html><html><head><style>
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ deviceScaleFactor: 1 });
-  const [png16, png32] = [await renderSvg(page, svg, 16), await renderSvg(page, svg, 32)];
+  writeFileSync(resolve(publicDir, 'favicon.svg'), mark);
+  const [png16, png32] = [await renderMark(page, 16), await renderMark(page, 32)];
   writeFileSync(resolve(publicDir, 'favicon.ico'), ico([{ size: 16, png: png16 }, { size: 32, png: png32 }]));
-  writeFileSync(resolve(publicDir, 'apple-touch-icon.png'), await renderSvg(page, svg.replace(/ rx="[\d.]+"/, ''), 180));
+  writeFileSync(resolve(publicDir, 'apple-touch-icon.png'), await renderMark(page, 180, Math.round(180 * 0.12), '#0c0c10'));
   await page.setViewportSize({ width: 1200, height: 630 });
   await page.setContent(card);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => Promise.all([document.fonts.ready, ...[...document.images].map(img => img.decode())]));
   // The text keeps clear of the panel, and the panel of the card's edge.
   const overflow = await page.evaluate(() => {
     const [text, panel] = ['.text', '.panel'].map(selector => document.querySelector(selector)!.getBoundingClientRect());
