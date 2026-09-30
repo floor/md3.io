@@ -58,6 +58,10 @@ describe('Vanilla', () => {
   test('an action calls the setters', () => {
     expect(code(withAction, 'vanilla')).toContain('function mute() {\n  slider.setValue(0);\n  slider.disable();\n}\n');
   });
+  test('open and close are the factory\'s own methods', () => {
+    expect(code('dialog:\n  title: Hi\n  action ask:\n    open\n', 'vanilla')).toContain('function ask() {\n  dialog.open();\n}');
+    expect(code('snackbar:\n  message: Saved\n  action tell:\n    - open\n    - close\n', 'vanilla')).toContain('function tell() {\n  snackbar.show();\n  snackbar.hide();\n}');
+  });
   test('children are the config array', () => {
     expect(code(withChildren, 'vanilla')).toContain("const tabs = createTabs({\n  tabs: [\n    { text: 'Flights', value: 'flights', state: 'active' },\n    { text: 'Trips', value: 'trips' },\n  ],\n});\ntabs.on('change', ({ value }) => showPanel(value));");
   });

@@ -110,6 +110,12 @@ const setters: Record<string, (value: unknown) => string> = {
   disabled: value => (value ? 'disable()' : 'enable()'),
 };
 
+// Factories that open and close with methods not named open() and close().
+const openers: Record<string, [open: string, close: string]> = {
+  snackbar: ['show', 'hide'],
+  tooltip: ['show', 'hide'],
+};
+
 /** The Vanilla code: the factory, its handlers, the element placed, and the actions. */
 export function vanillaCode(block: ExampleBlock): string {
   const factory = isComponent(block.slug) ? components[block.slug].factory : `create${pascal(block.slug)}`;
@@ -119,7 +125,8 @@ export function vanillaCode(block: ExampleBlock): string {
     const fields = [...new Set(h.args.filter(isField))];
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
   }).join('');
-  const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? 'open' : 'close'}();`
+  const [open, close] = openers[block.slug] ?? ['open', 'close'];
+  const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? open : close}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
   return `import { ${factory} } from 'mtrl';\n\nconst ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
