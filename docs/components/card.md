@@ -69,7 +69,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|------|---------|-------------|
 | `variant` | `'elevated' \| 'filled' \| 'outlined'` | `'elevated'` | Card variant |
 | `clickable` | `boolean` | `false` | A button: ripple, `Enter` and `Space`, and the `click` event |
-| `interactive` | `boolean` | `false` | The `button` role, a tab stop and hover elevation, without key handling |
+| `interactive` | `boolean` | `false` | Hover and press states only: no role, no tab stop, no key handling |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `draggable` | `boolean` | `false` | HTML drag, with elevation while dragged and `dragstart` / `dragend` |
 | `header` | `CardHeaderConfig` | `undefined` | `{ title, subtitle, avatar, action, class }` |
@@ -77,7 +77,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `media` | `CardMediaConfig` | `undefined` | `{ src, alt, element, aspectRatio, contain, position, class }`; `position` is `'top'` or `'bottom'` |
 | `actions` | `CardActionsConfig` | `undefined` | `{ actions, align, fullBleed, vertical, class }`; `align` is `'start'`, `'center'`, `'end'` or `'space-between'` |
 | `buttons` | `ButtonConfig[]` | `undefined` | An actions row of buttons, added a microtask after creation |
-| `aria` | `CardAriaAttributes` | `undefined` | `{ role, label, labelledby, describedby }`, each written as an `aria-` attribute; `role` defaults to `region`, or `button` when interactive |
+| `aria` | `CardAriaAttributes` | `undefined` | `{ role, label, labelledby, describedby }`, each written as an `aria-` attribute; `role` defaults to `article`, or `button` when clickable |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
@@ -114,10 +114,11 @@ The web component's activation is the native `click`.
 
 ## Accessibility
 
-- The card is a `region`, or a `button` with a tab stop when it is clickable or interactive.
-  `aria.label` or `aria.labelledby` names it; the web component is named by its headline.
-- Only a clickable card answers `Enter` and `Space`: an `interactive` card alone takes focus
-  and cannot be operated from the keyboard.
+- The card is an `article`, or a `button` with a tab stop that answers `Enter` and `Space`
+  when it is clickable. `interactive` alone changes only the hover and press states: the card
+  keeps the `article` role and takes no focus.
+- The headline is an `h3` and names the article; `aria.label` or `aria.labelledby` overrides it.
+  The subtitle is a paragraph, and the header and content carry no role of their own.
 - `makeDraggable()` keeps `aria-grabbed` in step during a drag; `draggable: true` does not set
   it.
 - A clickable card is one control: buttons inside it are not reachable as their own.
