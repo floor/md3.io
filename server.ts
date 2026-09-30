@@ -10,7 +10,8 @@ import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
-import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights } from './src/server/tokens';
+import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights, shapeUsage, themeBase } from './src/server/tokens';
+import { CORNER_MAX, ROUNDNESS } from './src/shared/theme-state';
 import { readFileSync, existsSync } from 'node:fs';
 import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/server/seo';
 
@@ -76,6 +77,8 @@ function styleClosure(names: string[]): string[] {
   return order;
 }
 
+/** The components on the Styles preview's screen (src/client/styles-frame.ts). */
+const STYLES_FRAME_COMPONENTS = ['top-app-bar', 'icon-button', 'chips', 'card', 'textfield', 'switch', 'slider', 'button', 'fab', 'dialog'];
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 /** The files browsers and link previews ask for at the root, from public/ (scripts/brand-images.ts makes them). */
 const rootFiles = new Set(['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png', '/og-image.png']);
@@ -145,9 +148,11 @@ export async function handleRequest(request: Request): Promise<Response> {
     }
     else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
   }
-  else if (path === '/styles/') response = page(path, 'Styles — mtrl', stylePages[0].description, 'styles-overview', { stylePages, comingStyles });
-  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT });
-  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components });
+  else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
+  else if (path === '/styles/') response = page(path, 'Styles — mtrl', stylePages[0].description, 'styles-overview', { stylePages, comingStyles, themeBase });
+  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
+  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
+  else if (path === '/styles/shape/') response = page(path, 'Shape — mtrl', stylePages[3].description, 'styles-shape', { shape: themeBase.shape, shapeUsage, components, mtrlVersion, themeBase, roundness: ROUNDNESS, cornerMax: CORNER_MAX });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {

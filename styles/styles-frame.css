@@ -1,0 +1,12 @@
+/* The Styles preview's app screen (src/client/styles-frame.ts): one column, phone-sized. */
+html, body { margin: 0; min-height: 100%; background: var(--mtrl-sys-color-surface); color: var(--mtrl-sys-color-on-surface); }
+.screen { position: relative; min-height: 100vh; font-family: var(--mtrl-sys-typescale-body-medium-font, Roboto, sans-serif); }
+.screen .mtrl-top-app-bar { position: sticky; top: 0; z-index: 1; }
+.screen__body { display: flex; flex-direction: column; gap: 16px; padding: 8px 16px 96px; }
+.screen__body > .mtrl-card { width: 100%; box-sizing: border-box; }
+.screen__body > .mtrl-textfield, .screen__body > .mtrl-slider { width: 100%; min-width: 0; }
+.screen__row { display: flex; }
+.screen__row > .mtrl-switch { width: 100%; }
+.screen__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.screen > .mtrl-fab { position: fixed; right: 16px; bottom: 16px; }
+.mtrl-dialog:not(.mtrl-dialog--fullscreen) { max-width: calc(100vw - 32px); }
