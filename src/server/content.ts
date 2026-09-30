@@ -24,6 +24,27 @@ export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/do
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
 export const docSlugs = [...slugs];
+/** The package managers of an `install` block, in switch order, with their add commands. */
+export const PACKAGE_MANAGERS = [
+  { id: 'npm', command: 'npm install' },
+  { id: 'pnpm', command: 'pnpm add' },
+  { id: 'yarn', command: 'yarn add' },
+  { id: 'bun', command: 'bun add' },
+] as const;
+
+/**
+ * An `install` fence (its text is the packages) as one command per package manager, with a
+ * switch between them. The reader's choice is on :root[data-package-manager] before paint
+ * (base.eta), and site.ts remembers it; npm without it.
+ */
+function renderInstall(packages: string): string {
+  const options = PACKAGE_MANAGERS.map(({ id }) =>
+    `<button type="button" class="framework-tab install__option" data-package-manager="${id}" aria-pressed="${id === 'npm'}">${id}</button>`).join('');
+  const commands = PACKAGE_MANAGERS.map(({ id, command }) =>
+    `<pre class="install__command" data-package-manager="${id}"><code class="hljs language-bash">${hljs.highlight(`${command} ${packages}`, { language: 'bash' }).value}</code></pre>`).join('');
+  return `<div class="install"><div class="framework-tabs install__switch" role="group" aria-label="Package manager">${options}</div>${commands}</div>\n`;
+}
+
 /** A fence's language as highlight.js names it; nothing for a fence without one. */
 const LANGUAGES: Record<string, string> = { ts: 'typescript', js: 'javascript', html: 'xml', sh: 'bash', shell: 'bash', svelte: 'xml', vue: 'xml' };
 function codeLanguage(lang = ''): string {
@@ -91,6 +112,7 @@ export function renderDocument(slug: string) {
         examples = true;
         return renderExample(token.text);
       }
+      if (token.lang === 'install') return renderInstall(token.text.trim());
       // Every other block highlighted like the examples: the fence's first word is the
       // language (after it come docs:check's flags, such as `fragment`).
       const language = codeLanguage(token.lang);

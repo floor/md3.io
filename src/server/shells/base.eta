@@ -20,6 +20,7 @@
   <% if (it.isHome) { %><link rel="stylesheet" href="/styles/homepage.css" /><% } %>
   <link rel="stylesheet" href="/styles/site.css" />
   <link rel="stylesheet" href="/styles/search.css" />
+  <% if (it.isCatalog) { %><link rel="stylesheet" href="/styles/roboto.css" /><link rel="stylesheet" href="/dist/mtrl/elements/preupgrade.css" /><link rel="stylesheet" href="/styles/catalog.css" /><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %>
   <% if (it.section === 'Examples') { %><link rel="stylesheet" href="/styles/examples.css" /><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><link rel="stylesheet" href="/styles/roboto.css" /><link rel="stylesheet" href="/styles/styles-pages.css" /><script type="module" src="/dist/styles.js"></script><% } %>
   <script>
@@ -34,6 +35,7 @@
   </script>
   <script>
     (() => { let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {} if (['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'].includes(framework)) document.documentElement.dataset.framework = framework; })();
+    (() => { let manager; try { manager = localStorage.getItem('md3-package-manager'); } catch {} if (['npm', 'pnpm', 'yarn', 'bun'].includes(manager)) document.documentElement.dataset.packageManager = manager; })();
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>

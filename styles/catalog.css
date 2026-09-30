@@ -1,0 +1,56 @@
+/* The components overview's card visuals: mtrl's own elements (src/server/catalog.ts).
+   mtrl's tokens are set on .catalog-visual by the page (catalogTokens), light or dark
+   with the site; the elements' styles are in their shadow roots. The visual is a
+   containing block for fixed descendants, so a sheet or a bar pinned to the viewport
+   is pinned to the card. */
+.catalog-visual {
+  position: relative;
+  height: 180px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  contain: layout paint;
+  background: var(--mtrl-sys-color-surface);
+  color: var(--mtrl-sys-color-on-surface);
+  font-family: "Roboto", sans-serif;
+}
+/* Still a link: the card, not what it shows, is what a pointer targets. */
+.catalog-visual * { pointer-events: none; }
+
+.catalog-stack { display: flex; flex-direction: column; align-items: flex-start; }
+.catalog-stack--inset { padding-inline-start: 24px; }
+.catalog-stack--progress { flex-direction: row; align-items: center; gap: 32px; width: 100%; justify-content: center; }
+.catalog-stack--progress m-progress:first-child { flex: 0 1 200px; }
+
+.catalog-visual--slider m-slider, .catalog-visual--tabs m-tabs { width: min(100%, 320px); }
+.catalog-visual--textfield m-textfield, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
+.catalog-visual--search m-search { width: min(100%, 320px); }
+.catalog-visual--list m-list { width: min(100%, 320px); }
+.catalog-visual--carousel m-carousel { display: block; width: 100%; height: 148px; }
+.catalog-visual--card m-card { width: min(100%, 300px); }
+
+/* Pinned to the card's edges, as they are to the window's. */
+.catalog-visual--navigation-rail, .catalog-visual--drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
+.catalog-visual--top-app-bar { align-items: flex-start; padding: 0; }
+.catalog-visual--top-app-bar m-top-app-bar { width: 100%; }
+.catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
+
+.catalog-badge { position: relative; display: inline-flex; }
+.catalog-badge m-badge { position: absolute; top: 4px; inset-inline-end: 4px; transform: translate(40%, -40%); }
+
+.catalog-divider { width: min(100%, 280px); display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 20px; color: var(--mtrl-sys-color-on-surface-variant); }
+.catalog-divider p { margin: 0; }
+.catalog-divider m-divider { display: block; }
+
+/* The overlays' surfaces keep their box until they upgrade. */
+md3-catalog-dialog:not(:defined) { width: 320px; height: 176px; }
+md3-catalog-menu:not(:defined) { width: 112px; height: 160px; }
+md3-catalog-snackbar:not(:defined) { width: 320px; height: 48px; }
+md3-catalog-tooltip:not(:defined) { width: 120px; height: 72px; }
+
+/* The time picker is a dialog-sized surface: shown at a scale that fits the card. */
+md3-catalog-timepicker { zoom: 0.4; }
+md3-catalog-timepicker:not(:defined) { width: 580px; height: 380px; }

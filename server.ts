@@ -5,6 +5,7 @@ import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
+import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
@@ -29,7 +30,7 @@ function page(path: string, title: string, description: string, template: string
   const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
   return html(eta.render('base', {
-    path, title, description, isHome, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
+    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -108,7 +109,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   let response: Response;
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
   if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage');
-  else if (path === '/components/') response = page(path, 'Components — mtrl', 'Explore mtrl components in an interactive playground.', 'catalog');
+  else if (path === '/components/') response = page(path, 'Components — mtrl', 'Explore mtrl components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
     const component = components[slug];
