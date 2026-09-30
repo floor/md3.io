@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-01
 status: draft
 ---
 
@@ -70,23 +70,18 @@ fab-menu:
 
 ### Choosing an action
 
-`select` reports the chosen item's `id`, and the menu closes. As an element, the event's
-`detail.value` is the item's `value`.
+`select` reports the chosen item's `value`, the item's `id` (the factory's payload also has it as
+`id`), and the menu closes.
 
-```javascript
-import { createFabMenu } from 'mtrl';
-
-const menu = createFabMenu({
-  icon: editIcon,
-  ariaLabel: 'Reply options',
-  placement: 'bottom-end',
-  items: [
-    { id: 'reply', text: 'Reply', icon: backIcon },
-    { id: 'forward', text: 'Forward', icon: forwardIcon },
-  ],
-});
-menu.on('select', ({ id }) => console.log(id));
-document.body.append(menu.element);
+```example
+fab-menu:
+  icon: editIcon
+  ariaLabel: Reply options
+  presentation: list
+  items:
+    - { id: reply, text: Reply, icon: backIcon }
+    - { id: forward, text: Forward, icon: forwardIcon }
+  on select: choose(value)
 ```
 
 `placement: 'bottom-end'` (or `'bottom-start'`) puts the FAB 16dp from the edges of its
@@ -131,7 +126,7 @@ the code, and add no prose restating them. -->
 |-------|---------|-------------|
 | `open` | — | It opened |
 | `close` | — | It closed |
-| `select` | `{ id }` | An item was chosen; it closes |
+| `select` | `{ id, value }` | An item was chosen; it closes. `value` is the `id` again |
 
 ### Element
 
