@@ -471,20 +471,26 @@
 :root[data-framework="solid"] .framework-switch__option[data-framework="solid"] { background: var(--accent); color: var(--text); }
 :root[data-framework]:not([data-framework="vanilla"]) .framework-switch__option[data-framework="vanilla"] { background: transparent; color: var(--text-dim); }
 
-/* An `install` block: one command per package manager, the reader's on :root[data-package-manager]
-   before paint (base.eta); npm without it. */
-.md .install__switch { margin-bottom: 8px; }
-.md .install__command { display: none; }
-.install__option[data-package-manager="npm"],
-:root[data-package-manager="pnpm"] .install__option[data-package-manager="pnpm"],
-:root[data-package-manager="yarn"] .install__option[data-package-manager="yarn"],
-:root[data-package-manager="bun"] .install__option[data-package-manager="bun"] { background: var(--accent); color: var(--text); }
-:root[data-package-manager]:not([data-package-manager="npm"]) .install__option[data-package-manager="npm"] { background: transparent; color: var(--text-dim); }
-.md .install__command[data-package-manager="npm"],
-:root[data-package-manager="pnpm"] .md .install__command[data-package-manager="pnpm"],
-:root[data-package-manager="yarn"] .md .install__command[data-package-manager="yarn"],
-:root[data-package-manager="bun"] .md .install__command[data-package-manager="bun"] { display: block; }
-:root[data-package-manager]:not([data-package-manager="npm"]) .md .install__command[data-package-manager="npm"] { display: none; }
+/* An `install` block: one code block, the package managers in its header and the reader's
+   command below, on :root[data-package-manager] before paint (base.eta); bun without it. */
+.md .doc-install { margin: 16px 0 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-code); overflow: hidden; }
+.doc-install__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.doc-install__switch { display: flex; flex-wrap: wrap; gap: 2px; }
+.doc-install__option, .doc-install__copy { border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); cursor: pointer; }
+.doc-install__option:hover, .doc-install__copy:hover { color: var(--text); }
+.doc-install__option:focus-visible, .doc-install__copy:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+.doc-install__copy { font-family: inherit; }
+.md .doc-install__command { display: none; margin: 0; padding: 14px 18px; border: 0; border-radius: 0; background: transparent; }
+.doc-install__option[data-package-manager="bun"],
+:root[data-package-manager="npm"] .doc-install__option[data-package-manager="npm"],
+:root[data-package-manager="pnpm"] .doc-install__option[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .doc-install__option[data-package-manager="yarn"] { background: var(--bg-card-hover); color: var(--text); }
+:root[data-package-manager]:not([data-package-manager="bun"]) .doc-install__option[data-package-manager="bun"] { background: transparent; color: var(--text-dim); }
+.md .doc-install__command[data-package-manager="bun"],
+:root[data-package-manager="npm"] .md .doc-install__command[data-package-manager="npm"],
+:root[data-package-manager="pnpm"] .md .doc-install__command[data-package-manager="pnpm"],
+:root[data-package-manager="yarn"] .md .doc-install__command[data-package-manager="yarn"] { display: block; }
+:root[data-package-manager]:not([data-package-manager="bun"]) .md .doc-install__command[data-package-manager="bun"] { display: none; }
 
 /* Previous and next at the end of a page, in sidebar order (as on vlist.io). */
 .page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); }

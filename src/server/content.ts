@@ -26,23 +26,24 @@ const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') &
 export const docSlugs = [...slugs];
 /** The package managers of an `install` block, in switch order, with their add commands. */
 export const PACKAGE_MANAGERS = [
+  { id: 'bun', command: 'bun add' },
   { id: 'npm', command: 'npm install' },
   { id: 'pnpm', command: 'pnpm add' },
   { id: 'yarn', command: 'yarn add' },
-  { id: 'bun', command: 'bun add' },
 ] as const;
 
 /**
  * An `install` fence (its text is the packages) as one command per package manager, with a
  * switch between them. The reader's choice is on :root[data-package-manager] before paint
- * (base.eta), and site.ts remembers it; npm without it.
+ * (base.eta), and site.ts remembers it; bun without it.
  */
 function renderInstall(packages: string): string {
   const options = PACKAGE_MANAGERS.map(({ id }) =>
-    `<button type="button" class="framework-tab install__option" data-package-manager="${id}" aria-pressed="${id === 'npm'}">${id}</button>`).join('');
+    `<button type="button" class="doc-install__option" data-package-manager="${id}" aria-pressed="${id === 'bun'}">${id}</button>`).join('');
   const commands = PACKAGE_MANAGERS.map(({ id, command }) =>
-    `<pre class="install__command" data-package-manager="${id}"><code class="hljs language-bash">${hljs.highlight(`${command} ${packages}`, { language: 'bash' }).value}</code></pre>`).join('');
-  return `<div class="install"><div class="framework-tabs install__switch" role="group" aria-label="Package manager">${options}</div>${commands}</div>\n`;
+    `<pre class="doc-install__command" data-package-manager="${id}"><code class="hljs language-bash">${hljs.highlight(`${command} ${packages}`, { language: 'bash' }).value}</code></pre>`).join('');
+  return `<div class="doc-install"><div class="doc-install__bar"><div class="doc-install__switch" role="group" aria-label="Package manager">${options}</div>` +
+    `<button type="button" class="doc-install__copy">Copy</button></div>${commands}</div>\n`;
 }
 
 /** A fence's language as highlight.js names it; nothing for a fence without one. */

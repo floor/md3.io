@@ -38,8 +38,8 @@ describe('site routes and documentation', () => {
     const html = renderDocument('getting-started')!.html;
     const text = html.replace(/<[^>]+>/g, '');
     for (const { command } of PACKAGE_MANAGERS) expect(text).toContain(`${command} mtrl`);
-    expect([...html.matchAll(/class="framework-tab install__option" data-package-manager="(\w+)" aria-pressed="(\w+)"/g)].map(m => [m[1], m[2]]))
-      .toEqual([['npm', 'true'], ['pnpm', 'false'], ['yarn', 'false'], ['bun', 'false']]);
+    expect([...html.matchAll(/class="doc-install__option" data-package-manager="(\w+)" aria-pressed="(\w+)"/g)].map(m => [m[1], m[2]]))
+      .toEqual([['bun', 'true'], ['npm', 'false'], ['pnpm', 'false'], ['yarn', 'false']]);
     expect(html).not.toContain('language-install');
   });
 
