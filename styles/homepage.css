@@ -660,3 +660,6 @@ footer a:hover {
         padding: 8px 16px;
     }
 }
+
+/* The install command itself keeps the text colour; only the "$ " prompt is dimmed. */
+.install code #install-command { color: inherit; }
