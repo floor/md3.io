@@ -5,7 +5,9 @@ button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
 html[data-theme-mode="dark"] { color-scheme: dark; }
 html[data-theme-mode="light"] { color-scheme: light; }
-.header__logo { font-size: 23px; letter-spacing: -1px; }
+.header__logo { font-size: 23px; letter-spacing: -1px; white-space: nowrap; }
+/* The mark at the wordmark's cap height, its foot on the baseline. */
+.header__mark { display: inline-block; width: 20px; height: 20px; margin-right: 7px; vertical-align: -1px; }
 .brand-dot { color: var(--accent-text); }
 .header__section { font-size: var(--fs-base); }
 .sidebar__label { font-size: var(--fs-xs); color: var(--text); }

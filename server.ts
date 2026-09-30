@@ -12,10 +12,13 @@ import { comingStyles, stylePages } from './src/server/styles';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
 import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights } from './src/server/tokens';
 import { readFileSync, existsSync } from 'node:fs';
+import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/server/seo';
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
 const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' };
 const html = (body: string, status = 200) => new Response(body, { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' } });
+// Previews and example frames are pages inside pages: never a search result of their own.
+const internalHtml = (body: string) => new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
 const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
@@ -29,8 +32,10 @@ function page(path: string, title: string, description: string, template: string
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
+  const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components';
+  const jsonLd = status === 200 ? structuredData(path, title.replace(/ — mtrl$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section: isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components', sidebarGroups,
+    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sidebarGroups, jsonLd,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -71,7 +76,10 @@ function styleClosure(names: string[]): string[] {
   return order;
 }
 
-const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png' };
+const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
+/** The files browsers and link previews ask for at the root, from public/ (scripts/brand-images.ts makes them). */
+const rootFiles = new Set(['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png', '/og-image.png']);
+const text = (body: string | null, type: string) => new Response(body, { headers: { ...commonHeaders, 'Content-Type': `${type}; charset=utf-8`, 'Cache-Control': 'public, max-age=3600' } });
 export async function handleRequest(request: Request): Promise<Response> {
   if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   const url = new URL(request.url);
@@ -97,7 +105,14 @@ export async function handleRequest(request: Request): Promise<Response> {
     const cache = staticMatch[1] === 'fonts' ? 'public, max-age=31536000, immutable' : 'no-cache';
     return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(filePath)]!, 'Cache-Control': cache } });
   }
-  if (path === '/favicon.ico') return new Response(null, { status: 204 });
+  if (rootFiles.has(path)) {
+    const file = Bun.file(resolve(root, 'public', path.slice(1)));
+    if (!await file.exists()) return new Response('Not found', { status: 404 });
+    // Not versioned by name, so a day's cache: a new icon reaches everyone by the next day.
+    return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(path)]!, 'Cache-Control': 'public, max-age=86400' } });
+  }
+  if (path === '/robots.txt') return text(request.method === 'HEAD' ? null : robotsTxt(), 'text/plain');
+  if (path === '/sitemap.xml') return text(request.method === 'HEAD' ? null : sitemapXml(), 'application/xml');
   // GET /api/search?q=…&limit=… — the site search dialog's results.
   if (path === '/api/search' || path === '/api/search/') {
     const q = url.searchParams.get('q') ?? '';
@@ -114,7 +129,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const slug = componentMatch[2]!;
     const component = components[slug];
     response = componentMatch[1] === 'preview'
-      ? html(eta.render('preview', { themes, slug, component }))
+      ? internalHtml(eta.render('preview', { themes, slug, component }))
       : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug) });
   }
   else if (path === '/examples/') response = page(path, 'Examples — mtrl', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
@@ -125,7 +140,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!example || !variants) response = page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
     else if (framework) {
       response = variants.some(v => v.id === framework)
-        ? html(eta.render('example-frame', { example, framework, themes, styles: styleClosure(example.components) }))
+        ? internalHtml(eta.render('example-frame', { example, framework, themes, styles: styleClosure(example.components) }))
         : page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
     }
     else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
@@ -138,7 +153,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
-    response = page(path, `${document.title} — mtrl`, document.summary, 'document', { ...document, playground: null });
+    response = page(path, `${document.title} — mtrl`, document.description, 'document', { ...document, playground: null });
   }
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);

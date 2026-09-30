@@ -6,9 +6,27 @@
   <title><%= it.title %></title>
   <meta name="description" content="<%= it.description %>" />
   <link rel="canonical" href="https://md3.io<%= it.path %>" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#0c0c10" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="md3.io" />
+  <meta property="og:url" content="https://md3.io<%= it.path %>" />
   <meta property="og:title" content="<%= it.title %>" />
   <meta property="og:description" content="<%= it.description %>" />
-  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://md3.io/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="mtrl — Material Design 3 for every framework" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://md3.io<%= it.path %>" />
+  <meta name="twitter:title" content="<%= it.title %>" />
+  <meta name="twitter:description" content="<%= it.description %>" />
+  <meta name="twitter:image" content="https://md3.io/og-image.png" />
+  <% (it.jsonLd || []).forEach(json => { %><script type="application/ld+json"><%~ json %></script>
+  <% }); %>
   <link rel="preload" href="/fonts/DIN-Alternate-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
@@ -42,7 +60,7 @@
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/">mtrl<span class="brand-dot">.</span></a>
+    <a class="header__logo" href="/"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="">mtrl<span class="brand-dot">.</span></a>
     <% if (it.section) { %><span class="header__sep">/</span><span class="header__section"><%= it.section %></span><% } %>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>

@@ -144,4 +144,16 @@ if (dialog && input && results) {
       }
     }
   }
+
+  // /?q=term opens the search on that term: the home page's SearchAction (src/server/seo.ts).
+  // The address loses the query, so a reload does not open it again.
+  const params = new URLSearchParams(location.search);
+  const query = params.get('q')?.trim();
+  if (query) {
+    open();
+    input.value = query;
+    void search(query);
+    params.delete('q');
+    history.replaceState(history.state, '', `${location.pathname}${params.size ? `?${params}` : ''}${location.hash}`);
+  }
 }

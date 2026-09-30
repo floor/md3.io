@@ -2,6 +2,7 @@
 created: 2026-09-21
 updated: 2026-09-30
 status: published
+description: How mtrl is built in layers, from features and component factories to web components and the React, Vue, Svelte and SolidJS components.
 ---
 
 # Architecture

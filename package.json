@@ -9,9 +9,11 @@
     "build": "bun scripts/build.ts",
     "icons": "bun scripts/icons.ts",
     "sizes": "bun scripts/sizes.ts",
+    "brand-images": "bun scripts/brand-images.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test test/",
     "docs:check": "bun scripts/check-docs.ts",
+    "seo:check": "bun scripts/check-seo.ts",
     "test:browser": "bun scripts/check-browser.ts && bun scripts/check-catalog.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-search.ts && bun scripts/check-styles.ts && bun scripts/check-docs.ts"
   },
   "dependencies": {
