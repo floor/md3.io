@@ -44,33 +44,6 @@ let disposing = false;
 let generation = 0;
 const stage = document.querySelector<HTMLElement>('#stage')!;
 
-/**
- * An app around a bar: the bar pinned to the top or bottom edge of the preview and
- * scrollable content beside it, padded by the bar's real height. The bars listen
- * to the window's scroll, so scrolling the preview drives the scrolled, compressed
- * and auto-hide states as it would in an app.
- */
-function appFrame(edge: 'top' | 'bottom', bar: HTMLElement): { element: HTMLElement; destroy: () => void } {
-  const element = document.createElement('div');
-  element.className = 'app-demo';
-  element.dataset.edge = edge;
-  const content = document.createElement('div');
-  content.className = 'app-demo__content';
-  content.setAttribute('aria-hidden', 'true');
-  for (let i = 1; i <= 24; i++) {
-    const row = document.createElement('div');
-    row.className = 'app-demo__row';
-    row.innerHTML = '<span class="app-demo__avatar"></span><span class="app-demo__lines"><span></span><span></span></span>';
-    content.append(row);
-  }
-  element.append(bar, content);
-  // The bar's height changes with its type and when it compresses: keep the content clear of it.
-  const pad = (): void => { content.style.setProperty('--app-demo-bar', `${bar.offsetHeight}px`); };
-  const observer = new ResizeObserver(pad);
-  observer.observe(bar);
-  requestAnimationFrame(pad);
-  return { element, destroy: () => observer.disconnect() };
-}
 const post = (data: Record<string, unknown>) => { if (!disposing) parent.postMessage(data, location.origin); };
 const clicked = () => post({ type: 'md3:click', count: ++clicks });
 const report = (value: string) => post({ type: 'md3:event', message: value });
@@ -237,8 +210,7 @@ function create(state: ComponentState) {
         buttons.push(navigation);
       }
       control.setScrollState(content.scrolled === true);
-      const frame = appFrame('top', control.element);
-      return { element: frame.element, destroy: () => { frame.destroy(); buttons.forEach(button => button.destroy()); control.destroy(); } };
+      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); control.destroy(); } };
     }
     case 'bottom-app-bar': {
       const control = createBottomAppBar(components['bottom-app-bar'].config(state));
@@ -248,8 +220,7 @@ function create(state: ComponentState) {
       const fab = content.fab ? createFab(content.fab) : null;
       if (fab) { control.addFab(fab.element); fab.on('click', () => message(`${String(state.fabLabel) || 'Compose'} clicked`)); }
       if (!content.visible) control.hide();
-      const frame = appFrame('bottom', control.element);
-      return { element: frame.element, destroy: () => { frame.destroy(); buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
+      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
     }
 
     case 'switch': {
