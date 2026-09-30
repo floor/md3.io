@@ -40,6 +40,8 @@ const visuals: Record<ComponentSlug, string> = {
     ['Save as…', 'Save a copy', 'Download'].map(label => m('menu-item', {}, text(label))).join('')),
   fab: m('fab', { icon: symbols.add, 'aria-label': 'Create new item' }),
   'extended-fab': m('extended-fab', { icon: symbols.edit }, 'Compose'),
+  'fab-menu': m('fab-menu', { icon: symbols.edit, 'aria-label': 'Reply options', presentation: 'list' },
+    [['reply', 'Reply'], ['forward', 'Forward']].map(([value, label]) => m('fab-menu-item', { value, icon: symbols.send }, text(label!))).join('')),
   // Selection & input
   checkbox: div('catalog-stack', m('checkbox', { 'data-indeterminate': true }, 'Additions')
     + div('catalog-stack catalog-stack--inset', m('checkbox', {}, 'Pickles') + m('checkbox', { checked: true }, 'Tomato'))),

@@ -17,6 +17,7 @@ import type { MenuConfig } from 'mtrl/components/menu';
 import type { TopAppBarConfig } from 'mtrl/components/top-app-bar';
 import type { BottomAppBarConfig } from 'mtrl/components/bottom-app-bar';
 import type { ToolbarConfig } from 'mtrl/components/toolbar';
+import type { FabMenuConfig } from 'mtrl/components/fab-menu';
 import type { SwitchConfig } from 'mtrl/components/switch';
 import type { RadiosConfig } from 'mtrl/components/radios';
 import type { ChipsConfig } from 'mtrl/components/chips';
@@ -214,6 +215,24 @@ export const components = {
     ],
     config: (state: ComponentState): FabConfig => ({ variant: string(state, 'variant'), size: string(state, 'size'), icon: iconMarkup(state),
       ariaLabel: string(state, 'ariaLabel').trim() || 'Create new item', disabled: bool(state, 'disabled'), ...fabPosition(state) }),
+  },
+  'fab-menu': {
+    group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
+    description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
+    summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
+    controls: [
+      ...section('Appearance', [choose('presentation', 'Presentation', ['list', 'menu', 'auto'], 'list'), choose('color', 'Color', ['primary', 'secondary', 'tertiary'], 'primary'), choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select')]),
+      ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5', '6'], '3'), toggle('itemIcons', 'Item icons', true)]),
+    ],
+    config: (state: ComponentState): FabMenuConfig => ({
+      icon: componentIcons.edit!, ariaLabel: 'Reply options',
+      presentation: pick(state, 'presentation', ['list', 'menu', 'auto'], 'list'),
+      color: pick(state, 'color', ['primary', 'secondary', 'tertiary'], 'primary'),
+      size: pick(state, 'size', ['default', 'medium', 'large'], 'default'),
+      items: [['reply', 'Reply', 'send'], ['forward', 'Forward', 'send'], ['star', 'Favorite', 'heart'], ['save', 'Bookmark', 'bookmark'], ['download', 'Download', 'download'], ['inbox', 'Archive', 'inbox']]
+        .slice(0, Number(state.items))
+        .map(([id, text, icon]) => ({ id: id!, text: text!, ...(state.itemIcons ? { icon: componentIcons[icon!] } : {}) })),
+    }),
   },
   'extended-fab': {
     group: 'Actions', name: 'Extended FAB', factory: 'createExtendedFab', variable: 'extendedFab',

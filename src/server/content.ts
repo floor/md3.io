@@ -8,7 +8,7 @@ import { FRAMEWORKS } from '../shared/frameworks';
 export const root = resolve(import.meta.dir, '../..');
 export const docsDir = resolve(root, 'docs/components');
 const groups: Record<string, string[]> = {
-  'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab'],
+  'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab', 'fab-menu'],
   'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'textfield', 'select', 'search', 'datepicker', 'timepicker'],
   'Navigation': ['navigation-rail', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
@@ -17,7 +17,7 @@ const groups: Record<string, string[]> = {
 };
 /** The guides, before the components: how to start, how mtrl is built, and one page per way of using it. */
 export const GUIDES = ['getting-started', 'architecture', 'vanilla', 'web-components', 'react', 'vue', 'svelte', 'solid', 'theming', 'server-rendering'];
-const names: Record<string, string> = { 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar' };
+const names: Record<string, string> = { 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
 export const isGuide = (slug: string) => GUIDES.includes(slug);
 /** A document's URL: a guide at /docs/<slug>/, a component under /docs/components/. */
 export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/components/${slug}/`;

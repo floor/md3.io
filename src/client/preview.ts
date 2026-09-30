@@ -32,6 +32,7 @@ import createIconButton from 'mtrl/components/icon-button';
 import createButtonGroup from 'mtrl/components/button-group';
 import createSplitButton from 'mtrl/components/split-button';
 import createFab from 'mtrl/components/fab';
+import createFabMenu from 'mtrl/components/fab-menu';
 import createExtendedFab from 'mtrl/components/extended-fab';
 import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
@@ -404,6 +405,11 @@ function create(state: ComponentState) {
       if (state.lowered) button.lower();
       button.on('click', clicked);
       return button;
+    }
+    case 'fab-menu': {
+      const control = createFabMenu(components['fab-menu'].config(state));
+      control.on('select', ({ id }) => message(`${id} chosen`));
+      return control;
     }
     case 'extended-fab': {
       const button = createExtendedFab(components['extended-fab'].config(state));
