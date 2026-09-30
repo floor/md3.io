@@ -5,13 +5,16 @@ import { dirname, resolve } from 'node:path';
 const root = resolve(import.meta.dir, '..');
 const outdir = resolve(root, 'dist');
 await mkdir(outdir, { recursive: true });
-const result = await Bun.build({
-  entrypoints: ['site', 'playground', 'preview', 'examples', 'styles', 'catalog'].map(name => resolve(root, `src/client/${name}.ts`)),
-  outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external',
-});
-if (!result.success) {
-  for (const log of result.logs) console.error(log);
-  process.exit(1);
+const options = { outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external' } as const;
+// The components overview is built on its own: each card's module is a chunk, and the
+// chunks the cards share are split by which cards use them, not also by which of the
+// other pages do.
+for (const names of [['site', 'playground', 'preview', 'examples', 'styles'], ['catalog']]) {
+  const result = await Bun.build({ ...options, entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)) });
+  if (!result.success) {
+    for (const log of result.logs) console.error(log);
+    process.exit(1);
+  }
 }
 // Bun links node_modules/mtrl file by file; copy from the real checkout so cp never
 // has to recreate those links over files already in dist.

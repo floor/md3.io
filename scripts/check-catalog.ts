@@ -1,6 +1,8 @@
-// The components overview in a browser: every card shows mtrl's element upgraded, nothing
-// opens in the top layer or as a modal, each card is one link whose visual is inert, the
-// visuals follow the site's light and dark mode, and a phone has no horizontal scroll.
+// The components overview in a browser: each card's element loads as the card comes near
+// the viewport, and every card shows mtrl's element upgraded once scrolled to, without
+// moving; nothing opens in the top layer or as a modal, each card is one link whose visual
+// is inert, the visuals follow the site's light and dark mode, and a phone has no
+// horizontal scroll.
 // BASE_URL checks a running server; without it the check serves the site itself.
 import { chromium, type Page } from 'playwright';
 import { mkdir } from 'node:fs/promises';
@@ -57,13 +59,34 @@ try {
   // Before the script: the pre-upgrade rules and the fixed visual keep every card's box.
   await page.route('**/dist/catalog.js', route => route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
   await page.goto(`${base}/components/`);
-  const boxes = () => page.locator('.component-card').evaluateAll(cards => cards.map(card => { const box = card.getBoundingClientRect(); return [Math.round(box.top), Math.round(box.height)]; }));
+  // Each card's box on the page, wherever it is scrolled to.
+  const boxes = () => page.locator('.component-card').evaluateAll(cards => cards.map(card => { const box = card.getBoundingClientRect(); return [Math.round(box.top + scrollY), Math.round(box.left), Math.round(box.width), Math.round(box.height)]; }));
   const before = await boxes();
   await page.unroute('**/dist/catalog.js');
+  // Scrolls through the page, so every card comes near the viewport and loads its element,
+  // then back to the top once all are upgraded.
+  const loadAll = async () => {
+    const step = await page.evaluate(() => innerHeight / 2);
+    // Two frames at each stop, for the observer to see the cards there.
+    const scrollAndPaint = (top: number) => page.evaluate(y => { scrollTo(0, y); return new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))); }, top);
+    for (let y = 0; y < await page.evaluate(() => document.documentElement.scrollHeight); y += step) await scrollAndPaint(y);
+    await scrollAndPaint(await page.evaluate(() => document.documentElement.scrollHeight));
+    await page.waitForFunction(() => document.querySelectorAll('.catalog-visual :not(:defined)').length === 0);
+    await page.evaluate(() => scrollTo(0, 0));
+  };
 
   console.log('Checking /components/');
   await page.goto(`${base}/components/`);
-  await page.waitForFunction(() => document.querySelectorAll('.catalog-visual :not(:defined)').length === 0);
+  // Lazily: the first card upgrades, and a card more than two viewports down has not
+  // loaded its element (the page loads a card a viewport before it is seen).
+  await page.waitForFunction(() => document.querySelector('.catalog-visual')?.querySelector(':not(:defined)') === null);
+  const far = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.catalog-visual')]
+    .filter(visual => visual.getBoundingClientRect().top > innerHeight * 2.5)
+    // Its own element is still undefined (the icon buttons some cards share may be defined).
+    .map(visual => ({ slug: visual.className, loaded: visual.querySelector(':not(:defined)') === null })));
+  assert(far.length > 0, 'No card is far enough down the overview to check it loads lazily');
+  assert(far.every(card => !card.loaded), `Cards far below the viewport loaded at once: ${far.filter(card => card.loaded).map(card => card.slug).join(', ')}`);
+  await loadAll();
   const state = await inspect(page);
   assert(state.cards.length === componentSlugs.length, `The overview shows ${state.cards.length} cards, not ${componentSlugs.length}`);
   for (const [index, card] of state.cards.entries()) {
@@ -94,7 +117,7 @@ try {
   await page.locator('.catalog-visual--dialog').click();
   await page.waitForURL('**/components/dialog/');
   await page.goBack();
-  await page.waitForFunction(() => customElements.get('m-button') !== undefined);
+  await loadAll();
 
   // Light and dark follow the site, from mtrl's baseline.
   const surface = () => page.locator('.catalog-visual--button').evaluate(element => getComputedStyle(element).backgroundColor);
