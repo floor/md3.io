@@ -2,6 +2,9 @@ import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { themes } from '../src/shared/button';
 import { baseline, shapeScale, shapeUsage, themeBase } from '../src/server/tokens';
+import { M3_CORNER_SCALE, M3_SHAPE_COUNT } from '../src/shared/m3-shape';
+import { SHAPE_GALLERY } from '../src/shared/shape-gallery';
+import { SHAPE_NAMES } from '../src/shared/shape-library';
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
 
@@ -33,24 +36,38 @@ describe('Styles pages', () => {
     expect(html).toContain('<a class="styles-card ui-card ui-card--interactive" href="/styles/shape/">');
     expect(html).toContain('id="styles-summary"');
   });
-  test('the shape page lists every step of mtrl\'s corner scale, with its token and value', async () => {
+  test('the shape page shows the M3 scale, mtrl\'s values, and the steps mtrl lacks', async () => {
     const html = await (await get('/styles/shape/')).text();
-    const steps = Object.keys(shapeScale);
-    expect(steps).toContain('medium');
-    expect(steps).toContain('full');
-    expect(html.match(/class="shape-step" data-step=/g)?.length).toBe(steps.length);
-    for (const [step, radius] of Object.entries(shapeScale)) {
-      expect(html).toContain(`data-copy="var(--mtrl-sys-shape-corner-${step})"`);
-      expect(html).toContain(`mtrl: ${radius}px`);
+    for (const { step, dp } of M3_CORNER_SCALE) {
+      const radius = shapeScale[step];
+      const tile = new RegExp(`<li class="shape-tile( shape-tile--missing)?" data-step="${step}">`).exec(html);
+      expect(tile).not.toBeNull();
+      if (radius === undefined) {
+        // In M3, not in mtrl: muted, with M3's value.
+        expect(tile![1]).toBe(' shape-tile--missing');
+        expect(html).toContain(`${dp}px in M3`);
+      } else {
+        expect(tile![1]).toBeUndefined();
+        expect(html).toContain(`data-copy="var(--mtrl-sys-shape-corner-${step})"`);
+      }
     }
-    // Only scalable steps get a fine-tune slider: none and full stay as they are.
-    expect(html).toContain('id="shape-medium"');
-    expect(html).not.toContain('id="shape-full"');
-    expect(html).not.toContain('id="shape-none"');
-    expect(html).toMatch(/id="shape-roundness" min="0" max="300"/);
-    // Where mtrl uses a step, read from its compiled component styles.
-    expect(shapeUsage.medium).toContain('card');
-    expect(html).toMatch(/data-step="extra-large"[\s\S]*?Used by [^<]*(<a href="\/components\/[a-z-]+\/">[^<]+<\/a>, )*<a href="\/components\/dialog\/">Dialog<\/a>/);
+    // mtrl's own steps are listed apart, and only editable steps get an editor.
+    const extras = Object.keys(shapeScale).filter(step => !M3_CORNER_SCALE.some(entry => entry.step === step));
+    expect(html).toContain('mtrl-specific, not part of M3');
+    for (const step of extras) expect(html).toContain(`data-step="${step}"`);
+    expect(html).toContain('id="shape-edit-medium"');
+    expect(html).not.toContain('id="shape-edit-full"');
+    expect(html).not.toContain('id="shape-edit-none"');
+    expect(html).not.toContain('roundness');
+    // The gallery frame, and the expressive shapes drawn by mtrl/core/shapes.
+    expect(html).toContain('<iframe class="shape-gallery" src="/styles/frame/?view=gallery" data-theme-frame="theme"');
+    expect(html.match(/<li class="shape-library__item"><svg viewBox="0 0 100 100" role="img" aria-label="[^"]+"><path d="M[^"]+Z" \/>/g)?.length).toBe(SHAPE_NAMES.length);
+    expect(html).toContain(`M3 defines ${M3_SHAPE_COUNT} shapes; mtrl ships these ${SHAPE_NAMES.length} today (FLO-346)`);
+    // The preview starts closed here: the gallery already shows the effect.
+    expect(html).toMatch(/<aside class="styles-preview styles-preview--docked" id="styles-preview" aria-label="Live preview" data-collapsible data-open="false">/);
+  });
+  test('every gallery pairing is a step the component\'s mtrl stylesheet reads', () => {
+    for (const { step, items } of SHAPE_GALLERY) for (const { component } of items) expect(shapeUsage[step]).toContain(component);
   });
   test('the preview frame is real mtrl, isolated and not indexed', async () => {
     const response = await get('/styles/frame/');
@@ -58,7 +75,7 @@ describe('Styles pages', () => {
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
     const html = await response.text();
     expect(html).toContain('/dist/mtrl/styles/base.css');
-    for (const style of ['card', 'dialog', 'button', 'chips', 'textfield']) expect(html).toContain(`/dist/mtrl/styles/${style}.css`);
+    for (const style of ['card', 'dialog', 'button', 'chips', 'textfield', 'checkbox']) expect(html).toContain(`/dist/mtrl/styles/${style}.css`);
     expect(html).toContain('/dist/styles-frame.js');
   });
   test('the shape page is in the sitemap and the sidebar', async () => {

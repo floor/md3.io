@@ -1,7 +1,8 @@
 // The Styles pages in a browser: the Color page swaps theme and mode from its JSON and
 // shares the playground's appearance key, the Typography sample text updates every
-// row, copy buttons copy, the Shape page's roundness reaches the live preview, a share
-// link and the exported CSS carry it, the preview's dialog closes with Escape, and
+// row, copy buttons copy, a Shape step edit reaches the gallery and the live preview, a
+// share link and the exported CSS carry it, the expressive shapes draw and the morph
+// respects reduced motion, the preview's dialog closes with Escape, and
 // every page fits a 375 px phone in both site themes.
 // BASE_URL checks a running server; without it the check serves the site itself.
 import { chromium } from 'playwright';
@@ -79,23 +80,39 @@ try {
   await page.locator('.type-card[data-role="body-medium"]').getByRole('button', { name: 'Copy class mtrl-body-medium' }).click();
   assert(await page.evaluate(() => navigator.clipboard.readText()) === 'mtrl-body-medium', 'Copy copies the utility class');
 
-  // Shape: roundness reaches a square button in the live preview, as a custom property.
+  // Shape: editing a step reaches the components gallery and the live preview.
   console.log('Checking /styles/shape/');
   await page.goto(`${base}/styles/shape/`);
   await page.waitForLoadState('networkidle');
-  const preview = page.frameLocator('[data-frame="theme"] iframe');
-  const buttonRadius = () => preview.locator('[data-preview="button"]').evaluate(element => getComputedStyle(element).borderTopLeftRadius);
-  const medium = await page.locator('.shape-step[data-step="medium"] .shape-step__spec').textContent();
-  const mediumPx = Number(/(\d+)px/.exec(medium!)![1]);
-  await until(buttonRadius, `${mediumPx}px`, 'The preview button starts at mtrl\'s medium corner');
-  await page.getByRole('slider', { name: 'Roundness', exact: true }).fill('200');
-  await until(buttonRadius, `${mediumPx * 2}px`, 'Roundness 200% doubles the preview button\'s corners');
-  assert(await page.locator('.shape-step[data-step="medium"] output').textContent() === `${mediumPx * 2}px`, 'The medium step shows its new value');
-  assert(await page.locator('.shape-step[data-step="full"] output').textContent() === '9999px', 'Full stays full');
-  // Export: the CSS has the overridden token; the share link restores it elsewhere.
+  const radiusOf = (frame: string, selector: string) => () => page.frameLocator(frame).locator(selector).first().evaluate(element => getComputedStyle(element).borderTopLeftRadius);
+  const galleryCard = radiusOf('iframe.shape-gallery', '.gallery__step[data-step="medium"] .mtrl-card');
+  const previewCard = radiusOf('[data-frame="theme"] iframe', '.screen__body > .mtrl-card');
+  await until(galleryCard, '12px', 'The gallery card starts at mtrl\'s medium corner');
+  assert(await page.locator('#styles-preview-toggle').getAttribute('aria-expanded') === 'false', 'The preview starts closed on the Shape page');
+  const medium = page.locator('.shape-tile[data-step="medium"]');
+  await medium.getByRole('button', { name: /^Edit medium/ }).click();
+  await medium.getByLabel('Medium corner radius in px').fill('24');
+  await until(galleryCard, '24px', 'Editing medium to 24px changes the gallery card');
+  await until(previewCard, '24px', 'Editing medium to 24px changes the preview card');
+  assert(await medium.locator('output').textContent() === '24px', 'The tile shows the new value');
+  // Selecting a step outlines its components in the gallery.
+  await medium.locator('.shape-tile__select').click();
+  await until(() => page.frameLocator('iframe.shape-gallery').locator('.gallery__step--active').getAttribute('data-step'), 'medium', 'Selecting a step highlights its components');
+  // The expressive shapes: 8 drawn paths, and a morph that stays still under reduced motion.
+  const paths = await page.locator('.shape-library__item path').evaluateAll(elements => elements.map(element => (element as SVGPathElement).getTotalLength()));
+  assert(paths.length === 8 && paths.every(length => length > 50), `The shape gallery draws 8 non-empty paths, got ${paths.map(Math.round).join(', ')}`);
+  assert(await page.locator('#shape-morph-toggle').getAttribute('aria-pressed') === 'false', 'The morph starts paused under reduced motion');
+  const still = await page.locator('#shape-morph-path').getAttribute('d');
+  await page.waitForTimeout(800);
+  assert(await page.locator('#shape-morph-path').getAttribute('d') === still, 'The paused morph does not move');
+  await page.locator('#shape-morph-toggle').click();
+  await page.waitForTimeout(800);
+  assert(await page.locator('#shape-morph-path').getAttribute('d') !== still, 'Play morphs the shape');
+  await page.locator('#shape-morph-toggle').click();
+  // Export: the CSS has the override; the share link restores it elsewhere.
   await page.getByRole('button', { name: 'Export theme' }).click();
   const css = await page.locator('#styles-export-css').textContent();
-  assert(css!.includes(`--mtrl-sys-shape-corner-medium: ${mediumPx * 2}px;`), `The exported CSS overrides the medium corner:\n${css}`);
+  assert(css!.includes('--mtrl-sys-shape-corner-medium: 24px;'), `The exported CSS overrides the medium corner:\n${css}`);
   assert(!css!.includes('--mtrl-sys-shape-corner-full'), 'The exported CSS leaves unchanged tokens out');
   const link = await page.locator('#styles-export-link').inputValue();
   assert(link.startsWith(`${base}/styles/?theme=`), `The share link points at the Styles overview, got ${link}`);
@@ -106,10 +123,12 @@ try {
   await other.goto(link.replace('/styles/?', '/styles/shape/?'));
   await other.waitForLoadState('networkidle');
   assert(!other.url().includes('theme='), `The share link leaves the address bar, got ${other.url()}`);
-  assert(await other.getByRole('slider', { name: 'Roundness', exact: true }).inputValue() === '200', 'A share link opened in a fresh browser restores the roundness');
-  await until(() => other.frameLocator('[data-frame="theme"] iframe').locator('[data-preview="button"]').evaluate(element => getComputedStyle(element).borderTopLeftRadius), `${mediumPx * 2}px`, 'The shared theme reaches the preview');
+  assert(await other.locator('.shape-tile[data-step="medium"] output').textContent() === '24px', 'A share link opened in a fresh browser restores medium');
+  await until(() => other.frameLocator('iframe.shape-gallery').locator('.gallery__step[data-step="medium"] .mtrl-card').evaluate(element => getComputedStyle(element).borderTopLeftRadius), '24px', 'The shared theme reaches the gallery');
   await fresh.close();
-  // The preview's dialog: opens from Book, Escape closes it, focus goes back.
+  // The preview's dialog, preview opened: Book opens it, Escape closes it, focus goes back.
+  await page.locator('#styles-preview-toggle').click();
+  const preview = page.frameLocator('[data-frame="theme"] iframe');
   const book = preview.locator('.mtrl-card').getByRole('button', { name: 'Book' });
   await book.click();
   const dialog = preview.getByRole('alertdialog', { name: 'Book Lakeside cabin?' });
@@ -117,8 +136,9 @@ try {
   await page.keyboard.press('Escape');
   await dialog.waitFor({ state: 'hidden' });
   assert(await book.evaluate(element => element.ownerDocument.activeElement === element), 'Closing the preview dialog returns focus to Book');
+  await page.locator('#styles-preview-toggle').click();
   await page.getByRole('button', { name: 'Reset shape' }).click();
-  await until(buttonRadius, `${mediumPx}px`, 'Reset shape brings mtrl\'s corners back');
+  await until(galleryCard, '12px', 'Reset shape brings mtrl\'s corners back');
 
   // Every page, 375 px wide, dark and light: no horizontal scroll, one swatch column.
   await page.setViewportSize({ width: 375, height: 800 });
@@ -146,7 +166,7 @@ try {
     }
   }
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
-  console.log('Styles pages: theme and mode swap, shared appearance key, sample text, copy, shape roundness in the preview, export CSS, share link, preview dialog, 375 px in both site themes.');
+  console.log('Styles pages: theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
   await browser.close();
   server?.stop();

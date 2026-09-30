@@ -3,7 +3,9 @@
 // come from the JSON the server embeds, read from mtrl's CSS; theme changes go
 // through the store (theme-store.ts), which the preview and the export follow.
 import { AA_TEXT, contrastRatio, pairOf } from '../shared/color';
-import { CORNER_MAX, cornerRadius, isScalable, type ShapeState } from '../shared/theme-state';
+import { CORNER_MAX, cornerRadius, isEditable } from '../shared/theme-state';
+import { SHAPE_LABELS, morphPath, shapeProfile } from '../shared/shape-library';
+import { LOADING_INDICATOR_SHAPES } from 'mtrl/components/loading-indicator/constants';
 import { themeBase, themeStore } from './theme-store';
 import { announce, changes, copy, themeName } from './styles-panel';
 
@@ -116,36 +118,116 @@ if (summary) {
 
 // ─── Shape ──────────────────────────────────────────────────────────
 
-const roundness = document.querySelector<HTMLInputElement>('#shape-roundness');
-if (roundness) {
-  const roundnessValue = document.querySelector<HTMLOutputElement>('#shape-roundness-value')!;
-  const steps = [...document.querySelectorAll<HTMLElement>('.shape-step')];
-  const shape = (): ShapeState => themeStore.get().shape ?? {};
+const strip = document.querySelector<HTMLElement>('.shape-strip');
+if (strip) {
+  const tiles = [...document.querySelectorAll<HTMLElement>('.shape-tile:not(.shape-tile--missing)')];
+  const gallery = document.querySelector<HTMLIFrameElement>('.shape-gallery');
+  const corners = () => themeStore.get().shape?.corners ?? {};
   themeStore.subscribe(state => {
-    const percent = state.shape?.roundness ?? 100;
-    roundness.value = String(percent);
-    roundnessValue.value = `${percent}%`;
-    for (const row of steps) {
-      const step = row.dataset.step!;
+    for (const tile of tiles) {
+      const step = tile.dataset.step!;
       const radius = cornerRadius(state.shape, themeBase, step);
-      row.querySelector<HTMLElement>('.shape-step__sample')!.style.borderRadius = `${radius}px`;
-      row.querySelector<HTMLOutputElement>('output')!.value = `${radius}px`;
-      row.classList.toggle('shape-step--changed', radius !== themeBase.shape[step]);
-      const slider = row.querySelector<HTMLInputElement>('input[type="range"]');
-      if (slider) {
-        // A scaled step can pass the slider's end; the end follows.
-        slider.max = String(Math.max(CORNER_MAX, radius));
-        slider.value = String(radius);
-      }
+      tile.querySelector<HTMLElement>('.shape-tile__shape')!.style.borderRadius = `${Math.min(radius, 999)}px`;
+      tile.classList.toggle('shape-tile--changed', radius !== themeBase.shape[step]);
+      if (!isEditable(themeBase.shape[step] ?? 0)) continue;
+      tile.querySelector('output')!.value = `${radius}px`;
+      tile.querySelector('.shape-tile__edit')!.setAttribute('aria-label', `Edit ${step.replaceAll('-', ' ')}, ${radius}px`);
+      for (const input of tile.querySelectorAll<HTMLInputElement>('.shape-tile__editor input')) if (input !== document.activeElement || input.type === 'range') input.value = String(radius);
     }
   });
-  // Roundness scales the whole scale again, so it replaces any fine-tuning.
-  roundness.addEventListener('input', () => themeStore.set({ shape: { roundness: Number(roundness.value) } }));
-  roundness.addEventListener('change', () => announce(`Roundness ${roundness.value}%`));
-  for (const slider of document.querySelectorAll<HTMLInputElement>('.shape-step input[type="range"]')) {
-    const step = slider.dataset.step!;
-    if (!isScalable(themeBase.shape[step] ?? 0)) continue;
-    slider.addEventListener('input', () => themeStore.set({ shape: { ...shape(), corners: { ...shape().corners, [step]: Number(slider.value) } } }));
-    slider.addEventListener('change', () => announce(`${step.replaceAll('-', ' ')} corner ${slider.value}px`));
+
+  // A value opens its editor; the number and the slider both write to the store.
+  const closeEditors = (except?: HTMLElement) => {
+    for (const tile of tiles) if (tile !== except) {
+      const editor = tile.querySelector<HTMLElement>('.shape-tile__editor');
+      if (editor && !editor.hidden) { editor.hidden = true; tile.querySelector('.shape-tile__edit')!.setAttribute('aria-expanded', 'false'); }
+    }
+  };
+  for (const tile of tiles) {
+    const edit = tile.querySelector<HTMLButtonElement>('.shape-tile__edit');
+    if (!edit) continue;
+    const step = tile.dataset.step!;
+    const editor = tile.querySelector<HTMLElement>('.shape-tile__editor')!;
+    const number = editor.querySelector<HTMLInputElement>('input[type="number"]')!;
+    edit.addEventListener('click', () => {
+      const open = editor.hidden;
+      closeEditors(tile);
+      editor.hidden = !open;
+      edit.setAttribute('aria-expanded', String(open));
+      if (open) number.select();
+    });
+    for (const input of editor.querySelectorAll<HTMLInputElement>('input')) {
+      input.addEventListener('input', () => {
+        const value = Math.min(CORNER_MAX, Math.max(0, Math.round(Number(input.value))));
+        if (input.value !== '' && Number.isFinite(value)) themeStore.set({ shape: { corners: { ...corners(), [step]: value } } });
+      });
+      input.addEventListener('change', () => announce(`${step.replaceAll('-', ' ')} corner ${cornerRadius(themeStore.get().shape, themeBase, step)}px`));
+      input.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' && event.key !== 'Enter') return;
+        event.preventDefault();
+        editor.hidden = true;
+        edit.setAttribute('aria-expanded', 'false');
+        edit.focus();
+      });
+    }
   }
+
+  // Selecting a step highlights its components in the gallery; hovering a gallery row
+  // highlights its step here.
+  const select = (step: string | null) => {
+    for (const tile of tiles) tile.querySelector('.shape-tile__select')!.setAttribute('aria-pressed', String(tile.dataset.step === step));
+    gallery?.contentWindow?.postMessage({ type: 'md3:highlight', step }, location.origin);
+  };
+  for (const tile of tiles) tile.querySelector('.shape-tile__select')!.addEventListener('click', event => {
+    const pressed = (event.currentTarget as HTMLElement).getAttribute('aria-pressed') === 'true';
+    select(pressed ? null : tile.dataset.step!);
+  });
+  addEventListener('message', event => {
+    if (event.origin !== location.origin || !gallery || event.source !== gallery.contentWindow || event.data?.type !== 'md3:step-hover') return;
+    for (const tile of tiles) tile.classList.toggle('shape-tile--hover', tile.dataset.step === event.data.step);
+  });
+}
+
+// The expressive shapes: filled with the base theme's primary container, and one
+// morphing through the loading indicator's sequence (radial profiles interpolated,
+// as mtrl's indicator does). Paused under reduced motion until asked to play.
+const library = document.querySelector<HTMLElement>('#shape-library');
+if (library) {
+  const colors = JSON.parse(document.querySelector('#shape-colors')?.textContent || '{}') as Record<string, Record<'light' | 'dark', [string, string]>>;
+  themeStore.subscribe(({ base, mode }) => {
+    const [fill, ink] = colors[base]?.[mode] ?? colors.baseline?.light ?? [];
+    if (fill) library.style.setProperty('--shape-fill', fill);
+    if (ink) library.style.setProperty('--shape-ink', ink);
+  });
+  const path = library.querySelector<SVGPathElement>('#shape-morph-path')!;
+  const name = library.querySelector<HTMLElement>('#shape-morph-name')!;
+  const toggle = library.querySelector<HTMLButtonElement>('#shape-morph-toggle')!;
+  const sequence = LOADING_INDICATOR_SHAPES;
+  const profiles = sequence.map(shape => shapeProfile(shape));
+  const HOLD = 650;
+  const MORPH = 500;
+  let playing = false;
+  let frame = 0;
+  let start = 0;
+  let elapsed = 0;
+  const ease = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+  const draw = (time: number) => {
+    const index = Math.floor(time / HOLD) % sequence.length;
+    const t = ease(Math.min(1, (time % HOLD) / MORPH));
+    path.setAttribute('d', morphPath(profiles[index]!, profiles[(index + 1) % sequence.length]!, t, (time / HOLD) * 90 % 360));
+    name.textContent = SHAPE_LABELS[sequence[(index + (t > 0.5 ? 1 : 0)) % sequence.length]!];
+  };
+  const tick = (now: number) => { elapsed = Math.max(0, now - start); draw(elapsed); frame = requestAnimationFrame(tick); };
+  const play = (on: boolean) => {
+    playing = on;
+    toggle.setAttribute('aria-pressed', String(on));
+    toggle.textContent = on ? 'Pause' : 'Play';
+    cancelAnimationFrame(frame);
+    if (on) { start = performance.now() - elapsed; frame = requestAnimationFrame(tick); }
+  };
+  draw(0);
+  toggle.addEventListener('click', () => play(!playing));
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  play(!reduced.matches);
+  reduced.addEventListener('change', () => { if (reduced.matches) play(false); });
 }

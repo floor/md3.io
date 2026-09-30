@@ -119,15 +119,15 @@
 /* The Yours / Base switch: comparing in a panel too narrow for two frames. */
 @media (max-width: 1599px) { .styles-preview--compare .styles-preview__switch { display: flex; } }
 
-@media (max-width: 1100px) {
-  .styles-layout { display: flex; flex-direction: column; align-items: stretch; }
-  .styles-preview { position: sticky; top: auto; bottom: 0; z-index: 20; height: auto; margin: 0; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; box-shadow: 0 -6px 24px var(--shadow-sidebar, rgba(0, 0, 0, 0.2)); }
-  .styles-preview__heading { display: none; }
-  .styles-preview__toggle { display: inline-flex; }
-  .styles-preview__body { height: min(62vh, 640px); flex: none; }
-  .styles-preview[data-open="false"] .styles-preview__body { display: none; }
-  .styles-preview--compare .styles-preview__switch { display: flex; }
-}
+/* Docked (styles-panel.ts): narrow screens, or a collapsible preview while closed. */
+.styles-layout:has(.styles-preview--docked) { display: flex; flex-direction: column; align-items: stretch; }
+.styles-preview--docked { position: sticky; top: auto; bottom: 0; z-index: 20; height: auto; margin: 0; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; box-shadow: 0 -6px 24px var(--shadow-sidebar, rgba(0, 0, 0, 0.2)); }
+.styles-preview--docked .styles-preview__heading { display: none; }
+.styles-preview--docked .styles-preview__toggle, .styles-preview[data-collapsible] .styles-preview__toggle { display: inline-flex; }
+.styles-preview[data-collapsible]:not(.styles-preview--docked) .styles-preview__heading { display: none; }
+.styles-preview--docked .styles-preview__body { height: min(62vh, 640px); flex: none; }
+.styles-preview--docked[data-open="false"] .styles-preview__body { display: none; }
+.styles-preview--docked.styles-preview--compare .styles-preview__switch { display: flex; }
 
 /* ─── Export ─────────────────────────────────────────────────────── */
 
@@ -166,30 +166,49 @@
 /* ─── Shape ──────────────────────────────────────────────────────── */
 
 .type-section__title { font-size: var(--fs-xl, 22px); margin: 0 0 6px; }
-.shape-roundness__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.shape-roundness__control { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
-.shape-roundness__end { color: var(--text-dim); font-size: var(--fs-xs); }
-.shape-roundness__control output { min-width: 44px; }
-.shape-scale { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.shape-step { display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(140px, 220px); align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
-.shape-step--changed { border-color: var(--accent-text); }
-.shape-step__sample { width: 56px; height: 56px; background: var(--accent-glow); border: 2px solid var(--accent-text); box-sizing: border-box; transition: border-radius 0.1s ease; }
-.shape-step__meta { display: grid; gap: 4px; min-width: 0; }
-.shape-step__name { margin: 0; font-size: var(--fs-md); }
-.shape-step__spec { margin: 0; color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); }
-.shape-step__control { justify-content: flex-end; }
-.shape-step__control output { min-width: 52px; }
+.styles-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.shape-strip { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.shape-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; padding: 10px 6px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); text-align: center; }
+.shape-tile--changed { border-color: var(--accent-text); }
+.shape-tile--hover, .shape-tile:has(.shape-tile__select[aria-pressed="true"]) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.shape-tile__select { padding: 4px; border: 0; background: transparent; cursor: pointer; border-radius: 8px; }
+.shape-tile__select:disabled { cursor: default; }
+.shape-tile__shape { display: block; width: 44px; height: 44px; background: var(--accent); transition: border-radius 0.12s ease; }
+.shape-tile__name { font-size: var(--fs-xs); font-weight: var(--fw-bold); color: var(--text); line-height: 1.25; }
+.shape-tile__value { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--text-muted); }
+.shape-tile__edit { padding: 1px 6px; border: 1px dashed var(--border-hover); border-radius: 6px; background: transparent; cursor: pointer; }
+.shape-tile__edit:hover { color: var(--text); border-color: var(--text-dim); }
+.shape-tile__editor { display: grid; gap: 6px; width: 100%; padding-top: 4px; }
+.shape-tile__editor .ui-input { width: 100%; box-sizing: border-box; }
+.shape-tile__token { padding: 0; border: 0; background: transparent; color: var(--text-dim); font-size: var(--fs-2xs); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 2px; cursor: copy; }
+.shape-tile__token:hover { color: var(--text); }
+.shape-tile--missing { border-style: dashed; background: transparent; }
+.shape-tile--missing .shape-tile__shape { background: var(--border-hover); }
+.shape-tile--missing .shape-tile__name { color: var(--text-muted); }
+.shape-tile__note { font-size: var(--fs-2xs); color: var(--text-dim); }
+.shape-extras { margin-top: 14px; }
+.shape-extras__label { margin: 0 0 6px; color: var(--text-dim); font-size: var(--fs-xs); }
+.shape-strip--extras { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); opacity: 0.85; }
+.shape-strip--extras .shape-tile__shape { background: var(--text-dim); }
+.shape-gallery { display: block; width: 100%; height: 520px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
+.shape-library { --shape-fill: var(--accent-dim); --shape-ink: var(--accent-text); }
+.shape-library__body { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 14px; align-items: start; }
+.shape-library__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.shape-library__item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); font-size: var(--fs-2xs); color: var(--text-muted); text-align: center; }
+.shape-library svg { display: block; width: 56px; height: 56px; overflow: visible; }
+.shape-library path { fill: var(--shape-fill); stroke: var(--shape-ink); stroke-width: 1.2; stroke-opacity: 0.35; }
+.shape-morph { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 0; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
+.shape-morph svg { width: 112px; height: 112px; }
+.shape-morph figcaption { display: flex; align-items: center; gap: 10px; font-size: var(--fs-xs); color: var(--text-muted); }
 .shape-guidance { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--text-muted); }
 .shape-guidance strong { color: var(--text); }
+@container (max-width: 560px) { .shape-library__body { grid-template-columns: minmax(0, 1fr); } }
 
 @media (max-width: 720px) {
   .styles-cards:not(.styles-cards--coming):has(> :nth-child(3)) { grid-template-columns: 1fr; }
   .styles-summary__item { flex-wrap: wrap; }
 }
-/* The rows follow the page column, which the preview beside it narrows. */
-@container (max-width: 600px) {
-  .shape-step { grid-template-columns: 44px minmax(0, 1fr); }
-  .shape-step__sample { width: 44px; height: 44px; }
-  .shape-step__control { grid-column: 1 / -1; justify-content: stretch; }
-  .shape-step__control:not(:has(input)) { display: none; }
+@container (max-width: 480px) {
+  .shape-strip, .shape-strip--extras { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; }
+  .shape-tile__shape { width: 36px; height: 36px; }
 }
