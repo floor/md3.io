@@ -122,8 +122,16 @@ const targets: Record<string, string> = {
   tooltip: 'target',
 };
 
+// The mtrl-addons components, from their own package, which has no web components.
+const addons: Record<string, { factory: string; variable: string; name: string }> = {
+  colorpicker: { factory: 'createColorPicker', variable: 'picker', name: 'color picker' },
+  form: { factory: 'createForm', variable: 'form', name: 'form' },
+};
+
+const addon = (slug: string) => (Object.hasOwn(addons, slug) ? addons[slug] : undefined);
+
 const factoryOf = (slug: string): { factory: string; variable: string } =>
-  isComponent(slug) ? components[slug] : { factory: `create${pascal(slug)}`, variable: camel(slug) };
+  addon(slug) ?? (isComponent(slug) ? components[slug] : { factory: `create${pascal(slug)}`, variable: camel(slug) });
 
 /** The Vanilla code: the factory, its handlers, the element placed, and the actions. */
 export function vanillaCode(block: ExampleBlock): string {
@@ -134,7 +142,8 @@ export function vanillaCode(block: ExampleBlock): string {
   const settings = target ? { ...block.config, [key!]: appRef(`${target.variable}.element`) } : block.config;
   const config = Object.keys(settings).length ? vanillaValue(settings) : '';
   const before = target ? `const ${target.variable} = ${target.factory}(${vanillaValue(block.config[key!])});\ndocument.body.append(${target.variable}.element);\n\n` : '';
-  const imports = [factory, ...(target ? [target.factory] : [])].join(', ');
+  const imports = addon(block.slug) ? `import { ${factory} } from 'mtrl-addons';`
+    : `import { ${[factory, ...(target ? [target.factory] : [])].join(', ')} } from 'mtrl';`;
   const handlers = block.handlers.map(h => {
     const fields = [...new Set(h.args.filter(isField))];
     return `${variable}.on('${h.event}', (${fields.length ? `{ ${fields.join(', ')} }` : ''}) => ${handlerCall(h, field => field)});\n`;
@@ -143,7 +152,7 @@ export function vanillaCode(block: ExampleBlock): string {
   const statement = (step: ExampleStep): string => 'open' in step ? `${variable}.${step.open ? open : close}();`
     : `${variable}.${setters[step.set]?.(step.value) ?? `set${pascal(step.set)}(${vanillaValue(step.value)})`};`;
   const actions = block.actions.map(action => `\nfunction ${action.name}() {\n${action.steps.map(step => `  ${statement(step)}\n`).join('')}}\n`).join('');
-  return `import { ${imports} } from 'mtrl';\n\n${before}const ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
+  return `${imports}\n\n${before}const ${variable} = ${factory}(${config});\n${handlers}document.body.append(${variable}.element);\n${actions}`;
 }
 
 export interface ExampleCode {
@@ -188,7 +197,9 @@ export function renderExample(source: string): string {
   }
   const highlight = (text: string, language: string) => `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
   const vanilla = highlight(rendered.code.vanilla!, 'javascript');
-  const note = `<p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the ${escapeHTML(componentName(slug).toLowerCase())} web component; the vanilla factory works in any of them today.</p>`;
+  const note = addon(slug)
+    ? `<p class="framework-note">The ${addon(slug)!.name} comes from mtrl-addons, which has no web components: its vanilla factory works in any framework.</p>`
+    : `<p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the ${escapeHTML(componentName(slug).toLowerCase())} web component; the vanilla factory works in any of them today.</p>`;
   const panels = FRAMEWORKS.map(({ id, label, language }) => {
     const code = rendered.code[id];
     const body = code !== undefined ? (id === 'vanilla' ? vanilla : highlight(code, language)) : `${vanilla}${note}`;

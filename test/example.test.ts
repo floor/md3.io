@@ -38,6 +38,9 @@ describe('the example fence', () => {
     expect(Object.keys(rendered)).toEqual(['vanilla']);
     const html = renderExample('form:\n  class: signup\n');
     expect(html.match(/class="framework-note"/g)).toHaveLength(5);
+    expect(html).toContain('The form comes from mtrl-addons, which has no web components');
+    expect(rendered.vanilla).toBe("import { createForm } from 'mtrl-addons';\n\nconst form = createForm({ class: 'signup' });\ndocument.body.append(form.element);\n");
+    expect(code('colorpicker:\n  value: red\n', 'vanilla')).toContain("import { createColorPicker } from 'mtrl-addons';\n\nconst picker = createColorPicker({ value: 'red' });");
   });
   test('renders six highlighted panels, and one switch at the top of a page with examples', () => {
     const html = renderExample(withEvent);
