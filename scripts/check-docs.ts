@@ -298,7 +298,8 @@ const served = [
 ];
 function browserModule(source: string, lang: string) {
   return (lang === 'typescript' ? typescript : transpiler).transformSync(source).replace(/((?:from|import)\s*\(?\s*)(["'])(mtrl(?:-addons)?(?:\/[^"']*)?)\2/g, (_, before: string, quote: string, specifier: string) => {
-    if (specifier === 'mtrl/styles' || specifier === 'mtrl-addons/styles') return `${before}${quote}data:text/javascript,${quote}`;
+    // Stylesheet imports are the bundler's; the page already has mtrl's CSS, so they run as nothing
+    if (/^mtrl(?:-addons)?\/(?:styles|themes)(?:\/|$)/.test(specifier)) return `${before}${quote}data:text/javascript,${quote}`;
     const file = Bun.resolveSync(specifier, root);
     for (const { url, dirs } of served) for (const dir of dirs) if (file.startsWith(dir + '/')) return `${before}${quote}${url}${file.slice(dir.length + 1)}${quote}`;
     throw new Error(`${specifier} resolves outside the served packages: ${file}`);
