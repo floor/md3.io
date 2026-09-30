@@ -1,39 +1,74 @@
-# TimePicker
+# Time picker
 
-A time picker asks for a time of day, on a clock dial or by typing it, in a modal dialog you open from your own trigger. Reach for it when the value is a wall-clock time: a meeting, an alarm, a delivery window. Unlike the [DatePicker](datepicker.md), it renders no field of its own; you supply the button or input that opens it.
+A time picker asks for a time of day, on a clock dial or by typing it, in a modal dialog: a
+meeting, an alarm, a delivery window. It renders no field of its own; the app opens it from
+its own button or field, and shows the time where it likes. See the
+[M3 time picker guidelines](https://m3.material.io/components/time-pickers/overview).
 
-## Import
+## Usage
 
-```javascript
-import { createTimePicker } from 'mtrl';
+The value is a 24-hour time, `HH:MM`, whatever the dial shows. While the picker is open, the
+dial, the fields and AM/PM edit a draft: **OK** commits it, and **Cancel**, `Escape` or the
+scrim discard it.
+
+```example
+timepicker:
+  title: Select time
+  value: '14:30'
+  action pick: open
 ```
 
-To pull in only this component, import it directly instead: `import createTimePicker from 'mtrl/components/timepicker'`.
+## Examples
 
-## Basic Usage
+### Seconds
 
-```javascript
-const timePicker = createTimePicker({ title: 'Select time', value: '14:30' });
+`showSeconds` adds seconds to the dial, the fields and the value, `HH:MM:SS`.
 
-timeButton.addEventListener('click', () => timePicker.open());
-
-timePicker.on('confirm', (time) => {
-  timeButton.textContent = time; // "14:30"
-});
+```example
+timepicker:
+  title: Start
+  value: '15:30:45'
+  showSeconds: true
+  action pick: open
 ```
 
-The value is always 24-hour `HH:MM`, or `HH:MM:SS` with `showSeconds`, whatever the picker displays: `format: '12h'` changes the dial and the AM/PM selector, not the string you get back. `getTimeObject()` gives the same time as numbers.
+### Limits and steps
 
-While the picker is open, the dial, fields and AM/PM edit a **draft**: **OK** commits it, and **Cancel**, `Escape` or a click on the scrim discard it, as M3 specifies. The value, `getValue()` and the form keep the committed time until OK.
+`minTime` and `maxTime` bound the time; `minuteStep` and `secondStep` put it on a grid. On the
+dial, what cannot be reached is disabled, and so is AM or PM when none of that half of the day
+is allowed. A pick outside the limits moves to the nearest time inside, and a typed time is
+held to them when it is committed; `setValue()` is not.
 
-## Configuration
+```example
+timepicker:
+  title: Meeting time
+  value: '10:00'
+  minTime: '09:00'
+  maxTime: '17:30'
+  minuteStep: 15
+  action pick: open
+```
+
+`format: '24h'` shows a dial with two rings, 00–11 outside and 12–23 inside, and no AM/PM; the
+value is 24-hour either way. `type: 'input'` starts on keyboard entry; the toggle in the
+dialog switches between the two. `orientation: 'horizontal'` puts the dial beside the time.
+The factory takes these as the `TIME_FORMAT`, `TIME_PICKER_TYPE` and
+`TIME_PICKER_ORIENTATION` enums from `mtrl/components/timepicker`; the web component takes
+the strings. With `name`, the time is submitted with the form the picker's element is in.
+
+## API
+
+<!-- API: generated from mtrl's types and <m-timepicker>'s spec in a later step. Until then these
+tables are hand-written: keep them in line with the code, and add no prose restating them. -->
+
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `value` | `string` | the current time | Initial time, 24-hour `HH:MM` or `HH:MM:SS` |
-| `type` | `'dial' \| 'input'` | `'dial'` | Clock dial or keyboard entry. People can switch with the toggle in the dialog |
-| `format` | `'12h' \| '24h'` | `'12h'` | How the time is shown. The value is 24-hour either way |
-| `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | The dialog's layout; horizontal puts the dial beside the time |
+| `type` | `TIME_PICKER_TYPE` (`'dial' \| 'input'`) | `'dial'` | Clock dial or keyboard entry. People can switch with the toggle in the dialog |
+| `format` | `TIME_FORMAT` (`'12h' \| '24h'`) | `'12h'` | How the time is shown. The value is 24-hour either way |
+| `orientation` | `TIME_PICKER_ORIENTATION` (`'vertical' \| 'horizontal'`) | `'vertical'` | The dialog's layout; horizontal puts the dial beside the time |
 | `title` | `string` | — | The dialog's heading, and its accessible name |
 | `showSeconds` | `boolean` | `false` | Adds seconds to the time and the value |
 | `minTime` / `maxTime` | `string` | — | The earliest and latest selectable times, 24-hour `HH:MM` or `HH:MM:SS` |
@@ -45,13 +80,12 @@ While the picker is open, the dial, fields and AM/PM edit a **draft**: **OK** co
 | `clockIcon` / `keyboardIcon` | `string` | built-in | SVG for the mode toggle |
 | `container` | `string \| HTMLElement` | the component's element | Where the dialog is appended. By default it stays in `picker.element`; `open()` puts that element in the page if you never did |
 | `class` | `string` | — | Extra classes on the component's element |
+| `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 | `closeOnSelect` | `boolean` | — | Deprecated, no effect: the picker is confirmed with OK, as M3 specifies |
+| `onChange` / `onInput` / `onConfirm` | `(time: string) => void` | — | Called beside the events |
+| `onCancel` / `onOpen` / `onClose` | `() => void` | — | Called beside the events |
 
-Callbacks fire alongside the events, if one handler reads better than `on()`: `onChange(time)`, `onInput(time)`, `onConfirm(time)`, `onCancel()`, `onOpen()`, `onClose()`.
-
-`TIME_PICKER_TYPE`, `TIME_FORMAT`, `TIME_PICKER_ORIENTATION` and `TIME_PERIOD` are exported as enums from `'mtrl/components/timepicker'`, so `format: TIME_FORMAT.MILITARY` reads better than `'24h'` at a call site.
-
-## Component API
+### Methods
 
 | Member | Returns | Description |
 |--------|---------|-------------|
@@ -70,7 +104,7 @@ Callbacks fire alongside the events, if one handler reads better than `on()`: `o
 | `on(event, handler)` / `off(event, handler)` | `TimePickerComponent` | Events |
 | `destroy()` | `void` | Closes the picker and removes it |
 
-## Events
+### Events
 
 | Event | Payload | Description |
 |-------|---------|-------------|
@@ -80,68 +114,27 @@ Callbacks fire alongside the events, if one handler reads better than `on()`: `o
 | `cancel` | none | Cancel, `Escape` or a click on the scrim discarded the draft, while the picker is still open |
 | `open` / `close` | none | The dialog opened or closed |
 
-`input` and `change` are the native pair: `input` as the draft moves, for a live preview; `change` once the time is committed. Changing the display format changes neither, and `setValue` with the time the picker already has emits nothing.
-
-## Limits and steps
-
-`minTime` and `maxTime` bound the time; `minuteStep` and `secondStep` put it on a grid.
-
-- On the dial, hours, minutes and seconds that cannot be reached are disabled, and so is AM or PM when no time in that half of the day is allowed.
-- A pointer between two labels picks the nearest step.
-- A pick that leaves the time outside the limits moves it to the nearest time inside: nine o'clock at a quarter past, with `minTime: '09:30'`, becomes 09:30.
-- A typed time is held to the limits and steps when it is committed, on Enter or on leaving the field, not while it is being typed.
-- `setValue` is not held to them: it sets what you give it.
-
-```javascript
-const meeting = createTimePicker({
-  title: 'Meeting time',
-  value: '10:00',
-  minTime: '09:00',
-  maxTime: '17:30',
-  minuteStep: 15
-});
-```
-
-## Examples
-
-### 24-hour, with seconds
-
-```javascript
-import { TIME_FORMAT } from 'mtrl/components/timepicker';
-
-createTimePicker({ title: 'Start', value: '15:30:45', format: TIME_FORMAT.MILITARY, showSeconds: true });
-```
-
-In 24-hour mode the dial has two rings, 00–11 outside and 12–23 inside, as in Compose; there is no AM/PM selector, and the hour and minute boxes widen to 114dp.
-
-### Starting in keyboard entry
-
-```javascript
-import { TIME_PICKER_TYPE } from 'mtrl/components/timepicker';
-
-createTimePicker({ title: 'Arrival', type: TIME_PICKER_TYPE.INPUT });
-```
-
-The toggle at the bottom of the dialog switches between the dial and the fields, so this only sets where the picker starts.
-
-### In a form
-
-```javascript
-const picker = createTimePicker({ title: 'Pickup', name: 'pickup', value: '08:00' });
-form.append(picker.element); // submits pickup=08:00, updated as the time changes
-```
+Changing the display format emits neither `input` nor `change`, and `setValue()` with the time
+the picker already has emits nothing. The web component's `input` and `change` carry
+`{ value }`; its value is `''` until a time is set or confirmed, and the first OK dispatches
+`change` even on the time the dial started on.
 
 ## Accessibility
 
-- The picker is a native modal `<dialog>`, kept in the component's own element: the page behind is inert, focus moves into the dialog when it opens and returns to whatever opened it when it closes, and `Escape` or a click on the scrim cancels it. Each picker's title has its own id and names the dialog, so pass a `title`.
-- The dial is a listbox named Hour, Minute or Second. Its numbers are options named as times ("9 o'clock", "20 hours", "15 minutes"); the arrows move between them and wrap, Home and End go to the ends, and Enter or Space selects. A pointer can click or drag. Numbers outside the limits or off the step are `aria-disabled`.
-- In dial mode the hour and minute boxes are a radiogroup: radios named "Select hour: 9 o'clock" and "Select minutes: 35 minutes", one Tab stop, the arrows moving the choice and the dial with it.
-- In keyboard entry the fields are number inputs named Hour, Minute and Second, labelled below.
-- AM and PM are a radiogroup with one Tab stop.
+- A native modal `<dialog>`, named by its `title`: the page behind is inert, focus moves in
+  when it opens and returns to the opener when it closes, and `Escape` or the scrim cancels.
+- The dial is a listbox named Hour, Minute or Second, its numbers options named as times
+  ("9 o'clock", "15 minutes"). The arrows move and wrap, `Home` and `End` go to the ends,
+  `Enter` or `Space` selects; numbers outside the limits or off the step are `aria-disabled`.
+- On the dial, the hour and minute boxes are a radiogroup with one Tab stop, and so are AM and
+  PM. In keyboard entry, the fields are number inputs named Hour, Minute and Second.
 - The mode toggle is a button named "Toggle input picker" or "Toggle dial picker".
-- Inside a shadow root, as in a web component, focus is read from the picker's own root, so all of this holds there too.
 
 ## Styling
+
+The dial is drawn in CSS from the theme's colors. Its hand, handle and the number under the
+handle move together on `--mtrl-time-picker-angle` and `--mtrl-time-picker-radius`, which
+spring the short way round; reduced motion turns the spring off.
 
 ```css
 .mtrl-time-picker { }                              /* the component's element */
@@ -159,11 +152,9 @@ form.append(picker.element); // submits pickup=08:00, updated as the time change
 .mtrl-time-picker__actions, .mtrl-time-picker__toggle-type, .mtrl-time-picker__cancel, .mtrl-time-picker__confirm { }
 ```
 
-The dial is drawn in CSS from the theme's colours, so a scoped theme reaches it. Its hand, handle and the label under the handle move together on `--mtrl-time-picker-angle` and `--mtrl-time-picker-radius`, registered custom properties that animate on the default spatial spring, the short way round; reduced motion turns the spring off.
-
 ## Measurements
 
-Following the m3.material.io time picker specs and their tokens, then Compose:
+From the M3 time picker specs and their tokens:
 
 | Attribute | Value |
 |-----------|-------|
