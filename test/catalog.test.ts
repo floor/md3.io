@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
-import { componentSlugs } from '../src/shared/components';
+import { componentSlugs, components, initialComponentState } from '../src/shared/components';
+import { dialogDefaults, menuDefaults, snackbarDefaults, timepickerDefaults, tooltipDefaults } from '../src/client/catalog/defaults';
 import { catalogTokens, catalogVisuals, SURFACES } from '../src/server/catalog';
 import { baseline, scopedTokens } from '../src/server/tokens';
 
@@ -32,6 +33,23 @@ describe('the components overview', () => {
     const cards = html.split('class="component-card ').slice(1);
     expect(cards.length).toBe(componentSlugs.length);
     for (const card of cards) expect(card.split('</a>')[0]).not.toContain('↗');
+  });
+  test("the overlay cards' configs are the playground's initial ones", () => {
+    const written = { dialog: dialogDefaults, menu: menuDefaults, snackbar: snackbarDefaults, tooltip: tooltipDefaults, timepicker: timepickerDefaults };
+    for (const [slug, config] of Object.entries(written)) {
+      const { opener: _opener, ...playground } = components[slug as keyof typeof written].config(initialComponentState(slug as keyof typeof written)) as Record<string, unknown>;
+      expect(config, slug).toEqual(playground);
+    }
+  });
+  test('every card has its own lazily imported module', async () => {
+    const entry = await Bun.file(new URL('../src/client/catalog.ts', import.meta.url)).text();
+    for (const slug of componentSlugs) {
+      expect(entry, slug).toContain(`import('./catalog/${slug}')`);
+      // Its elements are defined when the entry calls `define`, after every chunk it needs ran.
+      expect(await Bun.file(new URL(`../src/client/catalog/${slug}.ts`, import.meta.url)).text(), slug).toContain('export const define = (): void =>');
+    }
+    // Nothing from the playground's table or mtrl's elements is in the entry itself.
+    expect(entry).not.toMatch(/^import (?!type )/m);
   });
   test('the elements bundle stays off the other pages', async () => {
     for (const path of ['/', '/components/button/', '/docs/', '/styles/']) expect(await get(path), path).not.toContain('/dist/catalog.js');
