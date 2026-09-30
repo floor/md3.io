@@ -1174,7 +1174,9 @@ html[data-theme] .source__panel pre {
     }
 }
 
-/* A component's bundle size, beside its documentation link: the factory's on the
-   Vanilla tab, the web component's on the others. */
+/* A component's bundle size, at the right of the playground heading: the factory's
+   on the Vanilla tab, the web component's on the others. The copy button sits over
+   the code instead. */
 .component-size { margin-left: auto; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; cursor: help; }
+.playground-space > .preview-copy { position: absolute; top: 16px; right: 18px; z-index: 1; }
 .component-size strong { color: var(--text-muted); font-family: var(--font-mono); font-weight: var(--fw-bold, 600); }
