@@ -74,23 +74,9 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .preview-appearance .ui-select { flex: 1; }
 }
 .catalog-group + .catalog-group { margin-top: 32px; }
-.component-card__visual--checkbox span { border-radius: 4px; width: 30px; height: 30px; padding: 0; display: grid; place-items: center; font: 24px system-ui; }
 .catalog-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px; }
 .component-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .component-card { display: block; padding: 0; overflow: hidden; }
-.component-card__visual { min-height: 180px; display: flex; gap: 12px; align-items: center; justify-content: center; background: var(--accent-glow); }
-.component-card__visual span { border-radius: 24px; padding: 10px 23px; font-size: var(--fs-ui); background: var(--accent); color: white; }
-.component-card__visual span + span { background: none; border: 1px solid var(--accent-text); color: var(--accent-text); }
-.component-card__visual--icon-button span { width: 48px; height: 48px; display: grid; place-items: center; padding: 0; font: 28px system-ui; }
-.component-card__visual--button-group { gap: 3px; }
-.component-card__visual--button-group span { border-radius: 5px; font-family: var(--font-mono); }
-.component-card__visual--button-group span:first-child { border-radius: 24px 5px 5px 24px; }
-.component-card__visual--button-group span:last-child { border-radius: 5px 24px 24px 5px; }
-.component-card__visual--split-button { gap: 3px; }
-.component-card__visual--split-button span:first-child { border-radius: 24px 5px 5px 24px; }
-.component-card__visual--split-button span:last-child { border-radius: 5px 24px 24px 5px; padding-left: 14px; padding-right: 14px; }
-.component-card__visual--fab span { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 18px; padding: 0; font: 32px system-ui; }
-.component-card__visual--extended-fab span { border-radius: 18px; padding: 18px 26px; }
 .component-card__body { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-top: 1px solid var(--border); }
 .component-card__body h3 { font-size: var(--fs-lg); margin-bottom: 4px; }
 .component-card__body p, .catalog-note { font-size: var(--fs-ui); color: var(--text-muted); }
@@ -164,26 +150,6 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .control-range .ui-slider { min-width: 0; }
 .control-row:has(:disabled) { opacity: .5; }
 
-.component-card__visual--switch span { width: 58px; padding: 4px 6px; text-align: right; font: 28px/1 system-ui; }
-.component-card__visual--radios span { padding: 0; background: transparent; color: var(--accent-text); border: 0; font: 32px system-ui; }
-.component-card__visual--chips span { border-radius: 8px; padding: 8px 16px; }
-.component-card__visual--slider span { background: transparent; color: var(--accent-text); font: 28px var(--font-mono); }
-.component-card__visual--textfield span, .component-card__visual--select span { border-radius: 4px; background: transparent; border: 1px solid var(--accent-text); color: var(--accent-text); min-width: 180px; }
-.component-card__visual--datepicker span, .component-card__visual--timepicker span { border-radius: 12px; font-size: 28px; }
-.component-card__visual--navigation-rail span, .component-card__visual--drawer span, .component-card__visual--menu span { border-radius: 12px; line-height: 1.8; }
-.component-card__visual--tabs span { border-radius: 0; background: transparent; color: var(--accent-text); border-bottom: 2px solid var(--accent-text); }
-.component-card__visual--top-app-bar span, .component-card__visual--bottom-app-bar span { border-radius: 8px; min-width: 240px; }
-.component-card__visual--card span, .component-card__visual--dialog span { border-radius: 16px; padding: 16px 24px; line-height: 1.8; }
-.component-card__visual--list span { background: transparent; color: var(--accent-text); border-radius: 0; line-height: 1.8; }
-.component-card__visual--carousel span { border-radius: 16px; height: 80px; display: grid; place-items: center; }
-.component-card__visual--carousel span:last-child { padding-inline: 10px; }
-.component-card__visual--divider span { background: transparent; color: var(--accent-text); }
-.component-card__visual--bottom-sheet span { border-radius: 16px 16px 0 0; text-align: center; line-height: 1.8; }
-.component-card__visual--side-sheet span { border-radius: 16px 0 0 16px; height: 80px; }
-.component-card__visual--badge span { padding: 3px 8px; font-size: var(--fs-sm); }
-.component-card__visual--progress span { width: 180px; height: 8px; padding: 0; background: linear-gradient(to right, var(--accent-text) 45%, var(--border) 45%); }
-.component-card__visual--loading-indicator span { background: transparent; color: var(--accent-text); font-size: 64px; padding: 0; }
-.component-card__visual--snackbar span, .component-card__visual--tooltip span { border-radius: 4px; }
 @media (max-width: 1000px) {
   .component-page:is([data-component="card"], [data-component="dialog"], [data-component="bottom-sheet"], [data-component="side-sheet"]) .playground-space { height: 480px; min-height: 480px; }
 }
