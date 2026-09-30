@@ -11,11 +11,12 @@
 //              example built (a class the component sets and the stylesheet leaves
 //              alone). Run on its own, this level knows only the CSS.
 //
-// A page's imports are shared by its blocks, so an Import section covers the page.
-// Two fence annotations change what a block is:
+// A page's javascript and typescript imports are shared by its blocks, so an Import
+// section covers the page. Fence annotations change what a block is:
 //
-//   ```javascript fragment    not checked: a signature, a sketch, a partial line
+//   ```javascript fragment    not checked: a signature, a sketch, a partial line (any block)
 //   ```javascript continued   continues the previous block, in its scope
+//   ```tsx solid, ```tsx react  the framework of a tsx or jsx block (see below)
 //
 // A neutral ```example block (src/server/example-block.ts) is rendered in all six
 // frameworks, and a block a framework cannot render is a failure. Its Vanilla
@@ -23,6 +24,19 @@
 // rendering runs in Chromium, each handler's event triggered and its payload fields
 // read from the event's detail; each action is called. The React, Vue, Svelte and
 // SolidJS renderings go through their frameworks' compilers (check-docs/compile.ts).
+//
+// A plain ```vue, ```svelte, ```tsx or ```jsx block is a module of its own, with its own
+// imports (it cannot be `continued`). It goes through its framework's compiler, as an
+// example's renderings do, and is type-checked:
+//
+//   tsx, jsx   against React's or Solid's JSX types and mtrl/react or mtrl/solid. The page
+//              says which: a block is Solid on solid.md and React on every other page,
+//              unless its fence names the framework: ```tsx solid, ```tsx react.
+//   vue        its script, then its template as TypeScript (check-docs/templates.ts): each
+//   svelte     component's props and listeners typed with mtrl/vue's or mtrl/svelte's types.
+//
+// A jsx block, and a vue or svelte block whose script is not lang="ts", is typed loosely,
+// as a javascript block is.
 //
 // A listener the check cannot make fire is named, with the reason, in a comment on the
 // line before its fence: <!-- check-docs untriggered 'event': why -->. Any other listener
@@ -37,11 +51,13 @@ import ts from 'typescript';
 import { chromium } from 'playwright';
 import { exampleCode, parseExample, type ExampleBlock, type ExampleCode } from '../src/server/example-block';
 import { FRAMEWORKS } from '../src/shared/frameworks';
-import { compileFramework } from './check-docs/compile';
+import { compileFramework, errorLine } from './check-docs/compile';
+import { svelteToTs, vueToTs, type Generated } from './check-docs/templates';
 
 const root = resolve(import.meta.dir, '..');
 const docsDir = resolve(root, 'docs/components');
 const preludePath = resolve(import.meta.dir, 'check-docs/prelude.ts');
+const templatesPath = resolve(import.meta.dir, 'check-docs/templates.d.ts');
 const mtrlDir = resolve(root, 'node_modules/mtrl');
 // form and colorpicker document mtrl-addons: the published package, a devDependency
 const addonsDir = resolve(root, 'node_modules/mtrl-addons');
@@ -58,7 +74,8 @@ const failures: Failure[] = [];
 const fail = (page: string, line: number, level: string, message: string) => failures.push({ page, line, level, message });
 
 // Blocks, by page
-const FLAGS = new Set(['fragment', 'continued']);
+const FLAGS = new Set(['fragment', 'continued', 'react', 'solid']);
+const MARKUP = new Set(['vue', 'svelte', 'tsx', 'jsx']);
 const pages = readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)).filter(slug => only.length === 0 || only.includes(slug)).sort();
 const blocks: Block[] = [];
 for (const page of pages) {
@@ -68,6 +85,8 @@ for (const page of pages) {
     const line = text.slice(0, match.index).split('\n').length + 1;
     const flags = info.trim().split(/\s+/).filter(Boolean);
     for (const flag of flags) if (!FLAGS.has(flag)) fail(page, line - 1, 'syntax', `unknown fence annotation "${flag}"`);
+    for (const flag of flags) if ((flag === 'react' || flag === 'solid') && lang !== 'tsx' && lang !== 'jsx') fail(page, line - 1, 'syntax', `"${flag}" names the framework of a tsx or jsx block, not of a ${lang} block`);
+    if (flags.includes('continued') && MARKUP.has(lang)) fail(page, line - 1, 'syntax', `a ${lang} block is a module of its own: it cannot be "continued"`);
     // <!-- check-docs untriggered 'event': why --> on the line before: a listener the
     // check cannot make fire, with the reason, instead of a failure
     const before = text.slice(0, match.index).trimEnd().split('\n').at(-1) ?? '';
@@ -76,6 +95,16 @@ for (const page of pages) {
   }
 }
 const scripts = blocks.filter(block => block.lang === 'javascript' || block.lang === 'typescript');
+
+// Framework blocks: vue, svelte, and tsx or jsx for React or Solid (see the top)
+type Markup = { block: Block; framework: 'react' | 'vue' | 'svelte' | 'solid' };
+const frameworkOf = (block: Block): Markup['framework'] =>
+  block.lang === 'vue' || block.lang === 'svelte' ? block.lang
+    : block.flags.includes('solid') ? 'solid' : block.flags.includes('react') ? 'react' : block.page === 'solid' ? 'solid' : 'react';
+const markups: Markup[] = blocks.filter(block => MARKUP.has(block.lang) && !block.flags.includes('fragment')).map(block => ({ block, framework: frameworkOf(block) }));
+const frameworkLabel = (id: Markup['framework']) => FRAMEWORKS.find(framework => framework.id === id)!.label;
+// A vue or svelte block its compiler rejects is not typed too: its template would fail again
+const uncompiled = new Set<Markup>();
 
 // Example blocks, rendered in every framework
 type Rendered = { block: Block; example: ExampleBlock; code: ExampleCode['code'] };
@@ -177,34 +206,60 @@ for (const unit of units) {
 }
 const docLine = (unit: Unit, line: number) => unit.lines[Math.min(line, unit.lines.length - 1)] ?? unit.line;
 
-// Level 1: types
+// Level 1: types. Each file a unit or a framework block, in a program of its kind
+type Virtual = { page: string; source: string; docLine: (line: number) => number };
 function checkTypes() {
-  const virtual = new Map<string, Unit>(units.map(unit => [resolve(root, '.docs-check', `${unit.id}.ts`), unit]));
   const base: ts.CompilerOptions = {
     target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
     lib: ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'], types: [], skipLibCheck: true, noEmit: true, strict: true,
   };
   // JavaScript blocks are read as JavaScript is written: parameters without types, and
   // DOM lookups that may be null. TypeScript blocks are held to strict TypeScript.
-  const programs = [
-    { options: base, files: [...virtual].filter(([, unit]) => unit.lang === 'typescript').map(([file]) => file) },
-    { options: { ...base, noImplicitAny: false, strictNullChecks: false }, files: [...virtual].filter(([, unit]) => unit.lang === 'javascript').map(([file]) => file) },
-  ];
-  for (const { options, files } of programs) {
+  const loose: ts.CompilerOptions = { noImplicitAny: false, strictNullChecks: false };
+  const jsx: Record<string, ts.CompilerOptions> = { react: { jsx: ts.JsxEmit.ReactJSX, jsxImportSource: 'react' }, solid: { jsx: ts.JsxEmit.Preserve, jsxImportSource: 'solid-js' } };
+  const programs = new Map<string, { options: ts.CompilerOptions; roots: string[]; files: Map<string, Virtual> }>();
+  const add = (kind: string, options: ts.CompilerOptions, roots: string[], file: string, virtual: Virtual) => {
+    const program = programs.get(kind) ?? { options, roots, files: new Map() };
+    program.files.set(resolve(root, '.docs-check', file), virtual);
+    programs.set(kind, program);
+  };
+  for (const unit of units) {
+    add(unit.lang, unit.lang === 'typescript' ? base : { ...base, ...loose }, [preludePath], `${unit.id}.ts`, { page: unit.page, source: unit.source, docLine: line => docLine(unit, line) });
+  }
+  for (const markup of markups) {
+    const { block, framework } = markup;
+    const id = `${block.page}/${block.line}`;
+    if (block.lang === 'tsx' || block.lang === 'jsx') {
+      const strict = block.lang === 'tsx';
+      add(`${framework} ${block.lang}`, { ...base, ...jsx[framework], ...(strict ? {} : loose) }, [preludePath], `${id}.tsx`, { page: block.page, source: block.code, docLine: line => block.line + line });
+      continue;
+    }
+    if (uncompiled.has(markup)) continue;
+    let generated: Generated;
+    try {
+      generated = block.lang === 'vue' ? vueToTs(block.code) : svelteToTs(block.code);
+    } catch (error) {
+      fail(block.page, block.line + ((error as { line?: number }).line ?? errorLine(error) ?? 1) - 1, 'types', `${frameworkLabel(framework)}: ${(error as Error).message.split('\n')[0]}`);
+      continue;
+    }
+    const { source, lines, typescript } = generated;
+    add(`templates ${typescript}`, typescript ? base : { ...base, ...loose }, [preludePath, templatesPath], `${id}.ts`, { page: block.page, source, docLine: line => block.line + (lines[line] ?? 1) - 1 });
+  }
+  for (const { options, roots, files } of programs.values()) {
     const host = ts.createCompilerHost(options);
     const getSourceFile = host.getSourceFile.bind(host);
-    host.getSourceFile = (file, language, ...rest) => { const unit = virtual.get(resolve(file)); return unit ? ts.createSourceFile(file, unit.source, language, true, ts.ScriptKind.TS) : getSourceFile(file, language, ...rest); };
+    host.getSourceFile = (file, language, ...rest) => { const virtual = files.get(resolve(file)); return virtual ? ts.createSourceFile(file, virtual.source, language, true, file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS) : getSourceFile(file, language, ...rest); };
     const fileExists = host.fileExists.bind(host);
-    host.fileExists = file => virtual.has(resolve(file)) || fileExists(file);
+    host.fileExists = file => files.has(resolve(file)) || fileExists(file);
     const readFile = host.readFile.bind(host);
-    host.readFile = file => virtual.get(resolve(file))?.source ?? readFile(file);
-    const program = ts.createProgram([preludePath, ...files], options, host);
+    host.readFile = file => files.get(resolve(file))?.source ?? readFile(file);
+    const program = ts.createProgram([...roots, ...files.keys()], options, host);
     for (const diagnostic of ts.getPreEmitDiagnostics(program)) {
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n  ');
-      const unit = diagnostic.file && virtual.get(resolve(diagnostic.file.fileName));
-      if (!unit || diagnostic.start === undefined) { fail('(program)', 0, 'types', `${diagnostic.file ? relative(root, diagnostic.file.fileName) + ': ' : ''}${message}`); continue; }
+      const virtual = diagnostic.file && files.get(resolve(diagnostic.file.fileName));
+      if (!virtual || diagnostic.start === undefined) { fail('(program)', 0, 'types', `${diagnostic.file ? relative(root, diagnostic.file.fileName) + ': ' : ''}${message}`); continue; }
       const { line } = diagnostic.file!.getLineAndCharacterOfPosition(diagnostic.start);
-      fail(unit.page, docLine(unit, line), 'types', `TS${diagnostic.code} ${message}`);
+      fail(virtual.page, virtual.docLine(line), 'types', `TS${diagnostic.code} ${message}`);
     }
   }
 }
@@ -687,15 +742,21 @@ function checkClasses(rendered = new Set<string>()) {
   return count;
 }
 
-// The React, Vue, Svelte and SolidJS renderings, through their compilers
+// The React, Vue, Svelte and SolidJS renderings, and the framework blocks, through their compilers
+// (Babel names the file it was given with the working directory in front)
+const compileMessage = (error: unknown) => (error as Error).message.split('\n')[0]!.replace(`${process.cwd()}/`, '');
 async function checkCompile() {
   let count = 0;
   for (const { block, code } of examples) {
     for (const { id, label } of FRAMEWORKS) {
       if (id === 'vanilla' || id === 'html' || code[id] === undefined) continue;
       count++;
-      try { await compileFramework(id, code[id]!); } catch (error) { fail(block.page, block.line, 'compile', `${label}: ${(error as Error).message.split('\n')[0]}`); }
+      try { await compileFramework(id, code[id]!); } catch (error) { fail(block.page, block.line, 'compile', `${label}: ${compileMessage(error)}`); }
     }
+  }
+  for (const markup of markups) {
+    const { block, framework } = markup;
+    try { await compileFramework(framework, block.code); } catch (error) { uncompiled.add(markup); fail(block.page, block.line + (errorLine(error) ?? 1) - 1, 'compile', `${frameworkLabel(framework)}: ${compileMessage(error)}`); }
   }
   return count;
 }
@@ -703,6 +764,11 @@ async function checkCompile() {
 const summary: string[] = [];
 if (examples.length || blocks.some(block => block.lang === 'example')) summary.push(`examples: ${blocks.filter(block => block.lang === 'example').length} blocks, ${examples.length} rendered in every framework they have`);
 if (run('types')) summary.push(`compile: ${await checkCompile()} React, Vue, Svelte and SolidJS renderings`);
+if (run('types')) {
+  const count = (lang: string, framework?: string) => markups.filter(markup => markup.block.lang === lang && (!framework || markup.framework === framework)).length;
+  const fragments = blocks.filter(block => MARKUP.has(block.lang) && block.flags.includes('fragment')).length;
+  summary.push(`frameworks: ${markups.length} blocks compiled and type-checked: ${count('vue')} vue, ${count('svelte')} svelte, ${count('tsx', 'react')} tsx and ${count('jsx', 'react')} jsx React, ${count('tsx', 'solid')} tsx and ${count('jsx', 'solid')} jsx SolidJS (${fragments} fragments)`);
+}
 let rendered: Set<string> | undefined;
 if (run('types')) { checkTypes(); summary.push(`types: ${units.length} units from ${scripts.length} blocks (${scripts.filter(block => block.flags.includes('fragment')).length} fragments) and ${examples.length} examples' Vanilla`); }
 if (run('behaviour')) {
