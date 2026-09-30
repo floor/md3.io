@@ -24,7 +24,7 @@ datepicker:
   variant: modal
   value: 2026-10-02
   minDate: 2026-10-01
-  on change: search(value)
+  on change: search(date)
 ```
 
 ## Examples
