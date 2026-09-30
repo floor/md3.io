@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Marked, type Tokens } from 'marked';
+import { renderExample } from './example-block';
+import { FRAMEWORKS } from '../shared/frameworks';
 
 export const root = resolve(import.meta.dir, '../..');
 export const docsDir = resolve(root, 'docs/components');
@@ -39,7 +41,15 @@ export function renderDocument(slug: string) {
   const toc: { title: string; id: string }[] = [];
   const headingId = headingIds();
   const parser = new Marked();
+  // The page's `example` blocks follow the reader's framework, which a switch at the top
+  // of the page picks (document.eta): the same choice as the playgrounds and the Examples.
+  let examples = false;
   parser.use({ renderer: {
+    code(token: Tokens.Code) {
+      if (token.lang !== 'example') return false;
+      examples = true;
+      return renderExample(token.text);
+    },
     heading(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Heading) {
       const { title, id } = headingId(token.text);
       if (token.depth === 2) toc.push({ title, id });
@@ -58,5 +68,15 @@ export function renderDocument(slug: string) {
     },
   } });
   const html = parser.parse(source) as string;
-  return { html, toc, title: componentName(slug) };
+  return { html, toc, title: componentName(slug), frameworkSwitch: examples ? frameworkSwitch() : '' };
 }
+
+/**
+ * The framework switch at the top of a documentation page with examples, where the
+ * component pages have their framework tabs. Which button is on is CSS, from
+ * `:root[data-framework]`, so it is right before any script runs; the script keeps
+ * `aria-pressed` in step (src/client/site.ts).
+ */
+const frameworkSwitch = (): string =>
+  `<div class="framework-tabs framework-switch" role="group" aria-label="Framework for the examples">${FRAMEWORKS.map(({ id, label }) =>
+    `<button type="button" class="framework-tab framework-switch__option" data-framework="${id}" aria-pressed="${id === 'vanilla'}">${label}</button>`).join('')}</div>\n`;

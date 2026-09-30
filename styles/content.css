@@ -265,6 +265,55 @@
     color: #374151;
 }
 
+/* ─── Examples: every framework rendered, the reader's shown ──────────────── */
+
+.doc-example__panel {
+    display: none;
+    margin-bottom: 16px;
+}
+
+.doc-example__panel[data-framework="vanilla"],
+:root[data-framework="html"] .doc-example__panel[data-framework="html"],
+:root[data-framework="react"] .doc-example__panel[data-framework="react"],
+:root[data-framework="vue"] .doc-example__panel[data-framework="vue"],
+:root[data-framework="svelte"] .doc-example__panel[data-framework="svelte"],
+:root[data-framework="solid"] .doc-example__panel[data-framework="solid"] {
+    display: block;
+}
+
+:root[data-framework]:not([data-framework="vanilla"]) .doc-example__panel[data-framework="vanilla"] {
+    display: none;
+}
+
+.doc-example__label {
+    display: block;
+    padding: 8px 20px 0;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+    color: var(--text-dim);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: .6px;
+    text-transform: uppercase;
+}
+
+.doc-example__panel pre {
+    margin-bottom: 0;
+    padding-top: 8px;
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.doc-example .framework-note {
+    margin: 8px 0 0;
+}
+
+.doc-example__error {
+    color: var(--error, #f2b8b5);
+}
+
 /* ─── Tables ─────────────────────────────────────────────────────────────── */
 
 .md table {
@@ -410,3 +459,14 @@
         table-layout: fixed;
     }
 }
+
+/* The framework switch at the top of a documentation page: the tabs of the component
+   pages. The reader's framework is on :root[data-framework] before paint (base.eta);
+   Vanilla without it. */
+.framework-switch__option[data-framework="vanilla"],
+:root[data-framework="html"] .framework-switch__option[data-framework="html"],
+:root[data-framework="react"] .framework-switch__option[data-framework="react"],
+:root[data-framework="vue"] .framework-switch__option[data-framework="vue"],
+:root[data-framework="svelte"] .framework-switch__option[data-framework="svelte"],
+:root[data-framework="solid"] .framework-switch__option[data-framework="solid"] { background: var(--accent); color: var(--text); }
+:root[data-framework]:not([data-framework="vanilla"]) .framework-switch__option[data-framework="vanilla"] { background: transparent; color: var(--text-dim); }

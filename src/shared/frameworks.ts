@@ -148,10 +148,45 @@ export interface ElementMeta {
   states?: (OpenMeta & { property: string; events: [string, string]; opens?: true })[];
 }
 
+/** A docs example's handler: on `event`, call `call` with payload fields (identifiers) or literals. */
+export interface ExampleHandler {
+  event: string;
+  call: string;
+  args: string[];
+}
+/** One step of a docs example's action: set a config key, or open or close the element. */
+export type ExampleStep = { set: string; value: unknown } | { open: boolean };
+export interface ExampleAction {
+  name: string;
+  steps: ExampleStep[];
+}
+/** What a docs example adds to its configuration: handlers and actions. */
+export interface ExampleParts {
+  handlers: ExampleHandler[];
+  actions: ExampleAction[];
+}
+
+// A config value naming one of the app's identifiers (`saveIcon`) rather than a string.
+const APP = '\u0000app:';
+/** A config value that is the app's identifier `name`, written as code and never quoted. */
+export const appRef = (name: string): string => `${APP}${name}`;
+/** The app identifier a config value names, if it names one. */
+export const appName = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.startsWith(APP) ? value.slice(APP.length) : undefined;
+/** A value as code: an app identifier bare, anything else as a literal. */
+export const jsValue = (value: unknown): string => appName(value) ?? literal(value);
+/** A handler argument that is a payload field, not a literal. */
+export const isField = (arg: string): boolean => /^[A-Za-z_$][\w$]*$/.test(arg) && !['true', 'false', 'null', 'undefined'].includes(arg);
+/** The handler's call, its payload fields read through `field`. */
+export const handlerCall = (handler: ExampleHandler, field: (name: string) => string): string =>
+  `${handler.call}(${handler.args.map(arg => (isField(arg) ? field(arg) : arg)).join(', ')})`;
+const readsPayload = (handler: ExampleHandler): boolean => handler.args.some(isField);
+
 type Config = Record<string, unknown>;
-type Attr = { name: string; value: string | number | true; ref?: string };
+/** `state`: bound to the state of that name (an example's action sets it); `unset`: no first value to write. */
+type Attr = { name: string; value: string | number | true; ref?: string; state?: string; unset?: true };
 /** A live property: set in script for HTML, a prop in the frameworks. */
-type Prop = { name: string; value: string | number | boolean };
+type Prop = { name: string; value: string | number | boolean; state?: string; ref?: string };
 /** A child element in one of the parent's slots; `closes` when a click on it closes the parent. */
 type Slotted = { element: string; native: boolean; attrs: Attr[]; text: string; after: boolean; closes: boolean };
 /** A declaration child, with its own children (a submenu). */
@@ -188,6 +223,21 @@ interface Plan {
   calls: { method: string; argument?: unknown }[];
   /** Config options the element does not expose yet: named in a comment, never dropped silently. */
   omitted: string[];
+  /** The text content is this state, which an example's action sets. */
+  textState?: string;
+  /** A docs example's handlers and actions, bound to the element. */
+  example?: ExampleBinding;
+}
+
+/** An action step as each framework writes it: the state it sets and the value, and the web component's statement. */
+type BoundStep = { state: string; value: unknown; html: string };
+interface ExampleBinding {
+  handlers: ExampleHandler[];
+  /** State an action sets, beyond the model and the open state, with its first value. */
+  states: { name: string; value: unknown }[];
+  actions: { name: string; steps: BoundStep[] }[];
+  /** The app's identifiers the code uses: the handlers' placeholders and the icons. */
+  app: string[];
 }
 
 const valueOf = (type: AttributeType, raw: unknown): string | number | true | undefined => {
@@ -418,28 +468,104 @@ function plan(meta: ElementMeta, config: Config): Plan {
   return { attrs, model, props, text, children, slotted, trigger, open, states, calls, omitted: omitted.concat(childOmitted) };
 }
 
+/**
+ * Binds a docs example's actions to the element: each key an action sets becomes
+ * state the frameworks declare and pass down, and a statement on the web component
+ * (its live property, its text, or its attribute). What the element cannot take is
+ * an error: an example renders in every framework or fails.
+ */
+function bindExample(meta: ElementMeta, p: Plan, config: Config, parts: ExampleParts): ExampleBinding {
+  const variable = hostVariable(meta);
+  const states: ExampleBinding['states'] = [];
+  const declare = (name: string, value: unknown) => { if (!states.some(s => s.name === name)) states.push({ name, value }); };
+  const bindStep = (step: ExampleStep): BoundStep => {
+    if ('open' in step) {
+      if (!meta.open) throw new Error(`<m-${meta.name}> has no open state to ${step.open ? 'open' : 'close'}`);
+      if (p.open === undefined) {
+        const first = meta.open.config === undefined ? false : config[meta.open.config];
+        p.open = meta.open.values ? meta.open.values.includes(first) : first === true;
+        p.omitted = p.omitted.filter(key => key !== meta.open!.config);
+      }
+      const method = step.open ? meta.open.show : meta.open.hide;
+      return { state: openName(meta), value: step.open, html: method ? `${variable}.${method}();` : `${variable}.${openName(meta)} = ${step.open};` };
+    }
+    const { set: key, value } = step;
+    const code = jsValue(value);
+    const [name, attribute] = Object.entries(meta.attributes).find(([, a]) => a.config === key) ?? [];
+    if (name && meta.model && camel(name) === meta.model) {
+      if (!p.model) throw new Error(`set ${key} needs the first ${key} in the example`);
+      return { state: p.model.name, value, html: `${variable}.${meta.model} = ${code};` };
+    }
+    if (meta.slot?.config === key) {
+      p.textState = key;
+      declare(key, p.text ?? '');
+      return { state: key, value, html: `${variable}.textContent = ${code};` };
+    }
+    const property = Object.entries(meta.properties).find(([, prop]) => prop.config === key)?.[0];
+    if (property) {
+      const prop = p.props.find(pr => pr.name === property);
+      if (prop) prop.state = key;
+      else p.props.push({ name: property, value: false, state: key });
+      declare(key, config[key] ?? meta.properties[property]!.default ?? false);
+      return { state: key, value, html: `${variable}.${property} = ${code};` };
+    }
+    if (name && attribute) {
+      const attr = p.attrs.find(a => a.name === name);
+      if (attr) attr.state = key;
+      else p.attrs.push({ name, value: true, state: key, unset: true });
+      declare(key, config[key] ?? (attribute.type === 'boolean' ? false : undefined));
+      return {
+        state: key, value,
+        html: attribute.type === 'boolean' ? `${variable}.toggleAttribute('${name}', ${value === true});` : `${variable}.setAttribute('${name}', ${appName(value) ?? quoteJs(String(value))});`,
+      };
+    }
+    throw new Error(`<m-${meta.name}> has no attribute or property for ${key}`);
+  };
+  const actions = parts.actions.map(action => ({ name: action.name, steps: action.steps.map(bindStep) }));
+  const names = new Set(actions.map(a => a.name));
+  for (const handler of parts.handlers) {
+    if (readsPayload(handler) && !meta.events.includes(handler.event)) throw new Error(`<m-${meta.name}>'s ${handler.event} event has no detail to read ${handler.args.filter(isField).join(', ')} from`);
+  }
+  // The app's identifiers: placeholders, and the icons anywhere in the config or the actions.
+  const refs = new Set<string>(parts.handlers.map(h => h.call).filter(call => !names.has(call)));
+  const scan = (value: unknown): void => {
+    const app = appName(value);
+    if (app) refs.add(app);
+    else if (Array.isArray(value)) value.forEach(scan);
+    else if (isRecord(value)) Object.values(value).forEach(scan);
+  };
+  scan(config);
+  parts.actions.forEach(action => action.steps.forEach(step => 'set' in step && scan(step.value)));
+  return { handlers: parts.handlers, states, actions, app: [...refs] };
+}
+
+/** Attributes and props bound to state read it: `disabled={disabled}`, or Solid's `disabled={disabled()}`. */
+const bindState = <T extends Attr | Prop>(items: T[], read: (state: string) => string): T[] =>
+  items.map(item => (item.state ? { ...item, ref: read(item.state) } : item));
+
+/** The frameworks' import of the app's identifiers. */
+const appImport = (p: Plan, indent = ''): string =>
+  p.example?.app.length ? `${indent}import { ${p.example.app.join(', ')} } from './app';\n` : '';
+
 /** Declaration children and their own, depth first. */
 const everyChild = (children: Child[]): Child[] => children.flatMap(child => [child, ...everyChild(child.children)]);
 
-/** Frameworks import each icon (`editIcon`) instead of inlining SVG in attributes. */
+/** Frameworks import each icon (`editIcon`) instead of inlining SVG in attributes; an app identifier is used as it is. */
 function hoist(meta: ElementMeta, p: Plan, indent = ''): string {
   const icons = createIconNamer();
-  for (const attr of p.trigger?.attrs ?? []) {
-    if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${p.trigger!.element}-${attr.name}`);
-  }
-  for (const attr of p.attrs) {
-    if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${meta.name}-${attr.name}`);
-  }
+  const name = (attr: Attr, fallback: string) => {
+    const app = appName(attr.value);
+    if (app) attr.ref = app;
+    else if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, fallback);
+  };
+  for (const attr of p.trigger?.attrs ?? []) name(attr, `${p.trigger!.element}-${attr.name}`);
+  for (const attr of p.attrs) name(attr, `${meta.name}-${attr.name}`);
   for (const child of everyChild(p.children)) {
     const base = String(child.attrs.find(a => a.name === 'value')?.value ?? meta.children!.name);
-    for (const attr of child.attrs) {
-      if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${base}-${attr.name}`);
-    }
+    for (const attr of child.attrs) name(attr, `${base}-${attr.name}`);
   }
   for (const child of p.slotted) {
-    for (const attr of child.attrs) {
-      if (isMarkup(attr.value)) attr.ref = icons.name(attr.value, `${child.element}-${attr.name}`);
-    }
+    for (const attr of child.attrs) name(attr, `${child.element}-${attr.name}`);
   }
   return icons.imports(indent) + icons.declarations(indent);
 }
@@ -468,7 +594,7 @@ const callsNote = (meta: ElementMeta, p: Plan, comment: (text: string) => string
 
 /** HTML attributes; an imported icon (`ref`) is set by the script instead. */
 const htmlAttrs = (attrs: Attr[]): string =>
-  attrs.filter(a => !a.ref).map(a => (a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
+  attrs.filter(a => !a.ref && !a.unset).map(a => (a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
 
 /** JSX / Svelte props: camelCase, booleans bare, numbers in braces. React takes `style` as an object. */
 const jsxAttrs = (attrs: Attr[], react = false): string =>
@@ -497,11 +623,11 @@ const vueAttrs = (attrs: Attr[]): string =>
 
 /** Live properties as JSX / Svelte props: `true` bare, anything else in braces. */
 const jsxProps = (props: Prop[]): string =>
-  props.map(p => (p.value === true ? ` ${p.name}` : ` ${p.name}={${literal(p.value)}}`)).join('');
+  props.map(p => (p.ref ? ` ${p.name}={${p.ref}}` : p.value === true ? ` ${p.name}` : ` ${p.name}={${literal(p.value)}}`)).join('');
 
 /** Live properties as Vue props, bound so booleans and numbers keep their type. */
 const vueProps = (props: Prop[]): string =>
-  props.map(p => (p.value === true ? ` ${kebab(p.name)}` : ` :${kebab(p.name)}="${escapeAttr(literal(p.value)).replaceAll('&quot;', "'")}"`)).join('');
+  props.map(p => (p.ref ? ` :${kebab(p.name)}="${p.ref}"` : p.value === true ? ` ${kebab(p.name)}` : ` :${kebab(p.name)}="${escapeAttr(literal(p.value)).replaceAll('&quot;', "'")}"`)).join('');
 
 const kebab = (name: string): string => name.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`);
 
@@ -519,6 +645,8 @@ interface Markup {
   child: { tag: string; attrs: (attrs: Attr[]) => string; html?: boolean };
   /** A slotted child: `<m-button slot="actions">`, `<img slot="media">`. */
   slotted: (child: Slotted) => string;
+  /** Text content bound to state, as the framework reads it: `{text}`. */
+  text?: (state: string) => string;
 }
 
 /** A declaration child; one with children of its own (a submenu) has its text on a line before them. */
@@ -531,13 +659,14 @@ function childMarkup(markup: Markup['child'], child: Child): string {
 }
 
 function content(p: Plan, markup: Markup, indent: string, closing: string): string {
+  const text = p.textState && markup.text ? markup.text(p.textState) : p.text !== undefined && p.text !== '' ? escapeText(p.text) : undefined;
   const lines = [
     ...p.slotted.filter(s => !s.after).map(markup.slotted),
-    ...(p.text !== undefined && p.text !== '' ? [escapeText(p.text)] : []),
+    ...(text !== undefined ? [text] : []),
     ...p.children.map(c => childMarkup(markup.child, c)),
     ...p.slotted.filter(s => s.after).map(markup.slotted),
   ];
-  if (p.text !== undefined && !p.slotted.length && !p.children.length) return escapeText(p.text);
+  if ((p.text !== undefined || p.textState) && !p.slotted.length && !p.children.length) return text ?? '';
   return lines.length ? `${lines.map(line => `\n${indent}${line.replaceAll('\n', `\n${indent}`)}`).join('')}\n${closing}` : '';
 }
 
@@ -546,13 +675,15 @@ const componentNames = (meta: ElementMeta, p: Plan, name: (element: string) => s
   [...new Set([meta.name, ...(meta.children && p.children.length ? [meta.children.name] : []),
     ...p.slotted.filter(s => !s.native).map(s => s.element), ...(p.trigger && !p.trigger.native ? [p.trigger.element] : [])].map(name))];
 
-export interface CodeContext {
-  theme: string;
-  mode: string;
-}
+/**
+ * The playground's theme and mode; or a docs example, which leaves out the setup
+ * (styles, theme, registering the elements: the framework guides have it) and adds
+ * its handlers and actions.
+ */
+export type CodeContext = { theme: string; mode: string; example?: undefined } | { theme?: undefined; mode?: undefined; example: ExampleParts };
 
 const styleImports = (context: CodeContext): string =>
-  `import 'mtrl/styles/base';\n${context.theme === 'baseline' ? '' : `import 'mtrl/themes/${context.theme}';\n`}`;
+  context.example ? '' : `import 'mtrl/styles/base';\n${context.theme === 'baseline' ? '' : `import 'mtrl/themes/${context.theme}';\n`}`;
 
 /** The HTML selector of a slotted child, by its slot and name. */
 const slottedSelector = (child: Slotted): string => {
@@ -611,13 +742,24 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const triggerText = escapeText(shown !== undefined ? `${shown}${String(modelValue ?? '')}` : p.trigger?.text ?? '');
   const trigger = p.trigger
     ? `${p.trigger.native ? `<${p.trigger.element}${htmlAttrs(p.trigger.attrs)}>${triggerText}</${p.trigger.element}>` : `<m-${p.trigger.element}${htmlAttrs(p.trigger.attrs)}>${triggerText}</m-${p.trigger.element}>`}\n` : '';
+  const markup = `${trigger}<${tag}${modelAttr}${openAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
+  if (p.example) {
+    // The markup, then the script it needs: the element is defined where the app sets up.
+    const { handlers, actions } = p.example;
+    const listeners = (shown !== undefined ? `  ${variable}.addEventListener('${event}', (event) => {\n    ${handler}\n  });\n` : '') +
+      handlers.map(h => `  ${variable}.addEventListener('${h.event}', (${readsPayload(h) ? 'event' : ''}) => ${handlerCall(h, field => `event.detail.${field}`)});\n`).join('');
+    const functions = actions.map(action => `\n  function ${action.name}() {\n${action.steps.map(step => `    ${step.html}\n`).join('')}  }\n`).join('');
+    const hosted = iconAttrs + props + opening + closing + startOpen + calls + listeners + functions;
+    const script = triggerIcons + (hosted ? hostLine + hosted : '');
+    return `${markup}${script ? `\n<script type="module">\n${script}</script>\n` : ''}`;
+  }
   return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'mtrl/elements/css';\n  import { defineAll } from 'mtrl/elements';\n${icons ? `\n${icons}` : ''}\n` +
     (early ? `${hostLine}${iconAttrs}\n` : '') + `  defineAll();\n` +
     `  document.documentElement.dataset.theme = '${context.theme}';\n  document.documentElement.dataset.themeMode = '${context.mode}';\n` +
     (triggerIcons ? `\n${triggerIcons}` : '') +
     host + (early ? '' : iconAttrs) + props + opening + closing + startOpen + calls +
     (event ? `  ${variable}.addEventListener('${event}', (event) => {\n    ${handler}\n  });\n` : '') +
-    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${trigger}<${tag}${modelAttr}${openAttr}${htmlAttrs(p.attrs)}>${body}</${tag}>\n`;
+    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${markup}`;
 }
 
 /** What each framework writes for a state (`open`): its value, the handler setting it (or several), and how a prop and an event are named. */
@@ -626,6 +768,9 @@ interface OpenSyntax {
   set: (state: string | string[], value: boolean) => string;
   prop: (name: string, value: string) => string;
   on: (event: string, handler: string) => string;
+  /** A handler setting the state and running an example's calls, which read the payload through `detail`. */
+  run: (state: string, value: boolean, calls: string[], payload: boolean) => string;
+  detail: (field: string) => string;
 }
 const reactOpen = (solid: boolean): OpenSyntax => ({
   read: state => (solid ? `${state}()` : state),
@@ -633,12 +778,16 @@ const reactOpen = (solid: boolean): OpenSyntax => ({
     : `() => { ${state.map(name => `set${pascal(name)}(${value});`).join(' ')} }`),
   prop: (name, value) => ` ${name}={${value}}`,
   on: (event, handler) => ` on${pascal(event)}={${handler}}`,
+  run: (state, value, calls, payload) => arrow(payload, [`set${pascal(state)}(${value})`, ...calls]),
+  detail: field => `event.detail.${field}`,
 });
 const vueOpen: OpenSyntax = {
   read: state => state,
   set: (state, value) => [state].flat().map(name => `${name} = ${value}`).join('; '),
   prop: (name, value) => ` :${kebab(name)}="${value}"`,
   on: (event, handler) => ` @${event}="${handler}"`,
+  run: (state, value, calls) => escapeAttr([`${state} = ${value}`, ...calls].join('; ')),
+  detail: field => `$event.detail.${field}`,
 };
 const svelteOpen: OpenSyntax = {
   read: state => state,
@@ -646,7 +795,17 @@ const svelteOpen: OpenSyntax = {
     : `() => { ${state.map(name => `${name} = ${value};`).join(' ')} }`),
   prop: (name, value) => ` ${name}={${value}}`,
   on: (event, handler) => ` on${event}={${handler}}`,
+  run: (state, value, calls, payload) => arrow(payload, [`${state} = ${value}`, ...calls]),
+  detail: field => `event.detail.${field}`,
 };
+
+/** The events the open state's bindings handle: an example's handlers on them run inside those. */
+const openBound = (meta: ElementMeta, p: Plan): Set<string> => p.open === undefined ? new Set()
+  : new Set([...(meta.trigger?.for ? [openEvents(meta)[0]] : []), openEvents(meta)[1], ...p.states.flatMap(state => state.events)]);
+
+/** An example's handlers the frameworks write as props of their own: those the open state does not handle. */
+const ownHandlers = (meta: ElementMeta, p: Plan): ExampleHandler[] =>
+  (p.example?.handlers ?? []).filter(h => !openBound(meta, p).has(h.event));
 
 /**
  * The host's open state: bound one way, set back when it closes, and when it opens
@@ -656,8 +815,12 @@ const openProps = (meta: ElementMeta, p: Plan, s: OpenSyntax): string => {
   if (p.open === undefined) return '';
   const name = openName(meta);
   const [opened, closed] = openEvents(meta);
-  return `${s.prop(name, s.read(name))}${meta.trigger?.for ? s.on(opened, s.set(name, true)) : ''}${s.on(closed, s.set(name, false))}` +
-    p.states.map(state => `${s.prop(state.name, s.read(state.name))}${s.on(state.events[0], s.set(state.name, true))}${s.on(state.events[1], s.set(state.name, false))}`).join('');
+  const setting = (event: string, state: string, value: boolean): string => {
+    const handlers = (p.example?.handlers ?? []).filter(h => h.event === event);
+    return s.on(event, handlers.length ? s.run(state, value, handlers.map(h => handlerCall(h, s.detail)), handlers.some(readsPayload)) : s.set(state, value));
+  };
+  return `${s.prop(name, s.read(name))}${meta.trigger?.for ? setting(opened, name, true) : ''}${setting(closed, name, false)}` +
+    p.states.map(state => `${s.prop(state.name, s.read(state.name))}${setting(state.events[0], state.name, true)}${setting(state.events[1], state.name, false)}`).join('');
 };
 
 /** A click on the trigger opens the element, with the state it opens in (the bottom sheet expanded); one on a closing child closes it. */
@@ -677,6 +840,20 @@ const triggerBody = (meta: ElementMeta, p: Plan, expression: string): string => 
   return shown === undefined ? escapeText(p.trigger!.text) : `${escapeText(shown)}${expression}`;
 };
 
+/** A handler's function: `(event) => …` when it reads the payload; several calls in a block. */
+const arrow = (payload: boolean, calls: string[]): string =>
+  `(${payload ? 'event' : ''}) => ${calls.length === 1 ? calls[0] : `{ ${calls.join('; ')}; }`}`;
+
+/** An example's action, as a function of the framework's statements. */
+const actionFunction = (name: string, statements: string[], indent: string, arrowFunction: boolean): string =>
+  arrowFunction && statements.length === 1 ? `${indent}const ${name} = () => ${statements[0]};\n`
+    : arrowFunction ? `${indent}const ${name} = () => {\n${statements.map(line => `${indent}  ${line};\n`).join('')}${indent}};\n`
+    : `${indent}function ${name}() {\n${statements.map(line => `${indent}  ${line};\n`).join('')}${indent}}\n`;
+
+/** An example's own state, typed when it has no first value. */
+const exampleStates = (p: Plan, declare: (name: string, value: string, type: string) => string): string =>
+  (p.example?.states ?? []).map(state => declare(state.name, state.value === undefined ? '' : jsValue(state.value), state.value === undefined ? '<string>' : '')).join('');
+
 function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: boolean): string {
   const Name = pascal(meta.name);
   const Child = meta.children ? pascal(meta.children.name) : '';
@@ -685,23 +862,39 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const event = modelEvent(meta);
   const state = p.model ? p.model.name : '';
   const setter = `set${pascal(state)}`;
-  const read = solid ? `${state}()` : state;
+  const reads = (name: string) => (solid ? `${name}()` : name);
+  const read = reads(state);
   const hook = solid ? 'createSignal' : 'useState';
   const syntax = reactOpen(solid);
-  const imports = `${p.model || p.open !== undefined ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/${lib}';\n${styleImports(context)}`;
-  const modelProps = p.model ? ` ${state}={${read}} on${pascal(event ?? 'change')}={(event) => ${setter}(event.detail.${state})}` : '';
+  const stateful = p.model || p.open !== undefined || p.example?.states.length;
+  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/${lib}';\n${appImport(p)}${styleImports(context)}`;
+  // The model's event sets it; an example's handlers on that event run beside.
+  const events = new Map<string, { payload: boolean; calls: string[] }>();
+  const on = (name: string, payload: boolean, call: string) => {
+    const entry = events.get(name) ?? { payload: false, calls: [] };
+    entry.payload ||= payload;
+    entry.calls.push(call);
+    events.set(name, entry);
+  };
+  if (p.model) on(event ?? 'change', true, `${setter}(event.detail.${state})`);
+  for (const h of ownHandlers(meta, p)) on(h.event, readsPayload(h), handlerCall(h, field => `event.detail.${field}`));
+  const modelProps = (p.model ? ` ${state}={${read}}` : '') + [...events].map(([name, e]) => ` on${pascal(name)}={${arrow(e.payload, e.calls)}}`).join('');
   // Beside a trigger, the host is in a fragment, a level deeper.
   const depth = p.trigger ? '  ' : '';
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
     slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`, escapeText(child.text)),
+    text: name => `{${reads(name)}}`,
   }, `      ${depth}`, `    ${depth}`);
-  const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(p.attrs, !solid)}${jsxProps(p.props)}`, body);
+  const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(bindState(p.attrs, reads), !solid)}${jsxProps(bindState(p.props, reads))}`, body);
   const trigger = p.trigger
     ? element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid)}${clickOpens(meta, p, syntax, true)}`, triggerBody(meta, p, `{${read}}`)) : '';
+  const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `set${pascal(step.state)}(${jsValue(step.value)})`), '  ', true)).join('');
   return `${imports}\n${constants ? `${constants}\n` : ''}${omittedNote(p, t => `// ${t}`)}${callsNote(meta, p, t => `// ${t}`)}export function Example() {\n` +
     (p.model ? `  const [${state}, ${setter}] = ${hook}(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `  const [${state.name}, set${pascal(state.name)}] = ${hook}(${state.value});\n`).join('') +
+    exampleStates(p, (name, value, type) => `  const [${name}, set${pascal(name)}] = ${hook}${type}(${value});\n`) +
+    (actions ? `${actions}\n` : '') +
     (trigger ? `  return (\n    <>\n      ${trigger}\n      ${host}\n    </>\n  );\n}\n` : `  return (\n    ${host}\n  );\n}\n`);
 }
 
@@ -712,16 +905,21 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const body = content(p, {
     child: { tag: Child, attrs: vueAttrs },
     slotted: child => element(child.native ? child.element : `M${pascal(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`, escapeText(child.text)),
+    text: name => `{{ ${name} }}`,
   }, '    ', '  ');
   const model = p.model ? ` v-model="${p.model.name}"` : '';
-  const tag = element(Name, `${model}${openProps(meta, p, vueOpen)}${vueAttrs(p.attrs)}${vueProps(p.props)}`, body);
+  const handlers = ownHandlers(meta, p).map(h => ` @${h.event}="${escapeAttr(handlerCall(h, field => `$event.detail.${field}`))}"`).join('');
+  const tag = element(Name, `${model}${handlers}${openProps(meta, p, vueOpen)}${vueAttrs(bindState(p.attrs, name => name))}${vueProps(bindState(p.props, name => name))}`, body);
   const trigger = p.trigger
     ? `  ${element(p.trigger.native ? p.trigger.element : `M${pascal(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, triggerBody(meta, p, `{{ ${p.model?.name} }}`))}\n` : '';
-  const state = p.model || p.open !== undefined;
-  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'mtrl/vue';\n${styleImports(context)}` +
-    (state || constants ? '\n' : '') + constants + (constants && state ? '\n' : '') +
+  const state = p.model || p.open !== undefined || p.example?.states.length;
+  const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state}.value = ${jsValue(step.value)}`), '', false)).join('');
+  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'mtrl/vue';\n${appImport(p)}${styleImports(context)}` +
+    (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `const ${state.name} = ref(${state.value});\n`).join('') +
+    exampleStates(p, (name, value, type) => `const ${name} = ref${type}(${value});\n`) +
+    (actions ? `${state ? '\n' : ''}${actions}` : '') +
     `</script>\n\n<template>\n${omittedNote(p, t => `  <!-- ${t} -->`)}${callsNote(meta, p, t => `  <!-- ${t} -->`)}${trigger}  ${tag}\n</template>\n`;
 }
 
@@ -731,21 +929,33 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
     slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`, escapeText(child.text)),
+    text: name => `{${name}}`,
   }, '  ', '');
   const model = p.model ? ` bind:${p.model.name}` : '';
+  const handlers = ownHandlers(meta, p).map(h => ` on${h.event}={${arrow(readsPayload(h), [handlerCall(h, field => `event.detail.${field}`)])}}`).join('');
   const trigger = p.trigger
     ? `${element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs)}${clickOpens(meta, p, svelteOpen, true)}`, triggerBody(meta, p, `{${p.model?.name}}`))}\n` : '';
-  const state = p.model || p.open !== undefined;
-  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/svelte';\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n` +
-    (state || constants ? '\n' : '') + constants + (constants && state ? '\n' : '') +
+  const state = p.model || p.open !== undefined || p.example?.states.length;
+  const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state} = ${jsValue(step.value)}`), '  ', false)).join('');
+  const styles = styleImports(context);
+  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
+    (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `  let ${state.name} = $state(${state.value});\n`).join('') +
-    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${callsNote(meta, p, t => `<!-- ${t} -->`)}${trigger}${element(pascal(meta.name), `${model}${openProps(meta, p, svelteOpen)}${jsxAttrs(p.attrs)}${jsxProps(p.props)}`, body)}\n`;
+    exampleStates(p, (name, value, type) => `  let ${name} = $state${type}(${value});\n`) +
+    (actions ? `${state ? '\n' : ''}${actions}` : '') +
+    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${callsNote(meta, p, t => `<!-- ${t} -->`)}${trigger}${element(pascal(meta.name), `${model}${handlers}${openProps(meta, p, svelteOpen)}${jsxAttrs(bindState(p.attrs, name => name))}${jsxProps(bindState(p.props, name => name))}`, body)}\n`;
 }
 
 /** The component's code in a framework other than vanilla. */
 export function frameworkCode(framework: Exclude<Framework, 'vanilla'>, meta: ElementMeta, config: Config, context: CodeContext): string {
   const p = plan(meta, config);
+  if (context.example) {
+    p.example = bindExample(meta, p, config, context.example);
+    // An example renders in every framework, or it fails.
+    if (p.omitted.length) throw new Error(`<m-${meta.name}> does not take ${p.omitted.join(', ')}`);
+    if (p.calls.length) throw new Error(`<m-${meta.name}> needs ${p.calls.map(c => `${c.method}()`).join(' and ')} called once mounted, which the frameworks cannot say`);
+  }
   switch (framework) {
     case 'html': return html(meta, p, context);
     case 'react': return reactOrSolid(meta, p, context, false);
