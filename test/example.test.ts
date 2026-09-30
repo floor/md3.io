@@ -72,6 +72,14 @@ describe('Web Components', () => {
   test('an action sets the live property and the attribute', () => {
     expect(code(withAction, 'html')).toContain("function mute() {\n    slider.value = 0;\n    slider.toggleAttribute('disabled', true);\n  }");
   });
+  test('an action on a live property with an attribute of its own: one state, the property set', () => {
+    const source = 'progress:\n  value: 30\n  action advance:\n    set value: 75\n';
+    const html = code(source, 'html');
+    expect(html).toContain('<m-progress value="30"></m-progress>');
+    expect(html).toContain('function advance() {\n    progress.value = 75;\n  }');
+    expect(html).not.toContain('progress.value = false');
+    expect(code(source, 'react')).toContain('<Progress value={value} />');
+  });
   test('children are elements', () => {
     expect(code(withChildren, 'html')).toContain('<m-tabs value="flights">\n  <m-tab value="flights">Flights</m-tab>\n  <m-tab value="trips">Trips</m-tab>\n</m-tabs>');
   });
