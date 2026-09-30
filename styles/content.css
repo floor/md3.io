@@ -487,3 +487,6 @@
 .doc-entry { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 18px; text-decoration: none; }
 .doc-entry__name { color: var(--text); font-size: var(--fs-base); font-weight: var(--fw-bold); }
 .doc-entry__summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.5; }
+
+/* Documentation pages use the whole column between the sidebar and the table of contents. */
+.document-layout .md { max-width: none; margin: 0; padding: 32px 32px 80px; }
