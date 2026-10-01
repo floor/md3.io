@@ -2,7 +2,8 @@
 // get, set, reset and subscribe; the preview, the export and the other tabs follow.
 //
 // Load order: a `?theme=` link wins (and leaves the address bar), then what this browser
-// saved, then mtrl's baseline. The base theme and mode are also the playground's
+// saved, then mtrl's baseline. `?theme=<built-in name>` (`?theme=ocean`, the Themes
+// page's link) picks that base theme over what was saved, and stays in the address bar. The base theme and mode are also the playground's
 // appearance (`md3-preview-appearance`), so a theme picked in either place is the other's.
 import { defaultState, normalize, parse, serialize, type SectionKey, type ThemeBase, type ThemeState } from '../shared/theme-state';
 
@@ -22,6 +23,10 @@ const readJson = (key: string): Record<string, unknown> => {
 function load(): { state: ThemeState; fromLink: boolean } {
   const url = new URL(location.href);
   const linked = url.searchParams.get('theme');
+  if (linked !== null && themeBase.themes.includes(linked)) {
+    const saved = parse(read(STORAGE_KEY) ?? '', themeBase) ?? defaultState();
+    return { state: normalize({ ...saved, base: linked }, themeBase), fromLink: true };
+  }
   if (linked !== null) {
     url.searchParams.delete('theme');
     history.replaceState(history.state, '', url.pathname + url.search + url.hash);

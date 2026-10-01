@@ -9,6 +9,8 @@ import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
+import { builtInThemes } from './src/server/themes';
+import { THEME_ROLES } from 'mtrl/core/theme';
 import { minifyCss, type StylesheetBundle } from './src/server/css';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
 import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights, shapeUsage, themeBase } from './src/server/tokens';
@@ -62,6 +64,7 @@ function page(path: string, title: string, description: string, template: string
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
+const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
 const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup, ...docGroups];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -181,10 +184,14 @@ export async function handleRequest(request: Request): Promise<Response> {
     else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
   }
   else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
-  else if (path === '/styles/') response = page(path, 'Styles — mtrl', stylePages[0].description, 'styles-overview', { stylePages, comingStyles, themeBase });
-  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
-  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
-  else if (path === '/styles/shape/') response = page(path, 'Shape — mtrl', stylePages[3].description, 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
+  else if (path === '/styles/') response = page(path, 'Styles — mtrl', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
+  else if (path === '/styles/themes/') {
+    const linked = url.searchParams.get('theme');
+    response = page(path, 'Themes — mtrl', styleDescription('/styles/themes/'), 'styles-themes', { themes: builtInThemes, roles: THEME_ROLES, selected: linked && themes.includes(linked as never) ? linked : 'baseline', mtrlVersion, themeBase });
+  }
+  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
+  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
+  else if (path === '/styles/shape/') response = page(path, 'Shape — mtrl', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {

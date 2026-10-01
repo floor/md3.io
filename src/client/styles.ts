@@ -8,6 +8,7 @@ import { SHAPE_LABELS, morphPath, shapeProfile } from '../shared/shape-library';
 import { LOADING_INDICATOR_SHAPES } from 'mtrl/components/loading-indicator/constants';
 import { themeBase, themeStore } from './theme-store';
 import { announce, changes, copy, themeName } from './styles-panel';
+import './styles-themes';
 
 document.addEventListener('click', async event => {
   const button = (event.target as Element | null)?.closest<HTMLButtonElement>('button[data-copy]');

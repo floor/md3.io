@@ -140,6 +140,44 @@ try {
   await page.getByRole('button', { name: 'Reset shape' }).click();
   await until(galleryCard, '12px', 'Reset shape brings mtrl\'s corners back');
 
+  // Themes: the viewer. A theme from the select paints both scheme cards with the hex
+  // mtrl's CSS has, ?theme=<name> follows and opens it again, a tile copies its hex,
+  // a theme without a seed says why it has no palettes, and a phone does not scroll sideways.
+  console.log('Checking /styles/themes/');
+  await page.goto(`${base}/styles/themes/`);
+  const themeCss = await (await fetch(`${base}/dist/mtrl/themes/desert.css`)).text();
+  const declared = (css: string, role: string) => [...css.slice(0, css.indexOf('[data-theme-mode=dark]')).matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
+  await page.getByLabel('Theme', { exact: true }).selectOption('desert');
+  const lightPrimary = page.locator('.scheme-card--light .scheme-tile[data-role="primary"]');
+  await until(() => lightPrimary.getAttribute('title'), declared(themeCss, 'primary'), 'The light card shows desert\'s primary from mtrl\'s CSS');
+  const [pr, pg, pb] = declared(themeCss, 'primary')!.slice(1).match(/../g)!.map(part => parseInt(part, 16));
+  assert(await lightPrimary.evaluate(element => getComputedStyle(element).backgroundColor) === `rgb(${pr}, ${pg}, ${pb})`, 'The tile is painted with the hex it names');
+  assert(await page.locator('.scheme-card--dark .scheme-tile[data-role="primary"]').getAttribute('title') !== await lightPrimary.getAttribute('title'), 'The dark card has its own primary');
+  assert(await page.locator('.scheme-card').first().locator('.scheme-tile').count() === 33, 'A scheme card has MTB\'s 33 tiles');
+  assert(new URL(page.url()).searchParams.get('theme') === 'desert', 'The address carries ?theme=desert');
+  assert(await page.locator('.palettes__origin').textContent().then(text => text?.includes('#9a7a3e')), 'Desert\'s palettes name its seed');
+  assert(await page.locator('.palette').count() === 6 && await page.locator('.palette__tone').count() === 6 * 18, 'Six palettes of 18 tones');
+  // Share: the link opens the same theme, whatever this browser saved.
+  const shared = page.url();
+  await page.getByLabel('Theme', { exact: true }).selectOption('ocean');
+  await until(() => page.locator('.palettes__none').isVisible(), true, 'A theme without a seed says why it has no palettes');
+  assert(!await page.locator('.palettes__list').isVisible(), 'and shows none');
+  await page.goto(shared);
+  await until(() => page.getByLabel('Theme', { exact: true }).inputValue(), 'desert', 'The ?theme= link opens desert again');
+  assert(await lightPrimary.getAttribute('title') === declared(themeCss, 'primary'), 'with its colours');
+  await lightPrimary.click();
+  await until(() => page.locator('#themes-toast').textContent(), `Copied ${declared(themeCss, 'primary')}`, 'A tile click says it copied the hex');
+  assert(await page.evaluate(() => navigator.clipboard.readText()) === declared(themeCss, 'primary'), 'The clipboard holds the hex');
+  await page.setViewportSize({ width: 390, height: 844 });
+  const themesOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  assert(themesOverflow <= 0, `/styles/themes/ scrolls sideways at 390 px by ${themesOverflow} px`);
+  const errorTile = await page.locator('.scheme-card--light .scheme-tile[data-role="error"]').boundingBox();
+  const surfaceTile = await page.locator('.scheme-card--light .scheme-tile[data-role="surface-dim"]').boundingBox();
+  assert(errorTile!.y > surfaceTile!.y, 'At 390 px the Error column wraps under the main block');
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-themes-390.png`, fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.getByLabel('Theme', { exact: true }).selectOption('baseline');
+
   // Every page, 375 px wide, dark and light: no horizontal scroll, one swatch column.
   await page.setViewportSize({ width: 375, height: 800 });
   for (const mode of ['dark', 'light']) {
@@ -166,7 +204,7 @@ try {
     }
   }
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
-  console.log('Styles pages: theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
+  console.log('Styles pages: Themes viewer (select, cards from mtrl CSS, ?theme= link, copy, palettes, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
   await browser.close();
   server?.stop();

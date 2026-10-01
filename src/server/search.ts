@@ -15,6 +15,7 @@ import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
 import { stylePages } from './styles';
 import { colorGroups, shapeScale, typescale } from './tokens';
+import { themes } from '../shared/button';
 
 export const SECTIONS = ['Components', 'Styles', 'Docs', 'Examples'] as const;
 type Section = (typeof SECTIONS)[number];
@@ -147,6 +148,10 @@ function styleDocuments(): IndexDocument[] {
     '/styles/shape/': {
       api: Object.keys(shapeScale).map(step => `--mtrl-sys-shape-corner-${step}`).join(' '),
       body: `Shape, corner radius, border radius, rounded corners, roundness. ${Object.keys(shapeScale).map(roleWords).join(', ')}.`,
+    },
+    '/styles/themes/': {
+      api: 'mtrl/themes data-theme data-theme-mode',
+      body: `Themes, theme builder, light scheme, dark scheme, tonal palettes, seed color, Material Theme Builder. ${themes.map(name => name.replaceAll('-', ' ')).join(', ')}.`,
     },
     '/styles/color/': {
       api: colorGroups.flatMap(group => group.roles.map(role => `--mtrl-sys-color-${role}`)).join(' '),
