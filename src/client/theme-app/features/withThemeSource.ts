@@ -14,6 +14,8 @@ export interface ThemeData {
   /** How mtrl generates it ("seed #6750a4, Tonal Spot"), or null for a hand-set theme. */
   origin: string | null;
   palettes: Record<string, string[]> | null;
+  /** A theme made from an image: its seed, which the address carries. */
+  seed?: string;
 }
 
 export const withThemeSource = (config: { themes: ThemeData[] }) => (app: App) => {
@@ -26,10 +28,28 @@ export const withThemeSource = (config: { themes: ThemeData[] }) => (app: App) =
       get: (name: string): ThemeData => byName.get(name) ?? fallback,
       has: (name: string) => byName.has(name),
       current: (): ThemeData => byName.get(app.state.get('theme') as string) ?? fallback,
-      select: (name: string) => { if (byName.has(name)) themeStore.set({ base: name }); },
+      /** A built-in theme goes through the store; one made here only into the state. */
+      select: (name: string) => {
+        if (!byName.has(name)) return;
+        app.state.set('theme', name);
+        if (!byName.get(name)!.seed) themeStore.set({ base: name });
+      },
+      /** Adds (or replaces) a theme made here, and shows it. */
+      add: (theme: ThemeData) => {
+        byName.set(theme.name, theme);
+        if (app.state.get('theme') === theme.name) app.state.touch('theme');
+        else app.state.set('theme', theme.name);
+      },
       /** Follows the store and the site's mode into app.state; returns the disconnect. */
       connect: () => {
-        const unsubscribe = themeStore.subscribe(({ base }) => app.state.set('theme', byName.has(base) ? base : fallback.name));
+        // Only a change of the store's base theme (here, or in another tab) is followed:
+        // a theme made from an image stays until another one is chosen.
+        let base: string | undefined;
+        const unsubscribe = themeStore.subscribe(state => {
+          if (state.base === base) return;
+          base = state.base;
+          app.state.set('theme', byName.has(base) ? base : fallback.name);
+        });
         // The site's mode: html[data-theme-mode], set by its header toggle, or by the
         // system preference while the site has no choice of its own (md3-site-mode).
         const root = document.documentElement;

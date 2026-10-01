@@ -8,6 +8,13 @@ import createIconButton from 'mtrl/components/icon-button';
 import { createSchemeCard } from '../scheme-card';
 import { createPaletteStrip } from '../palette-strip';
 import share from '../../../../icons/share.svg' with { type: 'text' };
+import image from '../../../../icons/image.svg' with { type: 'text' };
+
+/** The bar's tooltips, by part (set up by withSetup). */
+export const TOOLTIPS: Record<string, string> = {
+  image: 'Make a theme from an image. It stays in your browser: nothing is uploaded.',
+  share: 'Copy a link to this theme',
+};
 export const PALETTES = [['primary', 'Primary'], ['secondary', 'Secondary'], ['tertiary', 'Tertiary'], ['neutral', 'Neutral'], ['neutralVariant', 'Neutral Variant'], ['error', 'Error']] as const;
 
 export interface LayoutData { themes: { name: string; label: string }[]; roles: string[]; selected: string }
@@ -17,7 +24,9 @@ export const layout = ({ themes, roles, selected }: LayoutData): unknown[] => [
   // The bar's actions: moved into its trailing slot by withSetup.
   ['actions', { class: 'theme-app__actions' },
     [createSelect, 'theme', { variant: 'outlined', density: 'compact', label: 'Theme', value: selected, options: themes.map(({ name, label }) => ({ id: name, text: label })) }],
+    [createIconButton, 'image', { icon: image, ariaLabel: 'Make a theme from an image (it stays in your browser)', variant: 'standard' }],
     [createIconButton, 'share', { icon: share, ariaLabel: 'Copy a link to this theme', variant: 'standard' }],
+    ['file', { tag: 'input', class: 'theme-app__file', attributes: { type: 'file', accept: 'image/*', hidden: '', 'aria-hidden': 'true', tabindex: '-1' } }],
   ],
   ['content', { tag: 'div', class: 'theme-app__content' },
     [createSchemeCard, 'scheme', { roles }],

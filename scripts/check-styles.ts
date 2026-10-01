@@ -7,7 +7,10 @@
 // BASE_URL checks a running server; without it the check serves the site itself.
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { inflateSync } from 'node:zlib';
+import { argbFromRgba, seedsFromPixels, themeColors } from '../src/shared/theme-engine';
 
 const server = process.env.BASE_URL ? null : Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: (await import('../server')).handleRequest });
 const base = (process.env.BASE_URL ?? server!.url.href).replace(/\/$/, '');
@@ -267,6 +270,41 @@ try {
   console.log(`Ten site mode toggles: listeners ${beforeModes.listeners} → ${afterModes.listeners}, elements ${beforeModes.nodes} → ${afterModes.nodes}`);
   assert(afterModes.listeners === beforeModes.listeners && afterModes.nodes <= beforeModes.nodes, `Ten site mode toggles add no listener and no element: ${JSON.stringify(beforeModes)} → ${JSON.stringify(afterModes)}`);
   await toggleSite();
+  // A theme from an image: the fixture's seed, found here by the same engine from its
+  // own pixels, is the one the app shows, with the engine's primary; ?seed= reproduces it.
+  const fixture = resolve(import.meta.dir, '../test/fixtures/theme-image.png');
+  const png = await Bun.file(fixture).bytes();
+  const width = new DataView(png.buffer).getUint32(16), height = new DataView(png.buffer).getUint32(20);
+  const raw = inflateSync(png.subarray(41, 41 + new DataView(png.buffer).getUint32(33)));
+  const rgba: number[] = [];
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) { const i = y * (width * 3 + 1) + 1 + x * 3; rgba.push(raw[i]!, raw[i + 1]!, raw[i + 2]!, 255); }
+  const imageSeed = seedsFromPixels(argbFromRgba(rgba))[0]!;
+  const imageTheme = themeColors({ source: imageSeed, variant: 'tonal-spot', contrast: 0 });
+  const chooser = page.waitForEvent('filechooser');
+  await page.locator('.theme-app__actions [name="image"]').click();
+  await (await chooser).setFiles(fixture);
+  await until(() => page.evaluate(() => new URL(location.href).searchParams.get('seed')), imageSeed.slice(1), 'The address carries the image\'s seed');
+  const imagePrimary = async () => imageTheme.roles[(await siteMode()) === 'light' ? 'light' : 'dark'].primary;
+  await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), 'The card shows the engine\'s primary for the image\'s seed');
+  await until(() => page.locator('.mtrl-select input').inputValue(), 'From image', 'The select shows From image');
+  await until(() => page.locator('.mtrl-snackbar').last().textContent().then(text => text?.trim()), `Theme generated from theme-image.png · seed ${imageSeed}`, 'The snackbar names the file and the seed');
+  assert(await page.locator('.md3-palette').first().isVisible(), 'and its palettes');
+  await page.goto(`${base}/styles/themes/?seed=${imageSeed.slice(1)}`);
+  await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), '?seed= reproduces the theme');
+  await until(() => page.locator('.mtrl-select input').inputValue(), 'From image', 'with From image selected');
+  // material-color-utilities loads with the first image, never with the page.
+  const dist = resolve(import.meta.dir, '../dist');
+  const graph = (entry: string, seen = new Set<string>()): Set<string> => {
+    if (seen.has(entry)) return seen;
+    seen.add(entry);
+    for (const [, next] of readFileSync(resolve(dist, entry), 'utf8').matchAll(/(?:from|import)\s*"\.\/([^"]+\.js)"/g)) graph(next!, seen);
+    return seen;
+  };
+  const firstLoad = graph('theme-app.js');
+  const mcuMarker = 'material-color-utilities has no';
+  assert(![...firstLoad].some(file => readFileSync(resolve(dist, file), 'utf8').includes(mcuMarker)), 'The Themes app\'s first-load JS has no material-color-utilities');
+  const firstKb = [...firstLoad].reduce((sum, file) => sum + Bun.gzipSync(readFileSync(resolve(dist, file))).length, 0) / 1024;
+  console.log(`Image theme: seed ${imageSeed}, primary ${await imagePrimary()}; first-load JS ${firstKb.toFixed(1)} KB gzip, no material-color-utilities`);
   await page.setViewportSize({ width: 390, height: 844 });
   const themesOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(themesOverflow <= 0, `/styles/themes/ scrolls sideways at 390 px by ${themesOverflow} px`);

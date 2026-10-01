@@ -11,6 +11,7 @@ import { withThemeSource, type ThemeData } from './features/withThemeSource';
 import { withScheme } from './features/withScheme';
 import { withPalettes } from './features/withPalettes';
 import { withCopy } from './features/withCopy';
+import { withImage } from './features/withImage';
 import { withInputWiring } from './features/withInputWiring';
 import { withReactionWiring } from './features/withReactionWiring';
 import { withSetup } from './features/withSetup';
@@ -34,6 +35,7 @@ export const createThemeApp = (options: ThemeAppOptions) => {
     withScheme(),
     withPalettes(),
     withCopy(),
+    withImage(),
     // Wiring, one direction each
     withInputWiring(),
     withReactionWiring(),

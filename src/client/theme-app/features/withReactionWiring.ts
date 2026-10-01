@@ -10,11 +10,12 @@ export const withReactionWiring = () => (app: App) => {
     palettes.paint();
     scheme.chrome();
     if (ui.theme.getValue() !== value) ui.theme.setValue(value);
+    // The address names the theme, or the seed of one made from an image.
+    const { seed } = app.source.current();
     const url = new URL(location.href);
-    if (url.searchParams.get('theme') !== value) {
-      url.searchParams.set('theme', value);
-      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
-    }
+    url.searchParams.delete(seed ? 'theme' : 'seed');
+    url.searchParams.set(seed ? 'seed' : 'theme', seed ? seed.slice(1) : value);
+    if (url.href !== location.href) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
   });
   state.on('mode', () => { scheme.paint(); scheme.chrome(); });
   return app;
