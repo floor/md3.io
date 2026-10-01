@@ -14,7 +14,8 @@ export const stylesheetBundles = {
   page: [...shell, 'site', 'search'],
   // The components overview adds Roboto, the elements' pre-upgrade rules, then the catalog.
   catalog: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog'],
-  examples: [...shell, 'site', 'search', 'examples'],
+  // Examples add the device chooser: mtrl's button group and icon button, then its sheet.
+  examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'device-frame'],
   // Styles pages add Roboto, then their own sheet.
   styles: [...shell, 'site', 'search', 'roboto', 'styles-pages'],
 } as const;
@@ -23,6 +24,7 @@ export type StylesheetBundle = keyof typeof stylesheetBundles;
 
 const fileFor = (name: string) => name === 'preupgrade'
   ? resolve(root, 'node_modules/mtrl/dist/elements/preupgrade.css')
+  : name.startsWith('mtrl:') ? resolve(root, 'node_modules/mtrl/dist/styles', `${name.slice(5)}.css`)
   : style(name);
 
 type Token = { kind: 'raw' | 'string' | 'space' | 'keep'; value: string };

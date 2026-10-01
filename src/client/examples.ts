@@ -1,12 +1,15 @@
 // The example page: framework tabs switch the running frame and its source; the
 // choice and the frame's appearance persist, and the URL carries the framework.
 import { copyText } from './site';
+import { mountDeviceFrame } from './device-frame';
 
 const page = document.querySelector<HTMLElement>('.example-page');
 if (page) {
   const slug = page.dataset.example!;
   const frame = document.querySelector<HTMLIFrameElement>('#example-frame')!;
   const status = document.querySelector<HTMLElement>('#example-status')!;
+  // Mobile, Tablet or Desktop: the frame at that device's size (src/client/device-frame.ts).
+  mountDeviceFrame(frame, { label: 'Example device' });
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
   const APPEARANCE = 'md3-preview-appearance';
   const FRAMEWORK = 'md3-example-framework';
