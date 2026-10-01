@@ -28,6 +28,8 @@ html:is([data-component="card"], [data-component="list"], [data-component="carou
 #stage > .mtrl-list { width: min(100%, 560px); height: auto; min-height: 0; max-height: calc(100dvh - 64px); flex-shrink: 0; }
 html[data-component="carousel"] #stage { height: 100%; padding: 24px 0; }
 #stage > .mtrl-carousel { width: 100%; height: min(100%, 360px); }
+/* Full-screen fills one screen, as on a phone: a centred 2:3 portrait frame. */
+#stage > .mtrl-carousel--full-screen { width: auto; max-width: calc(100% - 32px); height: min(100%, 600px); aspect-ratio: 2 / 3; flex-shrink: 0; }
 .mtrl-dialog:not(.mtrl-dialog--fullscreen) { max-width: calc(100vw - 32px); max-height: calc(100dvh - 24px); }
 .mtrl-side-sheet__container { max-width: min(400px, 100vw) !important; }
 

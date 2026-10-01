@@ -102,7 +102,7 @@ const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
     .slice(0, Number(state.items))
     .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
-/** Sixteen photos per layout, enough for each to scroll as it does with a real collection. */
+/** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
 const carouselSlides = (state: ComponentState) => {
   const variant = pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse');
   return carouselPhotos(variant).map(photo => ({ image: carouselPhotoUrl(variant, photo.id), alt: `${photo.title}, ${photo.location}`, ...(state.captions ? { title: photo.title, description: photo.location } : {}) }));
@@ -873,7 +873,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
   const shown = component.config(state) as Record<string, unknown>;
-  // The preview's sixteen photos would bury the code: three show the shape.
+  // The preview's twenty-four photos would bury the code: three show the shape.
   const slides = slug === 'carousel' ? (shown.slides as unknown[]) : [];
   const config = JSON.stringify(slug === 'carousel' ? { ...shown, slides: slides.slice(0, 3) } : shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(/(\n  slides: \[)/, slides.length > 3 ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1');

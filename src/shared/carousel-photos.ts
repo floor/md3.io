@@ -1,5 +1,5 @@
 // The carousel playground's photos: Lorem Picsum, curated with titles and places for
-// vlist.io's carousel demo (vlist.io src/data/carousel.js), sixteen per layout.
+// vlist.io's carousel demo (vlist.io src/data/carousel.js), twenty-four per layout.
 export type CarouselVariant = 'multi-browse' | 'uncontained' | 'hero' | 'hero-center' | 'full-screen';
 export interface CarouselPhoto { id: number; title: string; location: string }
 
@@ -21,6 +21,14 @@ const sets: Record<CarouselVariant, [number, string, string][]> = {
     [685, 'Above the Clouds', 'Summit'],
     [731, 'Cliff Eagle', 'Canary Islands'],
     [766, 'Coffee Beans', 'Roastery'],
+    [790, 'Red Deer Stag', 'Richmond Park'],
+    [803, 'Tropical Moss', 'Greenhouse'],
+    [809, 'Peak in Clouds', 'Huangshan'],
+    [832, 'Quiet Reading', 'Vietnam'],
+    [885, "Writer's Desk", 'Studio'],
+    [945, 'Fire Escapes', 'New York'],
+    [1037, 'Half Dome Sunrise', 'Yosemite'],
+    [1076, 'Steel Geometry', 'Tokyo'],
   ],
   uncontained: [
     [8, 'Laptop & Coffee', 'Studio'],
@@ -39,6 +47,14 @@ const sets: Record<CarouselVariant, [number, string, string][]> = {
     [588, 'Sunset Jetty', 'Maldives'],
     [757, 'Classic Interior', 'Route 66'],
     [784, 'Morning Dew', 'Meadow'],
+    [815, 'Heart Hands', 'Sunset'],
+    [869, 'Starry Mountains', 'Norway'],
+    [892, 'Rusty Plymouth', 'Junkyard'],
+    [926, 'Walking in Fog', 'Highlands'],
+    [958, 'Succulents', 'Greenhouse'],
+    [1021, 'Misty Canopy', 'Oregon'],
+    [1033, 'Escalator', 'Metro'],
+    [1073, 'Open Books', 'Library'],
   ],
   hero: [
     [29, 'Himalayan Peaks', 'Nepal'],
@@ -57,6 +73,14 @@ const sets: Record<CarouselVariant, [number, string, string][]> = {
     [82, 'Cherry Blossoms', 'Spring'],
     [84, 'Bridge at Night', 'New York'],
     [100, 'Hazy Beach', 'Santa Monica'],
+    [103, 'Park Afternoon', 'Atlanta'],
+    [106, 'Frangipani Blooms', 'Hawaii'],
+    [110, 'Pastoral Sunset', 'Netherlands'],
+    [119, 'Minimal Desk', 'Studio'],
+    [122, 'Millennium Bridge', 'London'],
+    [129, 'Golden Gate View', 'San Francisco'],
+    [134, 'Fort Point', 'San Francisco'],
+    [137, 'Tunnel Light', 'Underground'],
   ],
   'hero-center': [
     [10, 'Island Treeline', 'Pacific Northwest'],
@@ -75,30 +99,47 @@ const sets: Record<CarouselVariant, [number, string, string][]> = {
     [629, 'Leaning Tower', 'Pisa'],
     [649, 'Dry Grass', 'California'],
     [670, 'Red Tram', 'Istanbul'],
+    [674, 'Harvest Grapes', 'Vineyard'],
+    [703, 'City Rainbow', 'New York'],
+    [811, 'Forest Canopy', 'Amazon'],
+    [876, 'Cloud Forest', 'Black Forest'],
+    [882, 'Café Terrace', 'Lisbon'],
+    [891, 'Antler Still Life', 'Studio'],
+    [912, 'Deep Blue', 'Atlantic'],
+    [984, 'Highland Drama', 'Scotland'],
   ],
   'full-screen': [
-    [0, 'Laptop & Desk', 'Studio'],
-    [54, 'Mountain Summit', 'Alps'],
-    [123, 'Water Droplets', 'Macro'],
-    [172, 'Dock in Fog', 'Lake'],
-    [216, 'Mossy Trail', 'Forest'],
-    [265, 'Highway Sunset', 'Desert'],
-    [310, 'Smoke Portrait', 'Night'],
-    [353, 'Misty Hillside', 'Tropics'],
-    [386, 'Above the Clouds', 'Summit'],
-    [428, 'Yellow Wall', 'Vietnam'],
-    [467, 'Ocean Horizon', 'Atlantic'],
-    [505, 'Sunset Silhouette', 'Beach'],
-    [548, 'Bonfire Sparks', 'Campsite'],
-    [583, 'Cloud Tops', 'Sky'],
-    [634, 'Misty Pines', 'Pacific Northwest'],
-    [672, 'Bus Commute', 'City'],
+    [23, 'Silver Forks', 'Kitchen'],
+    [31, 'Barefoot', 'Studio'],
+    [75, 'Vine Grapes', 'Vineyard'],
+    [78, 'Arched Doorway', 'Old Town'],
+    [79, 'Summit Hiker', 'Mountains'],
+    [156, 'Sand Footprints', 'Beach'],
+    [253, 'Mossy Stone', 'Forest Floor'],
+    [260, 'Alpine Pines', 'Mountains'],
+    [263, 'Winter Street', 'Europe'],
+    [486, 'Vintage Typewriter', 'Studio'],
+    [508, 'Vaulted Ceiling', 'Cathedral'],
+    [512, 'Blue Lagoon', 'Iceland'],
+    [514, 'White Land Rover', 'Havana'],
+    [520, 'Manhattan Bridge', 'New York'],
+    [522, 'Tree-Lined Avenue', 'New York'],
+    [530, 'Terrarium', 'Greenhouse'],
+    [535, 'Clothing Rack', 'Boutique'],
+    [537, 'Shooting Star', 'Night Sky'],
+    [550, 'City Sunset', 'Rooftop'],
+    [567, 'Bokeh Canopy', 'Garden'],
+    [591, 'Cliff in Clouds', 'Mountains'],
+    [593, 'Young Tiger', 'Sanctuary'],
+    [613, 'Golden Gate', 'San Francisco'],
+    [638, 'Coastal Aerial', 'Beach'],
   ],
 };
 
 export const carouselPhotos = (variant: CarouselVariant): CarouselPhoto[] => sets[variant].map(([id, title, location]) => ({ id, title, location }));
 
-// About twice the rendered slide: a browse item is up to 280 px wide by default, a hero
-// or full-screen slide about 400 to 700 px, at 3:2.
-const sizes: Record<CarouselVariant, [number, number]> = { 'multi-browse': [560, 376], uncontained: [560, 376], hero: [800, 536], 'hero-center': [800, 536], 'full-screen': [960, 640] };
+// About twice the rendered slide: a browse item is up to 280 px wide by default and a hero
+// slide about 400 to 700 px, at 3:2; a full-screen slide fills a portrait frame up to
+// 400 × 600 px, at 2:3, as vlist.io's portrait set is.
+const sizes: Record<CarouselVariant, [number, number]> = { 'multi-browse': [560, 376], uncontained: [560, 376], hero: [800, 536], 'hero-center': [800, 536], 'full-screen': [640, 960] };
 export const carouselPhotoUrl = (variant: CarouselVariant, id: number): string => `https://picsum.photos/id/${id}/${sizes[variant][0]}/${sizes[variant][1]}`;
