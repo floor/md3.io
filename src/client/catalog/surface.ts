@@ -11,7 +11,8 @@ registerStyles({
     + ':host .mtrl-dialog{margin:0;min-width:0;width:320px}'
     + ':host .mtrl-menu,:host .mtrl-snackbar,:host .mtrl-tooltip{position:relative;inset:auto;translate:none}'
     + ':host .mtrl-snackbar{min-width:0}'
-    + ':host .mtrl-tooltip{margin-top:4px}'
+    // Room for the 8px arrow between the button and the tooltip.
+    + ':host .mtrl-tooltip{margin-top:12px}'
     + ':host .catalog-tooltip{display:flex;flex-direction:column;align-items:center}'
     + ':host .mtrl-time-picker__dialog{position:static;margin:0}',
 });
