@@ -4,6 +4,8 @@
 // labelled in its "on" colour. Composed the mtrl way; `set(theme, mode)` repaints it in
 // place, light filled and dark outlined, and a tile click emits `copy` with { role, hex }.
 import { pipe, createBase, withElement, withEvents, withLifecycle, type ElementComponent, type EventComponent } from 'mtrl/core/compose';
+import createTooltip from 'mtrl/components/tooltip';
+import copyIcon from '../../../icons/content_copy.svg' with { type: 'text' };
 import type { ThemeData } from './features/withThemeSource';
 import { contrastRatio } from '../../shared/color';
 
@@ -67,7 +69,7 @@ const withTiles = () => <T extends ElementComponent>(component: T) => {
         tile.type = 'button';
         tile.className = `${component.getClass('scheme-tile')} ${component.getClass('scheme-tile')}--${size}`;
         tile.dataset.role = role;
-        tile.innerHTML = `<span>${label(role)}</span>`;
+        tile.innerHTML = `<span>${label(role)}</span><span class="${component.getClass('scheme-tile')}__copy" aria-hidden="true">${copyIcon}</span>`;
         tiles.set(role, tile);
         box.append(tile);
       }
@@ -117,6 +119,35 @@ const withCopyEvent = () => <T extends ElementComponent & EventComponent>(compon
   return component;
 };
 
+/**
+ * As MTB does: a hovered or focused tile shows a copy icon and one mtrl tooltip, "Copy
+ * hex color", moved to that tile. A click anywhere on the tile, or Enter, copies.
+ */
+const withCopyHint = () => <T extends ElementComponent>(component: T) => {
+  const tooltip = createTooltip({ text: 'Copy hex color', position: 'top', showOnHover: false, showOnFocus: false });
+  const tileOf = (event: Event) => (event.target as Element).closest<HTMLElement>('[data-role]');
+  let current: HTMLElement | null = null;
+  const enter = (event: Event) => {
+    const tile = tileOf(event);
+    if (!tile || tile === current) return;
+    current = tile;
+    tooltip.setTarget(tile).show(true);
+  };
+  const leave = (event: Event) => {
+    const next = (event as MouseEvent | FocusEvent).relatedTarget as Element | null;
+    if (current && next && current.contains(next)) return;
+    current = null;
+    tooltip.hide(true);
+  };
+  const listeners: [string, EventListener][] = [['pointerover', enter], ['pointerout', leave], ['focusin', enter], ['focusout', leave]];
+  for (const [type, listener] of listeners) component.element.addEventListener(type, listener);
+  component.resources!.add(() => {
+    for (const [type, listener] of listeners) component.element.removeEventListener(type, listener);
+    tooltip.destroy();
+  });
+  return component;
+};
+
 export const createSchemeCard = (options: SchemeCardOptions) => {
   const card = pipe(
     createBase,
@@ -125,6 +156,7 @@ export const createSchemeCard = (options: SchemeCardOptions) => {
     withTiles(),
     withScheme(options),
     withCopyEvent(),
+    withCopyHint(),
     withLifecycle(),
   )({ prefix: 'md3', componentName: 'scheme-card' });
   return { ...card, destroy: () => card.lifecycle.destroy() };

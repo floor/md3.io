@@ -245,6 +245,18 @@ try {
   await lightPrimary.click();
   await until(() => page.locator('.mtrl-snackbar').first().textContent().then(text => text?.trim()), `Copied ${await shown()}`, 'mtrl\'s snackbar says the hex was copied');
   assert(await page.evaluate(() => navigator.clipboard.readText()) === await shown(), 'The clipboard holds the hex');
+  // Hover, as MTB: a copy icon on the tile and mtrl's tooltip "Copy hex color"; the
+  // keyboard: a tile takes focus and Enter copies.
+  const secondaryTile = page.locator('.md3-scheme-card [data-role="secondary"]');
+  await secondaryTile.hover();
+  await until(() => secondaryTile.locator('.md3-scheme-tile__copy').evaluate(element => getComputedStyle(element).opacity), '1', 'A hovered tile shows its copy icon');
+  await until(() => page.locator('.mtrl-tooltip').filter({ hasText: 'Copy hex color' }).isVisible(), true, 'and the tooltip Copy hex color');
+  await page.evaluate(() => navigator.clipboard.writeText(''));
+  await page.locator('.md3-scheme-card [data-role="tertiary"]').focus();
+  await page.keyboard.press('Enter');
+  const tertiaryHex = await page.locator('.md3-scheme-card [data-role="tertiary"]').getAttribute('data-hex');
+  await until(() => page.evaluate(() => navigator.clipboard.readText()), tertiaryHex, 'Enter on a focused tile copies its hex');
+  await page.mouse.move(0, 0);
   // The site's mode: the app and its Scheme card follow the header's light/dark toggle,
   // repainting the card in place.
   const appBackground = () => page.locator('.theme-app').evaluate(element => getComputedStyle(element).backgroundColor);

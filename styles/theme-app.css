@@ -68,3 +68,10 @@
   .theme-app__controls { padding: 12px 12px 0; }
   .theme-app__controls > .mtrl-select { width: auto; flex: 1 1 150px; min-width: 0; }
 }
+
+/* A tile's copy icon, as MTB shows it: on hover and keyboard focus. */
+.md3-scheme-tile { position: relative; }
+.md3-scheme-tile__copy { position: absolute; top: 6px; right: 6px; display: grid; opacity: 0; transition: opacity .12s ease; pointer-events: none; }
+.md3-scheme-tile__copy svg { width: 18px; height: 18px; }
+.md3-scheme-tile:hover .md3-scheme-tile__copy, .md3-scheme-tile:focus-visible .md3-scheme-tile__copy { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .md3-scheme-tile__copy { transition: none; } }
