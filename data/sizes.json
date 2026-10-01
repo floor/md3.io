@@ -1,5 +1,5 @@
 {
-  "mtrl": "0.10.3",
+  "mtrl": "0.10.4",
   "measured": "2026-10-01",
   "gzip": 9,
   "core": {
@@ -153,9 +153,9 @@
     },
     "textfield": {
       "factory": {
-        "alone": 14025,
+        "alone": 14026,
         "lazy": 0,
-        "added": 5741
+        "added": 5742
       },
       "element": {
         "alone": 19245,
@@ -189,14 +189,14 @@
     },
     "datepicker": {
       "factory": {
-        "alone": 17965,
+        "alone": 18154,
         "lazy": 0,
-        "added": 10621
+        "added": 10815
       },
       "element": {
-        "alone": 22612,
+        "alone": 22718,
         "lazy": 0,
-        "added": 11495
+        "added": 11582
       }
     },
     "timepicker": {
@@ -345,9 +345,9 @@
     },
     "dialog": {
       "factory": {
-        "alone": 19575,
+        "alone": 19576,
         "lazy": 6826,
-        "added": 11054
+        "added": 11055
       },
       "element": {
         "alone": 25824,
