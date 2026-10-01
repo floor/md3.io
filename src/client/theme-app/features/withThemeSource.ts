@@ -1,7 +1,7 @@
-// The built-in themes, as the server read them from mtrl's CSS (#themes-data), and the
-// Styles store (theme-store.ts) the app reads and writes its theme and mode through, so
-// the Color page, the playground and other tabs agree. `source.select(name)` and
-// `source.setMode(mode)` write the store; the store's changes land in `app.state`.
+// The built-in themes, as the server read them from mtrl's CSS (#themes-data), the
+// Styles store (theme-store.ts) the app reads and writes its theme through, so the Color
+// page, the playground and other tabs agree, and the site's own light or dark mode,
+// which the app follows. Both land in `app.state`.
 import { themeStore } from '../../theme-store';
 import type { App } from '../core/foundation';
 
@@ -27,9 +27,22 @@ export const withThemeSource = (config: { themes: ThemeData[] }) => (app: App) =
       has: (name: string) => byName.has(name),
       current: (): ThemeData => byName.get(app.state.get('theme') as string) ?? fallback,
       select: (name: string) => { if (byName.has(name)) themeStore.set({ base: name }); },
-      setMode: (mode: 'light' | 'dark') => themeStore.set({ mode }),
-      /** Follows the store into app.state; returns the unsubscribe. */
-      connect: () => themeStore.subscribe(({ base, mode }) => { app.state.set('mode', mode); app.state.set('theme', byName.has(base) ? base : fallback.name); }),
+      /** Follows the store and the site's mode into app.state; returns the disconnect. */
+      connect: () => {
+        const unsubscribe = themeStore.subscribe(({ base }) => app.state.set('theme', byName.has(base) ? base : fallback.name));
+        // The site's mode: html[data-theme-mode], set by its header toggle, or by the
+        // system preference while the site has no choice of its own (md3-site-mode).
+        const root = document.documentElement;
+        const system = matchMedia('(prefers-color-scheme: dark)');
+        const chosen = () => { try { return localStorage.getItem('md3-site-mode'); } catch { return null; } };
+        const follow = () => app.state.set('mode', root.dataset.themeMode === 'light' ? 'light' : 'dark');
+        const onSystem = () => { if (!chosen()) app.state.set('mode', system.matches ? 'dark' : 'light'); };
+        const observer = new MutationObserver(follow);
+        observer.observe(root, { attributes: true, attributeFilter: ['data-theme-mode'] });
+        system.addEventListener('change', onSystem);
+        follow();
+        return () => { unsubscribe(); observer.disconnect(); system.removeEventListener('change', onSystem); };
+      },
     },
   };
 };

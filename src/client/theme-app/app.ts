@@ -1,4 +1,4 @@
-// The Themes app: mtrl's built-in themes as Material Theme Builder's scheme cards and
+// The Themes app: mtrl's built-in themes as Material Theme Builder's scheme card and
 // tonal palettes. Built the mtrl way, a pipe of small features, each
 // `(config?) => (app) => ({ ...app, ns })`, with no `this`:
 //   foundation (state, UI from config/layout.ts) → the theme and what paints it →

@@ -1,8 +1,8 @@
-// A Light or Dark Scheme card, as Material Theme Builder lays one out: Primary,
+// The Scheme card, as Material Theme Builder lays one out, in the app's mode: Primary,
 // Secondary and Tertiary columns with Error beside them, the surfaces below, and the
 // inverse roles, scrim and shadow beside those. Each tile is filled with its role and
-// labelled in its "on" colour. Composed the mtrl way; `set(theme)` repaints it in place
-// and a tile click emits `copy` with { role, hex }.
+// labelled in its "on" colour. Composed the mtrl way; `set(theme, mode)` repaints it in
+// place, light filled and dark outlined, and a tile click emits `copy` with { role, hex }.
 import { pipe, createBase, withElement, withEvents, withLifecycle, type ElementComponent, type EventComponent } from 'mtrl/core/compose';
 import type { ThemeData } from './features/withThemeSource';
 import { contrastRatio } from '../../shared/color';
@@ -42,16 +42,16 @@ const BLOCKS: { area: string; groups: { kind: 'col' | 'row'; tiles: [string, Siz
   ] },
 ];
 
-export interface SchemeCardOptions { mode: Mode; roles: string[] }
+export interface SchemeCardOptions { roles: string[] }
 
 /** The tiles, built once: `tiles` maps each role to its button. */
-const withTiles = ({ mode }: SchemeCardOptions) => <T extends ElementComponent>(component: T) => {
+const withTiles = () => <T extends ElementComponent>(component: T) => {
   const { element } = component;
   const tiles = new Map<string, HTMLButtonElement>();
   const title = document.createElement('h2');
   title.className = component.getElementClass(component.getClass('scheme-card'), 'title');
-  title.textContent = `${mode === 'light' ? 'Light' : 'Dark'} Scheme`;
-  title.id = `scheme-${mode}-title`;
+  title.textContent = 'Scheme';
+  title.id = 'scheme-title';
   element.setAttribute('aria-labelledby', title.id);
   const grid = document.createElement('div');
   grid.className = component.getClass('scheme-grid');
@@ -79,11 +79,14 @@ const withTiles = ({ mode }: SchemeCardOptions) => <T extends ElementComponent>(
   return { ...component, tiles };
 };
 
-/** `set(theme)`: every tile, and the card's own surface, in this mode's colours. */
-const withScheme = ({ mode, roles }: SchemeCardOptions) => <T extends ElementComponent & { tiles: Map<string, HTMLButtonElement> }>(component: T) => {
+/** `set(theme, mode)`: every tile, and the card's own surface, in that mode's colours. */
+const withScheme = ({ roles }: SchemeCardOptions) => <T extends ElementComponent & { tiles: Map<string, HTMLButtonElement> }>(component: T) => {
   let current: Record<string, string> = {};
-  const set = (theme: ThemeData) => {
+  const set = (theme: ThemeData, mode: Mode) => {
     const colors = theme[mode];
+    component.element.dataset.mode = mode;
+    component.element.classList.toggle('md3-scheme-card--dark', mode === 'dark');
+    component.element.classList.toggle('md3-scheme-card--light', mode === 'light');
     current = Object.fromEntries(roles.map((role, i) => [role, colors[i]!]));
     const { element } = component;
     element.style.background = current.surface!;
@@ -118,8 +121,8 @@ export const createSchemeCard = (options: SchemeCardOptions) => {
   const card = pipe(
     createBase,
     withEvents(),
-    withElement({ tag: 'section', componentName: 'scheme-card', className: `md3-scheme-card--${options.mode}`, data: { mode: options.mode } }),
-    withTiles(options),
+    withElement({ tag: 'section', componentName: 'scheme-card' }),
+    withTiles(),
     withScheme(options),
     withCopyEvent(),
     withLifecycle(),

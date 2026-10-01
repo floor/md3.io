@@ -1,4 +1,4 @@
-// Paints the theme: both scheme cards, and the app itself. The app's mtrl components
+// Paints the theme in the app's mode: the scheme card, and the app itself. The app's mtrl components
 // (the bar, the select, the buttons, the snackbar) take the chosen theme's colour roles
 // in the chosen mode, written as mtrl's tokens on :root, where the select's menu and
 // the snackbar, which live outside the app's element, read them too.
@@ -13,12 +13,8 @@ export const withScheme = () => (app: App) => {
   return {
     ...app,
     scheme: {
-      /** The cards, for a theme. */
-      paint: () => {
-        const theme = source.current();
-        ui.light.set(theme);
-        ui.dark.set(theme);
-      },
+      /** The card, in place. */
+      paint: () => ui.scheme.set(source.current(), state.get('mode') === 'dark' ? 'dark' : 'light'),
       /** The app's own colours: the theme's roles in the current mode. */
       chrome: () => {
         const theme = source.current();
