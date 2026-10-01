@@ -532,10 +532,12 @@ export const components = {
     group: 'Containment', name: 'Carousel', factory: 'createCarousel', variable: 'carousel',
     description: 'Browse a collection with Material carousel layouts. Swipe, scroll, or use the arrow keys.',
     summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
+    // The preview's remote (icon buttons and a slider), which the copied code does not build.
+    previewStyles: ['icon-button', 'slider'],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
       ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
-      ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', ['0', '1', '2', '3', '4'], '0', 'select')]),
+      ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', Array.from({ length: 24 }, (_, index) => String(index)), '0', 'select')]),
       ...section('Behavior', [toggle('snap', 'Snap to items', true)]),
     ],
     config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: carouselSlides(state) }),
@@ -885,6 +887,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
     if (slug === 'divider') setup += `const container = document.createElement('div');\ncontainer.style.cssText = 'display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}';\ndivider.element.style.flex = '1';\ncontainer.append(divider.element);\ndocument.body.append(container);\n`;
     if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n";
     if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
+    if (slug === 'carousel') setup += "\n// Drive it from your own controls: carousel.next(), carousel.prev(), carousel.goTo(index).\n// 'change' reports every move: from the API, a swipe, the keyboard or a trackpad.\ncarousel.on('change', ({ index }) => console.log(`Slide ${index + 1} of ${carousel.slides.getCount()}`));\n";
   }
   return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +

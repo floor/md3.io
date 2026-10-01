@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 // Symbol names exactly as fonts.google.com/icons spells them.
 const names = [
   'account_circle', 'add', 'bookmark', 'check', 'close', 'download', 'edit', 'favorite', 'format_bold', 'format_italic',
-  'format_underlined', 'inbox', 'menu', 'send', 'volume_off', 'volume_up',
+  'format_underlined', 'inbox', 'menu', 'send', 'volume_off', 'volume_up', 'first_page', 'chevron_left', 'chevron_right', 'last_page',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

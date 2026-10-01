@@ -6,6 +6,7 @@ import createTooltip from 'mtrl/components/tooltip';
 import createCard from 'mtrl/components/card';
 import createList from 'mtrl/components/list';
 import createCarousel from 'mtrl/components/carousel';
+import { createCarouselRemote } from './carousel-remote';
 import { createDivider } from 'mtrl/components/divider';
 import createDialog from 'mtrl/components/dialog';
 import createBottomSheet from 'mtrl/components/bottom-sheet';
@@ -119,8 +120,14 @@ function create(state: ComponentState) {
     }
     case 'carousel': {
       const control = createCarousel(components.carousel.config(state));
-      control.on('change', (event: { index: number }) => { sync({ initialSlide: String(event.index) }); message(`Slide ${event.index + 1} of 5`); });
-      return control;
+      const count = control.slides.getCount();
+      control.on('change', event => { sync({ initialSlide: String(event.index) }); message(`Slide ${event.index + 1} of ${count}`); });
+      // The remote under the carousel goes with it: a new carousel gets a new remote.
+      const remote = createCarouselRemote(control);
+      const host = document.createElement('div');
+      host.className = 'carousel-demo';
+      host.append(control.element, remote.element);
+      return { element: host, destroy: () => { remote.destroy(); control.destroy(); } };
     }
     case 'divider': {
       const control = createDivider(components.divider.config(state));
