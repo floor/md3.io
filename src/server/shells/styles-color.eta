@@ -6,6 +6,7 @@
   // Compact JSON for the client: role → value, or [value, source] when inherited.
   const data = Object.fromEntries(Object.entries(it.themeTokens).map(([name, modes]) => [name, Object.fromEntries(['light', 'dark'].map(m => [m, Object.fromEntries(Object.entries(modes[m]).map(([role, c]) => [role, c.inherited ? [c.value, c.from] : c.value]))]))]));
 %>
+<div class="styles-layout">
 <div class="page-wrap styles-page styles-color" data-styles-page="color">
   <header class="page-heading"><span class="eyebrow">STYLES / COLOR</span><h1>Color</h1><p>The color roles mtrl components are painted with, in each theme and mode.</p></header>
   <p class="styles-source">Values read from mtrl's compiled theme CSS · mtrl <%= it.mtrlVersion %></p>
@@ -16,8 +17,7 @@
       <label class="choice"><input name="color-mode" type="radio" value="light" checked /><span class="ui-segmented__btn">Light</span></label>
       <label class="choice"><input name="color-mode" type="radio" value="dark" /><span class="ui-segmented__btn">Dark</span></label>
     </div>
-    <span class="styles-status sr-only" id="styles-status" role="status" aria-live="polite"></span>
-  </div>
+      </div>
   <% it.colorGroups.forEach((group, g) => { %>
   <section class="color-group" aria-labelledby="color-group-<%= g %>" <%= group.roles.some(role => scheme[role]) ? '' : 'hidden' %>>
     <h2 class="catalog-label" id="color-group-<%= g %>"><%= group.label %></h2>
@@ -46,4 +46,6 @@
   <% }); %>
   <% if (it.missingGroups.length) { %><p class="styles-note">Not in mtrl yet: the M3 <%= it.missingGroups.join(', ').toLowerCase() %> roles. This page shows only the roles mtrl's CSS declares.</p><% } %>
   <script type="application/json" id="color-tokens"><%~ JSON.stringify({ themes: data, aa: it.AA_TEXT }).replaceAll('<', '\\u003c') %></script>
+</div>
+<%~ include('styles-preview', { ...it, appearance: false }) %>
 </div>

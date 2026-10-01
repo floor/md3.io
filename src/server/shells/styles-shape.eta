@@ -1,0 +1,87 @@
+<%
+  const label = step => step.charAt(0).toUpperCase() + step.slice(1).replaceAll('-', ' ');
+  const editable = radius => radius > 0 && radius < 100;
+  const m3Steps = new Set(it.m3Scale.map(entry => entry.step));
+  const extras = Object.keys(it.shape).filter(step => !m3Steps.has(step));
+  // One step of the strip: mtrl's value where mtrl has the step, M3's where it doesn't.
+  const tile = (step, m3) => {
+    const radius = it.shape[step];
+    const missing = radius === undefined;
+    const token = `var(--mtrl-sys-shape-corner-${step})`;
+    const shown = missing ? (m3 === null ? 'full' : `${m3}px`) : radius >= 100 ? (radius > 1000 ? 'full' : `${radius}px`) : `${radius}px`;
+    const sample = missing ? (m3 === null ? 999 : m3) : Math.min(radius, 999);
+%>
+      <li class="shape-tile<%= missing ? ' shape-tile--missing' : '' %>" data-step="<%= step %>">
+        <button type="button" class="shape-tile__select" aria-pressed="false" <%= missing ? 'disabled' : '' %> aria-label="<%= missing ? `${label(step)}: not in mtrl yet` : `Show the components that use ${label(step).toLowerCase()}` %>"><span class="shape-tile__shape" style="border-radius:<%= sample %>px" aria-hidden="true"></span></button>
+        <span class="shape-tile__name"><%= label(step) %></span>
+        <% if (missing) { %>
+        <span class="shape-tile__value"><%= shown %> in M3</span>
+        <span class="shape-tile__note">Not in mtrl yet</span>
+        <% } else if (editable(radius)) { %>
+        <button type="button" class="shape-tile__value shape-tile__edit" aria-expanded="false" aria-controls="shape-edit-<%= step %>" aria-label="Edit <%= label(step).toLowerCase() %>, <%= radius %>px"><output><%= radius %>px</output></button>
+        <span class="shape-tile__editor" id="shape-edit-<%= step %>" hidden>
+          <input class="ui-input" type="number" min="0" max="<%= it.cornerMax %>" step="1" value="<%= radius %>" data-step="<%= step %>" aria-label="<%= label(step) %> corner radius in px" />
+          <input class="ui-slider" type="range" min="0" max="<%= it.cornerMax %>" step="1" value="<%= radius %>" data-step="<%= step %>" aria-label="<%= label(step) %> corner radius" />
+        </span>
+        <% } else { %>
+        <span class="shape-tile__value"><output><%= shown %></output></span>
+        <% } %>
+        <% if (!missing) { %><button type="button" class="shape-tile__token" data-copy="<%= token %>" aria-label="Copy <%= token %>">Copy token</button><% } %>
+      </li>
+<% }; %>
+<div class="styles-layout">
+<div class="page-wrap styles-page styles-shape" data-styles-page="shape">
+  <header class="page-heading"><span class="eyebrow">STYLES / SHAPE</span><h1>Shape</h1><p>Material 3's corner scale as mtrl ships it, the components that use each step, and the expressive shapes.</p></header>
+  <p class="styles-source">mtrl values read from its compiled CSS · mtrl <%= it.mtrlVersion %> · M3 values from m3.material.io and Compose</p>
+
+  <section aria-labelledby="shape-scale-title" data-reset-scope tabindex="-1">
+    <div class="styles-head"><h2 id="shape-scale-title" class="type-section__title">The corner scale</h2><button type="button" class="ui-btn" data-theme-reset="shape">Reset shape</button></div>
+    <p class="type-section__lead">Each step is <code>--mtrl-sys-shape-corner-&lt;step&gt;</code>. Select a step to see its components below; click a value to change it for your theme.</p>
+    <ol class="shape-strip">
+      <% it.m3Scale.forEach(entry => tile(entry.step, entry.dp)); %>
+    </ol>
+    <% if (extras.length) { %>
+    <div class="shape-extras">
+      <p class="shape-extras__label">mtrl-specific, not part of M3</p>
+      <ol class="shape-strip shape-strip--extras">
+        <% extras.forEach(step => tile(step, null)); %>
+      </ol>
+    </div>
+    <% } %>
+  </section>
+
+  <section aria-labelledby="shape-components-title">
+    <h2 id="shape-components-title" class="type-section__title">Shape in components</h2>
+    <p class="type-section__lead">Real mtrl components under the step they read. Hover a row to find its step above. A round button isn't here: M3's round shape is half the button's height, not a step.</p>
+    <iframe class="shape-gallery" src="/styles/frame/?view=gallery" data-theme-frame="theme" data-autosize title="mtrl components grouped by corner step"></iframe>
+  </section>
+
+  <section aria-labelledby="shape-library-title" class="shape-library" id="shape-library">
+    <h2 id="shape-library-title" class="type-section__title">Expressive shapes</h2>
+    <p class="type-section__lead">M3 defines <%= it.m3ShapeCount %> shapes; mtrl ships these <%= it.library.length %> today (FLO-346), drawn here by <code>mtrl/core/shapes</code>, the geometry its loading indicator morphs through.</p>
+    <div class="shape-library__body">
+      <ul class="shape-library__grid">
+        <% it.library.forEach(shape => { %>
+        <li class="shape-library__item"><svg viewBox="0 0 100 100" role="img" aria-label="<%= shape.label %>"><path d="<%= shape.path %>" /></svg><span><%= shape.label %></span></li>
+        <% }); %>
+      </ul>
+      <figure class="shape-morph">
+        <svg viewBox="0 0 100 100" role="img" aria-label="A shape morphing through the loading indicator's sequence"><path id="shape-morph-path" d="<%= it.library[0].path %>" /></svg>
+        <figcaption><span id="shape-morph-name" aria-live="off"></span><button type="button" class="ui-btn" id="shape-morph-toggle" aria-pressed="false">Play</button></figcaption>
+      </figure>
+    </div>
+    <script type="application/json" id="shape-colors"><%~ JSON.stringify(it.libraryColors).replaceAll('<', '\\u003c') %></script>
+  </section>
+
+  <%/* M3's shape guidance, m3.material.io/styles/shape (overview and corner radius scale). */%>
+  <section aria-labelledby="shape-guidance-title">
+    <h2 id="shape-guidance-title" class="type-section__title">Using the scale</h2>
+    <ul class="shape-guidance">
+      <li><strong>Larger components, larger corners.</strong> Text fields and chips sit at the small end, cards in the middle, dialogs and sheets at extra large.</li>
+      <li><strong>Full for pills.</strong> Switches, sliders' handles, badges and round buttons are fully round, whatever the rest of the scale does.</li>
+      <li><strong>Change steps, not components.</strong> Shape reads as a system when a handful of steps repeat, so edit a step and let every component that uses it follow.</li>
+    </ul>
+  </section>
+</div>
+<%~ include('styles-preview', { ...it, collapsible: true }) %>
+</div>

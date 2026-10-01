@@ -1,0 +1,40 @@
+/* The device chooser (src/client/device-frame.ts): mtrl's button group and icon
+   button, painted with the site's tokens, above a stage that centres the frame. */
+
+.device { display: flex; flex-direction: column; min-width: 0; }
+.device__bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  --mtrl-sys-color-primary: var(--accent);
+  --mtrl-sys-color-on-primary: #fff;
+  --mtrl-sys-color-secondary: var(--accent);
+  --mtrl-sys-color-on-secondary: #fff;
+  --mtrl-sys-color-secondary-container: var(--accent-dim);
+  --mtrl-sys-color-on-secondary-container: var(--text);
+  --mtrl-sys-color-surface-container: var(--surface-container);
+  --mtrl-sys-color-surface-container-low: var(--bg-card);
+  --mtrl-sys-color-on-surface: var(--text);
+  --mtrl-sys-color-on-surface-variant: var(--text-muted);
+  --mtrl-sys-color-outline: var(--border-hover);
+  --mtrl-sys-color-outline-variant: var(--border);
+  --mtrl-sys-color-inverse-surface: var(--text);
+  --mtrl-sys-color-inverse-on-surface: var(--bg);
+  --mtrl-ref-typeface-brand: var(--font-sans);
+  --mtrl-ref-typeface-plain: var(--font-sans);
+  --mtrl-sys-shape-corner-extra-small: 4px;
+  --mtrl-sys-shape-corner-small: 8px;
+  --mtrl-sys-shape-corner-medium: 12px;
+  --mtrl-sys-shape-corner-large: 16px;
+  --mtrl-sys-shape-corner-extra-large: 28px;
+}
+.device__bar svg { width: 18px; height: 18px; }
+.device__size { margin-left: auto; color: var(--text-muted); font: var(--fs-xs) var(--font-mono); white-space: nowrap; }
+.device__stage { min-width: 0; overflow: hidden; }
+/* Mobile and Tablet: the frame at the device's size, scaled from its top left into a
+   viewport the scaled size, centred on a quiet backdrop. */
+.device:not([data-device="desktop"]) .device__stage { display: flex; justify-content: center; padding: 16px 0; background: var(--bg); }
+.device:not([data-device="desktop"]) .device__viewport { flex: none; overflow: hidden; border-radius: 12px; box-shadow: 0 0 0 1px var(--border-hover); }
+.device:not([data-device="desktop"]) .device__viewport > iframe { display: block; max-width: none; transform-origin: 0 0; border: 0; }
+/* The site's reset (shell.css, `* { margin: 0; padding: 0 }`) is unlayered and would
+   beat mtrl's layered component styles: give these two back to mtrl's layers. */
+.device__bar * { margin: revert-layer; padding: revert-layer; }

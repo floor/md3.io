@@ -1,5 +1,12 @@
+<div class="styles-layout">
 <div class="page-wrap styles-page">
-  <header class="page-heading"><span class="eyebrow">STYLES</span><h1>Styles</h1><p>The design tokens behind every mtrl component, read from mtrl's own CSS.</p></header>
+  <header class="page-heading"><span class="eyebrow">STYLES</span><h1>Styles</h1><p>Shape your own Material: tune mtrl's tokens, watch real components follow in the preview, and export one theme.</p></header>
+  <section class="styles-summary" id="styles-summary" aria-labelledby="styles-summary-title" data-reset-scope tabindex="-1">
+    <div class="styles-head"><h2 class="catalog-label" id="styles-summary-title">Your theme</h2><button type="button" class="ui-btn" data-open-export aria-haspopup="dialog" aria-controls="styles-export">Export theme</button></div>
+    <p class="styles-summary__lead">Based on <strong class="styles-summary__base">Baseline, light</strong>. Pick another base theme and mode in the preview.</p>
+    <p class="styles-summary__empty">Nothing changed yet: the preview shows the base theme as mtrl ships it. Start with <a href="/styles/shape/">Shape</a>.</p>
+    <ul class="styles-summary__list"></ul>
+  </section>
   <section aria-labelledby="styles-available"><h2 class="catalog-label" id="styles-available">Foundations</h2>
     <div class="styles-cards">
       <a class="styles-card ui-card ui-card--interactive" href="/styles/color/">
@@ -9,6 +16,10 @@
       <a class="styles-card ui-card ui-card--interactive" href="/styles/typography/">
         <div class="styles-card__visual styles-card__visual--type" aria-hidden="true"><span>Aa</span></div>
         <div class="styles-card__body"><div><h3>Typography</h3><p>The 15 type scale roles as live samples you can edit.</p></div></div>
+      </a>
+      <a class="styles-card ui-card ui-card--interactive" href="/styles/shape/">
+        <div class="styles-card__visual styles-card__visual--shape" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="styles-card__body"><div><h3>Shape</h3><p>The corner scale: make your components squarer or rounder.</p></div></div>
       </a>
     </div>
   </section>
@@ -21,4 +32,6 @@
       <% }); %>
     </ul>
   </section>
+</div>
+<%~ include('styles-preview', it) %>
 </div>

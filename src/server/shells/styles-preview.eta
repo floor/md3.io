@@ -1,0 +1,70 @@
+<%
+  /* The live preview and the export panel, shared by every Styles page. The preview is
+     real mtrl in an isolated frame (/styles/frame/), as the playgrounds are; the store
+     (src/client/theme-store.ts) sends it the base theme, the mode and the overrides.
+     it.themeBase: mtrl's values; it.appearance: false on a page with its own theme controls;
+     it.collapsible: true for a preview that starts closed on wide screens too. */
+  const title = name => (name.charAt(0).toUpperCase() + name.slice(1)).replaceAll('-', ' ');
+%>
+<aside class="styles-preview<%= it.collapsible ? " styles-preview--docked" : "" %>" id="styles-preview" aria-label="Live preview" <%~ it.collapsible ? "data-collapsible data-open=\"false\"" : "" %>>
+  <div class="styles-preview__bar">
+    <button type="button" class="styles-preview__toggle" id="styles-preview-toggle" aria-expanded="false" aria-controls="styles-preview-body">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>Preview
+    </button>
+    <span class="styles-preview__heading" aria-hidden="true">Preview</span>
+    <label class="styles-preview__compare"><input type="checkbox" id="styles-compare" /> Compare</label>
+    <button type="button" class="ui-btn styles-preview__export" id="styles-export-open" data-open-export aria-haspopup="dialog" aria-controls="styles-export">Export theme</button>
+  </div>
+  <div class="styles-preview__body" id="styles-preview-body">
+    <% if (it.appearance !== false) { %>
+    <div class="styles-preview__appearance" role="group" aria-label="Base theme">
+      <label class="sr-only" for="styles-base">Base theme</label>
+      <select id="styles-base" class="ui-select" data-theme-control="base"><% it.themeBase.themes.forEach(name => { %><option value="<%= name %>"><%= title(name) %></option><% }); %></select>
+      <div class="ui-segmented choice-group choice-group--mode" role="radiogroup" aria-label="Preview mode">
+        <label class="choice"><input name="styles-mode" type="radio" value="light" data-theme-control="mode" checked /><span class="ui-segmented__btn">Light</span></label>
+        <label class="choice"><input name="styles-mode" type="radio" value="dark" data-theme-control="mode" /><span class="ui-segmented__btn">Dark</span></label>
+      </div>
+    </div>
+    <% } %>
+    <div class="styles-preview__switch ui-segmented choice-group" role="radiogroup" aria-label="Show">
+      <label class="choice"><input name="styles-show" type="radio" value="theme" checked /><span class="ui-segmented__btn">Yours</span></label>
+      <label class="choice"><input name="styles-show" type="radio" value="base" /><span class="ui-segmented__btn">Base</span></label>
+    </div>
+    <div class="styles-preview__frames" data-show="theme">
+      <figure class="styles-preview__frame" data-frame="theme">
+        <figcaption>Your theme</figcaption>
+        <iframe src="/styles/frame/" data-theme-frame="theme" title="Live preview of your theme"></iframe>
+      </figure>
+      <figure class="styles-preview__frame" data-frame="base" hidden>
+        <figcaption>Base theme</figcaption>
+        <iframe data-src="/styles/frame/" data-theme-frame="base" title="Live preview of the base theme, without your changes"></iframe>
+      </figure>
+    </div>
+  </div>
+</aside>
+
+<dialog class="styles-export" id="styles-export" aria-labelledby="styles-export-title">
+  <div class="styles-export__panel">
+    <header class="styles-export__head">
+      <h2 id="styles-export-title">Export theme</h2>
+      <button type="button" class="ui-btn styles-export__close" id="styles-export-close">Close</button>
+    </header>
+    <p class="styles-export__summary" id="styles-export-summary"></p>
+    <section aria-labelledby="styles-export-css-title">
+      <div class="styles-export__row"><h3 id="styles-export-css-title">CSS</h3>
+        <span class="styles-export__actions"><button type="button" class="ui-btn" id="styles-export-copy">Copy CSS</button><button type="button" class="ui-btn" id="styles-export-download">Download mtrl-theme.css</button></span></div>
+      <pre class="styles-export__css" tabindex="0" aria-label="Theme CSS"><code id="styles-export-css"></code></pre>
+      <p class="styles-export__hint">The same file for web components, React, Vue, Svelte, Solid and the factories: custom properties reach into every component, shadow roots included.</p>
+    </section>
+    <section aria-labelledby="styles-export-link-title">
+      <div class="styles-export__row"><h3 id="styles-export-link-title">Share link</h3><button type="button" class="ui-btn" id="styles-export-copy-link">Copy link</button></div>
+      <input class="ui-input styles-export__link" id="styles-export-link" type="text" readonly aria-labelledby="styles-export-link-title" />
+    </section>
+    <section aria-labelledby="styles-export-reset-title">
+      <div class="styles-export__row"><h3 id="styles-export-reset-title">Reset</h3>
+        <span class="styles-export__actions" id="styles-export-resets"><button type="button" class="ui-btn ui-btn--danger" data-theme-reset="">Reset everything</button></span></div>
+    </section>
+  </div>
+</dialog>
+<span class="styles-status sr-only" id="styles-status" role="status" aria-live="polite"></span>
+<script type="application/json" id="theme-base"><%~ JSON.stringify(it.themeBase).replaceAll('<', '\\u003c') %></script>

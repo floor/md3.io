@@ -41,7 +41,7 @@ const lastmod = (...files: string[]): string => files.reduce((latest, file) => {
 const shell = (name: string) => `src/server/shells/${name}.eta`;
 /** A component's playground: its definition, and its own module where it has one (src/shared/button.ts). */
 const componentFiles = (slug: string) => ['src/shared/components.ts', ...existsSync(resolve(root, `src/shared/${slug}.ts`)) ? [`src/shared/${slug}.ts`] : []];
-const STYLE_SHELLS: Record<string, string> = { '/styles/': 'styles-overview', '/styles/color/': 'styles-color', '/styles/typography/': 'styles-typography' };
+const STYLE_SHELLS: Record<string, string> = { '/styles/': 'styles-overview', '/styles/themes/': 'styles-themes', '/styles/color/': 'styles-color', '/styles/typography/': 'styles-typography', '/styles/shape/': 'styles-shape' };
 
 export interface SitemapPage { path: string; lastmod: string; priority: string }
 /** Every public page, from the routes' own data, with its sources' last commit. */
