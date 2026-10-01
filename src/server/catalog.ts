@@ -16,7 +16,7 @@ export const CATALOG_SCOPE = 'catalog-visual';
 export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`);
 
 /** The surface elements of the overlays, by component. */
-export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker' } as const;
+export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', toolbar: 'md3-catalog-toolbar' } as const;
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 type Attributes = Record<string, string | number | boolean | undefined>;
@@ -40,6 +40,8 @@ const visuals: Record<ComponentSlug, string> = {
     ['Save as…', 'Save a copy', 'Download'].map(label => m('menu-item', {}, text(label))).join('')),
   fab: m('fab', { icon: symbols.add, 'aria-label': 'Create new item' }),
   'extended-fab': m('extended-fab', { icon: symbols.edit }, 'Compose'),
+  'fab-menu': m('fab-menu', { icon: symbols.edit, 'aria-label': 'Reply options', presentation: 'list' },
+    [['reply', 'Reply'], ['forward', 'Forward']].map(([value, label]) => m('fab-menu-item', { value, icon: symbols.send }, text(label!))).join('')),
   // Selection & input
   checkbox: div('catalog-stack', m('checkbox', { 'data-indeterminate': true }, 'Additions')
     + div('catalog-stack catalog-stack--inset', m('checkbox', {}, 'Pickles') + m('checkbox', { checked: true }, 'Tomato'))),
@@ -64,6 +66,8 @@ const visuals: Record<ComponentSlug, string> = {
   menu: `<${SURFACES.menu}></${SURFACES.menu}>`,
   'top-app-bar': m('top-app-bar', { headline: 'My library', 'no-scroll': true },
     m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })),
+  // A surface: <m-toolbar>'s item hosts take a tabindex, which a card's link must not hold.
+  toolbar: `<${SURFACES.toolbar}></${SURFACES.toolbar}>`,
   'bottom-app-bar': m('bottom-app-bar', {},
     m('icon-button', { icon: symbols.heart, 'aria-label': 'Favorite' }) + m('icon-button', { icon: symbols.bookmark, 'aria-label': 'Bookmark' })
     + m('fab', { slot: 'fab', icon: symbols.add, 'aria-label': 'Compose' })),
@@ -81,7 +85,8 @@ const visuals: Record<ComponentSlug, string> = {
   // Communication
   badge: ['inbox', 'heart'].map((icon, index) => div('catalog-badge',
     m('icon-button', { variant: 'tonal', icon: symbols[icon as 'inbox' | 'heart'], 'aria-label': index ? 'Favorites' : 'Inbox' }) + m('badge', index ? { variant: 'small' } : { label: 8 }))).join(''),
-  progress: div('catalog-stack catalog-stack--progress', m('progress', { value: 60, 'aria-label': 'Uploading files' }) + m('progress', { variant: 'circular', value: 60, 'aria-label': 'Uploading files' })),
+  // Wavy and indeterminate: the M3 Expressive form, and it shows the motion.
+  progress: div('catalog-stack catalog-stack--progress', m('progress', { shape: 'wavy', indeterminate: true, 'aria-label': 'Uploading files' }) + m('progress', { variant: 'circular', shape: 'wavy', indeterminate: true, 'aria-label': 'Uploading files' })),
   'loading-indicator': m('loading-indicator', { size: 48, 'aria-label': 'Loading your content' }) + m('loading-indicator', { size: 48, contained: true, 'aria-label': 'Loading your content' }),
   snackbar: `<${SURFACES.snackbar}></${SURFACES.snackbar}>`,
   tooltip: `<${SURFACES.tooltip}></${SURFACES.tooltip}>`,

@@ -55,6 +55,7 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
   },
   select: { name: 'select-option', declaration: 'selectOption', from: 'options', text: 'text', keys: { id: 'value' } },
   'split-button': { name: 'menu-item', declaration: 'menuItem', from: 'items', text: 'text', keys: { id: 'value' } },
+  'fab-menu': { name: 'fab-menu-item', declaration: 'fabMenuItem', from: 'items', text: 'text', keys: { id: 'value' } },
   // Suggestions are strings, each one's text.
   search: { name: 'search-suggestion', declaration: 'searchSuggestion', from: 'suggestions', text: 'text' },
 };
@@ -78,6 +79,8 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     scrollable: { attribute: 'no-scroll', values: { false: true }, ignore: [true] },
     scrolled: { call: { method: 'setScrollState' }, ignore: [false] },
   },
+  // `flat` is the element's way of saying `elevated: false`.
+  toolbar: { elevated: { attribute: 'flat', values: { false: true }, ignore: [true] } },
   // The bar has a FAB when one is slotted.
   'bottom-app-bar': { hasFab: { ignore: [true, false] }, visible: { call: { method: 'hide', when: false }, ignore: [true] } },
   card: {
@@ -150,6 +153,8 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
   ],
+  // The factory takes its items in its config; the element as its children.
+  toolbar: [{ from: 'items', element: 'icon-button' }],
   'bottom-app-bar': [
     { from: 'actions', element: 'icon-button', add: 'addAction' },
     { from: 'fab', element: 'fab', slot: 'fab', add: 'addFab' },
@@ -185,6 +190,7 @@ const triggers: Record<string, Trigger> = {
 // `expanded`, which its trigger expands and Escape collapses.
 const open: Record<string, OpenMeta> = {
   menu: { show: 'show', hide: 'hide' },
+  'fab-menu': { show: 'show', hide: 'hide' },
   dialog: { config: 'open', show: 'show', hide: 'close' },
   'bottom-sheet': { config: 'initialState', values: ['partial', 'expanded'], show: 'expand', hide: 'close' },
   'side-sheet': { config: 'open', show: 'show', hide: 'close' },

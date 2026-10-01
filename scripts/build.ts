@@ -1,6 +1,7 @@
-import { mkdir, cp } from 'node:fs/promises';
+import { mkdir, cp, writeFile } from 'node:fs/promises';
 import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { bundleCss, stylesheetBundles } from '../src/server/css';
 
 const root = resolve(import.meta.dir, '..');
 const outdir = resolve(root, 'dist');
@@ -23,6 +24,13 @@ await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'mtrl/styles'), { recursiv
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'mtrl/themes'), { recursive: true });
 // The elements' pre-upgrade rules, for the components overview's cards.
 await cp(resolve(mtrlDist, 'elements/preupgrade.css'), resolve(outdir, 'mtrl/elements/preupgrade.css'));
+// One minified stylesheet per page type (dist/css/<page>.css), in the link order
+// the pages used to request. See stylesheetBundles.
+const cssDir = resolve(outdir, 'css');
+await mkdir(cssDir, { recursive: true });
+await Promise.all((Object.keys(stylesheetBundles) as (keyof typeof stylesheetBundles)[]).map(async name => {
+  await writeFile(resolve(cssDir, `${name}.css`), bundleCss(name));
+}));
 // Every example in every framework, into dist/examples.
 const examples = Bun.spawnSync(['bun', resolve(root, 'scripts/build-examples.ts')], { stdout: 'inherit', stderr: 'inherit' });
 if (examples.exitCode !== 0) process.exit(1);

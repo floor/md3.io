@@ -18,7 +18,9 @@ describe('Styles pages', () => {
       expect(html).toContain('<a href="/styles/" class="active">Styles</a>');
       expect(html).toContain('<span class="header__section">Styles</span>');
       expect(html).toContain(`href="${path}" aria-current="page"`);
-      expect(html).toContain('/styles/styles-pages.css');
+      expect(html).toContain('/dist/css/styles.css');
+      expect(html).not.toContain('/styles/styles-pages.css');
+      expect(html).not.toContain('/styles/roboto.css');
       // mtrl's base.css would restyle the site: the Styles pages never load it.
       expect(html).not.toContain('mtrl/styles/base.css');
       // Every Styles page has the live preview, the export panel and one status region.

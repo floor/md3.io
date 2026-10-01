@@ -16,6 +16,7 @@ import createTabs from 'mtrl/components/tabs';
 import createMenu from 'mtrl/components/menu';
 import createTopAppBar from 'mtrl/components/top-app-bar';
 import createBottomAppBar from 'mtrl/components/bottom-app-bar';
+import createToolbar from 'mtrl/components/toolbar';
 import createSwitch from 'mtrl/components/switch';
 import createRadios from 'mtrl/components/radios';
 import createSlider from 'mtrl/components/slider';
@@ -31,6 +32,7 @@ import createIconButton from 'mtrl/components/icon-button';
 import createButtonGroup from 'mtrl/components/button-group';
 import createSplitButton from 'mtrl/components/split-button';
 import createFab from 'mtrl/components/fab';
+import createFabMenu from 'mtrl/components/fab-menu';
 import createExtendedFab from 'mtrl/components/extended-fab';
 import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
@@ -222,6 +224,14 @@ function create(state: ComponentState) {
       if (!content.visible) control.hide();
       return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
     }
+    case 'toolbar': {
+      const control = createToolbar(components.toolbar.config(state));
+      control.bar.addEventListener('click', (event) => {
+        const item = (event.target as Element).closest('[aria-label]');
+        if (item && item !== control.bar) message(`${item.getAttribute('aria-label')} clicked`);
+      });
+      return control;
+    }
 
     case 'switch': {
       const control = createSwitch(components.switch.config(state));
@@ -395,6 +405,11 @@ function create(state: ComponentState) {
       if (state.lowered) button.lower();
       button.on('click', clicked);
       return button;
+    }
+    case 'fab-menu': {
+      const control = createFabMenu(components['fab-menu'].config(state));
+      control.on('select', ({ id }) => message(`${id} chosen`));
+      return control;
     }
     case 'extended-fab': {
       const button = createExtendedFab(components['extended-fab'].config(state));

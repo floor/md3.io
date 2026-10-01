@@ -16,6 +16,8 @@ import type { TabsConfig } from 'mtrl/components/tabs';
 import type { MenuConfig } from 'mtrl/components/menu';
 import type { TopAppBarConfig } from 'mtrl/components/top-app-bar';
 import type { BottomAppBarConfig } from 'mtrl/components/bottom-app-bar';
+import type { ToolbarConfig } from 'mtrl/components/toolbar';
+import type { FabMenuConfig } from 'mtrl/components/fab-menu';
 import type { SwitchConfig } from 'mtrl/components/switch';
 import type { RadiosConfig } from 'mtrl/components/radios';
 import type { ChipsConfig } from 'mtrl/components/chips';
@@ -91,6 +93,13 @@ export function appBarContent(slug: 'top-app-bar' | 'bottom-app-bar', state: Com
     ? { ...(state.leading ? { leading: { icon: componentIcons.menu, ariaLabel: 'Open navigation' } } : {}), actions: appBarActions(state), scrolled: state.scrolled === true }
     : { actions: appBarActions(state), ...(state.hasFab ? { fab: { icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
 }
+/** The toolbar preview's items: formatting toggles, or actions. */
+const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
+  (state.toggles
+    ? [['bold', 'Bold'], ['italic', 'Italic'], ['underline', 'Underline'], ['edit', 'Edit'], ['add', 'Add']]
+    : [['heart', 'Favorite'], ['bookmark', 'Bookmark'], ['send', 'Share'], ['inbox', 'Archive'], ['edit', 'Edit']])
+    .slice(0, Number(state.items))
+    .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
@@ -207,6 +216,24 @@ export const components = {
     config: (state: ComponentState): FabConfig => ({ variant: string(state, 'variant'), size: string(state, 'size'), icon: iconMarkup(state),
       ariaLabel: string(state, 'ariaLabel').trim() || 'Create new item', disabled: bool(state, 'disabled'), ...fabPosition(state) }),
   },
+  'fab-menu': {
+    group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
+    description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
+    summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
+    controls: [
+      ...section('Appearance', [choose('presentation', 'Presentation', ['list', 'menu', 'auto'], 'list'), choose('color', 'Color', ['primary', 'secondary', 'tertiary'], 'primary'), choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select')]),
+      ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5', '6'], '3'), toggle('itemIcons', 'Item icons', true)]),
+    ],
+    config: (state: ComponentState): FabMenuConfig => ({
+      icon: componentIcons.edit!, ariaLabel: 'Reply options',
+      presentation: pick(state, 'presentation', ['list', 'menu', 'auto'], 'list'),
+      color: pick(state, 'color', ['primary', 'secondary', 'tertiary'], 'primary'),
+      size: pick(state, 'size', ['default', 'medium', 'large'], 'default'),
+      items: [['reply', 'Reply', 'send'], ['forward', 'Forward', 'send'], ['star', 'Favorite', 'heart'], ['save', 'Bookmark', 'bookmark'], ['download', 'Download', 'download'], ['inbox', 'Archive', 'inbox']]
+        .slice(0, Number(state.items))
+        .map(([id, text, icon]) => ({ id: id!, text: text!, ...(state.itemIcons ? { icon: componentIcons[icon!] } : {}) })),
+    }),
+  },
   'extended-fab': {
     group: 'Actions', name: 'Extended FAB', factory: 'createExtendedFab', variable: 'extendedFab',
     description: 'Give your primary action a little more context. Try labels, icon placement, and a collapsed state.',
@@ -319,11 +346,13 @@ export const components = {
     summary: 'Text entry with labels and feedback.', styles: ['textfield'],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default'), icon(['none', 'heart', 'edit', 'send'], 'none')]),
-      ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('supportingText', 'Supporting text', 'As you would like it displayed')]),
+      ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed')]),
       ...section('Behavior', [toggle('error', 'Error'), toggle('required', 'Required'), toggle('readonly', 'Read only'), disabled]),
     ],
     config: (state: ComponentState): TextfieldConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), type: string(state, 'type'), label: string(state, 'label'),
       value: string(state, 'value'), placeholder: string(state, 'placeholder'), supportingText: string(state, 'supportingText'), name: 'name', ...(iconMarkup(state) ? { leadingIcon: iconMarkup(state) } : {}),
+      // Prefix and suffix text ("$", "kg") sit beside the input; only set when given, so the default field has neither
+      ...(string(state, 'prefixText') ? { prefixText: string(state, 'prefixText') } : {}), ...(string(state, 'suffixText') ? { suffixText: string(state, 'suffixText') } : {}),
       error: bool(state, 'error'), required: bool(state, 'required'), readonly: bool(state, 'readonly'), disabled: bool(state, 'disabled') }),
   },
   select: {
@@ -451,6 +480,25 @@ export const components = {
       ...section('Behavior', [toggle('visible', 'Visible', true)]),
     ],
     config: (state: ComponentState): BottomAppBarConfig => ({ hasFab: bool(state, 'hasFab'), fabPosition: pick(state, 'fabPosition', ['center', 'end'], 'end'), autoHide: false }),
+  },
+  toolbar: {
+    group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
+    description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
+    summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button'],
+    controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
+      ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
+      ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5'], '4'), toggle('toggles', 'Formatting toggles', true)]),
+    ],
+    config: (state: ComponentState): ToolbarConfig => ({
+      variant: pick(state, 'variant', ['docked', 'floating'], 'floating'),
+      color: pick(state, 'color', ['standard', 'vibrant'], 'standard'),
+      orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'),
+      arrangement: pick(state, 'arrangement', ['spread', 'center'], 'spread'),
+      ...(state.elevated ? {} : { elevated: false }),
+      ariaLabel: state.toggles ? 'Formatting' : 'Actions',
+      items: toolbarItems(state),
+    }),
   },
   card: {
     group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',

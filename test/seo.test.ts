@@ -103,8 +103,10 @@ describe('internal routes, errors and images', () => {
     expect(await size('/apple-touch-icon.png')).toEqual([180, 180]);
     // One source: favicon.svg is the mark as scripts/brand-images.ts copied it, and the header shows it.
     expect(await (await get('/favicon.svg')).text()).toBe(readFileSync(join(import.meta.dir, '../assets/brand/mark.svg'), 'utf8'));
-    expect(await (await get('/')).text()).toContain('<img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">mtrl');
+    const { BUILD } = await import('../server');
+    expect(await (await get('/')).text()).toContain(`<img class="header__mark" src="/assets/brand/mark.svg?v=${BUILD}" width="20" height="20" alt="" aria-hidden="true">mtrl`);
     expect((await get('/assets/brand/mark.svg')).headers.get('Content-Type')).toBe('image/svg+xml');
+    expect((await get(`/assets/brand/mark.svg?v=${BUILD}`)).headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
     const ico = Buffer.from(await (await get('/favicon.ico')).arrayBuffer());
     expect([ico.readUInt16LE(2), ico.readUInt16LE(4), ico[6], ico[22]]).toEqual([1, 2, 16, 32]);
   });
