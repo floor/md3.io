@@ -10,7 +10,7 @@ import { mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
-import { argbFromRgba, seedsFromPixels, themeColors } from '../src/shared/theme-engine';
+import { THEME_ROLES, argbFromRgba, seedsFromPixels, themeColors } from '../src/shared/theme-engine';
 
 const server = process.env.BASE_URL ? null : Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: (await import('../server')).handleRequest });
 const base = (process.env.BASE_URL ?? server!.url.href).replace(/\/$/, '');
@@ -270,6 +270,35 @@ try {
   console.log(`Ten site mode toggles: listeners ${beforeModes.listeners} → ${afterModes.listeners}, elements ${beforeModes.nodes} → ${afterModes.nodes}`);
   assert(afterModes.listeners === beforeModes.listeners && afterModes.nodes <= beforeModes.nodes, `Ten site mode toggles add no listener and no element: ${JSON.stringify(beforeModes)} → ${JSON.stringify(afterModes)}`);
   await toggleSite();
+  // Download: desert's CSS holds every THEME_ROLES token, light and dark, as mtrl's
+  // shipped desert.css has them; the SCSS is mtrl's create-theme form; the JSON parses.
+  const downloadAs = async (format: string) => {
+    const download = page.waitForEvent('download');
+    await page.locator('.theme-app__actions [name="download"]').click();
+    const item = page.locator('.mtrl-menu').getByText(format, { exact: true });
+    await item.waitFor({ state: 'visible' });
+    await item.click();
+    const file = await download;
+    await page.locator('.mtrl-menu--visible').waitFor({ state: 'detached' });
+    return { name: file.suggestedFilename(), text: await Bun.file((await file.path())!).text() };
+  };
+  const cssFile = await downloadAs('CSS');
+  assert(cssFile.name === 'mtrl-theme-desert.css', `The CSS is named for the theme: ${cssFile.name}`);
+  const blockOf = (text: string, selector: string) => text.slice(text.indexOf(`${selector} {`), text.indexOf('}', text.indexOf(`${selector} {`)));
+  const lightBlock = blockOf(cssFile.text, '[data-theme="desert"]');
+  const darkBlock = blockOf(cssFile.text, '[data-theme="desert"][data-theme-mode="dark"]');
+  for (const role of THEME_ROLES) {
+    const value = (block: string) => new RegExp(`--mtrl-sys-color-${role}: (#[0-9a-f]{6});`).exec(block)?.[1];
+    assert(value(lightBlock) === declared(themeCss, role), `Downloaded light ${role}: ${value(lightBlock)}, desert.css has ${declared(themeCss, role)}`);
+    assert(value(darkBlock) === declaredDark(role), `Downloaded dark ${role}: ${value(darkBlock)}, desert.css has ${declaredDark(role)}`);
+  }
+  const scss = await downloadAs('SCSS');
+  assert(scss.name === 'mtrl-theme-desert.scss' && scss.text.includes('@include create-theme("desert")') && scss.text.includes(`--#{$prefix}-sys-color-primary: ${desertPrimary};`), 'The SCSS is mtrl\'s create-theme form');
+  const json = await downloadAs('JSON');
+  const tokens = JSON.parse(json.text);
+  assert(json.name === 'mtrl-theme-desert.json' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON has the seed, the variant and every role');
+  console.log(`Download: ${cssFile.name}, ${scss.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
+
   // A theme from an image: the fixture's seed, found here by the same engine from its
   // own pixels, is the one the app shows, with the engine's primary; ?seed= reproduces it.
   const fixture = resolve(import.meta.dir, '../test/fixtures/theme-image.png');
@@ -289,6 +318,8 @@ try {
   await until(() => page.locator('.mtrl-select input').inputValue(), 'From image', 'The select shows From image');
   await until(() => page.locator('.mtrl-snackbar').last().textContent().then(text => text?.trim()), `Theme generated from theme-image.png · seed ${imageSeed}`, 'The snackbar names the file and the seed');
   assert(await page.locator('.md3-palette').first().isVisible(), 'and its palettes');
+  const imageFile = await downloadAs('JSON');
+  assert(imageFile.name === `mtrl-theme-seed-${imageSeed.slice(1)}.json` && JSON.parse(imageFile.text).seed === imageSeed, `A theme from an image downloads under its seed: ${imageFile.name}`);
   await page.goto(`${base}/styles/themes/?seed=${imageSeed.slice(1)}`);
   await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), '?seed= reproduces the theme');
   await until(() => page.locator('.mtrl-select input').inputValue(), 'From image', 'with From image selected');

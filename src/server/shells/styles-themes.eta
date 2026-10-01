@@ -1,7 +1,7 @@
 <%
   /* The Themes app's page: a mount point and the data the app paints, read by the
      server from mtrl's compiled theme CSS. The app itself is src/client/theme-app/. */
-  const data = it.themes.map(t => ({ name: t.name, label: t.label, light: it.roles.map(r => t.roles.light[r]), dark: it.roles.map(r => t.roles.dark[r]), origin: t.origin ? t.origin.text : null, palettes: t.palettes || null }));
+  const data = it.themes.map(t => ({ name: t.name, label: t.label, light: it.roles.map(r => t.roles.light[r]), dark: it.roles.map(r => t.roles.dark[r]), origin: t.origin ? t.origin.text : null, spec: t.origin ? { seed: t.origin.source, variant: t.origin.variant, contrast: t.origin.contrast, ...(t.origin.core && t.origin.core.secondary ? { secondary: t.origin.core.secondary } : {}) } : null, palettes: t.palettes || null }));
 %>
 <div class="theme-app-page">
   <h1 class="sr-only">Themes</h1>

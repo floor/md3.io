@@ -39,7 +39,7 @@ export const withImage = () => (app: App) => {
       name: 'image', label: 'From image', seed,
       light: (roles as string[]).map(role => colors.roles.light[role]!),
       dark: (roles as string[]).map(role => colors.roles.dark[role]!),
-      origin: `seed ${seed}, Tonal Spot`, palettes: colors.palettes,
+      origin: `seed ${seed}, Tonal Spot`, spec: { seed, variant: 'tonal-spot', contrast: 0 }, palettes: colors.palettes,
     };
   };
   /** Shows the theme of a seed, with "From image" in the select. */

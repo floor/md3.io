@@ -14,6 +14,8 @@ export interface ThemeData {
   /** How mtrl generates it ("seed #6750a4, Tonal Spot"), or null for a hand-set theme. */
   origin: string | null;
   palettes: Record<string, string[]> | null;
+  /** What mtrl generates it from, or null for a hand-set theme. */
+  spec: { seed: string; variant: string; contrast: number; secondary?: string } | null;
   /** A theme made from an image: its seed, which the address carries. */
   seed?: string;
 }
