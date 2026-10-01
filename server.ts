@@ -1,5 +1,5 @@
 import { Eta } from 'eta';
-import { resolve, extname, sep } from 'node:path';
+import { resolve, extname, sep, basename } from 'node:path';
 import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
@@ -9,6 +9,7 @@ import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
+import { minifyCss, type StylesheetBundle } from './src/server/css';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
 import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights } from './src/server/tokens';
 import { readFileSync, existsSync } from 'node:fs';
@@ -30,7 +31,9 @@ const importMap = (body: string) => {
 };
 const versionAssets = (body: string) => body
   .replace('<head>', `<head>\n  ${importMap(body)}`)
-  .replace(/((?:src|href)="\/(?:dist|styles)\/[^"?#]+\.(?:js|css))"/g, `$1?v=${BUILD}"`);
+  .replace(/((?:src|href)="\/(?:dist|styles)\/[^"?#]+\.(?:js|css))"/g, `$1?v=${BUILD}"`)
+  // The mark keeps its name across deploys, so the query is what makes the URL new.
+  .replace(/((?:src|href)="\/assets\/brand\/mark\.svg)"/g, `$1?v=${BUILD}"`);
 const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' } });
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
@@ -48,9 +51,11 @@ function page(path: string, title: string, description: string, template: string
   const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components';
+  // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
+  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — mtrl$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sidebarGroups, jsonLd,
+    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sidebarGroups, jsonLd, css,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -105,7 +110,8 @@ export async function handleRequest(request: Request): Promise<Response> {
   const exampleStyle = /^\/examples-styles\/([a-z-]+)\.css$/.exec(path);
   if (exampleStyle && exampleBySlug(exampleStyle[1]!)) {
     const file = Bun.file(resolve(root, 'examples', exampleStyle[1]!, 'styles.css'));
-    return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': 'text/css', 'Cache-Control': 'no-cache' } });
+    const body = request.method === 'HEAD' ? null : minifyCss(await file.text());
+    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'text/css', 'Cache-Control': 'no-cache' } });
   }
   const staticMatch = /^\/(styles|fonts|dist|assets)\/(.+)$/.exec(path);
   // /styles/ is also the Styles section: only a path with an extension is a file.
@@ -117,9 +123,14 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!await file.exists()) return new Response('Not found', { status: 404 });
     // Fonts never change under a name (a new font gets a new file), and a versioned
     // script or stylesheet (?v=, see versionAssets) is a new URL each build: both are
-    // cached for good. The rest revalidates.
-    const cache = staticMatch[1] === 'fonts' || url.searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'no-cache';
-    return new Response(request.method === 'HEAD' ? null : file, { headers: { ...commonHeaders, 'Content-Type': mime[extname(filePath)]!, 'Cache-Control': cache } });
+    // cached for good. A lazy chunk's name is its content hash (chunk-<hash>.js), so
+    // that URL is new when its bytes change, and it is cached the same way. The rest
+    // revalidates.
+    const hashedChunk = staticMatch[1] === 'dist' && /^chunk-[0-9a-z]+\.js$/.test(basename(filePath));
+    const cache = staticMatch[1] === 'fonts' || url.searchParams.has('v') || hashedChunk ? 'public, max-age=31536000, immutable' : 'no-cache';
+    const type = mime[extname(filePath)]!;
+    const body = request.method === 'HEAD' ? null : type === 'text/css' ? minifyCss(await file.text()) : file;
+    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': type, 'Cache-Control': cache } });
   }
   if (rootFiles.has(path)) {
     const file = Bun.file(resolve(root, 'public', path.slice(1)));

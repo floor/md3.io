@@ -14,10 +14,13 @@ if (dialog && input && results) {
   let request: AbortController | null = null;
   let returnFocus: HTMLElement | null = null;
 
-  // The shortcut hint reads Ctrl K off Apple platforms.
+  // The shortcut hint reads Ctrl K off Apple platforms. The keys are aria-hidden,
+  // and their text nodes are "Ctrl" and "K" with no space between them, so the
+  // accessible name has to contain that text.
   if (!/Mac|iPhone|iPad/.test(navigator.platform)) {
     const kbd = trigger?.querySelector('.header__search-kbd');
     if (kbd) kbd.innerHTML = '<kbd>Ctrl</kbd><kbd>K</kbd>';
+    trigger?.setAttribute('aria-label', 'Search (CtrlK)');
   }
 
   const open = (): void => {

@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { docGroups, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
@@ -248,11 +250,22 @@ test('scripts and stylesheets carry the build, and a versioned file is cached fo
   const { BUILD } = await import('../server');
   const page = await (await get('/components/button/')).text();
   const assets = [...page.matchAll(/(?:src|href)="(\/(?:dist|styles)\/[^"]+\.(?:js|css)[^"]*)"/g)].map(match => match[1]!);
-  expect(assets.length).toBeGreaterThan(5);
+  // One sheet for the page, plus the scripts it loads.
+  expect([...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([`/dist/css/page.css?v=${BUILD}`]);
+  expect(assets).toContain(`/dist/site.js?v=${BUILD}`);
+  expect(assets).toContain(`/dist/playground.js?v=${BUILD}`);
   for (const asset of assets) expect(asset).toEndWith(`?v=${BUILD}`);
+  const home = await (await get('/')).text();
+  expect([...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([`/dist/css/home.css?v=${BUILD}`]);
+  expect(home).toContain('aria-label="Search (⌘K)"');
+  expect(home).toContain('aria-keyshortcuts="Meta+K Control+K"');
   const versioned = await get(`/styles/site.css?v=${BUILD}`);
   expect(versioned.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
   expect((await get('/styles/site.css')).headers.get('Cache-Control')).toBe('no-cache');
+  // Whatever CSS the server sends is minified, including a file a page no longer links.
+  const served = await versioned.text();
+  expect(served).not.toContain('/*');
+  expect(served).toContain('font-family:inherit');
   const preview = await (await get('/preview/button/')).text();
   expect(preview).toContain(`?v=${BUILD}"`);
   // Lazy chunks import their entry by its plain name: the import map sends it to the
@@ -260,4 +273,20 @@ test('scripts and stylesheets carry the build, and a versioned file is cached fo
   const map = JSON.parse(/<script type="importmap">(.*?)<\/script>/.exec(preview)![1]!) as { imports: Record<string, string> };
   expect(map.imports['/dist/preview.js']).toBe(`/dist/preview.js?v=${BUILD}`);
   expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
+});
+
+test('a content-hashed chunk is cached for good without a query, and a plain file is not', async () => {
+  const dir = resolve(import.meta.dir, '../dist');
+  mkdirSync(dir, { recursive: true });
+  const chunk = resolve(dir, 'chunk-abc123.js');
+  const plain = resolve(dir, 'plain.js');
+  writeFileSync(chunk, 'export {}\n');
+  writeFileSync(plain, 'export {}\n');
+  try {
+    expect((await get('/dist/chunk-abc123.js')).headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+    expect((await get('/dist/plain.js')).headers.get('Cache-Control')).toBe('no-cache');
+  } finally {
+    unlinkSync(chunk);
+    unlinkSync(plain);
+  }
 });
