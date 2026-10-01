@@ -37,6 +37,8 @@
 
 /* Pinned to the card's edges, as they are to the window's. */
 .catalog-visual--navigation-rail, .catalog-visual--drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
+/* The rail's three destinations are taller than the card: scaled as the list and dialog are. */
+.catalog-visual--navigation-rail m-navigation-rail { zoom: 0.6; }
 .catalog-visual--top-app-bar { align-items: flex-start; padding: 0; }
 .catalog-visual--top-app-bar m-top-app-bar { width: 100%; }
 .catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
