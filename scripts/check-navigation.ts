@@ -52,6 +52,13 @@ try {
       await selected('favorites');
       await choose('variant', 'modal');
       await frame.locator('.mtrl-drawer--modal.mtrl-drawer--open').waitFor();
+      // Born open, the drawer marks itself open immediately, then takes the page
+      // (and focus) on the next frame. Escape dismisses it only after that.
+      await page.waitForFunction(() => {
+        const drawer = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-drawer--modal.mtrl-drawer--open');
+        const active = drawer?.ownerDocument.activeElement;
+        return !!drawer && drawer.getAttribute('aria-hidden') === 'false' && !!active && (drawer === active || drawer.contains(active));
+      });
       await frame.getByText('Favorites', { exact: true }).focus();
       await frame.getByText('Favorites', { exact: true }).press('Escape');
       await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
