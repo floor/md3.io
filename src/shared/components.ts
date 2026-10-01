@@ -6,6 +6,7 @@ import type { TooltipConfig } from 'mtrl/components/tooltip';
 import type { CardSchema } from 'mtrl/components/card';
 import type { ListConfig, ListItem, ListSlot } from 'mtrl/components/list';
 import type { CarouselConfig } from 'mtrl/components/carousel';
+import { carouselPhotos, carouselPhotoUrl } from './carousel-photos';
 import type { DividerConfig } from 'mtrl/components/divider';
 import type { DialogConfig } from 'mtrl/components/dialog';
 import type { BottomSheetConfig } from 'mtrl/components/bottom-sheet';
@@ -101,6 +102,11 @@ const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
     .slice(0, Number(state.items))
     .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
+/** Sixteen photos per layout, enough for each to scroll as it does with a real collection. */
+const carouselSlides = (state: ComponentState) => {
+  const variant = pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse');
+  return carouselPhotos(variant).map(photo => ({ image: carouselPhotoUrl(variant, photo.id), alt: `${photo.title}, ${photo.location}`, ...(state.captions ? { title: photo.title, description: photo.location } : {}) }));
+};
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
   const labels = (state.content === 'places'
@@ -532,7 +538,7 @@ export const components = {
       ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', ['0', '1', '2', '3', '4'], '0', 'select')]),
       ...section('Behavior', [toggle('snap', 'Snap to items', true)]),
     ],
-    config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: ['Highlands', 'Coast', 'Desert', 'Forest', 'Lakeside'].map((title, index) => ({ image: landscape(index), alt: `Illustrated ${title.toLowerCase()} landscape`, ...(state.captions ? { title, description: 'Take a moment to explore' } : {}) })) }),
+    config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: carouselSlides(state) }),
   },
   divider: {
     group: 'Containment', name: 'Divider', factory: 'createDivider', variable: 'divider',
@@ -866,7 +872,11 @@ function communicationCode(slug: ComponentSlug, state: ComponentState): string {
 function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
-  const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  const shown = component.config(state) as Record<string, unknown>;
+  // The preview's sixteen photos would bury the code: three show the shape.
+  const slides = slug === 'carousel' ? (shown.slides as unknown[]) : [];
+  const config = JSON.stringify(slug === 'carousel' ? { ...shown, slides: slides.slice(0, 3) } : shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
+    .replace(/(\n  slides: \[)/, slides.length > 3 ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1');
   const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
   let setup = '';
   if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
