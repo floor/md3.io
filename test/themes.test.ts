@@ -22,15 +22,19 @@ describe('Themes page', () => {
     for (const name of ['baseline', 'vibrant', 'desert', 'highcontrast']) expect(byName[name]!.palettes?.primary.length).toBe(18);
     for (const name of ['ocean', 'forest', 'spring', 'sunset', 'autumn']) expect(byName[name]!.origin).toBeUndefined();
   });
-  test('the page renders the linked theme, both cards and the palettes', async () => {
+  test('the page mounts the app with every theme\'s data and the linked one selected', async () => {
     const html = await (await handleRequest(new Request('http://localhost/styles/themes/?theme=summer'))).text();
     const summer = builtInThemes.find(theme => theme.name === 'summer')!;
-    expect(html).toContain('<option value="summer" selected>');
-    expect(html.match(/class="scheme-tile /g)?.length).toBe(66);
-    expect(html).toContain(`data-role="primary" data-ink="on-primary" style="background:${summer.roles.light.primary};color:${summer.roles.light['on-primary']}"`);
-    expect(html.match(/class="palette__tone"/g)?.length).toBe(6 * 18);
+    const data = JSON.parse(/<script type="application\/json" id="themes-data">([^<]*)<\/script>/.exec(html)![1]!);
+    expect(data.selected).toBe('summer');
+    expect(data.roles).toEqual([...THEME_ROLES]);
+    expect(data.themes.map((theme: { name: string }) => theme.name)).toEqual([...themes]);
+    expect(data.themes.find((theme: { name: string }) => theme.name === 'summer').light[THEME_ROLES.indexOf('primary')]).toBe(summer.roles.light.primary);
+    expect(html).toContain('<div class="theme-app" id="theme-app"');
+    expect(html).toContain('src="/dist/theme-app.js');
+    expect(html).not.toContain('src="/dist/styles.js');
     expect(html).toContain('id="theme-base"');
     const unknown = await (await handleRequest(new Request('http://localhost/styles/themes/?theme=nope'))).text();
-    expect(unknown).toContain('<option value="baseline" selected>');
+    expect(unknown).toContain('"selected":"baseline"');
   });
 });

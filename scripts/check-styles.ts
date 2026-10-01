@@ -24,6 +24,31 @@ async function until<T>(read: () => Promise<T>, want: T, message: string) {
 }
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', reducedMotion: 'reduce', permissions: ['clipboard-read', 'clipboard-write'] });
+  // A count of live event listeners, for the Themes app's leak check.
+  await context.addInitScript(() => {
+    const scope = window as unknown as { __listeners: number };
+    scope.__listeners = 0;
+    const add = EventTarget.prototype.addEventListener;
+    const remove = EventTarget.prototype.removeEventListener;
+    const live = new WeakMap<object, Set<unknown>>();
+    EventTarget.prototype.addEventListener = function (this: EventTarget, type: string, listener: unknown, options?: unknown) {
+      const key = `${type}`;
+      const set = live.get(this) ?? new Set();
+      live.set(this, set);
+      const id = [key, listener, typeof options === 'object' && options ? !!(options as { capture?: boolean }).capture : !!options];
+      const tag = JSON.stringify([id[0], id[2]]);
+      const entry = [...set].find(e => (e as unknown[])[0] === tag && (e as unknown[])[1] === listener);
+      if (!entry && listener) { set.add([tag, listener]); scope.__listeners++; }
+      return add.call(this, type, listener as EventListener, options as boolean);
+    };
+    EventTarget.prototype.removeEventListener = function (this: EventTarget, type: string, listener: unknown, options?: unknown) {
+      const set = live.get(this);
+      const tag = JSON.stringify([type, typeof options === 'object' && options ? !!(options as { capture?: boolean }).capture : !!options]);
+      const entry = set && [...set].find(e => (e as unknown[])[0] === tag && (e as unknown[])[1] === listener);
+      if (entry) { set!.delete(entry); scope.__listeners--; }
+      return remove.call(this, type, listener as EventListener, options as boolean);
+    };
+  });
   const page = await context.newPage();
   page.setDefaultTimeout(10000);
   const errors: string[] = [];
@@ -140,42 +165,91 @@ try {
   await page.getByRole('button', { name: 'Reset shape' }).click();
   await until(galleryCard, '12px', 'Reset shape brings mtrl\'s corners back');
 
-  // Themes: the viewer. A theme from the select paints both scheme cards with the hex
-  // mtrl's CSS has, ?theme=<name> follows and opens it again, a tile copies its hex,
-  // a theme without a seed says why it has no palettes, and a phone does not scroll sideways.
+  // Themes: the app. mtrl's select picks a theme and both scheme cards show the hex
+  // mtrl's CSS has, ?theme=<name> follows and opens it again, a tile copies its hex with
+  // mtrl's snackbar, a theme without a seed says why it has no palettes, ten switches
+  // leave the listener count flat, a switch paints within a frame, and a phone does not
+  // scroll sideways.
   console.log('Checking /styles/themes/');
   await page.goto(`${base}/styles/themes/`);
   const themeCss = await (await fetch(`${base}/dist/mtrl/themes/desert.css`)).text();
   const declared = (css: string, role: string) => [...css.slice(0, css.indexOf('[data-theme-mode=dark]')).matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
-  await page.getByLabel('Theme', { exact: true }).selectOption('desert');
-  const lightPrimary = page.locator('.scheme-card--light .scheme-tile[data-role="primary"]');
-  await until(() => lightPrimary.getAttribute('title'), declared(themeCss, 'primary'), 'The light card shows desert\'s primary from mtrl\'s CSS');
-  const [pr, pg, pb] = declared(themeCss, 'primary')!.slice(1).match(/../g)!.map(part => parseInt(part, 16));
+  const desertPrimary = declared(themeCss, 'primary')!;
+  // As a person does: open the select, wait for its menu, pick, and let the menu close.
+  const pickTheme = async (label: string) => {
+    const item = page.locator('.mtrl-menu').getByText(label, { exact: true });
+    await page.locator('.theme-app .mtrl-select').click();
+    await item.waitFor({ state: 'visible' });
+    await item.click();
+    await item.waitFor({ state: 'hidden' });
+  };
+  await pickTheme('Desert');
+  const lightPrimary = page.locator('.md3-scheme-card--light [data-role="primary"]');
+  await until(() => lightPrimary.getAttribute('data-hex'), desertPrimary, 'The light card shows desert\'s primary from mtrl\'s CSS');
+  const [pr, pg, pb] = desertPrimary.slice(1).match(/../g)!.map(part => parseInt(part, 16));
   assert(await lightPrimary.evaluate(element => getComputedStyle(element).backgroundColor) === `rgb(${pr}, ${pg}, ${pb})`, 'The tile is painted with the hex it names');
-  assert(await page.locator('.scheme-card--dark .scheme-tile[data-role="primary"]').getAttribute('title') !== await lightPrimary.getAttribute('title'), 'The dark card has its own primary');
-  assert(await page.locator('.scheme-card').first().locator('.scheme-tile').count() === 33, 'A scheme card has MTB\'s 33 tiles');
+  assert(await page.locator('.md3-scheme-card--dark [data-role="primary"]').getAttribute('data-hex') !== desertPrimary, 'The dark card has its own primary');
+  assert(await page.locator('.md3-scheme-card').first().locator('[data-role]').count() === 33, 'A scheme card has MTB\'s 33 tiles');
   assert(new URL(page.url()).searchParams.get('theme') === 'desert', 'The address carries ?theme=desert');
-  assert(await page.locator('.palettes__origin').textContent().then(text => text?.includes('#9a7a3e')), 'Desert\'s palettes name its seed');
-  assert(await page.locator('.palette').count() === 6 && await page.locator('.palette__tone').count() === 6 * 18, 'Six palettes of 18 tones');
-  // Share: the link opens the same theme, whatever this browser saved.
+  assert(await page.locator('.theme-app__note').textContent().then(text => text?.includes('#9a7a3e')), 'Desert\'s palettes name its seed');
+  assert(await page.locator('.md3-palette').count() === 6 && await page.locator('.md3-palette__tone').count() === 6 * 18, 'Six palettes of 18 tones');
+  // Scrim and shadow, both black, stay apart.
+  const scrim = (await page.locator('.md3-scheme-card--light [data-role="scrim"]').boundingBox())!;
+  const shadow = (await page.locator('.md3-scheme-card--light [data-role="shadow"]').boundingBox())!;
+  assert(shadow.x - (scrim.x + scrim.width) >= 4, 'A gap between scrim and shadow');
+  // Share: the link opens the same theme, whatever this browser saved since.
   const shared = page.url();
-  await page.getByLabel('Theme', { exact: true }).selectOption('ocean');
-  await until(() => page.locator('.palettes__none').isVisible(), true, 'A theme without a seed says why it has no palettes');
-  assert(!await page.locator('.palettes__list').isVisible(), 'and shows none');
+  await pickTheme('Ocean');
+  await until(() => page.locator('.theme-app__note').textContent().then(text => !!text?.includes('set by hand')), true, 'A theme without a seed says why it has no palettes');
+  assert(!await page.locator('.theme-app__palette-list').isVisible(), 'and shows none');
+  // Ten switches: listeners and elements stay flat, and a switch paints within a frame.
+  const counts = () => page.evaluate(() => ({ listeners: (window as unknown as { __listeners: number }).__listeners, nodes: document.getElementsByTagName('*').length }));
+  const before = await counts();
+  const names = ['Desert', 'Summer', 'Ocean', 'Vibrant', 'Forest', 'Baseline', 'Rainbow', 'Autumn', 'Monochrome', 'Ocean'];
+  for (const name of names) { await pickTheme(name); await until(() => page.locator('.mtrl-select input').inputValue(), name, `The select shows ${name}`); }
+  const after = await counts();
+  console.log(`Ten theme switches: listeners ${before.listeners} → ${after.listeners}, elements ${before.nodes} → ${after.nodes}`);
+  assert(after.listeners === before.listeners && after.nodes <= before.nodes, `Ten theme switches add no listener and no element: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  const switchMs = await page.evaluate(async () => {
+    const app = (window as unknown as { themeApp: { state: { set(key: string, value: unknown): void } } }).themeApp;
+    // From the change to its colours computed and laid out: the work the next frame waits on.
+    const work: number[] = [];
+    for (const name of ['desert', 'summer', 'vibrant', 'forest', 'rainbow', 'ocean']) {
+      const start = performance.now();
+      app.state.set('theme', name);
+      document.body.getBoundingClientRect();
+      getComputedStyle(document.querySelector('[data-role="primary"]')!).backgroundColor;
+      work.push(performance.now() - start);
+    }
+    return { work: Math.max(...work) };
+  });
+  assert(switchMs.work < 16, `A theme switch's work fits in a frame: ${switchMs.work.toFixed(1)} ms`);
+  console.log(`Theme switch: ${switchMs.work.toFixed(1)} ms of work (script, style, layout), worst of six`);
   await page.goto(shared);
-  await until(() => page.getByLabel('Theme', { exact: true }).inputValue(), 'desert', 'The ?theme= link opens desert again');
-  assert(await lightPrimary.getAttribute('title') === declared(themeCss, 'primary'), 'with its colours');
+  await until(() => page.locator('.mtrl-select input').inputValue(), 'Desert', 'The ?theme= link opens desert again');
+  await until(() => lightPrimary.getAttribute('data-hex'), desertPrimary, 'with its colours');
   await lightPrimary.click();
-  await until(() => page.locator('#themes-toast').textContent(), `Copied ${declared(themeCss, 'primary')}`, 'A tile click says it copied the hex');
-  assert(await page.evaluate(() => navigator.clipboard.readText()) === declared(themeCss, 'primary'), 'The clipboard holds the hex');
+  await until(() => page.locator('.mtrl-snackbar').first().textContent().then(text => text?.trim()), `Copied ${desertPrimary}`, 'mtrl\'s snackbar says the hex was copied');
+  assert(await page.evaluate(() => navigator.clipboard.readText()) === desertPrimary, 'The clipboard holds the hex');
+  // The mode button: the app's own colours follow the theme's dark scheme.
+  const appBackground = () => page.locator('.theme-app').evaluate(element => getComputedStyle(element).backgroundColor);
+  const lightBackground = await appBackground();
+  await page.getByRole('button', { name: 'App in dark mode', exact: true }).click();
+  await until(() => appBackground().then(value => value !== lightBackground), true, 'Dark mode repaints the app');
+  await page.getByRole('button', { name: 'App in light mode', exact: true }).click();
+  await until(appBackground, lightBackground, 'Light mode paints it back');
   await page.setViewportSize({ width: 390, height: 844 });
   const themesOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(themesOverflow <= 0, `/styles/themes/ scrolls sideways at 390 px by ${themesOverflow} px`);
-  const errorTile = await page.locator('.scheme-card--light .scheme-tile[data-role="error"]').boundingBox();
-  const surfaceTile = await page.locator('.scheme-card--light .scheme-tile[data-role="surface-dim"]').boundingBox();
+  const errorTile = await page.locator('.md3-scheme-card--light [data-role="error"]').boundingBox();
+  const surfaceTile = await page.locator('.md3-scheme-card--light [data-role="surface-dim"]').boundingBox();
   assert(errorTile!.y > surfaceTile!.y, 'At 390 px the Error column wraps under the main block');
   await page.screenshot({ animations: 'disabled', path: `${output}/styles-themes-390.png`, fullPage: true });
   await page.setViewportSize({ width: 1440, height: 900 });
+  // The app can be destroyed: its element empties and its popups go.
+  await page.evaluate(() => (window as unknown as { themeApp: { destroy(): void } }).themeApp.destroy());
+  assert(await page.locator('#theme-app').evaluate(element => element.childElementCount) === 0, 'destroy empties the app');
+  await page.goto(`${base}/styles/color/`);
   await page.getByLabel('Theme', { exact: true }).selectOption('baseline');
 
   // Every page, 375 px wide, dark and light: no horizontal scroll, one swatch column.
@@ -204,7 +278,7 @@ try {
     }
   }
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
-  console.log('Styles pages: Themes viewer (select, cards from mtrl CSS, ?theme= link, copy, palettes, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
+  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, flat listeners over 10 switches, a switch within a frame, mode, destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
   await browser.close();
   server?.stop();

@@ -1,79 +1,13 @@
 <%
-  /* The Themes page's viewer: one built-in theme's Light and Dark Scheme, laid out as
-     Material Theme Builder lays them out, and its tonal palettes. The server renders
-     it.selected; the page (src/client/styles-themes.ts) repaints from the JSON below
-     when another theme is chosen. Values come from mtrl's compiled theme CSS. */
-  const theme = it.themes.find(t => t.name === it.selected) || it.themes[0];
-  const label = role => ({ 'on-surface-variant': 'On Surface Var.' })[role] || role.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  // Each tile's label is drawn in its paired "on" colour.
-  const INK = {
-    'primary': 'on-primary', 'on-primary': 'primary', 'primary-container': 'on-primary-container', 'on-primary-container': 'primary-container',
-    'secondary': 'on-secondary', 'on-secondary': 'secondary', 'secondary-container': 'on-secondary-container', 'on-secondary-container': 'secondary-container',
-    'tertiary': 'on-tertiary', 'on-tertiary': 'tertiary', 'tertiary-container': 'on-tertiary-container', 'on-tertiary-container': 'tertiary-container',
-    'error': 'on-error', 'on-error': 'error', 'error-container': 'on-error-container', 'on-error-container': 'error-container',
-    'surface-dim': 'on-surface', 'surface': 'on-surface', 'surface-bright': 'on-surface',
-    'surface-container-lowest': 'on-surface', 'surface-container-low': 'on-surface', 'surface-container': 'on-surface', 'surface-container-high': 'on-surface', 'surface-container-highest': 'on-surface',
-    'on-surface': 'surface', 'on-surface-variant': 'surface', 'outline': 'surface', 'outline-variant': 'on-surface',
-    'inverse-surface': 'inverse-on-surface', 'inverse-on-surface': 'inverse-surface', 'inverse-primary': 'inverse-surface',
-    'scrim': null, 'shadow': null,
-  };
-  const tile = (mode, role, size) => {
-    const roles = theme.roles[mode];
-    const ink = INK[role] ? roles[INK[role]] : '#ffffff';
-    return `<button type="button" class="scheme-tile scheme-tile--${size}" data-role="${role}" data-ink="${INK[role] || ''}" style="background:${roles[role]};color:${ink}" title="${roles[role]}" aria-label="${label(role)} ${roles[role]}, copy"><span>${label(role)}</span></button>`;
-  };
-  const column = (mode, group) => `<div class="scheme-col">${tile(mode, group, 'tall')}${tile(mode, `on-${group}`, 'short')}${tile(mode, `${group}-container`, 'tall')}${tile(mode, `on-${group}-container`, 'short')}</div>`;
-  const row = (mode, roles, size) => `<div class="scheme-row" style="--count:${roles.length}">${roles.map(role => tile(mode, role, size)).join('')}</div>`;
-  const TONES = [100, 99, 98, 95, 90, 80, 70, 60, 50, 40, 35, 30, 25, 20, 15, 10, 5, 0];
-  const PALETTES = [['primary', 'Primary'], ['secondary', 'Secondary'], ['tertiary', 'Tertiary'], ['neutral', 'Neutral'], ['neutralVariant', 'Neutral Variant'], ['error', 'Error']];
-  // Compact for the client: roles as arrays in THEME_ROLES order.
-  const data = it.themes.map(t => ({ name: t.name, light: it.roles.map(r => t.roles.light[r]), dark: it.roles.map(r => t.roles.dark[r]), origin: t.origin ? t.origin.text : null, palettes: t.palettes || null }));
+  /* The Themes app's page: a mount point and the data the app paints, read by the
+     server from mtrl's compiled theme CSS. The app itself is src/client/theme-app/. */
+  const data = it.themes.map(t => ({ name: t.name, label: t.label, light: it.roles.map(r => t.roles.light[r]), dark: it.roles.map(r => t.roles.dark[r]), origin: t.origin ? t.origin.text : null, palettes: t.palettes || null }));
 %>
-<div class="page-wrap styles-page styles-themes" data-styles-page="themes">
-  <header class="page-heading"><span class="eyebrow">STYLES / THEMES</span><h1>Themes</h1><p>mtrl's built-in themes, every colour role in light and dark, laid out as Material Theme Builder shows a scheme.</p></header>
-  <p class="styles-source">Values read from mtrl's compiled theme CSS · mtrl <%= it.mtrlVersion %></p>
-  <div class="styles-toolbar" role="group" aria-label="Built-in theme">
-    <label for="themes-theme">Theme</label>
-    <select id="themes-theme" class="ui-select"><% it.themes.forEach(t => { %><option value="<%= t.name %>" <%= t.name === theme.name ? 'selected' : '' %>><%= t.label %></option><% }); %></select>
-  </div>
-
-  <div class="scheme-cards">
-  <% ['light', 'dark'].forEach(mode => { %>
-    <section class="scheme-card scheme-card--<%= mode %>" data-mode="<%= mode %>" aria-labelledby="scheme-<%= mode %>-title" style="background:<%= theme.roles[mode].surface %>;color:<%= theme.roles[mode]['on-surface'] %>;--card-outline:<%= theme.roles[mode]['outline-variant'] %>">
-      <h2 class="scheme-card__title" id="scheme-<%= mode %>-title"><%= mode === 'light' ? 'Light' : 'Dark' %> Scheme</h2>
-      <div class="scheme-grid">
-        <div class="scheme-grid__main"><%~ ['primary', 'secondary', 'tertiary'].map(group => column(mode, group)).join('') %></div>
-        <div class="scheme-grid__error"><%~ column(mode, 'error') %></div>
-        <div class="scheme-grid__surfaces">
-          <%~ row(mode, ['surface-dim', 'surface', 'surface-bright'], 'tall') %>
-          <%~ row(mode, ['surface-container-lowest', 'surface-container-low', 'surface-container', 'surface-container-high', 'surface-container-highest'], 'tall') %>
-          <%~ row(mode, ['on-surface', 'on-surface-variant', 'outline', 'outline-variant'], 'short') %>
-        </div>
-        <div class="scheme-grid__inverse">
-          <div class="scheme-col"><%~ tile(mode, 'inverse-surface', 'tall') %><%~ tile(mode, 'inverse-on-surface', 'short') %><%~ tile(mode, 'inverse-primary', 'short') %></div>
-          <%~ row(mode, ['scrim', 'shadow'], 'short') %>
-        </div>
-      </div>
-    </section>
-  <% }); %>
-  </div>
-
-  <section class="palettes" aria-labelledby="palettes-title">
-    <h2 class="catalog-label" id="palettes-title">Tonal palettes</h2>
-    <p class="palettes__origin" <%= theme.origin ? '' : 'hidden' %>>Generated by mtrl from <span><%= theme.origin ? theme.origin.text : '' %></span>.</p>
-    <p class="palettes__none" <%= theme.origin ? 'hidden' : '' %>><span><%= theme.label %></span>'s colours are set by hand in mtrl, not generated from a seed, so it has no tonal palettes to show.</p>
-    <div class="palettes__list" <%= theme.origin ? '' : 'hidden' %>>
-    <% PALETTES.forEach(([key, name]) => { %>
-      <div class="palette" data-palette="<%= key %>">
-        <h3 class="palette__name"><%= name %></h3>
-        <ol class="palette__strip" aria-label="<%= name %> tones">
-        <% TONES.forEach((tone, i) => { const hex = theme.palettes ? theme.palettes[key][i] : 'transparent'; %><li class="palette__tone" data-tone="<%= tone %>" style="background:<%= hex %>;color:<%= tone >= 50 ? '#1d1b20' : '#ffffff' %>" title="<%= name %> <%= tone %>: <%= hex %>"><%= tone %></li><% }); %>
-        </ol>
-      </div>
-    <% }); %>
-    </div>
-  </section>
-  <div class="themes-toast" id="themes-toast" role="status" aria-live="polite"></div>
-  <script type="application/json" id="themes-data"><%~ JSON.stringify({ roles: it.roles, themes: data }).replaceAll('<', '\\u003c') %></script>
+<div class="theme-app-page">
+  <h1 class="sr-only">Themes</h1>
+  <p class="sr-only">mtrl's built-in themes, every colour role in light and dark, laid out as Material Theme Builder shows a scheme, with the tonal palettes. Values read from mtrl <%= it.mtrlVersion %>'s compiled theme CSS.</p>
+  <div class="theme-app" id="theme-app" data-selected="<%= it.selected %>"></div>
+  <noscript><p class="theme-app__note">The Themes app needs JavaScript.</p></noscript>
+  <script type="application/json" id="themes-data"><%~ JSON.stringify({ roles: it.roles, selected: it.selected, themes: data }).replaceAll('<', '\\u003c') %></script>
   <script type="application/json" id="theme-base"><%~ JSON.stringify(it.themeBase).replaceAll('<', '\\u003c') %></script>
 </div>

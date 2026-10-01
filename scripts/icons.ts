@@ -11,6 +11,8 @@ const names = [
   'format_underlined', 'inbox', 'menu', 'send', 'volume_off', 'volume_up',
   // The device chooser (src/client/device-frame.ts).
   'smartphone', 'tablet', 'desktop_windows', 'screen_rotation',
+  // The Themes app's bar (src/client/theme-app/).
+  'light_mode', 'dark_mode', 'share',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

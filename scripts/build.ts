@@ -10,7 +10,7 @@ const options = { outdir, target: 'browser', splitting: true, minify: true, sour
 // The components overview is built on its own: each card's module is a chunk, and the
 // chunks the cards share are split by which cards use them, not also by which of the
 // other pages do.
-for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame'], ['catalog']]) {
+for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app'], ['catalog']]) {
   const result = await Bun.build({ ...options, entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)) });
   if (!result.success) {
     for (const log of result.logs) console.error(log);

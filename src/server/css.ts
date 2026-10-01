@@ -18,9 +18,28 @@ export const stylesheetBundles = {
   examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'device-frame'],
   // Styles pages add Roboto, then their own sheet.
   styles: [...shell, 'site', 'search', 'roboto', 'styles-pages'],
+  // The Themes app: the Styles sheet, mtrl's type and shape tokens and ripple, the mtrl
+  // components it is built from, then its own sheet.
+  themes: [...shell, 'site', 'search', 'roboto', 'styles-pages', 'mtrl-tokens', 'mtrl:textfield', 'mtrl:menu', 'mtrl:select', 'mtrl:top-app-bar', 'mtrl:button', 'mtrl:icon-button', 'mtrl:snackbar', 'theme-app'],
 } as const;
 
 export type StylesheetBundle = keyof typeof stylesheetBundles;
+
+/**
+ * mtrl's system tokens other than colour (type scale, shape), its ripple, and its
+ * button and list resets, from base.css: without base.css itself, whose page resets and
+ * body styles are for an mtrl app, not a page of this site. The resets stay in mtrl's
+ * base layer, scoped to the Themes app and the popups it puts on <body>. Colour comes
+ * from the theme the app shows.
+ */
+export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/mtrl/dist/styles/base.css'), 'utf8')): string {
+  const start = css.indexOf(':root{--mtrl-ref-typeface');
+  const ripple = css.indexOf('.mtrl-ripple{');
+  const rippleEnd = css.indexOf('}}', css.indexOf('@keyframes mtrl-ripple-expand')) + 2;
+  const resets = [...css.matchAll(/(?<=[}])(button|ul,ol)(\{[^}]*\})/g)].map(([, selector, body]) => `:where(.theme-app,.mtrl-menu,.mtrl-snackbar) :is(${selector})${body}`);
+  if (start < 0 || ripple < 0 || rippleEnd < 2 || resets.length !== 2) throw new Error('mtrl base.css: tokens, ripple or resets not found');
+  return `${css.slice(start, css.indexOf('}', start) + 1)}\n${css.slice(ripple, rippleEnd)}\n@layer mtrl.base{${resets.join('')}}`;
+}
 
 const fileFor = (name: string) => name === 'preupgrade'
   ? resolve(root, 'node_modules/mtrl/dist/elements/preupgrade.css')
@@ -126,6 +145,6 @@ export function minifyCss(css: string): string {
 }
 
 export function bundleCss(name: StylesheetBundle): string {
-  const css = stylesheetBundles[name].map(file => readFileSync(fileFor(file), 'utf8')).join('\n');
+  const css = stylesheetBundles[name].map(file => file === 'mtrl-tokens' ? mtrlTokens() : readFileSync(fileFor(file), 'utf8')).join('\n');
   return minifyCss(css);
 }
