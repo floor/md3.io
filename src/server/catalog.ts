@@ -73,7 +73,7 @@ const visuals: Record<ComponentSlug, string> = {
   // Navigation
   'navigation-rail': m('navigation-rail', { value: 'inbox', 'no-toggle': true, 'aria-label': 'Mail navigation' },
     destinations.map(item => m('navigation-rail-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label)).join('')),
-  drawer: m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail' },
+  drawer: m('drawer', { open: true, dense: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail' },
     m('drawer-item', { type: 'section' }, 'Your mailbox') + destinations.map(item => m('drawer-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label)).join('')),
   // A surface: M3's fixed tab row, which <m-tabs> has no attribute for.
   tabs: `<${SURFACES.tabs}></${SURFACES.tabs}>`,
