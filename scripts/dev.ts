@@ -78,10 +78,10 @@ const schedule = (from: Step) => {
 
 const on = (path: string, step: Step) => watch(path, { recursive: true }, () => schedule(step));
 on(resolve(mtrlRoot, 'src'), 'mtrl');
-for (const dir of ['src/client', 'src/shared', 'icons']) on(resolve(root, dir), 'site');
+for (const dir of ['src/client', 'src/shared', 'icons', 'styles']) on(resolve(root, dir), 'site');
 on(resolve(root, 'src/server'), 'server');
 on(resolve(root, 'server.ts'), 'server');
-console.log(`Watching ${mtrlRoot}/src, src/client, src/shared, src/server, server.ts and icons.`);
+console.log(`Watching ${mtrlRoot}/src, src/client, src/shared, src/server, server.ts, styles and icons.`);
 
 schedule('site');
 

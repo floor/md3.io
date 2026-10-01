@@ -30,17 +30,10 @@
   <link rel="preload" href="/fonts/DIN-Alternate-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/styles/tokens.css" />
-  <link rel="stylesheet" href="/styles/shell.css" />
-  <link rel="stylesheet" href="/styles/ui.css" />
-  <link rel="stylesheet" href="/styles/content.css" />
-  <link rel="stylesheet" href="/styles/syntax.css" />
-  <% if (it.isHome) { %><link rel="stylesheet" href="/styles/homepage.css" /><% } %>
-  <link rel="stylesheet" href="/styles/site.css" />
-  <link rel="stylesheet" href="/styles/search.css" />
-  <% if (it.isCatalog) { %><link rel="stylesheet" href="/styles/roboto.css" /><link rel="stylesheet" href="/dist/mtrl/elements/preupgrade.css" /><link rel="stylesheet" href="/styles/catalog.css" /><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %>
-  <% if (it.section === 'Examples') { %><link rel="stylesheet" href="/styles/examples.css" /><script type="module" src="/dist/examples.js"></script><% } %>
-  <% if (it.section === 'Styles') { %><link rel="stylesheet" href="/styles/roboto.css" /><link rel="stylesheet" href="/styles/styles-pages.css" /><script type="module" src="/dist/styles.js"></script><% } %>
+  <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
+  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %>
+  <% if (it.section === 'Examples') { %><script type="module" src="/dist/examples.js"></script><% } %>
+  <% if (it.section === 'Styles') { %><script type="module" src="/dist/styles.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
   </script>
@@ -69,7 +62,7 @@
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
       <a href="https://github.com/floor/mtrl" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
     </nav>
-    <button type="button" class="header__search" id="search-trigger" aria-label="Search" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
+    <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
       <svg class="header__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
     </button>
