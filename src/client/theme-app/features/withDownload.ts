@@ -10,12 +10,14 @@ const FORMATS = { css: colorThemeCss, scss: colorThemeScss, json: colorThemeJson
 type Format = keyof typeof FORMATS;
 
 export const withDownload = () => (app: App) => {
-  const { ui, source, roles, copy } = app;
+  const { ui, roles, copy } = app;
   /** The file for the theme shown. */
   const file = (format: Format): { name: string; text: string } => {
-    const theme = source.current();
+    const theme = app.variant.shown();
+    const params = app.variant.params();
     const byRole = (colors: string[]) => Object.fromEntries((roles as string[]).map((role, i) => [role, colors[i]!]));
-    const name = theme.seed ? `seed-${theme.seed.slice(1)}` : theme.name;
+    // The theme's name, or its seed, then any variant and contrast not its own.
+    const name = [theme.seed ? `seed-${theme.seed.slice(1)}` : theme.name, params.get('variant'), params.get('contrast')].filter(Boolean).join('-');
     const origin = theme.spec ?? undefined;
     const data: ColorThemeFile = {
       name, origin, tokens: schemeToTokens({ light: byRole(theme.light), dark: byRole(theme.dark) }),

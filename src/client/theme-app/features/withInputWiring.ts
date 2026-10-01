@@ -4,6 +4,8 @@ import type { App } from '../core/foundation';
 export const withInputWiring = () => (app: App) => {
   const { ui, source, copy, image, element } = app;
   ui.theme.on('change', (event: { value: string }) => source.select(event.value));
+  ui.variant.on('change', (event: { value: string }) => app.variant.setVariant(event.value));
+  ui.contrast.on('change', (event: { values: string[] }) => { if (event.values[0] !== undefined) app.variant.setContrast(Number(event.values[0])); });
   const onShare = () => copy.link();
   const onCopy = ({ hex, role }: { hex: string; role: string }) => copy.hex(hex, role);
   ui.scheme.on('copy', onCopy);

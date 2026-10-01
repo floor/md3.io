@@ -4,6 +4,11 @@
 // which the app follows. Both land in `app.state`.
 import { themeStore } from '../../theme-store';
 import type { App } from '../core/foundation';
+import { VARIANTS } from './withVariant';
+
+/** mtrl's variant themes (baseline's seed through another variant): a variant here, not a theme. */
+const VARIANT_THEMES = new Set<string>(VARIANTS.map(([name]) => name).filter(name => name !== 'tonal-spot'));
+export const isVariantTheme = (name: string) => VARIANT_THEMES.has(name);
 
 export interface ThemeData {
   name: string;
@@ -18,6 +23,8 @@ export interface ThemeData {
   spec: { seed: string; variant: string; contrast: number; secondary?: string } | null;
   /** A theme made from an image: its seed, which the address carries. */
   seed?: string;
+  /** A hand-made theme's seed for generated variants: its light primary. */
+  handSeed?: string | null;
 }
 
 export const withThemeSource = (config: { themes: ThemeData[] }) => (app: App) => {
@@ -27,6 +34,8 @@ export const withThemeSource = (config: { themes: ThemeData[] }) => (app: App) =
     ...app,
     source: {
       themes: config.themes,
+      /** The themes the select lists: not the variant themes. */
+      listed: config.themes.filter(theme => !VARIANT_THEMES.has(theme.name)),
       get: (name: string): ThemeData => byName.get(name) ?? fallback,
       has: (name: string) => byName.has(name),
       current: (): ThemeData => byName.get(app.state.get('theme') as string) ?? fallback,
@@ -50,6 +59,8 @@ export const withThemeSource = (config: { themes: ThemeData[] }) => (app: App) =
         const unsubscribe = themeStore.subscribe(state => {
           if (state.base === base) return;
           base = state.base;
+          // mtrl's vibrant theme is baseline, Vibrant.
+          if (VARIANT_THEMES.has(base)) { app.state.set('variant', base); app.state.set('contrast', null); app.state.set('theme', 'baseline'); return; }
           app.state.set('theme', byName.has(base) ? base : fallback.name);
         });
         // The site's mode: html[data-theme-mode], set by its header toggle, or by the

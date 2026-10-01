@@ -20,7 +20,7 @@ export const stylesheetBundles = {
   styles: [...shell, 'site', 'search', 'roboto', 'styles-pages'],
   // The Themes app: the Styles sheet, mtrl's type and shape tokens and ripple, the mtrl
   // components it is built from, then its own sheet.
-  themes: [...shell, 'site', 'search', 'roboto', 'styles-pages', 'mtrl-tokens', 'mtrl:textfield', 'mtrl:menu', 'mtrl:select', 'mtrl:top-app-bar', 'mtrl:button', 'mtrl:icon-button', 'mtrl:snackbar', 'mtrl:tooltip', 'theme-app'],
+  themes: [...shell, 'site', 'search', 'roboto', 'styles-pages', 'mtrl-tokens', 'mtrl:textfield', 'mtrl:menu', 'mtrl:select', 'mtrl:top-app-bar', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'mtrl:snackbar', 'mtrl:tooltip', 'theme-app'],
 } as const;
 
 export type StylesheetBundle = keyof typeof stylesheetBundles;

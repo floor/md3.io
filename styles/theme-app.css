@@ -14,11 +14,13 @@
    The site's reset (shell.css, `* { margin: 0; padding: 0 }`) is unlayered and would
    beat mtrl's layered component styles: give these back to mtrl's layers, here and in
    the select's menu and the snackbar, which live on <body>. */
-.theme-app > .mtrl-top-app-bar, .theme-app > .mtrl-top-app-bar *, .mtrl-menu, .mtrl-menu *, .mtrl-snackbar, .mtrl-snackbar *, .mtrl-tooltip, .mtrl-tooltip * { margin: revert-layer; padding: revert-layer; }
+.theme-app > .mtrl-top-app-bar, .theme-app > .mtrl-top-app-bar *, .theme-app__controls *, .mtrl-menu, .mtrl-menu *, .mtrl-snackbar, .mtrl-snackbar *, .mtrl-tooltip, .mtrl-tooltip * { margin: revert-layer; padding: revert-layer; }
 
 .theme-app > .mtrl-top-app-bar { position: sticky; left: auto; right: auto; top: var(--header-height); z-index: 5; background: var(--mtrl-sys-color-surface-container); }
 .theme-app__actions { display: flex; align-items: center; gap: 4px; }
-.theme-app__actions > .mtrl-select { width: 200px; }
+.theme-app__controls { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 16px; padding: 16px 24px 0; }
+.theme-app__controls > .mtrl-select { width: 200px; }
+.theme-app__controls > .mtrl-select[data-seeded] .mtrl-menu__item[data-id="original"] { display: none; }
 .theme-app[data-dropping] .theme-app__content { outline: 2px dashed var(--mtrl-sys-color-primary); outline-offset: -8px; border-radius: 16px; }
 .theme-app__content { display: grid; gap: 20px; padding: 20px 24px 48px; }
 .theme-app__heading { margin: 12px 0 4px; font: 500 16px/24px var(--mtrl-ref-typeface-brand); letter-spacing: 0.15px; }
@@ -63,8 +65,6 @@
   .theme-app__content { padding: 16px 12px 40px; }
   .md3-scheme-card { padding: 14px; }
   .md3-palette__tone { height: 40px; font-size: 9px; letter-spacing: -0.3px; }
-  /* The bar keeps its actions: the title gives way, the select narrows. */
-  .theme-app > .mtrl-top-app-bar .mtrl-top-app-bar__headline { display: none; }
-  .theme-app__actions > .mtrl-select { width: auto; flex: 1 1 140px; min-width: 0; }
-  .theme-app > .mtrl-top-app-bar .mtrl-top-app-bar__trailing, .theme-app__actions { flex: 1 1 auto; min-width: 0; }
+  .theme-app__controls { padding: 12px 12px 0; }
+  .theme-app__controls > .mtrl-select { width: auto; flex: 1 1 150px; min-width: 0; }
 }

@@ -10,7 +10,8 @@ import { mkdir } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
-import { THEME_ROLES, argbFromRgba, seedsFromPixels, themeColors } from '../src/shared/theme-engine';
+import { THEME_ROLES, argbFromRgba, seedsFromPixels, themeColors, type VariantName } from '../src/shared/theme-engine';
+import { contrastRatio } from '../src/shared/color';
 
 const server = process.env.BASE_URL ? null : Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: (await import('../server')).handleRequest });
 const base = (process.env.BASE_URL ?? server!.url.href).replace(/\/$/, '');
@@ -185,9 +186,12 @@ try {
   // The card is in the site's mode: desert's primary for that mode.
   const shown = async () => (await page.evaluate(() => document.documentElement.dataset.themeMode)) === 'light' ? desertPrimary : desertDarkPrimary;
   // As a person does: open the select, wait for its menu, pick, and let the menu close.
+  const themeSelect = page.locator('.theme-app__controls .mtrl-select').first();
+  const variantSelect = page.locator('.theme-app__controls .mtrl-select').nth(1);
+  const themeValue = () => themeSelect.locator('input').inputValue();
   const pickTheme = async (label: string) => {
     const item = page.locator('.mtrl-menu').getByText(label, { exact: true });
-    await page.locator('.theme-app .mtrl-select').click();
+    await themeSelect.click();
     await item.waitFor({ state: 'visible' });
     await item.click();
     await item.waitFor({ state: 'hidden' });
@@ -209,13 +213,12 @@ try {
   // Share: the link opens the same theme, whatever this browser saved since.
   const shared = page.url();
   await pickTheme('Ocean');
-  await until(() => page.locator('.theme-app__note').textContent().then(text => !!text?.includes('set by hand')), true, 'A theme without a seed says why it has no palettes');
-  assert(!await page.locator('.theme-app__palette-list').isVisible(), 'and shows none');
+  await until(() => page.locator('.theme-app__note').textContent().then(text => !!text?.startsWith('Original colours set by hand; variants generated from #')), true, 'A hand-made theme says its colours are set by hand, and where its variants come from');
   // Ten switches: listeners and elements stay flat, and a switch paints within a frame.
   const counts = () => page.evaluate(() => ({ listeners: (window as unknown as { __listeners: number }).__listeners, nodes: document.getElementsByTagName('*').length }));
   const before = await counts();
-  const names = ['Desert', 'Summer', 'Ocean', 'Vibrant', 'Forest', 'Baseline', 'Rainbow', 'Autumn', 'Monochrome', 'Ocean'];
-  for (const name of names) { await pickTheme(name); await until(() => page.locator('.mtrl-select input').inputValue(), name, `The select shows ${name}`); }
+  const names = ['Desert', 'Summer', 'Ocean', 'Brownbeige', 'Forest', 'Baseline', 'Sageivory', 'Autumn', 'Tealcaramel', 'Ocean'];
+  for (const name of names) { await pickTheme(name); await until(themeValue, name, `The select shows ${name}`); }
   const after = await counts();
   console.log(`Ten theme switches: listeners ${before.listeners} → ${after.listeners}, elements ${before.nodes} → ${after.nodes}`);
   assert(after.listeners === before.listeners && after.nodes <= before.nodes, `Ten theme switches add no listener and no element: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
@@ -223,9 +226,11 @@ try {
     const app = (window as unknown as { themeApp: { state: { set(key: string, value: unknown): void } } }).themeApp;
     // From the change to its colours computed and laid out: the work the next frame waits on.
     const work: number[] = [];
-    for (const name of ['desert', 'summer', 'vibrant', 'forest', 'rainbow', 'ocean']) {
+    for (const name of ['desert', 'summer', 'sageivory', 'forest', 'tealcaramel', 'ocean']) {
       const start = performance.now();
       app.state.set('theme', name);
+      // The repaint runs once the scheme is worked out: microtasks, no frame.
+      for (let i = 0; i < 5; i++) await Promise.resolve();
       document.body.getBoundingClientRect();
       getComputedStyle(document.querySelector('[data-role="primary"]')!).backgroundColor;
       work.push(performance.now() - start);
@@ -235,7 +240,7 @@ try {
   assert(switchMs.work < 16, `A theme switch's work fits in a frame: ${switchMs.work.toFixed(1)} ms`);
   console.log(`Theme switch: ${switchMs.work.toFixed(1)} ms of work (script, style, layout), worst of six`);
   await page.goto(shared);
-  await until(() => page.locator('.mtrl-select input').inputValue(), 'Desert', 'The ?theme= link opens desert again');
+  await until(themeValue, 'Desert', 'The ?theme= link opens desert again');
   await until(() => lightPrimary.getAttribute('data-hex'), await shown(), 'with its colours');
   await lightPrimary.click();
   await until(() => page.locator('.mtrl-snackbar').first().textContent().then(text => text?.trim()), `Copied ${await shown()}`, 'mtrl\'s snackbar says the hex was copied');
@@ -299,6 +304,85 @@ try {
   assert(json.name === 'mtrl-theme-desert.json' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON has the seed, the variant and every role');
   console.log(`Download: ${cssFile.name}, ${scss.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
 
+  // The axes: the theme select lists themes (seeds), not mtrl's variant themes; the
+  // variant and contrast regenerate the scheme from the theme's seed.
+  const roleHex = (css: string, role: string, mode: string) => {
+    const at = css.indexOf('[data-theme-mode=dark]');
+    const part = mode === 'light' ? css.slice(0, at) : css.slice(at);
+    return [...part.matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
+  };
+  const tiles = () => page.locator('.md3-scheme-card [data-role]').evaluateAll(elements => Object.fromEntries(elements.map(element => [(element as HTMLElement).dataset.role!, (element as HTMLElement).dataset.hex!])));
+  const pickVariant = async (label: string) => {
+    const item = page.locator('.mtrl-menu').getByText(label, { exact: true });
+    await variantSelect.click();
+    await item.waitFor({ state: 'visible' });
+    await item.click();
+    await item.waitFor({ state: 'hidden' });
+  };
+  const setContrast = (label: string) => page.locator(`.theme-app__controls [aria-label="${label} contrast"]`).click();
+  await themeSelect.click();
+  await page.locator('.mtrl-menu--visible .mtrl-menu__item-text').first().waitFor({ state: 'visible' });
+  const listed = await page.locator('.mtrl-menu--visible .mtrl-menu__item-text').allTextContents();
+  await page.keyboard.press('Escape');
+  await page.locator('.mtrl-menu--visible').waitFor({ state: 'detached' });
+  const VARIANT_THEMES: [string, string][] = [['neutral', 'Neutral'], ['vibrant', 'Vibrant'], ['expressive', 'Expressive'], ['fidelity', 'Fidelity'], ['content', 'Content'], ['monochrome', 'Monochrome'], ['rainbow', 'Rainbow'], ['fruit-salad', 'Fruit Salad']];
+  assert(listed.includes('Desert') && listed.includes('Ocean') && !VARIANT_THEMES.some(([, label]) => listed.includes(label)), `The theme select lists themes, not variants: ${listed.join(', ')}`);
+  // Baseline × each variant is mtrl's shipped variant theme, every role.
+  await pickTheme('Baseline');
+  const mode = (await siteMode()) === 'light' ? 'light' : 'dark';
+  for (const [name, label] of VARIANT_THEMES) {
+    await pickVariant(label);
+    const shipped = await (await fetch(`${base}/dist/mtrl/themes/${name}.css`)).text();
+    await until(() => tiles().then(shown => shown.primary), roleHex(shipped, 'primary', mode), `Baseline × ${label} shows ${name}'s primary`);
+    const shown = await tiles();
+    for (const role of THEME_ROLES) if (shown[role] !== undefined) assert(shown[role] === roleHex(shipped, role, mode), `Baseline × ${label}: ${role} ${shown[role]}, mtrl's ${name}.css has ${roleHex(shipped, role, mode)}`);
+  }
+  await pickVariant('Tonal Spot');
+  // Desert × High: every text pair at 7:1 or more.
+  await pickTheme('Desert');
+  await setContrast('High');
+  const desertHigh = themeColors({ source: '#9a7a3e', variant: 'tonal-spot', contrast: 1, core: { secondary: '#4a87c4' } }).roles[mode];
+  await until(() => tiles().then(shown => shown.primary), desertHigh.primary, 'High contrast regenerates desert');
+  const TEXT_PAIRS = [
+    ...['primary', 'secondary', 'tertiary', 'error'].flatMap(group => [[`on-${group}`, group], [`on-${group}-container`, `${group}-container`]]),
+    ...['surface', 'surface-dim', 'surface-bright', 'surface-container-lowest', 'surface-container-low', 'surface-container', 'surface-container-high', 'surface-container-highest'].map(surface => ['on-surface', surface]),
+    ['on-surface-variant', 'surface'], ['inverse-on-surface', 'inverse-surface'],
+  ];
+  const shownHigh = await tiles();
+  const weak = TEXT_PAIRS.map(([ink, fill]) => [ink, fill, contrastRatio(shownHigh[ink!]!, shownHigh[fill!]!)!] as const).filter(([, , ratio]) => ratio < 7);
+  assert(!weak.length, `Desert × High: text pairs under 7:1: ${weak.map(([ink, fill, ratio]) => `${ink} on ${fill} ${ratio.toFixed(2)}`).join(', ')}`);
+  console.log(`Desert × High: ${TEXT_PAIRS.length} text pairs, all at 7:1 or more (lowest ${Math.min(...TEXT_PAIRS.map(([ink, fill]) => contrastRatio(shownHigh[ink!]!, shownHigh[fill!]!)!)).toFixed(2)}:1)`);
+  // The address round-trips the three axes.
+  await pickVariant('Vibrant');
+  await until(() => page.evaluate(() => location.search), '?theme=desert&variant=vibrant&contrast=high', 'The address carries theme, variant and contrast');
+  await page.reload();
+  const desertVibrantHigh = themeColors({ source: '#9a7a3e', variant: 'vibrant' as VariantName, contrast: 1, core: { secondary: '#4a87c4' } }).roles[mode];
+  await until(() => tiles().then(shown => shown.primary), desertVibrantHigh.primary, 'The link reopens desert × Vibrant × High');
+  assert(await variantSelect.locator('input').inputValue() === 'Vibrant' && await page.locator('.theme-app__controls [aria-label="High contrast"]').getAttribute('aria-pressed') !== 'false', 'with the controls set');
+  const roundTrip = await tiles();
+  for (const role of THEME_ROLES) if (roundTrip[role] !== undefined) assert(roundTrip[role] === desertVibrantHigh[role], `desert × Vibrant × High ${role}: ${roundTrip[role]}, the engine gives ${desertVibrantHigh[role]}`);
+  await pickVariant('Tonal Spot');
+  await setContrast('Standard');
+  // A hand-made theme: Original is mtrl's ocean.css; Vibrant is generated from its light primary.
+  const oceanCss = await (await fetch(`${base}/dist/mtrl/themes/ocean.css`)).text();
+  await pickTheme('Ocean');
+  await until(() => variantSelect.locator('input').inputValue(), 'Original', 'Ocean opens on Original');
+  const original = await tiles();
+  // Every role ocean.css declares; the rest it inherits from mtrl's baseline, as the page does.
+  const declaredRoles = THEME_ROLES.filter(role => original[role] !== undefined && roleHex(oceanCss, role, mode) !== undefined);
+  assert(declaredRoles.length >= 25, `ocean.css declares its own roles: ${declaredRoles.length}`);
+  for (const role of declaredRoles) assert(original[role] === roleHex(oceanCss, role, mode), `Ocean Original ${role}: ${original[role]}, ocean.css has ${roleHex(oceanCss, role, mode)}`);
+  const oceanSeed = roleHex(oceanCss, 'primary', 'light')!;
+  assert((await variantSelect.textContent())?.includes(`variants generated from ${oceanSeed}`), 'The variant select says where the variants come from');
+  await pickVariant('Vibrant');
+  const oceanVibrant = themeColors({ source: oceanSeed, variant: 'vibrant' as VariantName, contrast: 0 }).roles[mode];
+  await until(() => tiles().then(shown => shown.primary), oceanVibrant.primary, 'Ocean × Vibrant is generated from ocean\'s light primary');
+  const generated = await tiles();
+  for (const role of THEME_ROLES) if (generated[role] !== undefined) assert(generated[role] === oceanVibrant[role], `Ocean × Vibrant ${role}: ${generated[role]}, the engine gives ${oceanVibrant[role]} from ${oceanSeed}`);
+  await pickVariant('Original');
+  await pickTheme('Desert');
+  console.log(`Axes: 8 variant themes off the theme list; baseline × each equals mtrl's CSS; ocean Original equals ocean.css, ocean × Vibrant generated from ${oceanSeed}; ?theme=desert&variant=vibrant&contrast=high round-trips`);
+
   // A theme from an image: the fixture's seed, found here by the same engine from its
   // own pixels, is the one the app shows, with the engine's primary; ?seed= reproduces it.
   const fixture = resolve(import.meta.dir, '../test/fixtures/theme-image.png');
@@ -315,14 +399,14 @@ try {
   await until(() => page.evaluate(() => new URL(location.href).searchParams.get('seed')), imageSeed.slice(1), 'The address carries the image\'s seed');
   const imagePrimary = async () => imageTheme.roles[(await siteMode()) === 'light' ? 'light' : 'dark'].primary;
   await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), 'The card shows the engine\'s primary for the image\'s seed');
-  await until(() => page.locator('.mtrl-select input').inputValue(), 'From image', 'The select shows From image');
+  await until(themeValue, 'From image', 'The select shows From image');
   await until(() => page.locator('.mtrl-snackbar').last().textContent().then(text => text?.trim()), `Theme generated from theme-image.png · seed ${imageSeed}`, 'The snackbar names the file and the seed');
   assert(await page.locator('.md3-palette').first().isVisible(), 'and its palettes');
   const imageFile = await downloadAs('JSON');
   assert(imageFile.name === `mtrl-theme-seed-${imageSeed.slice(1)}.json` && JSON.parse(imageFile.text).seed === imageSeed, `A theme from an image downloads under its seed: ${imageFile.name}`);
   await page.goto(`${base}/styles/themes/?seed=${imageSeed.slice(1)}`);
   await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), '?seed= reproduces the theme');
-  await until(() => page.locator('.mtrl-select input').inputValue(), 'From image', 'with From image selected');
+  await until(themeValue, 'From image', 'with From image selected');
   // material-color-utilities loads with the first image, never with the page.
   const dist = resolve(import.meta.dir, '../dist');
   const graph = (entry: string, seen = new Set<string>()): Set<string> => {

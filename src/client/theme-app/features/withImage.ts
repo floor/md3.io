@@ -39,13 +39,13 @@ export const withImage = () => (app: App) => {
       name: 'image', label: 'From image', seed,
       light: (roles as string[]).map(role => colors.roles.light[role]!),
       dark: (roles as string[]).map(role => colors.roles.dark[role]!),
-      origin: `seed ${seed}, Tonal Spot`, spec: { seed, variant: 'tonal-spot', contrast: 0 }, palettes: colors.palettes,
+      origin: `seed ${seed}, Tonal Spot`, spec: { seed, variant: 'tonal-spot', contrast: 0 }, palettes: colors.palettes, handSeed: null,
     };
   };
   /** Shows the theme of a seed, with "From image" in the select. */
   const show = async (seed: string) => {
     const theme = await fromSeed(seed);
-    ui.theme.setOptions([...source.themes.map((t: ThemeData) => ({ id: t.name, text: t.label })), entry(seed)]);
+    ui.theme.setOptions([...source.listed.map((t: ThemeData) => ({ id: t.name, text: t.label })), entry(seed)]);
     source.add(theme);
   };
   return {

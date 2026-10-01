@@ -15,9 +15,7 @@ export const withCopy = () => (app: App) => {
       tell,
       hex: async (hex: string, role: string) => tell(await write(hex) ? `Copied ${hex}` : `Could not copy ${hex} (${role})`),
       link: async () => {
-        const url = new URL('/styles/themes/', location.origin);
-        const { seed, name } = app.source.current();
-        url.searchParams.set(seed ? 'seed' : 'theme', seed ? seed.slice(1) : name);
+        const url = new URL(`/styles/themes/?${app.variant.params()}`, location.origin);
         tell(await write(url.href) ? 'Link copied' : `Could not copy ${url.href}`);
       },
     },

@@ -1,22 +1,37 @@
-// State → UI and effects, one direction only: a theme repaints the card, the
-// palettes, the chrome, the select and the address; the site's mode repaints the card
-// and the chrome.
+// State → UI and effects, one direction only. A theme, variant or contrast works out
+// the scheme (withVariant), then repaints the card, the palettes, the app's colours,
+// the controls and the address; the site's mode repaints the card and the app.
 import type { App } from '../core/foundation';
 
 export const withReactionWiring = () => (app: App) => {
-  const { ui, scheme, palettes, state } = app;
-  state.on('theme', (value: string) => {
+  const { ui, scheme, palettes, state, variant, source } = app;
+  const controls = () => {
+    const theme = source.current();
+    if (ui.theme.getValue() !== theme.name) ui.theme.setValue(theme.name);
+    const { variant: current, contrast } = variant.effective();
+    // "Original" is a hand-made theme's own colours: hidden for a seeded theme, whose
+    // own variant is its original (styles/theme-app.css), not rebuilt with setOptions.
+    if (theme.handSeed) delete ui.variant.element.dataset.seeded;
+    else ui.variant.element.dataset.seeded = '';
+    if (ui.variant.getValue() !== current) ui.variant.setValue(current);
+    const seed = variant.seedOf(theme);
+    ui.variant.textfield.setSupportingText(!theme.handSeed ? `Seed ${seed}`
+      : current === 'original' && contrast ? `Tonal Spot from ${seed}: Original is standard contrast only`
+      : current === 'original' ? `Set by hand; variants generated from ${seed}` : `Generated from ${seed}`);
+    if (!ui.contrast.isSelected(String(contrast))) ui.contrast.select(String(contrast));
+  };
+  const render = () => variant.update(() => {
     scheme.paint();
     palettes.paint();
     scheme.chrome();
-    if (ui.theme.getValue() !== value) ui.theme.setValue(value);
-    // The address names the theme, or the seed of one made from an image.
-    const { seed } = app.source.current();
+    controls();
     const url = new URL(location.href);
-    url.searchParams.delete(seed ? 'theme' : 'seed');
-    url.searchParams.set(seed ? 'seed' : 'theme', seed ? seed.slice(1) : value);
+    url.search = variant.params().toString();
     if (url.href !== location.href) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
   });
+  state.on('theme', render);
+  state.on('variant', render);
+  state.on('contrast', render);
   state.on('mode', () => { scheme.paint(); scheme.chrome(); });
   return app;
 };

@@ -5,6 +5,7 @@
 import createTooltip from 'mtrl/components/tooltip';
 import type { App } from '../core/foundation';
 import { TOOLTIPS } from '../config/layout';
+import { CONTRASTS, VARIANTS } from './withVariant';
 
 export const withSetup = () => (app: App) => {
   app.ui.bar.addTrailingElement(app.ui.actions);
@@ -13,7 +14,12 @@ export const withSetup = () => (app: App) => {
   // The download menu opens where its tooltip shows: the tooltip gives way.
   app.download.menu.on('open', () => tooltips.download!.hide());
   // Read before connecting: the first theme rewrites the address.
-  const seed = new URLSearchParams(location.search).get('seed');
+  const params = new URLSearchParams(location.search);
+  const seed = params.get('seed');
+  const variant = VARIANTS.find(([name]) => name === params.get('variant'))?.[0] ?? (params.get('variant') === 'original' ? 'original' : null);
+  const contrast = CONTRASTS.find(([, name]) => name === params.get('contrast'))?.[0] ?? null;
+  app.state.set('variant', variant);
+  app.state.set('contrast', contrast);
   app.teardown.add(app.source.connect());
   if (seed && /^#?[0-9a-f]{6}$/i.test(seed)) app.image.show(`#${seed.replace('#', '').toLowerCase()}`);
   return { ui: app.ui, state: app.state, destroy: () => app.teardown.run() };

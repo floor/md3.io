@@ -5,7 +5,7 @@
 import type { App } from '../core/foundation';
 
 export const withScheme = () => (app: App) => {
-  const { ui, source, state, element } = app;
+  const { ui, state, element } = app;
   const style = document.createElement('style');
   style.id = 'theme-app-tokens';
   document.head.append(style);
@@ -14,10 +14,10 @@ export const withScheme = () => (app: App) => {
     ...app,
     scheme: {
       /** The card, in place. */
-      paint: () => ui.scheme.set(source.current(), state.get('mode') === 'dark' ? 'dark' : 'light'),
+      paint: () => ui.scheme.set(app.variant.shown(), state.get('mode') === 'dark' ? 'dark' : 'light'),
       /** The app's own colours: the theme's roles in the current mode. */
       chrome: () => {
-        const theme = source.current();
+        const theme = app.variant.shown();
         const mode = state.get('mode') === 'dark' ? 'dark' : 'light';
         const colors: string[] = theme[mode];
         style.textContent = `:root{${(app.roles as string[]).map((role, i) => `--mtrl-sys-color-${role}:${colors[i]}`).join(';')}}`;
