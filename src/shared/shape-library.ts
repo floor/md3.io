@@ -5,9 +5,17 @@ import { materialShape, radialProfile, type MaterialShapeName, type RadialProfil
 
 /** Every shape mtrl names, labelled: a Record, so a shape mtrl adds fails the type check until it is listed. */
 export const SHAPE_LABELS: Record<MaterialShapeName, string> = {
-  circle: 'Circle', oval: 'Oval', pill: 'Pill', pentagon: 'Pentagon', sunny: 'Sunny', cookie4: '4-sided cookie', cookie9: '9-sided cookie', softBurst: 'Soft burst',
+  circle: 'Circle', square: 'Square', slanted: 'Slanted', arch: 'Arch', fan: 'Fan', arrow: 'Arrow', semiCircle: 'Semicircle',
+  oval: 'Oval', pill: 'Pill', triangle: 'Triangle', diamond: 'Diamond', clamShell: 'Clam shell', pentagon: 'Pentagon', gem: 'Gem',
+  sunny: 'Sunny', verySunny: 'Very sunny', cookie4Sided: '4-sided cookie', cookie6Sided: '6-sided cookie', cookie7Sided: '7-sided cookie',
+  cookie9Sided: '9-sided cookie', cookie12Sided: '12-sided cookie', ghostish: 'Ghost-ish', clover4Leaf: '4-leaf clover', clover8Leaf: '8-leaf clover',
+  burst: 'Burst', softBurst: 'Soft burst', boom: 'Boom', softBoom: 'Soft boom', flower: 'Flower', puffy: 'Puffy', puffyDiamond: 'Puffy diamond',
+  pixelCircle: 'Pixel circle', pixelTriangle: 'Pixel triangle', bun: 'Bun', heart: 'Heart',
+  cookie4: '4-sided cookie', cookie9: '9-sided cookie',
 };
-export const SHAPE_NAMES = Object.keys(SHAPE_LABELS) as MaterialShapeName[];
+/** mtrl's deprecated aliases: labelled for the morph (which may name them), not drawn twice. */
+const ALIASES: readonly MaterialShapeName[] = ['cookie4', 'cookie9'];
+export const SHAPE_NAMES = (Object.keys(SHAPE_LABELS) as MaterialShapeName[]).filter(name => !ALIASES.includes(name));
 
 const round = (value: number) => Math.round(value * 1000) / 10;
 /** A shape's outline as an SVG path in a 0–100 box: its cubics, as mtrl builds them. */

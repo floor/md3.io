@@ -98,9 +98,9 @@ try {
   // Selecting a step outlines its components in the gallery.
   await medium.locator('.shape-tile__select').click();
   await until(() => page.frameLocator('iframe.shape-gallery').locator('.gallery__step--active').getAttribute('data-step'), 'medium', 'Selecting a step highlights its components');
-  // The expressive shapes: 8 drawn paths, and a morph that stays still under reduced motion.
+  // The expressive shapes: all 35 of M3's drawn, and a morph that stays still under reduced motion.
   const paths = await page.locator('.shape-library__item path').evaluateAll(elements => elements.map(element => (element as SVGPathElement).getTotalLength()));
-  assert(paths.length === 8 && paths.every(length => length > 50), `The shape gallery draws 8 non-empty paths, got ${paths.map(Math.round).join(', ')}`);
+  assert(paths.length === 35 && paths.every(length => length > 50), `The shape gallery draws 35 non-empty paths, got ${paths.map(Math.round).join(', ')}`);
   assert(await page.locator('#shape-morph-toggle').getAttribute('aria-pressed') === 'false', 'The morph starts paused under reduced motion');
   const still = await page.locator('#shape-morph-path').getAttribute('d');
   await page.waitForTimeout(800);

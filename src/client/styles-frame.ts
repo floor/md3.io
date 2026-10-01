@@ -77,7 +77,6 @@ function buildScreen() {
 function buildGallery() {
   screen.classList.add('gallery');
   const make: Record<string, () => HTMLElement> = {
-    'tiny:checkbox': () => createCheckbox({ label: 'Checkbox', checked: true }).element,
     'extra-small:textfield': () => createTextfield({ variant: 'outlined', label: 'Text field', value: 'Lake Annecy' }).element,
     'small:chips': () => createChips({ label: 'Chips', multiSelect: false, chips: ['Hiking', 'Coast'].map((label, index) => ({ label, value: label.toLowerCase(), type: 'filter', selected: index === 0 })) }).element,
     'medium:card': () => createCard({ variant: 'filled', header: { title: 'Card', subtitle: 'Medium corners' } }).element,
