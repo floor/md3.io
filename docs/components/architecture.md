@@ -38,8 +38,9 @@ component pages show each component's size, measured from the build.
 The same pattern extends a component. A feature that adds a title to any button:
 
 ```typescript
-import { pipe, createButton } from 'mtrl';
+import { createButton } from 'mtrl';
 import type { ButtonConfig, ButtonComponent } from 'mtrl';
+import { pipe } from 'mtrl/core/compose';
 
 // A feature takes a component and returns it, enhanced
 const withTitle = (title: string) => (component: ButtonComponent) => {
@@ -56,8 +57,8 @@ const createCustomButton = (config: ButtonConfig) => pipe(
 Or builds a new component from the core features:
 
 ```typescript
-import { pipe, createBase, withEvents, withElement, withLifecycle } from 'mtrl';
-import type { ElementComponent } from 'mtrl';
+import { pipe, createBase, withEvents, withElement, withLifecycle } from 'mtrl/core/compose';
+import type { ElementComponent } from 'mtrl/core/compose';
 
 const withLabel = (label: string) => <C extends ElementComponent>(component: C) => {
   component.element.textContent = label;
