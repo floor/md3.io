@@ -42,9 +42,13 @@ export const withImage = () => (app: App) => {
       origin: `seed ${seed}, Tonal Spot`, spec: { seed, variant: 'tonal-spot', contrast: 0 }, palettes: colors.palettes, handSeed: null,
     };
   };
-  /** Shows the theme of a seed, with "From image" in the select. */
-  const show = async (seed: string) => {
+  let request = 0;
+  /** Shows the theme of a seed, with "From image" in the select, unless a newer image came first.
+   *  `ticket` belongs to a load already counted; a call without one takes the next. */
+  const show = async (seed: string, ticket?: number) => {
+    const mine = ticket ?? ++request;
     const theme = await fromSeed(seed);
+    if (mine !== request) return;
     ui.theme.setOptions([...source.listed.map((t: ThemeData) => ({ id: t.name, text: t.label })), entry(seed)]);
     source.add(theme);
   };
@@ -52,15 +56,18 @@ export const withImage = () => (app: App) => {
     ...app,
     image: {
       show,
-      /** An image file: its best seed, shown, and said. */
+      /** An image file: its best seed, shown, and said. A newer file wins, even if this one finishes last. */
       load: async (file: File) => {
         if (!file.type.startsWith('image/')) return copy.tell(`${file.name} is not an image`);
+        const ticket = ++request;
         try {
           const [pixels, { argbFromRgba, seedsFromPixels }] = await Promise.all([pixelsOf(file), engine()]);
+          if (ticket !== request) return;
           const seed = seedsFromPixels(argbFromRgba(pixels), 4)[0]!;
-          await show(seed);
+          await show(seed, ticket);
+          if (ticket !== request) return;
           copy.tell(`Theme generated from ${file.name} · seed ${seed}`);
-        } catch { copy.tell(`Could not read ${file.name}`); }
+        } catch { if (ticket === request) copy.tell(`Could not read ${file.name}`); }
       },
     },
   };
