@@ -56,11 +56,14 @@ function page(path: string, title: string, description: string, template: string
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components';
+  // Where the title already names the section, the compact header can drop the breadcrumb.
+  // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
+  const sectionNamed = section !== '' && title.toLowerCase().includes(section.toLowerCase());
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'styles-themes' ? 'themes' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : undefined,
+    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sectionNamed, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
