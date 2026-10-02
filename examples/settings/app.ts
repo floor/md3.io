@@ -232,3 +232,15 @@ export const createSettingsApp = (): SettingsApp => {
   root.append(bar.element, panes);
   return { element: root, destroy };
 };
+
+// For the check and the console: the factory, so check.ts can mount a second app and
+// tear it down (its step 9), the way the site's theme app exposes itself
+// (src/client/theme-app/index.ts). This file is a helper the example's code panel does
+// not list — only vanilla.ts and shared.ts are shown — so the reference a reader copies
+// carries no test hook; the live app is found in the DOM.
+declare global {
+  interface Window {
+    settingsExample: { createSettingsApp: () => SettingsApp };
+  }
+}
+window.settingsExample = { createSettingsApp };

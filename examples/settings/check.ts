@@ -238,8 +238,9 @@ export default async (page: Page): Promise<void> => {
   // while the page is two-pane opens its own first category (the module-level pane mode
   // this replaced would have left it blank), and destroy() takes that mount back out —
   // element, observer, listeners and components — leaving the first app as it was. The
-  // example exposes the factory and the live app on `window.settingsExample`, the way the
-  // site's theme app exposes itself (src/client/theme-app/index.ts).
+  // factory is exposed on `window.settingsExample` from app.ts (a helper the code panel
+  // does not show), the way the site's theme app exposes itself
+  // (src/client/theme-app/index.ts).
   await page.setViewportSize({ width: 700, height: 800 });
   await row(/Display/).click();
   const mounted = await page.evaluate(async () => {
