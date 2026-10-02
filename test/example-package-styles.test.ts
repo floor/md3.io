@@ -36,7 +36,8 @@ test("declared stylesheets are linked and applied on the first frame even with a
   const { handleRequest } = await import("../server");
   await buildPackageStyles(fixture, dir, output);
   const code = await Bun.file(resolve(dir, "vanilla.ts")).text();
-  await Bun.write(resolve(output, "vanilla.js"), code);
+  const bundle = await Bun.build({ entrypoints: [resolve(dir, "vanilla.ts")], outdir: output, target: "browser" });
+  expect(bundle.success).toBe(true);
   await Bun.write(resolve(output, "sources.json"), JSON.stringify({ vanilla: { files: [{ name: "vanilla.ts", code }], gzip: 1 } }));
   examples.push(fixture);
   const server = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: request => {
@@ -48,6 +49,8 @@ test("declared stylesheets are linked and applied on the first frame even with a
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
     const check = await preparePackageStylesCheck(page, fixture);
     await page.addInitScript(() => {
       (window as any).__firstPackageRules = new Promise(resolve => {
@@ -71,8 +74,9 @@ test("declared stylesheets are linked and applied on the first frame even with a
     await check();
     expect(delayed).toBe(true);
     expect(await page.evaluate(() => (window as any).__firstPackageRules)).toEqual(["ready", "imported", "ready", "second"]);
-    expect(await page.locator("head link[rel=stylesheet][href*='/package-']").count()).toBe(2);
+    expect(await page.locator("head link[rel=stylesheet][href*='/dist/examples/package-style-fixture/package-']").count()).toBe(2);
     expect(await page.locator("#app").textContent()).toBe("Package stylesheet fixture");
+    expect(errors).toEqual([]);
   } finally {
     await browser.close();
     server.stop(true);

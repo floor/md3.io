@@ -9,6 +9,8 @@ export interface ExampleMeta {
   about: string[];
   how: string[];
   variants?: FrameworkId[];
+  /** Public package CSS exports, in cascade order; linked before the example stylesheet. */
+  packageStyles?: string[];
 }
 
 /** The variants every example ships, in tab order: the web components first. */

@@ -14,6 +14,7 @@ import { transformAsync } from "@babel/core";
 import { compile } from "svelte/compiler";
 import { examples, FRAMEWORKS, type FrameworkId, exampleVariantIds } from "../examples";
 
+import { buildPackageStyles } from "./example-package-styles";
 import { exampleSources } from "./example-sources";
 
 const root = resolve(import.meta.dir, "..");
@@ -113,6 +114,7 @@ for (const example of examples) {
   const dir = resolve(root, "examples", example.slug);
   const sources: Record<string, { files: { name: string; code: string }[]; gzip: number }> = {};
   await mkdir(resolve(outdir, example.slug), { recursive: true });
+  await buildPackageStyles(example, dir, resolve(outdir, example.slug));
   const ids = exampleVariantIds(example);
   for (const { id, file } of FRAMEWORKS) {
     if (!ids.includes(id)) continue;

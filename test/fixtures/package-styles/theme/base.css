@@ -1,2 +1,2 @@
 @import "./tokens.css";
-html { --package-style-first: ready; }
+html { --package-style-first: ready; --package-style-order: first; }

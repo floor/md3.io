@@ -20,6 +20,6 @@
   <link rel="stylesheet" href="/dist/material/styles/contrast.css" />
   <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/material/themes/<%= theme %>-contrast.css" /><% }); %>
   <link rel="stylesheet" href="/styles/example-frame.css" />
-  <link rel="stylesheet" href="/examples-styles/<%= it.example.slug %>.css" />
+  <% (it.example.packageStyles || []).forEach((_, index) => { %><link rel="stylesheet" href="/dist/examples/<%= it.example.slug %>/package-<%= index %>.css" /><% }); %><link rel="stylesheet" href="/examples-styles/<%= it.example.slug %>.css" />
   <script type="module" src="/dist/examples/<%= it.example.slug %>/<%= it.framework %>.js"></script>
 </head><body><main id="app"></main></body></html>

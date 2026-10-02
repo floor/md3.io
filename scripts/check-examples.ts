@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { chromium, type Page } from "playwright";
+import { preparePackageStylesCheck } from "./check-example-styles";
 import { handleRequest } from "../server";
 import { examples, FRAMEWORKS, exampleVariantIds, exampleReferenceId } from "../examples";
 
@@ -49,7 +50,9 @@ try {
       const problems: string[] = [];
       page.on("pageerror", (error) => problems.push(error.message));
       page.on("console", (message) => { if (message.type() === "error" || message.type() === "warning") problems.push(message.text()); });
+      const checkStyles = await preparePackageStylesCheck(page, example);
       await page.goto(`${server.url}examples/${example.slug}/frame/${id}/`);
+      await checkStyles();
       const app = page.locator("#app");
       await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
       await page.waitForTimeout(100); // elements upgrade and adapters mount
