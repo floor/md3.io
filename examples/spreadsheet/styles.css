@@ -10,6 +10,7 @@
 
 .csv__find[hidden], .csv__empty[hidden], .csv__error[hidden] { display: none; }
 @media (max-width: 480px) { .csv__toolbar > *, .csv__find > * { max-width: 100%; } }
+.csv__cell--editing { overflow: visible; }
 .csv__cell--editing > * { width: 100%; min-width: 0; }
 
 .csv__appbar { position: relative; height: 64px; flex: 0 0 64px; }

@@ -81,7 +81,7 @@ function render() {
         }
       });
     },
-    unavailable(message) { error.textContent = message; error.hidden = false; },
+    reportError(message) { error.textContent = message; error.hidden = !message; },
     sort(column, direction) { view.sort = { column: column.id, direction }; render(); },
     filter(column, value) { view.exact = { column: column.id, value }; render(); status.textContent = `Filter: ${column.label} equals ${value || '(empty)'}.`; },
     hide(column) { view = hideColumn(doc, view, column.id); render(); show.element.focus(); },

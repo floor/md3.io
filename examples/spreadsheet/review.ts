@@ -1,4 +1,4 @@
-// Isolated review harness until shared variant registration is approved.
+// Review harness: frame-* modes use the registered frame after bun run build.
 // uptime; bun examples/spreadsheet/review.ts build <mktemp directory>
 // uptime; bun examples/spreadsheet/review.ts check <same directory>
 // uptime; bun examples/spreadsheet/review.ts screens <same directory> <screens directory>
@@ -43,10 +43,11 @@ if (mode === 'build') {
     const problems: string[] = [];
     page.on('pageerror', error => { problems.push(error.stack ?? error.message); console.error('PAGE ERROR', error.message); });
     page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') problems.push(message.text()); });
-    await page.goto(`${server.url}csv-review/`);
+    await page.goto(`${server.url}${mode.startsWith('frame-') ? 'examples/spreadsheet/frame/vanilla/' : 'csv-review/'}`);
     page.setDefaultTimeout(8000);
-    if (mode === 'screens') await screenshots(page, screenDir!);
-    else if (mode === 'audit') await audit(page, screenDir!);
+    if (mode.endsWith('screens')) await screenshots(page, screenDir!);
+    else if (mode.endsWith('editing')) await screenshots(page, screenDir!, new Set(['editing']));
+    else if (mode.endsWith('audit')) await audit(page, screenDir!);
     else await steps(page);
     if (problems.length) throw new Error(problems.join('\n'));
     console.log(`CSV review ${mode} passed.`);

@@ -1,7 +1,7 @@
 import type { Page } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { upload } from './check';
-export default async function screenshots(page: Page, directory: string) {
+export default async function screenshots(page: Page, directory: string, states?: Set<string>) {
   await mkdir(directory, { recursive: true });
   const evidence: unknown[] = [];
   for (const width of [390, 720, 1024, 1280]) for (const theme of ['light', 'dark']) {
@@ -10,9 +10,10 @@ export default async function screenshots(page: Page, directory: string) {
     await page.evaluate(theme => { document.documentElement.dataset.themeMode = theme; }, theme);
     await page.evaluate(() => document.fonts.ready);
     const shot = async (state: string) => {
+      if (states && !states.has(state)) return;
       // Component springs use JS timing as well as CSS; let the surface settle.
       await page.waitForTimeout(650);
-      await page.screenshot({ path: `${directory}/${width}-${theme}-${state}.png`, fullPage: true, animations: 'disabled' });
+      await page.screenshot({ path: `${directory}/${width}-${theme}-${state}.png`, fullPage: false, animations: 'disabled' });
     };
     await shot('loaded');
     await page.getByRole('button', { name: 'Tools', exact: true }).click(); await shot('tools');

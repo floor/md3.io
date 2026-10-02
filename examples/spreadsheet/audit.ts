@@ -26,10 +26,12 @@ export default async function audit(page: Page, directory: string) {
       before: { width: before.width, height: before.height }, after: { width: after.width, height: after.height },
       transition: s.transitionDuration, animation: s.animationDuration, color: s.color, background: s.backgroundColor };
   }));
-  const reducedMotion = await page.evaluate(() => [...document.querySelectorAll('[class*="mtrl-side-sheet"], [class*="mtrl-menu"], .csv__cell')].map(e => ({
+  const reducedMotion = await page.evaluate(() => [...document.querySelectorAll('[class*="mtrl-side-sheet"], [class*="mtrl-menu"], .csv__cell, .csv__table [role=row]')].map(e => ({
     className: e.className, transition: getComputedStyle(e).transitionDuration, animation: getComputedStyle(e).animationDuration,
   })));
   const result = { initial, tabbableCells, editing, controls, reducedMotion };
   await writeFile(`${directory}/accessibility-current.json`, JSON.stringify(result, null, 2));
+  const resources = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.toJSON()));
+  await writeFile(`${directory}/assets-evidence.json`, JSON.stringify(resources, null, 2));
   console.log(JSON.stringify({ tabbableCells, editing }, null, 2));
 }

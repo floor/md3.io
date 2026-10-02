@@ -16,7 +16,7 @@ export interface TableActions {
   sort(column: Column, direction: 'asc' | 'desc'): void;
   filter(column: Column, value: string): void;
   hide(column: Column): void;
-  unavailable(message: string): void;
+  reportError(message: string): void;
 }
 export function mountTable(host: HTMLElement, doc: Document, view: View, rows: Row[], actions: TableActions) {
   const columns = visibleColumns(doc, view);
@@ -100,11 +100,13 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
     // Keep data intact while the reported library initialization defect is unresolved.
     if (editor.getValue() !== valueAt(doc, rows[active.row], column)) {
       editor.destroy(); editor = undefined; editingRow = -1; list.destroy(); list = makeList();
-      actions.unavailable('Cell editing is waiting for a Material text-field fix. Your cell is unchanged.');
+      actions.reportError('Cell editing is waiting for a Material text-field fix. Your cell is unchanged.');
       return;
     }
+    actions.reportError('');
     editingCell = cell; cell.classList.add('csv__cell--editing'); cell.replaceChildren(editor.element);
-    editor.input.focus(); editor.input.select();
+    cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    editor.input.focus({ preventScroll: true }); editor.input.select();
     editor.input.addEventListener('keydown', nativeEvent => {
       const event = nativeEvent as KeyboardEvent;
       event.stopPropagation();
@@ -118,8 +120,6 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
     }));
   }
   host.addEventListener('keydown', onKey);
-  const onScroll = () => finish(true, 0, false);
-  host.addEventListener('scroll', onScroll, true);
   function onKey(event: KeyboardEvent) {
     if (editor || !(event.target instanceof HTMLElement) || event.target.closest('button, input, textarea, [role=menu]')) return;
     const moves: Record<string, [number, number]> = {
@@ -143,6 +143,6 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
       if (cell) startEdit(cell);
     },
     firstColumn: columns[0]?.id,
-    destroy() { destroyed = true; finish(false, 0, false); host.removeEventListener('keydown', onKey); host.removeEventListener('scroll', onScroll, true); controls.forEach(c => c.destroy()); list.destroy(); },
+    destroy() { destroyed = true; finish(false, 0, false); host.removeEventListener('keydown', onKey); controls.forEach(c => c.destroy()); list.destroy(); },
   };
 }
