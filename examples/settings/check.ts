@@ -42,6 +42,16 @@ export default async (page: Page): Promise<void> => {
   assert.equal(await wifiRow.getByRole("switch").count(), 1, "whose control is the trailing switch");
   assert.equal(await wifiRow.locator(".mtrl-list__headline").textContent(), "Wi-Fi", "and the row's headline names it");
 
+  // A trailing control is the app's to name (list.md), and the app names it through the
+  // switch's public ariaLabel; the row's supporting text stays the row's — the list
+  // exposes no public handle on it (FLO-590), and the switch's own `supportingText`
+  // renders a visible helper, not a description. So a switch row has a name and no
+  // description, and the row keeps showing its text.
+  const airplaneSwitch = page.getByRole("switch", { name: "Airplane mode" });
+  assert.equal(await airplaneSwitch.getAttribute("aria-label"), "Airplane mode", "the row's text is the switch's accessible name");
+  assert.equal(await airplaneSwitch.getAttribute("aria-describedby"), null, "no description is wired to it (FLO-590)");
+  assert.equal(await page.locator('[data-id="airplane"]').getByText("Turns off Wi-Fi and Bluetooth").isVisible(), true, "while the row still shows its supporting text");
+
   // 2. Medium: two panes, 50% of the window each.
   await page.setViewportSize({ width: 700, height: 800 });
   assert.ok(Math.abs((await paneWidth(listPane)) - (await paneWidth(detailPane))) <= 1, "at medium the panes are 50% each");
@@ -115,6 +125,9 @@ export default async (page: Page): Promise<void> => {
   await airplane.click();
   assert.equal(await wifi.isEnabled(), true, "turning airplane mode off enables Wi-Fi again");
   assert.equal(await wifi.isChecked(), false, "it stays off");
+  // The rule as written (state.ts): turning it off leaves them off — both of them.
+  assert.equal(await bluetooth.isEnabled(), true, "Bluetooth is enabled again");
+  assert.equal(await bluetooth.isChecked(), false, "and stays off too");
 
   // 7. Reset asks first — focus inside the dialog — then resets and offers the undo.
   await row(/Display/).click();
@@ -136,6 +149,22 @@ export default async (page: Page): Promise<void> => {
   await dialog.waitFor({ state: "hidden" });
   assert.equal(await darkTheme.isChecked(), true, "Cancel changes nothing");
 
+  // Rule 6's other two ways out: Escape, and a click on the scrim — neither changing
+  // anything. The dialog is mounted in the app's own element (its `container`), so the
+  // overlay covers the app's box; the click goes beside the surface, inside that box.
+  await page.getByRole("button", { name: "Reset all settings" }).click();
+  await dialog.waitFor();
+  await page.keyboard.press("Escape");
+  await dialog.waitFor({ state: "hidden" });
+  assert.equal(await darkTheme.isChecked(), true, "Escape closes the dialog and changes nothing");
+
+  await page.getByRole("button", { name: "Reset all settings" }).click();
+  await dialog.waitFor();
+  const surface = (await dialog.boundingBox())!;
+  await page.mouse.click(Math.max(surface.x - 40, 28), surface.y + surface.height / 2);
+  await dialog.waitFor({ state: "hidden" });
+  assert.equal(await darkTheme.isChecked(), true, "a click on the scrim closes it and changes nothing");
+
   await page.getByRole("button", { name: "Reset all settings" }).click();
   await dialog.waitFor();
   await page.getByRole("button", { name: "Reset", exact: true }).click();
@@ -149,12 +178,42 @@ export default async (page: Page): Promise<void> => {
   // the ones without an action. Five seconds in, this one is still there.
   await page.waitForTimeout(5000);
   assert.equal(await snackbar.isVisible(), true, "the snackbar with its action is still on screen after 5 s");
-  await page.getByRole("button", { name: "Undo" }).click();
+  // The snackbar is reachable by keyboard, as the note claims and the component's missing
+  // shortcut (finding 9) leaves as the only way: Tab to Undo, Enter to take it.
+  const undoButton = page.getByRole("button", { name: "Undo" });
+  let onUndo = false;
+  for (let presses = 0; presses < 30 && !onUndo; presses += 1) {
+    await page.keyboard.press("Tab");
+    onUndo = await undoButton.evaluate((el) => el === document.activeElement);
+  }
+  assert.equal(onUndo, true, "Tab reaches the snackbar's Undo");
+  await page.keyboard.press("Enter");
   await snackbar.waitFor({ state: "hidden" });
   assert.equal(await darkTheme.isChecked(), true, "Undo restores what was there");
   assert.equal(await appSurface(), "rgb(20, 18, 24)", "the dark app with it");
   assert.equal(await brightness.getAttribute("aria-valuenow"), "61", "including the Brightness");
   assert.equal(await page.getByRole("heading", { level: 2, name: "Display" }).isVisible(), true, "the open category stays open");
+
+  // A second reset while its snackbar is still up: still the one snackbar, and its Undo
+  // is the second reset's — `show()` on a visible snackbar is a no-op in the library, so
+  // the app's `undoState` (re-snapshotted on every reset) is what the action uses. A
+  // change made between the two resets comes back, not the state before the first.
+  await page.getByRole("button", { name: "Reset all settings" }).click();
+  await dialog.waitFor();
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await dialog.waitFor({ state: "hidden" });
+  await snackbar.waitFor();
+  await darkTheme.click();
+  assert.equal(await darkTheme.isChecked(), true, "a change between the two resets");
+  await page.getByRole("button", { name: "Reset all settings" }).click();
+  await dialog.waitFor();
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await dialog.waitFor({ state: "hidden" });
+  assert.equal(await page.getByRole("status").count(), 1, "the second reset's snackbar replaces the first, one at a time");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await snackbar.waitFor({ state: "hidden" });
+  assert.equal(await darkTheme.isChecked(), true, "Undo after the second reset restores the state before it");
+  assert.equal(await brightness.getAttribute("aria-valuenow"), "60", "the second reset's snapshot, not the first's (61)");
 
   // Its close button dismisses it, and the reset stands.
   await page.getByRole("button", { name: "Reset all settings" }).click();
@@ -174,6 +233,52 @@ export default async (page: Page): Promise<void> => {
   assert.equal(await page.getByRole("heading", { level: 1, name: "Settings" }).isVisible(), true, "a compact window opens under the app bar's Settings");
   assert.equal(await page.getByRole("heading", { level: 2, name: "Display" }).isVisible(), false, "with no detail open");
   assert.equal(await page.getByRole("button", { name: "Back" }).count(), 0, "and no Back button in sight");
+
+  // 9. The app's state is per mount, and one mount can be torn down: a second mount made
+  // while the page is two-pane opens its own first category (the module-level pane mode
+  // this replaced would have left it blank), and destroy() takes that mount back out —
+  // element, observer, listeners and components — leaving the first app as it was. The
+  // example exposes the factory and the live app on `window.settingsExample`, the way the
+  // site's theme app exposes itself (src/client/theme-app/index.ts).
+  await page.setViewportSize({ width: 700, height: 800 });
+  await row(/Display/).click();
+  const mounted = await page.evaluate(() => {
+    type Mount = { element: HTMLElement; destroy: () => void };
+    const check = window as unknown as { settingsExample: { createSettingsApp: () => Mount }; settingsSecond?: Mount };
+    const second = check.settingsExample.createSettingsApp();
+    const host = document.createElement("div");
+    // Off the page's flow, 800 px wide: the app reads its own box, lays itself out as two
+    // panes and opens its first category — with no module state to inherit.
+    host.style.cssText = "position:fixed;top:0;left:-10000px;width:800px;";
+    host.append(second.element);
+    document.body.append(host);
+    check.settingsSecond = second;
+    const open = (root: ParentNode | null): string | null => root?.querySelector('[aria-pressed="true"]')?.getAttribute("data-id") ?? null;
+    return {
+      apps: document.querySelectorAll(".settings-app").length,
+      second: open(second.element),
+      first: open(document.querySelector(".settings-app")),
+    };
+  });
+  assert.equal(mounted.apps, 2, "a second mount stands beside the first");
+  assert.equal(mounted.second, "network", "and opens its own first category, not the first app's");
+  assert.equal(mounted.first, "display", "while the first app keeps its own state");
+
+  const torn = await page.evaluate(() => {
+    type Mount = { element: HTMLElement; destroy: () => void };
+    const second = (window as unknown as { settingsSecond?: Mount }).settingsSecond!;
+    const host = second.element.parentElement;
+    second.destroy();
+    host?.remove();
+    return {
+      apps: document.querySelectorAll(".settings-app").length,
+      connected: second.element.isConnected,
+      first: document.querySelector(".settings-app")?.querySelectorAll('[aria-pressed="true"]').length ?? 0,
+    };
+  });
+  assert.equal(torn.apps, 1, "destroy() takes the second mount, element and all, back out");
+  assert.equal(torn.connected, false, "its element off the page");
+  assert.equal(torn.first, 1, "and the first app untouched");
 
   await page.setViewportSize(viewport ?? { width: 1280, height: 720 });
 };
