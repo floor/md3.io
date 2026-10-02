@@ -4,7 +4,7 @@
 import type { App } from '../core/foundation';
 
 export const withReactionWiring = () => (app: App) => {
-  const { ui, scheme, palettes, state, variant, source } = app;
+  const { ui, scheme, palettes, state, variant, source, copy } = app;
   const controls = () => {
     const theme = source.current();
     if (ui.theme.getValue() !== theme.name) ui.theme.setValue(theme.name);
@@ -28,7 +28,7 @@ export const withReactionWiring = () => (app: App) => {
     const url = new URL(location.href);
     url.search = variant.params().toString();
     if (url.href !== location.href) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
-  });
+  }, () => copy.tell('Could not apply this scheme'));
   state.on('theme', render);
   state.on('variant', render);
   state.on('contrast', render);
