@@ -221,12 +221,18 @@ try {
   await until(() => page.locator('.theme-app__note').textContent().then(text => !!text?.startsWith('Original colours set by hand; variants generated from #')), true, 'A hand-made theme says its colours are set by hand, and where its variants come from');
   // Ten switches: listeners and elements stay flat, and a switch paints within a frame.
   const counts = () => page.evaluate(() => ({ listeners: (window as unknown as { __listeners: number }).__listeners, nodes: document.getElementsByTagName('*').length }));
+  // mtrl takes a closed menu out of the page on a timer, after its closing animation, and
+  // pickTheme only waits for the item to be hidden: each count waits for the select's menu
+  // (38 elements) to have left, so both are of the same page and must be equal.
+  const menuGone = () => page.waitForFunction(() => !document.querySelector('.mtrl-menu'));
+  await menuGone();
   const before = await counts();
   const names = ['Desert', 'Summer', 'Ocean', 'Brownbeige', 'Forest', 'Baseline', 'Sageivory', 'Autumn', 'Tealcaramel', 'Ocean'];
   for (const name of names) { await pickTheme(name); await until(themeValue, name, `The select shows ${name}`); }
+  await menuGone();
   const after = await counts();
   console.log(`Ten theme switches: listeners ${before.listeners} → ${after.listeners}, elements ${before.nodes} → ${after.nodes}`);
-  assert(after.listeners === before.listeners && after.nodes <= before.nodes, `Ten theme switches add no listener and no element: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  assert(after.listeners === before.listeners && after.nodes === before.nodes, `Ten theme switches add no listener and no element, and lose none: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
   const switchMs = await page.evaluate(async () => {
     const app = (window as unknown as { themeApp: { state: { set(key: string, value: unknown): void } } }).themeApp;
     // From the change to its colours computed and laid out: the work the next frame waits on.
