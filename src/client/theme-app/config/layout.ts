@@ -23,7 +23,7 @@ const CONTRAST_ICONS = [standard, medium, high];
 /** The bar's tooltips, by part (set up by withSetup). */
 export const TOOLTIPS: Record<string, string> = {
   image: 'Make a theme from an image. It stays in your browser: nothing is uploaded.',
-  download: 'Download this theme: CSS, SCSS or JSON',
+  download: 'Download this theme: CSS or JSON',
   share: 'Copy a link to this theme',
 };
 export const PALETTES = [['primary', 'Primary'], ['secondary', 'Secondary'], ['tertiary', 'Tertiary'], ['neutral', 'Neutral'], ['neutralVariant', 'Neutral Variant'], ['error', 'Error']] as const;

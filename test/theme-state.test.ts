@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import * as themeState from '../src/shared/theme-state';
 import { cornerRadius, defaultState, normalize, parse, serialize, toCss, toTokens, type ThemeBase } from '../src/shared/theme-state';
 import { themeBase } from '../src/server/tokens';
 
@@ -41,6 +42,9 @@ describe('theme state', () => {
     expect(css).toContain('<html data-theme="ocean" data-theme-mode="dark">');
     expect(css).toContain('  /* Shape */\n  --mtrl-sys-shape-corner-small: 4px;');
     expect(toCss(defaultState(), base)).not.toContain('mtrl/themes/');
+  });
+  test('the colour theme files are CSS and JSON only: SCSS is gone', () => {
+    expect(Object.keys(themeState).filter(key => key.startsWith('colorTheme'))).toEqual(['colorThemeCss', 'colorThemeJson']);
   });
   test('mtrl\'s own scale: every editable step can be overridden', () => {
     const editable = Object.entries(themeBase.shape).filter(([, radius]) => radius > 0 && radius < 100);

@@ -1,13 +1,15 @@
-// The theme shown, as a file: CSS, SCSS or JSON, from mtrl's menu on the download
+// The theme shown, as a file: CSS or JSON, from mtrl's menu on the download
 // button. The files are written by the Styles section's exporter (theme-state.ts) from
 // mtrl's own schemeToTokens, so they are mtrl's theme shape.
 import createMenu from 'mtrl/components/menu';
 import { schemeToTokens } from 'mtrl/core/theme';
-import { colorThemeCss, colorThemeJson, colorThemeScss, type ColorThemeFile } from '../../../shared/theme-state';
+import { colorThemeCss, colorThemeJson, type ColorThemeFile } from '../../../shared/theme-state';
 import type { App } from '../core/foundation';
 
-const FORMATS = { css: colorThemeCss, scss: colorThemeScss, json: colorThemeJson } as const;
+const FORMATS = { css: colorThemeCss, json: colorThemeJson } as const;
 type Format = keyof typeof FORMATS;
+/** The download menu's items, from the formats: CSS, JSON. */
+export const FORMAT_ITEMS: { id: Format; text: string }[] = (Object.keys(FORMATS) as Format[]).map(id => ({ id, text: id.toUpperCase() }));
 
 export const withDownload = () => (app: App) => {
   const { ui, roles, copy } = app;
@@ -34,7 +36,7 @@ export const withDownload = () => (app: App) => {
   };
   const menu = createMenu({
     opener: ui.download.element,
-    items: [{ id: 'css', text: 'CSS' }, { id: 'scss', text: 'SCSS' }, { id: 'json', text: 'JSON' }],
+    items: FORMAT_ITEMS,
     position: 'bottom-end',
   });
   menu.on('select', event => save(event.itemId as Format));

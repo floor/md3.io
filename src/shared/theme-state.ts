@@ -179,28 +179,6 @@ export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string =>
   '',
 ].join('\n');
 
-/** SCSS: mtrl's create-theme form (src/styles/themes), with its status colours. */
-export const colorThemeScss = ({ name, tokens, note }: ColorThemeFile): string => {
-  const scss = (mode: Record<string, string>) => Object.fromEntries(Object.entries(mode).map(([property, value]) => [property.replace(/^--mtrl-/, '--#{$prefix}-'), value]));
-  return [
-    `// mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
-    '// In mtrl\'s create-theme form, as its own themes are written (mtrl/src/styles/themes).',
-    '@use "mtrl/src/styles/abstract/base" as *;',
-    '@use "mtrl/src/styles/themes/base-theme" as *;',
-    '',
-    `@include create-theme("${name}") {`,
-    '    @include status-colors-light();',
-    lines(scss(tokens.light), '    '),
-    '',
-    '    &[data-theme-mode="dark"] {',
-    '        @include status-colors-dark();',
-    lines(scss(tokens.dark), '        '),
-    '    }',
-    '}',
-    '',
-  ].join('\n');
-};
-
 /** JSON: design tokens (role → colour, light and dark), with what the theme was made from. */
 export const colorThemeJson = ({ name, tokens, origin, note }: ColorThemeFile): string => {
   const roles = (mode: Record<string, string>) => Object.fromEntries(Object.entries(mode).map(([property, value]) => [property.replace(/^--mtrl-sys-color-/, ''), { $type: 'color', $value: value }]));

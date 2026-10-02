@@ -292,7 +292,7 @@ try {
   assert(afterModes.listeners === beforeModes.listeners && afterModes.nodes <= beforeModes.nodes, `Ten site mode toggles add no listener and no element: ${JSON.stringify(beforeModes)} → ${JSON.stringify(afterModes)}`);
   await toggleSite();
   // Download: desert's CSS holds every THEME_ROLES token, light and dark, as mtrl's
-  // shipped desert.css has them; the SCSS is mtrl's create-theme form; the JSON parses.
+  // shipped desert.css has them; the JSON parses.
   const downloadAs = async (format: string) => {
     const download = page.waitForEvent('download');
     await page.locator('.theme-app__actions [name="download"]').click();
@@ -313,12 +313,10 @@ try {
     assert(value(lightBlock) === declared(themeCss, role), `Downloaded light ${role}: ${value(lightBlock)}, desert.css has ${declared(themeCss, role)}`);
     assert(value(darkBlock) === declaredDark(role), `Downloaded dark ${role}: ${value(darkBlock)}, desert.css has ${declaredDark(role)}`);
   }
-  const scss = await downloadAs('SCSS');
-  assert(scss.name === 'mtrl-theme-desert.scss' && scss.text.includes('@include create-theme("desert")') && scss.text.includes(`--#{$prefix}-sys-color-primary: ${desertPrimary};`), 'The SCSS is mtrl\'s create-theme form');
   const json = await downloadAs('JSON');
   const tokens = JSON.parse(json.text);
   assert(json.name === 'mtrl-theme-desert.json' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON has the seed, the variant and every role');
-  console.log(`Download: ${cssFile.name}, ${scss.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
+  console.log(`Download: ${cssFile.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
 
   // The axes: the theme select lists themes (seeds), not mtrl's variant themes; the
   // variant and contrast regenerate the scheme from the theme's seed.
