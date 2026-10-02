@@ -207,7 +207,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (match && isGuide(match[1]!)) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/${match[1]}/` } });
     const document = match ? renderDocument(match[1]!) : null;
     response = document
-      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the material ${document.title.toLowerCase()} component.`, 'document', { ...document, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
+      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...document, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
       : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
