@@ -44,7 +44,7 @@ export const layout = ({ themes, roles, selected }: LayoutData): unknown[] => [
     [createSelect, 'theme', { variant: 'outlined', density: 'compact', label: 'Theme', value: selected, options: themes.map(({ name, label }) => ({ id: name, text: label })) }],
     [createSelect, 'variant', { variant: 'outlined', density: 'compact', label: 'Variant', value: 'tonal-spot', options: VARIANT_OPTIONS, supportingText: ' ' }],
     [createButtonGroup, 'contrast', {
-      kind: 'connected', selection: 'single', required: true, size: 's', variant: 'outlined',
+      kind: 'connected', selection: 'single', required: true, size: 's', variant: 'outlined', ariaLabel: 'Contrast',
       buttons: CONTRASTS.map(([value, , label], i) => ({ value: String(value), icon: CONTRAST_ICONS[i], ariaLabel: label, selected: value === 0 })),
     }],
   ],
