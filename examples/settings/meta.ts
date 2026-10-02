@@ -8,7 +8,7 @@ export default {
   components: ["top-app-bar", "icon-button", "list", "switch", "slider", "button", "dialog", "snackbar"],
   about: [
     "A settings app: five categories as a list, one detail screen per category whose rows carry a switch or a slider, a reset that asks first, and a snackbar that can undo it. On a phone the detail replaces the list under a small top app bar with Back; from a 648 px window the two panes sit side by side.",
-    "Two single-choice screens — Network &amp; internet's network type and Display's text size — are not built yet: the list cannot yet hold one radio per row with the row selecting it (FLO-581).",
+    "Two single-choice screens — Network &amp; internet's network type and Display's text size — are not built yet: the list cannot yet hold one radio per row with the row selecting it.",
   ],
   how: [
     "Every setting is one row of the fixture in <code>data.ts</code>; its control is built from it and sits in the row's trailing slot, and the whole state is applied back to every control after each change.",

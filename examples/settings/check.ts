@@ -44,12 +44,12 @@ export default async (page: Page): Promise<void> => {
 
   // A trailing control is the app's to name (list.md), and the app names it through the
   // switch's public ariaLabel; the row's supporting text stays the row's — the list
-  // exposes no public handle on it (FLO-590), and the switch's own `supportingText`
+  // exposes no public handle on it, and the switch's own `supportingText`
   // renders a visible helper, not a description. So a switch row has a name and no
   // description, and the row keeps showing its text.
   const airplaneSwitch = page.getByRole("switch", { name: "Airplane mode" });
   assert.equal(await airplaneSwitch.getAttribute("aria-label"), "Airplane mode", "the row's text is the switch's accessible name");
-  assert.equal(await airplaneSwitch.getAttribute("aria-describedby"), null, "no description is wired to it (FLO-590)");
+  assert.equal(await airplaneSwitch.getAttribute("aria-describedby"), null, "no description is wired to it");
   assert.equal(await page.locator('[data-id="airplane"]').getByText("Turns off Wi-Fi and Bluetooth").isVisible(), true, "while the row still shows its supporting text");
 
   // 2. Medium: two panes, 50% of the window each.

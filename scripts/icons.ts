@@ -15,7 +15,7 @@ const names = [
   'smartphone', 'tablet', 'desktop_windows', 'screen_rotation',
   // The Themes app's bar (src/client/theme-app/).
   'share', 'image', 'brightness_5', 'brightness_6', 'brightness_7', 'content_copy',
-  // The Settings example (FLO-398): its five first-choice symbols, approved by the
+  // The Settings example: its five first-choice symbols, approved by the
   // review of the design note (2026-10-02).
   'wifi', 'notifications', 'lock', 'arrow_back', 'chevron_right',
 ];
