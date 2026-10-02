@@ -2,9 +2,9 @@
 // carousel through its public API (next, prev, goTo, getCurrentSlide, slides.getCount),
 // and following it through its `change` event, so swiping, the keyboard and the
 // trackpad move the remote as well. Created and destroyed with each carousel.
-import createIconButton from 'mtrl/components/icon-button';
-import createSlider from 'mtrl/components/slider';
-import type { CarouselComponent } from 'mtrl/components/carousel';
+import createIconButton from 'material/components/icon-button';
+import createSlider from 'material/components/slider';
+import type { CarouselComponent } from 'material/components/carousel';
 import { symbols } from '../shared/icons';
 
 export function createCarouselRemote(carousel: CarouselComponent): { element: HTMLElement; destroy: () => void } {
