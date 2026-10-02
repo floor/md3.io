@@ -13,7 +13,7 @@ const groups: Record<string, string[]> = {
   'Navigation': ['navigation-rail', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
-  'Additional references': ['form', 'colorpicker', 'segmented-button'],
+  'Additional references': ['form', 'colorpicker'],
 };
 /** The guides, before the components: how to start, how mtrl is built, and one page per way of using it. */
 export const GUIDES = ['getting-started', 'architecture', 'vanilla', 'web-components', 'react', 'vue', 'svelte', 'solid', 'theming', 'server-rendering'];
