@@ -8,16 +8,39 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { ThemeSpec } from '../node_modules/mtrl/scripts/generate-themes';
 
-// mtrl's script, run as it is, from the checkout md3.io links (file:../mtrl). That
-// checkout may not have its devDependencies installed, so its two imports are pointed
-// at md3.io's material-color-utilities (the same pinned 0.4.0) and mtrl's own source.
+// mtrl's script, copied to a temp directory and run from there, has to resolve its
+// imports from md3.io, not from mtrl's checkout (file:../mtrl): that checkout may
+// not have its devDependencies installed, and a temp directory has no package tree
+// at all. Three of its four imports need pointing elsewhere: the two bare packages,
+// material-color-utilities (the same pinned 0.4.0) and sass, at md3.io's own
+// installed copies, and the relative ../src/core/theme at mtrl's source. The
+// fourth, node:fs, is a builtin and resolves as it is.
 const mtrl = resolve(import.meta.dir, '../node_modules/mtrl');
-const script = (await Bun.file(join(mtrl, 'scripts/generate-themes.ts')).text())
-  .replace(/from "@material\/material-color-utilities"/, `from ${JSON.stringify(Bun.resolveSync('@material/material-color-utilities', import.meta.dir))}`)
-  .replace(/from "\.\.\/src\/core\/theme"/, `from ${JSON.stringify(join(mtrl, 'src/core/theme/index.ts'))}`);
+const rewrite = (source: string, specifier: string, target: string): string => {
+  const from = `from ${JSON.stringify(specifier)}`;
+  // If mtrl respells an import, the rewrite would miss and the copy would run
+  // half-rewritten; fail loudly, naming the rewrite, instead.
+  if (!source.includes(from)) throw new Error(`generate-themes.ts no longer has ${from}: update the copy's import rewrites`);
+  return source.replace(from, `from ${JSON.stringify(target)}`);
+};
+let script = await Bun.file(join(mtrl, 'scripts/generate-themes.ts')).text();
+script = rewrite(script, '@material/material-color-utilities', Bun.resolveSync('@material/material-color-utilities', import.meta.dir));
+script = rewrite(script, 'sass', Bun.resolveSync('sass', import.meta.dir));
+script = rewrite(script, '../src/core/theme', join(mtrl, 'src/core/theme/index.ts'));
 const copy = join(mkdtempSync(join(tmpdir(), 'md3-themes-')), 'generate-themes.ts');
 writeFileSync(copy, script);
-const { BASELINE_SEED, THEMES, rolesOf: mtrlRolesOf, schemeFor: mtrlSchemeFor } = await import(copy) as typeof import('../node_modules/mtrl/scripts/generate-themes');
+// The script also reads cwd-relative paths (importing it scans
+// src/styles/themes for HAND_THEMES), so the copy is imported with mtrl as the
+// working directory, as mtrl itself runs it, then md3.io's cwd is restored.
+const cwd = process.cwd();
+let generator: typeof import('../node_modules/mtrl/scripts/generate-themes');
+try {
+  process.chdir(mtrl);
+  generator = await import(copy) as typeof import('../node_modules/mtrl/scripts/generate-themes');
+} finally {
+  process.chdir(cwd);
+}
+const { BASELINE_SEED, THEMES, rolesOf: mtrlRolesOf, schemeFor: mtrlSchemeFor } = generator;
 import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec } from '../src/shared/theme-engine';
 
 const specOf = (theme: ThemeSpec): ColorSpec => ({ source: theme.seed, variant: theme.variant, contrast: theme.contrast ?? 0, ...(theme.secondary ? { core: { secondary: theme.secondary } } : {}) });
