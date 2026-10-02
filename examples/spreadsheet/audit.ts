@@ -3,6 +3,10 @@ import { writeFile } from 'node:fs/promises';
 export default async function audit(page: Page, directory: string) {
   await page.waitForSelector('.csv[data-rows="3000"]');
   const initial = await page.locator('.csv__table').ariaSnapshot();
+  const numericAlignment = await page.locator('[data-row="0"][data-column="4"]').evaluate(cell => {
+    const range = document.createRange(); range.selectNodeContents(cell);
+    return { alignment: getComputedStyle(cell).textAlign, textRight: range.getBoundingClientRect().right, cellRight: cell.getBoundingClientRect().right };
+  });
   const tabbableCells = await page.locator('.csv__cell[tabindex="0"]').count();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.locator('[data-row="0"][data-column="0"]').dblclick();
@@ -29,7 +33,7 @@ export default async function audit(page: Page, directory: string) {
   const reducedMotion = await page.evaluate(() => [...document.querySelectorAll('[class*="mtrl-side-sheet"], [class*="mtrl-menu"], .csv__cell, .csv__table [role=row]')].map(e => ({
     className: e.className, transition: getComputedStyle(e).transitionDuration, animation: getComputedStyle(e).animationDuration,
   })));
-  const result = { initial, tabbableCells, editing, controls, reducedMotion };
+  const result = { initial, numericAlignment, tabbableCells, editing, controls, reducedMotion };
   await writeFile(`${directory}/accessibility-current.json`, JSON.stringify(result, null, 2));
   const resources = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.toJSON()));
   await writeFile(`${directory}/assets-evidence.json`, JSON.stringify(resources, null, 2));
