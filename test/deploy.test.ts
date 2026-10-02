@@ -9,7 +9,7 @@ describe('deploy script', () => {
     const bin = mkdtempSync(join(tmpdir(), 'md3-deploy-dry-'));
     writeFileSync(join(bin, 'ssh'), '#!/bin/sh\necho SSH_INVOKED\nexit 97\n');
     chmodSync(join(bin, 'ssh'), 0o755);
-    const env = { ...process.env, DRY_RUN: '1', PATH: `${bin}:${process.env.PATH ?? ''}` };
+    const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', PATH: `${bin}:${process.env.PATH ?? ''}` };
     delete env.LIBRARY_REF;
     delete env.LIBRARY_URL;
     delete env.DEPLOY_HOST;
