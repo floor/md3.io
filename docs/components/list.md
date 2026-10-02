@@ -66,7 +66,9 @@ A choice emits `select` with `{ item, element, originalEvent }` before the selec
 `preventDefault()` leaves it where it was. Choosing the selected row again deselects it. The
 web component dispatches `activate` with `{ value }`, then `change` with `{ value, values }`
 when the selection moved. A trailing `control` or `custom` slot holds the app's own control,
-which a click on does not select the row. `renderItem(item, index)` renders a row the app's
+which a click on does not select the row. A trailing control is sized by its content; a
+control that fills its container, such as a slider, is not a list-row control and goes
+outside the row. `renderItem(item, index)` renders a row the app's
 way. The list renders every item; for long or remote data, use
 [vlist](https://vlist.io).
 
@@ -132,8 +134,10 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 - The list is a `list` named by `ariaLabel`, each row a `listitem`, a divider a `separator`.
 - A selectable row holds a button named by the headline and described by the supporting text,
-  with `aria-pressed` for its selection. `Up`, `Down`, `Home` and `End` move between the
-  enabled rows; `Enter` or `Space` selects.
+  with `aria-pressed` for its selection. With `trackSelection`, each row's action is a button
+  with `aria-pressed`: that is this option's contract and it stays. A listbox of options would
+  be a separate opt-in mode. `Up`, `Down`, `Home` and `End` move between
+  the enabled rows; `Enter` or `Space` selects.
 - A disabled row is `aria-disabled` and its button disabled. Leading icons are hidden from
   assistive tech; a trailing control is the app's to name.
 

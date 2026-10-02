@@ -25,19 +25,25 @@
 .catalog-stack--progress { flex-direction: row; align-items: center; gap: 32px; width: 100%; justify-content: center; }
 .catalog-stack--progress m-progress:first-child { flex: 0 1 200px; }
 
-.catalog-visual--slider m-slider, .catalog-visual--tabs m-tabs { width: min(100%, 320px); }
+.catalog-visual--slider m-slider, .catalog-visual--tabs md3-catalog-tabs { width: min(100%, 320px); }
 .catalog-visual--text-field m-text-field, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
 .catalog-visual--search m-search { width: min(100%, 320px); }
-.catalog-visual--list m-list { width: min(100%, 320px); }
+/* Three two-line rows and a dialog are taller than the card: shown at a scale that
+   leaves room around them, as the time picker is. */
+.catalog-visual--list m-list { width: 320px; zoom: 0.65; }
+.catalog-visual--dialog md3-catalog-dialog { zoom: 0.6; }
 .catalog-visual--carousel m-carousel { display: block; width: 100%; height: 148px; }
 .catalog-visual--card m-card { width: min(100%, 300px); }
 
 /* Pinned to the card's edges, as they are to the window's. */
 .catalog-visual--navigation-rail, .catalog-visual--drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
+/* The rail's three destinations are taller than the card: scaled as the list and dialog are. */
+.catalog-visual--navigation-rail m-navigation-rail { zoom: 0.6; }
 .catalog-visual--top-app-bar { align-items: flex-start; padding: 0; }
 .catalog-visual--top-app-bar m-top-app-bar { width: 100%; }
 .catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
 
+.catalog-visual--badge { gap: 32px; }
 .catalog-badge { position: relative; display: inline-flex; }
 .catalog-badge m-badge { position: absolute; top: 4px; inset-inline-end: 4px; transform: translate(40%, -40%); }
 
@@ -50,7 +56,8 @@ md3-catalog-dialog:not(:defined) { width: 320px; height: 176px; }
 md3-catalog-menu:not(:defined) { width: 112px; height: 160px; }
 md3-catalog-snackbar:not(:defined) { width: 320px; height: 48px; }
 md3-catalog-tooltip:not(:defined) { width: 120px; height: 72px; }
+md3-catalog-tabs:not(:defined) { height: 64px; }
 
 /* The time picker is a dialog-sized surface: shown at a scale that fits the card. */
-md3-catalog-timepicker { zoom: 0.4; }
+md3-catalog-timepicker { zoom: 0.34; }
 md3-catalog-timepicker:not(:defined) { width: 580px; height: 380px; }

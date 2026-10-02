@@ -5,7 +5,7 @@
 %>
 <div class="theme-app-page">
   <h1 class="sr-only">Themes</h1>
-  <p class="sr-only">mtrl's built-in themes, every colour role in light and dark, laid out as Material Theme Builder shows a scheme, with the tonal palettes. Values read from mtrl <%= it.mtrlVersion %>'s compiled theme CSS.</p>
+  <p class="sr-only">The material library's built-in themes, every colour role in light and dark, laid out as Material Theme Builder shows a scheme, with the tonal palettes. Values read from the compiled theme CSS of material <%= it.mtrlVersion %>.</p>
   <div class="theme-app" id="theme-app" data-selected="<%= it.selected %>"></div>
   <noscript><p class="theme-app__note">The Themes app needs JavaScript.</p></noscript>
   <script type="application/json" id="themes-data"><%~ JSON.stringify({ roles: it.roles, selected: it.selected, themes: data }).replaceAll('<', '\\u003c') %></script>

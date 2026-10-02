@@ -8,7 +8,7 @@ status: published
 
 A bottom app bar puts a screen's frequent actions within thumb reach on a phone: a row of icon
 buttons and, often, a [FAB](fab.md). M3 Expressive replaces it with the docked toolbar; this
-page describes the bar as mtrl ships it today. See the
+page describes the bar as `material` ships it today. See the
 [M3 bottom app bar guidelines](https://m3.material.io/components/bottom-app-bar/overview).
 
 ## Usage

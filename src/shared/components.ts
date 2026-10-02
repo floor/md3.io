@@ -6,6 +6,7 @@ import type { TooltipConfig } from 'material/components/tooltip';
 import type { CardConfig } from 'material/components/card';
 import type { ListConfig, ListItem, ListSlot } from 'material/components/list';
 import type { CarouselConfig } from 'material/components/carousel';
+import { carouselPhotos, carouselPhotoUrl } from './carousel-photos';
 import type { DividerConfig } from 'material/components/divider';
 import type { DialogConfig } from 'material/components/dialog';
 import type { BottomSheetConfig } from 'material/components/bottom-sheet';
@@ -101,6 +102,11 @@ const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
     .slice(0, Number(state.items))
     .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
+/** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
+const carouselSlides = (state: ComponentState) => {
+  const variant = pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse');
+  return carouselPhotos(variant).map(photo => ({ image: carouselPhotoUrl(variant, photo.id), alt: `${photo.title}, ${photo.location}`, ...(state.captions ? { title: photo.title, description: photo.location } : {}) }));
+};
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
   const labels = (state.content === 'places'
@@ -526,13 +532,15 @@ export const components = {
     group: 'Containment', name: 'Carousel', factory: 'createCarousel', variable: 'carousel',
     description: 'Browse a collection with Material carousel layouts. Swipe, scroll, or use the arrow keys.',
     summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
+    // The preview's remote (icon buttons and a slider), which the copied code does not build.
+    previewStyles: ['icon-button', 'slider'],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
       ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
-      ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', ['0', '1', '2', '3', '4'], '0', 'select')]),
+      ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', Array.from({ length: 24 }, (_, index) => String(index)), '0', 'select')]),
       ...section('Behavior', [toggle('snap', 'Snap to items', true)]),
     ],
-    config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: ['Highlands', 'Coast', 'Desert', 'Forest', 'Lakeside'].map((title, index) => ({ image: landscape(index), alt: `Illustrated ${title.toLowerCase()} landscape`, ...(state.captions ? { title, description: 'Take a moment to explore' } : {}) })) }),
+    config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: carouselSlides(state) }),
   },
   divider: {
     group: 'Containment', name: 'Divider', factory: 'createDivider', variable: 'divider',
@@ -740,7 +748,7 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(/^(\s*)trailingMenu: true/gm, '$1trailingMenu: true,\n$1onTrailingClick: (chip) => openMenu(chip)');
   const chipsSetup = slug === 'chips'
-    ? `${state.filterType && state.trailingMenu ? "// Anchor an mtrl menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
+    ? `${state.filterType && state.trailingMenu ? "// Anchor a material menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
       `${state.draggable ? 'chips.getChips().forEach(chip => { chip.element.draggable = true; });\n' : ''}`
     : '';
   if (slug === 'checkbox' && state.family === true) return checkboxFamilyCode(state);
@@ -866,7 +874,11 @@ function communicationCode(slug: ComponentSlug, state: ComponentState): string {
 function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
-  const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  const shown = component.config(state) as Record<string, unknown>;
+  // The preview's twenty-four photos would bury the code: three show the shape.
+  const slides = slug === 'carousel' ? (shown.slides as unknown[]) : [];
+  const config = JSON.stringify(slug === 'carousel' ? { ...shown, slides: slides.slice(0, 3) } : shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
+    .replace(/(\n  slides: \[)/, slides.length > 3 ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1');
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   let setup = '';
   if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
@@ -875,6 +887,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
     if (slug === 'divider') setup += `const container = document.createElement('div');\ncontainer.style.cssText = 'display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}';\ndivider.element.style.flex = '1';\ncontainer.append(divider.element);\ndocument.body.append(container);\n`;
     if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n";
     if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
+    if (slug === 'carousel') setup += "\n// Drive it from your own controls: carousel.next(), carousel.prev(), carousel.goTo(index).\n// 'change' reports every move: from the API, a swipe, the keyboard or a trackpad.\ncarousel.on('change', ({ value }) => console.log(`Slide ${value + 1} of ${carousel.slides.getCount()}`));\n";
   }
   return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +

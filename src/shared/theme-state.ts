@@ -131,9 +131,9 @@ export function parse(text: string, base: ThemeBase): ThemeState | null {
 /** The theme as a stylesheet: how to load the base theme, then the overrides by section. */
 export function toCss(state: ThemeState, base: ThemeBase): string {
   const lines = [
-    '/* mtrl theme, made on md3.io/styles/',
+    '/* material theme, made on md3.io/styles/',
     ' *',
-    ` * Load mtrl's base styles${state.base === 'baseline' ? '' : ` and the ${state.base} theme`}, then this file:`,
+    ` * Load material's base styles${state.base === 'baseline' ? '' : ` and the ${state.base} theme`}, then this file:`,
     ' *   import \'material/styles/base\';',
     ...(state.base === 'baseline' ? [] : [` *   import 'material/themes/${state.base}';`]),
     ' *   import \'./mtrl-theme.css\';',
@@ -146,7 +146,7 @@ export function toCss(state: ThemeState, base: ThemeBase): string {
     `  /* ${sections[key].label} */\n${Object.entries(bySection[key]!).map(([name, value]) => `  ${name}: ${value};`).join('\n')}`);
   // :root and not the theme's selector: shape and type are system-wide in mtrl
   // (base/_tokens.scss), and an unlayered rule wins over mtrl's layered base.
-  lines.push('', blocks.length ? `:root {\n${blocks.join('\n\n')}\n}` : '/* No overrides yet: the base theme as mtrl ships it. */', '');
+  lines.push('', blocks.length ? `:root {\n${blocks.join('\n\n')}\n}` : '/* No overrides yet: the base theme as material ships it. */', '');
   return lines.join('\n');
 }
 
@@ -186,9 +186,9 @@ export function downloadName(raw: unknown): string | null {
 
 /** CSS: light on [data-theme="name"], dark with data-theme-mode="dark", as mtrl's themes are. */
 export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string => [
-  `/* mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
+  `/* material theme "${name}", from md3.io/styles/themes/: ${note}`,
   ' *',
-  ' * Load mtrl\'s base styles, then this file, and name the theme on <html> (or any element):',
+  ' * Load material\'s base styles, then this file, and name the theme on <html> (or any element):',
   ' *   import \'material/styles/base\';',
   ` *   import './mtrl-theme-${name}.css';`,
   ` *   <html data-theme="${name}" data-theme-mode="light">`,
@@ -202,5 +202,5 @@ export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string =>
 /** JSON: design tokens (role → colour, light and dark), with what the theme was made from. */
 export const colorThemeJson = ({ name, tokens, origin, note }: ColorThemeFile): string => {
   const roles = (mode: Record<string, string>) => Object.fromEntries(Object.entries(mode).map(([property, value]) => [property.replace(/^--mtrl-sys-color-/, ''), { $type: 'color', $value: value }]));
-  return `${JSON.stringify({ $description: `mtrl theme "${name}", from md3.io/styles/themes/: ${note}`, name, ...(origin ? { seed: origin.seed, variant: origin.variant, contrast: origin.contrast, ...(origin.secondary ? { secondary: origin.secondary } : {}) } : {}), light: roles(tokens.light), dark: roles(tokens.dark) }, null, 2)}\n`;
+  return `${JSON.stringify({ $description: `material theme "${name}", from md3.io/styles/themes/: ${note}`, name, ...(origin ? { seed: origin.seed, variant: origin.variant, contrast: origin.contrast, ...(origin.secondary ? { secondary: origin.secondary } : {}) } : {}), light: roles(tokens.light), dark: roles(tokens.dark) }, null, 2)}\n`;
 };

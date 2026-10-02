@@ -6,7 +6,7 @@ status: published
 
 # SolidJS
 
-`material/solid` has a SolidJS component for every mtrl web component, for Solid 1.8 or later and
+`material/solid` has a SolidJS component for every `material` web component, for Solid 1.8 or later and
 SolidStart. Each one renders its `<m-*>` element, so it looks and behaves exactly as the element
 does. This page covers only what is particular to Solid; [Getting started](../getting-started/)
 has the install and the base stylesheet, and each component page has its options and events.
@@ -36,7 +36,7 @@ the elements' styles, so the base stylesheet is the only CSS you add.
 
 Props stay reactive: pass a signal's value and the element follows it. On the server they are
 rendered as attributes, so the markup carries them. In the browser, Solid sets a custom
-element's props as properties; every mtrl element, and every child like `<Tab>`, has a property
+element's props as properties; every `material` element, and every child like `<Tab>`, has a property
 for each attribute, so both reach the same place. `false` removes a boolean attribute. Anything
 else you pass, such as `class`, `id` or `data-*`, lands on the element.
 
@@ -193,7 +193,7 @@ export function Size() {
 }
 ```
 
-Solid sets a child's props as properties, often before mtrl has defined the elements. mtrl
+Solid sets a child's props as properties, often before `material` has defined the elements. `material`
 keeps them from 0.10.0-next.2 on; with an earlier version, a `<Tab>` rendered in the browser
 lost its `value`.
 

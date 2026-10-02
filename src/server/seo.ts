@@ -78,7 +78,7 @@ const author = { '@type': 'Organization', name: 'Floor IO', url: 'https://floor.
 export function structuredData(path: string, name: string, description: string, section: string): object[] {
   if (path === '/') return [
     {
-      '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'mtrl', applicationCategory: 'DeveloperApplication', operatingSystem: 'Web',
+      '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'material', applicationCategory: 'DeveloperApplication', operatingSystem: 'Web',
       url: SITE, description, author, offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' }, softwareVersion: mtrlVersion,
       license: 'https://opensource.org/licenses/MIT', codeRepository: 'https://github.com/floor/material', programmingLanguage: { '@type': 'ComputerLanguage', name: 'TypeScript' },
     },

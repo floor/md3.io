@@ -147,7 +147,7 @@ const M3_GROUPS: { label: string; roles: string[] }[] = [
   { label: 'Other', roles: ['shadow', 'scrim'] },
 ];
 /** mtrl's status roles, beyond M3's scheme, in every theme since mtrl#291 (badges read them). */
-const STATUS_GROUP = { label: 'Status', note: 'mtrl adds these to every theme, beyond the M3 scheme.', roles: ['success', 'on-success', 'warning', 'on-warning', 'info', 'on-info'] };
+const STATUS_GROUP = { label: 'Status', note: 'The material library adds these to every theme, beyond the M3 scheme.', roles: ['success', 'on-success', 'warning', 'on-warning', 'info', 'on-info'] };
 
 /** Every role any theme declares, in either mode. */
 export const allRoles: Set<string> = new Set([

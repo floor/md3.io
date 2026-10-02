@@ -8,8 +8,8 @@
 %>
 <div class="styles-layout">
 <div class="page-wrap styles-page styles-color" data-styles-page="color">
-  <header class="page-heading"><span class="eyebrow">STYLES / COLOR</span><h1>Color</h1><p>The color roles mtrl components are painted with, in each theme and mode.</p></header>
-  <p class="styles-source">Values read from mtrl's compiled theme CSS · mtrl <%= it.mtrlVersion %></p>
+  <header class="page-heading"><span class="eyebrow">STYLES / COLOR</span><h1>Color</h1><p>The color roles <code>material</code>'s components are painted with, in each theme and mode.</p></header>
+  <p class="styles-source">Values read from <code>material</code>'s compiled theme CSS · <code>material</code> <%= it.mtrlVersion %></p>
   <div class="styles-toolbar" role="group" aria-label="Color scheme">
     <label for="color-theme">Theme</label>
     <select id="color-theme" class="ui-select"><% it.themes.forEach(name => { %><option value="<%= name %>" <%= name === theme ? 'selected' : '' %>><%= title(name) %></option><% }); %></select>
@@ -44,7 +44,7 @@
     </ul>
   </section>
   <% }); %>
-  <% if (it.missingGroups.length) { %><p class="styles-note">Not in mtrl yet: the M3 <%= it.missingGroups.join(', ').toLowerCase() %> roles. This page shows only the roles mtrl's CSS declares.</p><% } %>
+  <% if (it.missingGroups.length) { %><p class="styles-note">Not in <code>material</code> yet: the M3 <%= it.missingGroups.join(', ').toLowerCase() %> roles. This page shows only the roles its CSS declares.</p><% } %>
   <script type="application/json" id="color-tokens"><%~ JSON.stringify({ themes: data, aa: it.AA_TEXT }).replaceAll('<', '\\u003c') %></script>
 </div>
 <%~ include('styles-preview', { ...it, appearance: false }) %>
