@@ -8,11 +8,27 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .header__logo { font-size: 23px; letter-spacing: -1px; white-space: nowrap; }
 /* The mark at the wordmark's cap height, its foot on the baseline. */
 .header__mark { display: inline-block; width: 20px; height: 20px; margin-right: 7px; vertical-align: -1px; }
-/* On a phone the mark costs the header its width: the logo gives up side padding, and the
-   section's name gives way (an ellipsis) before the buttons are pushed off the screen. */
+/* On a phone the mark costs the header its width, so the logo gives up side padding.
+   Under 600px the breadcrumb hides and the wordmark stays whole. From 600px up the
+   longest section name fits, so it no longer ellipsizes. */
 @media (max-width: 720px) {
   .header__logo { padding: 3px 4px; }
-  .header__section { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 599px) {
+  .header__sep,
+  .header:not(.header--section-only) .header__section { display: none; }
+  /* The title does not name the section: the name stays for assistive technology, the same as .sr-only. The separator is hidden. */
+  .header--section-only .header__section {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 }
 .brand-dot { color: var(--accent-text); }
 .header__section { font-size: var(--fs-base); }

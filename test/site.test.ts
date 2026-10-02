@@ -18,6 +18,14 @@ describe('site routes and documentation', () => {
       expect(await response.text()).toContain('<!doctype html>');
     }
   });
+  test('the breadcrumb separator is hidden from assistive technology', async () => {
+    expect(await (await get('/docs/')).text()).toContain('<span class="header__sep" aria-hidden="true">/');
+  });
+  test('a guide keeps the section name and the docs overview does not', async () => {
+    const headerClass = (html: string) => html.match(/<header class="([^"]*)"/)?.[1];
+    expect(headerClass(await (await get('/docs/getting-started/')).text())).toBe('header header--section-only');
+    expect(headerClass(await (await get('/docs/')).text())).toBe('header');
+  });
   test('each component reference links to its own playground', async () => {
     for (const slug of componentSlugs) {
       expect(await (await get(`/docs/components/${slug}/`)).text()).toContain(`href="/components/${slug}/">Open playground`);
