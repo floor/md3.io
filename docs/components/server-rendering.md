@@ -6,7 +6,7 @@ status: published
 
 # Server rendering
 
-mtrl's components are built in the browser: a web component builds its factory inside its
+`material`'s components are built in the browser: a web component builds its factory inside its
 shadow root when it upgrades, and a factory needs `document`. So the server sends each component
 as its element, the host tag with its attributes and light DOM, and the browser upgrades it once
 its script defines it. This page covers the first paint and what each framework needs; it holds
@@ -29,9 +29,9 @@ alone, so the two never disagree.
 
 ## Importing on the server
 
-Every mtrl module imports safely without a DOM, the framework entries included. Importing
+Every `material` module imports safely without a DOM, the framework entries included. Importing
 `material/elements` registers nothing, and the framework components register their elements only
-when they mount, which never happens on a server. So no import needs a guard and mtrl's
+when they mount, which never happens on a server. So no import needs a guard and `material`'s
 components need no client-only wrapper. Only calls need the browser: run a factory such as
 `createButton()`, or `defineAll()`, in client code or an effect.
 
@@ -91,11 +91,11 @@ then, they give each element the box it will have:
   and takes no room on the page, so it stays hidden until it upgrades, even with `open`.
 
 The colours come from the theme, so the base stylesheet goes in the head too. The rules sit in
-their own cascade layer, `mtrl.preupgrade`, so your CSS wins over them. Load
+their own cascade layer, `material.preupgrade`, so your CSS wins over them. Load
 `material/elements/preupgrade.css` explicitly. The element CSS modules do not apply these rules,
 and an element's own CSS does not include them.
 
-mtrl measures this in CI: every element, in its common configurations, and a React server
+`material` measures this in CI: every element, in its common configurations, and a React server
 render must shift the layout by less than 0.01 (the Cumulative Layout Shift score) between the
 first paint and the upgrade.
 

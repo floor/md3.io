@@ -225,7 +225,7 @@ only a declaration with `!important`, or one on the element itself, overrides th
 ## Measurements
 
 From the M3 button group specs, `ButtonGroupSmallTokens` and
-`ConnectedButtonGroupSmallTokens` (`BUTTON_GROUP_SIZE_TOKENS` in mtrl).
+`ConnectedButtonGroupSmallTokens` (`BUTTON_GROUP_SIZE_TOKENS` in `material`).
 
 | Size | Height | Icon | Standard gap | Connected inner corner |
 |------|--------|------|--------------|------------------------|

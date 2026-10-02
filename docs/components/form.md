@@ -8,11 +8,11 @@ status: published
 
 A form builds a set of fields from a layout, and keeps their data: it reads and sets it,
 knows when it has changed, validates it and submits it. M3 has no form component; its fields
-are mtrl's, such as [text fields](/docs/components/text-field/), and M3's guidance for them
+are `material`'s, such as [text fields](/docs/components/text-field/), and M3's guidance for them
 applies.
 
 From **material-addons**, checked against 3.0.0-next.0. material-addons has no web components, and a
-form's layout names mtrl's factories, which the neutral examples cannot, so these examples are
+form's layout names `material`'s factories, which the neutral examples cannot, so these examples are
 plain JavaScript: the vanilla factory, which works in any framework.
 
 ## Usage

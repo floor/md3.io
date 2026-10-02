@@ -6,7 +6,7 @@ status: published
 
 # Vue
 
-`material/vue` has a Vue 3 component for every mtrl web component, for Vue 3.3 or later and Nuxt.
+`material/vue` has a Vue 3 component for every `material` web component, for Vue 3.3 or later and Nuxt.
 Each one renders its `<m-*>` element, so it looks and behaves exactly as the element does. This
 page covers only what is particular to Vue; [Getting started](../getting-started/) has the
 install and the base stylesheet, and each component page has its options and events.

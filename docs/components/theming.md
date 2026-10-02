@@ -6,7 +6,7 @@ status: published
 
 # Theming
 
-A theme in mtrl is a set of CSS custom properties: one per Material 3 colour role, named
+A theme in `material` is a set of CSS custom properties: one per Material 3 colour role, named
 `--mtrl-sys-color-<role>`. `primary`, `on-primary`, `primary-container`, the surfaces, the
 outlines and the rest are the roles M3 defines, and the components take their colours from
 them. Changing a theme changes those properties and nothing else, so it needs no
@@ -96,7 +96,7 @@ Each theme is its own entry, `material/themes/<name>`, so an app only loads the 
   `monochrome`, `rainbow` and `fruit-salad` are M3's dynamic-scheme variants, generated with
   Google's colour library from the baseline seed. The baseline is the ninth, Tonal Spot. They
   exist only as their own entries, never in the full stylesheet.
-- **mtrl's own themes.** `ocean`, `forest`, `spring`, `sunset` and `autumn` are set by hand;
+- **`material`'s own themes.** `ocean`, `forest`, `spring`, `sunset` and `autumn` are set by hand;
   `desert`, `summer`, `brownbeige`, `sageivory` and `tealcaramel` are generated from a seed and
   keep a second colour of their own as the secondary, with every text pair at 4.5:1 or more.
 - **High contrast.** `highcontrast` is M3's high-contrast scheme from the baseline seed, with
@@ -105,7 +105,7 @@ Each theme is its own entry, `material/themes/<name>`, so an app only loads the 
   `data-theme-contrast="medium"` or `"high"`, import `material/styles/contrast` and
   `material/themes/<name>-contrast` beside the theme.
 
-The full stylesheet, `material/styles`, already contains the baseline, mtrl's own themes and
+The full stylesheet, `material/styles`, already contains the baseline, `material`'s own themes and
 high contrast, so with it only the scheme variants need an import. Explicit contrast is still
 the separate `contrast` and `<name>-contrast` stylesheets.
 
@@ -168,7 +168,7 @@ so either load order resolves the same colours.
 M3 builds a whole scheme from one colour. Google's
 [material-color-utilities](https://github.com/material-foundation/material-color-utilities) does
 the colour science, and `schemeToTokens` from `material/core/theme` turns a light and a dark scheme
-into mtrl's custom properties. It is the function mtrl's own themes are generated with, so a
+into `material`'s custom properties. It is the function `material`'s own themes are generated with, so a
 theme you make this way declares exactly what a shipped one does. It takes the role names
 kebab-case or camelCase, and throws if a role is missing or isn't a `#rrggbb` colour.
 
@@ -188,7 +188,7 @@ function installTheme(name: string, light: SchemeRoles, dark: SchemeRoles) {
 }
 ```
 
-The schemes come from the colour library, which is your app's dependency, not mtrl's
+The schemes come from the colour library, which is your app's dependency, not `material`'s
 (`npm install @material/material-color-utilities`). This block is marked as a sketch because the
 docs check doesn't install that library; it type-checks against its 0.4 release:
 
@@ -237,7 +237,7 @@ tonal palette, as the seed route does, gets it for free.
 
 ## Colour with transparency
 
-A tinted or translucent role is `color-mix`, as mtrl's own styles do it:
+A tinted or translucent role is `color-mix`, as `material`'s own styles do it:
 
 ```css
 .selected-row {
