@@ -156,7 +156,7 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-desktop.png`, fullPage: false });
   const tocHref = await page.locator('.doc-toc a').first().getAttribute('href');
   assert(tocHref && await page.locator(tocHref).count() === 1, 'TOC target is missing');
-  // Under 600px the breadcrumb is not displayed and the wordmark stays whole; at 600px the breadcrumb is displayed.
+  // Under 600px the breadcrumb is not displayed. The header and the document do not overflow at 360 or 599; at 600px the breadcrumb is displayed.
   const breadcrumb = () => page.evaluate(() => {
     const displayed = (selector: string) => {
       const el = document.querySelector(selector) as HTMLElement | null;
@@ -166,13 +166,23 @@ try {
       const rect = el.getBoundingClientRect();
       return rect.width > 1 && rect.height > 1;
     };
-    const logo = document.querySelector('.header__logo') as HTMLElement;
-    return { sep: displayed('.header__sep'), section: displayed('.header__section'), whole: logo.scrollWidth === logo.clientWidth };
+    const header = document.querySelector('.header') as HTMLElement;
+    const root = document.documentElement;
+    return {
+      sep: displayed('.header__sep'),
+      section: displayed('.header__section'),
+      headerFits: header.scrollWidth === header.clientWidth,
+      documentFits: root.scrollWidth === root.clientWidth,
+    };
   });
+  const fits = (width: number, reading: { headerFits: boolean; documentFits: boolean }) =>
+    assert(reading.headerFits && reading.documentFits, `At ${width} px the header or the document overflows horizontally`);
+  await page.setViewportSize({ width: 360, height: 844 });
+  fits(360, await breadcrumb());
   await page.setViewportSize({ width: 599, height: 844 });
   const at599 = await breadcrumb();
   assert(!at599.sep && !at599.section, `At 599 px the docs breadcrumb is displayed (separator ${at599.sep}, section ${at599.section})`);
-  assert(at599.whole, 'At 599 px the wordmark is cut');
+  fits(599, at599);
   await page.setViewportSize({ width: 600, height: 844 });
   const at600 = await breadcrumb();
   assert(at600.sep && at600.section, 'At 600 px the docs breadcrumb is not displayed');

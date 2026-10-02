@@ -15,10 +15,9 @@ html[data-theme-mode="light"] { color-scheme: light; }
   .header__logo { padding: 3px 4px; }
 }
 @media (max-width: 599px) {
-  .header:not(.header--section-only) .header__sep,
+  .header__sep,
   .header:not(.header--section-only) .header__section { display: none; }
-  /* The title does not name the section: visually hidden, the same as .sr-only, so assistive technology still hears it. */
-  .header--section-only .header__sep,
+  /* The title does not name the section: the name stays for assistive technology, the same as .sr-only. The separator is hidden. */
   .header--section-only .header__section {
     position: absolute;
     width: 1px;
