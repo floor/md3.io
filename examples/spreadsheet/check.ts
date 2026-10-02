@@ -27,7 +27,7 @@ export default async function steps(page: Page): Promise<void> {
   const first = page.locator('[data-row="0"][data-column="0"]');
   await first.focus(); await first.press('Enter');
   const nameEditor = page.getByRole('textbox', { name: 'Edit Name', exact: true });
-  assert.equal(await nameEditor.inputValue(), 'Alpha', 'FLO-577: existing value initializes');
+  assert.equal(await nameEditor.inputValue(), 'Alpha', 'existing value initializes');
   await page.getByRole('button', { name: 'Find', exact: true }).focus();
   await nameEditor.waitFor({ state: 'detached' });
   assert.equal(await first.textContent(), 'Alpha', 'blur without change preserves the cell');
@@ -108,7 +108,7 @@ export default async function steps(page: Page): Promise<void> {
   await page.locator('[data-row="0"][data-column="0"]').focus(); await page.keyboard.press('Control+End');
   await page.waitForSelector('[data-row="49999"][data-column="1"]'); await bound();
   await page.waitForFunction(() => (document.activeElement as HTMLElement)?.dataset.row === '49999');
-  assert.deepEqual(pageErrors, [], 'FLO-578: focused-row jump has no page error');
+  assert.deepEqual(pageErrors, [], 'focused-row jump has no page error');
   console.log(`50,000 rows: ${mountedBefore} mounted before jump; ${await page.locator('.csv__table [role="row"]').count()} after.`);
   assert.match(await page.locator('[data-row="49999"][data-column="0"]').textContent() ?? '', /Record 49999/);
   await page.setViewportSize({ width: 390, height: 844 });

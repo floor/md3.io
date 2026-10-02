@@ -52,7 +52,7 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
       mounted.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       return;
     }
-    // FLO-578: only far jumps need focus off the recyclable row before scrolling.
+    // Only far jumps need focus off the recyclable row before scrolling.
     // Use the documented public root and scrollToIndex; do not suppress errors.
     list.element.focus({ preventScroll: true });
     const previousFocus = document.activeElement;
