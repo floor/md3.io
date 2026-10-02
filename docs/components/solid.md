@@ -150,10 +150,10 @@ handler. A callback, `ref={(element) => …}`, works too.
 
 ```tsx
 import { Button, Textfield } from 'mtrl/solid';
-import type { TextfieldElement } from 'mtrl/elements';
+import type { TextFieldElement } from 'mtrl/elements';
 
 export function Name() {
-  let field: TextfieldElement | undefined;
+  let field: TextFieldElement | undefined;
   return (
     <>
       <Textfield ref={field} label="Name" defaultValue="Ada Lovelace" />

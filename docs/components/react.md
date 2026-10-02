@@ -113,10 +113,10 @@ after an action returns each control to its default.
 ```tsx
 import { useRef } from 'react';
 import { Button, Textfield } from 'mtrl/react';
-import type { TextfieldElement } from 'mtrl/elements';
+import type { TextFieldElement } from 'mtrl/elements';
 
 export function Rename() {
-  const field = useRef<TextfieldElement>(null);
+  const field = useRef<TextFieldElement>(null);
   return (
     <>
       <Textfield ref={field} label="Name" defaultValue="Untitled" />

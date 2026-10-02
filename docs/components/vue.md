@@ -14,7 +14,7 @@ install and the base stylesheet, and each component page has its options and eve
 ## Components
 
 The components are named after the element with an `M` in front: `MButton`, `MSwitch`,
-`MTextfield`, `MTabs`. Import them where you use them:
+`MTextField`, `MTabs`. Import them where you use them:
 
 ```vue
 <script setup lang="ts">
@@ -44,11 +44,11 @@ camelCase, bound with `:` for numbers, booleans and expressions.
 
 ```vue
 <script setup lang="ts">
-import { MSlider, MTextfield } from 'mtrl/vue';
+import { MSlider, MTextField } from 'mtrl/vue';
 </script>
 
 <template>
-  <MTextfield label="Email" type="email" supporting-text="We never share it" required />
+  <MTextField label="Email" type="email" supporting-text="We never share it" required />
   <MSlider aria-label="Volume" :min="0" :max="100" :step="5" />
 </template>
 ```
@@ -69,7 +69,7 @@ component page lists its events and their fields.
 
 ```vue
 <script setup lang="ts">
-import { MSwitch, MTextfield } from 'mtrl/vue';
+import { MSwitch, MTextField } from 'mtrl/vue';
 
 function setWifi(on: boolean) {
   console.log('Wi-Fi', on);
@@ -81,7 +81,7 @@ function search(query: string) {
 
 <template>
   <MSwitch @change="setWifi($event.detail.checked)">Wi-Fi</MSwitch>
-  <MTextfield label="Search" @input="(event) => search(event.detail.value)" />
+  <MTextField label="Search" @input="(event) => search(event.detail.value)" />
 </template>
 ```
 
@@ -98,7 +98,7 @@ handler receives the browser's event.
 | `MSwitch`, `MCheckbox` | `checked` |
 | `MIconButton` (a toggle) | `selected` |
 | `MCarousel` | `index` |
-| `MTextfield`, `MSlider`, `MSelect`, `MRadios`, `MTabs`, `MChips`, `MList`, `MSearch`, `MDatepicker`, `MTimepicker`, `MNavigationRail`, `MDrawer`, `MButtonGroup` | `value` |
+| `MTextField`, `MSlider`, `MSelect`, `MRadios`, `MTabs`, `MChips`, `MList`, `MSearch`, `MDatepicker`, `MTimepicker`, `MNavigationRail`, `MDrawer`, `MButtonGroup` | `value` |
 
 Under it are `modelValue` and `update:modelValue`. Every live property also has its own
 `v-model:<name>`, such as `v-model:indeterminate` on a checkbox.
@@ -204,14 +204,14 @@ properties and methods. It is `null` until the component mounts. `Exposed` types
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { MButton, MTextfield, type Exposed } from 'mtrl/vue';
-import type { TextfieldElement } from 'mtrl/elements';
+import { MButton, MTextField, type Exposed } from 'mtrl/vue';
+import type { TextFieldElement } from 'mtrl/elements';
 
-const field = ref<InstanceType<typeof MTextfield> & Exposed<TextfieldElement>>();
+const field = ref<InstanceType<typeof MTextField> & Exposed<TextFieldElement>>();
 </script>
 
 <template>
-  <MTextfield ref="field" label="Name" default-value="Ada Lovelace" />
+  <MTextField ref="field" label="Name" default-value="Ada Lovelace" />
   <MButton @click="field?.element?.select()">Select the name</MButton>
 </template>
 ```

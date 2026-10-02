@@ -47,11 +47,11 @@ wifi.on('change', ({ checked }) => setWifi(checked));
 To remove a listener, keep the function you added:
 
 ```typescript
-import createTextfield from 'mtrl/components/textfield';
-import type { TextfieldEvents } from 'mtrl/components/textfield';
+import createTextField from 'mtrl/components/textfield';
+import type { TextFieldEvents } from 'mtrl/components/textfield';
 
-const query = createTextfield({ label: 'Search' });
-const onInput: TextfieldEvents['input'] = ({ value }) => runSearch(value);
+const query = createTextField({ label: 'Search' });
+const onInput: TextFieldEvents['input'] = ({ value }) => runSearch(value);
 
 query.on('input', onInput);
 query.off('input', onInput);
