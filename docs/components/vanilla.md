@@ -6,7 +6,7 @@ status: published
 
 # Vanilla
 
-The factories are mtrl itself: one function per component, which builds its DOM and returns an
+The factories are `material` itself: one function per component, which builds its DOM and returns an
 object to drive it. There is no framework, no custom element and no shadow root, so the
 component's markup is in your page, styled by one stylesheet you import. The web components
 and the framework components are built on these factories. [Getting started](../getting-started/)
@@ -163,7 +163,7 @@ support it does nothing. The web components use it for every overlay.
 ## When to choose Vanilla
 
 Choose the factories for the smallest bundles and full control: no element layer, no shadow root,
-no framework runtime. They suit a page without a framework, a framework mtrl has no components
+no framework runtime. They suit a page without a framework, a framework `material` has no components
 for, or a component you drive from your own state code. Each component page shows, beside its
 name, what the component adds to an app, minified and gzipped: with Vanilla selected in the
 switch at the top, that is the factory's size, and with any other choice, the web component's.

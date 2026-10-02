@@ -6,7 +6,7 @@ status: published
 
 # Getting started
 
-mtrl is a Material Design 3 component library for the web, with no dependencies. The same
+`material` is a Material Design 3 component library for the web, with no dependencies. The same
 components work as plain JavaScript factories, as web components, and as React, Vue, Svelte and
 SolidJS components. This page takes you from install to a first component; the switch at the
 top shows every example in the way you use it.
@@ -17,7 +17,7 @@ top shows every example in the way you use it.
 material
 ```
 
-React, Vue, Svelte and SolidJS are optional peer dependencies: mtrl uses the one your app already
+React, Vue, Svelte and SolidJS are optional peer dependencies: `material` uses the one your app already
 has, and installs none of them itself.
 
 ## Choose how to use it
@@ -103,5 +103,5 @@ Browse the themes and every colour role in [Styles › Color](/styles/color/), a
   framework.
 - The guide for [your framework](#choose-how-to-use-it), for its events, forms and
   server rendering.
-- [Architecture](../architecture/): how mtrl is built.
+- [Architecture](../architecture/): how `material` is built.
 - [Examples](/examples/): whole screens in all six flavours.

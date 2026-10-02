@@ -740,7 +740,7 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(/^(\s*)trailingMenu: true/gm, '$1trailingMenu: true,\n$1onTrailingClick: (chip) => openMenu(chip)');
   const chipsSetup = slug === 'chips'
-    ? `${state.filterType && state.trailingMenu ? "// Anchor an mtrl menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
+    ? `${state.filterType && state.trailingMenu ? "// Anchor a material menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
       `${state.draggable ? 'chips.getChips().forEach(chip => { chip.element.draggable = true; });\n' : ''}`
     : '';
   if (slug === 'checkbox' && state.family === true) return checkboxFamilyCode(state);
