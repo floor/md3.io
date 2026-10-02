@@ -91,6 +91,33 @@ describe('deploy script', () => {
     }
   });
 
+  // The first line of each value matches. The check has to see the whole value.
+  const refuseBrokenLine = (name: string, extra: Record<string, string>, sentence: string) => {
+    slow(`a ${name} with a line break is refused and nothing is generated`, () => {
+      const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', ...extra };
+      const result = spawnSync('./scripts/deploy.sh', [], { encoding: 'utf8', env, timeout: 15000 });
+      expect(result.status).toBe(1);
+      expect(result.stdout ?? '').not.toContain('set -euo pipefail');
+      expect(result.stdout ?? '').not.toContain('git clone');
+      expect(result.stderr ?? '').toContain(sentence);
+    });
+  };
+  refuseBrokenLine(
+    'library ref',
+    { LIBRARY_REF: 'origin/main\nx' },
+    'Refusing to deploy: library ref must match [A-Za-z0-9._/-]+ and must not start with -.',
+  );
+  refuseBrokenLine(
+    'library URL',
+    { LIBRARY_URL: 'https://github.com/floor/material.git\nx' },
+    'Refusing to deploy: library URL must be https://, git@host:path, ssh://, file://, or an absolute path, with no .. segment.',
+  );
+  refuseBrokenLine(
+    'directory',
+    { DEPLOY_DIR: '/home/floor\nx' },
+    'Refusing to deploy: directory must be an absolute path of [A-Za-z0-9._/-] with no .. segment.',
+  );
+
   slow('a dirty library checkout is refused, listing the files, before anything changes', () => {
     const fixture = createDeployFixture();
     try {
