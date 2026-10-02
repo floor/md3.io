@@ -6,7 +6,10 @@ import { describe, expect, test } from 'bun:test';
 import { createDeployFixture, FLOOR_MATERIAL, placeMaterial, revision, runRemote, trashFixture } from './deploy-harness';
 
 describe('deploy script', () => {
-  test('a dry run prints the steps in order and the refusal, and does not open ssh', () => {
+  // Local bare repositories, under a busy suite. The default five seconds is tight.
+  const slow = (name: string, fn: () => void) => test(name, fn, 20_000);
+
+  slow('a dry run prints the steps in order and the refusal, and does not open ssh', () => {
     const bin = mkdtempSync(join(tmpdir(), 'md3-deploy-dry-'));
     writeFileSync(join(bin, 'ssh'), '#!/bin/sh\necho SSH_INVOKED\nexit 97\n');
     chmodSync(join(bin, 'ssh'), 0o755);
@@ -25,7 +28,7 @@ describe('deploy script', () => {
     expect(out).toContain('library: https://github.com/floor/material.git');
     expect(out).toContain('library ref: origin/main');
     const steps = [
-      'git clone -q "https://github.com/floor/material.git"',
+      "git clone -q 'https://github.com/floor/material.git'",
       'config --get remote.origin.url',
       'Refusing to deploy: /home/floor/material origin is $origin, not floor/material.',
       'git fetch -q origin --tags',
@@ -50,7 +53,7 @@ describe('deploy script', () => {
     }
   });
 
-  test('LIBRARY_REF=main checks out origin/main when the local branch is behind', () => {
+  slow('LIBRARY_REF=main checks out origin/main when the local branch is behind', () => {
     const fixture = createDeployFixture();
     try {
       const material = placeMaterial(fixture, FLOOR_MATERIAL);
@@ -63,7 +66,7 @@ describe('deploy script', () => {
     }
   });
 
-  test('an existing library checkout with no origin is refused before the site is touched', () => {
+  slow('an existing library checkout with no origin is refused before the site is touched', () => {
     const fixture = createDeployFixture();
     try {
       const material = placeMaterial(fixture, null);
@@ -77,7 +80,18 @@ describe('deploy script', () => {
     }
   });
 
-  test('a dirty library checkout is refused, listing the files, before anything changes', () => {
+  slow('a library ref containing a semicolon or a space is refused and nothing is generated', () => {
+    for (const ref of ['main;id', 'main id']) {
+      const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', LIBRARY_REF: ref };
+      const result = spawnSync('./scripts/deploy.sh', [], { encoding: 'utf8', env, timeout: 15000 });
+      expect(result.status).toBe(1);
+      expect(result.stdout ?? '').not.toContain('set -euo pipefail');
+      expect(result.stdout ?? '').not.toContain('git clone');
+      expect(result.stderr ?? '').toContain('Refusing to deploy');
+    }
+  });
+
+  slow('a dirty library checkout is refused, listing the files, before anything changes', () => {
     const fixture = createDeployFixture();
     try {
       const material = placeMaterial(fixture, FLOOR_MATERIAL);
@@ -93,7 +107,62 @@ describe('deploy script', () => {
     }
   });
 
-  test('a ref beginning with refs/heads/ is refused', () => {
+  slow('a missing library checkout is cloned', () => {
+    const fixture = createDeployFixture();
+    try {
+      const result = runRemote(fixture, { ref: 'main', url: fixture.materialBare });
+      expect(result.status).toBe(0);
+      expect(revision(join(fixture.dir, 'material'))).toBe(fixture.materialOrigin);
+      expect(revision(fixture.site)).toBe(fixture.siteOrigin);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
+  slow('a library checkout whose origin is not floor/material is refused and the site is untouched', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, 'https://github.com/floor/mtrl.git');
+      const result = runRemote(fixture, { ref: 'main' });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('https://github.com/floor/mtrl.git');
+      expect(result.stderr).toContain('not floor/material');
+      expect(revision(material)).toBe(fixture.materialLocal);
+      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
+  slow('a tag that is not main is checked out', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, FLOOR_MATERIAL);
+      const result = runRemote(fixture, { ref: 'v1' });
+      expect(fixture.materialTag).not.toBe(fixture.materialOrigin);
+      expect(result.status).toBe(0);
+      expect(revision(material)).toBe(fixture.materialTag);
+      expect(result.stdout).toContain(`tag refs/tags/v1 ${fixture.materialTag}`);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
+  slow('an unknown library ref is refused before the site is touched', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, FLOOR_MATERIAL);
+      const result = runRemote(fixture, { ref: 'no-such-ref' });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('no-such-ref');
+      expect(revision(material)).toBe(fixture.materialLocal);
+      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
+  slow('a ref beginning with refs/heads/ is refused', () => {
     const fixture = createDeployFixture();
     try {
       const material = placeMaterial(fixture, FLOOR_MATERIAL);
