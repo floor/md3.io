@@ -8,6 +8,7 @@
 //   2. add a `ThemeSection` for it to `sections`: how to validate it, which tokens it
 //      writes (only what differs from mtrl), and a one-line summary.
 // The store, the preview, the export and the share link pick it up from there.
+import { themes as builtInThemeNames } from './button';
 
 /** mtrl's own values, read from its compiled CSS by the server (src/server/tokens.ts). */
 export interface ThemeBase {
@@ -164,6 +165,32 @@ export interface ColorThemeFile {
 }
 const lines = (tokens: Record<string, string>, indent: string) => Object.entries(tokens).map(([property, value]) => `${indent}${property}: ${value};`).join('\n');
 
+/** A downloaded theme's name is at most this long. */
+const NAME_MAX = 40;
+
+/**
+ * The theme names mtrl ships but the Theme select does not offer: the four mtrl 0.10
+ * deprecated (removed in mtrl 1.0, FLO-308). Their files are built into mtrl as much as
+ * the offered ones, so a download refuses their names too. test/theme-state.test.ts
+ * checks every theme mtrl ships is offered or listed here, so a theme mtrl adds fails
+ * that test rather than slipping past the refusal.
+ */
+export const deprecatedThemeNames = ['material', 'winter', 'browngreen', 'legacy'] as const;
+const REFUSED_NAMES = new Set<string>([...builtInThemeNames, ...deprecatedThemeNames]);
+
+/**
+ * The name a downloaded theme takes: trimmed, lower-case letters, digits and single
+ * hyphens (runs of anything else become one hyphen), no leading or trailing hyphen, at
+ * most 40 characters. Empty, or nothing usable left of it, is `custom`; a theme mtrl
+ * ships (the theme select's list, plus the deprecated themes it still carries) is
+ * refused as null, so a download never writes a file or `data-theme` over mtrl's own.
+ */
+export function downloadName(raw: unknown): string | null {
+  const name = String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, NAME_MAX).replace(/-+$/, '');
+  if (!name) return 'custom';
+  return REFUSED_NAMES.has(name) ? null : name;
+}
+
 /** CSS: light on [data-theme="name"], dark with data-theme-mode="dark", as mtrl's themes are. */
 export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string => [
   `/* mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
@@ -178,28 +205,6 @@ export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string =>
   `[data-theme="${name}"][data-theme-mode="dark"] {\n${lines(tokens.dark, '  ')}\n}`,
   '',
 ].join('\n');
-
-/** SCSS: mtrl's create-theme form (src/styles/themes), with its status colours. */
-export const colorThemeScss = ({ name, tokens, note }: ColorThemeFile): string => {
-  const scss = (mode: Record<string, string>) => Object.fromEntries(Object.entries(mode).map(([property, value]) => [property.replace(/^--mtrl-/, '--#{$prefix}-'), value]));
-  return [
-    `// mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
-    '// In mtrl\'s create-theme form, as its own themes are written (mtrl/src/styles/themes).',
-    '@use "mtrl/src/styles/abstract/base" as *;',
-    '@use "mtrl/src/styles/themes/base-theme" as *;',
-    '',
-    `@include create-theme("${name}") {`,
-    '    @include status-colors-light();',
-    lines(scss(tokens.light), '    '),
-    '',
-    '    &[data-theme-mode="dark"] {',
-    '        @include status-colors-dark();',
-    lines(scss(tokens.dark), '        '),
-    '    }',
-    '}',
-    '',
-  ].join('\n');
-};
 
 /** JSON: design tokens (role → colour, light and dark), with what the theme was made from. */
 export const colorThemeJson = ({ name, tokens, origin, note }: ColorThemeFile): string => {
