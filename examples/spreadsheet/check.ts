@@ -20,10 +20,9 @@ export default async function steps(page: Page): Promise<void> {
   assert.equal(await page.locator('.csv__cell').count() < 800, true);
   const data = 'Name,Units,Depot,Note\nBeta,10,Lyon,\nAlpha,2,Lille,\nGamma,30,Lyon,';
   await upload(page, data);
-  // FLO-576: use the keyboard route; ordinary pointer activation is checked last.
-  await page.getByRole('button', { name: 'Units', exact: true }).focus();
-  await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Sort ascending', exact: true }).click();
+  const units = page.getByRole('columnheader', { name: 'Units', exact: true });
+  await units.click();
+  assert.equal(await units.getAttribute('aria-sort'), 'ascending', 'pointer header sort shows ascending');
   await page.waitForFunction(() => document.querySelector('[data-row="0"][data-column="0"]')?.textContent === 'Alpha');
   const first = page.locator('[data-row="0"][data-column="0"]');
   await first.focus(); await first.press('Enter');
@@ -56,15 +55,18 @@ export default async function steps(page: Page): Promise<void> {
   await page.waitForFunction(() => (document.activeElement as HTMLElement)?.dataset.column === '3');
   await page.getByRole('textbox', { name: 'Find in visible cells', exact: true }).press('Escape');
   assert.equal(await page.getByRole('search').isVisible(), false);
-  const depot = page.getByRole('button', { name: 'Depot', exact: true });
-  await depot.focus(); await depot.press('Enter');
-  await page.getByRole('menuitem', { name: 'Hide column', exact: true }).click();
-  assert.equal(await page.getByRole('button', { name: 'Depot', exact: true }).count(), 0);
-  await page.getByRole('button', { name: 'Show all columns', exact: true }).click();
-  await page.getByRole('button', { name: 'Depot', exact: true }).focus(); await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Filter by selected value', exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('.csv__info')?.textContent?.includes('1 of 3 rows'));
-  await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
+  await page.getByRole('button', { name: 'Tools', exact: true }).click();
+  await page.getByRole('switch', { name: 'Depot', exact: true }).click();
+  assert.equal(await page.getByRole('columnheader', { name: 'Depot', exact: true }).count(), 0, 'Tools hides Depot by pointer');
+  await page.getByRole('switch', { name: 'Depot', exact: true }).click();
+  assert.equal(await page.getByRole('columnheader', { name: 'Depot', exact: true }).count(), 1, 'Tools shows Depot again');
+  await page.locator('.csv__filter-column').click();
+  await page.getByRole('option', { name: 'Depot', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Exact value', exact: true }).fill('Lille');
+  await page.getByRole('button', { name: 'Apply value filter', exact: true }).click();
+  assert.match(await page.locator('.csv__info').textContent() ?? '', /1 of 3 rows/, 'Tools applies exact value filter');
+  await page.getByRole('button', { name: 'Clear value filter', exact: true }).click();
+  assert.match(await page.locator('.csv__info').textContent() ?? '', /3 of 3 rows/, 'Tools clears value filter');
   await page.getByRole('textbox', { name: 'Filter rows', exact: true }).fill('edited');
   assert.deepEqual(await downloadedCSV(page), [['Name', 'Units', 'Depot', 'Note'], ['Alpha', '2', 'Lille', 'Edited']]);
   await page.getByRole('textbox', { name: 'Filter rows', exact: true }).fill('no match');
@@ -82,7 +84,7 @@ export default async function steps(page: Page): Promise<void> {
   assert.equal(await page.locator('.csv').getAttribute('data-rows'), '0');
   await page.evaluate(() => {
     const transfer = new DataTransfer(); transfer.items.add(new File(['A,B\nDrop,'], 'drop.csv', { type: 'text/csv' }));
-    document.dispatchEvent(new DragEvent('drop', { dataTransfer: transfer, bubbles: true }));
+    document.querySelector('.csv')!.dispatchEvent(new DragEvent('drop', { dataTransfer: transfer, bubbles: true }));
   });
   await page.waitForFunction(() => document.querySelector('.csv__info')?.textContent?.startsWith('drop.csv'));
   await page.locator('[data-row="0"][data-column="1"]').focus(); await page.keyboard.press('Enter');
@@ -111,12 +113,84 @@ export default async function steps(page: Page): Promise<void> {
   assert.match(await page.locator('[data-row="49999"][data-column="0"]').textContent() ?? '', /Record 49999/);
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'phone has no page overflow');
-  // FLO-576: record the upstream gap explicitly, without forced/synthetic activation.
-  await page.getByRole('button', { name: 'Name', exact: true }).scrollIntoViewIfNeeded();
-  const header = await page.getByRole('button', { name: 'Name', exact: true }).boundingBox();
-  assert.ok(header); await page.mouse.click(header.x + header.width / 2, header.y + header.height / 2);
-  assert.equal(await page.getByRole('menu').isVisible(), false);
-  console.log('KNOWN GAP FLO-576: pointer header menus blocked by vlist; keyboard route passed.');
+  await page.getByRole('button', { name: 'Tools', exact: true }).click();
+  await page.getByRole('switch', { name: 'Units', exact: true }).click();
+  assert.equal(await page.getByRole('columnheader', { name: 'Units', exact: true }).count(), 0, 'compact Tools hides a column');
+  await page.getByRole('switch', { name: 'Units', exact: true }).click();
+  assert.equal(await page.getByRole('columnheader', { name: 'Units', exact: true }).count(), 1, 'compact Tools restores a column');
+  await page.locator('.csv__filter-column').click();
+  await page.getByRole('option', { name: 'Units', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Exact value', exact: true }).fill('42');
+  await page.getByRole('button', { name: 'Apply value filter', exact: true }).click();
+  assert.match(await page.locator('.csv__info').textContent() ?? '', /1 of 50,000 rows/, 'compact Tools filters by value');
+  await page.getByRole('button', { name: 'Clear value filter', exact: true }).click();
+  assert.match(await page.locator('.csv__info').textContent() ?? '', /50,000 of 50,000 rows/, 'compact Tools clears the filter');
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await page.getByRole('columnheader', { name: 'Units', exact: true }).click();
+  assert.equal(await page.getByRole('columnheader', { name: 'Units', exact: true }).getAttribute('aria-sort'), 'ascending', 'compact pointer sorts a non-first column');
+  await page.getByRole('columnheader', { name: 'Units', exact: true }).click();
+  assert.equal(await page.getByRole('columnheader', { name: 'Units', exact: true }).getAttribute('aria-sort'), 'descending');
+  assert.equal(await page.locator('[data-row="0"][data-column="0"]').textContent(), 'Record 49999', 'pointer sort changes row order');
+  // Enter/Space use vlist's same sort event and update the same rows and indicator.
+  const header = page.getByRole('columnheader', { name: 'Name', exact: true });
+  await header.focus(); await header.press('ArrowRight');
+  await page.keyboard.press('Enter'); // descending -> original order
+  assert.equal(await page.getByRole('columnheader', { name: 'Units', exact: true }).getAttribute('aria-sort'), null);
+  await page.keyboard.press('Space');
+  assert.equal(await page.getByRole('columnheader', { name: 'Units', exact: true }).getAttribute('aria-sort'), 'ascending', 'keyboard sort shares pointer state');
+  assert.equal(await page.locator('[data-row="0"][data-column="0"]').textContent(), 'Record 0');
+
+  const grid = page.getByRole('grid', { name: 'CSV data', exact: true });
+  assert.equal(await grid.count(), 1, 'the grid itself has an accessible name');
+  const tabStops = () => grid.evaluate(root => [...root.querySelectorAll<HTMLElement>('a,button,input,select,textarea,[tabindex]'), root as HTMLElement].filter(el => el.tabIndex >= 0).length);
+  assert.equal(await tabStops(), 1, 'one sequential table tab stop');
+  const traversal = await grid.evaluate(root => {
+    const before = document.createElement('button'), after = document.createElement('button');
+    before.id = 'before-grid'; after.id = 'after-grid';
+    before.textContent = 'Before table'; after.textContent = 'After table';
+    root.before(before); root.after(after); before.focus();
+    return true;
+  });
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('role')), 'columnheader', 'Tab enters the roving headers');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement?.id), 'after-grid', 'the next Tab leaves the table');
+  if (traversal) await page.evaluate(() => { document.getElementById('before-grid')?.remove(); document.getElementById('after-grid')?.remove(); });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.locator('[data-row="2"][data-column="0"]').focus();
+  const beforeArrow = await page.evaluate(() => {
+    const grid = document.querySelector('[role=grid]')!;
+    (window as any).__csvFocusChanges = 0;
+    grid.addEventListener('focusin', () => (window as any).__csvFocusChanges++);
+    return document.querySelector('.vlist-viewport')!.scrollTop;
+  });
+  await page.keyboard.press('ArrowDown');
+  assert.equal(await page.evaluate(() => (document.activeElement as HTMLElement)?.dataset.row), '3');
+  assert.equal(await page.evaluate(() => (window as any).__csvFocusChanges), 1, 'visible ArrowDown focuses once');
+  assert.equal(await page.locator('.vlist-viewport').evaluate(el => el.scrollTop), beforeArrow, 'visible ArrowDown does not scroll');
+  assert.equal(await tabStops(), 1, 'cell navigation adds no tab stops');
+  console.log('CSV round 3: pointer/keyboard header sort, desktop/compact Tools, named grid, one tab stop and one-focus/no-scroll ArrowDown passed.');
+
+  const lifecycle = await page.evaluate(async () => {
+    const primary = document.querySelector('.csv')!;
+    const stylesBefore = document.head.querySelectorAll('link[rel=stylesheet]').length;
+    const second = window.spreadsheetExample.createSpreadsheetApp();
+    document.getElementById('app')!.append(second.element);
+    const transfer = new DataTransfer(); transfer.items.add(new File(['A,B\nSecond,7'], 'second.csv', { type: 'text/csv' }));
+    second.element.dispatchEvent(new DragEvent('drop', { dataTransfer: transfer, bubbles: true }));
+    for (let i = 0; i < 100 && second.element.dataset.rows !== '1'; i++) await new Promise(resolve => setTimeout(resolve, 20));
+    const ownState = second.element.dataset.rows === '1' && primary.getAttribute('data-rows') === '50000';
+    const ownedSheets = [...second.element.querySelectorAll('.mtrl-side-sheet, .mtrl-bottom-sheet')];
+    second.destroy(); second.destroy();
+    window.dispatchEvent(new Event('resize'));
+    return { ownState, connected: second.element.isConnected, mounts: document.querySelectorAll('.csv').length,
+      stylesRestored: document.head.querySelectorAll('link[rel=stylesheet]').length === stylesBefore,
+      sheetsRemoved: ownedSheets.length > 0 && ownedSheets.every(sheet => !sheet.isConnected),
+      primaryRows: primary.getAttribute('data-rows') };
+  });
+  assert.deepEqual(lifecycle, { ownState: true, connected: false, mounts: 1, stylesRestored: true, sheetsRemoved: true, primaryRows: '50000' }, 'second mount owns its state and tears down without changing the first');
+  assert.equal(await grid.count(), 1, 'first table remains after second mount teardown');
   assert.deepEqual(pageErrors, [], 'every Spreadsheet action has no page error');
+  console.log('CSV round 3: independent second mount, idempotent teardown, stylesheet and sheet cleanup passed.');
   console.log('CSV: open/drop/parser errors, typed sort, edit/cancel, find, filter, hide, export, 50,000 virtual rows and phone containment passed.');
 }
