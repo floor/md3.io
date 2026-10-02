@@ -2,8 +2,8 @@
 // <m-tabs> takes the factory's default scrollable row, whose tabs start after a 52px
 // edge padding; the card shows M3's fixed row instead (`scrollable: false`), the tabs
 // dividing the row evenly, so the group, its indicator and the divider are centred.
-import 'mtrl/elements/css/tabs';
-import createTabs from 'mtrl/components/tabs';
+import 'material/elements/css/tabs';
+import createTabs from 'material/components/tabs';
 import { symbols } from '../../shared/icons';
 import { surface } from './surface';
 

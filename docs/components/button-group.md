@@ -117,7 +117,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `ariaLabel` | `string` | `'Button group'` | Accessible name of the group |
 | `class` | `string` | `undefined` | Extra classes on the container |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-| `on` | `{ click?, focus?, blur?, change? }` | `undefined` | Accepted but not applied: register handlers with `on()` |
+| `on` | `{ click?, focus?, blur?, change? }` | `undefined` | Listeners registered at creation, ahead of any listener added afterwards |
 
 #### Each button
 

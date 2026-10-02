@@ -3,11 +3,11 @@
 // written out here so the overview does not load the playground's whole component
 // table. test/catalog.test.ts keeps the two equal. The menu's `opener` is left out:
 // the card passes its own.
-import type { DialogConfig } from 'mtrl/components/dialog';
-import type { MenuConfig } from 'mtrl/components/menu';
-import type { SnackbarConfig } from 'mtrl/components/snackbar';
-import type { TooltipConfig } from 'mtrl/components/tooltip';
-import type { TimePickerConfig } from 'mtrl/components/timepicker';
+import type { DialogConfig } from 'material/components/dialog';
+import type { MenuConfig } from 'material/components/menu';
+import type { SnackbarConfig } from 'material/components/snackbar';
+import type { TooltipConfig } from 'material/components/tooltip';
+import type { TimePickerConfig } from 'material/components/timepicker';
 import bookmark from '../../../icons/bookmark.svg' with { type: 'text' };
 import send from '../../../icons/send.svg' with { type: 'text' };
 import download from '../../../icons/download.svg' with { type: 'text' };

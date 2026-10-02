@@ -1,6 +1,6 @@
 // The bottom-sheet card: <m-bottom-sheet>.
-import 'mtrl/elements/css/bottom-sheet';
-import { defineBottomSheet } from 'mtrl/elements';
+import 'material/elements/css/bottom-sheet';
+import { defineBottomSheet } from 'material/elements';
 
 export const define = (): void => {
   defineBottomSheet();

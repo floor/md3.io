@@ -55,8 +55,6 @@ icon-button:
   on change: setFavorite(selected)
 ```
 
-The DOM `toggle` event the element also dispatches is deprecated and goes in the next release.
-
 ### Changing it
 
 An action changes the icon and the label together.
@@ -152,11 +150,11 @@ these tables are hand-written: keep them in line with the code, and add no prose
 
 | Event | Description | Data |
 |-------|-------------|------|
-| `change` | A click changed a toggle button's selected state | `{ selected }` |
+| `change` | A click changed a toggle button's selected state | `{ selected, value }` |
 | `click` | The button was activated; not fired while disabled | `{ event, element, originalEvent }` |
 | `focus` / `blur` | The button took or lost focus | `{ event, element, originalEvent }` |
 
-The web component's `change` carries `{ selected }`.
+The web component's `change` carries `{ selected, value }`.
 
 ## Accessibility
 

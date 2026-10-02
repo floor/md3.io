@@ -3,14 +3,14 @@ import { resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { themes } from '../src/shared/button';
 import * as themeState from '../src/shared/theme-state';
-import { cornerRadius, defaultState, deprecatedThemeNames, downloadName, normalize, parse, serialize, toCss, toTokens, type ThemeBase } from '../src/shared/theme-state';
+import { cornerRadius, defaultState, downloadName, normalize, parse, serialize, toCss, toTokens, type ThemeBase } from '../src/shared/theme-state';
 import { themeBase } from '../src/server/tokens';
 
 // A small base keeps the expectations readable; the last test runs against mtrl's own.
 const base: ThemeBase = { themes: ['baseline', 'ocean'], shape: { none: 0, small: 8, medium: 12, 'extra-large': 28, full: 9999, pill: 100 } };
 // Every theme the linked mtrl ships (what a download writes over), and every name it refuses.
-const shippedThemes = readdirSync(resolve(import.meta.dir, '../node_modules/mtrl/dist/themes')).filter(file => file.endsWith('.css')).map(file => file.slice(0, -4));
-const refusedThemes: string[] = [...themes, ...deprecatedThemeNames];
+const shippedThemes = readdirSync(resolve(import.meta.dir, '../node_modules/material/dist/themes')).filter(file => file.endsWith('.css') && !file.endsWith('-contrast.css')).map(file => file.slice(0, -4));
+const refusedThemes: string[] = [...themes];
 
 describe('theme state', () => {
   test('round trip: serialize then parse gives the same state', () => {
@@ -43,11 +43,11 @@ describe('theme state', () => {
   });
   test('the CSS loads the base theme and overrides by section', () => {
     const css = toCss(normalize({ base: 'ocean', mode: 'dark', shape: { corners: { small: 4 } } }, base), base);
-    expect(css).toContain("import 'mtrl/styles/base';");
-    expect(css).toContain("import 'mtrl/themes/ocean';");
+    expect(css).toContain("import 'material/styles/base';");
+    expect(css).toContain("import 'material/themes/ocean';");
     expect(css).toContain('<html data-theme="ocean" data-theme-mode="dark">');
     expect(css).toContain('  /* Shape */\n  --mtrl-sys-shape-corner-small: 4px;');
-    expect(toCss(defaultState(), base)).not.toContain('mtrl/themes/');
+    expect(toCss(defaultState(), base)).not.toContain('material/themes/');
   });
   test('the colour theme files are CSS and JSON only: SCSS is gone', () => {
     expect(Object.keys(themeState).filter(key => key.startsWith('colorTheme'))).toEqual(['colorThemeCss', 'colorThemeJson']);
@@ -71,12 +71,7 @@ describe('theme state', () => {
     expect(downloadName('custom')).toBe('custom');
     expect(downloadName('Custom')).toBe('custom');
   });
-  // mtrl 0.10 ships 24 theme files and offers 20: the four it keeps for old users
-  // (deprecated in 0.10, removed in 1.0) are built into mtrl all the same.
-  test('the themes mtrl still ships but no longer offers are refused too: built in is built in', () => {
-    for (const name of ['material', 'winter', 'browngreen', 'legacy']) expect(downloadName(name), name).toBeNull();
-  });
-  test('every theme mtrl ships is refused: the select\'s list and the deprecated list cover mtrl\'s files', () => {
+  test('every theme material ships is refused: the select\'s list covers the theme files, and the contrast files are not themes', () => {
     expect(shippedThemes).toContain('baseline'); // the listing is mtrl's own
     for (const name of shippedThemes) {
       expect(refusedThemes, `${name}.css: offered, or refused as a deprecated theme`).toContain(name);

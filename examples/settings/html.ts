@@ -1,6 +1,6 @@
 // Web components: the elements themselves, no framework.
-import "mtrl/elements/css";
-import { defineAll } from "mtrl/elements";
+import "material/elements/css";
+import { defineAll } from "material/elements";
 import { DEFAULTS, summary } from "./shared";
 
 defineAll();

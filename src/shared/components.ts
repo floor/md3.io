@@ -1,40 +1,40 @@
-import type { BadgeConfig } from 'mtrl/components/badge';
-import type { ProgressConfig } from 'mtrl/components/progress';
-import type { LoadingIndicatorConfig } from 'mtrl/components/loading-indicator';
-import type { SnackbarConfig } from 'mtrl/components/snackbar';
-import type { TooltipConfig } from 'mtrl/components/tooltip';
-import type { CardConfig } from 'mtrl/components/card';
-import type { ListConfig, ListItem, ListSlot } from 'mtrl/components/list';
-import type { CarouselConfig } from 'mtrl/components/carousel';
+import type { BadgeConfig } from 'material/components/badge';
+import type { ProgressConfig } from 'material/components/progress';
+import type { LoadingIndicatorConfig } from 'material/components/loading-indicator';
+import type { SnackbarConfig } from 'material/components/snackbar';
+import type { TooltipConfig } from 'material/components/tooltip';
+import type { CardConfig } from 'material/components/card';
+import type { ListConfig, ListItem, ListSlot } from 'material/components/list';
+import type { CarouselConfig } from 'material/components/carousel';
 import { carouselPhotos, carouselPhotoUrl } from './carousel-photos';
-import type { DividerConfig } from 'mtrl/components/divider';
-import type { DialogConfig } from 'mtrl/components/dialog';
-import type { BottomSheetConfig } from 'mtrl/components/bottom-sheet';
-import type { SideSheetConfig } from 'mtrl/components/side-sheet';
-import type { NavigationRailConfig } from 'mtrl/components/navigation-rail';
-import type { DrawerConfig } from 'mtrl/components/drawer';
-import type { TabsConfig } from 'mtrl/components/tabs';
-import type { MenuConfig } from 'mtrl/components/menu';
-import type { TopAppBarConfig } from 'mtrl/components/top-app-bar';
-import type { BottomAppBarConfig } from 'mtrl/components/bottom-app-bar';
-import type { ToolbarConfig } from 'mtrl/components/toolbar';
-import type { FabMenuConfig } from 'mtrl/components/fab-menu';
-import type { SwitchConfig } from 'mtrl/components/switch';
-import type { RadiosConfig } from 'mtrl/components/radios';
-import type { ChipsConfig } from 'mtrl/components/chips';
-import type { SliderConfig } from 'mtrl/components/slider';
-import type { TextFieldConfig } from 'mtrl/components/textfield';
-import type { SelectConfig } from 'mtrl/components/select';
-import type { SearchConfig } from 'mtrl/components/search';
-import type { DatePickerConfig } from 'mtrl/components/datepicker';
-import type { TimePickerConfig } from 'mtrl/components/timepicker';
-import { TIME_PICKER_TYPE, TIME_FORMAT, TIME_PICKER_ORIENTATION } from 'mtrl/components/timepicker';
-import type { CheckboxConfig } from 'mtrl/components/checkbox';
-import type { IconButtonConfig } from 'mtrl/components/icon-button';
-import type { ButtonGroupConfig } from 'mtrl/components/button-group';
-import type { SplitButtonConfig } from 'mtrl/components/split-button';
-import type { FabConfig } from 'mtrl/components/fab';
-import type { ExtendedFabConfig } from 'mtrl/components/extended-fab';
+import type { DividerConfig } from 'material/components/divider';
+import type { DialogConfig } from 'material/components/dialog';
+import type { BottomSheetConfig } from 'material/components/bottom-sheet';
+import type { SideSheetConfig } from 'material/components/side-sheet';
+import type { NavigationRailConfig } from 'material/components/navigation-rail';
+import type { DrawerConfig } from 'material/components/drawer';
+import type { TabsConfig } from 'material/components/tabs';
+import type { MenuConfig } from 'material/components/menu';
+import type { TopAppBarConfig } from 'material/components/top-app-bar';
+import type { BottomAppBarConfig } from 'material/components/bottom-app-bar';
+import type { ToolbarConfig } from 'material/components/toolbar';
+import type { FabMenuConfig } from 'material/components/fab-menu';
+import type { SwitchConfig } from 'material/components/switch';
+import type { RadiosConfig } from 'material/components/radios';
+import type { ChipsConfig } from 'material/components/chips';
+import type { SliderConfig } from 'material/components/slider';
+import type { TextFieldConfig } from 'material/components/text-field';
+import type { SelectConfig } from 'material/components/select';
+import type { SearchConfig } from 'material/components/search';
+import type { DatePickerConfig } from 'material/components/datepicker';
+import type { TimePickerConfig } from 'material/components/timepicker';
+import { TIME_PICKER_TYPE, TIME_FORMAT, TIME_PICKER_ORIENTATION } from 'material/components/timepicker';
+import type { CheckboxConfig } from 'material/components/checkbox';
+import type { IconButtonConfig } from 'material/components/icon-button';
+import type { ButtonGroupConfig } from 'material/components/button-group';
+import type { SplitButtonConfig } from 'material/components/split-button';
+import type { FabConfig } from 'material/components/fab';
+import type { ExtendedFabConfig } from 'material/components/extended-fab';
 import { symbols } from './icons';
 import { nameIcons } from './icon-code';
 import { buttonConfig, icons as buttonIcons, normalizeState, sizes, themes, variants } from './button';
@@ -346,10 +346,10 @@ export const components = {
       ...(state.insetIconAllowed && state.insetIcon ? { insetIcon: symbols.volumeUp, insetIconAtMin: symbols.volumeOff } : {}), size: pick(state, 'size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), color: pick(state, 'color', ['primary', 'secondary', 'tertiary', 'error'], 'primary'),
       ticks: bool(state, 'ticks'), showValue: bool(state, 'showValue'), label: string(state, 'label'), ariaLabel: string(state, 'label').trim() || 'Volume', disabled: bool(state, 'disabled'), name: 'volume' }),
   },
-  textfield: {
-    group: 'Selection & input', name: 'Text field', factory: 'createTextField', variable: 'textfield',
+  'text-field': {
+    group: 'Selection & input', name: 'Text field', factory: 'createTextField', variable: 'textField',
     description: 'Enter text with helpful context. Explore field styles, input types, icons, and validation states.',
-    summary: 'Text entry with labels and feedback.', styles: ['textfield'],
+    summary: 'Text entry with labels and feedback.', styles: ['text-field'],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default'), icon(['none', 'heart', 'edit', 'send'], 'none')]),
       ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed')]),
@@ -364,7 +364,7 @@ export const components = {
   select: {
     group: 'Selection & input', name: 'Select', factory: 'createSelect', variable: 'select',
     description: 'Pick an option from a menu. Explore field styles, selection, and validation states.',
-    summary: 'A menu of choices in a field.', styles: ['textfield', 'menu', 'select'],
+    summary: 'A menu of choices in a field.', styles: ['text-field', 'menu', 'select'],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default')]),
       ...section('Content', [text('label', 'Label', 'Fruit'), choose('value', 'Selected', ['', 'apple', 'banana', 'cherry'], 'apple', 'select'), text('supportingText', 'Supporting text', 'Choose a favorite')]),
@@ -757,12 +757,12 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     : '';
   const setup = checkboxSetup + chipsSetup + (
     slug === 'radios' ? `radios.element.setAttribute('aria-label', 'Delivery method');\n` :
-    slug === 'textfield' && !string(state, 'label').trim() ? `textfield.input.setAttribute('aria-label', 'Text field');\n` :
-    slug === 'select' && !string(state, 'label').trim() ? `select.textfield.input.setAttribute('aria-label', 'Select an option');\n` :
+    slug === 'text-field' && !string(state, 'label').trim() ? `textField.input.setAttribute('aria-label', 'Text field');\n` :
+    slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
     slug === 'timepicker' ? `const openButton = createButton({ text: 'Choose time', variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.element.append(openButton.element);\n` : '');
   const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
-  const styles = component.styles.includes('full') ? "import 'mtrl/styles';\n" : ["base", ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
-  return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+  const styles = component.styles.includes('full') ? "import 'material/styles';\n" : ["base", ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
 }
@@ -782,8 +782,8 @@ function checkboxFamilyCode(state: ComponentState): string {
   const rest = `${state.labelPosition === 'start' ? ", labelPosition: 'start'" : ''}${bool(state, 'error') ? ', error: true' : ''}` +
     `${bool(state, 'required') ? ', required: true' : ''}${bool(state, 'disabled') ? ', disabled: true' : ''}`;
   const children = checkboxChildren.map(child => `  { label: '${child.label}', value: '${child.value}'${checkboxChildChecked(state, child.value) ? ', checked: true' : ''} }`).join(',\n');
-  const theme = state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`;
-  return `import { createCheckbox } from 'mtrl';\nimport 'mtrl/styles/base';\nimport 'mtrl/styles/checkbox';\n${theme}\n` +
+  const theme = state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`;
+  return `import { createCheckbox } from 'material';\nimport 'material/styles/base';\nimport 'material/styles/checkbox';\n${theme}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `// A parent over its children (m3.material.io checkbox guidelines): checking the\n// parent checks every child, and a mix makes it indeterminate.\n` +
     `const children = [\n${children}\n].map(child => createCheckbox({ ...child, name: '${string(state, 'name') || 'additions'}'${rest} }));\n` +
@@ -840,8 +840,8 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
       if (!state.visible) after += 'bottomBar.hide();\n';
     }
   }
-  const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
-  return `import { ${imports.join(', ')} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+  const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${literal(component.config(state))});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;
 }
@@ -850,7 +850,7 @@ function communicationCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const literal = (value: unknown) => JSON.stringify(value, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const hasTarget = slug === 'badge' || slug === 'tooltip';
-  const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
+  const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   let before = '';
   let config = literal(component.config(state));
   let after = `document.body.append(${component.variable}.element);\n`;
@@ -866,7 +866,7 @@ function communicationCode(slug: ComponentSlug, state: ComponentState): string {
   } else if (slug === 'progress' && state.variant === 'linear') {
     after = "progress.element.style.width = 'min(100%, 360px)';\n" + after;
   }
-  return `import { ${component.factory}${hasTarget ? ', createIconButton' : slug === 'snackbar' ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+  return `import { ${component.factory}${hasTarget ? ', createIconButton' : slug === 'snackbar' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\n// When the view is removed:\n${slug === 'snackbar' ? '// snackbar.hide();\n' : ''}// ${component.variable}.destroy();\n${cleanup}`;
 }
@@ -879,7 +879,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const slides = slug === 'carousel' ? (shown.slides as unknown[]) : [];
   const config = JSON.stringify(slug === 'carousel' ? { ...shown, slides: slides.slice(0, 3) } : shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(/(\n  slides: \[)/, slides.length > 3 ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1');
-  const styles = ['base', ...component.styles].map(style => `import 'mtrl/styles/${style}';\n`).join('');
+  const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   let setup = '';
   if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
   if (hasTrigger) setup = `const trigger = createButton({ text: 'Open ${component.name.toLowerCase()}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${slug === 'bottom-sheet' ? 'expand' : 'open'}());\ndocument.body.append(trigger.element);\n`;
@@ -889,7 +889,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
     if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
     if (slug === 'carousel') setup += "\n// Drive it from your own controls: carousel.next(), carousel.prev(), carousel.goTo(index).\n// 'change' reports every move: from the API, a swipe, the keyboard or a trackpad.\ncarousel.on('change', ({ index }) => console.log(`Slide ${index + 1} of ${carousel.slides.getCount()}`));\n";
   }
-  return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'mtrl';\n${styles}${state.theme === 'baseline' ? '' : `import 'mtrl/themes/${state.theme}';\n`}\n` +
+  return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${slug === 'card' && state.media || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
 }

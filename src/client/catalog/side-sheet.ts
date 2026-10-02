@@ -1,6 +1,6 @@
 // The side-sheet card: <m-side-sheet>.
-import 'mtrl/elements/css/side-sheet';
-import { defineSideSheet } from 'mtrl/elements';
+import 'material/elements/css/side-sheet';
+import { defineSideSheet } from 'material/elements';
 
 export const define = (): void => {
   defineSideSheet();

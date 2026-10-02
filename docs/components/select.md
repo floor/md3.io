@@ -28,7 +28,7 @@ select:
 ```
 
 `variant` is `filled` (the default) or `outlined`, and `density: 'compact'` lowers the field,
-as on a [text field](/docs/components/textfield/). A select fills its container's width.
+as on a [text field](/docs/components/text-field/). A select fills its container's width.
 
 ## Examples
 
@@ -132,15 +132,14 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Property | Type | Description |
 |----------|------|-------------|
 | `element` | `HTMLElement` | The root, which is the text field's |
-| `textfield` | `TextFieldComponent` | The text field |
-| `menu` | `MenuComponent` | The menu |
+| `textField` | `TextFieldComponent` | The text field |
 
 ### Events
 
 | Event | Description | Data |
 |-------|-------------|------|
-| `change` | The selection changed | `{ select, value, text, option, originalEvent?, preventDefault, defaultPrevented }` |
-| `open` / `close` | The menu opened or closed, however it was | `{ select, originalEvent?, preventDefault, defaultPrevented }` |
+| `change` | The selection changed | `{ select, value, text, option, originalEvent? }`. `value` is `string \| null` |
+| `open` / `close` | The menu opened or closed, however it was | `{ select, originalEvent? }` |
 
 The web component's `change` carries `{ value }`.
 
@@ -168,8 +167,8 @@ The select is a text field: its root carries both sets of classes, and the menu 
 
 ```css
 .mtrl-select, .mtrl-select--open { }
-.mtrl-select.mtrl-textfield--filled, .mtrl-select.mtrl-textfield--outlined { }
-.mtrl-select .mtrl-textfield__input, .mtrl-select .mtrl-textfield__label { }
-.mtrl-select .mtrl-textfield__trailing-icon { }
+.mtrl-select.mtrl-text-field--filled, .mtrl-select.mtrl-text-field--outlined { }
+.mtrl-select .mtrl-text-field__input, .mtrl-select .mtrl-text-field__label { }
+.mtrl-select .mtrl-text-field__trailing-icon { }
 .mtrl-select > .mtrl-menu { }
 ```

@@ -28,7 +28,7 @@ for, not what it looks like.
 ## Import
 
 ```javascript
-import { createComponent } from 'mtrl'
+import { createComponent } from 'material'
 ```
 
 ## Basic Usage

@@ -1,7 +1,7 @@
 // The dialog card: <md3-catalog-dialog>, the dialog shown open in place (surface.ts).
-import 'mtrl/elements/css/dialog';
-import createDialog from 'mtrl/components/dialog';
-import { PREFIX } from 'mtrl/core';
+import 'material/elements/css/dialog';
+import createDialog from 'material/components/dialog';
+import { PREFIX } from 'material/core';
 import { dialogDefaults } from './defaults';
 import { detached, surface } from './surface';
 

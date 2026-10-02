@@ -17,13 +17,13 @@ for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'st
     process.exit(1);
   }
 }
-// Bun links node_modules/mtrl file by file; copy from the real checkout so cp never
+// Bun links node_modules/material file by file; copy from the real checkout so cp never
 // has to recreate those links over files already in dist.
-const mtrlDist = resolve(dirname(realpathSync(resolve(root, 'node_modules/mtrl/package.json'))), 'dist');
-await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'mtrl/styles'), { recursive: true });
-await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'mtrl/themes'), { recursive: true });
+const mtrlDist = resolve(dirname(realpathSync(resolve(root, 'node_modules/material/package.json'))), 'dist');
+await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'material/styles'), { recursive: true });
+await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'material/themes'), { recursive: true });
 // The elements' pre-upgrade rules, for the components overview's cards.
-await cp(resolve(mtrlDist, 'elements/preupgrade.css'), resolve(outdir, 'mtrl/elements/preupgrade.css'));
+await cp(resolve(mtrlDist, 'elements/preupgrade.css'), resolve(outdir, 'material/elements/preupgrade.css'));
 // One minified stylesheet per page type (dist/css/<page>.css), in the link order
 // the pages used to request. See stylesheetBundles.
 const cssDir = resolve(outdir, 'css');

@@ -64,7 +64,7 @@ const visuals: Record<ComponentSlug, string> = {
   chips: m('chips', { selection: 'multi', 'aria-label': 'Interests' },
     [['hiking', 'Hiking', true], ['music', 'Music', false], ['food', 'Food', false]].map(([value, label, selected]) => m('chip', { value: String(value), variant: 'filter', selected: selected === true }, String(label))).join('')),
   slider: m('slider', { value: 40, min: 0, max: 100, step: 10, ticks: true, label: 'Volume', 'aria-label': 'Volume' }),
-  textfield: m('textfield', { variant: 'outlined', label: 'Name', placeholder: 'Enter your name', 'supporting-text': 'As you would like it displayed' }),
+  'text-field': m('text-field', { variant: 'outlined', label: 'Name', placeholder: 'Enter your name', 'supporting-text': 'As you would like it displayed' }),
   select: m('select', { variant: 'outlined', label: 'Fruit', value: 'apple', 'supporting-text': 'Choose a favorite' },
     [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']].map(([value, label]) => m('select-option', { value }, label!)).join('')),
   search: m('search', { placeholder: 'Search places', 'aria-label': 'Search places' }),

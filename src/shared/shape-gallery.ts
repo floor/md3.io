@@ -9,7 +9,7 @@ export interface GalleryItem {
 }
 
 export const SHAPE_GALLERY: readonly { step: string; items: readonly GalleryItem[] }[] = [
-  { step: 'extra-small', items: [{ component: 'textfield', label: 'Text field' }] },
+  { step: 'extra-small', items: [{ component: 'text-field', label: 'Text field' }] },
   { step: 'small', items: [{ component: 'chips', label: 'Chips' }] },
   { step: 'medium', items: [{ component: 'card', label: 'Card' }, { component: 'button', label: 'Square button' }] },
   { step: 'large', items: [{ component: 'fab', label: 'FAB' }] },

@@ -12,7 +12,7 @@ import { gzipSync } from "node:zlib";
 import type { BunPlugin } from "bun";
 import { transformAsync } from "@babel/core";
 import { compile } from "svelte/compiler";
-import { examples, FRAMEWORKS, type FrameworkId } from "../examples";
+import { examples, FRAMEWORKS, type FrameworkId, exampleVariantIds } from "../examples";
 
 const root = resolve(import.meta.dir, "..");
 const outdir = resolve(root, "dist/examples");
@@ -61,8 +61,8 @@ const solid: BunPlugin = {
   },
 };
 
-// One copy of each framework. node_modules/mtrl links to a local mtrl checkout that
-// has its own react, vue, svelte and solid-js (its dev dependencies), so mtrl/react
+// One copy of each framework. node_modules/material links to a local material checkout that
+// has its own react, vue, svelte and solid-js (its dev dependencies), so material/react
 // would otherwise import a second React, whose hooks fail; the same goes for the
 // others. Every framework import resolves from md3.io's node_modules instead. Vue
 // resolves to its full build, which carries the template compiler the example uses.
@@ -111,7 +111,9 @@ for (const example of examples) {
   const dir = resolve(root, "examples", example.slug);
   const sources: Record<string, { files: { name: string; code: string }[]; gzip: number }> = {};
   await mkdir(resolve(outdir, example.slug), { recursive: true });
+  const ids = exampleVariantIds(example);
   for (const { id, file } of FRAMEWORKS) {
+    if (!ids.includes(id)) continue;
     const result = await Bun.build({
       entrypoints: ["example-entry"],
       target: "browser",

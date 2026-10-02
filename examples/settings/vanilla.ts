@@ -1,7 +1,7 @@
 // Vanilla: the create* factories the elements are built on.
-import createButton from "mtrl/components/button";
-import createSwitch from "mtrl/components/switch";
-import createTabs from "mtrl/components/tabs";
+import createButton from "material/components/button";
+import createSwitch from "material/components/switch";
+import createTabs from "material/components/tabs";
 import { DEFAULTS, summary, type Settings } from "./shared";
 
 const s: Settings = { ...DEFAULTS };

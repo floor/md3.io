@@ -31,6 +31,7 @@
 /components/split-button/
 /components/switch/
 /components/tabs/
+/components/text-field/
 /components/textfield/
 /components/timepicker/
 /components/toolbar/
@@ -79,6 +80,7 @@
 /docs/components/svelte/
 /docs/components/switch/
 /docs/components/tabs/
+/docs/components/text-field/
 /docs/components/textfield/
 /docs/components/theming/
 /docs/components/timepicker/
@@ -88,6 +90,7 @@
 /docs/components/vanilla/
 /docs/components/vue/
 /docs/components/web-components/
+/docs/events-and-overlays/
 /docs/getting-started/
 /docs/react/
 /docs/server-rendering/

@@ -74,7 +74,6 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `ariaLabel` | `string` | `undefined` | Accessible name when there is no visible label |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-| `variant` | `string` | `undefined` | Deprecated, no effect: M3 has one checkbox |
 
 ### Methods
 
@@ -96,10 +95,10 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Description | Data |
 |-------|-------------|------|
-| `change` | The state changed | `{ checked, value, nativeEvent? }` |
+| `change` | The state changed | `{ checked, value, valueAttribute, nativeEvent? }` |
 
-`nativeEvent` is there when the user toggled it, not for the methods. The web component's
-`change` carries `{ checked, value }`.
+`value` is the boolean, the same as `getValue()`. `valueAttribute` is the input's `value` attribute, submitted with a form. `nativeEvent` is there when the user toggled it, not for the methods. The web component's
+`change` carries `{ checked, value, valueAttribute }`.
 
 ## Accessibility
 

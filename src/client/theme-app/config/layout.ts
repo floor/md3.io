@@ -1,12 +1,12 @@
-// The theme app's UI as a declarative layout for mtrl-addons' createLayout:
+// The theme app's UI as a declarative layout for material-addons' createLayout:
 // [factory, 'name', { options }, ...children]. Named parts land on `app.ui.<name>`.
 // mtrl's own factories for every control; the scheme card and palette strips are the
 // app's (scheme-card.ts, palette-strip.ts).
-import createTopAppBar from 'mtrl/components/top-app-bar';
-import createSelect from 'mtrl/components/select';
-import createTextField from 'mtrl/components/textfield';
-import createIconButton from 'mtrl/components/icon-button';
-import createButtonGroup from 'mtrl/components/button-group';
+import createTopAppBar from 'material/components/top-app-bar';
+import createSelect from 'material/components/select';
+import createTextField from 'material/components/text-field';
+import createIconButton from 'material/components/icon-button';
+import createButtonGroup from 'material/components/button-group';
 import { createSchemeCard } from '../scheme-card';
 import { createPaletteStrip } from '../palette-strip';
 import share from '../../../../icons/share.svg' with { type: 'text' };

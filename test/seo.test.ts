@@ -63,7 +63,7 @@ describe('page head', () => {
 describe('structured data', () => {
   test('the home page describes mtrl and the site, with the search /?q= opens', async () => {
     const [app, site] = jsonLd(await (await get('/')).text());
-    expect(app).toMatchObject({ '@type': 'SoftwareApplication', name: 'mtrl', softwareVersion: mtrlVersion, codeRepository: 'https://github.com/floor/mtrl', license: 'https://opensource.org/licenses/MIT', url: 'https://md3.io' });
+    expect(app).toMatchObject({ '@type': 'SoftwareApplication', name: 'mtrl', softwareVersion: mtrlVersion, codeRepository: 'https://github.com/floor/material', license: 'https://opensource.org/licenses/MIT', url: 'https://md3.io' });
     expect(site).toMatchObject({ '@type': 'WebSite', url: 'https://md3.io', potentialAction: { '@type': 'SearchAction', target: 'https://md3.io/?q={search_term_string}' } });
   });
   test('every other page has its trail: Home, its section, the page', async () => {

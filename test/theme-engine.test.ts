@@ -6,16 +6,16 @@ import { describe, expect, test } from 'bun:test';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { ThemeSpec } from '../node_modules/mtrl/scripts/generate-themes';
+import type { ThemeSpec } from '../node_modules/material/scripts/generate-themes';
 
 // mtrl's script, copied to a temp directory and run from there, has to resolve its
-// imports from md3.io, not from mtrl's checkout (file:../mtrl): that checkout may
+// imports from md3.io, not from mtrl's checkout (file:../material): that checkout may
 // not have its devDependencies installed, and a temp directory has no package tree
 // at all. Three of its four imports need pointing elsewhere: the two bare packages,
 // material-color-utilities (the same pinned 0.4.0) and sass, at md3.io's own
 // installed copies, and the relative ../src/core/theme at mtrl's source. The
 // fourth, node:fs, is a builtin and resolves as it is.
-const mtrl = resolve(import.meta.dir, '../node_modules/mtrl');
+const mtrl = resolve(import.meta.dir, '../node_modules/material');
 const rewrite = (source: string, specifier: string, target: string): string => {
   const from = `from ${JSON.stringify(specifier)}`;
   // If mtrl respells an import, the rewrite would miss and the copy would run
@@ -37,7 +37,7 @@ if (!script.includes(themes)) throw new Error(`generate-themes.ts no longer has 
 script = script.replaceAll(themes, JSON.stringify(join(mtrl, 'src/styles/themes')).slice(0, -1));
 const copy = join(mkdtempSync(join(tmpdir(), 'md3-themes-')), 'generate-themes.ts');
 writeFileSync(copy, script);
-const generator = await import(copy) as typeof import('../node_modules/mtrl/scripts/generate-themes');
+const generator = await import(copy) as typeof import('../node_modules/material/scripts/generate-themes');
 const { BASELINE_SEED, THEMES, rolesOf: mtrlRolesOf, schemeFor: mtrlSchemeFor } = generator;
 import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec } from '../src/shared/theme-engine';
 
@@ -63,7 +63,7 @@ describe('theme engine', () => {
 
   test('the shipped theme CSS carries the same tokens the page exports', async () => {
     for (const theme of THEMES) {
-      const css = await Bun.file(`node_modules/mtrl/dist/themes/${theme.name}.css`).text();
+      const css = await Bun.file(`node_modules/material/dist/themes/${theme.name}.css`).text();
       const { tokens } = themeColors(specOf(theme));
       const light = css.slice(0, css.indexOf('[data-theme-mode=dark]'));
       // The last declaration wins: the status-colour mixin sets error before the scheme does.

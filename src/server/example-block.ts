@@ -122,7 +122,7 @@ const openers: Record<string, [open: string, close: string]> = {
   snackbar: ['show', 'hide'],
 };
 
-// The mtrl-addons components, from their own package, which has no web components.
+// The material-addons components, from their own package, which has no web components.
 const addons: Record<string, { factory: string; variable: string; name: string }> = {
   colorpicker: { factory: 'createColorPicker', variable: 'picker', name: 'color picker' },
   form: { factory: 'createForm', variable: 'form', name: 'form' },
@@ -178,8 +178,8 @@ export function vanillaCode(block: ExampleBlock): string {
   const trigger = vanillaTrigger(block);
   const slotted = vanillaSlotted(block, trigger.config, variable);
   const config = Object.keys(slotted.config).length ? vanillaValue(slotted.config) : '';
-  const imports = addon(block.slug) ? `import { ${factory} } from 'mtrl-addons';`
-    : `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'mtrl';`;
+  const imports = addon(block.slug) ? `import { ${factory} } from 'material-addons';`
+    : `import { ${[factory, trigger.factory, ...slotted.factories].filter(Boolean).join(', ')} } from 'material';`;
   const renamed = factoryFields[block.slug] ?? {};
   const handlers = block.handlers.map(h => {
     // An example names the web component's payload fields; the factory's may differ
@@ -238,7 +238,7 @@ export function renderExample(source: string): string {
   const highlight = (text: string, language: string) => `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
   const vanilla = highlight(rendered.code.vanilla!, 'javascript');
   const note = addon(slug)
-    ? `<p class="framework-note">The ${addon(slug)!.name} comes from mtrl-addons, which has no web components: its vanilla factory works in any framework.</p>`
+    ? `<p class="framework-note">The ${addon(slug)!.name} comes from material-addons, which has no web components: its vanilla factory works in any framework.</p>`
     : `<p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the ${escapeHTML(componentName(slug).toLowerCase())} web component; the vanilla factory works in any of them today.</p>`;
   const panels = FRAMEWORKS.map(({ id, label, language }) => {
     const code = rendered.code[id];

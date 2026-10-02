@@ -1,8 +1,8 @@
 // The toolbar card: <md3-catalog-toolbar>, the toolbar factory in a surface (surface.ts).
 // <m-toolbar> gives each item host a tabindex for its arrow-key navigation, and a card
 // is a link, which must not hold one; in the surface's shadow root they stay out of it.
-import 'mtrl/elements/css/toolbar';
-import createToolbar from 'mtrl/components/toolbar';
+import 'material/elements/css/toolbar';
+import createToolbar from 'material/components/toolbar';
 import { symbols } from '../../shared/icons';
 import { surface } from './surface';
 

@@ -1,6 +1,6 @@
 // The progress card: <m-progress>.
-import 'mtrl/elements/css/progress';
-import { defineProgress } from 'mtrl/elements';
+import 'material/elements/css/progress';
+import { defineProgress } from 'material/elements';
 
 export const define = (): void => {
   defineProgress();

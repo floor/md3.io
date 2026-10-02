@@ -18,7 +18,7 @@ Each component has a `create*` factory that takes one config object. Every optio
 and each component page lists them.
 
 ```typescript
-import { createSwitch } from 'mtrl';
+import { createSwitch } from 'material';
 
 const wifi = createSwitch({ label: 'Wi-Fi', checked: true });
 document.querySelector('#settings')!.append(wifi.element);
@@ -47,8 +47,8 @@ wifi.on('change', ({ checked }) => setWifi(checked));
 To remove a listener, keep the function you added:
 
 ```typescript
-import createTextField from 'mtrl/components/textfield';
-import type { TextFieldEvents } from 'mtrl/components/textfield';
+import createTextField from 'material/components/text-field';
+import type { TextFieldEvents } from 'material/components/text-field';
 
 const query = createTextField({ label: 'Search' });
 const onInput: TextFieldEvents['input'] = ({ value }) => runSearch(value);
@@ -99,15 +99,15 @@ done: create a new one to show it again.
 Import the base stylesheet once, then one stylesheet per component you use:
 
 ```typescript
-import 'mtrl/styles/base';
-import 'mtrl/styles/switch';
-import 'mtrl/styles/select';
+import 'material/styles/base';
+import 'material/styles/switch';
+import 'material/styles/select';
 ```
 
-A component's stylesheet brings those it depends on: `mtrl/styles/select` also loads the text
-field's and the menu's. The alternative is `mtrl/styles`, one file with every component and the
+A component's stylesheet brings those it depends on: `material/styles/select` also loads the text
+field's and the menu's. The alternative is `material/styles`, one file with every component and the
 bundled themes. It is simpler, and several times larger than a page with a few components needs.
-Other themes are their own imports (`mtrl/themes/<name>`), as [Getting
+Other themes are their own imports (`material/themes/<name>`), as [Getting
 started](../getting-started/#themes-and-dark-mode) shows.
 
 The classes are BEM, with the `mtrl-` prefix (`mtrl-switch__track`), and the colours, type and
@@ -120,14 +120,14 @@ The package is free of side effects apart from its stylesheets, so a bundler kee
 import. Two paths reach a factory, and both tree-shake:
 
 ```typescript
-import { createButton, createMenu } from 'mtrl';
-import createChips from 'mtrl/components/chips';
+import { createButton, createMenu } from 'material';
+import createDialog from 'material/components/dialog';
 ```
 
-The root entry has every factory and its main types. `mtrl/components/<name>` has one component,
+The root entry has every factory and its main types. `material/components/<name>` has one component,
 its factory as the default export, with its types and constants. The constants are only
-there: `import { BUTTON_VARIANTS } from 'mtrl/components/button/constants'`. The composition
-utilities are in `mtrl/core`; [Architecture](../architecture/) shows how to build on them.
+there: `import { BUTTON_VARIANTS } from 'material/components/button/constants'`. The composition
+utilities are in `material/core`; [Architecture](../architecture/) shows how to build on them.
 
 Some features load on demand: a menu's submenus are a separate chunk, fetched only by a menu that
 has nested items. Your bundler splits them out on its own.

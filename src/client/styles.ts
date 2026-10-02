@@ -5,7 +5,7 @@
 import { AA_TEXT, contrastRatio, pairOf } from '../shared/color';
 import { CORNER_MAX, cornerRadius, isEditable } from '../shared/theme-state';
 import { SHAPE_LABELS, morphPath, shapeProfile } from '../shared/shape-library';
-import { LOADING_INDICATOR_SHAPES } from 'mtrl/components/loading-indicator/constants';
+import { LOADING_INDICATOR_SHAPES } from 'material/components/loading-indicator/constants';
 import { themeBase, themeStore } from './theme-store';
 import { announce, changes, copy, themeName } from './styles-panel';
 

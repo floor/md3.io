@@ -1,6 +1,6 @@
 // PM2 Ecosystem Configuration — md3.io (local dev)
-// `bun run dev` (scripts/dev.ts) rebuilds mtrl, the site and the server on its own,
-// in that order, whenever the mtrl checkout's src or this site's sources change.
+// `bun run dev` (scripts/dev.ts) rebuilds material, the site and the server on its own,
+// in that order, whenever the material checkout's src or this site's sources change.
 
 module.exports = {
   apps: [

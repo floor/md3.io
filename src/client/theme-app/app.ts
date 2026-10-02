@@ -4,7 +4,7 @@
 //   foundation (state, UI from config/layout.ts) → the theme and what paints it →
 //   wiring (UI → handlers; state → UI) → setup.
 // The editor and builder will be more features and layout entries in this pipe.
-import { pipe } from 'mtrl/core/compose';
+import { pipe } from 'material/core/compose';
 import { withState, withUI } from './core/foundation';
 import { layout } from './config/layout';
 import { isVariantTheme, withThemeSource, type ThemeData } from './features/withThemeSource';

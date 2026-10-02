@@ -1,6 +1,6 @@
 // Vue: mtrl/vue wraps the same elements; v-model binds their live state.
 import { defineComponent, reactive, ref } from "vue";
-import { MButton, MSwitch, MTab, MTabs } from "mtrl/vue";
+import { MButton, MSwitch, MTab, MTabs } from "material/vue";
 import { DEFAULTS, summary } from "./shared";
 
 export default defineComponent({

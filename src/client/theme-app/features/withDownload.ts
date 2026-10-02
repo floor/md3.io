@@ -1,8 +1,8 @@
 // The theme shown, as a file: CSS or JSON, from mtrl's menu on the download
 // button. The files are written by the Styles section's exporter (theme-state.ts) from
 // mtrl's own schemeToTokens, so they are mtrl's theme shape.
-import createMenu from 'mtrl/components/menu';
-import { schemeToTokens } from 'mtrl/core/theme';
+import createMenu from 'material/components/menu';
+import { schemeToTokens } from 'material/core/theme';
 import { colorThemeCss, colorThemeJson, downloadName, type ColorThemeFile } from '../../../shared/theme-state';
 import type { App } from '../core/foundation';
 import type { ThemeData } from './withThemeSource';

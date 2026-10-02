@@ -1,6 +1,6 @@
 // The button card: <m-button>.
-import 'mtrl/elements/css/button';
-import { defineButton } from 'mtrl/elements';
+import 'material/elements/css/button';
+import { defineButton } from 'material/elements';
 
 export const define = (): void => {
   defineButton();

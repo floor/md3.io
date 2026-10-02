@@ -4,7 +4,7 @@ html, body { margin: 0; min-height: 100%; background: var(--mtrl-sys-color-surfa
 .screen .mtrl-top-app-bar { position: sticky; top: 0; z-index: 1; }
 .screen__body { display: flex; flex-direction: column; gap: 16px; padding: 8px 16px 96px; }
 .screen__body > .mtrl-card { width: 100%; box-sizing: border-box; }
-.screen__body > .mtrl-textfield, .screen__body > .mtrl-slider { width: 100%; min-width: 0; }
+.screen__body > .mtrl-text-field, .screen__body > .mtrl-slider { width: 100%; min-width: 0; }
 .screen__row { display: flex; }
 .screen__row > .mtrl-switch { width: 100%; }
 .screen__actions { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -20,7 +20,7 @@ html, body { margin: 0; min-height: 100%; background: var(--mtrl-sys-color-surfa
 .gallery__items { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; min-width: 0; }
 .gallery__item { min-width: 0; }
 .gallery__item > .mtrl-card { width: 200px; }
-.gallery__item > .mtrl-textfield { width: 220px; max-width: 100%; }
+.gallery__item > .mtrl-text-field { width: 220px; max-width: 100%; }
 .gallery__item > .mtrl-slider { width: 200px; max-width: 100%; }
 @media (max-width: 480px) {
   .gallery__step { grid-template-columns: minmax(0, 1fr); gap: 6px; }

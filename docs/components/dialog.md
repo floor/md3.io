@@ -155,7 +155,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Event | Description | Data |
 |-------|-------------|------|
 | `beforeopen` / `beforeclose` | It is about to open or close; `preventDefault()` stops it | `{ dialog, preventDefault, defaultPrevented }` |
-| `open` / `close` | It opened or closed | `{ dialog }` |
+| `open` / `close` | Emitted inside `open()` and `close()`, once the dialog is open or closed. The animation finishing is `afteropen` / `afterclose` | `{ dialog }` |
 | `afteropen` / `afterclose` | Its animation is over | `{ dialog }` |
 
 The web component dispatches `open` and `close`, without a detail, and `cancel` when `Escape`

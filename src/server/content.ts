@@ -9,15 +9,15 @@ export const root = resolve(import.meta.dir, '../..');
 export const docsDir = resolve(root, 'docs/components');
 const groups: Record<string, string[]> = {
   'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab', 'fab-menu'],
-  'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'textfield', 'select', 'search', 'datepicker', 'timepicker'],
+  'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'text-field', 'select', 'search', 'datepicker', 'timepicker'],
   'Navigation': ['navigation-rail', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
   'Additional references': ['form', 'colorpicker'],
 };
 /** The guides, before the components: how to start, how mtrl is built, and one page per way of using it. */
-export const GUIDES = ['getting-started', 'architecture', 'vanilla', 'web-components', 'react', 'vue', 'svelte', 'solid', 'theming', 'server-rendering'];
-const names: Record<string, string> = { 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', fab: 'FAB', 'extended-fab': 'Extended FAB', textfield: 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
+export const GUIDES = ['getting-started', 'architecture', 'vanilla', 'web-components', 'react', 'vue', 'svelte', 'solid', 'theming', 'server-rendering', 'events-and-overlays'];
+const names: Record<string, string> = { 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', 'events-and-overlays': 'Events and overlays', fab: 'FAB', 'extended-fab': 'Extended FAB', 'text-field': 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
 export const isGuide = (slug: string) => GUIDES.includes(slug);
 /** A document's URL: a guide at /docs/<slug>/, a component under /docs/components/. */
 export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/components/${slug}/`;
@@ -31,6 +31,27 @@ export const PACKAGE_MANAGERS = [
   { id: 'pnpm', command: 'pnpm add' },
   { id: 'yarn', command: 'yarn add' },
 ] as const;
+
+/**
+ * The package a reader installs for this version of the library. A prerelease (a hyphen
+ * in the version) is published on the `next` dist-tag; a release is `material`.
+ */
+export function installSpecifier(version: string): string {
+  return version.includes('-') ? 'material@next' : 'material';
+}
+
+/** The library this site is built against (`node_modules/material`). */
+const libraryVersion = (): string =>
+  JSON.parse(readFileSync(resolve(root, 'node_modules/material/package.json'), 'utf8')).version as string;
+
+/**
+ * An install fence is authored as package names (`material`). That one name follows
+ * {@link installSpecifier} for the version installed here; any other name is unchanged.
+ */
+const resolveInstallPackages = (packages: string): string => {
+  const version = libraryVersion();
+  return packages.split(/\s+/).filter(Boolean).map(name => name === 'material' ? installSpecifier(version) : name).join(' ');
+};
 
 /**
  * An `install` fence (its text is the packages) as one command per package manager, with a
@@ -113,7 +134,7 @@ export function renderDocument(slug: string) {
         examples = true;
         return renderExample(token.text);
       }
-      if (token.lang === 'install') return renderInstall(token.text.trim());
+      if (token.lang === 'install') return renderInstall(resolveInstallPackages(token.text.trim()));
       // Every other block highlighted like the examples: the fence's first word is the
       // language (after it come docs:check's flags, such as `fragment`).
       const language = codeLanguage(token.lang);

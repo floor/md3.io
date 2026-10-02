@@ -1,7 +1,7 @@
 // The snackbar card: <md3-catalog-snackbar>, the snackbar shown in place (surface.ts).
-import 'mtrl/elements/css/snackbar';
-import createSnackbar from 'mtrl/components/snackbar';
-import { PREFIX } from 'mtrl/core';
+import 'material/elements/css/snackbar';
+import createSnackbar from 'material/components/snackbar';
+import { PREFIX } from 'material/core';
 import { snackbarDefaults } from './defaults';
 import { surface } from './surface';
 

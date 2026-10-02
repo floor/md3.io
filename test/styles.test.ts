@@ -22,7 +22,7 @@ describe('Styles pages', () => {
       expect(html).not.toContain('/styles/styles-pages.css');
       expect(html).not.toContain('/styles/roboto.css');
       // mtrl's base.css would restyle the site: the Styles pages never load it.
-      expect(html).not.toContain('mtrl/styles/base.css');
+      expect(html).not.toContain('material/styles/base.css');
       // Every Styles page has the live preview, the export panel and one status region.
       expect(html).toContain('<iframe src="/styles/frame/"');
       expect(html).toContain('id="styles-export"');
@@ -55,8 +55,8 @@ describe('Styles pages', () => {
     }
     // mtrl's own steps are listed apart, and only editable steps get an editor.
     const extras = Object.keys(shapeScale).filter(step => !M3_CORNER_SCALE.some(entry => entry.step === step));
-    expect(html).toContain('mtrl-specific, not part of M3');
-    for (const step of extras) expect(html).toContain(`data-step="${step}"`);
+    expect(extras).toEqual([]);
+    expect(html).not.toContain('mtrl-specific, not part of M3');
     expect(html).toContain('id="shape-edit-medium"');
     expect(html).not.toContain('id="shape-edit-full"');
     expect(html).not.toContain('id="shape-edit-none"');
@@ -76,8 +76,8 @@ describe('Styles pages', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
     const html = await response.text();
-    expect(html).toContain('/dist/mtrl/styles/base.css');
-    for (const style of ['card', 'dialog', 'button', 'chips', 'textfield', 'checkbox']) expect(html).toContain(`/dist/mtrl/styles/${style}.css`);
+    expect(html).toContain('/dist/material/styles/base.css');
+    for (const style of ['card', 'dialog', 'button', 'chips', 'text-field', 'checkbox']) expect(html).toContain(`/dist/material/styles/${style}.css`);
     expect(html).toContain('/dist/styles-frame.js');
   });
   test('the shape page is in the sitemap and the sidebar', async () => {

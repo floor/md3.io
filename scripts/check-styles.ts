@@ -177,7 +177,7 @@ try {
   // no height, no card move), and a phone does not scroll sideways.
   console.log('Checking /styles/themes/');
   await page.goto(`${base}/styles/themes/`);
-  const themeCss = await (await fetch(`${base}/dist/mtrl/themes/desert.css`)).text();
+  const themeCss = await (await fetch(`${base}/dist/material/themes/desert.css`)).text();
   const declared = (css: string, role: string) => [...css.slice(0, css.indexOf('[data-theme-mode=dark]')).matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
   const desertPrimary = declared(themeCss, 'primary')!;
   // mtrl's theme CSS is the light block, the dark block, then the contrast levels' blocks
@@ -331,7 +331,7 @@ try {
   // (styles/theme-app.css), so the field's height and the Scheme card's top are the
   // same with the message as without — at 1440 (the 200 px field; the field is a fixed
   // 200 px at every width above 700, so this is 1280's case too), and at 390 and 375.
-  const nameField = page.locator('.theme-app__controls > .mtrl-textfield:not(.mtrl-select)');
+  const nameField = page.locator('.theme-app__controls > .mtrl-text-field:not(.mtrl-select)');
   const nameInput = page.getByLabel('Theme name', { exact: true });
   assert(await nameField.count() === 1 && await nameInput.count() === 1, 'The controls hold the labelled Theme name field');
   assert(await nameInput.inputValue() === 'custom', `The Theme name field starts on custom: ${await nameInput.inputValue()}`);
@@ -343,7 +343,7 @@ try {
     const height = await nameFieldHeight();
     const top = await schemeCardTop();
     await nameInput.fill('desert');
-    await until(() => nameField.locator('.mtrl-textfield__helper').textContent().then(text => text?.trim()), 'Built-in name: taken', `A built-in theme's name is refused at ${where}, and the field says so`);
+    await until(() => nameField.locator('.mtrl-text-field__helper').textContent().then(text => text?.trim()), 'Built-in name: taken', `A built-in theme's name is refused at ${where}, and the field says so`);
     assert(Math.abs(await nameFieldHeight() - height) < 0.5, `The field keeps its height when the refusal appears at ${where}: ${height} → ${await nameFieldHeight()} px`);
     assert(Math.abs(await schemeCardTop() - top) < 0.5, `The Scheme card does not move when the refusal appears at ${where}: ${top} → ${await schemeCardTop()} px`);
   };
@@ -387,7 +387,7 @@ try {
   const mode = (await siteMode()) === 'light' ? 'light' : 'dark';
   for (const [name, label] of VARIANT_THEMES) {
     await pickVariant(label);
-    const shipped = await (await fetch(`${base}/dist/mtrl/themes/${name}.css`)).text();
+    const shipped = await (await fetch(`${base}/dist/material/themes/${name}.css`)).text();
     await until(() => tiles().then(shown => shown.primary), roleHex(shipped, 'primary', mode), `Baseline × ${label} shows ${name}'s primary`);
     const shown = await tiles();
     for (const role of THEME_ROLES) if (shown[role] !== undefined) assert(shown[role] === roleHex(shipped, role, mode), `Baseline × ${label}: ${role} ${shown[role]}, mtrl's ${name}.css has ${roleHex(shipped, role, mode)}`);
@@ -428,7 +428,7 @@ try {
   await pickVariant('Tonal Spot');
   await setContrast('Standard');
   // A hand-made theme: Original is mtrl's ocean.css; Vibrant is generated from its light primary.
-  const oceanCss = await (await fetch(`${base}/dist/mtrl/themes/ocean.css`)).text();
+  const oceanCss = await (await fetch(`${base}/dist/material/themes/ocean.css`)).text();
   await pickTheme('Ocean');
   await until(() => variantSelect.locator('input').inputValue(), 'Original', 'Ocean opens on Original');
   const original = await tiles();
