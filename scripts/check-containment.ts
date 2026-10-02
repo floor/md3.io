@@ -29,6 +29,17 @@ try {
     await page.locator('#playground-status').filter({ hasText: 'Configuration reset' }).waitFor();
   };
   const valueIs = (key: string, expected: string) => page.waitForFunction(({ key, expected }) => (document.querySelector(`#configuration [name="${key}"]:checked, #configuration [name="${key}"]:not([type="radio"]):not([type="checkbox"])`) as HTMLInputElement)?.value === expected, { key, expected });
+  // A change re-renders the stage: the element a read lands on may be the new one, a frame
+  // before it is laid out. Polls, bounded, until the box has a width and a height; the
+  // caller asserts, so one that never gets a box fails with its own message.
+  const untilBox = async (read: () => Promise<{ width: number; height: number } | null>) => {
+    let box = await read();
+    for (let i = 0; i < 50 && (!box || box.width === 0 || box.height === 0); i++) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      box = await read();
+    }
+    return box;
+  };
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Containment' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
     await page.goto(`${server.url}components/${slug}/`);
@@ -137,7 +148,7 @@ try {
         await frame.locator('#stage > *').first().waitFor();
         if (slug === 'divider') {
           await frame.getByRole('separator').waitFor();
-          const bounds = await frame.getByRole('separator').boundingBox();
+          const bounds = await untilBox(() => frame.getByRole('separator').boundingBox());
           assert(bounds && bounds.width > 0 && bounds.height > 0, 'Divider has no visible length');
         }
         if (slug === 'dialog' && key === 'size') {

@@ -225,11 +225,20 @@ try {
   // pickTheme only waits for the item to be hidden: each count waits for the select's menu
   // (38 elements) to have left, so both are of the same page and must be equal.
   const menuGone = () => page.waitForFunction(() => !document.querySelector('.mtrl-menu'));
+  // A press shows a ripple wave and a copy shows mtrl's snackbar; each leaves on a timer
+  // of its own (the snackbar's runs seconds), so a count waits for both to have left: the
+  // two samples are then of the same page, whatever the load.
+  const quiet = async () => {
+    await until(() => page.locator('.mtrl-ripple-wave').count(), 0, 'Ripple waves end');
+    await until(() => page.locator('.mtrl-snackbar').count(), 0, 'Snackbars end');
+  };
   await menuGone();
+  await quiet();
   const before = await counts();
   const names = ['Desert', 'Summer', 'Ocean', 'Brownbeige', 'Forest', 'Baseline', 'Sageivory', 'Autumn', 'Tealcaramel', 'Ocean'];
   for (const name of names) { await pickTheme(name); await until(themeValue, name, `The select shows ${name}`); }
   await menuGone();
+  await quiet();
   const after = await counts();
   console.log(`Ten theme switches: listeners ${before.listeners} → ${after.listeners}, elements ${before.nodes} → ${after.nodes}`);
   assert(after.listeners === before.listeners && after.nodes === before.nodes, `Ten theme switches add no listener and no element, and lose none: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
@@ -288,12 +297,13 @@ try {
   assert(await cardBefore!.evaluate(element => element.isConnected), 'The mode repaints the card in place');
   assert(!await page.locator('.theme-app__actions [name="mode"]').count(), 'The app has no mode button of its own');
   // Ten site toggles: listeners and elements stay flat.
+  await quiet();
   const beforeModes = await counts();
   for (let i = 0; i < 10; i++) {
     await toggleSite();
     await until(() => lightPrimary.getAttribute('data-hex'), primaryFor(await siteMode()), `Toggle ${i + 1} paints the ${await siteMode()} primary`);
   }
-  await until(() => page.locator('.mtrl-ripple-wave').count(), 0, 'Ripple waves end');
+  await quiet();
   const afterModes = await counts();
   console.log(`Ten site mode toggles: listeners ${beforeModes.listeners} → ${afterModes.listeners}, elements ${beforeModes.nodes} → ${afterModes.nodes}`);
   assert(afterModes.listeners === beforeModes.listeners && afterModes.nodes <= beforeModes.nodes, `Ten site mode toggles add no listener and no element: ${JSON.stringify(beforeModes)} → ${JSON.stringify(afterModes)}`);
