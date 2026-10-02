@@ -27,6 +27,10 @@ describe("exampleVariantIds", () => {
     const meta: ExampleMeta = { ...baseMeta, variants: ["vanilla", "unknown" as FrameworkId] };
     expect(() => exampleVariantIds(meta)).toThrow("Unknown framework id: unknown");
   });
+  test("an empty array rejected", () => {
+    const meta: ExampleMeta = { ...baseMeta, variants: [] };
+    expect(() => exampleVariantIds(meta)).toThrow("Example test declares an empty variants array");
+  });
 });
 
 describe("exampleReferenceId", () => {
@@ -50,19 +54,27 @@ describe("exampleReferenceId", () => {
   });
 });
 
+import { mkdtemp } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { afterAll } from "bun:test";
+
 describe("fixture example", () => {
+  let fixtureDir: string;
+
+  afterAll(async () => {
+    if (fixtureDir) {
+      await rm(fixtureDir, { recursive: true, force: true });
+    }
+  });
+
   test("proves the feature with a tiny fixture example inside the tests", async () => {
-    const fixtureDir = resolve(import.meta.dir, "temp-fixture");
-    await mkdir(fixtureDir, { recursive: true });
+    fixtureDir = await mkdtemp(join(tmpdir(), "md3io-example-fixture-"));
+    await writeFile(join(fixtureDir, "meta.ts"), "export default { slug: 'temp-fixture', title: 'Temp', description: '', components: [], about: [], how: [], variants: ['vanilla'] };");
     
-    await writeFile(resolve(fixtureDir, "meta.ts"), "export default { slug: 'temp-fixture', title: 'Temp', description: '', components: [], about: [], how: [], variants: ['vanilla'] };");
-    
-    // dynamically import the created fixture meta
-    const fixtureMeta = (await import(resolve(fixtureDir, "meta.ts"))).default;
+    const fixtureMeta = (await import(join(fixtureDir, "meta.ts"))).default;
     
     expect(exampleVariantIds(fixtureMeta)).toEqual(["vanilla"]);
     expect(exampleReferenceId(fixtureMeta)).toBe("vanilla");
-
-    await rm(fixtureDir, { recursive: true, force: true });
   });
 });
