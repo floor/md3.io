@@ -32,8 +32,8 @@ const destinations = [{ value: 'inbox', label: 'Inbox', icon: symbols.inbox }, {
 // the card's 200 × 148 slide. The card's element loads only as it nears the viewport,
 // so the photos do too.
 // Lorem Picsum (https://picsum.photos, read 2026-10-02) says "Images from Unsplash" and states no licence of its own.
-// The Unsplash licence (https://unsplash.com/license, read 2026-10-02): "All images can be downloaded and used for free", for "Commercial and non-commercial purposes", and "No permission needed (though attribution is appreciated!)".
-// "This license does not include the right to compile images from Unsplash to replicate a similar or competing service." The images are loaded from that service at view time, not stored in this repository.
+// Unsplash publishes its licence at https://unsplash.com/license (read 2026-10-02): "Unsplash grants you an irrevocable, nonexclusive, worldwide copyright license to download, copy, modify, distribute, perform, and use images from Unsplash for free, including for commercial purposes, without permission from or attributing the photographer or Unsplash."
+// Neither page says which terms cover a given photo. The images are loaded from that service at view time, not stored in this repository.
 const places = [
   { id: 29, title: 'Himalayan Peaks', location: 'Nepal' },
   { id: 49, title: 'Santorini Village', location: 'Greece' },

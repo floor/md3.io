@@ -136,7 +136,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 - A selectable row holds a button named by the headline and described by the supporting text,
   with `aria-pressed` for its selection. With `trackSelection`, each row's action is a button
   with `aria-pressed`: that is this option's contract and it stays. A listbox of options would
-  be a separate opt-in mode (planned for 3.1.0). `Up`, `Down`, `Home` and `End` move between
+  be a separate opt-in mode. `Up`, `Down`, `Home` and `End` move between
   the enabled rows; `Enter` or `Space` selects.
 - A disabled row is `aria-disabled` and its button disabled. Leading icons are hidden from
   assistive tech; a trailing control is the app's to name.
