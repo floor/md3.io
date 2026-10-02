@@ -21,7 +21,8 @@ try {
   for (const example of examples) {
     const steps = (await import(resolve(import.meta.dir, "../examples", example.slug, "check.ts"))).default as (page: Page) => Promise<void>;
     const reference: Record<string, string> = {};
-    for (const { id, label } of FRAMEWORKS) {
+
+    async function runVariant(id: string, label: string, isReference: boolean) {
       const page = await browser.newPage();
       const problems: string[] = [];
       page.on("pageerror", (error) => problems.push(error.message));
@@ -36,7 +37,7 @@ try {
       const after = await app.ariaSnapshot();
       await page.close();
       assert.deepEqual(problems, [], `${example.slug}/${label}: no errors or warnings`);
-      if (id === "html") {
+      if (isReference) {
         reference.before = before;
         reference.after = after;
       } else {
@@ -45,6 +46,14 @@ try {
       }
       checks++;
       console.log(`  ok ${example.slug}: ${label}`);
+    }
+
+    const refFramework = FRAMEWORKS.find(f => f.id === "html")!;
+    await runVariant(refFramework.id, refFramework.label, true);
+    for (const f of FRAMEWORKS) {
+      if (f.id !== "html") {
+        await runVariant(f.id, f.label, false);
+      }
     }
   }
 } finally {
