@@ -26,6 +26,8 @@ export const withVariant = () => (app: App) => {
   };
   let shown: ThemeData = source.current();
   let request = 0;
+  /** The variant and contrast state that produced `shown`. `null` is the theme's own. */
+  let applied = { variant: state.get('variant') as string | null, contrast: state.get('contrast') as number | null };
   /** The scheme in effect: the theme as mtrl ships it, a built-in theme that is the same scheme, or the engine's. */
   const derive = async (): Promise<ThemeData> => {
     const theme = source.current();
@@ -52,10 +54,23 @@ export const withVariant = () => (app: App) => {
     variant: {
       own, effective, seedOf,
       shown: () => shown,
-      /** Works out the scheme, then calls `done` with it, unless a newer change came first. */
-      update: (done: (theme: ThemeData) => void) => {
+      /** Works out the scheme, then calls `done` with it, unless a newer change came first.
+       *  A failure calls `failed` and puts the controls back to the scheme in effect. */
+      update: (done: (theme: ThemeData) => void, failed?: () => void) => {
         const ticket = ++request;
-        derive().then(theme => { if (ticket === request) { shown = theme; done(theme); } });
+        const chosen = { variant: state.get('variant') as string | null, contrast: state.get('contrast') as number | null };
+        derive().then(theme => {
+          if (ticket !== request) return;
+          shown = theme;
+          applied = chosen;
+          done(theme);
+        }).catch(() => {
+          if (ticket !== request) return;
+          // The control already shows the choice; the card is still `shown`.
+          state.set('variant', applied.variant);
+          state.set('contrast', applied.contrast);
+          failed?.();
+        });
       },
       /** The address of what is shown: the theme or seed, then any variant and contrast not its own. */
       params: (): URLSearchParams => {

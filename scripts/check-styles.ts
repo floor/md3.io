@@ -352,6 +352,15 @@ try {
   await pickVariant('Tonal Spot');
   // Desert × High: every text pair at 7:1 or more.
   await pickTheme('Desert');
+  // Original is a hand-made theme's own colours. The select's menu is appended inside
+  // the select, so the descendant rule can hide it for a seeded theme.
+  await until(() => variantSelect.evaluate(element => element.hasAttribute('data-seeded')), true, 'Desert marks the variant select as seeded');
+  await variantSelect.click();
+  await page.locator('.mtrl-menu--visible').waitFor();
+  const originalDisplay = await variantSelect.locator('.mtrl-menu__item[data-id="original"]').evaluateAll(elements => elements.map(element => getComputedStyle(element).display));
+  assert(originalDisplay.length === 1 && originalDisplay[0] === 'none', `A seeded theme does not show Original: ${originalDisplay.join(', ') || 'item not inside the select'}`);
+  await page.keyboard.press('Escape');
+  await page.locator('.mtrl-menu--visible').waitFor({ state: 'detached' });
   await setContrast('High');
   const desertHigh = themeColors({ source: '#9a7a3e', variant: 'tonal-spot', contrast: 1, core: { secondary: '#4a87c4' } }).roles[mode];
   await until(() => tiles().then(shown => shown.primary), desertHigh.primary, 'High contrast regenerates desert');

@@ -21,6 +21,11 @@ export const withSetup = () => (app: App) => {
   app.state.set('variant', variant);
   app.state.set('contrast', contrast);
   app.teardown.add(app.source.connect());
-  if (seed && /^#?[0-9a-f]{6}$/i.test(seed)) app.image.show(`#${seed.replace('#', '').toLowerCase()}`);
+  if (seed && /^#?[0-9a-f]{6}$/i.test(seed)) {
+    const value = `#${seed.replace('#', '').toLowerCase()}`;
+    // The engine loads here too. A rejected import must not stay unhandled; the select
+    // never moves until the seed is shown, so the built-in theme stays the one applied.
+    app.image.show(value).catch(() => app.copy.tell(`Could not read seed ${value}`));
+  }
   return { ui: app.ui, state: app.state, destroy: () => app.teardown.run() };
 };
