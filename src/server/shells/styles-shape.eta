@@ -12,11 +12,11 @@
     const sample = missing ? (m3 === null ? 999 : m3) : Math.min(radius, 999);
 %>
       <li class="shape-tile<%= missing ? ' shape-tile--missing' : '' %>" data-step="<%= step %>">
-        <button type="button" class="shape-tile__select" aria-pressed="false" <%= missing ? 'disabled' : '' %> aria-label="<%= missing ? `${label(step)}: not in mtrl yet` : `Show the components that use ${label(step).toLowerCase()}` %>"><span class="shape-tile__shape" style="border-radius:<%= sample %>px" aria-hidden="true"></span></button>
+        <button type="button" class="shape-tile__select" aria-pressed="false" <%= missing ? 'disabled' : '' %> aria-label="<%= missing ? `${label(step)}: not in material yet` : `Show the components that use ${label(step).toLowerCase()}` %>"><span class="shape-tile__shape" style="border-radius:<%= sample %>px" aria-hidden="true"></span></button>
         <span class="shape-tile__name"><%= label(step) %></span>
         <% if (missing) { %>
         <span class="shape-tile__value"><%= shown %> in M3</span>
-        <span class="shape-tile__note">Not in mtrl yet</span>
+        <span class="shape-tile__note">Not in material yet</span>
         <% } else if (editable(radius)) { %>
         <button type="button" class="shape-tile__value shape-tile__edit" aria-expanded="false" aria-controls="shape-edit-<%= step %>" aria-label="Edit <%= label(step).toLowerCase() %>, <%= radius %>px"><output><%= radius %>px</output></button>
         <span class="shape-tile__editor" id="shape-edit-<%= step %>" hidden>
@@ -31,8 +31,8 @@
 <% }; %>
 <div class="styles-layout">
 <div class="page-wrap styles-page styles-shape" data-styles-page="shape">
-  <header class="page-heading"><span class="eyebrow">STYLES / SHAPE</span><h1>Shape</h1><p>Material 3's corner scale as mtrl ships it, the components that use each step, and the expressive shapes.</p></header>
-  <p class="styles-source">mtrl values read from its compiled CSS · mtrl <%= it.mtrlVersion %> · M3 values from m3.material.io and Compose</p>
+  <header class="page-heading"><span class="eyebrow">STYLES / SHAPE</span><h1>Shape</h1><p>Material 3's corner scale as material ships it, the components that use each step, and the expressive shapes.</p></header>
+  <p class="styles-source">material values read from its compiled CSS · material <%= it.mtrlVersion %> · M3 values from m3.material.io and Compose</p>
 
   <section aria-labelledby="shape-scale-title" data-reset-scope tabindex="-1">
     <div class="styles-head"><h2 id="shape-scale-title" class="type-section__title">The corner scale</h2><button type="button" class="ui-btn" data-theme-reset="shape">Reset shape</button></div>
@@ -42,7 +42,7 @@
     </ol>
     <% if (extras.length) { %>
     <div class="shape-extras">
-      <p class="shape-extras__label">mtrl-specific, not part of M3</p>
+      <p class="shape-extras__label">material-specific, not part of M3</p>
       <ol class="shape-strip shape-strip--extras">
         <% extras.forEach(step => tile(step, null)); %>
       </ol>
@@ -52,13 +52,13 @@
 
   <section aria-labelledby="shape-components-title">
     <h2 id="shape-components-title" class="type-section__title">Shape in components</h2>
-    <p class="type-section__lead">Real mtrl components under the step they read. Hover a row to find its step above. A round button isn't here: M3's round shape is half the button's height, not a step.</p>
-    <iframe class="shape-gallery" src="/styles/frame/?view=gallery" data-theme-frame="theme" data-autosize title="mtrl components grouped by corner step"></iframe>
+    <p class="type-section__lead">Real material components under the step they read. Hover a row to find its step above. A round button isn't here: M3's round shape is half the button's height, not a step.</p>
+    <iframe class="shape-gallery" src="/styles/frame/?view=gallery" data-theme-frame="theme" data-autosize title="material components grouped by corner step"></iframe>
   </section>
 
   <section aria-labelledby="shape-library-title" class="shape-library" id="shape-library">
     <h2 id="shape-library-title" class="type-section__title">Expressive shapes</h2>
-    <p class="type-section__lead">M3 defines <%= it.m3ShapeCount %> shapes; mtrl ships these <%= it.library.length %> today (FLO-346), drawn here by <code>mtrl/core/shapes</code>, the geometry its loading indicator morphs through.</p>
+    <p class="type-section__lead">M3 defines <%= it.m3ShapeCount %> shapes; material ships these <%= it.library.length %> today (FLO-346), drawn here by <code>material/core/shapes</code>, the geometry its loading indicator morphs through.</p>
     <div class="shape-library__body">
       <ul class="shape-library__grid">
         <% it.library.forEach(shape => { %>
