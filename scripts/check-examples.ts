@@ -21,7 +21,6 @@ try {
   for (const example of examples) {
     const steps = (await import(resolve(import.meta.dir, "../examples", example.slug, "check.ts"))).default as (page: Page) => Promise<void>;
     const ids = exampleVariantIds(example);
-    if (ids.length === 0) continue;
     const referenceId = exampleReferenceId(example);
     const reference: Record<string, string> = {};
 

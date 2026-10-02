@@ -25,6 +25,7 @@ export type FrameworkId = (typeof FRAMEWORKS)[number]["id"];
 
 export function exampleVariantIds(meta: ExampleMeta): FrameworkId[] {
   if (meta.variants) {
+    if (meta.variants.length === 0) throw new Error(`Example ${meta.slug} declares an empty variants array`);
     const valid = FRAMEWORKS.map((f) => f.id);
     const invalid = meta.variants.find((id) => !valid.includes(id));
     if (invalid) throw new Error(`Unknown framework id: ${invalid}`);
@@ -33,8 +34,7 @@ export function exampleVariantIds(meta: ExampleMeta): FrameworkId[] {
   return FRAMEWORKS.map((f) => f.id);
 }
 
-export function exampleReferenceId(meta: ExampleMeta): FrameworkId | undefined {
+export function exampleReferenceId(meta: ExampleMeta): FrameworkId {
   const ids = exampleVariantIds(meta);
-  if (ids.length === 0) return undefined;
-  return ids.includes("html") ? "html" : ids[0];
+  return ids.includes("html") ? "html" : ids[0]!;
 }
