@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium, type Page } from "playwright";
 import { handleRequest } from "../server";
-import { examples, FRAMEWORKS } from "../examples";
+import { examples, FRAMEWORKS, exampleVariantIds, exampleReferenceId } from "../examples";
 
 const server = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: handleRequest });
 const browser = await chromium.launch();
@@ -20,6 +20,9 @@ let checks = 0;
 try {
   for (const example of examples) {
     const steps = (await import(resolve(import.meta.dir, "../examples", example.slug, "check.ts"))).default as (page: Page) => Promise<void>;
+    const ids = exampleVariantIds(example);
+    if (ids.length === 0) continue;
+    const referenceId = exampleReferenceId(example);
     const reference: Record<string, string> = {};
 
     async function runVariant(id: string, label: string, isReference: boolean) {
@@ -48,10 +51,10 @@ try {
       console.log(`  ok ${example.slug}: ${label}`);
     }
 
-    const refFramework = FRAMEWORKS.find(f => f.id === "html")!;
+    const refFramework = FRAMEWORKS.find(f => f.id === referenceId)!;
     await runVariant(refFramework.id, refFramework.label, true);
     for (const f of FRAMEWORKS) {
-      if (f.id !== "html") {
+      if (ids.includes(f.id) && f.id !== referenceId) {
         await runVariant(f.id, f.label, false);
       }
     }

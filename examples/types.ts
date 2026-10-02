@@ -8,6 +8,7 @@ export interface ExampleMeta {
   /** Paragraphs for the side panel (trusted HTML, written here). */
   about: string[];
   how: string[];
+  variants?: FrameworkId[];
 }
 
 /** The variants every example ships, in tab order: the web components first. */
@@ -21,3 +22,19 @@ export const FRAMEWORKS = [
 ] as const;
 
 export type FrameworkId = (typeof FRAMEWORKS)[number]["id"];
+
+export function exampleVariantIds(meta: ExampleMeta): FrameworkId[] {
+  if (meta.variants) {
+    const valid = FRAMEWORKS.map((f) => f.id);
+    const invalid = meta.variants.find((id) => !valid.includes(id));
+    if (invalid) throw new Error(`Unknown framework id: ${invalid}`);
+    return meta.variants;
+  }
+  return FRAMEWORKS.map((f) => f.id);
+}
+
+export function exampleReferenceId(meta: ExampleMeta): FrameworkId | undefined {
+  const ids = exampleVariantIds(meta);
+  if (ids.length === 0) return undefined;
+  return ids.includes("html") ? "html" : ids[0];
+}

@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import hljs from 'highlight.js';
 import { root } from './content';
-import { examples, FRAMEWORKS, type ExampleMeta, type FrameworkId } from '../../examples';
+import { examples, FRAMEWORKS, exampleVariantIds, type ExampleMeta, type FrameworkId } from '../../examples';
 
 export { examples, FRAMEWORKS };
 
@@ -27,7 +27,8 @@ export function exampleVariants(slug: string): ExampleVariant[] | null {
   const path = resolve(root, 'dist/examples', slug, 'sources.json');
   if (!existsSync(path)) return null;
   const built = JSON.parse(readFileSync(path, 'utf8')) as Record<string, Built>;
-  return FRAMEWORKS.filter(({ id }) => built[id]).map(({ id, label }) => ({
+  const ids = exampleVariantIds(exampleBySlug(slug)!);
+  return FRAMEWORKS.filter(({ id }) => ids.includes(id) && built[id]).map(({ id, label }) => ({
     id, label, gzip: built[id]!.gzip,
     files: built[id]!.files.map(file => ({
       name: file.name, code: file.code,
