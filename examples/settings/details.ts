@@ -3,9 +3,11 @@
 // library's headline-small type role — then per group the group's title (the library's
 // title-small role) and the group's settings under it: a switch is a list row with the
 // control in its trailing slot, the row supplying the 48 dp target, the text roles and
-// the states. A slider is not: the trailing slot is content-sized and does not shrink, so
-// a slider put there collapses to the width of its own label — it stands in a block of the
-// pane's full width instead, where the component draws its label above a draggable track.
+// the states. The switch is named by the app through its ariaLabel; the row's supporting
+// text stays the row's — the list exposes no public handle on it (FLO-590). A slider is
+// not a row: the trailing slot is content-sized and does not shrink, so a slider put
+// there collapses to the width of its own label — it stands in a block of the pane's
+// full width instead, where the component draws its label above a draggable track.
 import createList, { type ListItem } from "material/components/list";
 import { buildControl, type Control } from "./controls";
 import { CATEGORIES } from "./data";
@@ -14,6 +16,8 @@ import type { Store } from "./state";
 export interface DetailPanes {
   /** The pane per category id, hidden until its category is open. */
   details: Map<string, HTMLElement>;
+  /** Destroys the rows' lists, for the app's destroy(). */
+  destroy: () => void;
 }
 
 export const buildDetails = (
@@ -22,6 +26,7 @@ export const buildDetails = (
   detailPane: HTMLElement,
 ): DetailPanes => {
   const details = new Map<string, HTMLElement>();
+  const lists: ReturnType<typeof createList>[] = [];
 
   for (const category of CATEGORIES) {
     const detail = document.createElement("section");
@@ -41,20 +46,13 @@ export const buildDetails = (
       detail.append(groupTitle);
 
       let rows: ListItem[] = [];
-      let described: { key: string; control: Control }[] = [];
       // The rows up to here become one list; a slider breaks the run.
       const flush = (): void => {
         if (!rows.length) return;
         const list = createList({ ariaLabel: `${category.title}, ${group.title}`, trackSelection: false, items: rows });
-        // Describe a control with its row's supporting text, as the list does for its own
-        // action buttons: the text element's id is the list's.
-        for (const { key, control } of described) {
-          const supporting = list.element.querySelector(`[data-id="${key}"] .mtrl-list__supporting`);
-          if (supporting?.id && control.focusable) control.focusable.setAttribute("aria-describedby", supporting.id);
-        }
+        lists.push(list);
         detail.append(list.element);
         rows = [];
-        described = [];
       };
 
       for (const setting of group.settings) {
@@ -76,7 +74,6 @@ export const buildDetails = (
           supportingText: setting.supportingText,
           trailing: { type: "control", content: control.element },
         });
-        if (setting.supportingText) described.push({ key: setting.key, control });
       }
       flush();
     }
@@ -84,5 +81,10 @@ export const buildDetails = (
     detailPane.append(detail);
   }
 
-  return { details };
+  return {
+    details,
+    destroy: () => {
+      for (const list of lists) list.destroy();
+    },
+  };
 };
