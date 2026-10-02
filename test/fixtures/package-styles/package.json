@@ -1,0 +1,9 @@
+{
+  "name": "example-style-fixture",
+  "type": "module",
+  "exports": {
+    "./styles": "./theme/base.css",
+    "./styles/table": "./theme/table.css",
+    "./script": "./vanilla.ts"
+  }
+}
