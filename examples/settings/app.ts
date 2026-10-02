@@ -19,14 +19,23 @@ import { createStore } from "./state";
 // wherever the frame puts the app. The example frame pads the page by 24 px each side,
 // so the first boundary, 600 px of the app, is a 648 px window (888 and 1248 later).
 const SPLIT_AT = 600;
-let twoPane = false;
 
 const titleOf = (id: string): string => CATEGORIES.find((category) => category.id === id)?.title ?? "Settings";
 
-export const createSettingsApp = (): HTMLElement => {
+export interface SettingsApp {
+  /** The app's root element, for the caller to mount. */
+  element: HTMLElement;
+  /** Disconnects the observer and the store, destroys the components and removes the element. */
+  destroy: () => void;
+}
+
+export const createSettingsApp = (): SettingsApp => {
   const store = createStore();
   const controls = new Map<string, Control>();
   const rows = new Map<string, HTMLElement>();
+  // The app's own state, one per mount: a second mount starts from the single-pane
+  // layout and its own observer, never from the previous mount's pane mode.
+  let twoPane = false;
   let current: string | null = null;
   let last: string | null = null;
   let undoState: Settings | null = null;
@@ -74,9 +83,13 @@ export const createSettingsApp = (): HTMLElement => {
   listPane.append(reset.element);
 
   // One detail pane per category, built once, applied on every state change (details.ts).
-  const { details } = buildDetails(store, controls, detailPane);
+  const { details, destroy: destroyDetails } = buildDetails(store, controls, detailPane);
 
+  // The dialog is mounted in the app's own element (its documented `container`), so it
+  // sits in the app's subtree: "Dark theme" then carries it along, and the scrim covers
+  // the app rather than the page around it.
   const dialog = createDialog({
+    container: root,
     title: "Reset all settings?",
     content: "Every setting goes back to its default. You can undo this right after.",
     buttons: [
@@ -161,35 +174,61 @@ export const createSettingsApp = (): HTMLElement => {
   };
   // The observer fires once on observe too, so a wide window opens its first category
   // from the same call that keeps the app in step on every later resize.
-  new ResizeObserver(() => {
+  const observer = new ResizeObserver(() => {
     const next = root.getBoundingClientRect().width >= SPLIT_AT;
     if (next === twoPane) return;
     twoPane = next;
     applyLayout();
-  }).observe(root);
+  });
+  observer.observe(root);
 
   // "Dark theme" acts on the app itself: on, the app carries the dark roles for its own
   // subtree — data-theme-mode belongs on the element that has data-theme (theming docs)
   // — and so it darkens while the page around it stays as it is. Off, both attributes
   // go and the app follows the page's appearance, as every other example does. The name
   // is the frame's own theme, so the app darkens within whatever theme is picked.
-  const applyTheme = (state: Settings): void => {
-    if (!state.darkTheme) {
-      delete root.dataset.theme;
-      delete root.dataset.themeMode;
+  const theme = (element: HTMLElement, dark: boolean): void => {
+    if (!dark) {
+      delete element.dataset.theme;
+      delete element.dataset.themeMode;
       return;
     }
-    root.dataset.theme = document.documentElement.dataset.theme ?? "baseline";
-    root.dataset.themeMode = "dark";
+    element.dataset.theme = document.documentElement.dataset.theme ?? "baseline";
+    element.dataset.themeMode = "dark";
+  };
+  const applyTheme = (state: Settings): void => {
+    theme(root, state.darkTheme);
+    // The snackbar is the app's too, but the library always appends it to the document
+    // body (`open()` re-appends it there; there is no `container` option), so it cannot
+    // sit in the app's subtree. The documented theme attributes work on any element, so
+    // the app puts them on the snackbar's own element instead.
+    theme(snackbar.element, state.darkTheme);
   };
 
-  store.subscribe((state) => {
+  const unsubscribe = store.subscribe((state) => {
     applyTheme(state);
     for (const control of controls.values()) control.apply(state);
   });
   applyTheme(store.get());
 
+  // Everything this mount built, in reverse: the observer and the store first, then the
+  // components (the controls inside the detail rows, the rows' lists, the dialog, the
+  // snackbar, the list, the button and the bar), then the element itself.
+  const destroy = (): void => {
+    observer.disconnect();
+    unsubscribe();
+    for (const control of controls.values()) control.destroy();
+    destroyDetails();
+    dialog.destroy();
+    snackbar.destroy();
+    list.destroy();
+    reset.destroy();
+    back.destroy();
+    bar.destroy();
+    root.remove();
+  };
+
   panes.append(listPane, detailPane);
   root.append(bar.element, panes);
-  return root;
+  return { element: root, destroy };
 };
