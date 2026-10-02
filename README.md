@@ -43,7 +43,7 @@ The styles and fonts are copied locally rather than served from a sibling projec
 
 ## Deploy
 
-md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.config.cjs`, port 4300). The server keeps a material checkout beside md3.io, at `/home/floor/material`. Push `main`, then run `scripts/deploy.sh`: it resets both checkouts to `origin/main`, builds material and then md3.io, and reloads pm2 only when both builds succeed.
+md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.config.cjs`, port 4300). Push `main`, then run `scripts/deploy.sh`. If `/home/floor/material` is missing, the script clones `https://github.com/floor/material.git` there. A checkout whose origin is not `floor/material` is refused before the site is touched. The library is then fetched and checked out detached at `LIBRARY_REF` (default `origin/main`; a tag such as `v3.0.0-next.0`, a commit or a branch), and built. Only then is this site reset to `origin/main` and built. pm2 reloads only when both builds succeed. `DRY_RUN=1 scripts/deploy.sh` prints those steps and does not open ssh.
 
 The Date picker playground requires mtrl PR #182 or newer. It uses the selective Date picker stylesheet and the native calendar/input modes, with configurable date limits and modal confirmation by default. The preview and copied example use the component API directly.
 
