@@ -59,6 +59,11 @@ describe('site routes and documentation', () => {
     expect(await head.text()).toBe('');
     expect((await get('/', 'POST')).status).toBe(405);
   });
+  test('the retired segmented button URL redirects to the button group', async () => {
+    const response = await get('/docs/components/segmented-button/');
+    expect(response.status).toBe(301);
+    expect(response.headers.get('Location')).toBe('/docs/components/button-group/');
+  });
 });
 describe('preview configuration and generated code', () => {
   test('untrusted preview state is normalized', () => {
