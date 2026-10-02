@@ -9,7 +9,7 @@ status: published
 A button group is a row, or a column, of buttons that belong together: a formatting toolbar, a
 set of views, a unit picker. **Standard** groups space their buttons apart, each its own
 control; **connected** groups join them into one, and are what M3 Expressive uses in place of
-the [segmented button](/docs/components/button-group/). See the
+the segmented button. See the
 [M3 button groups guidelines](https://m3.material.io/components/button-groups/overview).
 
 ## Usage
