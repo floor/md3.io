@@ -43,7 +43,7 @@ const host = element('div', 'csv__table');
 const empty = element('p', 'csv__empty');
 const status = element('output', 'csv__status'); status.setAttribute('role', 'status');
 const error = element('p', 'csv__error'); error.setAttribute('role', 'alert'); error.hidden = true;
-const help = element('p', 'csv__help', 'Drop a CSV anywhere. Scroll sideways for more columns. Arrows move between cells; Enter or double-click edits; Escape cancels. Column menus currently require keyboard focus and Enter (vlist issue FLO-576).');
+const help = element('p', 'csv__help', 'This version reads and writes CSV. Drop a CSV anywhere. Scroll sideways for more columns. Arrows move between cells; Enter or double-click edits; Escape cancels. Column menus currently require keyboard focus and Enter (vlist issue FLO-576). Before keyboard or find jumps, focus moves to the grid, then to the destination cell, to avoid focused-row removal (FLO-578).');
 section.append(barHost, heading, info, findBar, error, host, empty, status, help);
 document.getElementById('app')!.append(section);
 let doc: Document = openCSV(fixture, 'warehouse-dispatches.csv'), view = freshView();
@@ -81,7 +81,6 @@ function render() {
         }
       });
     },
-    reportError(message) { error.textContent = message; error.hidden = !message; },
     sort(column, direction) { view.sort = { column: column.id, direction }; render(); },
     filter(column, value) { view.exact = { column: column.id, value }; render(); status.textContent = `Filter: ${column.label} equals ${value || '(empty)'}.`; },
     hide(column) { view = hideColumn(doc, view, column.id); render(); show.element.focus(); },

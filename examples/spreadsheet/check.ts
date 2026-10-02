@@ -14,20 +14,31 @@ async function downloadedCSV(page: Page) {
   return parseCSV(Buffer.concat(chunks).toString());
 }
 export default async function steps(page: Page): Promise<void> {
+  const pageErrors: string[] = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
   await page.waitForSelector('.csv[data-rows="3000"]');
   assert.equal(await page.locator('.csv__cell').count() < 800, true);
   const data = 'Name,Units,Depot,Note\nBeta,10,Lyon,\nAlpha,2,Lille,\nGamma,30,Lyon,';
   await upload(page, data);
-  // Pointer activation is asserted last: vlist 3.1.0 currently intercepts header clicks.
+  // FLO-576: use the keyboard route; ordinary pointer activation is checked last.
   await page.getByRole('button', { name: 'Units', exact: true }).focus();
   await page.keyboard.press('Enter');
   await page.getByRole('menuitem', { name: 'Sort ascending', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('[data-row="0"][data-column="0"]')?.textContent === 'Alpha');
   const first = page.locator('[data-row="0"][data-column="0"]');
   await first.focus(); await first.press('Enter');
-  await page.getByRole('alert').filter({ hasText: 'Cell editing is waiting' }).waitFor();
-  assert.equal(await first.textContent(), 'Alpha', 'failed initialization preserves existing data');
-  console.log('KNOWN GAP: Material multiline initial value blocks editing nonempty cells.');
+  const nameEditor = page.getByRole('textbox', { name: 'Edit Name', exact: true });
+  assert.equal(await nameEditor.inputValue(), 'Alpha', 'FLO-577: existing value initializes');
+  await page.getByRole('button', { name: 'Find', exact: true }).focus();
+  await nameEditor.waitFor({ state: 'detached' });
+  assert.equal(await first.textContent(), 'Alpha', 'blur without change preserves the cell');
+  assert.match(await page.locator('.csv__info').textContent() ?? '', /0 edited cells/);
+  await first.focus(); await first.press('Enter');
+  await nameEditor.fill('Alpha revised'); await nameEditor.press('Enter');
+  await page.waitForFunction(() => document.querySelector('[data-row="0"][data-column="0"]')?.textContent === 'Alpha revised');
+  assert.equal((await downloadedCSV(page))[1][0], 'Alpha revised', 'existing-cell edit commits to export');
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-row="0"][data-column="0"]')?.textContent === 'Alpha');
   const blank = page.locator('[data-row="0"][data-column="3"]');
   await blank.focus(); await blank.press('Enter');
   await page.getByRole('textbox', { name: 'Edit Note', exact: true }).fill('cancelled'); await page.keyboard.press('Escape');
@@ -39,12 +50,14 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole('textbox', { name: 'Find in visible cells', exact: true }).fill('edited');
   await page.getByRole('button', { name: 'Next match', exact: true }).click();
   assert.equal(await page.locator('.csv__find output').textContent(), '1 of 1 matches');
+  await page.waitForFunction(() => (document.activeElement as HTMLElement)?.dataset.column === '3');
   await page.getByRole('button', { name: 'Next match', exact: true }).click();
   assert.equal(await page.locator('.csv__find output').textContent(), '1 of 1 matches');
+  await page.waitForFunction(() => (document.activeElement as HTMLElement)?.dataset.column === '3');
   await page.getByRole('textbox', { name: 'Find in visible cells', exact: true }).press('Escape');
   assert.equal(await page.getByRole('search').isVisible(), false);
   const depot = page.getByRole('button', { name: 'Depot', exact: true });
-  await depot.focus(); await depot.press('ArrowDown');
+  await depot.focus(); await depot.press('Enter');
   await page.getByRole('menuitem', { name: 'Hide column', exact: true }).click();
   assert.equal(await page.getByRole('button', { name: 'Depot', exact: true }).count(), 0);
   await page.getByRole('button', { name: 'Show all columns', exact: true }).click();
@@ -92,6 +105,8 @@ export default async function steps(page: Page): Promise<void> {
   const mountedBefore = await page.locator('.csv__table [role="row"]').count();
   await page.locator('[data-row="0"][data-column="0"]').focus(); await page.keyboard.press('Control+End');
   await page.waitForSelector('[data-row="49999"][data-column="1"]'); await bound();
+  await page.waitForFunction(() => (document.activeElement as HTMLElement)?.dataset.row === '49999');
+  assert.deepEqual(pageErrors, [], 'FLO-578: focused-row jump has no page error');
   console.log(`50,000 rows: ${mountedBefore} mounted before jump; ${await page.locator('.csv__table [role="row"]').count()} after.`);
   assert.match(await page.locator('[data-row="49999"][data-column="0"]').textContent() ?? '', /Record 49999/);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -102,5 +117,6 @@ export default async function steps(page: Page): Promise<void> {
   assert.ok(header); await page.mouse.click(header.x + header.width / 2, header.y + header.height / 2);
   assert.equal(await page.getByRole('menu').isVisible(), false);
   console.log('KNOWN GAP FLO-576: pointer header menus blocked by vlist; keyboard route passed.');
+  assert.deepEqual(pageErrors, [], 'every Spreadsheet action has no page error');
   console.log('CSV: open/drop/parser errors, typed sort, edit/cancel, find, filter, hide, export, 50,000 virtual rows and phone containment passed.');
 }

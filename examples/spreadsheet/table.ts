@@ -16,7 +16,6 @@ export interface TableActions {
   sort(column: Column, direction: 'asc' | 'desc'): void;
   filter(column: Column, value: string): void;
   hide(column: Column): void;
-  reportError(message: string): void;
 }
 export function mountTable(host: HTMLElement, doc: Document, view: View, rows: Row[], actions: TableActions) {
   const columns = visibleColumns(doc, view);
@@ -44,7 +43,8 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
     controls.push(menu, opener);
     return opener.element;
   });
-  const makeList = () => createVList({ container: host, items: rows, overscan: 4, ariaLabel: 'CSV data',
+  const makeList = () => {
+    const list = createVList({ container: host, items: rows, overscan: 4, ariaLabel: 'CSV data',
     item: { height: index => index === editingRow ? 160 : 48, template: () => '' },
   }, [table({ rowHeight: index => index === editingRow ? 160 : 48, headerHeight: 72, resizable: false, columns: columns.map((column, i) => ({
     key: column.id, label: menus[i], width: column.type === 'text' ? 240 : 200, align: column.type === 'number' ? 'right' as const : 'left' as const,
@@ -58,11 +58,21 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
       return cell;
     },
   })) }), a11y({ keyboard: false })]);
+    // FLO-578: the documented public root owns our composite grid tab stop.
+    // a11y({ keyboard: false }) leaves table-root tabindex to the application.
+    list.element.tabIndex = 0;
+    return list;
+  };
   let list = makeList();
   if (view.sort) list.setSort(view.sort.column, view.sort.direction);
   function focus(row: number, column: number) {
     if (!rows.length) return;
     active = { row: Math.max(0, Math.min(rows.length - 1, row)), column: Math.max(0, Math.min(columns.length - 1, column)) };
+    // FLO-578: move focus off a row before virtualization removes it. The public
+    // element property and documented a11y composite tab stop let us use native
+    // focus(), without private APIs or suppressing the focus-removal exception.
+    // https://vlist.io/docs/api and https://vlist.io/docs/accessibility
+    list.element.focus({ preventScroll: true });
     const previousFocus = document.activeElement;
     list.scrollToIndex(active.row, 'center');
     requestAnimationFrame(() => {
@@ -96,14 +106,6 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
     cell = host.querySelector<HTMLElement>(`[data-row="${active.row}"][data-column="${active.column}"]`)!;
     if (!cell) return;
     editor = createTextField({ label: `Edit ${column.label}`, value: valueAt(doc, rows[active.row], column), variant: 'outlined', type: 'multiline' });
-    // The supplied multiline factory currently loses configured nonempty values.
-    // Keep data intact while the reported library initialization defect is unresolved.
-    if (editor.getValue() !== valueAt(doc, rows[active.row], column)) {
-      editor.destroy(); editor = undefined; editingRow = -1; list.destroy(); list = makeList();
-      actions.reportError('Cell editing is waiting for a Material text-field fix. Your cell is unchanged.');
-      return;
-    }
-    actions.reportError('');
     editingCell = cell; cell.classList.add('csv__cell--editing'); cell.replaceChildren(editor.element);
     cell.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     editor.input.focus({ preventScroll: true }); editor.input.select();
