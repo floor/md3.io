@@ -161,45 +161,45 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
-  if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
-  else if (path === '/components/') response = page(path, 'Components — mtrl', 'Explore mtrl components in an interactive playground.', 'catalog', { catalogVisuals });
+  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
+  else if (path === '/components/') response = page(path, 'Components — material', 'Explore material components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, slug, component }))
-      : page(path, `${component.name} — mtrl`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug) });
   }
-  else if (path === '/examples/') response = page(path, 'Examples — mtrl', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
+  else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
   else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
     const [, slug, , framework] = /^\/examples\/([a-z-]+)\/(frame\/([a-z]+)\/)?$/.exec(path)!;
     const example = exampleBySlug(slug!);
     const variants = example ? exampleVariants(slug!) : null;
-    if (!example || !variants) response = page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
+    if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     else if (framework) {
       response = variants.some(v => v.id === framework)
         ? internalHtml(eta.render('example-frame', { example, framework, themes, styles: styleClosure(example.components) }))
-        : page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
+        : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes });
   }
   else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
-  else if (path === '/styles/') response = page(path, 'Styles — mtrl', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
+  else if (path === '/styles/') response = page(path, 'Styles — material', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
   else if (path === '/styles/themes/') {
     const linked = url.searchParams.get('theme');
-    response = page(path, 'Themes — mtrl', styleDescription('/styles/themes/'), 'styles-themes', { themes: builtInThemes, roles: THEME_ROLES, selected: linked && themes.includes(linked as never) ? linked : 'baseline', mtrlVersion, themeBase });
+    response = page(path, 'Themes — material', styleDescription('/styles/themes/'), 'styles-themes', { themes: builtInThemes, roles: THEME_ROLES, selected: linked && themes.includes(linked as never) ? linked : 'baseline', mtrlVersion, themeBase });
   }
-  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
-  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
-  else if (path === '/styles/shape/') response = page(path, 'Shape — mtrl', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
-  else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
+  else if (path === '/styles/color/') response = page(path, 'Color — material', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
+  else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
+  else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
+  else if (path === '/docs/') response = page(path, 'Documentation — material', 'Configuration and API references for material components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
   else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
-    response = page(path, `${document.title} — mtrl`, document.description, 'document', { ...document, playground: null });
+    response = page(path, `${document.title} — material`, document.description, 'document', { ...document, playground: null });
   }
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
@@ -207,8 +207,8 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (match && isGuide(match[1]!)) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/${match[1]}/` } });
     const document = match ? renderDocument(match[1]!) : null;
     response = document
-      ? page(path, `${document.title} documentation — mtrl`, `Configuration, methods, and examples for the mtrl ${document.title.toLowerCase()} component.`, 'document', { ...document, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
-      : page(path, 'Page not found — mtrl', 'This page could not be found.', 'not-found', {}, 404);
+      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the material ${document.title.toLowerCase()} component.`, 'document', { ...document, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
+      : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
 }
