@@ -10,9 +10,7 @@ export default async function audit(page: Page, directory: string) {
   const tabbableCells = await page.locator('.csv__cell[tabindex="0"]').count();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await page.locator('[data-row="0"][data-column="0"]').dblclick();
-  await page.getByRole('alert').filter({ hasText: 'Cell editing is waiting' }).waitFor();
-  await page.locator('[data-row="1"][data-column="7"]').dblclick();
-  const editor = page.getByRole('textbox', { name: 'Edit Notes', exact: true });
+  const editor = page.getByRole('textbox', { name: 'Edit Dispatch', exact: true });
   await editor.waitFor();
   const editing = await editor.evaluate(input => {
     const s = getComputedStyle(input), rect = input.getBoundingClientRect();

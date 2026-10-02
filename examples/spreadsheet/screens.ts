@@ -33,10 +33,8 @@ export default async function screenshots(page: Page, directory: string, states?
     await page.getByRole('menuitem', { name: 'Sort ascending', exact: true }).waitFor();
     await shot('menu'); await page.keyboard.press('Escape');
     await page.locator('[data-row="0"][data-column="0"]').dblclick();
-    await page.getByRole('alert').filter({ hasText: 'Cell editing is waiting' }).waitFor(); await shot('editing-blocked');
-    await page.locator('[data-row="1"][data-column="7"]').dblclick();
-    const editor = page.getByRole('textbox', { name: 'Edit Notes', exact: true });
-    await editor.waitFor(); await editor.fill('Added note'); await shot('editing'); await editor.press('Enter');
+    const editor = page.getByRole('textbox', { name: 'Edit Dispatch', exact: true });
+    await editor.waitFor(); await editor.fill('DSP-00001 revised'); await shot('editing'); await editor.press('Enter');
     await page.getByRole('button', { name: 'Undo', exact: true }).waitFor(); await shot('undo');
     await page.getByLabel('Open CSV file').setInputFiles({ name: 'next.csv', mimeType: 'text/csv', buffer: Buffer.from('A\nx') });
     await page.getByRole('button', { name: 'Cancel', exact: true }).waitFor(); await shot('discard');
