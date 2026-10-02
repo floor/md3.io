@@ -12,10 +12,13 @@ import { CATEGORIES, type Setting, type Settings } from "./data";
 import { ICONS } from "./icons";
 import { createStore } from "./state";
 
-// M3's window size classes, read off the app's own box: the example frame adds 24 px of
-// page padding around it. Compact below 600 px (one pane), medium from 600 px (two
-// panes, 50% each), expanded from 840 px (fixed pane 360 px), large from 1200 px (412).
-const TWO_PANE = "(min-width: 600px)";
+// M3's size classes are read from the app's own box, not the window: the stylesheet's
+// container queries draw the panes, and this observer is their JS twin, so the layout
+// and the app's behaviour (the bar's title, Back, the selected row) switch together
+// wherever the frame puts the app. The example frame pads the page by 24 px each side,
+// so the first boundary, 600 px of the app, is a 648 px window (888 and 1248 later).
+const SPLIT_AT = 600;
+let twoPane = false;
 
 const titleOf = (id: string): string => CATEGORIES.find((category) => category.id === id)?.title ?? "Settings";
 
@@ -74,9 +77,9 @@ export const createSettingsApp = (): HTMLElement => {
   // One detail pane per category, built once, applied on every state change. A detail is
   // the category's title, then per group the group's title — a heading in the app's own
   // markup carrying the library's title-small type role — and the group's settings under
-  // it: a switch or a radio group is a list row with the control in its trailing slot,
-  // the row supplying the 48 dp target, the text roles and the states. A slider is not:
-  // see the block below.
+  // it: a switch is a list row with the control in its trailing slot, the row supplying
+  // the 48 dp target, the text roles and the states. A slider is not: see the block
+  // below.
   for (const category of CATEGORIES) {
     const detail = document.createElement("section");
     detail.className = "settings-app__detail";
@@ -130,10 +133,10 @@ export const createSettingsApp = (): HTMLElement => {
         rows.push({
           id: setting.key,
           headline: setting.label,
-          supportingText: setting.kind === "switch" ? setting.supportingText : undefined,
+          supportingText: setting.supportingText,
           trailing: { type: "control", content: control.element },
         });
-        if (setting.kind === "switch" && setting.supportingText) described.push({ key: setting.key, control });
+        if (setting.supportingText) described.push({ key: setting.key, control });
       }
       flush();
     }
@@ -172,14 +175,13 @@ export const createSettingsApp = (): HTMLElement => {
     },
   });
 
-  const twoPane = window.matchMedia(TWO_PANE);
   const openCategory = (id: string, focusTitle: boolean): void => {
     current = id;
     last = id;
     for (const [key, detail] of details) detail.hidden = key !== id;
     // Selected state belongs to the list view of a two-pane layout; in the single pane the
     // detail replaces the list, so no row keeps a selection to come back to.
-    if (twoPane.matches) {
+    if (twoPane) {
       list.setSelection([id]); // one row at a time; selectItem would add
       bar.setTitle("Settings");
       showBack(false);
@@ -194,7 +196,7 @@ export const createSettingsApp = (): HTMLElement => {
     if (focusTitle) bar.getHeadlineElement().focus();
   };
   const goBack = (): void => {
-    if (twoPane.matches) return; // from 600 px both panes stay; there is no Back there
+    if (twoPane) return; // with both panes there is no Back to take
     const id = current;
     for (const detail of details.values()) detail.hidden = true;
     current = null;
@@ -210,10 +212,10 @@ export const createSettingsApp = (): HTMLElement => {
     if (event.value === current) return;
     // The event's element is the row; the row's button is what takes focus on return.
     rows.set(event.value, event.element.querySelector("button") ?? event.element);
-    openCategory(event.value, !twoPane.matches);
+    openCategory(event.value, !twoPane);
   });
   const applyLayout = (): void => {
-    if (!twoPane.matches) {
+    if (!twoPane) {
       list.clearSelection();
       bar.setTitle(current ? titleOf(current) : "Settings");
       showBack(current !== null);
@@ -221,17 +223,40 @@ export const createSettingsApp = (): HTMLElement => {
     }
     bar.setTitle("Settings");
     showBack(false);
-    // No selection when the window widens: reopen the category the user was last in —
+    // No selection when the panes become two: reopen the category the user was last in —
     // "Consistency is key" — rather than a placeholder or the first one.
     if (!current) openCategory(last ?? CATEGORIES[0]!.id, false);
     else list.setSelection([current]);
   };
-  twoPane.addEventListener("change", applyLayout);
-  if (twoPane.matches) openCategory(CATEGORIES[0]!.id, false);
+  // The observer fires once on observe too, so a wide window opens its first category
+  // from the same call that keeps the app in step on every later resize.
+  new ResizeObserver(() => {
+    const next = root.getBoundingClientRect().width >= SPLIT_AT;
+    if (next === twoPane) return;
+    twoPane = next;
+    applyLayout();
+  }).observe(root);
+
+  // "Dark theme" acts on the app itself: on, the app carries the dark roles for its own
+  // subtree — data-theme-mode belongs on the element that has data-theme (theming docs)
+  // — and so it darkens while the page around it stays as it is. Off, both attributes
+  // go and the app follows the page's appearance, as every other example does. The name
+  // is the frame's own theme, so the app darkens within whatever theme is picked.
+  const applyTheme = (state: Settings): void => {
+    if (!state.darkTheme) {
+      delete root.dataset.theme;
+      delete root.dataset.themeMode;
+      return;
+    }
+    root.dataset.theme = document.documentElement.dataset.theme ?? "baseline";
+    root.dataset.themeMode = "dark";
+  };
 
   store.subscribe((state) => {
+    applyTheme(state);
     for (const control of controls.values()) control.apply(state);
   });
+  applyTheme(store.get());
 
   panes.append(listPane, detailPane);
   root.append(bar.element, panes);

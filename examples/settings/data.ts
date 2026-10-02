@@ -8,12 +8,10 @@ export interface Settings {
   bluetooth: boolean;
   airplane: boolean;
   mobileData: boolean;
-  networkMode: string;
   // Display
   brightness: number;
   adaptiveBrightness: boolean;
   darkTheme: boolean;
-  textSize: string;
   // Sound
   mediaVolume: number;
   ringVolume: number;
@@ -30,7 +28,6 @@ export interface Settings {
 export type SettingsKey = keyof Settings;
 export type BooleanKey = { [K in SettingsKey]: Settings[K] extends boolean ? K : never }[SettingsKey];
 export type NumberKey = { [K in SettingsKey]: Settings[K] extends number ? K : never }[SettingsKey];
-export type StringKey = { [K in SettingsKey]: Settings[K] extends string ? K : never }[SettingsKey];
 
 export interface SwitchSetting {
   kind: "switch";
@@ -39,13 +36,6 @@ export interface SwitchSetting {
   supportingText?: string;
   /** A switch another setting locks, e.g. Wi-Fi while airplane mode is on. */
   disabledWhen?: (state: Settings) => boolean;
-}
-
-export interface RadiosSetting {
-  kind: "radios";
-  key: StringKey;
-  label: string;
-  options: { value: string; label: string }[];
 }
 
 export interface SliderSetting {
@@ -59,7 +49,7 @@ export interface SliderSetting {
   iconAtMin?: IconName;
 }
 
-export type Setting = SwitchSetting | RadiosSetting | SliderSetting;
+export type Setting = SwitchSetting | SliderSetting;
 
 export interface Group {
   title: string;
@@ -90,28 +80,16 @@ export const CATEGORIES: Category[] = [
           { kind: "switch", key: "mobileData", label: "Mobile data" },
         ],
       },
-      {
-        title: "Mobile network",
-        settings: [
-          {
-            kind: "radios",
-            key: "networkMode",
-            label: "Preferred network type",
-            options: [
-              { value: "5g", label: "5G" },
-              { value: "lte", label: "LTE" },
-              { value: "3g", label: "3G" },
-            ],
-          },
-        ],
-      },
+      // A "Mobile network" group with "Preferred network type" (5G / LTE / 3G, one radio
+      // per list row, the row selecting it) waits: the library cannot draw that group
+      // across list rows — the finding in the design note, section 7.
     ],
   },
   {
     id: "display",
     title: "Display",
     icon: "brightness6",
-    summary: "Brightness, theme, text size",
+    summary: "Brightness and theme",
     groups: [
       {
         title: "Screen",
@@ -123,17 +101,11 @@ export const CATEGORIES: Category[] = [
       {
         title: "Appearance",
         settings: [
+          // "Dark theme" acts on the app itself: on, the app carries the dark roles for
+          // its own subtree (see app.ts).
           { kind: "switch", key: "darkTheme", label: "Dark theme" },
-          {
-            kind: "radios",
-            key: "textSize",
-            label: "Text size",
-            options: [
-              { value: "small", label: "Small" },
-              { value: "default", label: "Default" },
-              { value: "large", label: "Large" },
-            ],
-          },
+          // "Text size" (Small / Default / Large, one radio per row) waits with the
+          // radio finding above.
         ],
       },
     ],
@@ -197,11 +169,9 @@ export const DEFAULTS: Settings = {
   bluetooth: false,
   airplane: false,
   mobileData: true,
-  networkMode: "5g",
   brightness: 60,
   adaptiveBrightness: true,
   darkTheme: false,
-  textSize: "default",
   mediaVolume: 40,
   ringVolume: 70,
   vibrate: true,

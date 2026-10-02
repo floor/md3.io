@@ -3,14 +3,13 @@
 // control never holds state of its own.
 //
 // Each control is built to sit in the trailing slot of a list item, so it carries no
-// visible label of its own where the row already shows one: the switch and the radios
-// are named by the row's text through ariaLabel. The slider is the exception: it renders
-// its own label and takes the handle's name from the same option, and the trailing slot
-// is too narrow for it, so it stands in a block of its own instead (see the design note).
-import createRadios from "material/components/radios";
+// visible label of its own where the row already shows one: the switch is named by the
+// row's text through ariaLabel. The slider is the exception: it renders its own label
+// and takes the handle's name from the same option, and the trailing slot is too narrow
+// for it, so it stands in a block of its own instead (see the design note).
 import createSlider from "material/components/slider";
 import createSwitch from "material/components/switch";
-import type { RadiosSetting, Setting, Settings, SliderSetting, SwitchSetting } from "./data";
+import type { Setting, Settings, SliderSetting, SwitchSetting } from "./data";
 import { ICONS } from "./icons";
 import { changeSetting, type Store } from "./state";
 
@@ -21,8 +20,6 @@ export interface Control {
   /** Brings the control in line with the state, without emitting a change. */
   apply: (state: Settings) => void;
 }
-
-let radioGroups = 0;
 
 const buildSwitch = (store: Store, setting: SwitchSetting): Control => {
   // No visible label and no supporting text: the row's headline is the label and the
@@ -38,24 +35,6 @@ const buildSwitch = (store: Store, setting: SwitchSetting): Control => {
       else control.enable();
     },
   };
-};
-
-const buildRadios = (store: Store, setting: RadiosSetting): Control => {
-  // The group is named by the row's text through ariaLabel; the options keep their own
-  // visible labels, which is what a radio group needs. Vertical, as the guidelines have
-  // it: "Radio buttons should be vertically listed" (horizontal lists are a Don't), and
-  // only a stacked group fits a row of a narrow pane.
-  const control = createRadios({
-    name: `settings-${setting.key}-${++radioGroups}`,
-    options: setting.options,
-    value: store.get()[setting.key],
-    direction: "vertical",
-    ariaLabel: setting.label,
-  });
-  control.on("change", ({ value }) => {
-    if (value !== null) changeSetting(store, setting.key, value);
-  });
-  return { element: control.element, focusable: control.element, apply: (state) => control.setValue(state[setting.key]) };
 };
 
 const buildSlider = (store: Store, setting: SliderSetting): Control => {
@@ -79,6 +58,5 @@ const buildSlider = (store: Store, setting: SliderSetting): Control => {
 
 export const buildControl = (store: Store, setting: Setting): Control => {
   if (setting.kind === "switch") return buildSwitch(store, setting);
-  if (setting.kind === "radios") return buildRadios(store, setting);
   return buildSlider(store, setting);
 };
