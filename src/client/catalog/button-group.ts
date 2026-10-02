@@ -1,6 +1,6 @@
 // The button-group card: <m-button-group>.
-import 'mtrl/elements/css/button-group';
-import { defineButtonGroup } from 'mtrl/elements';
+import 'material/elements/css/button-group';
+import { defineButtonGroup } from 'material/elements';
 
 export const define = (): void => {
   defineButtonGroup();

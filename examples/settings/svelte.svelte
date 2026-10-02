@@ -1,6 +1,6 @@
 <!-- Svelte: mtrl/svelte wraps the same elements; bind: keeps their live state. -->
 <script lang="ts">
-  import { Button, Switch, Tab, Tabs } from "mtrl/svelte";
+  import { Button, Switch, Tab, Tabs } from "material/svelte";
   import { DEFAULTS, summary } from "./shared";
 
   let s = $state({ ...DEFAULTS });

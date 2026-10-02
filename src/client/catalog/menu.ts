@@ -1,8 +1,8 @@
 // The menu card: <md3-catalog-menu>, the menu shown open in place (surface.ts).
-import 'mtrl/elements/css/button';
-import 'mtrl/elements/css/menu';
-import createMenu from 'mtrl/components/menu';
-import { PREFIX } from 'mtrl/core';
+import 'material/elements/css/button';
+import 'material/elements/css/menu';
+import createMenu from 'material/components/menu';
+import { PREFIX } from 'material/core';
 import { menuDefaults } from './defaults';
 import { detached, surface } from './surface';
 

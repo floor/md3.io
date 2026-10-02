@@ -4,8 +4,8 @@ html, body { background: var(--mtrl-sys-color-surface-container-low); }
 #stage > button { max-width: 100%; }
 #stage .mtrl-button__text { overflow-wrap: anywhere; }
 
-html:is([data-component="switch"], [data-component="slider"], [data-component="textfield"], [data-component="select"], [data-component="search"], [data-component="datepicker"], [data-component="chips"], [data-component="radios"]) #stage { width: 100%; min-width: 0; }
-#stage > :is(.mtrl-switch, .mtrl-slider, .mtrl-textfield, .mtrl-select, .mtrl-search) { width: min(100%, 360px); min-width: 0; }
+html:is([data-component="switch"], [data-component="slider"], [data-component="text-field"], [data-component="select"], [data-component="search"], [data-component="datepicker"], [data-component="chips"], [data-component="radios"]) #stage { width: 100%; min-width: 0; }
+#stage > :is(.mtrl-switch, .mtrl-slider, .mtrl-text-field, .mtrl-select, .mtrl-search) { width: min(100%, 360px); min-width: 0; }
 #stage > :is(.mtrl-chips, .mtrl-radios) { max-width: 100%; }
 .mtrl-time-picker__dialog { min-width: 0; min-height: 0; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; }
 /* The docked calendar expands inside the isolated preview, including short frames. */

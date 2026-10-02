@@ -86,7 +86,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `ariaLabel` | `string` | `'Primary navigation'` | Accessible name of the rail |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `onSelect` | `(event) => void` | `undefined` | Called with `{ id, index, originalEvent }` when a destination is selected |
-| `onExpand` / `onCollapse` | `() => void` | `undefined` | Called when the rail expands or collapses |
+| `onExpand` / `onCollapse` | `({ expanded }) => void` | `undefined` | Called when the rail expands (`expanded: true`) or collapses (`expanded: false`) |
 
 #### Items
 

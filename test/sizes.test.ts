@@ -7,8 +7,8 @@ import { sizes } from '../src/server/sizes';
 // data/sizes.json is written by `bun run sizes`: re-run it when mtrl changes version.
 describe('component sizes', () => {
   test('are measured on the installed mtrl', () => {
-    const { version } = JSON.parse(readFileSync('node_modules/mtrl/package.json', 'utf8')) as { version: string };
-    expect(sizes.mtrl).toBe(version);
+    const { version } = JSON.parse(readFileSync('node_modules/material/package.json', 'utf8')) as { version: string };
+    expect(sizes.material).toBe(version);
   });
 
   test('cover every component, for the factory and the element', () => {

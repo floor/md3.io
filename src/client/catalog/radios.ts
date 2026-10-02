@@ -1,6 +1,6 @@
 // The radios card: <m-radios>.
-import 'mtrl/elements/css/radios';
-import { defineRadios } from 'mtrl/elements';
+import 'material/elements/css/radios';
+import { defineRadios } from 'material/elements';
 
 export const define = (): void => {
   defineRadios();

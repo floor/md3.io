@@ -24,15 +24,15 @@ describe('stylesheets', () => {
     const syntax = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/syntax.css'), 'utf8'));
     expect(syntax).toContain('[data-theme-mode="light"] .hljs{');
     // The space is the descendant combinator. `.item:is(button)` would match the item itself.
-    const list = minifyCss(readFileSync(resolve(import.meta.dir, '../node_modules/mtrl/dist/styles/list.css'), 'utf8'));
+    const list = minifyCss(readFileSync(resolve(import.meta.dir, '../node_modules/material/dist/styles/list.css'), 'utf8'));
     expect(list).toContain('.mtrl-list__item :is(button');
     const site = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8'));
     expect(site).toContain('(max-width:1000px) and (min-width:721px)');
     const preview = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/preview.css'), 'utf8'));
-    expect(preview).toContain('#stage> :is(.mtrl-switch,.mtrl-slider,.mtrl-textfield,.mtrl-select,.mtrl-search)');
+    expect(preview).toContain('#stage> :is(.mtrl-switch,.mtrl-slider,.mtrl-text-field,.mtrl-select,.mtrl-search)');
     const tokens = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/tokens.css'), 'utf8'));
     expect(tokens).toContain('url("/fonts/DIN-Alternate-Regular.woff2") format("woff2")');
-    const base = readFileSync(resolve(import.meta.dir, '../node_modules/mtrl/dist/styles/base.css'), 'utf8');
+    const base = readFileSync(resolve(import.meta.dir, '../node_modules/material/dist/styles/base.css'), 'utf8');
     const min = minifyCss(base);
     expect(min.split('{').length).toBe(min.split('}').length);
     expect(min).toContain('@layer');

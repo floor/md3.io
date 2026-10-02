@@ -53,9 +53,11 @@ tabs:
 ### Panels
 
 Give each panel `role="tabpanel"`, the id `tabpanel-<groupId>-<value>` and
-`aria-labelledby="tab-<groupId>-<value>"`. The tabs point at their panels with
+`aria-labelledby="tab-<groupId>-<value>"`, when `value` is only `[A-Za-z0-9_-]`.
+Any other character gets a derived id (`tabPanelIdFor`) instead of that pattern.
+The tabs point at their panels with
 `aria-controls`, and show and hide them as the selection changes. Pin `groupId` in the
-factory's options, or the id is allocated.
+factory's options, or the id is allocated. Keep a pinned group id to `[A-Za-z0-9_]`.
 
 ```html
 <div role="tabpanel" id="tabpanel-travel-flights" aria-labelledby="tab-travel-flights">…</div>
@@ -64,7 +66,7 @@ factory's options, or the id is allocated.
 
 The factory's row scrolls by default; `scrollable: false` divides it evenly between the tabs
 (fixed tabs). `setupResponsiveBehavior(tabs, { smallScreen: { layout: 'icon-only' } })`, from
-`mtrl/components/tabs`, shows tabs with an icon and a label as icons only below 600px, the
+`material/components/tabs`, shows tabs with an icon and a label as icons only below 600px, the
 label kept as their name. The web component takes the tabs, `variant` and the selection.
 
 ## API

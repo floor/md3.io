@@ -43,7 +43,7 @@ export function originOf(header: string): ColorSpec | undefined {
 
 function originFor(name: string): ColorSpec | undefined {
   if (name === 'baseline') return BASELINE;
-  const file = resolve(root, 'node_modules/mtrl/src/styles/themes', `_${name}.scss`);
+  const file = resolve(root, 'node_modules/material/src/styles/themes', `_${name}.scss`);
   const header = existsSync(file) ? HEADER.exec(readFileSync(file, 'utf8'))?.[1] : undefined;
   return header ? originOf(header) : undefined;
 }

@@ -1,6 +1,6 @@
 // The carousel card: <m-carousel>.
-import 'mtrl/elements/css/carousel';
-import { defineCarousel } from 'mtrl/elements';
+import 'material/elements/css/carousel';
+import { defineCarousel } from 'material/elements';
 
 export const define = (): void => {
   defineCarousel();

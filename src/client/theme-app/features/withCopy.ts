@@ -1,6 +1,6 @@
 // Copying, told by mtrl's snackbar: a role's hex, or a link to the theme. `tell` is
 // the app's snackbar for anything else.
-import createSnackbar, { clearSnackbars } from 'mtrl/components/snackbar';
+import createSnackbar, { clearSnackbars } from 'material/components/snackbar';
 import type { App } from '../core/foundation';
 
 export const withCopy = () => (app: App) => {

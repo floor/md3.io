@@ -1,8 +1,8 @@
 // The theme app's two foundation features, each `(config) => (app) => ({ ...app, ns })`:
 // a small state (get, set, on) with the app's teardown list, and the UI built once from
-// config/layout.ts by mtrl-addons' createLayout.
-import { createEmitter } from 'mtrl/core/state';
-import { createLayout, clearClassCache, clearFragmentPool } from 'mtrl-addons/layout';
+// config/layout.ts by material-addons' createLayout.
+import { createEmitter } from 'material/core/state';
+import { createLayout, clearClassCache, clearFragmentPool } from 'material-addons/layout';
 
 export type App = Record<string, any>;
 

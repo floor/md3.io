@@ -38,9 +38,9 @@ component pages show each component's size, measured from the build.
 The same pattern extends a component. A feature that adds a title to any button:
 
 ```typescript
-import { createButton } from 'mtrl';
-import type { ButtonConfig, ButtonComponent } from 'mtrl';
-import { pipe } from 'mtrl/core/compose';
+import { createButton } from 'material';
+import type { ButtonConfig, ButtonComponent } from 'material';
+import { pipe } from 'material/core/compose';
 
 // A feature takes a component and returns it, enhanced
 const withTitle = (title: string) => (component: ButtonComponent) => {
@@ -57,8 +57,8 @@ const createCustomButton = (config: ButtonConfig) => pipe(
 Or builds a new component from the core features:
 
 ```typescript
-import { pipe, createBase, withEvents, withElement, withLifecycle } from 'mtrl/core/compose';
-import type { ElementComponent } from 'mtrl/core/compose';
+import { pipe, createBase, withEvents, withElement, withLifecycle } from 'material/core/compose';
+import type { ElementComponent } from 'material/core/compose';
 
 const withLabel = (label: string) => <C extends ElementComponent>(component: C) => {
   component.element.textContent = label;
@@ -84,9 +84,11 @@ Styles are plain CSS, written in Sass and compiled. Classes follow BEM, prefixed
 token, a CSS custom property: colour roles (`--mtrl-sys-color-primary`), the type scale
 (`--mtrl-sys-typescale-body-large-font-size`), shapes and state layers.
 
-- `mtrl/styles/base` holds the tokens and the ripple; every app imports it once.
-- `mtrl/styles/<component>` is one component's stylesheet, for the factories.
-- `mtrl/themes/<name>` sets the colour roles for another theme, applied with `data-theme` and
+- `material/styles/base` holds the colour, shape and state tokens and the ripple; every app imports it once.
+- `material/styles/typography` holds the type scale.
+- `material/styles/contrast` and `material/themes/<name>-contrast` are the explicit high-contrast sheets (`data-theme-contrast`). The base and each theme already follow `prefers-contrast`.
+- `material/styles/<component>` is one component's stylesheet, for the factories.
+- `material/themes/<name>` sets the colour roles for another theme, applied with `data-theme` and
   `data-theme-mode` on any element. Most themes are generated from a seed colour with Google's
   colour library, so their roles follow M3's schemes.
 
@@ -116,8 +118,8 @@ The React, Vue, Svelte and SolidJS components are generated from the element spe
 written by hand. Each renders its `<m-*>` element, passes props as properties or attributes,
 maps events to the framework's convention (`onChange`, `@change`, `onchange`), registers the
 element the first time it mounts, and loads its CSS. A fix in a factory or an element reaches
-every framework at once. The frameworks are optional peer dependencies of the one `mtrl`
-package, imported from `mtrl/react`, `mtrl/vue`, `mtrl/svelte` and `mtrl/solid`.
+every framework at once. The frameworks are optional peer dependencies of the one `material`
+package, imported from `material/react`, `material/vue`, `material/svelte` and `material/solid`.
 
 ## Overlays and the top layer
 

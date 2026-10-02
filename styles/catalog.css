@@ -26,7 +26,7 @@
 .catalog-stack--progress m-progress:first-child { flex: 0 1 200px; }
 
 .catalog-visual--slider m-slider, .catalog-visual--tabs m-tabs { width: min(100%, 320px); }
-.catalog-visual--textfield m-textfield, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
+.catalog-visual--text-field m-text-field, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
 .catalog-visual--search m-search { width: min(100%, 320px); }
 .catalog-visual--list m-list { width: min(100%, 320px); }
 .catalog-visual--carousel m-carousel { display: block; width: 100%; height: 148px; }

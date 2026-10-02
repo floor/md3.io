@@ -12,5 +12,5 @@
     <div><span class="feature-index">02 / CUSTOMIZE</span><h2>Make it feel like you.</h2><p>Switch Material themes and light or dark mode. See every change as you make it.</p></div>
     <div><span class="feature-index">03 / BUILD</span><h2>Take it from here.</h2><p>Copy your configuration and bring the component to your project. No framework required.</p></div>
   </div>
-  <footer class="landing-footer"><span>mtrl · Built by <a href="https://floor.io">floor</a></span><a href="https://github.com/floor/mtrl">Source on GitHub ↗</a></footer>
+  <footer class="landing-footer"><span>mtrl · Built by <a href="https://floor.io">floor</a></span><a href="https://github.com/floor/material">Source on GitHub ↗</a></footer>
 </div>

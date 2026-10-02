@@ -2,7 +2,7 @@
 // tooltips, the app connects to the theme store and the site's mode (which set the
 // first theme and mode), a `?seed=` link is shown, and only the parts, the state and
 // destroy are kept.
-import createTooltip from 'mtrl/components/tooltip';
+import createTooltip from 'material/components/tooltip';
 import type { App } from '../core/foundation';
 import { TOOLTIPS } from '../config/layout';
 import { CONTRASTS, VARIANTS } from './withVariant';

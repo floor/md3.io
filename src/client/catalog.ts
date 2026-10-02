@@ -25,7 +25,7 @@ const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
   radios: () => import('./catalog/radios'),
   chips: () => import('./catalog/chips'),
   slider: () => import('./catalog/slider'),
-  textfield: () => import('./catalog/textfield'),
+  'text-field': () => import('./catalog/text-field'),
   select: () => import('./catalog/select'),
   search: () => import('./catalog/search'),
   datepicker: () => import('./catalog/datepicker'),

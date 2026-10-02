@@ -85,6 +85,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 |--------|------------|---------|-------------|
 | `setText(text)` / `getText()` | `text: string` | `SplitButtonComponent` / `string` | The leading button's label |
 | `setIcon(icon)` | `icon: string` | `SplitButtonComponent` | The leading button's icon |
+| `setItems(items)` / `getItems()` | `items: MenuContent[]` | `SplitButtonComponent` / `MenuContent[]` | Replaces or reads the choices the trailing button opens |
 | `expand()` / `collapse()` | none | `SplitButtonComponent` | Opens or closes what the trailing button opens |
 | `isExpanded()` | none | `boolean` | Whether it is open |
 | `enable()` / `disable()` | none | `SplitButtonComponent` | Both halves together |
@@ -97,7 +98,6 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `element` | `HTMLElement` | The group holding both halves |
 | `leadingElement` | `HTMLButtonElement` | The leading button |
 | `trailingElement` | `HTMLButtonElement` | The trailing button |
-| `menu` | `MenuComponent` | The menu, when the component was given items |
 
 ### Events
 

@@ -1,6 +1,6 @@
 // One tonal palette: its name and a strip of 18 equal cells, tones 100 to 0, each
 // with its tone number in a colour that reads on it. `set(tones)` repaints it in place.
-import { pipe, createBase, withElement, withLifecycle, type ElementComponent } from 'mtrl/core/compose';
+import { pipe, createBase, withElement, withLifecycle, type ElementComponent } from 'material/core/compose';
 
 export const PALETTE_TONES = [100, 99, 98, 95, 90, 80, 70, 60, 50, 40, 35, 30, 25, 20, 15, 10, 5, 0] as const;
 export interface PaletteStripOptions { key: string; label: string }

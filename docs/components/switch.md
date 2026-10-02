@@ -93,11 +93,11 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Description | Data |
 |-------|-------------|------|
-| `change` | The state changed | `{ checked, value, nativeEvent? }` |
+| `change` | The state changed | `{ checked, value, valueAttribute, nativeEvent? }` |
 | `focus` / `blur` | The switch gained or lost focus | `FocusEvent` |
 
-`nativeEvent` is there when the user toggled it, not for the methods. The web component's
-`change` carries `{ checked, value }`.
+`value` is the boolean, the same as `getValue()`. `valueAttribute` is the input's `value` attribute, submitted with a form. `nativeEvent` is there when the user toggled it, not for the methods. The web component's
+`change` carries `{ checked, value, valueAttribute }`.
 
 ## Accessibility
 

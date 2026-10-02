@@ -3,8 +3,8 @@
 // inverse roles, scrim and shadow beside those. Each tile is filled with its role and
 // labelled in its "on" colour. Composed the mtrl way; `set(theme, mode)` repaints it in
 // place, light filled and dark outlined, and a tile click emits `copy` with { role, hex }.
-import { pipe, createBase, withElement, withEvents, withLifecycle, type ElementComponent, type EventComponent } from 'mtrl/core/compose';
-import createTooltip from 'mtrl/components/tooltip';
+import { pipe, createBase, withElement, withEvents, withLifecycle, type ElementComponent, type EventComponent } from 'material/core/compose';
+import createTooltip from 'material/components/tooltip';
 import copyIcon from '../../../icons/content_copy.svg' with { type: 'text' };
 import type { ThemeData } from './features/withThemeSource';
 import { contrastRatio } from '../../shared/color';

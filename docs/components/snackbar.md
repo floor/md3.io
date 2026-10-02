@@ -99,6 +99,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `show()` / `hide()` | none | `SnackbarComponent` | Queues it to show, or closes it with reason `api` |
+| `isOpen()` | none | `boolean` | Whether it is on screen |
 | `getMessage()` / `setMessage(message)` | `message: string` | `string` / `SnackbarComponent` | The text |
 | `getAction()` / `setAction(text)` | `text: string` | `string` / `SnackbarComponent` | The action's label |
 | `getDuration()` / `setDuration(duration)` | `duration: SnackbarDuration` | `number` / `SnackbarComponent` | How long it stays, read in milliseconds; a change on screen starts the count again |
@@ -109,10 +110,10 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Property | Type | Description |
 |----------|------|-------------|
 | `element` | `HTMLElement` | The snackbar |
-| `state` | `'visible' \| 'hidden'` | Whether it is on screen |
+| `state` | `'visible' \| 'queued' \| 'hidden'` | `queued` between `show()` and its turn on screen, `visible` while it is on screen |
 | `actionButton` / `closeButton` | `HTMLElement \| undefined` | Its buttons |
 
-`clearSnackbars()`, from `mtrl`, closes the snackbar on screen and drops the waiting ones.
+`clearSnackbars()`, from `material`, closes the snackbar on screen and drops the waiting ones.
 
 ### Events
 

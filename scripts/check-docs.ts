@@ -1,8 +1,8 @@
-// The code in docs/components/*.md, checked against the real mtrl (and mtrl-addons, for
+// The code in docs/components/*.md, checked against the real mtrl (and material-addons, for
 // form and colorpicker), at three levels:
 //
 //   types      every javascript and typescript block type-checks against the published
-//              types (node_modules/mtrl);
+//              types (node_modules/material);
 //   behaviour  every block runs in Chromium against the built mtrl without an error or a
 //              warning. Each `x.on('event', handler)` it documents is triggered and must
 //              receive the payload fields the handler reads; a handler in a factory's
@@ -59,9 +59,9 @@ const root = resolve(import.meta.dir, '..');
 const docsDir = resolve(root, 'docs/components');
 const preludePath = resolve(import.meta.dir, 'check-docs/prelude.ts');
 const templatesPath = resolve(import.meta.dir, 'check-docs/templates.d.ts');
-const mtrlDir = resolve(root, 'node_modules/mtrl');
-// form and colorpicker document mtrl-addons: the published package, a devDependency
-const addonsDir = resolve(root, 'node_modules/mtrl-addons');
+const mtrlDir = resolve(root, 'node_modules/material');
+// form and colorpicker document material-addons: the published package, a devDependency
+const addonsDir = resolve(root, 'node_modules/material-addons');
 const args = process.argv.slice(2);
 const levels = ['types', 'behaviour', 'classes'].filter(level => args.includes(`--${level}`));
 const run = (level: string) => levels.length === 0 || levels.includes(level);
@@ -356,22 +356,22 @@ const transpiler = new Bun.Transpiler({ loader: 'ts', target: 'browser' });
 const typescript = new Bun.Transpiler({ loader: 'ts', target: 'browser', trimUnusedImports: true });
 // Where each package's modules are served from, by the directories they resolve into
 const served = [
-  { url: '/mtrl/', dirs: [resolve(mtrlDir, 'dist'), resolve(Bun.resolveSync('mtrl', root), '..')] },
-  { url: '/addons/', dirs: [resolve(addonsDir, 'dist'), resolve(Bun.resolveSync('mtrl-addons', root), '..')] },
+  { url: '/material/', dirs: [resolve(mtrlDir, 'dist'), resolve(Bun.resolveSync('material', root), '..')] },
+  { url: '/addons/', dirs: [resolve(addonsDir, 'dist'), resolve(Bun.resolveSync('material-addons', root), '..')] },
 ];
 function browserModule(source: string, lang: string) {
-  return (lang === 'typescript' ? typescript : transpiler).transformSync(source).replace(/((?:from|import)\s*\(?\s*)(["'])(mtrl(?:-addons)?(?:\/[^"']*)?)\2/g, (_, before: string, quote: string, specifier: string) => {
-    // Stylesheet imports are the bundler's; the page already has mtrl's CSS, so they run as
+  return (lang === 'typescript' ? typescript : transpiler).transformSync(source).replace(/((?:from|import)\s*\(?\s*)(["'])(material(?:-addons)?(?:\/[^"']*)?)\2/g, (_, before: string, quote: string, specifier: string) => {
+    // Stylesheet imports are the bundler's; the page already has material's CSS, so they run as
     // nothing. So does a .css file (the pre-upgrade stylesheet), which only styles elements
     // before they are defined.
-    if (/^mtrl(?:-addons)?\/(?:styles|themes)(?:\/|$)|\.css$/.test(specifier)) return `${before}${quote}data:text/javascript,${quote}`;
+    if (/^material(?:-addons)?\/(?:styles|themes)(?:\/|$)|\.css$/.test(specifier)) return `${before}${quote}data:text/javascript,${quote}`;
     const file = Bun.resolveSync(specifier, root);
     for (const { url, dirs } of served) for (const dir of dirs) if (file.startsWith(dir + '/')) return `${before}${quote}${url}${file.slice(dir.length + 1)}${quote}`;
     throw new Error(`${specifier} resolves outside the served packages: ${file}`);
   });
 }
 
-const harness = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/mtrl/styles.css"><link rel="stylesheet" href="/addons/styles.css"></head><body><script type="module">
+const harness = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/material/styles.css"><link rel="stylesheet" href="/addons/styles.css"></head><body><script type="module">
 import '/prelude.js';
 const listeners = [];
 // What an example's own handler logs is the example talking, not a failure
@@ -590,7 +590,7 @@ async function checkBehaviour() {
     if (html === undefined) continue;
     const script = /<script type="module">\n([\s\S]*?)<\/script>/.exec(html)?.[1] ?? '';
     const markup = html.replace(/<script type="module">[\s\S]*?<\/script>\n?/, '').trim();
-    const source = `import 'mtrl/elements/css';\nimport { defineAll } from 'mtrl/elements';\ndocument.body.insertAdjacentHTML('beforeend', ${JSON.stringify(markup)});\ndefineAll();\n${script}${actionsTail(rendered.example)}`;
+    const source = `import 'material/elements/css';\nimport { defineAll } from 'material/elements';\ndocument.body.insertAdjacentHTML('beforeend', ${JSON.stringify(markup)});\ndefineAll();\n${script}${actionsTail(rendered.example)}`;
     try {
       elementModules.set(`${rendered.block.page}/${rendered.block.line}`, { rendered, code: browserModule(source, 'javascript') });
     } catch (error) {
@@ -612,16 +612,23 @@ async function checkBehaviour() {
         const module = modules.get(path.slice(6, -3));
         return module ? new Response(module.code, { headers: { 'content-type': 'text/javascript' } }) : new Response('', { status: 404 });
       }
-      if (path.startsWith('/mtrl/')) {
-        const file = Bun.file(resolve(mtrlDir, 'dist', path.slice(6)));
+      if (path.startsWith('/material/')) {
+        const file = Bun.file(resolve(mtrlDir, 'dist', path.slice('/material/'.length)));
         if (await file.exists()) return new Response(file);
       }
       if (path.startsWith('/addons/')) {
         const file = Bun.file(resolve(addonsDir, 'dist', path.slice(8)));
         if (!(await file.exists())) return new Response('', { status: 404 });
         if (!path.endsWith('.mjs')) return new Response(file);
-        // Its mtrl is ours
-        return new Response((await file.text()).replace(/from\s*"mtrl"/g, 'from "/mtrl/index.js"'), { headers: { 'content-type': 'text/javascript' } });
+        // Its material is ours, including subpaths (material/core/compose and the rest).
+        // The bundle is minified, so `from` and the quote may have no space. The file is
+        // the package export (core/compose → core/compose/index.js), not specifier + ".js".
+        return new Response((await file.text()).replace(/from\s*"(material(?:\/[^"]*)?)"/g, (_, spec: string) => {
+          if (/^material\/(?:styles|themes)(?:\/|$)/.test(spec)) return 'from "data:text/javascript,"';
+          const resolved = Bun.resolveSync(spec, addonsDir);
+          for (const { url, dirs } of served) for (const dir of dirs) if (resolved.startsWith(dir + '/')) return `from "${url}${resolved.slice(dir.length + 1)}"`;
+          throw new Error(`${spec} resolves outside the served packages: ${resolved}`);
+        }), { headers: { 'content-type': 'text/javascript' } });
       }
       // The app's images: a placeholder for every picture an example shows
       if (/\.(jpe?g|png|webp|gif|svg)$/i.test(path)) return new Response('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="9"/>', { headers: { 'content-type': 'image/svg+xml' } });

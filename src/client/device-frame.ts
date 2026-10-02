@@ -8,8 +8,8 @@
 // (src/server/shells/example.eta) and the Styles pages. The toolbar is mtrl itself, a
 // connected button group and an icon button, painted with the site's colours
 // (styles/device-frame.css).
-import createButtonGroup from 'mtrl/components/button-group';
-import createIconButton from 'mtrl/components/icon-button';
+import createButtonGroup from 'material/components/button-group';
+import createIconButton from 'material/components/icon-button';
 import smartphone from '../../icons/smartphone.svg' with { type: 'text' };
 import tablet from '../../icons/tablet.svg' with { type: 'text' };
 import desktop from '../../icons/desktop_windows.svg' with { type: 'text' };

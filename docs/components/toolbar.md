@@ -86,7 +86,7 @@ toolbar leaves the screen after 40px of scrolling down and comes back after 40px
 top; `scrollTarget` names the element that scrolls, the window by default.
 
 ```javascript
-import { createToolbar, createFab } from 'mtrl';
+import { createToolbar, createFab } from 'material';
 
 const toolbar = createToolbar({
   variant: 'floating',
@@ -111,7 +111,7 @@ opens. The toolbar never loads a menu of its own, so it costs nothing when unuse
 function returns is destroyed with the toolbar.
 
 ```javascript
-import { createToolbar, createMenu } from 'mtrl';
+import { createToolbar, createMenu } from 'material';
 
 const toolbar = createToolbar({
   ariaLabel: 'Actions',

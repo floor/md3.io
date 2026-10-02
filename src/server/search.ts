@@ -150,7 +150,7 @@ function styleDocuments(): IndexDocument[] {
       body: `Shape, corner radius, border radius, rounded corners, roundness. ${Object.keys(shapeScale).map(roleWords).join(', ')}.`,
     },
     '/styles/themes/': {
-      api: 'mtrl/themes data-theme data-theme-mode',
+      api: 'material/themes data-theme data-theme-mode',
       body: `Themes, theme builder, light scheme, dark scheme, tonal palettes, seed color, Material Theme Builder. ${themes.map(name => name.replaceAll('-', ' ')).join(', ')}.`,
     },
     '/styles/color/': {

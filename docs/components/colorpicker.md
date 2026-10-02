@@ -8,11 +8,11 @@ status: published
 
 A color picker lets people choose a color: in an area of saturation and brightness, on a hue
 slider, by hex value, from swatches or with an eyedropper. M3 has no color picker component;
-this one is built from M3 parts (a [text field](/docs/components/textfield/), an
+this one is built from M3 parts (a [text field](/docs/components/text-field/), an
 [icon button](/docs/components/icon-button/)) and the
 [M3 color system](https://m3.material.io/styles/color/system/overview).
 
-From **mtrl-addons**, checked against 0.9.0-next.1. mtrl-addons has no web components: the
+From **material-addons**, checked against 3.0.0-next.0. material-addons has no web components: the
 examples are the vanilla factory, which works in any framework.
 
 ## Usage
@@ -75,7 +75,7 @@ Recipes such as a theme color setting are planned for [Examples](/examples/).
 
 ## API
 
-<!-- API: generated from mtrl-addons' types in a later step. Until then these tables are
+<!-- API: generated from material-addons' types in a later step. Until then these tables are
 hand-written: keep them in line with the code, and add no prose restating them. -->
 
 ### Options
@@ -122,7 +122,7 @@ hand-written: keep them in line with the code, and add no prose restating them. 
 | `destroy()` | none | `void` | Removes it |
 
 The conversions (`hexToRgb`, `rgbToHex`, `hexToHsv`, `hsvToHex`, `hsvToRgb`, `rgbToHsv`,
-`isValidHex`, `normalizeHex`, `getContrastColor`) are exported from `mtrl-addons` too.
+`isValidHex`, `normalizeHex`, `getContrastColor`) are exported from `material-addons` too.
 
 ### Events
 

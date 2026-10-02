@@ -8,10 +8,10 @@ status: published
 
 A form builds a set of fields from a layout, and keeps their data: it reads and sets it,
 knows when it has changed, validates it and submits it. M3 has no form component; its fields
-are mtrl's, such as [text fields](/docs/components/textfield/), and M3's guidance for them
+are mtrl's, such as [text fields](/docs/components/text-field/), and M3's guidance for them
 applies.
 
-From **mtrl-addons**, checked against 0.9.0-next.1. mtrl-addons has no web components, and a
+From **material-addons**, checked against 3.0.0-next.0. material-addons has no web components, and a
 form's layout names mtrl's factories, which the neutral examples cannot, so these examples are
 plain JavaScript: the vanilla factory, which works in any framework.
 
@@ -22,8 +22,8 @@ The layout is an array of `[factory, name, options]`. A field named `info.<key>`
 form, and are enabled while its data differs from what it started with.
 
 ```javascript
-import { createForm } from 'mtrl-addons';
-import { createTextField, createSwitch, createButton } from 'mtrl';
+import { createForm } from 'material-addons';
+import { createTextField, createSwitch, createButton } from 'material';
 
 const form = createForm({
   layout: [
@@ -50,8 +50,8 @@ Each rule validates one field's value, with all the data at hand: it returns `tr
 message. `validate()` shows the messages on the fields, and `submit()` validates first.
 
 ```javascript
-import { createForm } from 'mtrl-addons';
-import { createTextField } from 'mtrl';
+import { createForm } from 'material-addons';
+import { createTextField } from 'material';
 
 const form = createForm({
   layout: [
@@ -74,8 +74,8 @@ With `action`, `submit()` sends the data as JSON with `fetch`, by `method` (`POS
 default); `onSubmit` replaces the request. While it submits, the controls are disabled.
 
 ```javascript
-import { createForm } from 'mtrl-addons';
-import { createTextField, createButton } from 'mtrl';
+import { createForm } from 'material-addons';
+import { createTextField, createButton } from 'material';
 
 const form = createForm({
   action: '/api/profile',
@@ -96,8 +96,8 @@ form.on('submit:success', () => router.go('/profile'));
 `setData(data)` changes it as an edit would.
 
 ```javascript
-import { createForm } from 'mtrl-addons';
-import { createTextField } from 'mtrl';
+import { createForm } from 'material-addons';
+import { createTextField } from 'material';
 
 const form = createForm({
   layout: [[createTextField, 'info.name', { label: 'Name' }]],
@@ -114,7 +114,7 @@ form are planned for [Examples](/examples/).
 
 ## API
 
-<!-- API: generated from mtrl-addons' types in a later step. Until then these tables are
+<!-- API: generated from material-addons' types in a later step. Until then these tables are
 hand-written: keep them in line with the code, and add no prose restating them. -->
 
 ### Options
@@ -165,7 +165,7 @@ hand-written: keep them in line with the code, and add no prose restating them. 
 | `fields` | `Map<string, FormField>` | The data's fields |
 | `state` | `FormState` | `{ modified, submitting, disabled, initialData, currentData, errors }` |
 
-`DATA_STATE` and `FORM_EVENTS` are in `mtrl-addons/components/form/constants`.
+`DATA_STATE` and `FORM_EVENTS` are in `material-addons/components/form/constants`.
 
 ### Events
 

@@ -6,20 +6,19 @@ status: published
 
 # SolidJS
 
-`mtrl/solid` has a SolidJS component for every mtrl web component, for Solid 1.8 or later and
+`material/solid` has a SolidJS component for every mtrl web component, for Solid 1.8 or later and
 SolidStart. Each one renders its `<m-*>` element, so it looks and behaves exactly as the element
 does. This page covers only what is particular to Solid; [Getting started](../getting-started/)
 has the install and the base stylesheet, and each component page has its options and events.
 
 ## Components and props
 
-The components are named after the element: `Button`, `Switch`, `Tabs`. The text field is the one
-exception: the element is `m-textfield`, the component `TextField`. Import
+The components are named after the element: `Button`, `Switch`, `Tabs`, `TextField`. Import
 them where you use them. A component's props are its element's attributes, in camelCase:
 `supportingText` for `supporting-text`, `ariaLabel` for `aria-label`.
 
 ```tsx
-import { Button, Slider, TextField } from 'mtrl/solid';
+import { Button, Slider, TextField } from 'material/solid';
 
 export function Profile() {
   return (
@@ -32,7 +31,7 @@ export function Profile() {
 }
 ```
 
-A component registers its element the first time it mounts, and importing `mtrl/solid` loads
+A component registers its element the first time it mounts, and importing `material/solid` loads
 the elements' styles, so the base stylesheet is the only CSS you add.
 
 Props stay reactive: pass a signal's value and the element follows it. On the server they are
@@ -48,7 +47,7 @@ Element events are `on` props in PascalCase: `onChange`, `onInput`, `onOpen`, `o
 component page lists its events and their fields.
 
 ```tsx
-import { Switch, TextField } from 'mtrl/solid';
+import { Switch, TextField } from 'material/solid';
 
 function search(query: string) {
   console.log('Searching for', query);
@@ -76,7 +75,7 @@ component writes the property to the element whenever the signal changes.
 
 ```tsx
 import { createSignal } from 'solid-js';
-import { Switch, Tabs, Tab } from 'mtrl/solid';
+import { Switch, Tabs, Tab } from 'material/solid';
 
 export function Library() {
   const [wifi, setWifi] = createSignal(true);
@@ -102,7 +101,7 @@ element's default, as `checked` is on a native checkbox, and takes the `default`
 `defaultChecked`, `defaultValue`. Read the value from the event when you need it:
 
 ```tsx
-import { Switch } from 'mtrl/solid';
+import { Switch } from 'material/solid';
 
 export function Notifications() {
   return (
@@ -118,7 +117,7 @@ the user closes it:
 
 ```tsx
 import { createSignal } from 'solid-js';
-import { Button, Dialog } from 'mtrl/solid';
+import { Button, Dialog } from 'material/solid';
 
 export function DeleteDraft() {
   const [open, setOpen] = createSignal(false);
@@ -146,12 +145,12 @@ export function DeleteDraft() {
 ## Refs
 
 `ref` gives the `<m-*>` element itself, with its properties and methods, once it is created.
-Type it with the element's type from `mtrl/elements`, and use it in `onMount` or an event
+Type it with the element's type from `material/elements`, and use it in `onMount` or an event
 handler. A callback, `ref={(element) => …}`, works too.
 
 ```tsx
-import { Button, TextField } from 'mtrl/solid';
-import type { TextFieldElement } from 'mtrl/elements';
+import { Button, TextField } from 'material/solid';
+import type { TextFieldElement } from 'material/elements';
 
 export function Name() {
   let field: TextFieldElement | undefined;
@@ -180,7 +179,7 @@ fine: the parent reads them again when they change.
 
 ```tsx
 import { createSignal, For } from 'solid-js';
-import { Radios, Radio } from 'mtrl/solid';
+import { Radios, Radio } from 'material/solid';
 
 const sizes = [{ value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }, { value: 'l', label: 'Large' }];
 
@@ -204,7 +203,7 @@ To write the elements themselves (`<m-switch checked>`), with Solid's `prop:` an
 import the tag types once, in any file TypeScript sees:
 
 ```tsx
-import type {} from 'mtrl/solid/jsx';
+import type {} from 'material/solid/jsx';
 
 export const Wifi = () => <m-switch checked supporting-text="Saves battery">Wi-Fi</m-switch>;
 ```
@@ -225,7 +224,7 @@ stylesheet gives each element its final size and look meanwhile, so the page doe
 the script arrives. Import it once in `src/app.tsx`:
 
 ```typescript
-import 'mtrl/elements/preupgrade.css';
+import 'material/elements/preupgrade.css';
 ```
 
 [Server rendering](../server-rendering/) explains what the server sends and how the upgrade

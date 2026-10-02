@@ -64,7 +64,7 @@ try {
       await frame.getByRole('slider').nth(1).waitFor();
       await frame.getByRole('slider').nth(1).press('ArrowLeft');
       await valueIs('secondValue', '70');
-    } else if (slug === 'textfield') {
+    } else if (slug === 'text-field') {
       await frame.getByRole('textbox').fill('Ada Lovelace');
       await valueIs('value', 'Ada Lovelace');
       const input = await frame.getByRole('textbox').elementHandle();

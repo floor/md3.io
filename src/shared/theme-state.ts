@@ -134,8 +134,8 @@ export function toCss(state: ThemeState, base: ThemeBase): string {
     '/* mtrl theme, made on md3.io/styles/',
     ' *',
     ` * Load mtrl's base styles${state.base === 'baseline' ? '' : ` and the ${state.base} theme`}, then this file:`,
-    ' *   import \'mtrl/styles/base\';',
-    ...(state.base === 'baseline' ? [] : [` *   import 'mtrl/themes/${state.base}';`]),
+    ' *   import \'material/styles/base\';',
+    ...(state.base === 'baseline' ? [] : [` *   import 'material/themes/${state.base}';`]),
     ' *   import \'./mtrl-theme.css\';',
     ' * and name the theme on <html> (or any element):',
     ` *   <html data-theme="${state.base}" data-theme-mode="${state.mode}">`,
@@ -168,22 +168,15 @@ const lines = (tokens: Record<string, string>, indent: string) => Object.entries
 /** A downloaded theme's name is at most this long. */
 const NAME_MAX = 40;
 
-/**
- * The theme names mtrl ships but the Theme select does not offer: the four mtrl 0.10
- * deprecated (removed in mtrl 1.0, FLO-308). Their files are built into mtrl as much as
- * the offered ones, so a download refuses their names too. test/theme-state.test.ts
- * checks every theme mtrl ships is offered or listed here, so a theme mtrl adds fails
- * that test rather than slipping past the refusal.
- */
-export const deprecatedThemeNames = ['material', 'winter', 'browngreen', 'legacy'] as const;
-const REFUSED_NAMES = new Set<string>([...builtInThemeNames, ...deprecatedThemeNames]);
+/** Theme names a download refuses: every theme material ships and the select offers. Contrast files are not themes. */
+const REFUSED_NAMES = new Set<string>(builtInThemeNames);
 
 /**
  * The name a downloaded theme takes: trimmed, lower-case letters, digits and single
  * hyphens (runs of anything else become one hyphen), no leading or trailing hyphen, at
- * most 40 characters. Empty, or nothing usable left of it, is `custom`; a theme mtrl
- * ships (the theme select's list, plus the deprecated themes it still carries) is
- * refused as null, so a download never writes a file or `data-theme` over mtrl's own.
+ * most 40 characters. Empty, or nothing usable left of it, is `custom`; a theme
+ * material ships (the theme select's list) is refused as null, so a download never
+ * writes a file or `data-theme` over material's own.
  */
 export function downloadName(raw: unknown): string | null {
   const name = String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, NAME_MAX).replace(/-+$/, '');
@@ -196,7 +189,7 @@ export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string =>
   `/* mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
   ' *',
   ' * Load mtrl\'s base styles, then this file, and name the theme on <html> (or any element):',
-  ' *   import \'mtrl/styles/base\';',
+  ' *   import \'material/styles/base\';',
   ` *   import './mtrl-theme-${name}.css';`,
   ` *   <html data-theme="${name}" data-theme-mode="light">`,
   ' */',

@@ -30,9 +30,9 @@ chips:
     - { type: filter, label: CSS, value: css }
 ```
 
-`change` reports the selection: the factory calls its handlers with the selected values and the
-value that changed, the web component's detail has `value`, an array in a multi-select set and
-a string or `null` in a single-select one.
+`change` reports the selection as one object, `{ value, selected, changed }`. `value` is the
+set's current value: an array in a multi-select set, a string or `null` in a single-select one.
+The web component's detail has `value`.
 
 ## Examples
 
@@ -54,7 +54,7 @@ chips:
 ### Input chips
 
 Every input chip has a remove button, and `Backspace` or `Delete` removes it when focused. In a
-set, the set removes it and emits `remove` with the chip; on its own, it leaves the page.
+set, the set removes it and emits `remove` with `{ value, chip, chipValue }`; on its own, it leaves the page.
 `avatar` puts a 24dp round image in place of the leading icon.
 
 ```example
@@ -110,8 +110,8 @@ Passed to the four factories, and in a set's `chips` or `addChip()`, with `type`
 | `onTrailingClick` | `(chip) => void` | `undefined` | Filter chips: gives the trailing icon its own button |
 | `trailingMenu` | `boolean` | `false` | Filter chips: the trailing button opens a menu (`aria-haspopup`, a drop-down arrow) |
 | `trailingLabel` | `string` | `'{label} options'` or `'Remove {label}'` | Filter chips: the trailing button's accessible name |
-| `onClick` | `(chip) => void` | `undefined` | Called when the chip is activated |
-| `onChange` | `(selected, chip) => void` | `undefined` | Filter and input chips: called when a click changes the selected state |
+| `onClick` | `ChipEvents['click']` | `undefined` | Called when the chip is activated, before it toggles: `isSelected()` is still the state before the click |
+| `onChange` | `(payload: { selected, chip, value }) => void` | `undefined` | Filter and input chips: called when a click changes the selected state |
 | `onSelect` | `(chip) => void` | `undefined` | Filter and input chips: called with the chip after `onChange` |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
 | `class` | `string` | `undefined` | Additional CSS classes |
@@ -130,7 +130,7 @@ Passed to `createChips`.
 | `labelPosition` | `'start' \| 'end'` | `'start'` | Which side the label sits on |
 | `scrollable` | `boolean` | `false` | Whether the set scrolls horizontally instead of wrapping |
 | `vertical` | `boolean` | `false` | Whether the chips stack vertically |
-| `onChange` | `(selectedValues, changedValue) => void` | `undefined` | Called with every selected value and the one that changed |
+| `onChange` | `(event: { value, selected, changed }) => void` | `undefined` | Called with the selection after the change |
 | `on` | `{ change?, add?, remove? }` | `undefined` | Event handlers registered at creation |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
@@ -178,11 +178,12 @@ trailing button (`chip.trailingAction`) are its siblings, never inside it.
 | Event | Description | Data |
 |-------|-------------|------|
 | Chip `click` | The chip was activated | `{ event, element, originalEvent }` |
-| Chip `change` | A click changed the selected state | `{ selected, chip }` |
+| Chip `change` | A click changed the selected state | `{ selected, chip, value }` |
 | Chip `remove` / `trailing` | Removed, or its trailing button activated | the chip |
 | Chip `focus` / `blur` / `keydown` | The chip's action took or lost focus, or a key went down | `{ event, element, originalEvent }` |
-| Set `change` | The selection changed | `(selectedValues, changedValue)`, `changedValue` `null` for programmatic changes |
-| Set `add` / `remove` | A chip was added, or is about to be removed | the chip |
+| Set `change` | The selection changed | `{ value, selected, changed }`; `changed` is `null` for programmatic changes |
+| Set `add` | A chip was added | `{ value, chip }` |
+| Set `remove` | A chip is about to be removed | `{ value, chip, chipValue }` |
 
 The web component's `change` carries `{ value }`, and `remove` the removed chip's `{ value }`.
 

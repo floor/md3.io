@@ -78,7 +78,6 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `ripple` | `boolean` | `true` | Whether each radio has its state layer |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-| `rippleConfig` | `object` | `undefined` | Deprecated, no effect |
 
 #### Option
 
@@ -93,8 +92,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getValue()` | none | `string` | The selected value, or `''` |
-| `setValue(value)` | `value: string` | `RadiosComponent` | Selects an option; an unknown value clears the selection and emits `change` |
+| `getValue()` | none | `string \| null` | The selected value, or `null` when nothing is selected |
+| `setValue(value)` | `value: string \| null` | `RadiosComponent` | Selects an option; `null`, or an unknown value, clears the selection and emits `change` |
 | `getSelected()` | none | `RadioOptionConfig \| null` | The selected option |
 | `addOption(option)` | `option: RadioOptionConfig` | `RadiosComponent` | Adds an option |
 | `removeOption(value)` | `value: string` | `RadiosComponent` | Removes an option |
