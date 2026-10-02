@@ -14,6 +14,8 @@ import { transformAsync } from "@babel/core";
 import { compile } from "svelte/compiler";
 import { examples, FRAMEWORKS, type FrameworkId, exampleVariantIds } from "../examples";
 
+import { exampleSources } from "./example-sources";
+
 const root = resolve(import.meta.dir, "..");
 const outdir = resolve(root, "dist/examples");
 
@@ -134,10 +136,7 @@ for (const example of examples) {
     const js = await result.outputs[0].text();
     await writeFile(resolve(outdir, example.slug, `${id}.js`), js);
     sources[id] = {
-      files: [
-        { name: file, code: await Bun.file(resolve(dir, file)).text() },
-        { name: "shared.ts", code: await Bun.file(resolve(dir, "shared.ts")).text() },
-      ],
+      files: await exampleSources(dir, file),
       gzip: gzipSync(js).length,
     };
   }
