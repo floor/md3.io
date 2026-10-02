@@ -31,6 +31,7 @@ const destinations = [{ value: 'inbox', label: 'Inbox', icon: symbols.inbox }, {
 // Lorem Picsum photos, from vlist.io's carousel demo (src/data/carousel.js), at twice
 // the card's 200 × 148 slide. The card's element loads only as it nears the viewport,
 // so the photos do too.
+// Lorem Picsum, https://picsum.photos, says "Images from Unsplash" (https://unsplash.com); the service states no licence on https://picsum.photos, read 2026-10-02. The images are loaded from that service at view time, not stored in this repository.
 const places = [
   { id: 29, title: 'Himalayan Peaks', location: 'Nepal' },
   { id: 49, title: 'Santorini Village', location: 'Greece' },
