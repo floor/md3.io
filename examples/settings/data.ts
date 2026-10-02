@@ -78,7 +78,7 @@ export const CATEGORIES: Category[] = [
   {
     id: "network",
     title: "Network & internet",
-    icon: "share",
+    icon: "wifi",
     summary: "Wi-Fi, Bluetooth, mobile data",
     groups: [
       {
@@ -91,7 +91,7 @@ export const CATEGORIES: Category[] = [
         ],
       },
       {
-        title: "Preferred network",
+        title: "Mobile network",
         settings: [
           {
             kind: "radios",
@@ -163,7 +163,7 @@ export const CATEGORIES: Category[] = [
   {
     id: "notifications",
     title: "Notifications",
-    icon: "inbox",
+    icon: "notifications",
     summary: "Alerts and notification sounds",
     groups: [
       {
@@ -178,7 +178,7 @@ export const CATEGORIES: Category[] = [
   {
     id: "privacy",
     title: "Privacy",
-    icon: "accountCircle",
+    icon: "lock",
     summary: "Location and usage data",
     groups: [
       {
