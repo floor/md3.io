@@ -33,6 +33,27 @@ export const PACKAGE_MANAGERS = [
 ] as const;
 
 /**
+ * The package a reader installs for this version of the library. A prerelease (a hyphen
+ * in the version) is published on the `next` dist-tag; a release is `material`.
+ */
+export function installSpecifier(version: string): string {
+  return version.includes('-') ? 'material@next' : 'material';
+}
+
+/** The library this site is built against (`node_modules/material`). */
+const libraryVersion = (): string =>
+  JSON.parse(readFileSync(resolve(root, 'node_modules/material/package.json'), 'utf8')).version as string;
+
+/**
+ * An install fence is authored as package names (`material`). That one name follows
+ * {@link installSpecifier} for the version installed here; any other name is unchanged.
+ */
+const resolveInstallPackages = (packages: string): string => {
+  const version = libraryVersion();
+  return packages.split(/\s+/).filter(Boolean).map(name => name === 'material' ? installSpecifier(version) : name).join(' ');
+};
+
+/**
  * An `install` fence (its text is the packages) as one command per package manager, with a
  * switch between them. The reader's choice is on :root[data-package-manager] before paint
  * (base.eta), and site.ts remembers it; bun without it.
@@ -113,7 +134,7 @@ export function renderDocument(slug: string) {
         examples = true;
         return renderExample(token.text);
       }
-      if (token.lang === 'install') return renderInstall(token.text.trim());
+      if (token.lang === 'install') return renderInstall(resolveInstallPackages(token.text.trim()));
       // Every other block highlighted like the examples: the fence's first word is the
       // language (after it come docs:check's flags, such as `fragment`).
       const language = codeLanguage(token.lang);
