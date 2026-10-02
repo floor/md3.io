@@ -31,7 +31,7 @@ export const themeFile = (format: Format, theme: ThemeData, roles: string[], raw
   const byRole = (colors: string[]) => Object.fromEntries(roles.map((role, i) => [role, colors[i]!]));
   const data: ColorThemeFile = {
     name, origin: theme.spec ?? undefined, tokens: schemeToTokens({ light: byRole(theme.light), dark: byRole(theme.dark) }),
-    note: theme.spec ? `generated from ${generatedFrom(theme.spec)}` : 'colours as mtrl ships them, set by hand',
+    note: theme.spec ? `generated from ${generatedFrom(theme.spec)}` : 'colours as material ships them, set by hand',
   };
   return { name: `mtrl-theme-${name}.${format}`, text: FORMATS[format](data) };
 };
