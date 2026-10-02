@@ -342,6 +342,10 @@ try {
     assert(Math.abs(await schemeCardTop() - top) < 0.5, `The Scheme card does not move when the refusal appears at ${where}: ${top} → ${await schemeCardTop()} px`);
   };
   await nameInput.fill('my theme');
+  // The name is state only: it names the download, never the address (the seed or the
+  // theme, the variant and the contrast, nothing else).
+  const addressParams = [...new URLSearchParams(await page.evaluate(() => location.search)).keys()];
+  assert(!addressParams.includes('name') && addressParams.every(key => ['seed', 'theme', 'variant', 'contrast'].includes(key)), `The typed name stays out of the address: ${await page.evaluate(() => location.search)}`);
   const namedCss = await downloadAs('CSS');
   assert(namedCss.name === 'mtrl-theme-my-theme.css' && namedCss.text.includes('[data-theme="my-theme"]'), `The typed name names the file and its selector: ${namedCss.name}`);
   await refusalAddsNoHeight('1440 px');

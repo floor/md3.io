@@ -167,19 +167,28 @@ const lines = (tokens: Record<string, string>, indent: string) => Object.entries
 
 /** A downloaded theme's name is at most this long. */
 const NAME_MAX = 40;
-const BUILT_IN_NAMES = new Set<string>(builtInThemeNames);
+
+/**
+ * The theme names mtrl ships but the Theme select does not offer: the four mtrl 0.10
+ * deprecated (removed in mtrl 1.0, FLO-308). Their files are built into mtrl as much as
+ * the offered ones, so a download refuses their names too. test/theme-state.test.ts
+ * checks every theme mtrl ships is offered or listed here, so a theme mtrl adds fails
+ * that test rather than slipping past the refusal.
+ */
+export const deprecatedThemeNames = ['material', 'winter', 'browngreen', 'legacy'] as const;
+const REFUSED_NAMES = new Set<string>([...builtInThemeNames, ...deprecatedThemeNames]);
 
 /**
  * The name a downloaded theme takes: trimmed, lower-case letters, digits and single
  * hyphens (runs of anything else become one hyphen), no leading or trailing hyphen, at
- * most 40 characters. Empty, or nothing usable left of it, is `custom`; a built-in
- * theme's name (the list the app's theme select is built from) is refused as null, so a
- * download never writes a file or `data-theme` over mtrl's own.
+ * most 40 characters. Empty, or nothing usable left of it, is `custom`; a theme mtrl
+ * ships (the theme select's list, plus the deprecated themes it still carries) is
+ * refused as null, so a download never writes a file or `data-theme` over mtrl's own.
  */
 export function downloadName(raw: unknown): string | null {
   const name = String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, NAME_MAX).replace(/-+$/, '');
   if (!name) return 'custom';
-  return BUILT_IN_NAMES.has(name) ? null : name;
+  return REFUSED_NAMES.has(name) ? null : name;
 }
 
 /** CSS: light on [data-theme="name"], dark with data-theme-mode="dark", as mtrl's themes are. */
