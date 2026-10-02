@@ -3,7 +3,7 @@ import type { ProgressConfig } from 'mtrl/components/progress';
 import type { LoadingIndicatorConfig } from 'mtrl/components/loading-indicator';
 import type { SnackbarConfig } from 'mtrl/components/snackbar';
 import type { TooltipConfig } from 'mtrl/components/tooltip';
-import type { CardSchema } from 'mtrl/components/card';
+import type { CardConfig } from 'mtrl/components/card';
 import type { ListConfig, ListItem, ListSlot } from 'mtrl/components/list';
 import type { CarouselConfig } from 'mtrl/components/carousel';
 import type { DividerConfig } from 'mtrl/components/divider';
@@ -22,7 +22,7 @@ import type { SwitchConfig } from 'mtrl/components/switch';
 import type { RadiosConfig } from 'mtrl/components/radios';
 import type { ChipsConfig } from 'mtrl/components/chips';
 import type { SliderConfig } from 'mtrl/components/slider';
-import type { TextfieldConfig } from 'mtrl/components/textfield';
+import type { TextFieldConfig } from 'mtrl/components/textfield';
 import type { SelectConfig } from 'mtrl/components/select';
 import type { SearchConfig } from 'mtrl/components/search';
 import type { DatePickerConfig } from 'mtrl/components/datepicker';
@@ -341,7 +341,7 @@ export const components = {
       ticks: bool(state, 'ticks'), showValue: bool(state, 'showValue'), label: string(state, 'label'), ariaLabel: string(state, 'label').trim() || 'Volume', disabled: bool(state, 'disabled'), name: 'volume' }),
   },
   textfield: {
-    group: 'Selection & input', name: 'Text field', factory: 'createTextfield', variable: 'textfield',
+    group: 'Selection & input', name: 'Text field', factory: 'createTextField', variable: 'textfield',
     description: 'Enter text with helpful context. Explore field styles, input types, icons, and validation states.',
     summary: 'Text entry with labels and feedback.', styles: ['textfield'],
     controls: [
@@ -349,7 +349,7 @@ export const components = {
       ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed')]),
       ...section('Behavior', [toggle('error', 'Error'), toggle('required', 'Required'), toggle('readonly', 'Read only'), disabled]),
     ],
-    config: (state: ComponentState): TextfieldConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), type: string(state, 'type'), label: string(state, 'label'),
+    config: (state: ComponentState): TextFieldConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), type: string(state, 'type'), label: string(state, 'label'),
       value: string(state, 'value'), placeholder: string(state, 'placeholder'), supportingText: string(state, 'supportingText'), name: 'name', ...(iconMarkup(state) ? { leadingIcon: iconMarkup(state) } : {}),
       // Prefix and suffix text ("$", "kg") sit beside the input; only set when given, so the default field has neither
       ...(string(state, 'prefixText') ? { prefixText: string(state, 'prefixText') } : {}), ...(string(state, 'suffixText') ? { suffixText: string(state, 'suffixText') } : {}),
@@ -509,7 +509,7 @@ export const components = {
       ...section('Content', [text('title', 'Title', 'A little time outside'), text('subtitle', 'Subtitle', 'Find your next escape'), text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), toggle('actions', 'Show actions', true)]),
       ...section('Behavior', [toggle('clickable', 'Clickable'), toggle('draggable', 'Draggable')]),
     ],
-    config: (state: ComponentState): CardSchema => ({ variant: string(state, 'variant'), clickable: bool(state, 'clickable'), interactive: bool(state, 'clickable'), draggable: bool(state, 'draggable'), header: { title: string(state, 'title'), subtitle: string(state, 'subtitle') }, content: { text: string(state, 'content') }, ...(state.media ? { media: { src: landscape(0), alt: 'Illustrated mountain landscape', aspectRatio: string(state, 'aspectRatio'), position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top') } } : {}), ...(state.actions ? { buttons: [{ text: 'Explore', variant: 'text' }, { text: 'Save', variant: 'tonal' }] } : {}) }),
+    config: (state: ComponentState): CardConfig => ({ variant: string(state, 'variant'), clickable: bool(state, 'clickable'), interactive: bool(state, 'clickable'), draggable: bool(state, 'draggable'), header: { title: string(state, 'title'), subtitle: string(state, 'subtitle') }, content: { text: string(state, 'content') }, ...(state.media ? { media: { src: landscape(0), alt: 'Illustrated mountain landscape', aspectRatio: string(state, 'aspectRatio'), position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top') } } : {}), ...(state.actions ? { buttons: [{ text: 'Explore', variant: 'text' }, { text: 'Save', variant: 'tonal' }] } : {}) }),
   },
   list: {
     group: 'Containment', name: 'List', factory: 'createList', variable: 'list',

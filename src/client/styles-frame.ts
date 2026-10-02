@@ -7,7 +7,7 @@ import createTopAppBar from 'mtrl/components/top-app-bar';
 import createIconButton from 'mtrl/components/icon-button';
 import { createChips } from 'mtrl/components/chips';
 import createCard from 'mtrl/components/card';
-import createTextfield from 'mtrl/components/textfield';
+import createTextField from 'mtrl/components/textfield';
 import createSwitch from 'mtrl/components/switch';
 import createSlider from 'mtrl/components/slider';
 import createButton from 'mtrl/components/button';
@@ -40,7 +40,7 @@ function buildScreen() {
     media: { src: '/assets/playground/landscape-1.svg', alt: 'Illustrated mountain landscape', aspectRatio: '16:9', position: 'top' },
     buttons: [{ text: 'Details', variant: 'text' }, { text: 'Book', variant: 'tonal' }],
   });
-  const where = createTextfield({ variant: 'outlined', label: 'Where to?', value: 'Lake Annecy' });
+  const where = createTextField({ variant: 'outlined', label: 'Where to?', value: 'Lake Annecy' });
   const flexible = createSwitch({ label: 'Flexible dates', checked: true, icon: symbols.check });
   const budget = createSlider({ min: 0, max: 100, value: 40, step: 5, label: 'Budget', ariaLabel: 'Budget' });
   // Square buttons: their corners are shape tokens. A round button is half its height
@@ -77,7 +77,7 @@ function buildScreen() {
 function buildGallery() {
   screen.classList.add('gallery');
   const make: Record<string, () => HTMLElement> = {
-    'extra-small:textfield': () => createTextfield({ variant: 'outlined', label: 'Text field', value: 'Lake Annecy' }).element,
+    'extra-small:textfield': () => createTextField({ variant: 'outlined', label: 'Text field', value: 'Lake Annecy' }).element,
     'small:chips': () => createChips({ label: 'Chips', multiSelect: false, chips: ['Hiking', 'Coast'].map((label, index) => ({ label, value: label.toLowerCase(), type: 'filter', selected: index === 0 })) }).element,
     'medium:card': () => createCard({ variant: 'filled', header: { title: 'Card', subtitle: 'Medium corners' } }).element,
     'medium:button': () => createButton({ text: 'Square button', variant: 'filled', shape: 'square' }).element,

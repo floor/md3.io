@@ -18,12 +18,12 @@ Import the components by name. `mtrl/react` loads the elements' CSS, and each co
 registers its element the first time it mounts, so there is no `defineAll()` to call.
 
 ```tsx
-import { Switch, Textfield } from 'mtrl/react';
+import { Switch, TextField } from 'mtrl/react';
 
 export function Settings() {
   return (
     <form>
-      <Textfield name="city" label="City" supportingText="Where you live" variant="outlined" />
+      <TextField name="city" label="City" supportingText="Where you live" variant="outlined" />
       <Switch name="wifi" defaultChecked>Wi-Fi</Switch>
     </form>
   );
@@ -48,7 +48,7 @@ configure({ prefix: 'md' });
 Each element event is an `on` prop: `change` is `onChange`, `select` is `onSelect`. The handler
 receives the element's `CustomEvent`, with the payload in `event.detail`, typed for each
 component. They replace React's own handlers of the same name, and keep the element's meaning:
-a `Textfield`'s `onChange` follows the native `change`, when the edit is committed, not React's
+a `TextField`'s `onChange` follows the native `change`, when the edit is committed, not React's
 per-keystroke `onChange`. Use `onInput` for every keystroke; both carry `{ value }`.
 
 The component attaches its listeners once and always calls your latest handler, so an inline
@@ -89,12 +89,12 @@ their `name`, and `new FormData(form)` reads them. That makes uncontrolled compo
 for React 19's form actions, which receive the `FormData`:
 
 ```tsx
-import { Button, Switch, Textfield } from 'mtrl/react';
+import { Button, Switch, TextField } from 'mtrl/react';
 
 export function Booking() {
   return (
     <form action={(data) => submitForm(data)}>
-      <Textfield name="city" label="City" required />
+      <TextField name="city" label="City" required />
       <Switch name="newsletter" value="yes">Send me offers</Switch>
       <Button type="submit">Book</Button>
     </form>
@@ -112,14 +112,14 @@ after an action returns each control to its default.
 
 ```tsx
 import { useRef } from 'react';
-import { Button, Textfield } from 'mtrl/react';
-import type { TextfieldElement } from 'mtrl/elements';
+import { Button, TextField } from 'mtrl/react';
+import type { TextFieldElement } from 'mtrl/elements';
 
 export function Rename() {
-  const field = useRef<TextfieldElement>(null);
+  const field = useRef<TextFieldElement>(null);
   return (
     <>
-      <Textfield ref={field} label="Name" defaultValue="Untitled" />
+      <TextField ref={field} label="Name" defaultValue="Untitled" />
       <Button onClick={() => field.current?.select()}>Select all</Button>
     </>
   );
