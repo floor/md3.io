@@ -95,7 +95,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The underlying button's type attribute |
 | `value` | `string` | `undefined` | Value attribute, for use in a form |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
+| `rippleConfig` | `{ duration? }` | `undefined` | How long, in ms, a released wave lingers before it is removed |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 | `tooltip` | `boolean` | `true` | Accepted but not applied: no tooltip is rendered. Use the tooltip component beside the button |

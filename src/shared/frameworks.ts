@@ -200,6 +200,8 @@ type Child = { attrs: Attr[]; text: string; children: Child[] };
 
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 const pascal = (name: string): string => camel(name).replace(/^./, c => c.toUpperCase());
+/** The adapters' name for an element: mtrl 1.0 spells the text field TextField; everything else is PascalCase. */
+const adapterName = (name: string): string => (name === 'textfield' ? 'TextField' : pascal(name));
 const escapeAttr = (value: string): string => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
 /** Text content: braces too, which JSX, Svelte and Vue would read as code. */
 const escapeText = (value: string): string =>
@@ -900,8 +902,8 @@ const exampleStates = (p: Plan, declare: (name: string, value: string, type: str
   (p.example?.states ?? []).map(state => declare(state.name, state.value === undefined ? '' : jsValue(state.value), state.value === undefined ? '<string>' : '')).join('');
 
 function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: boolean): string {
-  const Name = pascal(meta.name);
-  const Child = meta.children ? pascal(meta.children.name) : '';
+  const Name = adapterName(meta.name);
+  const Child = meta.children ? adapterName(meta.children.name) : '';
   const constants = hoist(meta, p);
   const lib = solid ? 'solid' : 'react';
   const event = modelEvent(meta);
@@ -912,7 +914,7 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const hook = solid ? 'createSignal' : 'useState';
   const syntax = reactOpen(solid);
   const stateful = p.model || p.open !== undefined || p.example?.states.length;
-  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/${lib}';\n${appImport(p)}${styleImports(context)}`;
+  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, adapterName).join(', ')} } from 'mtrl/${lib}';\n${appImport(p)}${styleImports(context)}`;
   // The model's event sets it; an example's handlers on that event run beside.
   const events = new Map<string, { payload: boolean; calls: string[] }>();
   const on = (name: string, payload: boolean, call: string) => {
@@ -928,12 +930,12 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const depth = p.trigger ? '  ' : '';
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
-    slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`, escapeText(child.text)),
+    slotted: child => element(child.native ? child.element : adapterName(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`, escapeText(child.text)),
     text: name => `{${reads(name)}}`,
   }, `      ${depth}`, `    ${depth}`);
   const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(bindState(p.attrs, reads), !solid)}${jsxProps(bindState(p.props, reads))}`, body);
   const trigger = p.trigger
-    ? element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid)}${clickOpens(meta, p, syntax, true)}`, triggerBody(meta, p, `{${read}}`)) : '';
+    ? element(p.trigger.native ? p.trigger.element : adapterName(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid)}${clickOpens(meta, p, syntax, true)}`, triggerBody(meta, p, `{${read}}`)) : '';
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `set${pascal(step.state)}(${jsValue(step.value)})`), '  ', true)).join('');
   return `${imports}\n${constants ? `${constants}\n` : ''}${omittedNote(p, t => `// ${t}`)}${callsNote(meta, p, t => `// ${t}`)}export function Example() {\n` +
     (p.model ? `  const [${state}, ${setter}] = ${hook}(${literal(p.model.value)});\n` : '') +
@@ -944,12 +946,12 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
 }
 
 function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
-  const Name = `M${pascal(meta.name)}`;
-  const Child = meta.children ? `M${pascal(meta.children.name)}` : '';
+  const Name = `M${adapterName(meta.name)}`;
+  const Child = meta.children ? `M${adapterName(meta.children.name)}` : '';
   const constants = hoist(meta, p);
   const body = content(p, {
     child: { tag: Child, attrs: vueAttrs },
-    slotted: child => element(child.native ? child.element : `M${pascal(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`, escapeText(child.text)),
+    slotted: child => element(child.native ? child.element : `M${adapterName(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`, escapeText(child.text)),
     text: name => `{{ ${name} }}`,
     region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`<template #${slot}>`, lines, '</template>') },
   }, '    ', '  ');
@@ -957,10 +959,10 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const handlers = ownHandlers(meta, p).map(h => ` @${h.event}="${escapeAttr(handlerCall(h, field => `$event.detail.${field}`))}"`).join('');
   const tag = element(Name, `${model}${handlers}${openProps(meta, p, vueOpen)}${vueAttrs(bindState(p.attrs, name => name))}${vueProps(bindState(p.props, name => name))}`, body);
   const trigger = p.trigger
-    ? `  ${element(p.trigger.native ? p.trigger.element : `M${pascal(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, triggerBody(meta, p, `{{ ${p.model?.name} }}`))}\n` : '';
+    ? `  ${element(p.trigger.native ? p.trigger.element : `M${adapterName(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, triggerBody(meta, p, `{{ ${p.model?.name} }}`))}\n` : '';
   const state = p.model || p.open !== undefined || p.example?.states.length;
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state}.value = ${jsValue(step.value)}`), '', false)).join('');
-  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'mtrl/vue';\n${appImport(p)}${styleImports(context)}` +
+  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${adapterName(name)}`).join(', ')} } from 'mtrl/vue';\n${appImport(p)}${styleImports(context)}` +
     (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `const ${state.name} = ref(${state.value});\n`).join('') +
@@ -970,11 +972,11 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
 }
 
 function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
-  const Child = meta.children ? pascal(meta.children.name) : '';
+  const Child = meta.children ? adapterName(meta.children.name) : '';
   const constants = hoist(meta, p, '  ');
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
-    slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`, escapeText(child.text)),
+    slotted: child => element(child.native ? child.element : adapterName(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`, escapeText(child.text)),
     text: name => `{${name}}`,
     // a dashed slot is a camelCase snippet: `header-action` → `headerAction`
     region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`{#snippet ${camel(slot)}()}`, lines, '{/snippet}') },
@@ -982,17 +984,17 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const model = p.model ? ` bind:${p.model.name}` : '';
   const handlers = ownHandlers(meta, p).map(h => ` on${h.event}={${arrow(readsPayload(h), [handlerCall(h, field => `event.detail.${field}`)])}}`).join('');
   const trigger = p.trigger
-    ? `${element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs)}${clickOpens(meta, p, svelteOpen, true)}`, triggerBody(meta, p, `{${p.model?.name}}`))}\n` : '';
+    ? `${element(p.trigger.native ? p.trigger.element : adapterName(p.trigger.element), `${jsxAttrs(p.trigger.attrs)}${clickOpens(meta, p, svelteOpen, true)}`, triggerBody(meta, p, `{${p.model?.name}}`))}\n` : '';
   const state = p.model || p.open !== undefined || p.example?.states.length;
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state} = ${jsValue(step.value)}`), '  ', false)).join('');
   const styles = styleImports(context);
-  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'mtrl/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
+  return `<script lang="ts">\n  import { ${componentNames(meta, p, adapterName).join(', ')} } from 'mtrl/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
     (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `  let ${state.name} = $state(${state.value});\n`).join('') +
     exampleStates(p, (name, value, type) => `  let ${name} = $state${type}(${value});\n`) +
     (actions ? `${state ? '\n' : ''}${actions}` : '') +
-    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${callsNote(meta, p, t => `<!-- ${t} -->`)}${trigger}${element(pascal(meta.name), `${model}${handlers}${openProps(meta, p, svelteOpen)}${jsxAttrs(bindState(p.attrs, name => name))}${jsxProps(bindState(p.props, name => name))}`, body)}\n`;
+    `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${callsNote(meta, p, t => `<!-- ${t} -->`)}${trigger}${element(adapterName(meta.name), `${model}${handlers}${openProps(meta, p, svelteOpen)}${jsxAttrs(bindState(p.attrs, name => name))}${jsxProps(bindState(p.props, name => name))}`, body)}\n`;
 }
 
 /** The component's code in a framework other than vanilla. */

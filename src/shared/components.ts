@@ -77,10 +77,10 @@ const pick = <const T extends readonly string[]>(state: ComponentState, key: str
 const string = (state: ComponentState, key: string) => typeof state[key] === 'string' ? state[key] as string : '';
 const bool = (state: ComponentState, key: string) => state[key] === true;
 const shape = (state: ComponentState) => bool(state, 'square') ? 'square' as const : 'round' as const;
-const tones = ['primary-container', 'secondary-container', 'tertiary-container', 'primary', 'secondary', 'tertiary', 'surface'] as const;
+const tones = ['primary-container', 'secondary-container', 'tertiary-container', 'primary', 'secondary', 'tertiary'] as const;
 const positions = ['center', 'bottom-right', 'bottom-left', 'top-right', 'top-left'] as const;
 const position = choose('position', 'Position', positions, 'center', 'select');
-const toneControl: Control = { ...choose('variant', 'Color', tones, 'primary-container', 'select'), labels: { surface: 'Surface (legacy)' } };
+const toneControl: Control = choose('variant', 'Color', tones, 'primary-container', 'select');
 const iconMarkup = (state: ComponentState) => componentIcons[string(state, 'icon')] || '';
 const fabPosition = (state: ComponentState) => state.position === 'center' ? {} : { position: string(state, 'position') };
 const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'Italic' }, { value: 'underline', text: 'Underline' }];
@@ -214,7 +214,7 @@ export const components = {
     summary: 'A floating action with a clear purpose.',
     styles: ['fab'],
     controls: [
-      ...section('Appearance', [toneControl, { ...choose('size', 'Size', ['small', 'default', 'medium', 'large'], 'default', 'select'), labels: { small: 'Small (legacy)' } },
+      ...section('Appearance', [toneControl, choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
         position, toggle('lowered', 'Lowered elevation')]),
       ...section('Content', [icon(['add', 'edit', 'heart', 'download', 'send'], 'add'), text('ariaLabel', 'Accessible label', 'Create new item')]),
       ...section('Behavior', [disabled]),
