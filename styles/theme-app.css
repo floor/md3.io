@@ -20,6 +20,9 @@
 .theme-app__actions { display: flex; align-items: center; gap: 4px; }
 .theme-app__controls { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 16px; padding: 16px 24px 0; }
 .theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-text-field { width: 200px; }
+/* The next select is 280px unless the page sets a width (the text field's min
+   width). 100% fills the 200px slot on the line above and beats a `.mtrl-select` width. */
+.theme-app__controls > .mtrl-select { width: 100%; max-width: 200px; }
 .theme-app__controls > .mtrl-select[data-seeded] .mtrl-menu__item[data-id="original"] { display: none; }
 /* The name field's supporting row holds one line from the start. mtrl's row (mtrl's
    _text-field.scss: 4px inset + body-small) is only as tall as its text, and the blank
@@ -74,6 +77,7 @@
   .md3-palette__tone { height: 40px; font-size: 9px; letter-spacing: -0.3px; }
   .theme-app__controls { padding: 12px 12px 0; }
   .theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-text-field { width: auto; flex: 1 1 150px; min-width: 0; }
+  .theme-app__controls > .mtrl-select { max-width: none; }
 }
 
 /* A tile's copy icon, as MTB shows it: on hover and keyboard focus. */
