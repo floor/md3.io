@@ -37,3 +37,6 @@
 
 .csv__cell { font-variant-numeric: tabular-nums; }
 @media (max-width: 599px) { #app:has(.csv) { padding: 16px; } }
+
+.csv__column-tools, .csv__columns { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.csv__subhead { margin: 8px 0 0; font-family: var(--mtrl-sys-typescale-title-medium-font); font-size: var(--mtrl-sys-typescale-title-medium-font-size); line-height: var(--mtrl-sys-typescale-title-medium-line-height); font-weight: var(--mtrl-sys-typescale-title-medium-font-weight); }

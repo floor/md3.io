@@ -1,21 +1,10 @@
 import { createVList, table, a11y } from 'vlist';
-import createMenu from 'material/components/menu';
 import createTextField from 'material/components/text-field';
-import { button, element } from './ui';
+import { element } from './ui';
 import { valueAt, visibleColumns, type Document, type View, type Row, type Column } from './shared';
-import listStyles from 'vlist/styles' with { type: 'text' };
-import tableStyles from 'vlist/styles/table' with { type: 'text' };
-
-// The examples builder emits one JS file. Bundle the unmodified public CSS exports
-// as text so their styles travel with that entry, without changing shared infrastructure.
-const styles = document.createElement('style');
-styles.textContent = listStyles + tableStyles; document.head.append(styles);
-
 export interface TableActions {
   edit(row: Row, column: Column, value: string, move: number, restore: boolean): void;
-  sort(column: Column, direction: 'asc' | 'desc'): void;
-  filter(column: Column, value: string): void;
-  hide(column: Column): void;
+  sort(column: Column, direction: 'asc' | 'desc' | null): void;
 }
 export function mountTable(host: HTMLElement, doc: Document, view: View, rows: Row[], actions: TableActions) {
   const columns = visibleColumns(doc, view);
@@ -23,44 +12,31 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
   let editor: ReturnType<typeof createTextField> | undefined;
   let editingCell: HTMLElement | undefined;
   let editingRow = -1, destroyed = false;
-  const controls: Array<{ destroy(): void }> = [];
-  // FLO-576: vlist 3.1.0 blocks pointer input in HTMLElement labels.
-  // column:click has a payload type but no runtime emission; retain keyboard menus.
-  const menus = columns.map(column => {
-    const opener = button(column.label, () => {});
-    const menu = createMenu({ opener: opener.element, items: [
-      { id: 'asc', text: 'Sort ascending' }, { id: 'desc', text: 'Sort descending' },
-      { id: 'filter', text: 'Filter by selected value' }, { id: 'hide', text: 'Hide column', disabled: columns.length === 1 },
-    ] });
-    menu.on('select', ({ itemId }) => {
-      // Let menu selection restore focus before changing the table structure.
-      queueMicrotask(() => {
-        if (itemId === 'asc' || itemId === 'desc') actions.sort(column, itemId);
-        if (itemId === 'hide') actions.hide(column);
-        if (itemId === 'filter' && rows[active.row]) actions.filter(column, valueAt(doc, rows[active.row], column));
-      });
-    });
-    controls.push(menu, opener);
-    return opener.element;
-  });
   const makeList = () => {
     const list = createVList({ container: host, items: rows, overscan: 4, ariaLabel: 'CSV data',
     item: { height: index => index === editingRow ? 160 : 48, template: () => '' },
-  }, [table({ rowHeight: index => index === editingRow ? 160 : 48, headerHeight: 72, resizable: false, columns: columns.map((column, i) => ({
-    key: column.id, label: menus[i], width: column.type === 'text' ? 240 : 200, align: column.type === 'number' ? 'right' as const : 'left' as const,
+  }, [table({ rowHeight: index => index === editingRow ? 160 : 48, headerHeight: 48, resizable: false, columns: columns.map((column, i) => ({
+    key: column.id, label: column.label, sortable: true, width: column.type === 'text' ? 240 : 200, align: column.type === 'number' ? 'right' as const : 'left' as const,
     cell: (row: Row, _column: unknown, rowIndex: number) => {
       const cell = element('span', 'csv__cell', valueAt(doc, row, column));
       cell.dataset.row = String(rowIndex); cell.dataset.column = String(i);
-      cell.tabIndex = rowIndex === active.row && i === active.column ? 0 : -1;
+      cell.tabIndex = -1; // The library's roving header is the table's only Tab stop.
       cell.setAttribute('aria-label', `${column.label}, row ${rowIndex + 1}: ${valueAt(doc, row, column) || 'empty'}`);
       cell.addEventListener('focus', () => { active = { row: rowIndex, column: i }; });
       cell.addEventListener('dblclick', () => startEdit(cell));
       return cell;
     },
   })) }), a11y({ keyboard: false })]);
-    // FLO-578: the documented public root owns our composite grid tab stop.
-    // a11y({ keyboard: false }) leaves table-root tabindex to the application.
-    list.element.tabIndex = 0;
+    // Public VList.element is the grid root. ariaLabel currently names only the
+    // inner rowgroup; set the accessible name on this documented public element.
+    list.element.setAttribute('aria-label', 'CSV data');
+    list.element.tabIndex = -1; // Programmatic focus only; headers already own Tab.
+    list.on('column:sort', payload => {
+      const { key, direction } = payload as { key: string; direction: 'asc' | 'desc' | null };
+      const column = columns.find(column => column.id === key);
+      if (column) actions.sort(column, direction);
+    });
+    if (view.sort) list.setSort(view.sort.column, view.sort.direction);
     return list;
   };
   let list = makeList();
@@ -68,20 +44,23 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
   function focus(row: number, column: number) {
     if (!rows.length) return;
     active = { row: Math.max(0, Math.min(rows.length - 1, row)), column: Math.max(0, Math.min(columns.length - 1, column)) };
-    // FLO-578: move focus off a row before virtualization removes it. The public
-    // element property and documented a11y composite tab stop let us use native
-    // focus(), without private APIs or suppressing the focus-removal exception.
-    // https://vlist.io/docs/api and https://vlist.io/docs/accessibility
+    const target = () => host.querySelector<HTMLElement>(`[data-row="${active.row}"][data-column="${active.column}"]`);
+    const mounted = target();
+    if (mounted) {
+      // A visible neighbour needs just one focus change and no vertical scrolling.
+      mounted.focus({ preventScroll: true });
+      mounted.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      return;
+    }
+    // FLO-578: only far jumps need focus off the recyclable row before scrolling.
+    // Use the documented public root and scrollToIndex; do not suppress errors.
     list.element.focus({ preventScroll: true });
     const previousFocus = document.activeElement;
     list.scrollToIndex(active.row, 'center');
     requestAnimationFrame(() => {
-      // A later user action takes precedence over this deferred cell reveal.
       if (destroyed || document.activeElement !== previousFocus) return;
-      const target = host.querySelector<HTMLElement>(`[data-row="${active.row}"][data-column="${active.column}"]`);
-      host.querySelectorAll<HTMLElement>('.csv__cell').forEach(cell => { cell.tabIndex = cell === target ? 0 : -1; });
-      target?.focus({ preventScroll: true });
-      target?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      target()?.focus({ preventScroll: true });
+      target()?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     });
   }
   function finish(commit: boolean, move = 0, restore = true) {
@@ -144,7 +123,19 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
       const cell = host.querySelector<HTMLElement>(`[data-row="${active.row}"][data-column="${active.column}"]`);
       if (cell) startEdit(cell);
     },
-    firstColumn: columns[0]?.id,
-    destroy() { destroyed = true; finish(false, 0, false); host.removeEventListener('keydown', onKey); controls.forEach(c => c.destroy()); list.destroy(); },
+    update(next: Document, nextView: View, nextRows: Row[]) {
+      const nextColumns = visibleColumns(next, nextView);
+      if (nextColumns.length !== columns.length || nextColumns.some((column, i) => column !== columns[i])) return false;
+      doc = next; view = nextView; rows = nextRows;
+      active.row = Math.max(0, Math.min(active.row, rows.length - 1));
+      list.setSort(view.sort?.column ?? null, view.sort?.direction);
+      // vlist's documented sorting route: retain headers and replace the row data.
+      // Move focus only if replacing the rows would remove the focused cell.
+      if (host.querySelector('.csv__cell:focus')) list.element.focus({ preventScroll: true });
+      // Cell values also depend on sparse document edits, not only row identity.
+      list.setItems(rows.map(row => ({ ...row })));
+      return true;
+    },
+    destroy() { destroyed = true; finish(false, 0, false); host.removeEventListener('keydown', onKey); list.destroy(); },
   };
 }
