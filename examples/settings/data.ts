@@ -114,7 +114,7 @@ export const CATEGORIES: Category[] = [
     summary: "Brightness, theme, text size",
     groups: [
       {
-        title: "Brightness",
+        title: "Screen",
         settings: [
           { kind: "slider", key: "brightness", label: "Brightness", min: 0, max: 100, step: 1, icon: "brightness7", iconAtMin: "brightness5" },
           { kind: "switch", key: "adaptiveBrightness", label: "Adaptive brightness", supportingText: "Adjusts to the light around you" },
