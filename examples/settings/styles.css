@@ -21,15 +21,15 @@
   min-height: 1.5em;
 }
 
-/* The settings app (Vanilla, the reference). */
+/* The settings app (Vanilla, the reference). Margins and pane widths are M3's window
+   size class numbers (compact 16, medium+ 24, 50% panes at medium, 360/412 fixed pane at
+   expanded/large); colours and type are the library's tokens and classes. */
 
 .settings-app {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 16px;
-  max-width: 960px;
-  margin: 0 auto;
 }
 
 .settings-app__header h1 {
@@ -65,7 +65,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 48px;
+  min-height: 48px; /* the M3 48dp target for the Back button */
 }
 
 .settings-app__detail-title {
@@ -78,6 +78,7 @@
 
 .settings-app__group-title {
   margin: 0 0 8px;
+  color: var(--mtrl-sys-color-on-surface-variant);
 }
 
 .settings-app__field {
@@ -88,15 +89,20 @@
   margin: 0 0 8px;
 }
 
-@media (min-width: 720px) {
+/* Medium and up: two panes, 50% of the width each, 24dp margins and 24dp spacer. */
+@media (min-width: 600px) {
+  .settings-app {
+    padding: 24px;
+  }
+
   .settings-app .settings-app__panes {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
-    gap: 32px;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
     align-items: start;
   }
 
-  /* Both panes stay on a wide screen, whatever the phone state was. */
+  /* Both panes stay on a wide screen, whatever the compact state was. */
   .settings-app--detail .settings-app__list-pane {
     display: block;
   }
@@ -107,5 +113,19 @@
 
   .settings-app .settings-app__back {
     display: none;
+  }
+}
+
+/* Expanded: the list becomes a fixed pane at its default width. */
+@media (min-width: 840px) {
+  .settings-app .settings-app__panes {
+    grid-template-columns: 360px minmax(0, 1fr);
+  }
+}
+
+/* Large and extra-large: the fixed pane's default width grows. */
+@media (min-width: 1200px) {
+  .settings-app .settings-app__panes {
+    grid-template-columns: 412px minmax(0, 1fr);
   }
 }

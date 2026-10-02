@@ -10,7 +10,9 @@ import { CATEGORIES, type Settings } from "./data";
 import { ICONS } from "./icons";
 import { createStore } from "./state";
 
-const PHONE = "(max-width: 719px)";
+// M3's window size classes: compact below 600 px (one pane), medium from 600 px (two
+// panes, 50% each), expanded from 840 px (fixed pane 360 px), large from 1200 px (412 px).
+const TWO_PANE = "(min-width: 600px)";
 
 export const createSettingsApp = (): HTMLElement => {
   const store = createStore();
@@ -27,6 +29,7 @@ export const createSettingsApp = (): HTMLElement => {
   const header = document.createElement("header");
   header.className = "settings-app__header";
   const title = document.createElement("h1");
+  title.className = "mtrl-headline-small"; // the pane title's type-scale role, from the library
   title.textContent = "Settings";
   header.append(title);
 
@@ -59,7 +62,7 @@ export const createSettingsApp = (): HTMLElement => {
     detail.className = "settings-app__detail";
     detail.hidden = true;
     const heading = document.createElement("h2");
-    heading.className = "settings-app__detail-title";
+    heading.className = "settings-app__detail-title mtrl-headline-small";
     heading.id = `settings-${category.id}-heading`;
     heading.tabIndex = -1;
     heading.textContent = category.title;
@@ -75,7 +78,7 @@ export const createSettingsApp = (): HTMLElement => {
       const section = document.createElement("div");
       section.className = "settings-app__group";
       const groupTitle = document.createElement("h3");
-      groupTitle.className = "settings-app__group-title";
+      groupTitle.className = "settings-app__group-title mtrl-title-small";
       groupTitle.textContent = group.title;
       section.append(groupTitle);
       for (const setting of group.settings) {
@@ -118,16 +121,19 @@ export const createSettingsApp = (): HTMLElement => {
     },
   });
 
-  const phone = window.matchMedia(PHONE);
+  const twoPane = window.matchMedia(TWO_PANE);
   const openCategory = (id: string, focusHeading: boolean): void => {
     current = id;
     for (const [key, detail] of details) detail.hidden = key !== id;
-    list.setSelection([id]); // one row selected at a time; selectItem would add to it
+    // Selected state belongs to the list view of a two-pane layout; in the single pane the
+    // detail replaces the list, so no row keeps a selection to come back to.
+    if (twoPane.matches) list.setSelection([id]); // one row at a time; selectItem would add
+    else list.clearSelection();
     root.classList.add("settings-app--detail");
     if (focusHeading) headings.get(id)?.focus();
   };
   const goBack = (): void => {
-    if (!phone.matches) return; // at ≥720 px both panes stay; there is no Back there
+    if (twoPane.matches) return; // from 600 px both panes stay; there is no Back there
     const id = current;
     for (const detail of details.values()) detail.hidden = true;
     current = null;
@@ -141,12 +147,19 @@ export const createSettingsApp = (): HTMLElement => {
     if (event.value === current) return;
     // The event's element is the row; the row's button is what takes focus on return.
     rows.set(event.value, event.element.querySelector("button") ?? event.element);
-    openCategory(event.value, phone.matches);
+    openCategory(event.value, !twoPane.matches);
   });
-  phone.addEventListener("change", () => {
-    if (!phone.matches && !current) openCategory(CATEGORIES[0]!.id, false);
-  });
-  if (!phone.matches) openCategory(CATEGORIES[0]!.id, false);
+  const applyLayout = (): void => {
+    if (!twoPane.matches) {
+      list.clearSelection();
+      return;
+    }
+    // No selection when the window widens: open the first category rather than a placeholder.
+    if (!current) openCategory(CATEGORIES[0]!.id, false);
+    else list.setSelection([current]);
+  };
+  twoPane.addEventListener("change", applyLayout);
+  if (twoPane.matches) openCategory(CATEGORIES[0]!.id, false);
 
   store.subscribe((state) => {
     for (const control of controls.values()) control.apply(state);
