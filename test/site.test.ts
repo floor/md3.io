@@ -39,7 +39,7 @@ describe('site routes and documentation', () => {
   test('an install block gives the command of each package manager, npm first', () => {
     const html = renderDocument('getting-started')!.html;
     const text = html.replace(/<[^>]+>/g, '');
-    for (const { command } of PACKAGE_MANAGERS) expect(text).toContain(`${command} mtrl`);
+    for (const { command } of PACKAGE_MANAGERS) expect(text).toContain(`${command} material`);
     expect([...html.matchAll(/class="doc-install__option" data-package-manager="(\w+)" aria-pressed="(\w+)"/g)].map(m => [m[1], m[2]]))
       .toEqual([['bun', 'true'], ['npm', 'false'], ['pnpm', 'false'], ['yarn', 'false']]);
     expect(html).not.toContain('language-install');
@@ -64,6 +64,13 @@ describe('site routes and documentation', () => {
     expect(response.status).toBe(301);
     expect(response.headers.get('Location')).toBe('/docs/components/button-group/');
   });
+  test('the text field slug redirects from textfield to text-field', async () => {
+    for (const [from, to] of [['/components/textfield/', '/components/text-field/'], ['/preview/textfield/', '/preview/text-field/'], ['/docs/components/textfield/', '/docs/components/text-field/']] as const) {
+      const response = await get(from);
+      expect(response.status).toBe(301);
+      expect(response.headers.get('Location')).toBe(to);
+    }
+  });
 });
 describe('preview configuration and generated code', () => {
   test('untrusted preview state is normalized', () => {
@@ -77,7 +84,7 @@ describe('preview configuration and generated code', () => {
   test('copied code uses the same config as the live preview and safely quotes text', () => {
     const state = normalizeComponentState('button', { text: 'Say "hello"\n</script>', icon: 'heart', disabled: true, size: 'xl', theme: 'ocean', mode: 'dark' });
     const source = componentCode('button', state);
-    expect(source).toContain("import 'mtrl/themes/ocean'");
+    expect(source).toContain("import 'material/themes/ocean'");
     expect(source).toContain("dataset.themeMode = 'dark'");
     expect(source).toContain("import favoriteIcon from './icons/favorite.svg?raw';");
     // The icons are imports: bind each imported name to its file's SVG.
@@ -138,7 +145,7 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   const partial = normalizeComponentState('datepicker', { ...empty, range: true, value: '2026-09-22' });
   expect(components.datepicker.config(partial).value).toBe('2026-09-22');
   const code = componentCode('datepicker', empty);
-  expect(code).toContain("import 'mtrl/styles/datepicker'");
+  expect(code).toContain("import 'material/styles/datepicker'");
   expect(code).not.toContain('MutationObserver');
 });
 
@@ -230,7 +237,7 @@ describe('framework code for the overlay elements', () => {
   });
   test('values that need quoting stay valid code', () => {
     expect(code('switch', 'html')).toContain("const switchElement = document.querySelector('m-switch');");
-    expect(code('textfield', 'react', { label: 'Say "hi" {now}' })).toContain('label={"Say \\"hi\\" {now}"}');
+    expect(code('text-field', 'react', { label: 'Say "hi" {now}' })).toContain('label={"Say \\"hi\\" {now}"}');
     expect(code('button', 'svelte', { text: 'a {b}' })).toContain('>a &#123;b&#125;</Button>');
   });
 });

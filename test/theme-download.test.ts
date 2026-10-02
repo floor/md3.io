@@ -2,7 +2,7 @@
 // Theme name field the file is named for. scripts/check-styles.ts runs the same flows in a
 // browser.
 import { describe, expect, test } from 'bun:test';
-import createTextField from 'mtrl/components/textfield';
+import createTextField from 'material/components/text-field';
 import { layout } from '../src/client/theme-app/config/layout';
 import { FORMAT_ITEMS, nameSupportingText, themeFile } from '../src/client/theme-app/features/withDownload';
 import type { ThemeData } from '../src/client/theme-app/features/withThemeSource';

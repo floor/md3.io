@@ -20,7 +20,7 @@ export const stylesheetBundles = {
   styles: [...shell, 'site', 'search', 'roboto', 'styles-pages'],
   // The Themes app: the Styles sheet, mtrl's type and shape tokens and ripple, the mtrl
   // components it is built from, then its own sheet.
-  themes: [...shell, 'site', 'search', 'roboto', 'styles-pages', 'mtrl-tokens', 'mtrl:textfield', 'mtrl:menu', 'mtrl:select', 'mtrl:top-app-bar', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'mtrl:snackbar', 'mtrl:tooltip', 'theme-app'],
+  themes: [...shell, 'site', 'search', 'roboto', 'styles-pages', 'mtrl-tokens', 'mtrl:text-field', 'mtrl:menu', 'mtrl:select', 'mtrl:top-app-bar', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'mtrl:snackbar', 'mtrl:tooltip', 'theme-app'],
 } as const;
 
 export type StylesheetBundle = keyof typeof stylesheetBundles;
@@ -32,7 +32,7 @@ export type StylesheetBundle = keyof typeof stylesheetBundles;
  * base layer, scoped to the Themes app and the popups it puts on <body>. Colour comes
  * from the theme the app shows.
  */
-export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/mtrl/dist/styles/base.css'), 'utf8')): string {
+export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/material/dist/styles/base.css'), 'utf8')): string {
   const start = css.indexOf(':root{--mtrl-ref-typeface');
   const ripple = css.indexOf('.mtrl-ripple{');
   const rippleEnd = css.indexOf('}}', css.indexOf('@keyframes mtrl-ripple-expand')) + 2;
@@ -42,8 +42,8 @@ export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/mtrl/d
 }
 
 const fileFor = (name: string) => name === 'preupgrade'
-  ? resolve(root, 'node_modules/mtrl/dist/elements/preupgrade.css')
-  : name.startsWith('mtrl:') ? resolve(root, 'node_modules/mtrl/dist/styles', `${name.slice(5)}.css`)
+  ? resolve(root, 'node_modules/material/dist/elements/preupgrade.css')
+  : name.startsWith('mtrl:') ? resolve(root, 'node_modules/material/dist/styles', `${name.slice(5)}.css`)
   : style(name);
 
 type Token = { kind: 'raw' | 'string' | 'space' | 'keep'; value: string };

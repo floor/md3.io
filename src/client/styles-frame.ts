@@ -3,17 +3,17 @@
 // grouped under the corner step each one reads. The page sends the base theme, the
 // mode and the overridden custom properties; they go on the root, so everything
 // inside follows, the dialog in the top layer included, without re-creating a component.
-import createTopAppBar from 'mtrl/components/top-app-bar';
-import createIconButton from 'mtrl/components/icon-button';
-import { createChips } from 'mtrl/components/chips';
-import createCard from 'mtrl/components/card';
-import createTextField from 'mtrl/components/textfield';
-import createSwitch from 'mtrl/components/switch';
-import createSlider from 'mtrl/components/slider';
-import createButton from 'mtrl/components/button';
-import createFab from 'mtrl/components/fab';
-import createDialog from 'mtrl/components/dialog';
-import createCheckbox from 'mtrl/components/checkbox';
+import createTopAppBar from 'material/components/top-app-bar';
+import createIconButton from 'material/components/icon-button';
+import { createChips } from 'material/components/chips';
+import createCard from 'material/components/card';
+import createTextField from 'material/components/text-field';
+import createSwitch from 'material/components/switch';
+import createSlider from 'material/components/slider';
+import createButton from 'material/components/button';
+import createFab from 'material/components/fab';
+import createDialog from 'material/components/dialog';
+import createCheckbox from 'material/components/checkbox';
 import { symbols } from '../shared/icons';
 import { SHAPE_GALLERY } from '../shared/shape-gallery';
 
@@ -77,7 +77,7 @@ function buildScreen() {
 function buildGallery() {
   screen.classList.add('gallery');
   const make: Record<string, () => HTMLElement> = {
-    'extra-small:textfield': () => createTextField({ variant: 'outlined', label: 'Text field', value: 'Lake Annecy' }).element,
+    'extra-small:text-field': () => createTextField({ variant: 'outlined', label: 'Text field', value: 'Lake Annecy' }).element,
     'small:chips': () => createChips({ label: 'Chips', multiSelect: false, chips: ['Hiking', 'Coast'].map((label, index) => ({ label, value: label.toLowerCase(), type: 'filter', selected: index === 0 })) }).element,
     'medium:card': () => createCard({ variant: 'filled', header: { title: 'Card', subtitle: 'Medium corners' } }).element,
     'medium:button': () => createButton({ text: 'Square button', variant: 'filled', shape: 'square' }).element,

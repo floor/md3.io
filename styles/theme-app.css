@@ -19,15 +19,15 @@
 .theme-app > .mtrl-top-app-bar { position: sticky; left: auto; right: auto; top: var(--header-height); z-index: 5; background: var(--mtrl-sys-color-surface-container); }
 .theme-app__actions { display: flex; align-items: center; gap: 4px; }
 .theme-app__controls { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 16px; padding: 16px 24px 0; }
-.theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-textfield { width: 200px; }
+.theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-text-field { width: 200px; }
 .theme-app__controls > .mtrl-select[data-seeded] .mtrl-menu__item[data-id="original"] { display: none; }
 /* The name field's supporting row holds one line from the start. mtrl's row (mtrl's
-   _textfield.scss: 4px inset + body-small) is only as tall as its text, and the blank
+   _text-field.scss: 4px inset + body-small) is only as tall as its text, and the blank
    helper — a whitespace-only text node, which draws no line box — is 0 px tall, so the
    refusal message would grow the field and push the Scheme card down. A non-blank
    character would hold the line instead, but the helper is an aria-live region: the
    blank stays blank and the row's height is reserved here. 4px inset + 16px line. */
-.theme-app__controls > .mtrl-textfield:not(.mtrl-select) > .mtrl-textfield__supporting { min-height: 20px; }
+.theme-app__controls > .mtrl-text-field:not(.mtrl-select) > .mtrl-text-field__supporting { min-height: 20px; }
 .theme-app[data-dropping] .theme-app__content { outline: 2px dashed var(--mtrl-sys-color-primary); outline-offset: -8px; border-radius: 16px; }
 .theme-app__content { display: grid; gap: 20px; padding: 20px 24px 48px; }
 .theme-app__heading { margin: 12px 0 4px; font: 500 16px/24px var(--mtrl-ref-typeface-brand); letter-spacing: 0.15px; }
@@ -73,7 +73,7 @@
   .md3-scheme-card { padding: 14px; }
   .md3-palette__tone { height: 40px; font-size: 9px; letter-spacing: -0.3px; }
   .theme-app__controls { padding: 12px 12px 0; }
-  .theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-textfield { width: auto; flex: 1 1 150px; min-width: 0; }
+  .theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-text-field { width: auto; flex: 1 1 150px; min-width: 0; }
 }
 
 /* A tile's copy icon, as MTB shows it: on hover and keyboard focus. */

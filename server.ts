@@ -10,7 +10,7 @@ import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
 import { builtInThemes } from './src/server/themes';
-import { THEME_ROLES } from 'mtrl/core/theme';
+import { THEME_ROLES } from 'material/core/theme';
 import { minifyCss, type StylesheetBundle } from './src/server/css';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
 import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights, shapeUsage, themeBase } from './src/server/tokens';
@@ -87,13 +87,13 @@ const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/
 /** The reading order across sections, a cycle: the documentation, Styles, Examples, and back. */
 const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
-// mtrl's light-DOM stylesheets for a set of components, dependencies first: each
-// dist/mtrl/styles/<name>.js imports the stylesheets its component needs.
+// material's light-DOM stylesheets for a set of components, dependencies first: each
+// dist/material/styles/<name>.js imports the stylesheets its component needs.
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
   const visit = (name: string) => {
     if (order.includes(name)) return;
-    const module = resolve(root, 'dist/mtrl/styles', `${name}.js`);
+    const module = resolve(root, 'dist/material/styles', `${name}.js`);
     const source = existsSync(module) ? readFileSync(module, 'utf8') : '';
     for (const [, dependency] of source.matchAll(/import "\.\/([a-z-]+)\.js"/g)) if (dependency !== name) visit(dependency!);
     order.push(name);
@@ -103,7 +103,7 @@ function styleClosure(names: string[]): string[] {
 }
 
 /** The components in the Styles frames (src/client/styles-frame.ts): the preview's screen and the Shape gallery. */
-const STYLES_FRAME_COMPONENTS = ['top-app-bar', 'icon-button', 'chips', 'card', 'textfield', 'switch', 'slider', 'button', 'fab', 'dialog', 'checkbox'];
+const STYLES_FRAME_COMPONENTS = ['top-app-bar', 'icon-button', 'chips', 'card', 'text-field', 'switch', 'slider', 'button', 'fab', 'dialog', 'checkbox'];
 /** The Shape page's expressive shapes, drawn by mtrl/core/shapes, and each theme's primary container to fill them. */
 const shapeLibrary = SHAPE_NAMES.map(name => ({ name, label: SHAPE_LABELS[name], path: shapePath(name) }));
 const libraryColors = Object.fromEntries(Object.entries(themeTokens).map(([theme, modes]) => [theme, Object.fromEntries((['light', 'dark'] as const).map(mode => [mode, [modes[mode]['primary-container']?.value, modes[mode]['on-primary-container']?.value]]))]));
@@ -161,7 +161,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
-  if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall('mtrl') });
+  if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall('material') });
   else if (path === '/components/') response = page(path, 'Components — mtrl', 'Explore mtrl components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
@@ -195,6 +195,8 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
+  else if (path === '/components/textfield/' || path === '/preview/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('textfield', 'text-field') } });
+  else if (path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/text-field/' } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
