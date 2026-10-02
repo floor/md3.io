@@ -1,0 +1,21 @@
+<!doctype html><html lang="en" data-theme="baseline" data-theme-mode="light"><head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Styles preview</title>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      try {
+        const saved = JSON.parse(localStorage.getItem('md3-preview-appearance') || '{}');
+        if (<%~ JSON.stringify(it.themes) %>.includes(saved?.theme)) root.dataset.theme = saved.theme;
+        root.dataset.themeMode = saved?.mode === 'dark' ? 'dark' : 'light';
+      } catch {}
+      root.style.colorScheme = root.dataset.themeMode;
+    })();
+  </script>
+  <link rel="preload" href="/fonts/Roboto-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/styles/roboto.css" />
+  <link rel="stylesheet" href="/dist/mtrl/styles/base.css" />
+  <% it.styles.forEach(style => { %><link rel="stylesheet" href="/dist/mtrl/styles/<%= style %>.css" /><% }); %>
+  <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/mtrl/themes/<%= theme %>.css" /><% }); %>
+  <link rel="stylesheet" href="/styles/styles-frame.css" />
+  <script type="module" src="/dist/styles-frame.js"></script>
+</head><body><main id="screen" class="screen" aria-label="Example app screen" hidden></main></body></html>

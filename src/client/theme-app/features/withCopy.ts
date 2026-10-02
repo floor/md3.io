@@ -1,0 +1,22 @@
+// Copying, told by mtrl's snackbar: a role's hex, or a link to the theme.
+import createSnackbar, { clearSnackbars } from 'mtrl/components/snackbar';
+import type { App } from '../core/foundation';
+
+export const withCopy = () => (app: App) => {
+  app.teardown.add(() => clearSnackbars());
+  const tell = (message: string) => createSnackbar({ message, duration: 2000, queueBehavior: 'replace', position: 'center' }).show();
+  const write = async (text: string): Promise<boolean> => {
+    try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+  };
+  return {
+    ...app,
+    copy: {
+      hex: async (hex: string, role: string) => tell(await write(hex) ? `Copied ${hex}` : `Could not copy ${hex} (${role})`),
+      link: async () => {
+        const url = new URL('/styles/themes/', location.origin);
+        url.searchParams.set('theme', app.state.get('theme'));
+        tell(await write(url.href) ? 'Link copied' : `Could not copy ${url.href}`);
+      },
+    },
+  };
+};

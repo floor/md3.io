@@ -1,0 +1,13 @@
+<%
+  /* The Themes app's page: a mount point and the data the app paints, read by the
+     server from mtrl's compiled theme CSS. The app itself is src/client/theme-app/. */
+  const data = it.themes.map(t => ({ name: t.name, label: t.label, light: it.roles.map(r => t.roles.light[r]), dark: it.roles.map(r => t.roles.dark[r]), origin: t.origin ? t.origin.text : null, palettes: t.palettes || null }));
+%>
+<div class="theme-app-page">
+  <h1 class="sr-only">Themes</h1>
+  <p class="sr-only">mtrl's built-in themes, every colour role in light and dark, laid out as Material Theme Builder shows a scheme, with the tonal palettes. Values read from mtrl <%= it.mtrlVersion %>'s compiled theme CSS.</p>
+  <div class="theme-app" id="theme-app" data-selected="<%= it.selected %>"></div>
+  <noscript><p class="theme-app__note">The Themes app needs JavaScript.</p></noscript>
+  <script type="application/json" id="themes-data"><%~ JSON.stringify({ roles: it.roles, selected: it.selected, themes: data }).replaceAll('<', '\\u003c') %></script>
+  <script type="application/json" id="theme-base"><%~ JSON.stringify(it.themeBase).replaceAll('<', '\\u003c') %></script>
+</div>

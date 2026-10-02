@@ -9,9 +9,14 @@ import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { comingStyles, stylePages } from './src/server/styles';
+import { builtInThemes } from './src/server/themes';
+import { THEME_ROLES } from 'mtrl/core/theme';
 import { minifyCss, type StylesheetBundle } from './src/server/css';
 import { AA_TEXT, contrastRatio } from './src/shared/color';
-import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights } from './src/server/tokens';
+import { colorGroups, missingGroups, mtrlVersion, pairFor, themeTokens, typescale, unloadedFonts, roleUsage, fontWeights, shapeUsage, themeBase } from './src/server/tokens';
+import { CORNER_MAX } from './src/shared/theme-state';
+import { M3_CORNER_SCALE, M3_SHAPE_COUNT } from './src/shared/m3-shape';
+import { SHAPE_LABELS, SHAPE_NAMES, shapePath } from './src/shared/shape-library';
 import { readFileSync, existsSync } from 'node:fs';
 import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/server/seo';
 
@@ -48,17 +53,18 @@ function page(path: string, title: string, description: string, template: string
   // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
-  const pager = status === 200 && !isHome && template !== 'component' ? pagerHtml(chain, path, chain === readingOrder) : '';
+  const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
-  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : isStyles ? 'styles' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'styles-themes' ? 'themes' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — mtrl$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sidebarGroups, jsonLd, css,
+    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
+const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
 const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup, ...docGroups];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -96,6 +102,11 @@ function styleClosure(names: string[]): string[] {
   return order;
 }
 
+/** The components in the Styles frames (src/client/styles-frame.ts): the preview's screen and the Shape gallery. */
+const STYLES_FRAME_COMPONENTS = ['top-app-bar', 'icon-button', 'chips', 'card', 'textfield', 'switch', 'slider', 'button', 'fab', 'dialog', 'checkbox'];
+/** The Shape page's expressive shapes, drawn by mtrl/core/shapes, and each theme's primary container to fill them. */
+const shapeLibrary = SHAPE_NAMES.map(name => ({ name, label: SHAPE_LABELS[name], path: shapePath(name) }));
+const libraryColors = Object.fromEntries(Object.entries(themeTokens).map(([theme, modes]) => [theme, Object.fromEntries((['light', 'dark'] as const).map(mode => [mode, [modes[mode]['primary-container']?.value, modes[mode]['on-primary-container']?.value]]))]));
 const mime: Record<string, string> = { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 /** The files browsers and link previews ask for at the root, from public/ (scripts/brand-images.ts makes them). */
 const rootFiles = new Set(['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png', '/og-image.png']);
@@ -172,9 +183,15 @@ export async function handleRequest(request: Request): Promise<Response> {
     }
     else response = page(path, `${example.title} example — mtrl`, example.description, 'example', { example, variants, themes });
   }
-  else if (path === '/styles/') response = page(path, 'Styles — mtrl', stylePages[0].description, 'styles-overview', { stylePages, comingStyles });
-  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', stylePages[1].description, 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT });
-  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', stylePages[2].description, 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components });
+  else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
+  else if (path === '/styles/') response = page(path, 'Styles — mtrl', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
+  else if (path === '/styles/themes/') {
+    const linked = url.searchParams.get('theme');
+    response = page(path, 'Themes — mtrl', styleDescription('/styles/themes/'), 'styles-themes', { themes: builtInThemes, roles: THEME_ROLES, selected: linked && themes.includes(linked as never) ? linked : 'baseline', mtrlVersion, themeBase });
+  }
+  else if (path === '/styles/color/') response = page(path, 'Color — mtrl', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
+  else if (path === '/styles/typography/') response = page(path, 'Typography — mtrl', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
+  else if (path === '/styles/shape/') response = page(path, 'Shape — mtrl', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {

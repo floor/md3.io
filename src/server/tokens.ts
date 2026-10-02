@@ -11,6 +11,7 @@ import { resolve } from 'node:path';
 import { root } from './content';
 import { themes } from '../shared/button';
 import { pairOf } from '../shared/color';
+import type { ThemeBase } from '../shared/theme-state';
 
 const mtrlDir = resolve(root, 'node_modules/mtrl');
 const read = (path: string) => readFileSync(resolve(mtrlDir, path), 'utf8');
@@ -256,3 +257,30 @@ export const fontWeights: { name: string; weight: string }[] = baseBlocks
     return match && weight ? [{ name: match[1]!, weight }] : [];
   })
   .sort((a, b) => Number(a.weight) - Number(b.weight));
+
+// ─── Shape ──────────────────────────────────────────────────────────
+
+/** The corner scale, `--mtrl-sys-shape-corner-<step>` on base.css's `:root`, step → px, in mtrl's order. */
+export const shapeScale: Record<string, number> = Object.fromEntries([...rootDeclarations].flatMap(([name, value]) => {
+  const step = /^--mtrl-sys-shape-corner-([a-z-]+)$/.exec(name)?.[1];
+  const px = /^(\d+(?:\.\d+)?)(px)?$/.exec(value.trim());
+  return step && px && (px[2] || px[1] === '0') ? [[step, Number(px[1])]] : [];
+}));
+
+/**
+ * Which components read each corner step: the component stylesheets in mtrl's dist
+ * that reference `--mtrl-sys-shape-corner-<step>`. A component that picks a radius
+ * some other way (a fixed value, half its height) is not listed.
+ */
+export const shapeUsage: Record<string, string[]> = (() => {
+  const dir = resolve(mtrlDir, 'dist/styles');
+  const usage: Record<string, Set<string>> = {};
+  if (!existsSync(dir)) return {};
+  for (const file of readdirSync(dir).filter(name => name.endsWith('.css') && name !== 'base.css')) {
+    for (const [, step] of readFileSync(resolve(dir, file), 'utf8').matchAll(/--mtrl-sys-shape-corner-([a-z-]+)/g)) (usage[step!] ??= new Set()).add(file.slice(0, -4));
+  }
+  return Object.fromEntries(Object.entries(usage).map(([step, components]) => [step, [...components].sort()]));
+})();
+
+/** What the Styles pages' theme state validates against and diffs from (src/shared/theme-state.ts). */
+export const themeBase: ThemeBase = { themes, shape: shapeScale };

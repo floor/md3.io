@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
   <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %>
   <% if (it.section === 'Examples') { %><script type="module" src="/dist/examples.js"></script><% } %>
-  <% if (it.section === 'Styles') { %><script type="module" src="/dist/styles.js"></script><% } %>
+  <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
   </script>

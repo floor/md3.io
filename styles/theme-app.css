@@ -1,0 +1,69 @@
+/* The Themes app (src/client/theme-app/): an mtrl app inside the site's shell. Its
+   mtrl components read the chosen theme's colour tokens, which the app writes on
+   :root (features/withScheme.ts); this sheet lays the app out. */
+
+.theme-app-page { min-width: 0; }
+.theme-app {
+  min-height: calc(100vh - var(--header-height));
+  background: var(--mtrl-sys-color-surface-container-low, var(--bg));
+  color: var(--mtrl-sys-color-on-surface, var(--text));
+  font-family: var(--mtrl-ref-typeface-plain);
+}
+/* mtrl's top-app-bar and select drop a `class` option (createComponentConfig renames it
+   className, they read class): they are styled by where they sit.
+   The site's reset (shell.css, `* { margin: 0; padding: 0 }`) is unlayered and would
+   beat mtrl's layered component styles: give these back to mtrl's layers, here and in
+   the select's menu and the snackbar, which live on <body>. */
+.theme-app > .mtrl-top-app-bar, .theme-app > .mtrl-top-app-bar *, .mtrl-menu, .mtrl-menu *, .mtrl-snackbar, .mtrl-snackbar * { margin: revert-layer; padding: revert-layer; }
+
+.theme-app > .mtrl-top-app-bar { position: sticky; left: auto; right: auto; top: var(--header-height); z-index: 5; background: var(--mtrl-sys-color-surface-container); }
+.theme-app__actions { display: flex; align-items: center; gap: 4px; }
+.theme-app__actions > .mtrl-select { width: 200px; }
+.theme-app__content { display: grid; gap: 20px; padding: 20px 24px 48px; }
+.theme-app__heading { margin: 12px 0 4px; font: 500 16px/24px var(--mtrl-ref-typeface-brand); letter-spacing: 0.15px; }
+.theme-app__note { margin: 0 0 12px; color: var(--mtrl-sys-color-on-surface-variant, var(--text-muted)); font-size: 14px; line-height: 20px; }
+.theme-app__palette-list { display: grid; gap: 16px; }
+.theme-app__palette-list[hidden] { display: none; }
+
+/* A scheme card, as Material Theme Builder lays it out. */
+.md3-scheme-card { padding: 20px; border-radius: 16px; container-type: inline-size; font-family: var(--mtrl-ref-typeface-plain); }
+.md3-scheme-card--dark { box-shadow: inset 0 0 0 1px var(--card-outline); }
+.md3-scheme-card__title { margin: 0 0 16px; font: 400 22px/28px var(--mtrl-ref-typeface-brand); }
+.md3-scheme-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 16px; grid-template-areas: "main error" "surfaces inverse"; }
+.md3-scheme-grid__main { grid-area: main; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.md3-scheme-grid__error { grid-area: error; display: grid; }
+.md3-scheme-grid__surfaces { grid-area: surfaces; display: grid; gap: 8px; align-content: start; }
+.md3-scheme-grid__inverse { grid-area: inverse; display: grid; gap: 8px; align-content: start; }
+.md3-scheme-col { display: flex; flex-direction: column; min-width: 0; }
+.md3-scheme-row { display: grid; grid-template-columns: repeat(var(--count), minmax(0, 1fr)); min-width: 0; }
+/* Scrim and shadow, both black: a gap between them, as MTB draws it. */
+.md3-scheme-grid__inverse .md3-scheme-row { gap: 8px; }
+.md3-scheme-tile {
+  display: flex; align-items: flex-start; min-width: 0; margin: 0; padding: 8px 10px; border: 0; border-radius: 0;
+  font: 400 12px/16px var(--mtrl-ref-typeface-plain); letter-spacing: 0.4px; text-align: left; overflow-wrap: anywhere; cursor: copy;
+}
+.md3-scheme-tile--tall { min-height: 88px; }
+.md3-scheme-tile--short { min-height: 44px; }
+.md3-scheme-tile:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+/* A narrow card: the Error and inverse column wraps under the main block, side by side. */
+@container (max-width: 700px) {
+  .md3-scheme-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "main main" "surfaces surfaces" "error inverse"; }
+  .md3-scheme-tile { padding: 6px; font-size: 11px; line-height: 14px; letter-spacing: 0.2px; }
+  .md3-scheme-tile--tall { min-height: 72px; }
+  .md3-scheme-tile--short { min-height: 40px; }
+}
+
+/* A tonal palette: 18 equal cells. */
+.md3-palette__name { margin: 0 0 6px; font: 500 14px/20px var(--mtrl-ref-typeface-plain); }
+.md3-palette__strip { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border-radius: 8px; overflow: hidden; }
+.md3-palette__tone { display: grid; place-items: center; min-width: 0; height: 52px; font: 400 11px/1 var(--mtrl-ref-typeface-plain); }
+
+@media (max-width: 700px) {
+  .theme-app__content { padding: 16px 12px 40px; }
+  .md3-scheme-card { padding: 14px; }
+  .md3-palette__tone { height: 40px; font-size: 9px; letter-spacing: -0.3px; }
+  /* The bar keeps its actions: the title gives way, the select narrows. */
+  .theme-app > .mtrl-top-app-bar .mtrl-top-app-bar__headline { display: none; }
+  .theme-app__actions > .mtrl-select { width: auto; flex: 1 1 140px; min-width: 0; }
+  .theme-app > .mtrl-top-app-bar .mtrl-top-app-bar__trailing, .theme-app__actions { flex: 1 1 auto; min-width: 0; }
+}
