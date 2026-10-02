@@ -2,10 +2,13 @@
 # Deploy md3.io to the floor.io server: push main first, then run this.
 #
 # The library is built beside md3.io, so `file:../material` resolves the same way.
-# It is checked out detached at LIBRARY_REF (default origin/main: a tag, a commit
-# or a branch), then the site is reset to origin/main. pm2 reloads only when both
-# builds succeed. A missing library checkout is cloned from LIBRARY_URL (default
-# the GitHub repository; a test points it at a local bare repository).
+# It is checked out detached at LIBRARY_REF (default origin/main). A branch name
+# means that branch on origin, so main is origin/main; the server's local branch
+# is never moved. A tag or a commit hash is used as itself. A ref written as
+# refs/heads/ is refused. Then the site is reset to origin/main. pm2 reloads
+# only when both builds succeed. A missing library checkout is cloned from
+# LIBRARY_URL (default the GitHub repository; a test points it at a local bare
+# repository).
 #
 # Override the host with DEPLOY_HOST, the directory with DEPLOY_DIR.
 # DRY_RUN=1 prints the remote script and does not open ssh.
@@ -15,6 +18,26 @@ host="${DEPLOY_HOST:-floor.io}"
 dir="${DEPLOY_DIR:-/home/floor}"
 ref="${LIBRARY_REF:-origin/main}"
 url="${LIBRARY_URL:-https://github.com/floor/material.git}"
+
+# The three values are pasted into the remote script. Check each whole value
+# before that text exists (grep would accept a valid first line and let the
+# rest through), then write them inside quotes. ref: [A-Za-z0-9._/-]+, not
+# starting with -. url: https://[A-Za-z0-9._/-]+, git@[A-Za-z0-9._-]+:[A-Za-z0-9._/-]+,
+# ssh://[A-Za-z0-9._@/-]+, file://[A-Za-z0-9._/-]+, or /[A-Za-z0-9._/-]+, and no
+# ".." segment. directory: /[A-Za-z0-9._/-]+ with no ".." segment.
+if [[ ! "$ref" =~ ^[A-Za-z0-9._/-]+$ ]] || [[ "$ref" =~ ^- ]]; then
+  echo "Refusing to deploy: library ref must match [A-Za-z0-9._/-]+ and must not start with -." >&2
+  exit 1
+fi
+if [[ ! "$url" =~ ^(https://[A-Za-z0-9._/-]+|git@[A-Za-z0-9._-]+:[A-Za-z0-9._/-]+|ssh://[A-Za-z0-9._@/-]+|file://[A-Za-z0-9._/-]+|/[A-Za-z0-9._/-]+)$ ]] \
+  || [[ "$url" =~ (^|/)\.\.(/|$) ]]; then
+  echo "Refusing to deploy: library URL must be https://, git@host:path, ssh://, file://, or an absolute path, with no .. segment." >&2
+  exit 1
+fi
+if [[ ! "$dir" =~ ^/[A-Za-z0-9._/-]+$ ]] || [[ "$dir" =~ (^|/)\.\.(/|$) ]]; then
+  echo "Refusing to deploy: directory must be an absolute path of [A-Za-z0-9._/-] with no .. segment." >&2
+  exit 1
+fi
 
 # One remote script. The three values above are written into it once: a dry run
 # prints that text, a real run pipes the same text to ssh, so the two cannot differ.
@@ -30,15 +53,20 @@ export PATH="$HOME/.bun/bin:$PATH"
 # The library, completely, before the site. A failure here (the wrong origin,
 # an unknown ref, the install, the build) exits before the site is fetched or
 # reset, so the site's tree stays as it was.
-if [ ! -d "@@DIR@@/material" ]; then
-  echo "Cloning @@LIBRARY_URL@@ into @@DIR@@/material."
-  git clone -q "@@LIBRARY_URL@@" "@@DIR@@/material"
+if [ ! -d '@@DIR@@/material' ]; then
+  echo 'Cloning @@LIBRARY_URL@@ into @@DIR@@/material.'
+  git clone -q '@@LIBRARY_URL@@' '@@DIR@@/material'
 else
   # The configured origin, not an insteadOf rewrite: a renamed checkout still says floor/mtrl.
-  origin=$(git -C "@@DIR@@/material" config --get remote.origin.url)
+  # config --get exits 1 when the remote is missing; say so, instead of ending with no sentence.
+  origin=$(git -C '@@DIR@@/material' config --get remote.origin.url || true)
   # https or ssh, with or without .git. A renamed floor/mtrl checkout is not this.
   case "${origin%.git}" in
     https://github.com/floor/material|git@github.com:floor/material|ssh://git@github.com/floor/material)
+      ;;
+    "")
+      echo 'Refusing to deploy: @@DIR@@/material has no origin.' >&2
+      exit 1
       ;;
     *)
       echo "Refusing to deploy: @@DIR@@/material origin is $origin, not floor/material." >&2
@@ -47,14 +75,46 @@ else
   esac
 fi
 
-cd "@@DIR@@/material"
+cd '@@DIR@@/material'
+# The server's library checkout is never edited by hand. A dirty tree used to
+# be thrown away by reset --hard; checkout --detach would carry it into the
+# build. Refuse, and list the files, before anything is changed.
+dirty=$(git status --porcelain)
+if [ -n "$dirty" ]; then
+  echo 'Refusing to deploy: @@DIR@@/material has local changes:' >&2
+  printf '%s\n' "$dirty" >&2
+  exit 1
+fi
 git fetch -q origin --tags
-if ! commit=$(git rev-parse --verify "@@LIBRARY_REF@@^{commit}" 2>/dev/null); then
-  echo "Refusing to deploy: library ref @@LIBRARY_REF@@ does not resolve to a commit." >&2
+# After the fetch, a branch name is the remote's branch. Nothing else moves
+# refs/heads/ (the checkout is detached), so that form is refused.
+ref='@@LIBRARY_REF@@'
+case "$ref" in
+  refs/heads/*)
+    echo "Refusing to deploy: library ref $ref names a local branch. Pass the branch name (it means origin's branch) or origin/<branch>." >&2
+    exit 1
+    ;;
+esac
+form=
+commit=
+if git show-ref --verify --quiet "refs/remotes/origin/$ref"; then
+  form="remote branch refs/remotes/origin/$ref"
+  commit=$(git rev-parse --verify "refs/remotes/origin/$ref^{commit}")
+elif git show-ref --verify --quiet "refs/tags/$ref"; then
+  form="tag refs/tags/$ref"
+  commit=$(git rev-parse --verify "refs/tags/$ref^{commit}")
+elif printf '%s\n' "$ref" | grep -Eq '^[0-9a-fA-F]{4,}$' \
+  && ! git show-ref --verify --quiet "refs/heads/$ref" \
+  && commit=$(git rev-parse --verify --quiet "${ref}^{commit}"); then
+  form="commit"
+elif [[ "$ref" == origin/* ]] && commit=$(git rev-parse --verify --quiet "${ref}^{commit}"); then
+  form="origin ref $ref"
+else
+  echo "Refusing to deploy: library ref $ref does not resolve to a commit." >&2
   exit 1
 fi
 git checkout -q --detach "$commit"
-echo "material: $commit"
+echo "material: $form $commit"
 
 bun install --frozen-lockfile
 bun run build
@@ -64,7 +124,7 @@ bun run build
 # The process already running keeps serving the previous build from memory;
 # the operator still sees the old site, until that process is restarted.
 echo "md3.io:"
-cd "@@DIR@@/md3.io"
+cd '@@DIR@@/md3.io'
 git fetch -q origin main
 git reset -q --hard origin/main
 git log --oneline -1

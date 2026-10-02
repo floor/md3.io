@@ -6,7 +6,7 @@ status: published
 
 # Svelte
 
-`material/svelte` has a Svelte 5 component for every mtrl web component, for Svelte apps and
+`material/svelte` has a Svelte 5 component for every `material` web component, for Svelte apps and
 SvelteKit. Each one renders its `<m-*>` element, so it looks and behaves exactly as the element
 does. This page covers only what is particular to Svelte; [Getting started](../getting-started/)
 has the install and the base stylesheet, and each component page has its options and events.
