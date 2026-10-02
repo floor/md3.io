@@ -225,12 +225,13 @@ through the field, `.mtrl-text-field__field > …`. The filled indicator is
 The label has no `--floating` class: it rises with the root's `--focused` and `--empty` classes
 and the input's own state. The outlined border is an `__outline` of three segments
 (`__outline-leading`, `__outline-notch`, `__outline-trailing`), whose notch is sized from the
-label and opened by `__outline--notched`. Icon and affix padding is measured in JavaScript,
+label and opened by `__outline--notched`. The icon inset is in the stylesheet. An affix's
+width is measured into `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`,
 which is why `updatePositions()` exists.
 
 ## Measurements
 
-From `_text-field.scss` in mtrl, which names no M3 token for them.
+From `_text-field.scss` in material, which names no M3 token for them.
 
 | Attribute | Value | Source |
 |-----------|-------|--------|
@@ -239,11 +240,11 @@ From `_text-field.scss` in mtrl, which names no M3 token for them.
 | Container corner | 4dp | `f.get-shape('extra-small')` |
 | Filled corner | 4dp, top only | the filled variant's `border-radius` |
 | Input padding | 13dp 16dp | `.mtrl-text-field__input { padding }` |
-| Filled input padding | 20dp 16dp 7dp | the filled variant's input rule |
+| Filled input padding | 24dp 16dp 7dp | the filled variant's input rule |
 | Icon | 24dp | the leading and trailing icon rules |
 | Icon, compact | 20dp, 16dp inside it | the `--density-compact` icon rules |
-| Input padding beside an icon | 44dp | the `--with-leading-icon` and `--with-trailing-icon` input rules |
-| Input padding beside an affix | 48dp, until measured | the `--with-prefix` and `--with-suffix` input rules |
+| Input padding beside an icon | 52dp | the `--with-leading-icon` and `--with-trailing-icon` input rules |
+| Input padding beside an affix | 16dp, plus the affix width and 2dp (the width is 32dp until measured) | `--with-prefix` and `--with-suffix`, `beside-affix` |
 | Active indicator | 1dp at rest, 2dp focused | the filled input's `border-bottom` and `.mtrl-text-field__field::before` |
 | Input type | Body Large | `m.typography('body-large')` |
 | Supporting text type | Body Small | `m.typography('body-small')` |
