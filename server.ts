@@ -194,6 +194,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/shape/') response = page(path, 'Shape — mtrl', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
+  else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
