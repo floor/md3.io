@@ -196,7 +196,7 @@ docs check doesn't install that library; it type-checks against its 0.4 release:
 import { argbFromHex, hexFromArgb, Hct, SchemeTonalSpot, type DynamicScheme } from '@material/material-color-utilities';
 import { THEME_ROLES } from 'material/core/theme';
 
-// A scheme's colour for each role mtrl sets; the library names them in camelCase
+// A scheme's colour for each role material sets; the library names them in camelCase
 const roles = (scheme: DynamicScheme) => Object.fromEntries(THEME_ROLES.map((role) => {
   const getter = role.replace(/-(\w)/g, (_, letter: string) => letter.toUpperCase()) as keyof DynamicScheme;
   return [role, hexFromArgb(scheme[getter] as number)];

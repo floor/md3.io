@@ -13,15 +13,15 @@ components. Each layer adds one thing and keeps the one below it intact, so a co
 behaves the same whichever layer you use. The library has no runtime dependencies.
 
 ```text
-core        pipe, events, lifecycle, DOM, state          mtrl/core
+core        pipe, events, lifecycle, DOM, state          material/core
   ↓
-factories   createButton, createMenu, …                  mtrl
+factories   createButton, createMenu, …                  material
   ↓
-elements    <m-button>, <m-menu>, …                      mtrl/elements
+elements    <m-button>, <m-menu>, …                      material/elements
   ↓
-adapters    <Button>, <MButton>, …                       mtrl/react · vue · svelte · solid
+adapters    <Button>, <MButton>, …                       material/react · vue · svelte · solid
 
-styles      tokens, themes, one stylesheet per component  mtrl/styles · mtrl/themes
+styles      tokens, themes, one stylesheet per component  material/styles · material/themes
 ```
 
 ## Factories: features in a pipe
