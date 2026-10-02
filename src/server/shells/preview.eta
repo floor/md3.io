@@ -13,9 +13,12 @@
   </script>
   <link rel="preload" href="/fonts/Roboto-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/styles/roboto.css" />
-  <link rel="stylesheet" href="/dist/mtrl/styles/base.css" />
-  <% it.component.styles.forEach(style => { %><link rel="stylesheet" href="/dist/mtrl/styles/<%= style %>.css" /><% }); %>
-  <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/mtrl/themes/<%= theme %>.css" /><% }); %>
+  <link rel="stylesheet" href="/dist/material/styles/base.css" />
+  <link rel="stylesheet" href="/dist/material/styles/typography.css" />
+  <% it.component.styles.forEach(style => { %><link rel="stylesheet" href="/dist/material/styles/<%= style %>.css" /><% }); %>
+  <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/material/themes/<%= theme %>.css" /><% }); %>
+  <link rel="stylesheet" href="/dist/material/styles/contrast.css" />
+  <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/material/themes/<%= theme %>-contrast.css" /><% }); %>
   <link rel="stylesheet" href="/styles/preview.css" />
   <script type="module" src="/dist/preview.js"></script>
 </head><body><main id="stage" aria-label="Component preview"></main></body></html>

@@ -13,7 +13,7 @@ import { themes } from '../shared/button';
 import { pairOf } from '../shared/color';
 import type { ThemeBase } from '../shared/theme-state';
 
-const mtrlDir = resolve(root, 'node_modules/mtrl');
+const mtrlDir = resolve(root, 'node_modules/material');
 const read = (path: string) => readFileSync(resolve(mtrlDir, path), 'utf8');
 
 export const mtrlVersion: string = JSON.parse(read('package.json')).version;
@@ -100,6 +100,9 @@ export type ColorScheme = Record<string, ColorValue>;
 export interface ThemeColors { light: ColorScheme; dark: ColorScheme }
 
 const baseBlocks = parseCss(read('dist/styles/base.css'));
+/** Type roles, role utilities and font-weight utilities left base.css (material 3). */
+const typographyBlocks = parseCss(read('dist/styles/typography.css'));
+const typeBlocks = [...baseBlocks, ...typographyBlocks];
 /** Baseline light (`:root`) and dark (`.dark-theme`) from base.css. */
 export const baseline: Record<Mode, Map<string, string>> = {
   light: colorRoles(findBlock(baseBlocks, ':root')),
@@ -181,7 +184,7 @@ export interface TypeStyle {
   utility: boolean;
 }
 
-const rootDeclarations = new Map(baseBlocks.filter(block => block.path.at(-1) === ':root').flatMap(block => [...block.declarations]));
+const rootDeclarations = new Map(typeBlocks.filter(block => block.path.at(-1) === ':root').flatMap(block => [...block.declarations]));
 /** `var(--a, fallback)` resolved against base.css's `:root` declarations. */
 function resolveVar(value: string, seen = new Set<string>()): string {
   return value.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*))?\)/g, (whole, name: string, fallback?: string) => {
@@ -190,7 +193,7 @@ function resolveVar(value: string, seen = new Set<string>()): string {
     return found !== undefined ? resolveVar(found, new Set([...seen, name])) : fallback?.trim() ?? whole;
   });
 }
-const utilities = new Set(baseBlocks.map(block => block.path.at(-1)!).filter(selector => /^\.mtrl-[a-z]+-(large|medium|small)$/.test(selector)).map(selector => selector.slice(6)));
+const utilities = new Set(typeBlocks.map(block => block.path.at(-1)!).filter(selector => /^\.mtrl-[a-z]+-(large|medium|small)$/.test(selector)).map(selector => selector.slice(6)));
 
 export const typescale: TypeStyle[] = TYPE_ROLES.flatMap(role => {
   const get = (property: string) => {
@@ -250,7 +253,7 @@ export function scopedTokens(scope: string, darkScope: string): string {
 }
 
 /** mtrl's font-weight utility classes (`.mtrl-font-<name>`), lightest first. */
-export const fontWeights: { name: string; weight: string }[] = baseBlocks
+export const fontWeights: { name: string; weight: string }[] = typeBlocks
   .flatMap(block => {
     const match = /^\.mtrl-font-([a-z]+)$/.exec(block.path.at(-1) ?? '');
     const weight = block.declarations.get('font-weight');

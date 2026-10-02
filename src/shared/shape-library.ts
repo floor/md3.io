@@ -1,7 +1,7 @@
 // The M3 Expressive shapes mtrl ships (mtrl/core/shapes, a port of Compose's
 // MaterialShapes, which its loading indicator morphs through), as SVG paths. Shared by
 // the server, which draws the Shape page's gallery, and the page's morph demo.
-import { materialShape, radialProfile, type MaterialShapeName, type RadialProfile } from 'mtrl/core/shapes';
+import { materialShape, radialProfile, type MaterialShapeName, type RadialProfile } from 'material/core/shapes';
 
 /** Every shape mtrl names, labelled: a Record, so a shape mtrl adds fails the type check until it is listed. */
 export const SHAPE_LABELS: Record<MaterialShapeName, string> = {
@@ -11,11 +11,8 @@ export const SHAPE_LABELS: Record<MaterialShapeName, string> = {
   cookie9Sided: '9-sided cookie', cookie12Sided: '12-sided cookie', ghostish: 'Ghost-ish', clover4Leaf: '4-leaf clover', clover8Leaf: '8-leaf clover',
   burst: 'Burst', softBurst: 'Soft burst', boom: 'Boom', softBoom: 'Soft boom', flower: 'Flower', puffy: 'Puffy', puffyDiamond: 'Puffy diamond',
   pixelCircle: 'Pixel circle', pixelTriangle: 'Pixel triangle', bun: 'Bun', heart: 'Heart',
-  cookie4: '4-sided cookie', cookie9: '9-sided cookie',
 };
-/** mtrl's deprecated aliases: labelled for the morph (which may name them), not drawn twice. */
-const ALIASES: readonly MaterialShapeName[] = ['cookie4', 'cookie9'];
-export const SHAPE_NAMES = (Object.keys(SHAPE_LABELS) as MaterialShapeName[]).filter(name => !ALIASES.includes(name));
+export const SHAPE_NAMES = Object.keys(SHAPE_LABELS) as MaterialShapeName[];
 
 const round = (value: number) => Math.round(value * 1000) / 10;
 /** A shape's outline as an SVG path in a 0–100 box: its cubics, as mtrl builds them. */

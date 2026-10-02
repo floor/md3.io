@@ -1,7 +1,6 @@
 export const variants = ['filled', 'tonal', 'outlined', 'elevated', 'text'] as const;
 export const sizes = ['xs', 's', 'm', 'l', 'xl'] as const;
-// Baseline, then the M3 scheme variants generated from its seed, then mtrl's own themes.
-// material, winter, browngreen and legacy are deprecated in mtrl 0.10 and not offered.
+// Baseline, then the M3 scheme variants generated from its seed, then material's own themes.
 export const themes = ['baseline', 'neutral', 'vibrant', 'expressive', 'fidelity', 'content', 'monochrome', 'rainbow', 'fruit-salad', 'ocean', 'forest', 'spring', 'sunset', 'autumn', 'desert', 'summer', 'brownbeige', 'sageivory', 'tealcaramel', 'highcontrast'] as const;
 import { symbols } from './icons';
 export const icons = {

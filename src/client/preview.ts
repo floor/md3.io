@@ -1,39 +1,39 @@
-import createBadge from 'mtrl/components/badge';
-import createProgress from 'mtrl/components/progress';
-import createLoadingIndicator from 'mtrl/components/loading-indicator';
-import createSnackbar from 'mtrl/components/snackbar';
-import createTooltip from 'mtrl/components/tooltip';
-import createCard from 'mtrl/components/card';
-import createList from 'mtrl/components/list';
-import createCarousel from 'mtrl/components/carousel';
-import { createDivider } from 'mtrl/components/divider';
-import createDialog from 'mtrl/components/dialog';
-import createBottomSheet from 'mtrl/components/bottom-sheet';
-import createSideSheet from 'mtrl/components/side-sheet';
-import createNavigationRail from 'mtrl/components/navigation-rail';
-import createDrawer from 'mtrl/components/drawer';
-import createTabs from 'mtrl/components/tabs';
-import createMenu from 'mtrl/components/menu';
-import createTopAppBar from 'mtrl/components/top-app-bar';
-import createBottomAppBar from 'mtrl/components/bottom-app-bar';
-import createToolbar from 'mtrl/components/toolbar';
-import createSwitch from 'mtrl/components/switch';
-import createRadios from 'mtrl/components/radios';
-import createSlider from 'mtrl/components/slider';
-import createTextField from 'mtrl/components/textfield';
-import createSelect from 'mtrl/components/select';
-import createSearch from 'mtrl/components/search';
-import createDatePicker from 'mtrl/components/datepicker';
-import createTimePicker from 'mtrl/components/timepicker';
-import { createChips, type ChipComponent } from 'mtrl/components/chips';
-import createCheckbox from 'mtrl/components/checkbox';
-import createButton from 'mtrl/components/button';
-import createIconButton from 'mtrl/components/icon-button';
-import createButtonGroup from 'mtrl/components/button-group';
-import createSplitButton from 'mtrl/components/split-button';
-import createFab from 'mtrl/components/fab';
-import createFabMenu from 'mtrl/components/fab-menu';
-import createExtendedFab from 'mtrl/components/extended-fab';
+import createBadge from 'material/components/badge';
+import createProgress from 'material/components/progress';
+import createLoadingIndicator from 'material/components/loading-indicator';
+import createSnackbar from 'material/components/snackbar';
+import createTooltip from 'material/components/tooltip';
+import createCard from 'material/components/card';
+import createList from 'material/components/list';
+import createCarousel from 'material/components/carousel';
+import { createDivider } from 'material/components/divider';
+import createDialog from 'material/components/dialog';
+import createBottomSheet from 'material/components/bottom-sheet';
+import createSideSheet from 'material/components/side-sheet';
+import createNavigationRail from 'material/components/navigation-rail';
+import createDrawer from 'material/components/drawer';
+import createTabs from 'material/components/tabs';
+import createMenu from 'material/components/menu';
+import createTopAppBar from 'material/components/top-app-bar';
+import createBottomAppBar from 'material/components/bottom-app-bar';
+import createToolbar from 'material/components/toolbar';
+import createSwitch from 'material/components/switch';
+import createRadios from 'material/components/radios';
+import createSlider from 'material/components/slider';
+import createTextField from 'material/components/text-field';
+import createSelect from 'material/components/select';
+import createSearch from 'material/components/search';
+import createDatePicker from 'material/components/datepicker';
+import createTimePicker from 'material/components/timepicker';
+import { createChips, type ChipComponent } from 'material/components/chips';
+import createCheckbox from 'material/components/checkbox';
+import createButton from 'material/components/button';
+import createIconButton from 'material/components/icon-button';
+import createButtonGroup from 'material/components/button-group';
+import createSplitButton from 'material/components/split-button';
+import createFab from 'material/components/fab';
+import createFabMenu from 'material/components/fab-menu';
+import createExtendedFab from 'material/components/extended-fab';
 import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -119,7 +119,7 @@ function create(state: ComponentState) {
     }
     case 'carousel': {
       const control = createCarousel(components.carousel.config(state));
-      control.on('change', (event: { index: number }) => { sync({ initialSlide: String(event.index) }); message(`Slide ${event.index + 1} of 5`); });
+      control.on('change', (event: { value: number }) => { sync({ initialSlide: String(event.value) }); message(`Slide ${event.value + 1} of 5`); });
       return control;
     }
     case 'divider': {
@@ -271,15 +271,15 @@ function create(state: ComponentState) {
       });
       return control;
     }
-    case 'textfield': {
-      const control = createTextField(components.textfield.config(state));
+    case 'text-field': {
+      const control = createTextField(components['text-field'].config(state));
       if (!String(state.label).trim()) control.input.setAttribute('aria-label', 'Text field');
       control.input.addEventListener('input', () => { sync({ value: control.getValue() }); message('Text updated'); });
       return control;
     }
     case 'select': {
       const control = createSelect(components.select.config(state));
-      if (!String(state.label).trim()) control.textfield.input.setAttribute('aria-label', 'Select an option');
+      if (!String(state.label).trim()) control.textField.input.setAttribute('aria-label', 'Select an option');
       control.on('change', () => { sync({ value: control.getValue() || '' }); message(`Selected: ${control.getText()}`); });
       return control;
     }
