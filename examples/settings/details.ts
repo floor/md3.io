@@ -2,8 +2,9 @@
 // A detail is the category's title — a heading in the app's own markup carrying the
 // library's headline-small type role — then per group the group's title (the library's
 // title-small role) and the group's settings under it: a switch is a list row with the
-// control in its trailing slot, the row supplying the 48 dp target, the text roles and
-// the states. The switch is named by the app through its ariaLabel; the row's supporting
+// control in its trailing slot, the row supplying the text roles and the states. The
+// target is the control's own, not the row's — a click on the row's text does not toggle
+// it (FLO-590). The switch is named by the app through its ariaLabel; the row's supporting
 // text stays the row's — the list exposes no public handle on it (FLO-590). A slider is
 // not a row: the trailing slot is content-sized and does not shrink, so a slider put
 // there collapses to the width of its own label — it stands in a block of the pane's
