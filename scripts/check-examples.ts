@@ -9,6 +9,7 @@
 //   bun scripts/build.ts && bun scripts/check-examples.ts
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
+import { mkdir } from "node:fs/promises";
 import { chromium, type Page } from "playwright";
 import { handleRequest } from "../server";
 import { examples, FRAMEWORKS, exampleVariantIds, exampleReferenceId } from "../examples";
@@ -18,6 +19,24 @@ const browser = await chromium.launch();
 let checks = 0;
 
 try {
+  const sourcePage = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  await sourcePage.goto(`${server.url}examples/settings/?framework=vanilla`);
+  const source = sourcePage.locator('.example-source[data-framework="vanilla"]');
+  const expectedFiles = ["vanilla.ts", "app.ts", "controls.ts", "data.ts", "details.ts", "icons.ts", "state.ts"];
+  const listedFiles = await source.getByRole("tab").allTextContents();
+  assert.deepEqual(listedFiles, expectedFiles, "Settings code panel lists the variant and all six helpers");
+  console.log(`  ok Settings code panel files: ${listedFiles.join(", ")}`);
+  await source.getByRole("tab", { name: "data.ts", exact: true }).click();
+  assert.equal(await source.locator("pre:visible code").textContent(),
+    await Bun.file(resolve(import.meta.dir, "../examples/settings/data.ts")).text(),
+    "choosing data.ts shows its complete source");
+  assert.equal(await source.getByRole("tab", { name: "data.ts", exact: true }).getAttribute("aria-selected"), "true");
+  console.log("  ok Settings code panel: choosing data.ts shows its complete source");
+  await mkdir(resolve(import.meta.dir, "../analysis/examples"), { recursive: true });
+  await source.scrollIntoViewIfNeeded();
+  await sourcePage.screenshot({ path: resolve(import.meta.dir, "../analysis/examples/settings-source.png") });
+  await sourcePage.close();
+
   for (const example of examples) {
     const steps = (await import(resolve(import.meta.dir, "../examples", example.slug, "check.ts"))).default as (page: Page) => Promise<void>;
     const ids = exampleVariantIds(example);
