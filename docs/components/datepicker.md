@@ -109,6 +109,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Method | Returns | Description |
 |--------|---------|-------------|
 | `open()` / `close()` | `DatePickerComponent` | Shows or hides the calendar |
+| `isOpen()` | `boolean` | Whether the calendar is open |
 | `getValue()` / `setValue(value)` | `Date \| null` (`[Date, Date] \| null` in range mode) / `DatePickerComponent` | The committed value; `setValue` takes what `value` does |
 | `getFormattedValue()` | `string` | The value as the field shows it |
 | `clear()` | `DatePickerComponent` | Clears the value |

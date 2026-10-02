@@ -59,7 +59,7 @@ timepicker:
 value is 24-hour either way. `type: 'input'` starts on keyboard entry; the toggle in the
 dialog switches between the two. `orientation: 'horizontal'` puts the dial beside the time.
 The factory takes these as the `TIME_FORMAT`, `TIME_PICKER_TYPE` and
-`TIME_PICKER_ORIENTATION` enums from `mtrl/components/timepicker`; the web component takes
+`TIME_PICKER_ORIENTATION` enums from `material/components/timepicker`; the web component takes
 the strings. With `name`, the time is submitted with the form the picker's element is in.
 
 ## API
@@ -80,16 +80,16 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `minTime` / `maxTime` | `string` | — | The earliest and latest selectable times, 24-hour `HH:MM` or `HH:MM:SS` |
 | `minuteStep` / `secondStep` | `number` | `1` | The minute and second steps |
 | `name` | `string` | — | Submits the value with a form the picker's element is in |
-| `isOpen` | `boolean` | `false` | Whether the dialog opens as soon as it is created |
+| `open` | `boolean` | `false` | Whether the dialog opens as soon as it is created |
 | `disabled` | `boolean` | `false` | A disabled picker does not open |
 | `cancelText` / `confirmText` | `string` | `'Cancel'` / `'OK'` | The action buttons |
 | `clockIcon` / `keyboardIcon` | `string` | built-in | SVG for the mode toggle |
 | `container` | `string \| HTMLElement` | the component's element | Where the dialog is appended. By default it stays in `picker.element`; `open()` puts that element in the page if you never did |
 | `class` | `string` | — | Extra classes on the component's element |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-| `closeOnSelect` | `boolean` | — | Deprecated, no effect: the picker is confirmed with OK, as M3 specifies |
-| `onChange` / `onInput` | `({ value }) => void` | — | Called beside the events |
-| `onConfirm` | `(time: string) => void` | — | Called beside `confirm` |
+| `onChange` | `({ value }) => void` | — | Called beside `change` |
+| `onInput` | `({ value, draftValue }) => void` | — | Called beside `input` |
+| `onConfirm` | `({ value }) => void` | — | Called beside `confirm` |
 | `onCancel` / `onOpen` / `onClose` | `() => void` | — | Called beside the events |
 
 ### Methods
@@ -98,7 +98,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|---------|-------------|
 | `element` | `HTMLElement` | The component's element; holds the form value when `name` is set |
 | `dialogElement` | `HTMLElement` | The native `<dialog>`. `modalElement` is the same element |
-| `isOpen` | `boolean` | Whether the dialog is open, kept current |
+| `isOpen()` | `boolean` | Whether the dialog is open |
 | `open()` / `close()` / `toggle()` | `TimePickerComponent` | Shows or hides the dialog |
 | `getValue()` | `string` | The committed time, 24-hour `HH:MM` (or `HH:MM:SS`) |
 | `setValue(time)` | `TimePickerComponent` | Sets the time from a 24-hour string; an invalid one is logged and ignored. Not held to `minTime` and `maxTime` |
@@ -115,9 +115,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `input` | `{ value }` | The draft changed while the picker is open: a pick on the dial (once, when a drag is released), a keystroke in a field, AM/PM |
+| `input` | `{ value, draftValue }` | The draft changed while the picker is open: a pick on the dial (once, when a drag is released), a keystroke in a field, AM/PM. `value` is the committed time, `draftValue` the one shown |
 | `change` | `{ value }` | The committed time changed: OK with a different draft, or `setValue` with a different time |
-| `confirm` | `string` | OK was pressed, after `change`, while the picker is still open |
+| `confirm` | `{ value }` | OK was pressed, after `change`, while the picker is still open |
 | `cancel` | none | Cancel, `Escape` or a click on the scrim discarded the draft, while the picker is still open |
 | `open` / `close` | none | The dialog opened or closed |
 

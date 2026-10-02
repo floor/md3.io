@@ -6,7 +6,7 @@ status: published
 
 # Vue
 
-`mtrl/vue` has a Vue 3 component for every mtrl web component, for Vue 3.3 or later and Nuxt.
+`material/vue` has a Vue 3 component for every mtrl web component, for Vue 3.3 or later and Nuxt.
 Each one renders its `<m-*>` element, so it looks and behaves exactly as the element does. This
 page covers only what is particular to Vue; [Getting started](../getting-started/) has the
 install and the base stylesheet, and each component page has its options and events.
@@ -14,12 +14,11 @@ install and the base stylesheet, and each component page has its options and eve
 ## Components
 
 The components are named after the element with an `M` in front: `MButton`, `MSwitch`,
-`MTabs`. The text field is the one exception: the element is `m-textfield`, the component
-`MTextField`. Import them where you use them:
+`MTabs`, `MTextField`. Import them where you use them:
 
 ```vue
 <script setup lang="ts">
-import { MButton, MSwitch } from 'mtrl/vue';
+import { MButton, MSwitch } from 'material/vue';
 </script>
 
 <template>
@@ -30,7 +29,7 @@ import { MButton, MSwitch } from 'mtrl/vue';
 
 There is no plugin to install. For global registration, pass them to `app.component()` as you
 would any component. A component registers its element the first time it mounts, and importing
-`mtrl/vue` loads the elements' styles, so the base stylesheet is the only CSS you add.
+`material/vue` loads the elements' styles, so the base stylesheet is the only CSS you add.
 
 `<m-switch>` written directly in a template is the web component itself, which Vue first tries
 to resolve as a Vue component and warns about. If you mix bare elements in, tell the compiler
@@ -45,7 +44,7 @@ camelCase, bound with `:` for numbers, booleans and expressions.
 
 ```vue
 <script setup lang="ts">
-import { MSlider, MTextField } from 'mtrl/vue';
+import { MSlider, MTextField } from 'material/vue';
 </script>
 
 <template>
@@ -70,7 +69,7 @@ component page lists its events and their fields.
 
 ```vue
 <script setup lang="ts">
-import { MSwitch, MTextField } from 'mtrl/vue';
+import { MSwitch, MTextField } from 'material/vue';
 
 function setWifi(on: boolean) {
   console.log('Wi-Fi', on);
@@ -107,7 +106,7 @@ Under it are `modelValue` and `update:modelValue`. Every live property also has 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { MSwitch, MTabs, MTab } from 'mtrl/vue';
+import { MSwitch, MTabs, MTab } from 'material/vue';
 
 const wifi = ref(true);
 const tab = ref('songs');
@@ -134,7 +133,7 @@ step when the user closes it:
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { MButton, MDialog } from 'mtrl/vue';
+import { MButton, MDialog } from 'material/vue';
 
 const open = ref(false);
 </script>
@@ -161,7 +160,7 @@ content. A component's named regions, such as a dialog's `headline` and `actions
 
 ```vue
 <script setup lang="ts">
-import { MButton, MCard } from 'mtrl/vue';
+import { MButton, MCard } from 'material/vue';
 </script>
 
 <template>
@@ -184,7 +183,7 @@ fine: the parent reads them again when they change.
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { MRadios, MRadio } from 'mtrl/vue';
+import { MRadios, MRadio } from 'material/vue';
 
 const sizes = [{ value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }, { value: 'l', label: 'Large' }];
 const size = ref('m');
@@ -205,8 +204,8 @@ properties and methods. It is `null` until the component mounts. `Exposed` types
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { MButton, MTextField, type Exposed } from 'mtrl/vue';
-import type { TextFieldElement } from 'mtrl/elements';
+import { MButton, MTextField, type Exposed } from 'material/vue';
+import type { TextFieldElement } from 'material/elements';
 
 const field = ref<InstanceType<typeof MTextField> & Exposed<TextFieldElement>>();
 </script>
@@ -231,7 +230,7 @@ stylesheet gives each element its final size and look meanwhile, so the page doe
 the script arrives. Load it globally, in `app.vue` or in `nuxt.config`'s `css`:
 
 ```typescript
-import 'mtrl/elements/preupgrade.css';
+import 'material/elements/preupgrade.css';
 ```
 
 [Server rendering](../server-rendering/) explains what the server sends and how the upgrade

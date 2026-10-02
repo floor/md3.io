@@ -6,19 +6,19 @@ status: published
 
 # Web Components
 
-`mtrl/elements` has every component as a custom element: `<m-switch>`, `<m-tabs>`, `<m-dialog>`.
+`material/elements` has every component as a custom element: `<m-switch>`, `<m-tabs>`, `<m-dialog>`.
 Each element builds its factory inside its own shadow root, so it works in plain HTML, server
 templates and any framework. [Getting started](../getting-started/) covers the install and the
 styles; this page covers what is specific to the elements.
 
 ## Register the elements
 
-Importing `mtrl/elements` registers nothing and touches no DOM, so it is safe on a server.
+Importing `material/elements` registers nothing and touches no DOM, so it is safe on a server.
 `defineAll()` registers every element; to ship less, register those you use, each with its CSS:
 
 ```typescript
-import 'mtrl/elements/css/switch';
-import { defineSwitch } from 'mtrl/elements';
+import 'material/elements/css/switch';
+import { defineSwitch } from 'material/elements';
 
 defineSwitch();
 ```
@@ -28,8 +28,8 @@ harmless, so two bundles on one page, or a hot reload, don't throw. The tags sta
 pass a prefix to use your own:
 
 ```typescript
-import 'mtrl/elements/css';
-import { defineAll } from 'mtrl/elements';
+import 'material/elements/css';
+import { defineAll } from 'material/elements';
 
 defineAll({ prefix: 'md' });
 ```
@@ -48,7 +48,7 @@ user or a script changes the state. From then on the property holds it, the attr
 it was, and a form reset returns to it.
 
 ```typescript
-import type { SwitchElement } from 'mtrl/elements';
+import type { SwitchElement } from 'material/elements';
 
 const wifi = document.querySelector('m-switch') as SwitchElement;
 wifi.checked = false;         // the live state
@@ -66,8 +66,8 @@ creation: changing one rebuilds the component inside, keeping its state. Methods
 ## Events
 
 An element dispatches its factory's events from the host, under the same names, as
-`CustomEvent`s that bubble and cross shadow roots. The payload is in `detail`: `{ checked, value }`
-for a switch's `change`. Each component page lists them.
+`CustomEvent`s that bubble and cross shadow roots. The payload is in `detail`: `{ checked, value, valueAttribute }`
+for a switch's `change`, where `value` is the boolean and `valueAttribute` is the input's `value` attribute. Each component page lists them.
 
 ```typescript continued
 wifi.addEventListener('change', (event) => {
@@ -132,7 +132,7 @@ form-associated, as native controls are.
 ```html
 <form>
   <label for="city">Where to?</label>
-  <m-textfield id="city" name="city" label="City" required></m-textfield>
+  <m-text-field id="city" name="city" label="City" required></m-text-field>
   <m-switch name="newsletter" value="yes">Send me offers</m-switch>
   <m-button type="submit">Book</m-button>
 </form>
@@ -160,18 +160,18 @@ expose no `::part` yet: the custom properties are the styling surface.
 Until its script defines it, an element is the markup the server sent, unstyled. The pre-upgrade
 stylesheet gives each element its final box meanwhile, so nothing jumps when it upgrades: labels
 in their final type style, declaration children hidden with their room kept, overlays hidden.
-Each element's CSS module applies these rules once it loads; for server-rendered pages, put
+An element's own CSS does not include them. For server-rendered pages, put
 them in the `<head>` so they apply from the first paint:
 
 ```html
 <link rel="stylesheet" href="/css/mtrl-preupgrade.css">
 ```
 
-The file is `mtrl/elements/preupgrade.css`: serve a copy, or import it where your bundler handles
+The file is `material/elements/preupgrade.css`: serve a copy, or import it where your bundler handles
 CSS. It is built for `m-`; for another prefix, build the rules on the server and inline them:
 
 ```typescript
-import { preupgradeStyles } from 'mtrl/elements/preupgrade';
+import { preupgradeStyles } from 'material/elements/preupgrade';
 
 const css = preupgradeStyles('md');
 ```

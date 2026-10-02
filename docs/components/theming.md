@@ -19,10 +19,12 @@ palette. [Styles › Color](/styles/color/) shows them all, in every shipped the
 ## The baseline
 
 The base stylesheet, which every app imports once, holds M3's baseline theme (primary
-`#6750A4`) on `:root`, with the type, shape and state tokens:
+`#6750A4`) on `:root`, with the shape and state tokens. The type scale is
+`material/styles/typography`:
 
 ```typescript
-import 'mtrl/styles/base';
+import 'material/styles/base';
+import 'material/styles/typography';
 ```
 
 With nothing else, the whole page uses the baseline, light or dark as the system prefers.
@@ -33,7 +35,7 @@ A theme is one more import, and it applies wherever an element names it with `da
 `data-theme-mode="dark"` on the same element switches it to its dark roles:
 
 ```typescript
-import 'mtrl/themes/ocean';
+import 'material/themes/ocean';
 
 document.documentElement.dataset.theme = 'ocean';
 document.documentElement.dataset.themeMode = 'dark';
@@ -56,7 +58,7 @@ theme wins over the baseline whatever order the stylesheets load in.
 
 ## Dark mode
 
-The baseline follows the system: `mtrl/styles/base` sets its dark roles on `:root` under
+The baseline follows the system: `material/styles/base` sets its dark roles on `:root` under
 `@media (prefers-color-scheme: dark)`. A named theme doesn't. Once `data-theme` is set, its
 light roles apply until `data-theme-mode="dark"` asks for the dark ones, and that includes
 `data-theme="baseline"`, which is how an app offers a light setting on a dark system. To follow
@@ -75,7 +77,7 @@ Removing `data-theme` returns the page to the baseline and to the system's mode.
 
 ## The shipped themes
 
-Each theme is its own entry, `mtrl/themes/<name>`, so an app only loads the one it uses.
+Each theme is its own entry, `material/themes/<name>`, so an app only loads the one it uses.
 
 - **M3's scheme variants.** `neutral`, `vibrant`, `expressive`, `fidelity`, `content`,
   `monochrome`, `rainbow` and `fruit-salad` are M3's dynamic-scheme variants, generated with
@@ -85,13 +87,14 @@ Each theme is its own entry, `mtrl/themes/<name>`, so an app only loads the one 
   `desert`, `summer`, `brownbeige`, `sageivory` and `tealcaramel` are generated from a seed and
   keep a second colour of their own as the secondary, with every text pair at 4.5:1 or more.
 - **High contrast.** `highcontrast` is M3's high-contrast scheme from the baseline seed, with
-  7:1 or more on every text pair.
-- **Deprecated.** `material`, `winter`, `browngreen` and `legacy` still work in 0.10 and go in
-  1.0. Use `baseline` for `material`, `ocean` for `winter` and `brownbeige` for `browngreen`;
-  `legacy` has no replacement.
+  7:1 or more on every text pair. The base stylesheet and each theme also follow the
+  operating system's `prefers-contrast: more`. To set contrast explicitly, with
+  `data-theme-contrast="medium"` or `"high"`, import `material/styles/contrast` and
+  `material/themes/<name>-contrast` beside the theme.
 
-The full stylesheet, `mtrl/styles`, already contains the baseline, mtrl's own themes, high
-contrast and the deprecated four, so with it only the scheme variants need an import.
+The full stylesheet, `material/styles`, already contains the baseline, mtrl's own themes and
+high contrast, so with it only the scheme variants need an import. Explicit contrast is still
+the separate `contrast` and `<name>-contrast` stylesheets.
 
 ## Your own theme
 
@@ -99,7 +102,7 @@ contrast and the deprecated four, so with it only the scheme variants need an im
 
 M3 builds a whole scheme from one colour. Google's
 [material-color-utilities](https://github.com/material-foundation/material-color-utilities) does
-the colour science, and `schemeToTokens` from `mtrl/core/theme` turns a light and a dark scheme
+the colour science, and `schemeToTokens` from `material/core/theme` turns a light and a dark scheme
 into mtrl's custom properties. It is the function mtrl's own themes are generated with, so a
 theme you make this way declares exactly what a shipped one does. It takes the role names
 kebab-case or camelCase, and throws if a role is missing or isn't a `#rrggbb` colour.
@@ -107,7 +110,7 @@ kebab-case or camelCase, and throws if a role is missing or isn't a `#rrggbb` co
 A function that installs a theme under a name you pick:
 
 ```typescript
-import { schemeToTokens, type SchemeRoles } from 'mtrl/core/theme';
+import { schemeToTokens, type SchemeRoles } from 'material/core/theme';
 
 function installTheme(name: string, light: SchemeRoles, dark: SchemeRoles) {
   const tokens = schemeToTokens({ light, dark });
@@ -126,7 +129,7 @@ docs check doesn't install that library; it type-checks against its 0.4 release:
 
 ```typescript fragment
 import { argbFromHex, hexFromArgb, Hct, SchemeTonalSpot, type DynamicScheme } from '@material/material-color-utilities';
-import { THEME_ROLES } from 'mtrl/core/theme';
+import { THEME_ROLES } from 'material/core/theme';
 
 // A scheme's colour for each role mtrl sets; the library names them in camelCase
 const roles = (scheme: DynamicScheme) => Object.fromEntries(THEME_ROLES.map((role) => {
@@ -183,7 +186,8 @@ percentage.
 
 ## The other tokens
 
-The base stylesheet also puts M3's system tokens on `:root`:
+`material/styles/typography`, imported with the base, puts the type scale on `:root`. The base
+keeps shape and state, and body-medium's size tokens:
 
 - **Type scale:** `--mtrl-sys-typescale-<role>-font`, `-font-size`, `-line-height`,
   `-letter-spacing` and `-font-weight` for every role from `display-large` to `label-small`.

@@ -17,7 +17,7 @@ out of the way, and optional icons, affixes and supporting text. See the
 `input` fires as the value changes, `change` when it is committed.
 
 ```example
-textfield:
+text-field:
   label: Name
   name: name
   on change: save(value)
@@ -37,7 +37,7 @@ field and its supporting text take the error colors, and the input gets `aria-in
 `setError(false)` restores it.
 
 ```example
-textfield:
+text-field:
   label: Email
   type: email
   variant: outlined
@@ -50,12 +50,12 @@ textfield:
 ### A character counter
 
 With `maxLength`, the supporting text row ends with a counter, `0/160`, that follows typing and
-`setValue()`. A limit set or removed later on the input (`<m-textfield maxlength>` does this)
+`setValue()`. A limit set or removed later on the input (`<m-text-field maxlength>` does this)
 adds or removes it. It describes the input, so a screen reader hears it with the field, not on
 every keystroke, and it takes the error color while the field is in error.
 
 ```example
-textfield:
+text-field:
   label: Bio
   maxLength: 160
   supportingText: A line about you
@@ -68,7 +68,7 @@ textfield:
 was built without it.
 
 ```example
-textfield:
+text-field:
   label: Amount
   type: number
   prefixText: $
@@ -81,7 +81,7 @@ A password field with a reveal button, and validating an email as it is left, ar
 
 ## API
 
-<!-- API: generated from mtrl's types and <m-textfield>'s spec in a later step. Until then these
+<!-- API: generated from mtrl's types and <m-text-field>'s spec in a later step. Until then these
 tables are hand-written: keep them in line with the code, and add no prose restating them. -->
 
 ### Options
@@ -196,30 +196,30 @@ The root holds two children: the field, then the supporting text row, which exis
 it holds a helper or a counter.
 
 ```text
-.mtrl-textfield                root (element)
-├─ .mtrl-textfield__field      the container (field): label, input, outline, icons, affixes
-└─ .mtrl-textfield__supporting the row under it, in the flow
-   ├─ .mtrl-textfield__helper  start
-   └─ .mtrl-textfield__counter end
+.mtrl-text-field                root (element)
+├─ .mtrl-text-field__field      the container (field): label, input, outline, icons, affixes
+└─ .mtrl-text-field__supporting the row under it, in the flow
+   ├─ .mtrl-text-field__helper  start
+   └─ .mtrl-text-field__counter end
 ```
 
 The row is in the flow: a helper that wraps pushes what follows down, and a field without one
 is 56dp tall. Since mtrl 0.10 (FLO-300) the label, input and slots are inside `__field`, not
-direct children of the root: CSS written as `.mtrl-textfield > .mtrl-textfield__input` now goes
-through the field, `.mtrl-textfield__field > …`. The filled indicator is
-`.mtrl-textfield__field::before`.
+direct children of the root: CSS written as `.mtrl-text-field > .mtrl-text-field__input` now goes
+through the field, `.mtrl-text-field__field > …`. The filled indicator is
+`.mtrl-text-field__field::before`.
 
 ```css
-.mtrl-textfield { }
-.mtrl-textfield--filled, .mtrl-textfield--outlined { }
-.mtrl-textfield--density-compact, .mtrl-textfield--multiline { }
-.mtrl-textfield--focused, .mtrl-textfield--empty, .mtrl-textfield--error, .mtrl-textfield--disabled { }
-.mtrl-textfield__field, .mtrl-textfield__input, .mtrl-textfield__label { }
-.mtrl-textfield__leading-icon, .mtrl-textfield__trailing-icon { }
-.mtrl-textfield__prefix, .mtrl-textfield__suffix { }
-.mtrl-textfield__supporting, .mtrl-textfield__helper, .mtrl-textfield__helper--error { }
-.mtrl-textfield__counter { }
-.mtrl-textfield__outline, .mtrl-textfield__outline--notched { }
+.mtrl-text-field { }
+.mtrl-text-field--filled, .mtrl-text-field--outlined { }
+.mtrl-text-field--density-compact, .mtrl-text-field--multiline { }
+.mtrl-text-field--focused, .mtrl-text-field--empty, .mtrl-text-field--error, .mtrl-text-field--disabled { }
+.mtrl-text-field__field, .mtrl-text-field__input, .mtrl-text-field__label { }
+.mtrl-text-field__leading-icon, .mtrl-text-field__trailing-icon { }
+.mtrl-text-field__prefix, .mtrl-text-field__suffix { }
+.mtrl-text-field__supporting, .mtrl-text-field__helper, .mtrl-text-field__helper--error { }
+.mtrl-text-field__counter { }
+.mtrl-text-field__outline, .mtrl-text-field__outline--notched { }
 ```
 
 The label has no `--floating` class: it rises with the root's `--focused` and `--empty` classes
@@ -230,21 +230,21 @@ which is why `updatePositions()` exists.
 
 ## Measurements
 
-From `_textfield.scss` in mtrl, which names no M3 token for them.
+From `_text-field.scss` in mtrl, which names no M3 token for them.
 
 | Attribute | Value | Source |
 |-----------|-------|--------|
-| Field height | 56dp | `.mtrl-textfield__input { height }` |
+| Field height | 56dp | `.mtrl-text-field__input { height }` |
 | Field height, compact | 40dp | `--density-compact` input rule |
 | Container corner | 4dp | `f.get-shape('extra-small')` |
 | Filled corner | 4dp, top only | the filled variant's `border-radius` |
-| Input padding | 13dp 16dp | `.mtrl-textfield__input { padding }` |
+| Input padding | 13dp 16dp | `.mtrl-text-field__input { padding }` |
 | Filled input padding | 20dp 16dp 7dp | the filled variant's input rule |
 | Icon | 24dp | the leading and trailing icon rules |
 | Icon, compact | 20dp, 16dp inside it | the `--density-compact` icon rules |
 | Input padding beside an icon | 44dp | the `--with-leading-icon` and `--with-trailing-icon` input rules |
 | Input padding beside an affix | 48dp, until measured | the `--with-prefix` and `--with-suffix` input rules |
-| Active indicator | 1dp at rest, 2dp focused | the filled input's `border-bottom` and `.mtrl-textfield__field::before` |
+| Active indicator | 1dp at rest, 2dp focused | the filled input's `border-bottom` and `.mtrl-text-field__field::before` |
 | Input type | Body Large | `m.typography('body-large')` |
 | Supporting text type | Body Small | `m.typography('body-small')` |
 | Supporting text row | 4dp above, 16dp each side | `TextFieldDefaults.supportingTextPadding` |

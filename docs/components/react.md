@@ -6,7 +6,7 @@ status: published
 
 # React
 
-`mtrl/react` has a React component for every element: `Switch` renders `<m-switch>`, `Tabs`
+`material/react` has a React component for every element: `Switch` renders `<m-switch>`, `Tabs`
 renders `<m-tabs>`. The element does the work, so everything in the [Web Components
 guide](../web-components/) holds here: the forms, the styling, the top layer. [Getting
 started](../getting-started/) covers the install and the base stylesheet; this page covers what
@@ -14,11 +14,11 @@ the React components add.
 
 ## Components and props
 
-Import the components by name. `mtrl/react` loads the elements' CSS, and each component
+Import the components by name. `material/react` loads the elements' CSS, and each component
 registers its element the first time it mounts, so there is no `defineAll()` to call.
 
 ```tsx
-import { Switch, TextField } from 'mtrl/react';
+import { Switch, TextField } from 'material/react';
 
 export function Settings() {
   return (
@@ -38,7 +38,7 @@ element. `className` works on React 18 and 19 alike: the component passes it on 
 To render another tag prefix, call `configure` once, before the first render:
 
 ```tsx
-import { configure } from 'mtrl/react';
+import { configure } from 'material/react';
 
 configure({ prefix: 'md' });
 ```
@@ -62,7 +62,7 @@ doesn't change it, puts it back, as React does for `<input checked>`.
 
 ```tsx
 import { useState } from 'react';
-import { Switch } from 'mtrl/react';
+import { Switch } from 'material/react';
 
 export function WifiSetting() {
   const [wifi, setWifi] = useState(false);
@@ -89,7 +89,7 @@ their `name`, and `new FormData(form)` reads them. That makes uncontrolled compo
 for React 19's form actions, which receive the `FormData`:
 
 ```tsx
-import { Button, Switch, TextField } from 'mtrl/react';
+import { Button, Switch, TextField } from 'material/react';
 
 export function Booking() {
   return (
@@ -108,12 +108,12 @@ after an action returns each control to its default.
 ## Refs
 
 `ref` gives you the element, with its properties and methods typed. The element types come from
-`mtrl/elements`:
+`material/elements`:
 
 ```tsx
 import { useRef } from 'react';
-import { Button, TextField } from 'mtrl/react';
-import type { TextFieldElement } from 'mtrl/elements';
+import { Button, TextField } from 'material/react';
+import type { TextFieldElement } from 'material/elements';
 
 export function Rename() {
   const field = useRef<TextFieldElement>(null);
@@ -139,7 +139,7 @@ for the slot. Each component's page lists its slots.
 
 ```tsx
 import { useState } from 'react';
-import { Button, Dialog, Tab, Tabs } from 'mtrl/react';
+import { Button, Dialog, Tab, Tabs } from 'material/react';
 
 export function Library() {
   const [tab, setTab] = useState<string | null>('songs');
@@ -169,7 +169,7 @@ The components are the usual way. To write the elements themselves (`<m-switch c
 import the tag types once, in any file TypeScript sees:
 
 ```tsx
-import type {} from 'mtrl/react/jsx';
+import type {} from 'material/react/jsx';
 
 export const Wifi = () => (
   <m-switch checked label="Wi-Fi" onchange={(event) => setWifi(event.detail.checked)} />
@@ -191,7 +191,7 @@ upgrade.
 
 ## Next.js and server rendering
 
-`mtrl/react` starts with `"use client"`, so you can import the components from Server
+`material/react` starts with `"use client"`, so you can import the components from Server
 Components: they are client components, which Next.js still renders on the server. Event
 handlers and refs need a client component of your own, as with any client component. The server
 HTML is the element's tag with its attributes: the string, number and boolean props, a
@@ -204,8 +204,8 @@ shifts when it upgrades:
 
 ```tsx
 import type { ReactNode } from 'react';
-import 'mtrl/styles/base';
-import 'mtrl/elements/preupgrade.css';
+import 'material/styles/base';
+import 'material/elements/preupgrade.css';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

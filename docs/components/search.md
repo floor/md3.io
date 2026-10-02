@@ -96,9 +96,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `disabled` | `boolean` | `false` | Whether it starts disabled |
 | `class` | `string` | — | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
-| `onInput` / `onSubmit` | `(value: string) => void` | — | Called with the query, beside the events |
-| `onClear` / `onExpand` / `onCollapse` | `() => void` | — | Called beside the events |
-| `onSuggestionSelect` | `(suggestion: SearchSuggestion) => void` | — | Called with the chosen suggestion |
+| `onInput` / `onSubmit` / `onClear` / `onSuggestionSelect` | `SearchEvent` | — | `{ component, value, originalEvent, suggestion?, preventDefault, defaultPrevented }`; `suggestion` is set for `onSuggestionSelect` |
+| `onExpand` / `onCollapse` | `SearchStateEvent` | — | `{ component, state, viewMode }` |
 | `on` | `{ [event]: handler }` | — | Event handlers, by event name |
 
 ### Methods
@@ -130,8 +129,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `expand` / `collapse` | The view opened or closed |
 | `focus` / `blur` | The input gained or lost focus |
 
-Handlers receive `{ component, value, originalEvent, suggestion?, preventDefault(),
-defaultPrevented }`. The web component's events are `input`, `change` (a submit), `select` (a
+`input`, `submit`, `clear`, `suggestionSelect`, `focus` and `blur` receive the `SearchEvent`:
+`{ component, value, originalEvent, suggestion?, preventDefault(), defaultPrevented }`.
+`expand` and `collapse` receive `{ component, state, viewMode }`. The web component's events are `input`, `change` (a submit), `select` (a
 suggestion), each with `{ value }`, then `open`, `close` and `action`.
 
 ## Accessibility

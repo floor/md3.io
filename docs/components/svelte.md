@@ -6,20 +6,19 @@ status: published
 
 # Svelte
 
-`mtrl/svelte` has a Svelte 5 component for every mtrl web component, for Svelte apps and
+`material/svelte` has a Svelte 5 component for every mtrl web component, for Svelte apps and
 SvelteKit. Each one renders its `<m-*>` element, so it looks and behaves exactly as the element
 does. This page covers only what is particular to Svelte; [Getting started](../getting-started/)
 has the install and the base stylesheet, and each component page has its options and events.
 
 ## Components
 
-The components are named after the element: `Button`, `Switch`, `Tabs`. The text field is the one
-exception: the element is `m-textfield`, the component `TextField`. Import
+The components are named after the element: `Button`, `Switch`, `Tabs`, `TextField`. Import
 them where you use them:
 
 ```svelte
 <script lang="ts">
-  import { Button, Switch } from 'mtrl/svelte';
+  import { Button, Switch } from 'material/svelte';
 </script>
 
 <Switch>Wi-Fi</Switch>
@@ -32,7 +31,7 @@ plugin for Vite, which SvelteKit and Vite's Svelte template include, does this w
 setting. They are written with runes, so they need Svelte 5; with Svelte 4, use the
 [web components](../web-components/) directly.
 
-A component registers its element the first time it mounts, and importing `mtrl/svelte` loads
+A component registers its element the first time it mounts, and importing `material/svelte` loads
 the elements' styles, so the base stylesheet is the only CSS you add.
 
 ## Props
@@ -42,7 +41,7 @@ A component's props are its element's attributes, in camelCase: `supportingText`
 
 ```svelte
 <script lang="ts">
-  import { Slider, TextField } from 'mtrl/svelte';
+  import { Slider, TextField } from 'material/svelte';
 </script>
 
 <TextField label="Email" type="email" supportingText="We never share it" required />
@@ -64,7 +63,7 @@ data in `detail`; every component page lists its events and their fields.
 
 ```svelte
 <script lang="ts">
-  import { Switch, TextField } from 'mtrl/svelte';
+  import { Switch, TextField } from 'material/svelte';
 
   function setWifi(on: boolean) {
     console.log('Wi-Fi', on);
@@ -92,7 +91,7 @@ checkbox's `indeterminate`, bind the same way.
 
 ```svelte
 <script lang="ts">
-  import { Switch, Tabs, Tab } from 'mtrl/svelte';
+  import { Switch, Tabs, Tab } from 'material/svelte';
 
   let wifi = $state(true);
   let tab = $state<string | null>('songs');
@@ -115,7 +114,7 @@ step when the user closes it:
 
 ```svelte
 <script lang="ts">
-  import { Button, Dialog } from 'mtrl/svelte';
+  import { Button, Dialog } from 'material/svelte';
 
   let open = $state(false);
 </script>
@@ -141,7 +140,7 @@ or `subhead`, takes either: the prop for plain text, the snippet for markup.
 
 ```svelte
 <script lang="ts">
-  import { Button, Card } from 'mtrl/svelte';
+  import { Button, Card } from 'material/svelte';
 </script>
 
 <Card subhead="Updated today">
@@ -161,7 +160,7 @@ are fine: the parent reads them again when they change.
 
 ```svelte
 <script lang="ts">
-  import { Radios, Radio } from 'mtrl/svelte';
+  import { Radios, Radio } from 'material/svelte';
 
   const sizes = [{ value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }, { value: 'l', label: 'Large' }];
   let size = $state<string | null>('m');
@@ -182,7 +181,7 @@ its properties and methods. It is `null` until the component mounts. An attachme
 
 ```svelte
 <script lang="ts">
-  import { Button, TextField } from 'mtrl/svelte';
+  import { Button, TextField } from 'material/svelte';
 
   let field = $state<ReturnType<typeof TextField>>();
 </script>
@@ -207,7 +206,7 @@ stylesheet gives each element its final size and look meanwhile, so the page doe
 the script arrives. Import it once in your root `+layout.svelte`:
 
 ```typescript
-import 'mtrl/elements/preupgrade.css';
+import 'material/elements/preupgrade.css';
 ```
 
 [Server rendering](../server-rendering/) explains what the server sends and how the upgrade

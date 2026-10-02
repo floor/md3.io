@@ -15,7 +15,7 @@ read in full. M3 has five layouts: **multi-browse**, **uncontained**, **hero**,
 ## Usage
 
 The carousel fills the height it is given, and has none of its own: set one on it or on its
-container. `change` fires with the `index` of the item that settles into the focal position.
+container. `change` fires with the `value` of the item that settles into the focal position: its index, as `getValue()` returns it.
 
 ```example
 carousel:
@@ -24,7 +24,7 @@ carousel:
     - { image: /assets/playground/landscape-1.svg, alt: Hills under a pale sky, title: Highlands }
     - { image: /assets/playground/landscape-2.svg, alt: Cliffs over the sea, title: Coast }
     - { image: /assets/playground/landscape-3.svg, alt: Dunes at noon, title: Desert }
-  on change: showSlide(index)
+  on change: showSlide(value)
 ```
 
 ## Examples
@@ -118,9 +118,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `change` | `{ index }` | Another item settled into the focal position; a `goTo()` reports its destination only |
+| `change` | `{ value }` | Another item settled into the focal position; `value` is its index. A `goTo()` reports its destination only |
 
-The web component's `change` carries `{ index }` too.
+The web component's `change` carries `{ value }` too.
 
 ## Accessibility
 
