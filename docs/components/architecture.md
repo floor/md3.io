@@ -7,7 +7,7 @@ description: How the material library is built in layers, from features and comp
 
 # Architecture
 
-the `material` library is built in layers: small features compose into component factories, web components wrap
+The `material` library is built in layers: small features compose into component factories, web components wrap
 the factories, and the React, Vue, Svelte and SolidJS components are generated from the web
 components. Each layer adds one thing and keeps the one below it intact, so a component looks and
 behaves the same whichever layer you use. The library has no runtime dependencies.

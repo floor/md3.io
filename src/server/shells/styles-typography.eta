@@ -19,9 +19,9 @@
 <% }; %>
 <div class="styles-layout">
 <div class="page-wrap styles-page styles-typography" data-styles-page="typography">
-  <header class="page-heading"><span class="eyebrow">STYLES / TYPOGRAPHY</span><h1>Typography</h1><p>The Material 3 type scale: five roles in three sizes, as material ships them.</p></header>
-  <p class="styles-source">Values read from material's compiled CSS · material <%= it.mtrlVersion %> · sizes in px: size / line height · weight · tracking</p>
-    <% if (it.unloadedFonts.length) { %><p class="styles-note">material's type scale names <%= it.unloadedFonts.join(', ') %>, which md3.io does not load: the samples show your browser's fallback.</p><% } %>
+  <header class="page-heading"><span class="eyebrow">STYLES / TYPOGRAPHY</span><h1>Typography</h1><p>The Material 3 type scale: five roles in three sizes, as <code>material</code> ships them.</p></header>
+  <p class="styles-source">Values read from <code>material</code>'s compiled CSS · <code>material</code> <%= it.mtrlVersion %> · sizes in px: size / line height · weight · tracking</p>
+    <% if (it.unloadedFonts.length) { %><p class="styles-note"><code>material</code>'s type scale names <%= it.unloadedFonts.join(', ') %>, which md3.io does not load: the samples show your browser's fallback.</p><% } %>
 
   <section class="type-section" aria-labelledby="type-display">
     <h2 id="type-display">Display, headline and title</h2>

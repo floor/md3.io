@@ -162,7 +162,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   let response: Response;
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
-  else if (path === '/components/') response = page(path, 'Components — material', 'Explore material components in an interactive playground.', 'catalog', { catalogVisuals });
+  else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
     const component = components[slug];
@@ -192,7 +192,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/color/') response = page(path, 'Color — material', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
-  else if (path === '/docs/') response = page(path, 'Documentation — material', 'Configuration and API references for material components.', 'docs');
+  else if (path === '/docs/') response = page(path, 'Documentation — material', 'Configuration and API references for the material library\'s components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
   else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });

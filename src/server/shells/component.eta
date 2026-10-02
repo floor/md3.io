@@ -33,7 +33,7 @@
       </div>
       <div class="preview-footer">
         <span id="playground-status" role="status" aria-live="polite">Loading preview…</span>
-        <% if (it.size) { const kb = n => (n / 1024).toFixed(1); %><span class="component-size"><% [['factory', it.size.factory], ...(it.element ? [['element', it.size.element]] : [])].forEach(([flavour, size]) => { %><span data-flavour="<%= flavour %>" <%= flavour === 'factory' ? '' : 'hidden' %> title="What this component adds to an app: minified JS and CSS, gzip, on top of material's shared core, which all components share and a page loads once.<% if (size.lazy) { %> Another <%= kb(size.lazy) %> KB loads later, only if a feature needs it.<% } %> Measured on material <%= it.size.material %>."><strong><%= kb(size.added) %> KB</strong> gzip</span><% }); %></span><% } %>
+        <% if (it.size) { const kb = n => (n / 1024).toFixed(1); %><span class="component-size"><% [['factory', it.size.factory], ...(it.element ? [['element', it.size.element]] : [])].forEach(([flavour, size]) => { %><span data-flavour="<%= flavour %>" <%= flavour === 'factory' ? '' : 'hidden' %> title="What this component adds to an app: minified JS and CSS, gzip, on top of the material library's shared core, which all components share and a page loads once.<% if (size.lazy) { %> Another <%= kb(size.lazy) %> KB loads later, only if a feature needs it.<% } %> Measured on material <%= it.size.material %>."><strong><%= kb(size.added) %> KB</strong> gzip</span><% }); %></span><% } %>
       </div>
     </div>
     <form class="split-panel configuration" id="configuration">
