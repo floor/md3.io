@@ -1,28 +1,37 @@
-// State → UI and effects, one direction only: a theme repaints the cards, the
-// palettes, the chrome, the select and the address; a mode repaints the chrome and
-// the mode button.
+// State → UI and effects, one direction only. A theme, variant or contrast works out
+// the scheme (withVariant), then repaints the card, the palettes, the app's colours,
+// the controls and the address; the site's mode repaints the card and the app.
 import type { App } from '../core/foundation';
-import { icons } from '../config/layout';
 
 export const withReactionWiring = () => (app: App) => {
-  const { ui, scheme, palettes, state } = app;
-  state.on('theme', (value: string) => {
+  const { ui, scheme, palettes, state, variant, source } = app;
+  const controls = () => {
+    const theme = source.current();
+    if (ui.theme.getValue() !== theme.name) ui.theme.setValue(theme.name);
+    const { variant: current, contrast } = variant.effective();
+    // "Original" is a hand-made theme's own colours: hidden for a seeded theme, whose
+    // own variant is its original (styles/theme-app.css), not rebuilt with setOptions.
+    if (theme.handSeed) delete ui.variant.element.dataset.seeded;
+    else ui.variant.element.dataset.seeded = '';
+    if (ui.variant.getValue() !== current) ui.variant.setValue(current);
+    const seed = variant.seedOf(theme);
+    ui.variant.textfield.setSupportingText(!theme.handSeed ? `Seed ${seed}`
+      : current === 'original' && contrast ? `Tonal Spot from ${seed}: Original is standard contrast only`
+      : current === 'original' ? `Set by hand; variants generated from ${seed}` : `Generated from ${seed}`);
+    if (!ui.contrast.isSelected(String(contrast))) ui.contrast.select(String(contrast));
+  };
+  const render = () => variant.update(() => {
     scheme.paint();
     palettes.paint();
     scheme.chrome();
-    if (ui.theme.getValue() !== value) ui.theme.setValue(value);
+    controls();
     const url = new URL(location.href);
-    if (url.searchParams.get('theme') !== value) {
-      url.searchParams.set('theme', value);
-      history.replaceState(history.state, '', url.pathname + url.search + url.hash);
-    }
+    url.search = variant.params().toString();
+    if (url.href !== location.href) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
   });
-  state.on('mode', (value: string) => {
-    scheme.chrome();
-    const dark = value === 'dark';
-    ui.mode.setIcon(dark ? icons.light : icons.dark);
-    ui.mode.setAriaLabel(dark ? 'App in light mode' : 'App in dark mode');
-    ui.mode.element.setAttribute('aria-pressed', String(dark));
-  });
+  state.on('theme', render);
+  state.on('variant', render);
+  state.on('contrast', render);
+  state.on('mode', () => { scheme.paint(); scheme.chrome(); });
   return app;
 };

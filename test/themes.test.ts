@@ -20,7 +20,12 @@ describe('Themes page', () => {
     expect(originOf('seed #6750A4, variant Tonal Spot, contrastLevel 1.0')).toEqual({ source: '#6750a4', variant: 'tonal-spot', contrast: 1 });
     const byName = Object.fromEntries(builtInThemes.map(theme => [theme.name, theme]));
     for (const name of ['baseline', 'vibrant', 'desert', 'highcontrast']) expect(byName[name]!.palettes?.primary.length).toBe(18);
-    for (const name of ['ocean', 'forest', 'spring', 'sunset', 'autumn']) expect(byName[name]!.origin).toBeUndefined();
+    for (const name of ['ocean', 'forest', 'spring', 'sunset', 'autumn']) {
+      expect(byName[name]!.origin).toBeUndefined();
+      // Their variants are generated from their light primary, as are their palettes.
+      expect(byName[name]!.handSeed).toBe(byName[name]!.roles.light.primary);
+      expect(byName[name]!.palettes.primary.length).toBe(18);
+    }
   });
   test('the page mounts the app with every theme\'s data and the linked one selected', async () => {
     const html = await (await handleRequest(new Request('http://localhost/styles/themes/?theme=summer'))).text();

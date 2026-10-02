@@ -1,8 +1,9 @@
 // The Themes page's built-in themes: each one's colour roles, light and dark, as mtrl's
-// compiled theme CSS declares them (tokens.ts reads it), and its tonal palettes where
-// mtrl generates the theme from a seed. The seed is read from the header
-// scripts/generate-themes.ts writes in each generated theme's SCSS (src/styles is in
-// mtrl's published files); the palettes are the engine's (src/shared/theme-engine.ts).
+// compiled theme CSS declares them (tokens.ts reads it), and its tonal palettes, from the
+// seed mtrl generates it from or, for a theme set by hand, from its light primary. The
+// seed is read from the header scripts/generate-themes.ts writes in each generated
+// theme's SCSS (src/styles is in mtrl's published files); the palettes are the
+// engine's (src/shared/theme-engine.ts).
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { root } from './content';
@@ -17,7 +18,12 @@ export interface BuiltInTheme {
   roles: { light: Record<string, string>; dark: Record<string, string> };
   /** What mtrl generates the theme from, when it does. */
   origin?: ColorSpec & { text: string };
-  palettes?: Record<CoreColor, string[]>;
+  /**
+   * A hand-made theme's seed for its generated variants: its light primary. Its own
+   * colours stay "Original"; its palettes are Tonal Spot's from this seed.
+   */
+  handSeed?: string;
+  palettes: Record<CoreColor, string[]>;
 }
 
 /** M3's baseline seed: mtrl's baseline is M3's hand-tuned baseline scheme of this seed (generate-themes.ts, BASELINE_SEED). */
@@ -52,8 +58,8 @@ export const builtInThemes: BuiltInTheme[] = themes.map(name => {
   const tokens = themeTokens[name]!;
   const pick = (mode: 'light' | 'dark') => Object.fromEntries(THEME_ROLES.map(role => [role, tokens[mode][role]?.value ?? '']));
   const origin = originFor(name);
-  return {
-    name, label: label(name), roles: { light: pick('light'), dark: pick('dark') },
-    ...(origin ? { origin: { ...origin, text: describe(origin) }, palettes: themeColors(origin).palettes } : {}),
-  };
+  const roles = { light: pick('light'), dark: pick('dark') };
+  if (origin) return { name, label: label(name), roles, origin: { ...origin, text: describe(origin) }, palettes: themeColors(origin).palettes };
+  const handSeed = roles.light.primary!;
+  return { name, label: label(name), roles, handSeed, palettes: themeColors({ source: handSeed, variant: 'tonal-spot', contrast: 0 }).palettes };
 });
