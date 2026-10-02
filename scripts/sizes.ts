@@ -4,11 +4,11 @@
 //
 // - alone: the initial load of a page that uses only this component, with the
 //   base stylesheet. Chunks it loads on demand (the button's progress) are `lazy`.
-// - added: what it adds on top of mtrl's shared core, which a page pays once
-//   whatever it uses: the base stylesheet and mtrl/core, plus for web components
+// - added: what it adds on top of material's shared core, which a page pays once
+//   whatever it uses: the base stylesheet and material/core, plus for web components
 //   defineElement and the shadow ripple styles. It is the core with this component
 //   minus the core alone, so a component another one contains (select contains
-//   textfield and menu) still shows its own cost.
+//   text-field and menu) still shows its own cost.
 //
 // For both flavours: the factory (Vanilla) and the web component (the element,
 // which the React, Vue, Svelte and Solid adapters render).
@@ -20,30 +20,27 @@ import { components } from "../src/shared/components";
 
 const root = resolve(import.meta.dir, "..");
 const work = resolve(root, "dist/sizes");
-const mtrl = resolve(root, "node_modules/mtrl");
+const mtrl = resolve(root, "node_modules/material");
 const slugs = Object.keys(components);
 
 type Flavour = "factory" | "element";
 const pascal = (slug: string): string => slug.replace(/(^|-)(\w)/g, (_, __, c: string) => c.toUpperCase());
-// The element's define function where define+Pascal is not its name: mtrl 1.0 spells
-// the text field's defineTextField.
-const defineNames: Record<string, string> = { textfield: "defineTextField" };
 
 // The import a page writes: the factory's creator, or the element's define function.
 function imports(slug: string, flavour: Flavour, id: string): string {
   if (flavour === "element") {
-    const define = defineNames[slug] ?? `define${pascal(slug)}`;
-    return `import "mtrl/elements/css/${slug}";\nimport { ${define} as ${id} } from "mtrl/elements";\n${id}();\n`;
+    const define = `define${pascal(slug)}`;
+    return `import "material/elements/css/${slug}";\nimport { ${define} as ${id} } from "material/elements";\n${id}();\n`;
   }
   const index = readFileSync(resolve(mtrl, "dist/components", slug, "index.js"), "utf8");
   const creator = /export default|as default\b|export \{ default(?: \}|,)/.test(index) ? `import ${id} from` : `import { create${pascal(slug)} as ${id} } from`;
-  return `import "mtrl/styles/${slug}";\n${creator} "mtrl/components/${slug}";\nglobalThis.${id} = ${id};\n`;
+  return `import "material/styles/${slug}";\n${creator} "material/components/${slug}";\nglobalThis.${id} = ${id};\n`;
 }
 const entry = (list: string[], flavour: Flavour): string =>
-  `import "mtrl/styles/base";\n${list.map((slug, i) => imports(slug, flavour, `c${i}`)).join("")}`;
+  `import "material/styles/base";\n${list.map((slug, i) => imports(slug, flavour, `c${i}`)).join("")}`;
 const core = (flavour: Flavour): string =>
-  `import * as core from "mtrl/core";\nglobalThis.core = core;\n` +
-  (flavour === "element" ? `import "mtrl/elements/css/ripple";\nimport { defineElement } from "mtrl/elements";\nglobalThis.defineElement = defineElement;\n` : "");
+  `import * as core from "material/core";\nglobalThis.core = core;\n` +
+  (flavour === "element" ? `import "material/elements/css/ripple";\nimport { defineElement } from "material/elements";\nglobalThis.defineElement = defineElement;\n` : "");
 
 interface Size { initial: number; lazy: number }
 
@@ -85,7 +82,7 @@ for (const flavour of ["factory", "element"] as const) {
 
 const { version } = JSON.parse(await readFile(resolve(mtrl, "package.json"), "utf8")) as { version: string };
 await mkdir(resolve(root, "data"), { recursive: true });
-await writeFile(resolve(root, "data/sizes.json"), `${JSON.stringify({ mtrl: version, measured: new Date().toISOString().slice(0, 10), gzip: 9, core: shared, components: sizes }, null, 2)}\n`);
+await writeFile(resolve(root, "data/sizes.json"), `${JSON.stringify({ material: version, measured: new Date().toISOString().slice(0, 10), gzip: 9, core: shared, components: sizes }, null, 2)}\n`);
 for (const slug of slugs) {
   const { factory, element } = sizes[slug]!;
   const kb = (n: number): string => `${(n / 1024).toFixed(1)}`;
