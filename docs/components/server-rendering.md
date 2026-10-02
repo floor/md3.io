@@ -91,7 +91,7 @@ then, they give each element the box it will have:
   and takes no room on the page, so it stays hidden until it upgrades, even with `open`.
 
 The colours come from the theme, so the base stylesheet goes in the head too. The rules sit in
-their own cascade layer, `material.preupgrade`, so your CSS wins over them. Load
+their own cascade layer, `mtrl.preupgrade`, so your CSS wins over them. Load
 `material/elements/preupgrade.css` explicitly. The element CSS modules do not apply these rules,
 and an element's own CSS does not include them.
 

@@ -92,7 +92,7 @@ token, a CSS custom property: colour roles (`--mtrl-sys-color-primary`), the typ
   `data-theme-mode` on any element. Most themes are generated from a seed colour with Google's
   colour library, so their roles follow M3's schemes.
 
-The rules sit in CSS cascade layers (`material.base`, `material.button` …), so an app's own styles win
+The rules sit in CSS cascade layers (`mtrl.base`, `mtrl.button` …), so an app's own styles win
 without fighting specificity. [Styles](/styles/) shows every token as `material` ships it.
 
 ## Web components
