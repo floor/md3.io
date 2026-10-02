@@ -2,7 +2,7 @@
 // Theme name field the file is named for. scripts/check-styles.ts runs the same flows in a
 // browser.
 import { describe, expect, test } from 'bun:test';
-import createTextfield from 'mtrl/components/textfield';
+import createTextField from 'mtrl/components/textfield';
 import { layout } from '../src/client/theme-app/config/layout';
 import { FORMAT_ITEMS, nameSupportingText, themeFile } from '../src/client/theme-app/features/withDownload';
 import type { ThemeData } from '../src/client/theme-app/features/withThemeSource';
@@ -41,7 +41,7 @@ describe('theme download', () => {
     const controls = layout({ themes: [{ name: 'desert', label: 'Desert' }], roles: [], selected: 'desert' })
       .find(entry => Array.isArray(entry) && entry[0] === 'controls') as unknown[] | undefined;
     const field = (controls ?? []).find(child => Array.isArray(child) && child[1] === 'name') as unknown[] | undefined;
-    expect(field?.[0]).toBe(createTextfield);
+    expect(field?.[0]).toBe(createTextField);
     expect(field?.[2]).toEqual({ variant: 'outlined', density: 'compact', label: 'Theme name', value: 'custom', supportingText: ' ' });
   });
   test('a refused name says so in the field; any other keeps its row a reserved blank', () => {
