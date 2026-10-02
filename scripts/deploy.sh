@@ -38,10 +38,15 @@ if [ ! -d "@@DIR@@/material" ]; then
   git clone -q "@@LIBRARY_URL@@" "@@DIR@@/material"
 else
   # The configured origin, not an insteadOf rewrite: a renamed checkout still says floor/mtrl.
-  origin=$(git -C "@@DIR@@/material" config --get remote.origin.url)
+  # config --get exits 1 when the remote is missing; say so, instead of ending with no sentence.
+  origin=$(git -C "@@DIR@@/material" config --get remote.origin.url || true)
   # https or ssh, with or without .git. A renamed floor/mtrl checkout is not this.
   case "${origin%.git}" in
     https://github.com/floor/material|git@github.com:floor/material|ssh://git@github.com/floor/material)
+      ;;
+    "")
+      echo "Refusing to deploy: @@DIR@@/material has no origin." >&2
+      exit 1
       ;;
     *)
       echo "Refusing to deploy: @@DIR@@/material origin is $origin, not floor/material." >&2

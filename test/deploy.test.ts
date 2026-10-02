@@ -63,6 +63,20 @@ describe('deploy script', () => {
     }
   });
 
+  test('an existing library checkout with no origin is refused before the site is touched', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, null);
+      const result = runRemote(fixture, { ref: 'main' });
+      expect(result.stderr).toContain('no origin');
+      expect(result.status).toBe(1);
+      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+      expect(revision(material)).toBe(fixture.materialLocal);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
   test('a ref beginning with refs/heads/ is refused', () => {
     const fixture = createDeployFixture();
     try {
