@@ -1,7 +1,111 @@
-/* Layout for the example only: the components bring their own styles. */
-.settings { display: flex; flex-direction: column; gap: 16px; width: min(100%, 420px); }
-.settings__panel { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
-.settings__panel[hidden] { display: none; }
-.settings__panel > * { display: block; width: 100%; }
-.settings__actions { display: flex; justify-content: flex-end; gap: 8px; }
-.settings__status { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
+/* The example's own layout. Components are used as the library draws them: nothing in
+   here restyles a mtrl- class. The first rules are the old screen's, kept while the
+   five framework variants still run it. */
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.settings__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.settings__status {
+  min-height: 1.5em;
+}
+
+/* The settings app (Vanilla, the reference). */
+
+.settings-app {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.settings-app__header h1 {
+  margin: 0;
+}
+
+.settings-app__panes {
+  display: block;
+}
+
+.settings-app__list-pane {
+  display: block;
+}
+
+.settings-app__reset {
+  margin-top: 12px;
+}
+
+.settings-app__detail-pane {
+  display: none;
+  min-width: 0;
+}
+
+.settings-app--detail .settings-app__list-pane {
+  display: none;
+}
+
+.settings-app--detail .settings-app__detail-pane {
+  display: block;
+}
+
+.settings-app__detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+}
+
+.settings-app__detail-title {
+  margin: 0;
+}
+
+.settings-app__group {
+  margin-top: 24px;
+}
+
+.settings-app__group-title {
+  margin: 0 0 8px;
+}
+
+.settings-app__field {
+  margin-bottom: 16px;
+}
+
+.settings-app__field-label {
+  margin: 0 0 8px;
+}
+
+@media (min-width: 720px) {
+  .settings-app .settings-app__panes {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* Both panes stay on a wide screen, whatever the phone state was. */
+  .settings-app--detail .settings-app__list-pane {
+    display: block;
+  }
+
+  .settings-app .settings-app__detail-pane {
+    display: block;
+  }
+
+  .settings-app .settings-app__back {
+    display: none;
+  }
+}

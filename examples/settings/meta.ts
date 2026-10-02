@@ -3,14 +3,15 @@ import type { ExampleMeta } from "../types";
 export default {
   slug: "settings",
   title: "Settings",
-  description: "Tabs, switches and buttons working together, the same screen in every framework.",
-  components: ["tabs", "switch", "button"],
+  description: "A settings app: categories, detail screens of switches, radios and sliders, reset with undo.",
+  components: ["tabs", "switch", "button", "list", "radios", "slider", "dialog", "snackbar"],
   about: [
-    "A settings screen: two tabs, five switches and two buttons. Airplane mode disables Wi-Fi and Bluetooth; Save reads the state back, Reset restores the defaults.",
-    "Every tab above runs the same components. The HTML tab uses the web components directly; React, Vue, Svelte and Solid use the generated adapters around them; Vanilla uses the factories the elements are built on.",
+    "A settings app: five categories as a list, one detail screen per category with switches, radio groups and sliders, a reset that asks first, and a snackbar that can undo it. On a phone the detail replaces the list and Back returns to it; from 720 px the two sit side by side.",
+    "The Vanilla tab is the reference, being written as the first case study. The other five tabs still run the previous small screen (two tabs, five switches, two buttons) until their ports are written; how a partly-ported example declares its variants is an open question with the owner.",
   ],
   how: [
-    "Switch state is live: <code>checked</code> in React and Solid, <code>v-model</code> in Vue, <code>bind:checked</code> in Svelte, the <code>checked</code> property on the element.",
-    "The tabs report the selected value in their <code>change</code> event; the page shows the matching panel.",
+    "Every setting is one row of the fixture in <code>data.ts</code>; its control is built from it, and the whole state is applied back to every control after each change.",
+    "Airplane mode turns Wi-Fi and Bluetooth off and disables them while it is on — the one setting that reaches into others.",
+    "Reset takes a snapshot before resetting, so the snackbar's Undo can restore it; the snackbar closes itself after 10 s.",
   ],
 } satisfies ExampleMeta;
