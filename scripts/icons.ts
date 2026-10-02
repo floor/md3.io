@@ -9,6 +9,8 @@ import { resolve } from 'node:path';
 const names = [
   'account_circle', 'add', 'bookmark', 'check', 'close', 'download', 'edit', 'favorite', 'format_bold', 'format_italic',
   'format_underlined', 'inbox', 'menu', 'send', 'volume_off', 'volume_up',
+  // The carousel remote control (the catalog's playground).
+  'first_page', 'chevron_left', 'chevron_right', 'last_page',
   // The device chooser (src/client/device-frame.ts).
   'smartphone', 'tablet', 'desktop_windows', 'screen_rotation',
   // The Themes app's bar (src/client/theme-app/).
