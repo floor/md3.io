@@ -21,27 +21,25 @@
   min-height: 1.5em;
 }
 
-/* The settings app (Vanilla, the reference). Margins and pane widths are M3's window
-   size class numbers (compact 16, medium+ 24, 50% panes at medium, 360/412 fixed pane at
-   expanded/large); colours and type are the library's tokens and classes. */
+/* The settings app (Vanilla, the reference). The app fills the example frame, so it is
+   the frame's padding (24 px each side, the site's page chrome) that sits outside the
+   numbers below; the app's own box carries M3's window size classes, as container
+   queries on itself: 16 dp margins at compact, 24 dp from medium, a 50% split at
+   medium, a fixed 360 dp list pane at expanded and 412 dp at large. The small top app
+   bar is absolute over the content, so the app leaves its 64 dp open at the top. */
 
 .settings-app {
+  position: relative;          /* the app bar positions itself against the app */
+  container-type: inline-size; /* the size classes read the app's own width */
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-}
-
-.settings-app__header h1 {
-  margin: 0;
+  flex: 1;                     /* fill the frame: no shrink-to-fit, no cap */
+  padding-top: 64px;
 }
 
 .settings-app__panes {
   display: block;
-}
-
-.settings-app__list-pane {
-  display: block;
+  padding: 16px;
 }
 
 .settings-app__reset {
@@ -61,45 +59,33 @@
   display: block;
 }
 
-.settings-app__detail-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 48px; /* the M3 48dp target for the Back button */
-}
-
+/* The single pane's title lives in the app bar; only the two-pane layout shows the
+   pane's own title. */
 .settings-app__detail-title {
-  margin: 0;
+  display: none;
+  margin: 0 0 8px;
 }
 
+/* A group's title, over the list of its switch and radio rows. */
 .settings-app__group {
-  margin-top: 24px;
+  margin: 16px 0 8px;
 }
 
-.settings-app__group-title {
-  margin: 0 0 8px;
-  color: var(--mtrl-sys-color-on-surface-variant);
-}
-
-.settings-app__field {
-  margin-bottom: 16px;
-}
-
-.settings-app__field-label {
-  margin: 0 0 8px;
+/* A slider is a block of its own — the list cannot carry it — inset like the list's rows
+   so its label and track line up with the rows' text. */
+.settings-app__control {
+  margin: 8px 0 16px;
+  padding: 0 16px;
 }
 
 /* Medium and up: two panes, 50% of the width each, 24dp margins and 24dp spacer. */
-@media (min-width: 600px) {
-  .settings-app {
-    padding: 24px;
-  }
-
-  .settings-app .settings-app__panes {
+@container (min-width: 600px) {
+  .settings-app__panes {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
     align-items: start;
+    padding: 24px;
   }
 
   /* Both panes stay on a wide screen, whatever the compact state was. */
@@ -111,21 +97,21 @@
     display: block;
   }
 
-  .settings-app .settings-app__back {
-    display: none;
+  .settings-app__detail-title {
+    display: block;
   }
 }
 
 /* Expanded: the list becomes a fixed pane at its default width. */
-@media (min-width: 840px) {
-  .settings-app .settings-app__panes {
+@container (min-width: 840px) {
+  .settings-app__panes {
     grid-template-columns: 360px minmax(0, 1fr);
   }
 }
 
 /* Large and extra-large: the fixed pane's default width grows. */
-@media (min-width: 1200px) {
-  .settings-app .settings-app__panes {
+@container (min-width: 1200px) {
+  .settings-app__panes {
     grid-template-columns: 412px minmax(0, 1fr);
   }
 }

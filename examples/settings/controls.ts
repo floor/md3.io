@@ -4,9 +4,9 @@
 //
 // Each control is built to sit in the trailing slot of a list item, so it carries no
 // visible label of its own where the row already shows one: the switch and the radios
-// are named by the row's text through ariaLabel. The slider is the exception — the
-// component renders its label and takes the handle's name from the same option, so
-// there the label is the row's only text (see the design note).
+// are named by the row's text through ariaLabel. The slider is the exception: it renders
+// its own label and takes the handle's name from the same option, and the trailing slot
+// is too narrow for it, so it stands in a block of its own instead (see the design note).
 import createRadios from "material/components/radios";
 import createSlider from "material/components/slider";
 import createSwitch from "material/components/switch";
@@ -42,12 +42,14 @@ const buildSwitch = (store: Store, setting: SwitchSetting): Control => {
 
 const buildRadios = (store: Store, setting: RadiosSetting): Control => {
   // The group is named by the row's text through ariaLabel; the options keep their own
-  // visible labels, which is what a radio group needs.
+  // visible labels, which is what a radio group needs. Vertical, as the guidelines have
+  // it: "Radio buttons should be vertically listed" (horizontal lists are a Don't), and
+  // only a stacked group fits a row of a narrow pane.
   const control = createRadios({
     name: `settings-${setting.key}-${++radioGroups}`,
     options: setting.options,
     value: store.get()[setting.key],
-    direction: "horizontal",
+    direction: "vertical",
     ariaLabel: setting.label,
   });
   control.on("change", ({ value }) => {

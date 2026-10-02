@@ -1,13 +1,14 @@
 // What the Settings app must do, once, in a browser: the steps
-// scripts/check-examples.ts runs per variant. Written for the Vanilla reference — the
-// other five variants still run the previous small screen, so this check cannot pass on
-// them until their ports exist (see the design note, section 6).
+// scripts/check-examples.ts runs per variant. Written for the Vanilla reference, which
+// is the only variant this example declares today (`variants: ["vanilla"]`).
 //
-// The window widths are M3's size classes: 390 is compact (one pane), 700 medium (two
+// The window widths are M3's size classes, read on the app's own box (the example frame
+// adds 24 px of page padding around it): 390 is compact (one pane), 700 medium (two
 // panes at 50% each), 1024 expanded (fixed list pane 360 px), 1280 large (412 px).
 //
-// The 10-second snackbar timeout is not waited out here; the Undo path is asserted
-// instead, and the timeout itself belongs to the component's own behaviour.
+// The snackbar is not expected to go away on its own: it has an action, and an
+// actionable snackbar stays until the user acts on it or dismisses it — both are
+// checked, with a wait past the 4-10 s bound that only applies without an action.
 import assert from "node:assert/strict";
 import type { Page } from "playwright";
 
@@ -23,9 +24,10 @@ export default async (page: Page): Promise<void> => {
     return detail.x - (list.x + list.width);
   };
 
-  // 1. Expanded: the first category is open beside the list, its row selected, and the
-  // list is the fixed pane at M3's expanded width.
+  // 1. Expanded: the app bar titles the screen, the first category is open beside the
+  // list with its row selected, and the list is the fixed pane at M3's expanded width.
   await page.setViewportSize({ width: 1024, height: 800 });
+  assert.equal(await page.getByRole("heading", { level: 1, name: "Settings" }).isVisible(), true, "the app bar carries the screen's only h1");
   assert.equal(await row(/Network & internet/).getAttribute("aria-pressed"), "true", "Network & internet is selected on load");
   await page.getByRole("heading", { level: 2, name: "Network & internet" }).waitFor();
   assert.equal(await page.getByRole("switch", { name: "Wi-Fi" }).isChecked(), true, "Wi-Fi starts on");
@@ -33,10 +35,15 @@ export default async (page: Page): Promise<void> => {
   assert.ok(Math.abs((await paneWidth(listPane)) - 360) <= 1, "at expanded the list pane is 360 px");
   assert.ok(Math.abs((await spacer()) - 24) <= 1, "and the spacer is 24 px");
 
+  // The settings are list rows, their controls in the trailing slot.
+  const wifiRow = page.locator('[data-id="wifi"]');
+  assert.equal(await wifiRow.getAttribute("role"), "listitem", "a setting is a list item");
+  assert.equal(await wifiRow.getByRole("switch").count(), 1, "whose control is the trailing switch");
+  assert.equal(await wifiRow.locator(".mtrl-list__headline").textContent(), "Wi-Fi", "and the row's headline names it");
+
   // 2. Medium: two panes, 50% of the window each.
   await page.setViewportSize({ width: 700, height: 800 });
-  const wide = (await paneWidth(listPane));
-  assert.ok(Math.abs(wide - (await paneWidth(detailPane))) <= 1, "at medium the panes are 50% each");
+  assert.ok(Math.abs((await paneWidth(listPane)) - (await paneWidth(detailPane))) <= 1, "at medium the panes are 50% each");
   assert.ok(Math.abs((await spacer()) - 24) <= 1, "with a 24 px spacer");
 
   // 3. Large: the fixed pane grows to its large-breakpoint width.
@@ -50,25 +57,46 @@ export default async (page: Page): Promise<void> => {
   assert.equal(await page.getByRole("heading", { level: 2, name: "Network & internet" }).isVisible(), false, "the previous detail is gone");
   const brightness = page.getByRole("slider", { name: "Brightness" });
   assert.equal(await brightness.getAttribute("aria-valuenow"), "60", "Brightness starts at its default");
+  // A slider cannot be a list row: the trailing slot is content-sized, and a slider there
+  // collapses to its own label. It is a full-width control under its group's heading.
+  assert.equal(await page.locator('[data-id="brightness"]').count(), 0, "the slider is not a list row");
+  assert.equal(await page.getByRole("heading", { level: 3, name: "Screen" }).isVisible(), true, "its group's title is a heading over it");
+  const sliderBlock = page.locator('[data-setting="brightness"]');
+  assert.equal(await sliderBlock.getByRole("slider").count(), 1, "the slider sits in a block of its own");
+  assert.ok((await sliderBlock.boundingBox())!.width > 300, "that spans the pane, not a trailing slot");
+
+  // A radio group is a row's trailing control, stacked vertically: the guidelines say
+  // radio buttons should be vertically listed, and a horizontal group overflows the row.
+  const large = page.getByRole("radio", { name: "Large" });
+  assert.equal(await page.getByRole("radio", { name: "Default" }).isChecked(), true, "Text size starts on its default");
+  await page.getByText("Large", { exact: true }).click(); // the option's label, as a user clicks it
+  assert.equal(await large.isChecked(), true, "and choosing Large takes");
 
   // The slider takes the keyboard and applies at once — no button to press.
   await brightness.focus();
   await page.keyboard.press("ArrowRight");
   assert.equal(await brightness.getAttribute("aria-valuenow"), "61", "ArrowRight moves Brightness by one step");
 
-  // 5. Compact: the detail replaces the list, with no selected state to come back to;
-  // Back returns to the list, focused. Widening again shows both panes.
+  // 5. Compact: the detail replaces the list under the app bar, which takes the
+  // category's title and Back. There is no selected state to come back to; Back returns
+  // to the list, focused; widening reopens the category the user was last in.
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(await row(/Display/).isVisible(), false, "in the single pane the list gives way to the detail");
+  // The pane swap is CSS, but the title comes from the app's matchMedia listener, a tick
+  // later: wait for the bar to take the category's title rather than race it.
+  await page.getByRole("heading", { level: 1, name: "Display" }).waitFor();
+  assert.equal(await page.getByRole("heading", { level: 1, name: "Display" }).isVisible(), true, "the app bar titles the category");
+  assert.equal(await page.getByRole("heading", { level: 2, name: "Display" }).isVisible(), false, "the pane's own title gives way to it");
   await page.getByRole("button", { name: "Back" }).click();
   assert.equal(await row(/Display/).isVisible(), true, "Back returns to the list");
+  assert.equal(await page.getByRole("heading", { level: 1, name: "Settings" }).isVisible(), true, "with the app bar back to the screen's title");
   assert.equal(await row(/Display/).evaluate((el) => el === document.activeElement), true, "focus lands on the row it came from");
   assert.equal(await page.locator('.settings-app__list-pane [aria-pressed="true"]').count(), 0, "and the single pane keeps no selected row");
   await page.setViewportSize({ width: 700, height: 800 });
   // The app reacts to the breakpoint through a media-query listener, so give it the event.
-  await page.getByRole("heading", { level: 2, name: "Network & internet" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Display" }).waitFor();
   assert.equal(await detailPane.isVisible(), true, "widening shows both panes");
-  assert.equal(await row(/Network & internet/).getAttribute("aria-pressed"), "true", "and opens the first category, nothing being selected");
+  assert.equal(await row(/Display/).getAttribute("aria-pressed"), "true", "and reopens the category the user was last in");
 
   // 6. Airplane mode reaches into Wi-Fi and Bluetooth, and only those.
   await row(/Network & internet/).click();
@@ -87,7 +115,7 @@ export default async (page: Page): Promise<void> => {
   assert.equal(await wifi.isEnabled(), true, "turning airplane mode off enables Wi-Fi again");
   assert.equal(await wifi.isChecked(), false, "it stays off");
 
-  // 7. Reset asks first — focus inside the dialog — then resets, then offers the undo.
+  // 7. Reset asks first — focus inside the dialog — then resets and offers the undo.
   await row(/Display/).click();
   const darkTheme = page.getByRole("switch", { name: "Dark theme" });
   await darkTheme.click();
@@ -105,23 +133,38 @@ export default async (page: Page): Promise<void> => {
   await dialog.waitFor();
   await page.getByRole("button", { name: "Reset", exact: true }).click();
   await dialog.waitFor({ state: "hidden" });
-  const snackbar = page.getByText("Settings reset");
+  const snackbar = page.getByRole("status");
   await snackbar.waitFor();
   assert.equal(await darkTheme.isChecked(), false, "Reset puts Dark theme back to its default");
   assert.equal(await brightness.getAttribute("aria-valuenow"), "60", "and Brightness too");
+  // An actionable snackbar does not close itself: the guidelines' 4-10 s bound is for
+  // the ones without an action. Five seconds in, this one is still there.
+  await page.waitForTimeout(5000);
+  assert.equal(await snackbar.isVisible(), true, "the snackbar with its action is still on screen after 5 s");
   await page.getByRole("button", { name: "Undo" }).click();
   await snackbar.waitFor({ state: "hidden" });
   assert.equal(await darkTheme.isChecked(), true, "Undo restores what was there");
   assert.equal(await brightness.getAttribute("aria-valuenow"), "61", "including the Brightness");
   assert.equal(await page.getByRole("heading", { level: 2, name: "Display" }).isVisible(), true, "the open category stays open");
 
-  // 8. A fresh compact load opens on the list, nothing preselected (after the steps above,
-  // so the reload cannot hide a change they were about to assert).
+  // Its close button dismisses it, and the reset stands.
+  await page.getByRole("button", { name: "Reset all settings" }).click();
+  await dialog.waitFor();
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await dialog.waitFor({ state: "hidden" });
+  await snackbar.waitFor();
+  await page.getByRole("button", { name: "Dismiss" }).click();
+  await snackbar.waitFor({ state: "hidden" });
+  assert.equal(await darkTheme.isChecked(), false, "dismissing the snackbar keeps the reset, with no Undo taken");
+
+  // 8. A fresh compact load opens on the list, nothing preselected and no Back (after
+  // the steps above, so the reload cannot hide a change they were about to assert).
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
-  assert.equal(await page.getByRole("heading", { level: 2, name: "Display" }).isVisible(), false, "a compact window opens on the list");
-  assert.equal(await page.getByRole("button", { name: "Back" }).count(), 0, "with no Back button in sight");
+  assert.equal(await page.getByRole("heading", { level: 1, name: "Settings" }).isVisible(), true, "a compact window opens under the app bar's Settings");
+  assert.equal(await page.getByRole("heading", { level: 2, name: "Display" }).isVisible(), false, "with no detail open");
+  assert.equal(await page.getByRole("button", { name: "Back" }).count(), 0, "and no Back button in sight");
 
   await page.setViewportSize(viewport ?? { width: 1280, height: 720 });
 };

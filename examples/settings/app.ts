@@ -71,10 +71,12 @@ export const createSettingsApp = (): HTMLElement => {
   reset.element.classList.add("settings-app__reset");
   listPane.append(reset.element);
 
-  // One detail pane per category, built once, applied on every state change. Each is a
-  // list: the group titles are its subheaders and every setting is a row whose trailing
-  // slot carries its control (switch, radios or slider), so the row supplies the 48 dp
-  // target, the text roles and the states.
+  // One detail pane per category, built once, applied on every state change. A detail is
+  // the category's title, then per group the group's title — a heading in the app's own
+  // markup carrying the library's title-small type role — and the group's settings under
+  // it: a switch or a radio group is a list row with the control in its trailing slot,
+  // the row supplying the 48 dp target, the text roles and the states. A slider is not:
+  // see the block below.
   for (const category of CATEGORIES) {
     const detail = document.createElement("section");
     detail.className = "settings-app__detail";
@@ -86,34 +88,55 @@ export const createSettingsApp = (): HTMLElement => {
     detail.setAttribute("aria-labelledby", heading.id);
     detail.append(heading);
 
-    const items: ListItem[] = [];
     for (const group of category.groups) {
-      items.push({ kind: "subheader", headline: group.title });
+      const groupTitle = document.createElement("h3");
+      groupTitle.className = "settings-app__group mtrl-title-small";
+      groupTitle.textContent = group.title;
+      detail.append(groupTitle);
+
+      let rows: ListItem[] = [];
+      let described: { key: string; control: Control }[] = [];
+      // The rows up to here become one list; a slider breaks the run.
+      const flush = (): void => {
+        if (!rows.length) return;
+        const list = createList({ ariaLabel: `${category.title}, ${group.title}`, trackSelection: false, items: rows });
+        // Describe a control with its row's supporting text, as the list does for its own
+        // action buttons: the text element's id is the list's.
+        for (const { key, control } of described) {
+          const supporting = list.element.querySelector(`[data-id="${key}"] .mtrl-list__supporting`);
+          if (supporting?.id && control.focusable) control.focusable.setAttribute("aria-describedby", supporting.id);
+        }
+        detail.append(list.element);
+        rows = [];
+        described = [];
+      };
+
       for (const setting of group.settings) {
         const control = buildControl(store, setting);
         controls.set(setting.key, control);
-        items.push({
+        if (setting.kind === "slider") {
+          // A slider cannot be a list row: the trailing slot is content-sized and does not
+          // shrink, so a slider put there collapses to the width of its own label. It is a
+          // block of the pane's full width instead, where the component draws its label
+          // above a track that can be dragged — the finding in the note.
+          flush();
+          const block = document.createElement("div");
+          block.className = "settings-app__control";
+          block.dataset.setting = setting.key;
+          block.append(control.element);
+          detail.append(block);
+          continue;
+        }
+        rows.push({
           id: setting.key,
-          // A slider shows its own label above its track and takes the handle's name
-          // from it, so its row adds no text of its own.
-          headline: setting.kind === "slider" ? "" : setting.label,
+          headline: setting.label,
           supportingText: setting.kind === "switch" ? setting.supportingText : undefined,
           trailing: { type: "control", content: control.element },
         });
+        if (setting.kind === "switch" && setting.supportingText) described.push({ key: setting.key, control });
       }
+      flush();
     }
-    const detailList = createList({ ariaLabel: category.title, trackSelection: false, items });
-    // Describe a control with its row's supporting text, as the list does for its own
-    // action buttons: the text element's id is the list's.
-    for (const group of category.groups) {
-      for (const setting of group.settings) {
-        if (setting.kind !== "switch" || !setting.supportingText) continue;
-        const supporting = detailList.element.querySelector(`[data-id="${setting.key}"] .mtrl-list__supporting`);
-        const focusable = controls.get(setting.key)?.focusable;
-        if (supporting?.id && focusable) focusable.setAttribute("aria-describedby", supporting.id);
-      }
-    }
-    detail.append(detailList.element);
     details.set(category.id, detail);
     headings.set(category.id, heading);
     detailPane.append(detail);
