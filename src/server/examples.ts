@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import hljs from 'highlight.js';
 import { root } from './content';
-import { examples, FRAMEWORKS, type ExampleMeta, type FrameworkId } from '../../examples';
+import { examples, FRAMEWORKS, exampleVariantIds, type ExampleMeta, type FrameworkId } from '../../examples';
 
 export { examples, FRAMEWORKS };
 
@@ -22,12 +22,16 @@ export function exampleBySlug(slug: string): ExampleMeta | undefined {
   return examples.find(example => example.slug === slug);
 }
 
-/** Each framework's files, highlighted, and its bundle size. Null before the examples build ran. */
+/** Each framework's files, highlighted, and its bundle size. Null before the examples build ran, or for a stale build. */
 export function exampleVariants(slug: string): ExampleVariant[] | null {
+  const example = exampleBySlug(slug);
+  // A stale folder is one that exists in `dist/` from a previous build, but the example has since been removed or renamed in code.
+  if (!example) return null;
   const path = resolve(root, 'dist/examples', slug, 'sources.json');
   if (!existsSync(path)) return null;
   const built = JSON.parse(readFileSync(path, 'utf8')) as Record<string, Built>;
-  return FRAMEWORKS.filter(({ id }) => built[id]).map(({ id, label }) => ({
+  const ids = exampleVariantIds(example);
+  return FRAMEWORKS.filter(({ id }) => ids.includes(id) && built[id]).map(({ id, label }) => ({
     id, label, gzip: built[id]!.gzip,
     files: built[id]!.files.map(file => ({
       name: file.name, code: file.code,

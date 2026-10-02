@@ -12,7 +12,7 @@ import { gzipSync } from "node:zlib";
 import type { BunPlugin } from "bun";
 import { transformAsync } from "@babel/core";
 import { compile } from "svelte/compiler";
-import { examples, FRAMEWORKS, type FrameworkId } from "../examples";
+import { examples, FRAMEWORKS, type FrameworkId, exampleVariantIds } from "../examples";
 
 const root = resolve(import.meta.dir, "..");
 const outdir = resolve(root, "dist/examples");
@@ -111,7 +111,9 @@ for (const example of examples) {
   const dir = resolve(root, "examples", example.slug);
   const sources: Record<string, { files: { name: string; code: string }[]; gzip: number }> = {};
   await mkdir(resolve(outdir, example.slug), { recursive: true });
+  const ids = exampleVariantIds(example);
   for (const { id, file } of FRAMEWORKS) {
+    if (!ids.includes(id)) continue;
     const result = await Bun.build({
       entrypoints: ["example-entry"],
       target: "browser",

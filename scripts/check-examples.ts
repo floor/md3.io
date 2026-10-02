@@ -3,7 +3,7 @@
 // For each variant it loads the example's frame, takes an accessibility snapshot of
 // the app (roles, names, checked, disabled, selected), runs the example's steps
 // (examples/<slug>/check.ts) and snapshots again. Every framework must match the
-// web components (HTML) exactly, before and after: the tabs of an example are the
+// reference variant exactly, before and after: the tabs of an example are the
 // same interface, not five pages that drift apart.
 //
 //   bun scripts/build.ts && bun scripts/check-examples.ts
@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { chromium, type Page } from "playwright";
 import { handleRequest } from "../server";
-import { examples, FRAMEWORKS } from "../examples";
+import { examples, FRAMEWORKS, exampleVariantIds, exampleReferenceId } from "../examples";
 
 const server = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: handleRequest });
 const browser = await chromium.launch();
@@ -20,8 +20,12 @@ let checks = 0;
 try {
   for (const example of examples) {
     const steps = (await import(resolve(import.meta.dir, "../examples", example.slug, "check.ts"))).default as (page: Page) => Promise<void>;
+    const ids = exampleVariantIds(example);
+    const referenceId = exampleReferenceId(example);
     const reference: Record<string, string> = {};
-    for (const { id, label } of FRAMEWORKS) {
+    const refFramework = FRAMEWORKS.find(f => f.id === referenceId)!;
+
+    async function runVariant(id: string, label: string, isReference: boolean) {
       const page = await browser.newPage();
       const problems: string[] = [];
       page.on("pageerror", (error) => problems.push(error.message));
@@ -36,15 +40,22 @@ try {
       const after = await app.ariaSnapshot();
       await page.close();
       assert.deepEqual(problems, [], `${example.slug}/${label}: no errors or warnings`);
-      if (id === "html") {
+      if (isReference) {
         reference.before = before;
         reference.after = after;
       } else {
-        assert.equal(before, reference.before, `${example.slug}/${label} renders what the web components render`);
-        assert.equal(after, reference.after, `${example.slug}/${label} behaves as the web components do`);
+        assert.equal(before, reference.before, `${example.slug}/${label} renders what ${refFramework.label} renders`);
+        assert.equal(after, reference.after, `${example.slug}/${label} behaves as ${refFramework.label} does`);
       }
       checks++;
       console.log(`  ok ${example.slug}: ${label}`);
+    }
+
+    await runVariant(refFramework.id, refFramework.label, true);
+    for (const f of FRAMEWORKS) {
+      if (ids.includes(f.id) && f.id !== referenceId) {
+        await runVariant(f.id, f.label, false);
+      }
     }
   }
 } finally {
