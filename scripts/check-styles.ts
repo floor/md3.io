@@ -179,7 +179,11 @@ try {
   const themeCss = await (await fetch(`${base}/dist/mtrl/themes/desert.css`)).text();
   const declared = (css: string, role: string) => [...css.slice(0, css.indexOf('[data-theme-mode=dark]')).matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
   const desertPrimary = declared(themeCss, 'primary')!;
-  const darkCss = themeCss.slice(themeCss.indexOf('[data-theme-mode=dark]'));
+  // mtrl's theme CSS is the light block, the dark block, then the contrast levels' blocks
+  // (mtrl 0.10.6), which declare the same roles again: the scheme the card shows by default
+  // is what comes before the first of those.
+  const standard = (css: string) => { const contrast = css.indexOf('[data-theme-contrast'); return contrast < 0 ? css : css.slice(0, contrast); };
+  const darkCss = standard(themeCss).slice(themeCss.indexOf('[data-theme-mode=dark]'));
   const declaredDark = (role: string) => [...darkCss.matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
   const desertDarkPrimary = declaredDark('primary')!;
   assert(desertDarkPrimary && desertDarkPrimary !== desertPrimary, 'desert has its own dark primary');
@@ -320,7 +324,7 @@ try {
   // variant and contrast regenerate the scheme from the theme's seed.
   const roleHex = (css: string, role: string, mode: string) => {
     const at = css.indexOf('[data-theme-mode=dark]');
-    const part = mode === 'light' ? css.slice(0, at) : css.slice(at);
+    const part = mode === 'light' ? css.slice(0, at) : standard(css).slice(at);
     return [...part.matchAll(new RegExp(`--mtrl-sys-color-${role}:\\s*(#[0-9a-f]{6})`, 'gi'))].at(-1)?.[1]?.toLowerCase();
   };
   const tiles = () => page.locator('.md3-scheme-card [data-role]').evaluateAll(elements => Object.fromEntries(elements.map(element => [(element as HTMLElement).dataset.role!, (element as HTMLElement).dataset.hex!])));
