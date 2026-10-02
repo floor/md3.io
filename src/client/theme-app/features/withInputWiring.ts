@@ -6,6 +6,8 @@ export const withInputWiring = () => (app: App) => {
   ui.theme.on('change', (event: { value: string }) => source.select(event.value));
   ui.variant.on('change', (event: { value: string }) => app.variant.setVariant(event.value));
   ui.contrast.on('change', (event: { values: string[] }) => { if (event.values[0] !== undefined) app.variant.setContrast(Number(event.values[0])); });
+  // The downloaded file's name, typed in the field: it names no scheme, so it stays in the state.
+  ui.name.on('input', (event: { value: string }) => app.state.set('name', event.value));
   const onShare = () => copy.link();
   const onCopy = ({ hex, role }: { hex: string; role: string }) => copy.hex(hex, role);
   ui.scheme.on('copy', onCopy);

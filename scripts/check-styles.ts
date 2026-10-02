@@ -172,7 +172,8 @@ try {
   // Themes: the app. mtrl's select picks a theme and the Scheme card shows the hex
   // mtrl's CSS has, ?theme=<name> follows and opens it again, a tile copies its hex with
   // mtrl's snackbar, a theme without a seed says why it has no palettes, ten switches
-  // leave the listener count flat, a switch paints within a frame, and a phone does not
+  // leave the listener count flat, a switch paints within a frame, the Theme name field
+  // names the download (a built-in theme's name refused, saying so), and a phone does not
   // scroll sideways.
   console.log('Checking /styles/themes/');
   await page.goto(`${base}/styles/themes/`);
@@ -318,6 +319,20 @@ try {
   const tokens = JSON.parse(json.text);
   assert(json.name === 'mtrl-theme-custom.json' && tokens.name === 'custom' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON is named like the file, and has the seed, the variant and every role');
   console.log(`Download: ${cssFile.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
+  // The Theme name field: the typed name names the file and its selector; a built-in
+  // theme's name is refused, says so in the field, and the download stays custom.
+  const nameField = page.locator('.theme-app__controls > .mtrl-textfield:not(.mtrl-select)');
+  const nameInput = page.getByLabel('Theme name', { exact: true });
+  assert(await nameField.count() === 1 && await nameInput.count() === 1, 'The controls hold the labelled Theme name field');
+  assert(await nameInput.inputValue() === 'custom', `The Theme name field starts on custom: ${await nameInput.inputValue()}`);
+  await nameInput.fill('my theme');
+  const namedCss = await downloadAs('CSS');
+  assert(namedCss.name === 'mtrl-theme-my-theme.css' && namedCss.text.includes('[data-theme="my-theme"]'), `The typed name names the file and its selector: ${namedCss.name}`);
+  await nameInput.fill('desert');
+  await until(() => nameField.locator('.mtrl-textfield__helper').textContent().then(text => text?.trim()), "That is a built-in theme's name", 'A built-in theme\'s name is refused, and the field says so');
+  const refusedCss = await downloadAs('CSS');
+  assert(refusedCss.name === 'mtrl-theme-custom.css' && refusedCss.text.includes('[data-theme="custom"]'), `A refused name keeps the download on custom: ${refusedCss.name}`);
+  await nameInput.fill('');
 
   // The axes: the theme select lists themes (seeds), not mtrl's variant themes; the
   // variant and contrast regenerate the scheme from the theme's seed.
@@ -484,7 +499,7 @@ try {
     }
   }
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
-  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
+  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, the Theme name field, destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
   await browser.close();
   server?.stop();

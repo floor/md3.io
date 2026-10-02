@@ -1,7 +1,10 @@
-// The Themes app's download, unit-tested: the menu's items and the files it writes.
-// scripts/check-styles.ts runs the same flows in a browser.
+// The Themes app's download, unit-tested: the menu's items, the files it writes and the
+// Theme name field the file is named for. scripts/check-styles.ts runs the same flows in a
+// browser.
 import { describe, expect, test } from 'bun:test';
-import { FORMAT_ITEMS, themeFile } from '../src/client/theme-app/features/withDownload';
+import createTextfield from 'mtrl/components/textfield';
+import { layout } from '../src/client/theme-app/config/layout';
+import { FORMAT_ITEMS, nameSupportingText, themeFile } from '../src/client/theme-app/features/withDownload';
 import type { ThemeData } from '../src/client/theme-app/features/withThemeSource';
 import { THEME_ROLES } from '../src/shared/theme-engine';
 
@@ -33,6 +36,19 @@ describe('theme download', () => {
   test('a built-in theme\'s name is refused: the file falls back to custom', () => {
     expect(themeFile('css', desert, ROLES, 'desert').name).toBe('mtrl-theme-custom.css');
     expect(themeFile('json', desert, ROLES, 'Desert').text).toContain('"name": "custom"');
+  });
+  test('the controls hold the Theme name field: outlined, compact, on custom, its supporting row reserved', () => {
+    const controls = layout({ themes: [{ name: 'desert', label: 'Desert' }], roles: [], selected: 'desert' })
+      .find(entry => Array.isArray(entry) && entry[0] === 'controls') as unknown[] | undefined;
+    const field = (controls ?? []).find(child => Array.isArray(child) && child[1] === 'name') as unknown[] | undefined;
+    expect(field?.[0]).toBe(createTextfield);
+    expect(field?.[2]).toEqual({ variant: 'outlined', density: 'compact', label: 'Theme name', value: 'custom', supportingText: ' ' });
+  });
+  test('a refused name says so in the field; any other keeps its row a reserved blank', () => {
+    expect(nameSupportingText('desert')).toBe("That is a built-in theme's name");
+    expect(nameSupportingText('My Theme')).toBe(' ');
+    expect(nameSupportingText('')).toBe(' ');
+    expect(nameSupportingText(undefined)).toBe(' ');
   });
   test('the CSS header says what the theme was generated from: seed, variant and contrast', () => {
     const css = themeFile('css', desert, ROLES, 'custom');

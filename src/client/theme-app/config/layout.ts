@@ -4,6 +4,7 @@
 // app's (scheme-card.ts, palette-strip.ts).
 import createTopAppBar from 'mtrl/components/top-app-bar';
 import createSelect from 'mtrl/components/select';
+import createTextfield from 'mtrl/components/textfield';
 import createIconButton from 'mtrl/components/icon-button';
 import createButtonGroup from 'mtrl/components/button-group';
 import { createSchemeCard } from '../scheme-card';
@@ -47,6 +48,9 @@ export const layout = ({ themes, roles, selected }: LayoutData): unknown[] => [
       kind: 'connected', selection: 'single', required: true, size: 's', variant: 'outlined', ariaLabel: 'Contrast',
       buttons: CONTRASTS.map(([value, , label], i) => ({ value: String(value), icon: CONTRAST_ICONS[i], ariaLabel: label, selected: value === 0 })),
     }],
+    // The downloaded file's name: `custom` until typed; a built-in theme's name is refused.
+    // The supporting row is reserved from the start, as the variant select's is.
+    [createTextfield, 'name', { variant: 'outlined', density: 'compact', label: 'Theme name', value: 'custom', supportingText: ' ' }],
   ],
   ['content', { tag: 'div', class: 'theme-app__content' },
     [createSchemeCard, 'scheme', { roles }],
