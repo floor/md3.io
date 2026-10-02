@@ -196,8 +196,8 @@ The modals use `showModal()`, so the page outside is inert. A menu's `anchor` an
 
 Each element styles its own shadow root, and the first render of many elements costs more than
 the same factories in the page. Measured on `material` 3.0.0-next.0 in Chromium 153, 1,000 text
-fields mount in about 300 ms as elements against about 150 ms as factories; with the CPU slowed
-four times, in about 1.7 s against about 0.7 s. These are medians of 15 runs.
+fields mount in about 290 ms as elements against about 150 ms as factories; with the CPU slowed
+four times, in about 1.4 s against about 0.63 s. These are medians of 15 runs.
 
 A form or a page has far fewer. For hundreds of instances created at once, a long
 editable table for example, use the [Vanilla](../vanilla/) factories there; they mix with the
