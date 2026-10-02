@@ -1,6 +1,8 @@
 // The carousel playground's photos: Lorem Picsum, curated with titles and places for
 // vlist.io's carousel demo (vlist.io src/data/carousel.js), twenty-four per layout.
-// Lorem Picsum, https://picsum.photos, says "Images from Unsplash" (https://unsplash.com); the service states no licence on https://picsum.photos, read 2026-10-02. The images are loaded from that service at view time, not stored in this repository.
+// Lorem Picsum (https://picsum.photos, read 2026-10-02) says "Images from Unsplash" and states no licence of its own.
+// The Unsplash licence (https://unsplash.com/license, read 2026-10-02): "All images can be downloaded and used for free", for "Commercial and non-commercial purposes", and "No permission needed (though attribution is appreciated!)".
+// "This license does not include the right to compile images from Unsplash to replicate a similar or competing service." The images are loaded from that service at view time, not stored in this repository.
 export type CarouselVariant = 'multi-browse' | 'uncontained' | 'hero' | 'hero-center' | 'full-screen';
 export interface CarouselPhoto { id: number; title: string; location: string }
 
