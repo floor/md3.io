@@ -86,8 +86,8 @@ export const createSettingsApp = (): SettingsApp => {
   const { details, destroy: destroyDetails } = buildDetails(store, controls, detailPane);
 
   // The dialog is mounted in the app's own element (its documented `container`), so it
-  // sits in the app's subtree: "Dark theme" then carries it along, and the scrim covers
-  // the app rather than the page around it.
+  // sits in the app's subtree and takes the app's theme ("Dark theme" carries it along);
+  // its scrim is a fixed overlay, so it covers the page, not the app's box.
   const dialog = createDialog({
     container: root,
     title: "Reset all settings?",

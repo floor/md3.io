@@ -150,8 +150,9 @@ export default async (page: Page): Promise<void> => {
   assert.equal(await darkTheme.isChecked(), true, "Cancel changes nothing");
 
   // Rule 6's other two ways out: Escape, and a click on the scrim — neither changing
-  // anything. The dialog is mounted in the app's own element (its `container`), so the
-  // overlay covers the app's box; the click goes beside the surface, inside that box.
+  // anything. The dialog sits in the app's subtree (its `container`), so it takes the
+  // app's theme, but its scrim is a fixed overlay covering the page; the click goes
+  // beside the surface, on that scrim.
   await page.getByRole("button", { name: "Reset all settings" }).click();
   await dialog.waitFor();
   await page.keyboard.press("Escape");
