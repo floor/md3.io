@@ -72,7 +72,6 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `showOnHover` / `showOnFocus` | `boolean` | `true` | Whether the pointer, and focus, show it |
 | `layer` | `'top'` | `undefined` | Shows it in the top layer, after its target in the target's tree |
 | `zIndex` | `number` | `undefined` | Its z-index, outside the top layer |
-| `rich` | `boolean` | `false` | Deprecated, never applied: use `variant: 'rich'`; the text is always text |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 

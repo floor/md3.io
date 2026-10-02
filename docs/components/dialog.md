@@ -126,7 +126,6 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `autofocus` | `boolean` | `false` | Focuses it when the dialog opens |
 | `attributes` | `Record<string, unknown>` | `undefined` | More of the [button's options](/docs/components/button/) |
 | `size` | `string` | `undefined` | The button's size |
-| `color` | `string` | `undefined` | Deprecated, never applied: the button has no colour option |
 
 ### Methods
 

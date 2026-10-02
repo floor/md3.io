@@ -113,7 +113,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `disabled` | `boolean` | `false` | Disables the whole group |
 | `equalWidth` | `boolean` | `false` | Gives every button the same width |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
+| `rippleConfig` | `{ duration? }` | `undefined` | How long, in ms, a released wave lingers before it is removed |
 | `ariaLabel` | `string` | `'Button group'` | Accessible name of the group |
 | `class` | `string` | `undefined` | Extra classes on the container |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |

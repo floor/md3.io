@@ -103,6 +103,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `autocomplete` | `string` | `undefined` | The input's `autocomplete` token |
 | `leadingIcon` | `string` | `undefined` | HTML, usually an SVG, before the input |
 | `trailingIcon` | `string` | `undefined` | HTML after the input |
+| `trailingIconLabel` | `string` | `undefined` | Makes the trailing icon a button with this accessible name, emitting `trailing` when activated; without it the icon is decorative |
 | `prefixText` | `string` | `undefined` | Static text before the value |
 | `suffixText` | `string` | `undefined` | Static text after the value |
 | `supportingText` | `string` | `undefined` | Helper text under the field |
@@ -143,7 +144,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
 | `setLeadingIcon(html)` / `removeLeadingIcon()` | `html: string` | `TextFieldComponent` | The leading icon |
-| `setTrailingIcon(html)` / `removeTrailingIcon()` | `html: string` | `TextFieldComponent` | The trailing icon |
+| `setTrailingIcon(html, label?)` / `removeTrailingIcon()` | `html: string, label?: string` | `TextFieldComponent` | The trailing icon; `label` makes it a button with that accessible name |
 | `setPrefixText(text)` / `removePrefixText()` | `text: string` | `TextFieldComponent` | The prefix text |
 | `setSuffixText(text)` / `removeSuffixText()` | `text: string` | `TextFieldComponent` | The suffix text |
 | `updatePositions()` | none | `TextFieldComponent` | Recomputes the label and input padding, after you change the surroundings yourself; the setters above do it |
