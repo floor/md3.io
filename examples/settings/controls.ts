@@ -7,7 +7,7 @@
 // row's text through ariaLabel — the naming the docs put on the app ("a trailing control
 // is the app's to name", list.md). The row's supporting text stays the row's text: a
 // switch row today has a name and no description, because the list exposes no public
-// handle on its supporting element (FLO-590) and the switch's own `supportingText`
+// handle on its supporting element and the switch's own `supportingText`
 // renders a visible helper under the control, which would print the row's text twice.
 // The slider is the exception: it renders its own label and takes the handle's name from
 // the same option, and the trailing slot is too narrow for it, so it stands in a block

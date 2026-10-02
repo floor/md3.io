@@ -8,7 +8,7 @@ export default {
   components: ["top-app-bar", "icon-button", "list", "switch", "slider", "button", "dialog", "snackbar"],
   about: [
     "A settings app: five categories as a list, one detail screen per category whose rows carry a switch or a slider, a reset that asks first, and a snackbar that can undo it. On a phone the detail replaces the list under a small top app bar with Back; from a 648 px window the two panes sit side by side.",
-    "Two single-choice screens — Network &amp; internet's network type and Display's text size — are not built yet: the list cannot yet hold one radio per row with the row selecting it (FLO-581).",
+    "Two single-choice screens — Network &amp; internet's network type and Display's text size — are not built yet: the list cannot yet hold one radio per row with the row selecting it.",
     "The Vanilla tab is the reference, being written as the first case study. The five other variant files still hold the previous small screen (two tabs, five switches, two buttons); with variants declared they are no longer built or shown, and what happens to them is one of the owner's open questions.",
   ],
   how: [
