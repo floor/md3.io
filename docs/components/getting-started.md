@@ -35,10 +35,10 @@ The web components are built on the factories, and the framework components rend
 components, so they all look and behave alike.
 
 Each web component styles its own shadow root, which costs more on a first render than the same
-component as a factory: 1,000 text fields take about twice as long to style (roughly 300 ms
-against 150 ms on a slow phone's CPU), comparable to Material Web's. That is invisible for a form
-or a page, but for hundreds of instances at once, such as a long editable table, the Vanilla
-factories are the faster choice. See [Web Components](../web-components/#many-instances).
+component as a factory: 1,000 text fields mount in about 290 ms as elements against about
+150 ms as factories, and with the CPU slowed four times in about 1.4 s against about 0.63 s
+(`material` 3.0.0-next.0, Chromium 153, medians of 15 runs). A form or a page has far fewer. For hundreds of instances at once, such as a long editable table, use the Vanilla
+factories. See [Web Components](../web-components/#many-instances).
 
 ## Add the styles
 

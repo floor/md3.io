@@ -92,7 +92,8 @@ then, they give each element the box it will have:
 
 The colours come from the theme, so the base stylesheet goes in the head too. The rules sit in
 their own cascade layer, `mtrl.preupgrade`, so your CSS wins over them. Load
-`material/elements/preupgrade.css` explicitly: an element's own CSS does not include them.
+`material/elements/preupgrade.css` explicitly. The element CSS modules do not apply these rules,
+and an element's own CSS does not include them.
 
 mtrl measures this in CI: every element, in its common configurations, and a React server
 render must shift the layout by less than 0.01 (the Cumulative Layout Shift score) between the
