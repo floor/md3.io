@@ -9,7 +9,7 @@ status: published
 A button group is a row, or a column, of buttons that belong together: a formatting toolbar, a
 set of views, a unit picker. **Standard** groups space their buttons apart, each its own
 control; **connected** groups join them into one, and are what M3 Expressive uses in place of
-the [segmented button](/docs/components/segmented-button/). See the
+the segmented button. See the
 [M3 button groups guidelines](https://m3.material.io/components/button-groups/overview).
 
 ## Usage
@@ -113,7 +113,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `disabled` | `boolean` | `false` | Disables the whole group |
 | `equalWidth` | `boolean` | `false` | Gives every button the same width |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
+| `rippleConfig` | `{ duration? }` | `undefined` | How long, in ms, a released wave lingers before it is removed |
 | `ariaLabel` | `string` | `'Button group'` | Accessible name of the group |
 | `class` | `string` | `undefined` | Extra classes on the container |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |

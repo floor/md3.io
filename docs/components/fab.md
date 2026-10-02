@@ -68,14 +68,14 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|------|---------|-------------|
 | `icon` | `string` | `undefined` | Icon as an HTML string, usually an SVG |
 | `ariaLabel` | `string` | required | Accessible name |
-| `variant` | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary' \| 'surface'` | `'primary-container'` | Color style; `surface` is deprecated |
-| `size` | `'small' \| 'default' \| 'medium' \| 'large'` | `'default'` | Container, icon and corner; `small` is deprecated |
+| `variant` | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary'` | `'primary-container'` | Color style |
+| `size` | `'default' \| 'medium' \| 'large'` | `'default'` | Container, icon and corner |
 | `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `undefined` | Fixes the FAB to a corner of the viewport |
 | `disabled` | `boolean` | `false` | Creates it disabled |
 | `iconSize` | `string` | `undefined` | Adds an `mtrl-icon--<value>` class to the icon, for your own CSS; the stylesheet has no rules for it |
 | `animate` | `boolean` | `false` | Scales the FAB in when it is added to the page |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
+| `rippleConfig` | `{ duration? }` | `undefined` | How long, in ms, a released wave lingers before it is removed |
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The button's `type` attribute |
 | `value` | `string` | `undefined` | The button's `value` attribute, for forms |
 | `class` | `string` | `undefined` | Extra classes on the element |
@@ -128,8 +128,8 @@ the state layer takes the icon color.
 ```css
 .mtrl-fab { }
 .mtrl-fab--primary-container, .mtrl-fab--secondary-container, .mtrl-fab--tertiary-container { }
-.mtrl-fab--primary, .mtrl-fab--secondary, .mtrl-fab--tertiary, .mtrl-fab--surface { }
-.mtrl-fab--small, .mtrl-fab--default, .mtrl-fab--medium, .mtrl-fab--large { }
+.mtrl-fab--primary, .mtrl-fab--secondary, .mtrl-fab--tertiary { }
+.mtrl-fab--default, .mtrl-fab--medium, .mtrl-fab--large { }
 .mtrl-fab--lowered, .mtrl-fab--disabled, .mtrl-fab--animate-enter { }
 .mtrl-fab--top-left, .mtrl-fab--top-right, .mtrl-fab--bottom-left, .mtrl-fab--bottom-right { }
 .mtrl-fab__icon { }

@@ -241,7 +241,7 @@ function create(state: ComponentState) {
     case 'radios': {
       const control = createRadios(components.radios.config(state));
       control.element.setAttribute('aria-label', 'Delivery method');
-      control.on('change', () => { sync({ value: control.getValue() }); message(`Selected: ${control.getSelected()?.label}`); });
+      control.on('change', () => { sync({ value: control.getValue() ?? '' }); message(`Selected: ${control.getSelected()?.label}`); });
       return control;
     }
     case 'chips': {
@@ -377,9 +377,7 @@ function create(state: ComponentState) {
     case 'icon-button': {
       const button = createIconButton(components['icon-button'].config(state));
       button.on('click', clicked);
-      button.element.addEventListener('toggle', event => {
-        if (!(event instanceof CustomEvent) || typeof event.detail?.selected !== 'boolean') return;
-        const selected: boolean = event.detail.selected;
+      button.on('change', ({ selected }) => {
         if (current) current.selected = selected;
         post({ type: 'md3:selected', selected });
         message(selected ? 'Icon button selected' : 'Icon button deselected');

@@ -79,7 +79,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 |--------|------|---------|-------------|
 | `text` | `string` | `undefined` | The label |
 | `icon` | `string` | `undefined` | Icon as an HTML string, usually an SVG |
-| `variant` | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary' \| 'surface'` | `'primary-container'` | Color style; `surface` is deprecated |
+| `variant` | `'primary-container' \| 'secondary-container' \| 'tertiary-container' \| 'primary' \| 'secondary' \| 'tertiary'` | `'primary-container'` | Color style |
 | `size` | `'small' \| 'medium' \| 'large'` | `'small'` | Height, icon, spacing and label type style |
 | `width` | `'fixed' \| 'fluid'` | `'fixed'` | Sized by its content, or by its container |
 | `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `undefined` | Fixes it to a corner of the viewport |
@@ -90,7 +90,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `iconSize` | `string` | `undefined` | Adds an `mtrl-icon--<value>` class to the icon, for your own CSS; the stylesheet has no rules for it |
 | `animate` | `boolean` | `false` | Scales it in when it is added to the page |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
-| `rippleConfig` | `{ duration?, timing?, opacity? }` | `undefined` | Only `duration` applies: how long, in ms, a released wave lingers before it is removed. `timing` and `opacity` are accepted and not applied |
+| `rippleConfig` | `{ duration? }` | `undefined` | How long, in ms, a released wave lingers before it is removed |
 | `type` | `'button' \| 'submit' \| 'reset'` | `'button'` | The button's `type` attribute |
 | `value` | `string` | `undefined` | The button's `value` attribute, for forms |
 | `class` | `string` | `undefined` | Extra classes on the element |
@@ -145,7 +145,7 @@ Colors are the theme's roles, as on the FAB; the state layer takes the label col
 .mtrl-extended-fab { }
 .mtrl-extended-fab--primary-container, .mtrl-extended-fab--secondary-container,
 .mtrl-extended-fab--tertiary-container, .mtrl-extended-fab--primary,
-.mtrl-extended-fab--secondary, .mtrl-extended-fab--tertiary, .mtrl-extended-fab--surface { }
+.mtrl-extended-fab--secondary, .mtrl-extended-fab--tertiary { }
 .mtrl-extended-fab--small, .mtrl-extended-fab--medium, .mtrl-extended-fab--large { }
 .mtrl-extended-fab--fixed, .mtrl-extended-fab--fluid, .mtrl-extended-fab--icon-end { }
 .mtrl-extended-fab--collapsed, .mtrl-extended-fab--collapsible { }
