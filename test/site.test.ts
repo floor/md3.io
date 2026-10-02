@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
-import { docGroups, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
+import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
 import { symbolByFile } from '../src/shared/icons';
@@ -36,13 +36,29 @@ describe('site routes and documentation', () => {
     expect(document.html).toContain('/docs/components/menu/');
     for (const heading of document.toc) expect(document.html).toContain(`id="${heading.id}"`);
   });
+  test('installSpecifier names the next dist-tag for a prerelease', () => {
+    expect(installSpecifier('3.0.0-next.0')).toBe('material@next');
+    expect(installSpecifier('3.0.0')).toBe('material');
+    expect(installSpecifier('3.1.0-next.2')).toBe('material@next');
+  });
   test('an install block gives the command of each package manager, npm first', () => {
     const html = renderDocument('getting-started')!.html;
     const text = html.replace(/<[^>]+>/g, '');
-    for (const { command } of PACKAGE_MANAGERS) expect(text).toContain(`${command} material`);
+    const specifier = installSpecifier(JSON.parse(readFileSync('node_modules/material/package.json', 'utf8')).version as string);
+    for (const { command } of PACKAGE_MANAGERS) expect(text).toContain(`${command} ${specifier}`);
     expect([...html.matchAll(/class="doc-install__option" data-package-manager="(\w+)" aria-pressed="(\w+)"/g)].map(m => [m[1], m[2]]))
       .toEqual([['bun', 'true'], ['npm', 'false'], ['pnpm', 'false'], ['yarn', 'false']]);
     expect(html).not.toContain('language-install');
+  });
+  test('the homepage and getting started install the specifier for the installed version', async () => {
+    const specifier = installSpecifier(JSON.parse(readFileSync('node_modules/material/package.json', 'utf8')).version as string);
+    const visible = (html: string) => html.replace(/<[^>]+>/g, '');
+    const home = visible(await (await get('/')).text());
+    const started = visible(renderDocument('getting-started')!.html);
+    for (const { command } of PACKAGE_MANAGERS) {
+      expect(home).toContain(`${command} ${specifier}`);
+      expect(started).toContain(`${command} ${specifier}`);
+    }
   });
 
   test('unknown documents and private paths are not served', async () => {
