@@ -2,18 +2,30 @@
 import type { App } from '../core/foundation';
 
 export const withInputWiring = () => (app: App) => {
-  const { ui, source, copy, state } = app;
+  const { ui, source, copy, image, element } = app;
   ui.theme.on('change', (event: { value: string }) => source.select(event.value));
-  const onMode = () => source.setMode(state.get('mode') === 'dark' ? 'light' : 'dark');
+  ui.variant.on('change', (event: { value: string }) => app.variant.setVariant(event.value));
+  ui.contrast.on('change', (event: { values: string[] }) => { if (event.values[0] !== undefined) app.variant.setContrast(Number(event.values[0])); });
   const onShare = () => copy.link();
-  ui.mode.element.addEventListener('click', onMode);
-  ui.share.element.addEventListener('click', onShare);
   const onCopy = ({ hex, role }: { hex: string; role: string }) => copy.hex(hex, role);
-  ui.light.on('copy', onCopy);
-  ui.dark.on('copy', onCopy);
-  app.teardown.add(() => {
-    ui.mode.element.removeEventListener('click', onMode);
-    ui.share.element.removeEventListener('click', onShare);
-  });
+  ui.scheme.on('copy', onCopy);
+  // An image: from the picker, or dropped anywhere on the app.
+  const onPick = () => ui.file.click();
+  const onFile = () => { const file = ui.file.files?.[0]; ui.file.value = ''; if (file) image.load(file); };
+  const onDragOver = (event: DragEvent) => { if (event.dataTransfer?.types.includes('Files')) { event.preventDefault(); element.dataset.dropping = ''; } };
+  const onDragLeave = (event: DragEvent) => { if (!element.contains(event.relatedTarget as Node)) delete element.dataset.dropping; };
+  const onDrop = (event: DragEvent) => {
+    const file = event.dataTransfer?.files[0];
+    delete element.dataset.dropping;
+    if (!file) return;
+    event.preventDefault();
+    image.load(file);
+  };
+  const listeners: [EventTarget, string, EventListener][] = [
+    [ui.share.element, 'click', onShare], [ui.image.element, 'click', onPick], [ui.file, 'change', onFile],
+    [element, 'dragover', onDragOver as EventListener], [element, 'dragleave', onDragLeave as EventListener], [element, 'drop', onDrop as EventListener],
+  ];
+  for (const [target, type, listener] of listeners) target.addEventListener(type, listener);
+  app.teardown.add(() => { for (const [target, type, listener] of listeners) target.removeEventListener(type, listener); });
   return app;
 };

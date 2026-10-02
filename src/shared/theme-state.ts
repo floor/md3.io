@@ -148,3 +148,61 @@ export function toCss(state: ThemeState, base: ThemeBase): string {
   lines.push('', blocks.length ? `:root {\n${blocks.join('\n\n')}\n}` : '/* No overrides yet: the base theme as mtrl ships it. */', '');
   return lines.join('\n');
 }
+
+// ─── Colour theme files ─────────────────────────────────────────────
+// A colour theme as files, in mtrl's own shapes: the Themes app's download writes
+// them, and the colour section's export will. `tokens` are mtrl's schemeToTokens output.
+
+export interface ColorThemeFile {
+  /** The theme's name: its data-theme. */
+  name: string;
+  tokens: { light: Record<string, string>; dark: Record<string, string> };
+  /** What it was made from, when it was made from a seed. */
+  origin?: { seed: string; variant: string; contrast: number; secondary?: string };
+  /** One line on where it comes from. */
+  note: string;
+}
+const lines = (tokens: Record<string, string>, indent: string) => Object.entries(tokens).map(([property, value]) => `${indent}${property}: ${value};`).join('\n');
+
+/** CSS: light on [data-theme="name"], dark with data-theme-mode="dark", as mtrl's themes are. */
+export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string => [
+  `/* mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
+  ' *',
+  ' * Load mtrl\'s base styles, then this file, and name the theme on <html> (or any element):',
+  ' *   import \'mtrl/styles/base\';',
+  ` *   import './mtrl-theme-${name}.css';`,
+  ` *   <html data-theme="${name}" data-theme-mode="light">`,
+  ' */',
+  `[data-theme="${name}"] {\n${lines(tokens.light, '  ')}\n}`,
+  '',
+  `[data-theme="${name}"][data-theme-mode="dark"] {\n${lines(tokens.dark, '  ')}\n}`,
+  '',
+].join('\n');
+
+/** SCSS: mtrl's create-theme form (src/styles/themes), with its status colours. */
+export const colorThemeScss = ({ name, tokens, note }: ColorThemeFile): string => {
+  const scss = (mode: Record<string, string>) => Object.fromEntries(Object.entries(mode).map(([property, value]) => [property.replace(/^--mtrl-/, '--#{$prefix}-'), value]));
+  return [
+    `// mtrl theme "${name}", from md3.io/styles/themes/: ${note}`,
+    '// In mtrl\'s create-theme form, as its own themes are written (mtrl/src/styles/themes).',
+    '@use "mtrl/src/styles/abstract/base" as *;',
+    '@use "mtrl/src/styles/themes/base-theme" as *;',
+    '',
+    `@include create-theme("${name}") {`,
+    '    @include status-colors-light();',
+    lines(scss(tokens.light), '    '),
+    '',
+    '    &[data-theme-mode="dark"] {',
+    '        @include status-colors-dark();',
+    lines(scss(tokens.dark), '        '),
+    '    }',
+    '}',
+    '',
+  ].join('\n');
+};
+
+/** JSON: design tokens (role → colour, light and dark), with what the theme was made from. */
+export const colorThemeJson = ({ name, tokens, origin, note }: ColorThemeFile): string => {
+  const roles = (mode: Record<string, string>) => Object.fromEntries(Object.entries(mode).map(([property, value]) => [property.replace(/^--mtrl-sys-color-/, ''), { $type: 'color', $value: value }]));
+  return `${JSON.stringify({ $description: `mtrl theme "${name}", from md3.io/styles/themes/: ${note}`, name, ...(origin ? { seed: origin.seed, variant: origin.variant, contrast: origin.contrast, ...(origin.secondary ? { secondary: origin.secondary } : {}) } : {}), light: roles(tokens.light), dark: roles(tokens.dark) }, null, 2)}\n`;
+};

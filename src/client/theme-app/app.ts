@@ -1,4 +1,4 @@
-// The Themes app: mtrl's built-in themes as Material Theme Builder's scheme cards and
+// The Themes app: mtrl's built-in themes as Material Theme Builder's scheme card and
 // tonal palettes. Built the mtrl way, a pipe of small features, each
 // `(config?) => (app) => ({ ...app, ns })`, with no `this`:
 //   foundation (state, UI from config/layout.ts) → the theme and what paints it →
@@ -7,10 +7,13 @@
 import { pipe } from 'mtrl/core/compose';
 import { withState, withUI } from './core/foundation';
 import { layout } from './config/layout';
-import { withThemeSource, type ThemeData } from './features/withThemeSource';
+import { isVariantTheme, withThemeSource, type ThemeData } from './features/withThemeSource';
+import { withVariant } from './features/withVariant';
 import { withScheme } from './features/withScheme';
 import { withPalettes } from './features/withPalettes';
 import { withCopy } from './features/withCopy';
+import { withImage } from './features/withImage';
+import { withDownload } from './features/withDownload';
 import { withInputWiring } from './features/withInputWiring';
 import { withReactionWiring } from './features/withReactionWiring';
 import { withSetup } from './features/withSetup';
@@ -27,13 +30,17 @@ export interface ThemeAppOptions {
 export const createThemeApp = (options: ThemeAppOptions) => {
   return pipe(
     // Foundation. Theme and mode persist through the Styles store (withThemeSource).
-    withState({ theme: null, mode: null }),
-    withUI(layout(options), options.container),
+    withState({ theme: null, mode: null, variant: null, contrast: null }),
+    // mtrl's variant themes are variants of baseline here, not themes of the select.
+    withUI(layout({ ...options, themes: options.themes.filter(theme => !isVariantTheme(theme.name)), selected: isVariantTheme(options.selected) ? 'baseline' : options.selected }), options.container),
     // The theme, and what paints it
     withThemeSource(options),
+    withVariant(),
     withScheme(),
     withPalettes(),
     withCopy(),
+    withImage(),
+    withDownload(),
     // Wiring, one direction each
     withInputWiring(),
     withReactionWiring(),
