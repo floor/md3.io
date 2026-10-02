@@ -121,7 +121,7 @@ import. Two paths reach a factory, and both tree-shake:
 
 ```typescript
 import { createButton, createMenu } from 'material';
-import createChips from 'material/components/chips';
+import createDialog from 'material/components/dialog';
 ```
 
 The root entry has every factory and its main types. `material/components/<name>` has one component,
