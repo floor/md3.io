@@ -82,9 +82,9 @@ describe('site routes and documentation', () => {
   });
   test('the text field slug redirects from textfield to text-field', async () => {
     for (const [from, to] of [['/components/textfield/', '/components/text-field/'], ['/preview/textfield/', '/preview/text-field/'], ['/docs/components/textfield/', '/docs/components/text-field/']] as const) {
-      const response = await get(from);
+      const response = await get(`${from}?theme=ocean`);
       expect(response.status).toBe(301);
-      expect(response.headers.get('Location')).toBe(to);
+      expect(response.headers.get('Location')).toBe(`${to}?theme=ocean`);
     }
   });
 });

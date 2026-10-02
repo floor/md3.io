@@ -195,8 +195,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
-  else if (path === '/components/textfield/' || path === '/preview/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('textfield', 'text-field') } });
-  else if (path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/text-field/' } });
+  else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
