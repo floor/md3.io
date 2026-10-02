@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
@@ -72,6 +72,22 @@ describe('deploy script', () => {
       expect(result.status).toBe(1);
       expect(revision(fixture.site)).toBe(fixture.siteLocal);
       expect(revision(material)).toBe(fixture.materialLocal);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
+  test('a dirty library checkout is refused, listing the files, before anything changes', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, FLOOR_MATERIAL);
+      writeFileSync(join(material, 'shared.txt'), 'local edit\n');
+      const result = runRemote(fixture, { ref: 'main' });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('shared.txt');
+      expect(revision(material)).toBe(fixture.materialLocal);
+      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+      expect(readFileSync(join(material, 'shared.txt'), 'utf8')).toBe('local edit\n');
     } finally {
       trashFixture(fixture);
     }

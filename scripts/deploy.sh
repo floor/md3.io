@@ -56,6 +56,15 @@ else
 fi
 
 cd "@@DIR@@/material"
+# The server's library checkout is never edited by hand. A dirty tree used to
+# be thrown away by reset --hard; checkout --detach would carry it into the
+# build. Refuse, and list the files, before anything is changed.
+dirty=$(git status --porcelain)
+if [ -n "$dirty" ]; then
+  echo "Refusing to deploy: @@DIR@@/material has local changes:" >&2
+  printf '%s\n' "$dirty" >&2
+  exit 1
+fi
 git fetch -q origin --tags
 # After the fetch, a branch name is the remote's branch. Nothing else moves
 # refs/heads/ (the checkout is detached), so that form is refused.
