@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/styles/roboto.css" />
   <link rel="stylesheet" href="/dist/material/styles/base.css" />
   <link rel="stylesheet" href="/dist/material/styles/typography.css" />
-  <% it.component.styles.forEach(style => { %><link rel="stylesheet" href="/dist/material/styles/<%= style %>.css" /><% }); %>
+  <% [...it.component.styles, ...(it.component.previewStyles || [])].forEach(style => { %><link rel="stylesheet" href="/dist/material/styles/<%= style %>.css" /><% }); %>
   <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/material/themes/<%= theme %>.css" /><% }); %>
   <link rel="stylesheet" href="/dist/material/styles/contrast.css" />
   <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/material/themes/<%= theme %>-contrast.css" /><% }); %>

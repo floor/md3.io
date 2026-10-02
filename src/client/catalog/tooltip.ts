@@ -15,6 +15,9 @@ export const define = (): void => surface('md3-catalog-tooltip', ['icon-button',
   const target = createIconButton({ icon: favorite.trim(), ariaLabel: 'Favorite', variant: 'tonal' });
   const tooltip = createTooltip({ ...tooltipDefaults, target: target.element, showOnHover: false, showOnFocus: false });
   tooltip.element.classList.add(`${PREFIX}-tooltip--visible`);
+  // mtrl sets the arrow's side when it positions a shown tooltip, which this one never
+  // is: below its button (position 'bottom'), the arrow is on top, pointing up.
+  tooltip.element.querySelector(`.${PREFIX}-tooltip__arrow`)?.classList.add(`${PREFIX}-tooltip__arrow--top`);
   host.append(target.element, tooltip.element);
   return { element: host, destroy: () => { tooltip.destroy(); target.destroy(); } };
 });

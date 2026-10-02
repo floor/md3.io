@@ -52,9 +52,9 @@
 </head>
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
-  <header class="header"><div class="header__inner">
+  <header class="header<%= it.section && !it.sectionNamed ? ' header--section-only' : '' %>"><div class="header__inner">
     <a class="header__logo" href="/"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material<span class="brand-dot">.</span></a>
-    <% if (it.section) { %><span class="header__sep">/</span><span class="header__section"><%= it.section %></span><% } %>
+    <% if (it.section) { %><span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span><% } %>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
       <a href="/styles/" class="<%= it.section === 'Styles' ? 'active' : '' %>">Styles</a>
