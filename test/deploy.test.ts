@@ -3,6 +3,7 @@ import { chmodSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
+import { createDeployFixture, FLOOR_MATERIAL, placeMaterial, revision, runRemote, trashFixture } from './deploy-harness';
 
 describe('deploy script', () => {
   test('a dry run prints the steps in order and the refusal, and does not open ssh', () => {
@@ -28,7 +29,7 @@ describe('deploy script', () => {
       'config --get remote.origin.url',
       'Refusing to deploy: /home/floor/material origin is $origin, not floor/material.',
       'git fetch -q origin --tags',
-      'git rev-parse --verify "origin/main^{commit}"',
+      'refs/remotes/origin/$ref',
       'git checkout -q --detach',
       'bun install --frozen-lockfile',
       'bun run build',
@@ -46,6 +47,33 @@ describe('deploy script', () => {
       const index = out.indexOf(step, cursor + 1);
       expect(index).toBeGreaterThan(cursor);
       cursor = index;
+    }
+  });
+
+  test('LIBRARY_REF=main checks out origin/main when the local branch is behind', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, FLOOR_MATERIAL);
+      const result = runRemote(fixture, { ref: 'main' });
+      expect(revision(material)).toBe(fixture.materialOrigin);
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain(`remote branch refs/remotes/origin/main ${fixture.materialOrigin}`);
+    } finally {
+      trashFixture(fixture);
+    }
+  });
+
+  test('a ref beginning with refs/heads/ is refused', () => {
+    const fixture = createDeployFixture();
+    try {
+      const material = placeMaterial(fixture, FLOOR_MATERIAL);
+      const result = runRemote(fixture, { ref: 'refs/heads/main' });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('refs/heads/');
+      expect(revision(material)).toBe(fixture.materialLocal);
+      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+    } finally {
+      trashFixture(fixture);
     }
   });
 });

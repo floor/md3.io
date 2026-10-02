@@ -2,10 +2,13 @@
 # Deploy md3.io to the floor.io server: push main first, then run this.
 #
 # The library is built beside md3.io, so `file:../material` resolves the same way.
-# It is checked out detached at LIBRARY_REF (default origin/main: a tag, a commit
-# or a branch), then the site is reset to origin/main. pm2 reloads only when both
-# builds succeed. A missing library checkout is cloned from LIBRARY_URL (default
-# the GitHub repository; a test points it at a local bare repository).
+# It is checked out detached at LIBRARY_REF (default origin/main). A branch name
+# means that branch on origin, so main is origin/main; the server's local branch
+# is never moved. A tag or a commit hash is used as itself. A ref written as
+# refs/heads/ is refused. Then the site is reset to origin/main. pm2 reloads
+# only when both builds succeed. A missing library checkout is cloned from
+# LIBRARY_URL (default the GitHub repository; a test points it at a local bare
+# repository).
 #
 # Override the host with DEPLOY_HOST, the directory with DEPLOY_DIR.
 # DRY_RUN=1 prints the remote script and does not open ssh.
@@ -49,12 +52,35 @@ fi
 
 cd "@@DIR@@/material"
 git fetch -q origin --tags
-if ! commit=$(git rev-parse --verify "@@LIBRARY_REF@@^{commit}" 2>/dev/null); then
-  echo "Refusing to deploy: library ref @@LIBRARY_REF@@ does not resolve to a commit." >&2
+# After the fetch, a branch name is the remote's branch. Nothing else moves
+# refs/heads/ (the checkout is detached), so that form is refused.
+ref="@@LIBRARY_REF@@"
+case "$ref" in
+  refs/heads/*)
+    echo "Refusing to deploy: library ref $ref names a local branch. Pass the branch name (it means origin's branch) or origin/<branch>." >&2
+    exit 1
+    ;;
+esac
+form=
+commit=
+if git show-ref --verify --quiet "refs/remotes/origin/$ref"; then
+  form="remote branch refs/remotes/origin/$ref"
+  commit=$(git rev-parse --verify "refs/remotes/origin/$ref^{commit}")
+elif git show-ref --verify --quiet "refs/tags/$ref"; then
+  form="tag refs/tags/$ref"
+  commit=$(git rev-parse --verify "refs/tags/$ref^{commit}")
+elif printf '%s\n' "$ref" | grep -Eq '^[0-9a-fA-F]{4,}$' \
+  && ! git show-ref --verify --quiet "refs/heads/$ref" \
+  && commit=$(git rev-parse --verify --quiet "${ref}^{commit}"); then
+  form="commit"
+elif [[ "$ref" == origin/* ]] && commit=$(git rev-parse --verify --quiet "${ref}^{commit}"); then
+  form="origin ref $ref"
+else
+  echo "Refusing to deploy: library ref $ref does not resolve to a commit." >&2
   exit 1
 fi
 git checkout -q --detach "$commit"
-echo "material: $commit"
+echo "material: $form $commit"
 
 bun install --frozen-lockfile
 bun run build
