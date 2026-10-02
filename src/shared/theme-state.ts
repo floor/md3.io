@@ -8,6 +8,7 @@
 //   2. add a `ThemeSection` for it to `sections`: how to validate it, which tokens it
 //      writes (only what differs from mtrl), and a one-line summary.
 // The store, the preview, the export and the share link pick it up from there.
+import { themes as builtInThemeNames } from './button';
 
 /** mtrl's own values, read from its compiled CSS by the server (src/server/tokens.ts). */
 export interface ThemeBase {
@@ -163,6 +164,23 @@ export interface ColorThemeFile {
   note: string;
 }
 const lines = (tokens: Record<string, string>, indent: string) => Object.entries(tokens).map(([property, value]) => `${indent}${property}: ${value};`).join('\n');
+
+/** A downloaded theme's name is at most this long. */
+const NAME_MAX = 40;
+const BUILT_IN_NAMES = new Set<string>(builtInThemeNames);
+
+/**
+ * The name a downloaded theme takes: trimmed, lower-case letters, digits and single
+ * hyphens (runs of anything else become one hyphen), no leading or trailing hyphen, at
+ * most 40 characters. Empty, or nothing usable left of it, is `custom`; a built-in
+ * theme's name (the list the app's theme select is built from) is refused as null, so a
+ * download never writes a file or `data-theme` over mtrl's own.
+ */
+export function downloadName(raw: unknown): string | null {
+  const name = String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, NAME_MAX).replace(/-+$/, '');
+  if (!name) return 'custom';
+  return BUILT_IN_NAMES.has(name) ? null : name;
+}
 
 /** CSS: light on [data-theme="name"], dark with data-theme-mode="dark", as mtrl's themes are. */
 export const colorThemeCss = ({ name, tokens, note }: ColorThemeFile): string => [

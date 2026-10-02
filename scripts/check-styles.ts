@@ -291,8 +291,9 @@ try {
   console.log(`Ten site mode toggles: listeners ${beforeModes.listeners} → ${afterModes.listeners}, elements ${beforeModes.nodes} → ${afterModes.nodes}`);
   assert(afterModes.listeners === beforeModes.listeners && afterModes.nodes <= beforeModes.nodes, `Ten site mode toggles add no listener and no element: ${JSON.stringify(beforeModes)} → ${JSON.stringify(afterModes)}`);
   await toggleSite();
-  // Download: desert's CSS holds every THEME_ROLES token, light and dark, as mtrl's
-  // shipped desert.css has them; the JSON parses.
+  // Download: the file is named for the name typed (none yet: custom), and the CSS holds
+  // every THEME_ROLES token, light and dark, as mtrl's shipped desert.css has them; the
+  // JSON parses and carries the same name.
   const downloadAs = async (format: string) => {
     const download = page.waitForEvent('download');
     await page.locator('.theme-app__actions [name="download"]').click();
@@ -304,10 +305,10 @@ try {
     return { name: file.suggestedFilename(), text: await Bun.file((await file.path())!).text() };
   };
   const cssFile = await downloadAs('CSS');
-  assert(cssFile.name === 'mtrl-theme-desert.css', `The CSS is named for the theme: ${cssFile.name}`);
+  assert(cssFile.name === 'mtrl-theme-custom.css', `The CSS is named for the name typed (none yet: custom): ${cssFile.name}`);
   const blockOf = (text: string, selector: string) => text.slice(text.indexOf(`${selector} {`), text.indexOf('}', text.indexOf(`${selector} {`)));
-  const lightBlock = blockOf(cssFile.text, '[data-theme="desert"]');
-  const darkBlock = blockOf(cssFile.text, '[data-theme="desert"][data-theme-mode="dark"]');
+  const lightBlock = blockOf(cssFile.text, '[data-theme="custom"]');
+  const darkBlock = blockOf(cssFile.text, '[data-theme="custom"][data-theme-mode="dark"]');
   for (const role of THEME_ROLES) {
     const value = (block: string) => new RegExp(`--mtrl-sys-color-${role}: (#[0-9a-f]{6});`).exec(block)?.[1];
     assert(value(lightBlock) === declared(themeCss, role), `Downloaded light ${role}: ${value(lightBlock)}, desert.css has ${declared(themeCss, role)}`);
@@ -315,7 +316,7 @@ try {
   }
   const json = await downloadAs('JSON');
   const tokens = JSON.parse(json.text);
-  assert(json.name === 'mtrl-theme-desert.json' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON has the seed, the variant and every role');
+  assert(json.name === 'mtrl-theme-custom.json' && tokens.name === 'custom' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON is named like the file, and has the seed, the variant and every role');
   console.log(`Download: ${cssFile.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
 
   // The axes: the theme select lists themes (seeds), not mtrl's variant themes; the
@@ -426,7 +427,7 @@ try {
   await until(() => page.locator('.mtrl-snackbar').last().textContent().then(text => text?.trim()), `Theme generated from theme-image.png · seed ${imageSeed}`, 'The snackbar names the file and the seed');
   assert(await page.locator('.md3-palette').first().isVisible(), 'and its palettes');
   const imageFile = await downloadAs('JSON');
-  assert(imageFile.name === `mtrl-theme-seed-${imageSeed.slice(1)}.json` && JSON.parse(imageFile.text).seed === imageSeed, `A theme from an image downloads under its seed: ${imageFile.name}`);
+  assert(imageFile.name === 'mtrl-theme-custom.json' && JSON.parse(imageFile.text).seed === imageSeed, `A theme from an image downloads named for the name typed (none yet: custom), carrying its seed: ${imageFile.name}`);
   await page.goto(`${base}/styles/themes/?seed=${imageSeed.slice(1)}`);
   await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), '?seed= reproduces the theme');
   await until(themeValue, 'From image', 'with From image selected');
