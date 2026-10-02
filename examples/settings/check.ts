@@ -242,7 +242,7 @@ export default async (page: Page): Promise<void> => {
   // site's theme app exposes itself (src/client/theme-app/index.ts).
   await page.setViewportSize({ width: 700, height: 800 });
   await row(/Display/).click();
-  const mounted = await page.evaluate(() => {
+  const mounted = await page.evaluate(async () => {
     type Mount = { element: HTMLElement; destroy: () => void };
     const check = window as unknown as { settingsExample: { createSettingsApp: () => Mount }; settingsSecond?: Mount };
     const second = check.settingsExample.createSettingsApp();
@@ -253,7 +253,13 @@ export default async (page: Page): Promise<void> => {
     host.append(second.element);
     document.body.append(host);
     check.settingsSecond = second;
-    const open = (root: ParentNode | null): string | null => root?.querySelector('[aria-pressed="true"]')?.getAttribute("data-id") ?? null;
+    // The pressed element is the row's button; the id is the row container's (as in
+    // step 1, where the checks locate rows by [data-id="…"]).
+    const open = (root: ParentNode | null): string | null => root?.querySelector('[aria-pressed="true"]')?.closest("[data-id]")?.getAttribute("data-id") ?? null;
+    // The app's first layout comes from its ResizeObserver, a task after the mount: wait
+    // for the row it opens, bounded, so a mount that never opens one fails here.
+    const deadline = performance.now() + 1000;
+    while (open(second.element) === null && performance.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 10));
     return {
       apps: document.querySelectorAll(".settings-app").length,
       second: open(second.element),
