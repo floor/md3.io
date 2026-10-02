@@ -1,29 +1,5 @@
 /* The example's own layout. Components are used as the library draws them: nothing in
-   here restyles a mtrl- class. The first rules are the old screen's: the five parked
-   variant files (html.ts, react.tsx, solid.tsx, svelte.svelte, vue.ts) still use those
-   class names, and with `variants: ["vanilla"]` they are no longer built or shown —
-   the rules stay so the files stay whole until the owner decides their fate. */
-
-.settings {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.settings__actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.settings__status {
-  min-height: 1.5em;
-}
-
-/* The settings app (Vanilla, the reference). The app fills the example frame, so it is
+   here restyles a mtrl- class. The app fills the example frame, so it is
    the frame's padding (24 px each side, the site's page chrome) that sits outside the
    numbers below; the app's own box carries M3's size classes, as container queries on
    itself: 16 dp margins at compact, 24 dp from medium, a 50% split at medium, a fixed
