@@ -19,21 +19,22 @@ dir="${DEPLOY_DIR:-/home/floor}"
 ref="${LIBRARY_REF:-origin/main}"
 url="${LIBRARY_URL:-https://github.com/floor/material.git}"
 
-# The three values are pasted into the remote script. Check them before that
-# text exists, then write them inside quotes. ref: [A-Za-z0-9._/-]+, not
+# The three values are pasted into the remote script. Check each whole value
+# before that text exists (grep would accept a valid first line and let the
+# rest through), then write them inside quotes. ref: [A-Za-z0-9._/-]+, not
 # starting with -. url: https://[A-Za-z0-9._/-]+, git@[A-Za-z0-9._-]+:[A-Za-z0-9._/-]+,
 # ssh://[A-Za-z0-9._@/-]+, file://[A-Za-z0-9._/-]+, or /[A-Za-z0-9._/-]+, and no
 # ".." segment. directory: /[A-Za-z0-9._/-]+ with no ".." segment.
-if ! printf '%s\n' "$ref" | grep -Eq '^[A-Za-z0-9._/-]+$' || printf '%s\n' "$ref" | grep -Eq '^-'; then
+if [[ ! "$ref" =~ ^[A-Za-z0-9._/-]+$ ]] || [[ "$ref" =~ ^- ]]; then
   echo "Refusing to deploy: library ref must match [A-Za-z0-9._/-]+ and must not start with -." >&2
   exit 1
 fi
-if ! printf '%s\n' "$url" | grep -Eq '^(https://[A-Za-z0-9._/-]+|git@[A-Za-z0-9._-]+:[A-Za-z0-9._/-]+|ssh://[A-Za-z0-9._@/-]+|file://[A-Za-z0-9._/-]+|/[A-Za-z0-9._/-]+)$' \
-  || printf '%s\n' "$url" | grep -Eq '(^|/)\.\.(/|$)'; then
+if [[ ! "$url" =~ ^(https://[A-Za-z0-9._/-]+|git@[A-Za-z0-9._-]+:[A-Za-z0-9._/-]+|ssh://[A-Za-z0-9._@/-]+|file://[A-Za-z0-9._/-]+|/[A-Za-z0-9._/-]+)$ ]] \
+  || [[ "$url" =~ (^|/)\.\.(/|$) ]]; then
   echo "Refusing to deploy: library URL must be https://, git@host:path, ssh://, file://, or an absolute path, with no .. segment." >&2
   exit 1
 fi
-if ! printf '%s\n' "$dir" | grep -Eq '^/[A-Za-z0-9._/-]+$' || printf '%s\n' "$dir" | grep -Eq '(^|/)\.\.(/|$)'; then
+if [[ ! "$dir" =~ ^/[A-Za-z0-9._/-]+$ ]] || [[ "$dir" =~ (^|/)\.\.(/|$) ]]; then
   echo "Refusing to deploy: directory must be an absolute path of [A-Za-z0-9._/-] with no .. segment." >&2
   exit 1
 fi
