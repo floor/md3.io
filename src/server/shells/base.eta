@@ -19,7 +19,7 @@
   <meta property="og:image" content="https://md3.io/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="mtrl — Material Design 3 for every framework" />
+  <meta property="og:image:alt" content="material. The Material component library: Material Design 3 for every framework" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://md3.io<%= it.path %>" />
   <meta name="twitter:title" content="<%= it.title %>" />
