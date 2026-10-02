@@ -65,7 +65,7 @@ describe('scoped tokens', () => {
   test('light: baseline colour, typescale and shape tokens on the scope, not :root', () => {
     expect(light).toStartWith('.scope{color-scheme:light;');
     expect(light).toContain(`--mtrl-sys-color-primary:${baseline.light.get('primary')}`);
-    expect(light).toMatch(/--mtrl-sys-typescale-body-large-font-size:/);
+    expect(light).toMatch(/--mtrl-sys-typescale-body-medium-font-size:/);
     expect(light).toMatch(/--mtrl-sys-shape-corner-[a-z-]+:/);
     expect(css).not.toContain(':root');
   });

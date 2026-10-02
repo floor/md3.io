@@ -25,10 +25,16 @@ const slugs = Object.keys(components);
 
 type Flavour = "factory" | "element";
 const pascal = (slug: string): string => slug.replace(/(^|-)(\w)/g, (_, __, c: string) => c.toUpperCase());
+// The element's define function where define+Pascal is not its name: mtrl 1.0 spells
+// the text field's defineTextField.
+const defineNames: Record<string, string> = { textfield: "defineTextField" };
 
 // The import a page writes: the factory's creator, or the element's define function.
 function imports(slug: string, flavour: Flavour, id: string): string {
-  if (flavour === "element") return `import "mtrl/elements/css/${slug}";\nimport { define${pascal(slug)} as ${id} } from "mtrl/elements";\n${id}();\n`;
+  if (flavour === "element") {
+    const define = defineNames[slug] ?? `define${pascal(slug)}`;
+    return `import "mtrl/elements/css/${slug}";\nimport { ${define} as ${id} } from "mtrl/elements";\n${id}();\n`;
+  }
   const index = readFileSync(resolve(mtrl, "dist/components", slug, "index.js"), "utf8");
   const creator = /export default|as default\b|export \{ default(?: \}|,)/.test(index) ? `import ${id} from` : `import { create${pascal(slug)} as ${id} } from`;
   return `import "mtrl/styles/${slug}";\n${creator} "mtrl/components/${slug}";\nglobalThis.${id} = ${id};\n`;
