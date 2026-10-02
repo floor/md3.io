@@ -64,6 +64,9 @@ export function findCells(doc: Document, view: View, rows: Row[], query: string)
   }));
   return matches;
 }
-export function exportCSV(doc: Document, view: View): string {
-  return writeCSV([doc.columns.map(c => c.label), ...rowsInView(doc, view).map(row => doc.columns.map(c => valueAt(doc, row, c)))]);
+/** Prefix potential spreadsheet formulas, including whitespace/control prefixes. */
+export const safeCell = (value: string) => /^[\s]*[=+@-]/.test(value) || /^[\t\r\n]/.test(value) ? "'" + value : value;
+export function exportCSV(doc: Document, view: View, safe = false): string {
+  const records = [doc.columns.map(c => c.label), ...rowsInView(doc, view).map(row => doc.columns.map(c => valueAt(doc, row, c)))];
+  return writeCSV(safe ? records.map(row => row.map(safeCell)) : records);
 }

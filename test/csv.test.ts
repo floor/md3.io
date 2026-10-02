@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { parseCSV, writeCSV } from '../examples/csv/parser';
-import { openCSV, edit, freshView, rowsInView, findCells, hideColumn, exportCSV, valueAt } from '../examples/csv/model';
+import { parseCSV, writeCSV } from '../examples/spreadsheet/parser';
+import { openCSV, edit, freshView, rowsInView, findCells, hideColumn, exportCSV, valueAt } from '../examples/spreadsheet/model';
 
 describe('CSV grammar', () => {
   test('BOM, CRLF, commas, doubled quotes and embedded line breaks', () => {
@@ -54,4 +54,12 @@ describe('CSV model', () => {
     for (const c of d.columns) view = hideColumn(d, view, c.id);
     expect(view.hidden.size).toBe(3);
   });
+});
+
+test('literal export by default, opt-in spreadsheet-safe headers and cells', () => {
+  const doc = openCSV('=Header,Note\n=1+1,  @SUM(1)\n-42,ordinary', 'formulas.csv');
+  expect(parseCSV(exportCSV(doc, freshView()))[1][0]).toBe('=1+1');
+  expect(parseCSV(exportCSV(doc, freshView(), true))).toEqual([
+    ["'=Header", 'Note'], ["'=1+1", "'  @SUM(1)"], ["'-42", 'ordinary'],
+  ]);
 });

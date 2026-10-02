@@ -1,5 +1,5 @@
 // Synthetic warehouse dispatches, deterministic; no customer or personal data.
-// Reproduce: bun examples/csv/generate-fixture.ts
+// Reproduce: bun examples/spreadsheet/generate-fixture.ts
 import { writeCSV } from './parser';
 const headers = ['Dispatch', 'Ship date', 'Depot', 'Product', 'Units', 'Value EUR', 'Status', 'Notes'];
 const depots = ['Lyon', 'Lille', 'Nantes', 'Bordeaux', 'Strasbourg'];
