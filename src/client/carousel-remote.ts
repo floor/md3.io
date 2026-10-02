@@ -34,7 +34,7 @@ export function createCarouselRemote(carousel: CarouselComponent): { element: HT
       if (off) control.disabled.disable(); else control.disabled.enable();
     }
   };
-  const onChange = ({ index }: { index: number }) => reflect(index);
+  const onChange = ({ value }: { value: number }) => reflect(value);
   carousel.on('change', onChange);
   reflect(carousel.getCurrentSlide());
 
