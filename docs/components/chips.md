@@ -80,7 +80,7 @@ chips:
 
 A filter chip's `trailingMenu` gives it a trailing button that opens a menu; `onTrailingClick`
 handles it. A filter chip opening a price menu is planned for [Examples](/examples/). A chip
-your app makes `draggable` shows M3's dragged state from `dragstart` to `dragend`; mtrl does
+your app makes `draggable` shows M3's dragged state from `dragstart` to `dragend`; `material` does
 not move chips itself.
 
 ## API

@@ -2,26 +2,26 @@
 created: 2026-09-21
 updated: 2026-09-30
 status: published
-description: How mtrl is built in layers, from features and component factories to web components and the React, Vue, Svelte and SolidJS components.
+description: How the material library is built in layers, from features and component factories to web components and the React, Vue, Svelte and SolidJS components.
 ---
 
 # Architecture
 
-mtrl is built in layers: small features compose into component factories, web components wrap
+The `material` library is built in layers: small features compose into component factories, web components wrap
 the factories, and the React, Vue, Svelte and SolidJS components are generated from the web
 components. Each layer adds one thing and keeps the one below it intact, so a component looks and
 behaves the same whichever layer you use. The library has no runtime dependencies.
 
 ```text
-core        pipe, events, lifecycle, DOM, state          mtrl/core
+core        pipe, events, lifecycle, DOM, state          material/core
   ↓
-factories   createButton, createMenu, …                  mtrl
+factories   createButton, createMenu, …                  material
   ↓
-elements    <m-button>, <m-menu>, …                      mtrl/elements
+elements    <m-button>, <m-menu>, …                      material/elements
   ↓
-adapters    <Button>, <MButton>, …                       mtrl/react · vue · svelte · solid
+adapters    <Button>, <MButton>, …                       material/react · vue · svelte · solid
 
-styles      tokens, themes, one stylesheet per component  mtrl/styles · mtrl/themes
+styles      tokens, themes, one stylesheet per component  material/styles · material/themes
 ```
 
 ## Factories: features in a pipe
@@ -93,7 +93,7 @@ token, a CSS custom property: colour roles (`--mtrl-sys-color-primary`), the typ
   colour library, so their roles follow M3's schemes.
 
 The rules sit in CSS cascade layers (`mtrl.base`, `mtrl.button` …), so an app's own styles win
-without fighting specificity. [Styles](/styles/) shows every token as mtrl ships it.
+without fighting specificity. [Styles](/styles/) shows every token as `material` ships it.
 
 ## Web components
 
@@ -103,7 +103,7 @@ factory's config and setters, its events to the factory's, and its child element
 element, so they all behave alike:
 
 - **Shadow DOM.** The element renders its factory inside a shadow root, with the component's
-  CSS as a shared, adopted stylesheet (a `<style>` where the browser lacks them), so page styles and mtrl's styles never collide. Tokens
+  CSS as a shared, adopted stylesheet (a `<style>` where the browser lacks them), so page styles and `material`'s styles never collide. Tokens
   still reach it, since custom properties inherit.
 - **Attributes as defaults.** An attribute gives the initial state; once the user or a script
   changes it, the element's state wins, and a form reset returns to the attribute.
@@ -129,7 +129,7 @@ while a modal dialog is open appears inside that dialog, so it stays visible and
 
 ## Where to go next
 
-- [Getting started](../getting-started/) to add mtrl to an app.
+- [Getting started](../getting-started/) to add `material` to an app.
 - The guide for your way of using it: [Vanilla](../vanilla/), [Web Components](../web-components/),
   [React](../react/), [Vue](../vue/), [Svelte](../svelte/) or [SolidJS](../solid/).
 - [Theming](../theming/) for tokens and themes, [Server rendering](../server-rendering/) for SSR.

@@ -54,6 +54,6 @@ describe('theme download', () => {
     const css = themeFile('css', desert, ROLES, 'custom');
     expect(css.text).toContain('generated from seed #9a7a3e, Tonal Spot, standard contrast');
     const hand: ThemeData = { ...desert, spec: null, origin: null };
-    expect(themeFile('css', hand, ROLES, 'custom').text).toContain('colours as mtrl ships them, set by hand');
+    expect(themeFile('css', hand, ROLES, 'custom').text).toContain('colours as the material library ships them, set by hand');
   });
 });

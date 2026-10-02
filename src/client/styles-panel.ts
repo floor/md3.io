@@ -82,7 +82,7 @@ if (panel) {
     if (baseSelect) baseSelect.value = state.base;
     for (const input of modeInputs) input.checked = input.value === state.mode;
     document.documentElement.dataset.previewMode = state.mode;
-    baseFigure.querySelector('figcaption')!.textContent = `${themeName(state.base)}, as mtrl ships it`;
+    baseFigure.querySelector('figcaption')!.textContent = `${themeName(state.base)}, as the material library ships it`;
   });
 }
 
@@ -142,5 +142,5 @@ document.addEventListener('click', event => {
   themeStore.reset(section || undefined);
   // The button may be gone with what it reset: keep focus nearby.
   if (!button.isConnected) (scope?.querySelector<HTMLElement>('[data-theme-reset=""]') ?? scope as HTMLElement | null)?.focus();
-  announce(section ? `${sections[section].label} reset to mtrl's values` : 'Theme reset to mtrl\'s baseline');
+  announce(section ? `${sections[section].label} reset to the material library's values` : 'Theme reset to the material library\'s baseline');
 });

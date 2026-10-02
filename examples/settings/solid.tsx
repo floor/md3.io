@@ -1,4 +1,4 @@
-// Solid: mtrl/solid wraps the same elements.
+// Solid: material/solid wraps the same elements.
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 import { Button, Switch, Tab, Tabs } from "material/solid";

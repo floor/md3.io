@@ -1,4 +1,4 @@
-<!-- Svelte: mtrl/svelte wraps the same elements; bind: keeps their live state. -->
+<!-- Svelte: material/svelte wraps the same elements; bind: keeps their live state. -->
 <script lang="ts">
   import { Button, Switch, Tab, Tabs } from "material/svelte";
   import { DEFAULTS, summary } from "./shared";

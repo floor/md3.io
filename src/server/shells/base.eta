@@ -53,7 +53,7 @@
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">mtrl<span class="brand-dot">.</span></a>
+    <a class="header__logo" href="/"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material<span class="brand-dot">.</span></a>
     <% if (it.section) { %><span class="header__sep">/</span><span class="header__section"><%= it.section %></span><% } %>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
@@ -79,7 +79,7 @@
       <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
-      <div class="sidebar__foot">mtrl · Material Design 3<br><a href="https://github.com/floor/material/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
+      <div class="sidebar__foot">material · Material Design 3<br><a href="https://github.com/floor/material/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>

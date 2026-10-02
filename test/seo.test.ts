@@ -48,7 +48,7 @@ describe('page head', () => {
       '<meta property="og:image:width" content="1200" />',
       '<meta name="twitter:card" content="summary_large_image" />',
       '<meta name="twitter:image" content="https://md3.io/og-image.png" />',
-      '<meta name="twitter:title" content="Button documentation — mtrl" />',
+      '<meta name="twitter:title" content="Button documentation — material" />',
       '<link rel="icon" href="/favicon.svg" type="image/svg+xml" />',
       '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />',
       '<meta name="theme-color" content="#0c0c10" media="(prefers-color-scheme: dark)" />',
@@ -56,14 +56,14 @@ describe('page head', () => {
   });
   test('a front matter description replaces the summary as the meta description', async () => {
     const html = await (await get('/docs/architecture/')).text();
-    expect(html).toContain('<meta name="description" content="How mtrl is built in layers');
+    expect(html).toContain('<meta name="description" content="How the material library is built in layers');
   });
 });
 
 describe('structured data', () => {
   test('the home page describes mtrl and the site, with the search /?q= opens', async () => {
     const [app, site] = jsonLd(await (await get('/')).text());
-    expect(app).toMatchObject({ '@type': 'SoftwareApplication', name: 'mtrl', softwareVersion: mtrlVersion, codeRepository: 'https://github.com/floor/material', license: 'https://opensource.org/licenses/MIT', url: 'https://md3.io' });
+    expect(app).toMatchObject({ '@type': 'SoftwareApplication', name: 'material', softwareVersion: mtrlVersion, codeRepository: 'https://github.com/floor/material', license: 'https://opensource.org/licenses/MIT', url: 'https://md3.io' });
     expect(site).toMatchObject({ '@type': 'WebSite', url: 'https://md3.io', potentialAction: { '@type': 'SearchAction', target: 'https://md3.io/?q={search_term_string}' } });
   });
   test('every other page has its trail: Home, its section, the page', async () => {
@@ -104,7 +104,7 @@ describe('internal routes, errors and images', () => {
     // One source: favicon.svg is the mark as scripts/brand-images.ts copied it, and the header shows it.
     expect(await (await get('/favicon.svg')).text()).toBe(readFileSync(join(import.meta.dir, '../assets/brand/mark.svg'), 'utf8'));
     const { BUILD } = await import('../server');
-    expect(await (await get('/')).text()).toContain(`<img class="header__mark" src="/assets/brand/mark.svg?v=${BUILD}" width="20" height="20" alt="" aria-hidden="true">mtrl`);
+    expect(await (await get('/')).text()).toContain(`<img class="header__mark" src="/assets/brand/mark.svg?v=${BUILD}" width="20" height="20" alt="" aria-hidden="true">material`);
     expect((await get('/assets/brand/mark.svg')).headers.get('Content-Type')).toBe('image/svg+xml');
     expect((await get(`/assets/brand/mark.svg?v=${BUILD}`)).headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
     const ico = Buffer.from(await (await get('/favicon.ico')).arrayBuffer());
