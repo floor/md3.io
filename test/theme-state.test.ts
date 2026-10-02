@@ -65,6 +65,11 @@ describe('theme state', () => {
     expect(downloadName('custom')).toBe('custom');
     expect(downloadName('Custom')).toBe('custom');
   });
+  // mtrl 0.10 ships 24 theme files and offers 20: the four it keeps for old users
+  // (deprecated in 0.10, removed in 1.0) are built into mtrl all the same.
+  test('the themes mtrl still ships but no longer offers are refused too: built in is built in', () => {
+    for (const name of ['material', 'winter', 'browngreen', 'legacy']) expect(downloadName(name), name).toBeNull();
+  });
   test('mtrl\'s own scale: every editable step can be overridden', () => {
     const editable = Object.entries(themeBase.shape).filter(([, radius]) => radius > 0 && radius < 100);
     expect(editable.map(([step]) => step)).toContain('medium');
