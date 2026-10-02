@@ -1,9 +1,16 @@
+import { readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { cornerRadius, defaultState, normalize, parse, serialize, toCss, toTokens, type ThemeBase } from '../src/shared/theme-state';
+import { themes } from '../src/shared/button';
+import * as themeState from '../src/shared/theme-state';
+import { cornerRadius, defaultState, deprecatedThemeNames, downloadName, normalize, parse, serialize, toCss, toTokens, type ThemeBase } from '../src/shared/theme-state';
 import { themeBase } from '../src/server/tokens';
 
 // A small base keeps the expectations readable; the last test runs against mtrl's own.
 const base: ThemeBase = { themes: ['baseline', 'ocean'], shape: { none: 0, small: 8, medium: 12, 'extra-large': 28, full: 9999, pill: 100 } };
+// Every theme the linked mtrl ships (what a download writes over), and every name it refuses.
+const shippedThemes = readdirSync(resolve(import.meta.dir, '../node_modules/mtrl/dist/themes')).filter(file => file.endsWith('.css')).map(file => file.slice(0, -4));
+const refusedThemes: string[] = [...themes, ...deprecatedThemeNames];
 
 describe('theme state', () => {
   test('round trip: serialize then parse gives the same state', () => {
@@ -41,6 +48,43 @@ describe('theme state', () => {
     expect(css).toContain('<html data-theme="ocean" data-theme-mode="dark">');
     expect(css).toContain('  /* Shape */\n  --mtrl-sys-shape-corner-small: 4px;');
     expect(toCss(defaultState(), base)).not.toContain('mtrl/themes/');
+  });
+  test('the colour theme files are CSS and JSON only: SCSS is gone', () => {
+    expect(Object.keys(themeState).filter(key => key.startsWith('colorTheme'))).toEqual(['colorThemeCss', 'colorThemeJson']);
+  });
+  test('a downloaded theme\'s name is trimmed, lower-cased and [a-z0-9-]: other runs become one hyphen', () => {
+    expect(downloadName('  Desert  Oasis! ')).toBe('desert-oasis');
+    expect(downloadName('My__Theme!!!2')).toBe('my-theme-2');
+    expect(downloadName('--Edge--Case--')).toBe('edge-case');
+    expect(downloadName('Ünicode-Ærø')).toBe('nicode-r');
+  });
+  test('an empty name, or nothing left of one, is custom', () => {
+    for (const value of ['', '   ', '!!!', '-', '---', undefined, null]) expect(downloadName(value)).toBe('custom');
+  });
+  test('a downloaded theme\'s name stops at 40 characters, without a trailing hyphen from the cut', () => {
+    expect(downloadName('a'.repeat(60))).toBe('a'.repeat(40));
+    expect(downloadName(`${'a'.repeat(39)}-b`)).toBe('a'.repeat(39));
+    expect(downloadName(`${'a'.repeat(38)}!!b`)).toBe(`${'a'.repeat(38)}-b`);
+  });
+  test('a built-in theme\'s name is refused, typed as it is or as a name', () => {
+    for (const name of ['desert', 'Desert', 'desert!', 'baseline', 'highcontrast', 'neutral', 'vibrant', 'ocean']) expect(downloadName(name)).toBeNull();
+    expect(downloadName('custom')).toBe('custom');
+    expect(downloadName('Custom')).toBe('custom');
+  });
+  // mtrl 0.10 ships 24 theme files and offers 20: the four it keeps for old users
+  // (deprecated in 0.10, removed in 1.0) are built into mtrl all the same.
+  test('the themes mtrl still ships but no longer offers are refused too: built in is built in', () => {
+    for (const name of ['material', 'winter', 'browngreen', 'legacy']) expect(downloadName(name), name).toBeNull();
+  });
+  test('every theme mtrl ships is refused: the select\'s list and the deprecated list cover mtrl\'s files', () => {
+    expect(shippedThemes).toContain('baseline'); // the listing is mtrl's own
+    for (const name of shippedThemes) {
+      expect(refusedThemes, `${name}.css: offered, or refused as a deprecated theme`).toContain(name);
+      expect(downloadName(name), `${name}.css: a download refuses the name`).toBeNull();
+    }
+  });
+  test('custom, the default, is not in the refused set: the fallback never collides with a theme', () => {
+    expect(refusedThemes).not.toContain('custom');
   });
   test('mtrl\'s own scale: every editable step can be overridden', () => {
     const editable = Object.entries(themeBase.shape).filter(([, radius]) => radius > 0 && radius < 100);

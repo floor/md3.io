@@ -4,6 +4,7 @@
 // app's (scheme-card.ts, palette-strip.ts).
 import createTopAppBar from 'mtrl/components/top-app-bar';
 import createSelect from 'mtrl/components/select';
+import createTextField from 'mtrl/components/textfield';
 import createIconButton from 'mtrl/components/icon-button';
 import createButtonGroup from 'mtrl/components/button-group';
 import { createSchemeCard } from '../scheme-card';
@@ -23,7 +24,7 @@ const CONTRAST_ICONS = [standard, medium, high];
 /** The bar's tooltips, by part (set up by withSetup). */
 export const TOOLTIPS: Record<string, string> = {
   image: 'Make a theme from an image. It stays in your browser: nothing is uploaded.',
-  download: 'Download this theme: CSS, SCSS or JSON',
+  download: 'Download this theme: CSS or JSON',
   share: 'Copy a link to this theme',
 };
 export const PALETTES = [['primary', 'Primary'], ['secondary', 'Secondary'], ['tertiary', 'Tertiary'], ['neutral', 'Neutral'], ['neutralVariant', 'Neutral Variant'], ['error', 'Error']] as const;
@@ -47,6 +48,11 @@ export const layout = ({ themes, roles, selected }: LayoutData): unknown[] => [
       kind: 'connected', selection: 'single', required: true, size: 's', variant: 'outlined', ariaLabel: 'Contrast',
       buttons: CONTRASTS.map(([value, , label], i) => ({ value: String(value), icon: CONTRAST_ICONS[i], ariaLabel: label, selected: value === 0 })),
     }],
+    // The downloaded file's name: `custom` until typed; a built-in theme's name is refused.
+    // The blank supporting text keeps the row element; its height is reserved in
+    // styles/theme-app.css — a whitespace-only helper draws no line box (the variant
+    // select needs no such rule: its row always holds the seed line).
+    [createTextField, 'name', { variant: 'outlined', density: 'compact', label: 'Theme name', value: 'custom', supportingText: ' ' }],
   ],
   ['content', { tag: 'div', class: 'theme-app__content' },
     [createSchemeCard, 'scheme', { roles }],

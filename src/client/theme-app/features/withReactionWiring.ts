@@ -2,6 +2,7 @@
 // the scheme (withVariant), then repaints the card, the palettes, the app's colours,
 // the controls and the address; the site's mode repaints the card and the app.
 import type { App } from '../core/foundation';
+import { nameSupportingText } from './withDownload';
 
 export const withReactionWiring = () => (app: App) => {
   const { ui, scheme, palettes, state, variant, source, copy } = app;
@@ -33,5 +34,8 @@ export const withReactionWiring = () => (app: App) => {
   state.on('variant', render);
   state.on('contrast', render);
   state.on('mode', () => { scheme.paint(); scheme.chrome(); });
+  // The Theme name field: its row is reserved from the start (layout); a name the download
+  // refuses says why there. No scheme work: the name only names the file.
+  state.on('name', (value: unknown) => ui.name.setSupportingText(nameSupportingText(value)));
   return app;
 };

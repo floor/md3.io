@@ -172,8 +172,9 @@ try {
   // Themes: the app. mtrl's select picks a theme and the Scheme card shows the hex
   // mtrl's CSS has, ?theme=<name> follows and opens it again, a tile copies its hex with
   // mtrl's snackbar, a theme without a seed says why it has no palettes, ten switches
-  // leave the listener count flat, a switch paints within a frame, and a phone does not
-  // scroll sideways.
+  // leave the listener count flat, a switch paints within a frame, the Theme name field
+  // names the download (a built-in theme's name refused, saying so, in a row held open:
+  // no height, no card move), and a phone does not scroll sideways.
   console.log('Checking /styles/themes/');
   await page.goto(`${base}/styles/themes/`);
   const themeCss = await (await fetch(`${base}/dist/mtrl/themes/desert.css`)).text();
@@ -220,12 +221,18 @@ try {
   await until(() => page.locator('.theme-app__note').textContent().then(text => !!text?.startsWith('Original colours set by hand; variants generated from #')), true, 'A hand-made theme says its colours are set by hand, and where its variants come from');
   // Ten switches: listeners and elements stay flat, and a switch paints within a frame.
   const counts = () => page.evaluate(() => ({ listeners: (window as unknown as { __listeners: number }).__listeners, nodes: document.getElementsByTagName('*').length }));
+  // mtrl takes a closed menu out of the page on a timer, after its closing animation, and
+  // pickTheme only waits for the item to be hidden: each count waits for the select's menu
+  // (38 elements) to have left, so both are of the same page and must be equal.
+  const menuGone = () => page.waitForFunction(() => !document.querySelector('.mtrl-menu'));
+  await menuGone();
   const before = await counts();
   const names = ['Desert', 'Summer', 'Ocean', 'Brownbeige', 'Forest', 'Baseline', 'Sageivory', 'Autumn', 'Tealcaramel', 'Ocean'];
   for (const name of names) { await pickTheme(name); await until(themeValue, name, `The select shows ${name}`); }
+  await menuGone();
   const after = await counts();
   console.log(`Ten theme switches: listeners ${before.listeners} → ${after.listeners}, elements ${before.nodes} → ${after.nodes}`);
-  assert(after.listeners === before.listeners && after.nodes <= before.nodes, `Ten theme switches add no listener and no element: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  assert(after.listeners === before.listeners && after.nodes === before.nodes, `Ten theme switches add no listener and no element, and lose none: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
   const switchMs = await page.evaluate(async () => {
     const app = (window as unknown as { themeApp: { state: { set(key: string, value: unknown): void } } }).themeApp;
     // From the change to its colours computed and laid out: the work the next frame waits on.
@@ -291,8 +298,9 @@ try {
   console.log(`Ten site mode toggles: listeners ${beforeModes.listeners} → ${afterModes.listeners}, elements ${beforeModes.nodes} → ${afterModes.nodes}`);
   assert(afterModes.listeners === beforeModes.listeners && afterModes.nodes <= beforeModes.nodes, `Ten site mode toggles add no listener and no element: ${JSON.stringify(beforeModes)} → ${JSON.stringify(afterModes)}`);
   await toggleSite();
-  // Download: desert's CSS holds every THEME_ROLES token, light and dark, as mtrl's
-  // shipped desert.css has them; the SCSS is mtrl's create-theme form; the JSON parses.
+  // Download: the file is named for the name typed (none yet: custom), and the CSS holds
+  // every THEME_ROLES token, light and dark, as mtrl's shipped desert.css has them; the
+  // JSON parses and carries the same name.
   const downloadAs = async (format: string) => {
     const download = page.waitForEvent('download');
     await page.locator('.theme-app__actions [name="download"]').click();
@@ -304,21 +312,52 @@ try {
     return { name: file.suggestedFilename(), text: await Bun.file((await file.path())!).text() };
   };
   const cssFile = await downloadAs('CSS');
-  assert(cssFile.name === 'mtrl-theme-desert.css', `The CSS is named for the theme: ${cssFile.name}`);
+  assert(cssFile.name === 'mtrl-theme-custom.css', `The CSS is named for the name typed (none yet: custom): ${cssFile.name}`);
   const blockOf = (text: string, selector: string) => text.slice(text.indexOf(`${selector} {`), text.indexOf('}', text.indexOf(`${selector} {`)));
-  const lightBlock = blockOf(cssFile.text, '[data-theme="desert"]');
-  const darkBlock = blockOf(cssFile.text, '[data-theme="desert"][data-theme-mode="dark"]');
+  const lightBlock = blockOf(cssFile.text, '[data-theme="custom"]');
+  const darkBlock = blockOf(cssFile.text, '[data-theme="custom"][data-theme-mode="dark"]');
   for (const role of THEME_ROLES) {
     const value = (block: string) => new RegExp(`--mtrl-sys-color-${role}: (#[0-9a-f]{6});`).exec(block)?.[1];
     assert(value(lightBlock) === declared(themeCss, role), `Downloaded light ${role}: ${value(lightBlock)}, desert.css has ${declared(themeCss, role)}`);
     assert(value(darkBlock) === declaredDark(role), `Downloaded dark ${role}: ${value(darkBlock)}, desert.css has ${declaredDark(role)}`);
   }
-  const scss = await downloadAs('SCSS');
-  assert(scss.name === 'mtrl-theme-desert.scss' && scss.text.includes('@include create-theme("desert")') && scss.text.includes(`--#{$prefix}-sys-color-primary: ${desertPrimary};`), 'The SCSS is mtrl\'s create-theme form');
   const json = await downloadAs('JSON');
   const tokens = JSON.parse(json.text);
-  assert(json.name === 'mtrl-theme-desert.json' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON has the seed, the variant and every role');
-  console.log(`Download: ${cssFile.name}, ${scss.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
+  assert(json.name === 'mtrl-theme-custom.json' && tokens.name === 'custom' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON is named like the file, and has the seed, the variant and every role');
+  console.log(`Download: ${cssFile.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
+  // The Theme name field: the typed name names the file and its selector; a built-in
+  // theme's name is refused, says so in the field, and the download stays custom. The
+  // refusal brings no height with it: the helper's row is held open from the start
+  // (styles/theme-app.css), so the field's height and the Scheme card's top are the
+  // same with the message as without — at 1440 (the 200 px field; the field is a fixed
+  // 200 px at every width above 700, so this is 1280's case too), and at 390 and 375.
+  const nameField = page.locator('.theme-app__controls > .mtrl-textfield:not(.mtrl-select)');
+  const nameInput = page.getByLabel('Theme name', { exact: true });
+  assert(await nameField.count() === 1 && await nameInput.count() === 1, 'The controls hold the labelled Theme name field');
+  assert(await nameInput.inputValue() === 'custom', `The Theme name field starts on custom: ${await nameInput.inputValue()}`);
+  const nameFieldHeight = () => nameField.evaluate(element => element.getBoundingClientRect().height);
+  // In the document, not the viewport: a scroll (or scroll anchoring) can hide a move.
+  const schemeCardTop = () => page.locator('.md3-scheme-card').evaluate(element => element.getBoundingClientRect().top + window.scrollY);
+  const refusalAddsNoHeight = async (where: string) => {
+    await nameInput.fill('my theme');
+    const height = await nameFieldHeight();
+    const top = await schemeCardTop();
+    await nameInput.fill('desert');
+    await until(() => nameField.locator('.mtrl-textfield__helper').textContent().then(text => text?.trim()), 'Built-in name: taken', `A built-in theme's name is refused at ${where}, and the field says so`);
+    assert(Math.abs(await nameFieldHeight() - height) < 0.5, `The field keeps its height when the refusal appears at ${where}: ${height} → ${await nameFieldHeight()} px`);
+    assert(Math.abs(await schemeCardTop() - top) < 0.5, `The Scheme card does not move when the refusal appears at ${where}: ${top} → ${await schemeCardTop()} px`);
+  };
+  await nameInput.fill('my theme');
+  // The name is state only: it names the download, never the address (the seed or the
+  // theme, the variant and the contrast, nothing else).
+  const addressParams = [...new URLSearchParams(await page.evaluate(() => location.search)).keys()];
+  assert(!addressParams.includes('name') && addressParams.every(key => ['seed', 'theme', 'variant', 'contrast'].includes(key)), `The typed name stays out of the address: ${await page.evaluate(() => location.search)}`);
+  const namedCss = await downloadAs('CSS');
+  assert(namedCss.name === 'mtrl-theme-my-theme.css' && namedCss.text.includes('[data-theme="my-theme"]'), `The typed name names the file and its selector: ${namedCss.name}`);
+  await refusalAddsNoHeight('1440 px');
+  const refusedCss = await downloadAs('CSS');
+  assert(refusedCss.name === 'mtrl-theme-custom.css' && refusedCss.text.includes('[data-theme="custom"]'), `A refused name keeps the download on custom: ${refusedCss.name}`);
+  await nameInput.fill('');
 
   // The axes: the theme select lists themes (seeds), not mtrl's variant themes; the
   // variant and contrast regenerate the scheme from the theme's seed.
@@ -428,7 +467,7 @@ try {
   await until(() => page.locator('.mtrl-snackbar').last().textContent().then(text => text?.trim()), `Theme generated from theme-image.png · seed ${imageSeed}`, 'The snackbar names the file and the seed');
   assert(await page.locator('.md3-palette').first().isVisible(), 'and its palettes');
   const imageFile = await downloadAs('JSON');
-  assert(imageFile.name === `mtrl-theme-seed-${imageSeed.slice(1)}.json` && JSON.parse(imageFile.text).seed === imageSeed, `A theme from an image downloads under its seed: ${imageFile.name}`);
+  assert(imageFile.name === 'mtrl-theme-custom.json' && JSON.parse(imageFile.text).seed === imageSeed, `A theme from an image downloads named for the name typed (none yet: custom), carrying its seed: ${imageFile.name}`);
   await page.goto(`${base}/styles/themes/?seed=${imageSeed.slice(1)}`);
   await until(() => lightPrimary.getAttribute('data-hex'), await imagePrimary(), '?seed= reproduces the theme');
   await until(themeValue, 'From image', 'with From image selected');
@@ -452,6 +491,11 @@ try {
   const surfaceTile = await page.locator('.md3-scheme-card [data-role="surface-dim"]').boundingBox();
   assert(errorTile!.y > surfaceTile!.y, 'At 390 px the Error column wraps under the main block');
   await page.screenshot({ animations: 'disabled', path: `${output}/styles-themes-390.png`, fullPage: true });
+  // The reserved line at the narrow layout too: the field's height and the Scheme card's
+  // top are the same with the refusal message as with an allowed name, at 390 and 375.
+  await refusalAddsNoHeight('390 px');
+  await page.setViewportSize({ width: 375, height: 800 });
+  await refusalAddsNoHeight('375 px');
   await page.setViewportSize({ width: 1440, height: 900 });
   // The app can be destroyed: its element empties and its popups go.
   await page.evaluate(() => (window as unknown as { themeApp: { destroy(): void } }).themeApp.destroy());
@@ -485,7 +529,7 @@ try {
     }
   }
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
-  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
+  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, the Theme name field (its reserved row: no jump through a refusal at 1440, 390 and 375 px), destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
   await browser.close();
   server?.stop();
