@@ -41,9 +41,9 @@ describe('the example fence', () => {
     expect(Object.keys(rendered)).toEqual(['vanilla']);
     const html = renderExample('form:\n  class: signup\n');
     expect(html.match(/class="framework-note"/g)).toHaveLength(5);
-    expect(html).toContain('The form comes from mtrl-addons, which has no web components');
-    expect(rendered.vanilla).toBe("import { createForm } from 'mtrl-addons';\n\nconst form = createForm({ class: 'signup' });\ndocument.body.append(form.element);\n");
-    expect(code('colorpicker:\n  value: red\n', 'vanilla')).toContain("import { createColorPicker } from 'mtrl-addons';\n\nconst picker = createColorPicker({ value: 'red' });");
+    expect(html).toContain('The form comes from material-addons, which has no web components');
+    expect(rendered.vanilla).toBe("import { createForm } from 'material-addons';\n\nconst form = createForm({ class: 'signup' });\ndocument.body.append(form.element);\n");
+    expect(code('colorpicker:\n  value: red\n', 'vanilla')).toContain("import { createColorPicker } from 'material-addons';\n\nconst picker = createColorPicker({ value: 'red' });");
   });
   test('renders six highlighted panels, and one switch at the top of a page with examples', () => {
     const html = renderExample(withEvent);
@@ -59,7 +59,7 @@ describe('the example fence', () => {
 
 describe('Vanilla', () => {
   test('a switch with an event', () => {
-    expect(code(withEvent, 'vanilla')).toBe("import { createSwitch } from 'mtrl';\n\nconst toggle = createSwitch({ label: 'Wi-Fi', checked: true });\ntoggle.on('change', ({ checked }) => setWifi(checked));\ndocument.body.append(toggle.element);\n");
+    expect(code(withEvent, 'vanilla')).toBe("import { createSwitch } from 'material';\n\nconst toggle = createSwitch({ label: 'Wi-Fi', checked: true });\ntoggle.on('change', ({ checked }) => setWifi(checked));\ndocument.body.append(toggle.element);\n");
   });
   test('an action calls the setters', () => {
     expect(code(withAction, 'vanilla')).toContain('function mute() {\n  slider.setValue(0);\n  slider.disable();\n}\n');
@@ -70,7 +70,7 @@ describe('Vanilla', () => {
   });
   test('a tooltip\'s target is made by its own factory, and its element passed', () => {
     // The same trigger path as a menu's opener: the element is created first, as `trigger`
-    expect(code('tooltip:\n  text: Save\n  target: { icon: saveIcon, ariaLabel: Save }\n', 'vanilla')).toBe("import { createTooltip, createIconButton } from 'mtrl';\n\nconst trigger = createIconButton({ icon: saveIcon, ariaLabel: 'Save' });\ndocument.body.append(trigger.element);\n\nconst tooltip = createTooltip({ target: trigger.element, text: 'Save' });\ndocument.body.append(tooltip.element);\n");
+    expect(code('tooltip:\n  text: Save\n  target: { icon: saveIcon, ariaLabel: Save }\n', 'vanilla')).toBe("import { createTooltip, createIconButton } from 'material';\n\nconst trigger = createIconButton({ icon: saveIcon, ariaLabel: 'Save' });\ndocument.body.append(trigger.element);\n\nconst tooltip = createTooltip({ target: trigger.element, text: 'Save' });\ndocument.body.append(tooltip.element);\n");
   });
   test('children are the config array', () => {
     expect(code(withChildren, 'vanilla')).toContain("const tabs = createTabs({\n  tabs: [\n    { text: 'Flights', value: 'flights', state: 'active' },\n    { text: 'Trips', value: 'trips' },\n  ],\n});\ntabs.on('change', ({ value }) => showPanel(value));");
@@ -104,7 +104,7 @@ describe('React', () => {
     const react = code(withEvent, 'react');
     expect(react).toContain("import { setWifi } from './app';");
     expect(react).toContain('<Switch checked={checked} onChange={(event) => { setChecked(event.detail.checked); setWifi(event.detail.checked); }}>Wi-Fi</Switch>');
-    expect(react).not.toContain('mtrl/styles');
+    expect(react).not.toContain('material/styles');
   });
   test('an action is a state change', () => {
     const react = code(withAction, 'react');
@@ -178,7 +178,7 @@ describe('slotted children a factory takes through a method', () => {
   const bar = 'top-app-bar:\n  title: Inbox\n  leading: { icon: backIcon, ariaLabel: Back }\n  actions:\n    - { icon: searchIcon, ariaLabel: Search }\n';
   test('Vanilla creates each one and hands it to the method, not the config', () => {
     const vanilla = code(bar, 'vanilla');
-    expect(vanilla).toContain("import { createTopAppBar, createIconButton } from 'mtrl';");
+    expect(vanilla).toContain("import { createTopAppBar, createIconButton } from 'material';");
     expect(vanilla).toContain("const topBar = createTopAppBar({ title: 'Inbox' });\ntopBar.addLeadingElement(createIconButton({ icon: backIcon, ariaLabel: 'Back' }).element);\ntopBar.addTrailingElement(createIconButton({ icon: searchIcon, ariaLabel: 'Search' }).element);\n");
   });
   test('the web component takes them in its slots', () => {
@@ -232,7 +232,7 @@ describe('a trigger', () => {
   });
   test('Vanilla creates the button and passes its element as the opener', () => {
     const vanilla = code(menu, 'vanilla');
-    expect(vanilla).toContain("import { createMenu, createButton } from 'mtrl';");
+    expect(vanilla).toContain("import { createMenu, createButton } from 'material';");
     expect(vanilla).toContain("const trigger = createButton({ text: 'Edit' });\ndocument.body.append(trigger.element);\n\nconst menu = createMenu({ opener: trigger.element,");
     expect(vanilla).not.toContain('trigger: {');
   });

@@ -173,7 +173,7 @@ try {
   source = await code();
   assert(source.includes("labelPosition: 'start'") && source.includes('disabled: true'), 'Generated family code does not follow label position and disabled');
   const familyCopy = await copyCode();
-  assert(familyCopy.includes('parent.on(') && familyCopy.includes("'mtrl/styles/checkbox'") && familyCopy.includes("import 'mtrl/themes/ocean'"), 'Copied family code is incomplete');
+  assert(familyCopy.includes('parent.on(') && familyCopy.includes("'material/styles/checkbox'") && familyCopy.includes("import 'material/themes/ocean'"), 'Copied family code is incomplete');
   await toggle('disabled').click();
   await choose('labelPosition', 'end');
   await page.getByLabel('Label', { exact: true }).fill('Additions');
@@ -232,7 +232,7 @@ try {
   await frame.getByRole('checkbox', { name: 'Checkbox', exact: true }).waitFor();
 
   const copied = await copyCode();
-  assert(copied.includes('createCheckbox') && copied.includes('mtrl/styles/checkbox') && copied.includes("setAttribute('aria-label', 'Checkbox')") &&
+  assert(copied.includes('createCheckbox') && copied.includes('material/styles/checkbox') && copied.includes("setAttribute('aria-label', 'Checkbox')") &&
     copied.includes('disabled: true') && copied.includes('labelPosition: "start"') && copied.includes('name: "updates"') && copied.includes('value: "yes"') &&
     !copied.includes('required') && !copied.includes('error'), 'Copied checkbox code is incomplete');
 

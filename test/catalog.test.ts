@@ -30,9 +30,9 @@ describe('the components overview', () => {
     // Pre-upgrade rules ride in the page's one stylesheet, not their own link.
     expect(html).toMatch(/<script type="module" src="\/dist\/catalog\.js\?v=[a-z0-9]+">/);
     expect(html).toMatch(/<link rel="stylesheet" href="\/dist\/css\/catalog\.css\?v=[a-z0-9]+" \/>/);
-    expect(html).not.toContain('/dist/mtrl/elements/preupgrade.css');
+    expect(html).not.toContain('/dist/material/elements/preupgrade.css');
     expect(html).toContain(catalogTokens);
-    expect(html).not.toContain('mtrl/styles/base.css');
+    expect(html).not.toContain('material/styles/base.css');
     const cards = html.split('class="component-card ').slice(1);
     expect(cards.length).toBe(componentSlugs.length);
     for (const card of cards) expect(card.split('</a>')[0]).not.toContain('↗');

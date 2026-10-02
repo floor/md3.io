@@ -5,7 +5,7 @@ import { themes } from '../src/shared/button';
 import { contrastRatio, pairOf } from '../src/shared/color';
 import { allRoles, baseline, colorGroups, parseCss, parseDeclarations, themeTokens, TYPE_ROLES, typescale } from '../src/server/tokens';
 
-const baseCss = readFileSync(resolve(import.meta.dir, '../node_modules/mtrl/dist/styles/base.css'), 'utf8');
+const baseCss = readFileSync(resolve(import.meta.dir, '../node_modules/material/dist/styles/base.css'), 'utf8');
 const CORE_ROLES = ['primary', 'on-primary', 'primary-container', 'on-primary-container', 'secondary', 'on-secondary', 'tertiary', 'on-tertiary', 'error', 'on-error', 'surface', 'on-surface', 'on-surface-variant', 'outline', 'outline-variant', 'inverse-surface', 'inverse-on-surface', 'inverse-primary'];
 
 describe('mtrl tokens', () => {
@@ -43,7 +43,7 @@ describe('mtrl tokens', () => {
   test('every role the color page lists exists in the CSS', () => {
     const listed = colorGroups.flatMap(group => group.roles);
     expect(listed.length).toBeGreaterThan(30);
-    for (const role of listed) expect(baseCss.includes(`--mtrl-sys-color-${role}:`) || themes.some(theme => readFileSync(resolve(import.meta.dir, `../node_modules/mtrl/dist/themes/${theme}.css`), 'utf8').includes(`--mtrl-sys-color-${role}:`)), role).toBe(true);
+    for (const role of listed) expect(baseCss.includes(`--mtrl-sys-color-${role}:`) || themes.some(theme => readFileSync(resolve(import.meta.dir, `../node_modules/material/dist/themes/${theme}.css`), 'utf8').includes(`--mtrl-sys-color-${role}:`)), role).toBe(true);
   });
   test('the type scale has 15 roles with numeric sizes', () => {
     expect(typescale.map(style => style.role)).toEqual(TYPE_ROLES);

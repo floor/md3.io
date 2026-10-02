@@ -2,7 +2,7 @@
 // cards hold a surface element instead: the same factory, built by mtrl's
 // defineElement in a shadow root with the component's own CSS, and shown open in
 // place, without showModal(), a popover, a scrim or a focus trap.
-import { defineElement, registerStyles, type ElementComponent } from 'mtrl/elements';
+import { defineElement, registerStyles, type ElementComponent } from 'material/elements';
 
 // The factories place their surfaces with position: fixed, as overlays; in a card the
 // surface is laid out where it stands.

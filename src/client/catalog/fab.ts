@@ -1,6 +1,6 @@
 // The fab card: <m-fab>.
-import 'mtrl/elements/css/fab';
-import { defineFab } from 'mtrl/elements';
+import 'material/elements/css/fab';
+import { defineFab } from 'material/elements';
 
 export const define = (): void => {
   defineFab();

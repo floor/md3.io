@@ -1,6 +1,6 @@
 // The list card: <m-list>.
-import 'mtrl/elements/css/list';
-import { defineList } from 'mtrl/elements';
+import 'material/elements/css/list';
+import { defineList } from 'material/elements';
 
 export const define = (): void => {
   defineList();

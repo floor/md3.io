@@ -1,6 +1,6 @@
 // The split-button card: <m-split-button>.
-import 'mtrl/elements/css/split-button';
-import { defineSplitButton } from 'mtrl/elements';
+import 'material/elements/css/split-button';
+import { defineSplitButton } from 'material/elements';
 
 export const define = (): void => {
   defineSplitButton();

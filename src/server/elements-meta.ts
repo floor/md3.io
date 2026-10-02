@@ -1,7 +1,7 @@
 // The web component behind a playground, as plain data for the framework code
 // generators (src/shared/frameworks.ts). Read on the server from mtrl/elements,
 // which imports safely there; the browser gets JSON, not the elements.
-import { elements, declarations } from 'mtrl/elements';
+import { elements, declarations } from 'material/elements';
 import type { ChildrenMeta, ConfigKey, ElementMeta, OpenMeta, SlottedMeta, TriggerMeta } from '../shared/frameworks';
 
 type Spec = {

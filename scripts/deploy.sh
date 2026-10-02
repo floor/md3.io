@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Deploy md3.io to the floor.io server: push main first, then run this.
 #
-# The server keeps an mtrl checkout beside md3.io, as locally, so `file:../mtrl` resolves
-# the same way. Both are reset to origin/main and built there; the pm2 process reloads only
-# when both builds succeed. Override the host with DEPLOY_HOST, the directory with DEPLOY_DIR.
+# The server keeps a material checkout beside md3.io, at /home/floor/material, so
+# `file:../material` resolves the same way. Both are reset to origin/main and built there;
+# the pm2 process reloads only when both builds succeed. Override the host with
+# DEPLOY_HOST, the directory with DEPLOY_DIR.
 set -euo pipefail
 
 host="${DEPLOY_HOST:-floor.io}"
@@ -13,7 +14,7 @@ ssh "$host" DIR="$dir" bash -s <<'REMOTE'
 set -euo pipefail
 export PATH="$HOME/.bun/bin:$PATH"
 
-for repo in mtrl md3.io; do
+for repo in material md3.io; do
   echo "$repo:"
   cd "$DIR/$repo"
   git fetch -q origin main

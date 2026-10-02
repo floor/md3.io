@@ -1,6 +1,6 @@
 // The search card: <m-search>.
-import 'mtrl/elements/css/search';
-import { defineSearch } from 'mtrl/elements';
+import 'material/elements/css/search';
+import { defineSearch } from 'material/elements';
 
 export const define = (): void => {
   defineSearch();

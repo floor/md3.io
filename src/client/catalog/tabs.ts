@@ -1,6 +1,6 @@
 // The tabs card: <m-tabs>.
-import 'mtrl/elements/css/tabs';
-import { defineTabs } from 'mtrl/elements';
+import 'material/elements/css/tabs';
+import { defineTabs } from 'material/elements';
 
 export const define = (): void => {
   defineTabs();

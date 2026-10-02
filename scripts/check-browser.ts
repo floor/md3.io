@@ -78,7 +78,7 @@ try {
   await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   assert(copied === await page.locator('#generated-code').textContent(), 'Copied code differs from the highlighted source');
-  assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('mtrl/themes/ocean'), 'Copied code is stale');
+  assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('material/themes/ocean'), 'Copied code is stale');
   const parentHasMaterial = await page.evaluate(() => [...document.styleSheets].some(sheet => sheet.href?.includes('/mtrl/')));
   assert(!parentHasMaterial, 'Material CSS leaked into the site');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });

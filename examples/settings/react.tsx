@@ -1,6 +1,6 @@
 // React: mtrl/react wraps the same elements.
 import { useState } from "react";
-import { Button, Switch, Tab, Tabs } from "mtrl/react";
+import { Button, Switch, Tab, Tabs } from "material/react";
 import { DEFAULTS, summary, type Settings as State } from "./shared";
 
 export default function Settings() {

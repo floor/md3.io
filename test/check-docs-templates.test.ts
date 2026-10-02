@@ -36,7 +36,7 @@ const typeErrors = (blocks: Generated[]) => {
 describe('a named slot, typed against mtrl', () => {
   const vue = (region: string) => vueToTs([
     '<script setup lang="ts">',
-    "import { MButton, MDialog } from 'mtrl/vue';",
+    "import { MButton, MDialog } from 'material/vue';",
     '</script>',
     '<template>',
     '  <MDialog>',
@@ -46,7 +46,7 @@ describe('a named slot, typed against mtrl', () => {
   ].join('\n'));
   const svelte = (region: string, child = '<Button variant="text">Cancel</Button>') => svelteToTs([
     '<script lang="ts">',
-    "  import { Button, Card, Dialog } from 'mtrl/svelte';",
+    "  import { Button, Card, Dialog } from 'material/svelte';",
     '  let dialog: { element: HTMLElement | null } | undefined = $state();',
     '  const width = () => dialog?.element?.offsetWidth;',
     '</script>',
@@ -56,7 +56,7 @@ describe('a named slot, typed against mtrl', () => {
     '<Card>{#snippet headerAction()}x{/snippet}{#snippet subhead()}y{/snippet}</Card>',
   ].join('\n'));
   const [declaredVue, undeclaredVue, badContentVue, declaredSvelte, undeclaredSvelte, badContentSvelte] = typeErrors([
-    vue('actions'), vue('footer'), vueToTs('<script setup lang="ts">\nimport { MButton, MDialog } from \'mtrl/vue\';\n</script>\n<template>\n  <MDialog>\n    <template #actions>{{ nowhere }}</template>\n  </MDialog>\n</template>'),
+    vue('actions'), vue('footer'), vueToTs('<script setup lang="ts">\nimport { MButton, MDialog } from \'material/vue\';\n</script>\n<template>\n  <MDialog>\n    <template #actions>{{ nowhere }}</template>\n  </MDialog>\n</template>'),
     svelte('actions'), svelte('footer'), svelte('actions', '{nowhere}'),
   ]);
 
@@ -77,7 +77,7 @@ describe('a vue block as TypeScript', () => {
   const vue = [
     '<script setup lang="ts">',
     "import { ref } from 'vue';",
-    "import { MSwitch, MRadios, MRadio } from 'mtrl/vue';",
+    "import { MSwitch, MRadios, MRadio } from 'material/vue';",
     'const wifi = ref(true);',
     'const sizes = [{ value: "s" }];',
     '</script>',
@@ -140,7 +140,7 @@ describe('a vue block as TypeScript', () => {
 describe('a svelte block as TypeScript', () => {
   const svelte = [
     '<script lang="ts">',
-    "  import { Switch, Radios, Radio } from 'mtrl/svelte';",
+    "  import { Switch, Radios, Radio } from 'material/svelte';",
     '  let wifi = $state(true);',
     '  const sizes = [{ value: "s" }];',
     '</script>',
@@ -167,7 +167,7 @@ describe('a svelte block as TypeScript', () => {
   test('types a named snippet as the component\'s prop, with its content, and bind:this as its instance', () => {
     const snippets = svelteToTs([
       '<script lang="ts">',
-      "  import { Card, Dialog, Button } from 'mtrl/svelte';",
+      "  import { Card, Dialog, Button } from 'material/svelte';",
       '  let dialog = $state();',
       '</script>',
       '',

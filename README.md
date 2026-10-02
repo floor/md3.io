@@ -4,17 +4,17 @@ The presentation site for mtrl. Uses the vlist.io stack and shared styles: Bun, 
 
 ## Development
 
-Keep `mtrl` alongside this repository, update it to main including PR #185 or newer, and build it first:
+Keep `material` alongside this repository, update it to main including PR #185 or newer, and build it first:
 
 ```sh
-cd ../mtrl
+cd ../material
 bun run build
 cd ../md3.io
 bun install
 bun run dev
 ```
 
-Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in the local mtrl checkout's `src` rebuilds mtrl, then this site, then restarts the server; a change in `src/client`, `src/shared` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server. Reload the page to see the result.
+Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in the local material checkout's `src` rebuilds material, then this site, then restarts the server; a change in `src/client`, `src/shared` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server. Reload the page to see the result.
 
 ```sh
 bun run typecheck
@@ -25,7 +25,7 @@ bun run test:browser
 
 The browser check uses Playwright Chromium and writes screenshots to `analysis/browser/`. Install its browser once with `bunx playwright install chromium` if needed. To serve a built site, run `bun start`.
 
-`bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against mtrl, and against the published mtrl-addons (a pinned devDependency) for form and colorpicker: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app.
+`bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against material, and against material-addons (a devDependency) for form and colorpicker: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app.
 
 ## Structure
 
@@ -39,11 +39,11 @@ The browser check uses Playwright Chromium and writes screenshots to `analysis/b
 
 The site includes a compact landing page, a component catalog, all six Actions playgrounds (Button, Icon button, Button group, Split button, FAB, and Extended FAB), all ten Selection & input playgrounds (Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, and Time picker), all six Navigation playgrounds (Navigation rail, Drawer, Tabs, Menu, Top app bar, and Bottom app bar), all seven Containment playgrounds (Card, List, Carousel, Divider, Dialog, Bottom sheet, and Side sheet), all five Communication playgrounds (Badge, Progress, Loading indicator, Snackbar, and Tooltip), and all supplied component documentation. Each playground shares a configuration panel, independent Material theme controls, and preview/code tabs with contextual copying. View code uses a locally bundled highlight.js JavaScript grammar and the vlist.io syntax colors, following the site’s light/dark mode. No benchmark infrastructure is included. The docs include additional/legacy references such as form and colorpicker; their examples are checked by `bun run docs:check`.
 
-The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local mtrl dependency (`file:../mtrl`, a checkout beside this one).
+The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local material dependency (`file:../material`, a checkout beside this one).
 
 ## Deploy
 
-md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.config.cjs`, port 4300). The server keeps an mtrl checkout beside md3.io, as locally. Push `main`, then run `scripts/deploy.sh`: it resets both checkouts to `origin/main`, builds mtrl and then md3.io, and reloads pm2 only when both builds succeed.
+md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.config.cjs`, port 4300). The server keeps a material checkout beside md3.io, at `/home/floor/material`. Push `main`, then run `scripts/deploy.sh`: it resets both checkouts to `origin/main`, builds material and then md3.io, and reloads pm2 only when both builds succeed.
 
 The Date picker playground requires mtrl PR #182 or newer. It uses the selective Date picker stylesheet and the native calendar/input modes, with configurable date limits and modal confirmation by default. The preview and copied example use the component API directly.
 

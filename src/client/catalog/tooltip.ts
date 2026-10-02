@@ -1,10 +1,10 @@
 // The tooltip card: <md3-catalog-tooltip>, the tooltip shown under its icon button, in
 // place (surface.ts).
-import 'mtrl/elements/css/icon-button';
-import 'mtrl/elements/css/tooltip';
-import createIconButton from 'mtrl/components/icon-button';
-import createTooltip from 'mtrl/components/tooltip';
-import { PREFIX } from 'mtrl/core';
+import 'material/elements/css/icon-button';
+import 'material/elements/css/tooltip';
+import createIconButton from 'material/components/icon-button';
+import createTooltip from 'material/components/tooltip';
+import { PREFIX } from 'material/core';
 import favorite from '../../../icons/favorite.svg' with { type: 'text' };
 import { tooltipDefaults } from './defaults';
 import { surface } from './surface';

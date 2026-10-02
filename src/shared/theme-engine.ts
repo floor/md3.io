@@ -23,7 +23,7 @@ import {
   argbFromHex,
   hexFromArgb,
 } from '@material/material-color-utilities';
-import { schemeToTokens, THEME_ROLES, type ThemeTokens } from 'mtrl/core/theme';
+import { schemeToTokens, THEME_ROLES, type ThemeTokens } from 'material/core/theme';
 
 export { THEME_ROLES };
 export type VariantName =

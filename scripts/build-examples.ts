@@ -61,8 +61,8 @@ const solid: BunPlugin = {
   },
 };
 
-// One copy of each framework. node_modules/mtrl links to a local mtrl checkout that
-// has its own react, vue, svelte and solid-js (its dev dependencies), so mtrl/react
+// One copy of each framework. node_modules/material links to a local material checkout that
+// has its own react, vue, svelte and solid-js (its dev dependencies), so material/react
 // would otherwise import a second React, whose hooks fail; the same goes for the
 // others. Every framework import resolves from md3.io's node_modules instead. Vue
 // resolves to its full build, which carries the template compiler the example uses.

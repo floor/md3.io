@@ -1,7 +1,7 @@
 // Solid: mtrl/solid wraps the same elements.
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-import { Button, Switch, Tab, Tabs } from "mtrl/solid";
+import { Button, Switch, Tab, Tabs } from "material/solid";
 import { DEFAULTS, summary, type Settings as State } from "./shared";
 
 export default function Settings() {

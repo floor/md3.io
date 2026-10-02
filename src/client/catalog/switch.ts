@@ -1,6 +1,6 @@
 // The switch card: <m-switch>.
-import 'mtrl/elements/css/switch';
-import { defineSwitch } from 'mtrl/elements';
+import 'material/elements/css/switch';
+import { defineSwitch } from 'material/elements';
 
 export const define = (): void => {
   defineSwitch();

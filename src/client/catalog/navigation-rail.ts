@@ -1,6 +1,6 @@
 // The navigation-rail card: <m-navigation-rail>.
-import 'mtrl/elements/css/navigation-rail';
-import { defineNavigationRail } from 'mtrl/elements';
+import 'material/elements/css/navigation-rail';
+import { defineNavigationRail } from 'material/elements';
 
 export const define = (): void => {
   defineNavigationRail();

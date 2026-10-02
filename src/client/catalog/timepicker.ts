@@ -1,8 +1,8 @@
 // The time picker card: <md3-catalog-timepicker>, the picker shown open in place
 // (surface.ts).
-import 'mtrl/elements/css/button';
-import 'mtrl/elements/css/timepicker';
-import createTimePicker from 'mtrl/components/timepicker';
+import 'material/elements/css/button';
+import 'material/elements/css/timepicker';
+import createTimePicker from 'material/components/timepicker';
 import { timepickerDefaults } from './defaults';
 import { surface } from './surface';
 

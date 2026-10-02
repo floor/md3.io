@@ -22,7 +22,7 @@
     "highlight.js": "11.11.1",
     "marked": "17.0.2",
     "minisearch": "^7.2.0",
-    "mtrl": "file:../mtrl"
+    "material": "file:../material"
   },
   "devDependencies": {
     "@babel/core": "^7",
@@ -32,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-preset-solid": "^1.9",
-    "mtrl-addons": "0.9.0-next.1",
+    "material-addons": "file:../../material/tarballs/material-addons-3.0.0-next.0.tgz",
     "playwright": "^1.63.0",
     "react": "^19",
     "react-dom": "^19",
