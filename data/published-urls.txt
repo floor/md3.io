@@ -90,6 +90,7 @@
 /docs/components/vanilla/
 /docs/components/vue/
 /docs/components/web-components/
+/docs/events-and-overlays/
 /docs/getting-started/
 /docs/react/
 /docs/server-rendering/

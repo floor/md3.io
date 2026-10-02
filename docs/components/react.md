@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-10-02
 status: published
 ---
 
@@ -53,6 +53,15 @@ per-keystroke `onChange`. Use `onInput` for every keystroke; both carry `{ value
 
 The component attaches its listeners once and always calls your latest handler, so an inline
 arrow function costs nothing.
+
+A component owns the `on…` props of its element's events (`onChange`, `onInput`, `onSelect`,
+…) and its `default…` props, typed with the element's own payloads. Any other HTML attribute
+passes to the host. To spread a whole set of HTML attributes into a component, omit the props
+it owns:
+
+```tsx fragment
+type Rest = Omit<React.HTMLAttributes<HTMLElement>, 'onChange'>;
+```
 
 ## Controlled and uncontrolled
 
