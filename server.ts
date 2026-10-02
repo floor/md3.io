@@ -1,6 +1,6 @@
 import { Eta } from 'eta';
 import { resolve, extname, sep, basename } from 'node:path';
-import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall } from './src/server/content';
+import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
@@ -161,7 +161,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
   const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
-  if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall('material') });
+  if (path === '/') response = page(path, 'mtrl — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/') response = page(path, 'Components — mtrl', 'Explore mtrl components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
@@ -195,8 +195,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/docs/') response = page(path, 'Documentation — mtrl', 'Configuration and API references for mtrl components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
-  else if (path === '/components/textfield/' || path === '/preview/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('textfield', 'text-field') } });
-  else if (path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/text-field/' } });
+  else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
