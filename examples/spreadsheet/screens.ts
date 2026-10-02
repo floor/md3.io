@@ -10,6 +10,8 @@ export default async function screenshots(page: Page, directory: string) {
     await page.evaluate(theme => { document.documentElement.dataset.themeMode = theme; }, theme);
     await page.evaluate(() => document.fonts.ready);
     const shot = async (state: string) => {
+      // Component springs use JS timing as well as CSS; let the surface settle.
+      await page.waitForTimeout(650);
       await page.screenshot({ path: `${directory}/${width}-${theme}-${state}.png`, fullPage: true, animations: 'disabled' });
     };
     await shot('loaded');
@@ -30,8 +32,10 @@ export default async function screenshots(page: Page, directory: string) {
     await page.getByRole('menuitem', { name: 'Sort ascending', exact: true }).waitFor();
     await shot('menu'); await page.keyboard.press('Escape');
     await page.locator('[data-row="0"][data-column="0"]').dblclick();
-    const editor = page.getByRole('textbox', { name: 'Edit Dispatch', exact: true });
-    await editor.waitFor(); await shot('editing'); await editor.fill('Revised dispatch'); await editor.press('Enter');
+    await page.getByRole('alert').filter({ hasText: 'Cell editing is waiting' }).waitFor(); await shot('editing-blocked');
+    await page.locator('[data-row="1"][data-column="7"]').dblclick();
+    const editor = page.getByRole('textbox', { name: 'Edit Notes', exact: true });
+    await editor.waitFor(); await editor.fill('Added note'); await shot('editing'); await editor.press('Enter');
     await page.getByRole('button', { name: 'Undo', exact: true }).waitFor(); await shot('undo');
     await page.getByLabel('Open CSV file').setInputFiles({ name: 'next.csv', mimeType: 'text/csv', buffer: Buffer.from('A\nx') });
     await page.getByRole('button', { name: 'Cancel', exact: true }).waitFor(); await shot('discard');

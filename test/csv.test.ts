@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { parseCSV, writeCSV } from '../examples/spreadsheet/parser';
-import { openCSV, edit, freshView, rowsInView, findCells, hideColumn, exportCSV, valueAt } from '../examples/spreadsheet/model';
+import { openCSV, edit, freshView, rowsInView, findCells, hideColumn, exportCSV, valueAt } from '../examples/spreadsheet/shared';
 
 describe('CSV grammar', () => {
   test('BOM, CRLF, commas, doubled quotes and embedded line breaks', () => {

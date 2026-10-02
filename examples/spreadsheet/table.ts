@@ -2,15 +2,21 @@ import { createVList, table, a11y } from 'vlist';
 import createMenu from 'material/components/menu';
 import createTextField from 'material/components/text-field';
 import { button, element } from './ui';
-import { valueAt, visibleColumns, type Document, type View, type Row, type Column } from './model';
-import 'vlist/styles';
-import 'vlist/styles/table';
+import { valueAt, visibleColumns, type Document, type View, type Row, type Column } from './shared';
+import listStyles from 'vlist/styles' with { type: 'text' };
+import tableStyles from 'vlist/styles/table' with { type: 'text' };
+
+// The examples builder emits one JS file. Bundle the unmodified public CSS exports
+// as text so their styles travel with that entry, without changing shared infrastructure.
+const styles = document.createElement('style');
+styles.textContent = listStyles + tableStyles; document.head.append(styles);
 
 export interface TableActions {
   edit(row: Row, column: Column, value: string, move: number, restore: boolean): void;
   sort(column: Column, direction: 'asc' | 'desc'): void;
   filter(column: Column, value: string): void;
   hide(column: Column): void;
+  unavailable(message: string): void;
 }
 export function mountTable(host: HTMLElement, doc: Document, view: View, rows: Row[], actions: TableActions) {
   const columns = visibleColumns(doc, view);
@@ -89,7 +95,14 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
     list.scrollToIndex(active.row, 'center');
     cell = host.querySelector<HTMLElement>(`[data-row="${active.row}"][data-column="${active.column}"]`)!;
     if (!cell) return;
-    editor = createTextField({ label: `Edit ${column.label}`, value: valueAt(doc, rows[active.row], column), density: 'compact', variant: 'outlined', type: 'multiline' });
+    editor = createTextField({ label: `Edit ${column.label}`, value: valueAt(doc, rows[active.row], column), variant: 'outlined', type: 'multiline' });
+    // The supplied multiline factory currently loses configured nonempty values.
+    // Keep data intact while the reported library initialization defect is unresolved.
+    if (editor.getValue() !== valueAt(doc, rows[active.row], column)) {
+      editor.destroy(); editor = undefined; editingRow = -1; list.destroy(); list = makeList();
+      actions.unavailable('Cell editing is waiting for a Material text-field fix. Your cell is unchanged.');
+      return;
+    }
     editingCell = cell; cell.classList.add('csv__cell--editing'); cell.replaceChildren(editor.element);
     editor.input.focus(); editor.input.select();
     editor.input.addEventListener('keydown', nativeEvent => {
@@ -98,20 +111,28 @@ export function mountTable(host: HTMLElement, doc: Document, view: View, rows: R
       if (event.key === 'Escape') { event.preventDefault(); finish(false); }
       if ((event.key === 'Enter' && !event.shiftKey) || event.key === 'Tab') { event.preventDefault(); finish(true, event.key === 'Tab' ? event.shiftKey ? -1 : 1 : 0); }
     });
-    editor.input.addEventListener('blur', () => finish(true, 0, false));
+    const currentEditor = editor;
+    // A virtual row can blur while being removed; rebuild after that DOM operation.
+    editor.input.addEventListener('blur', () => queueMicrotask(() => {
+      if (editor === currentEditor) finish(true, 0, false);
+    }));
   }
   host.addEventListener('keydown', onKey);
   const onScroll = () => finish(true, 0, false);
   host.addEventListener('scroll', onScroll, true);
   function onKey(event: KeyboardEvent) {
-    if (editor || !(event.target instanceof HTMLElement) || !event.target.matches('.csv__cell')) return;
+    if (editor || !(event.target instanceof HTMLElement) || event.target.closest('button, input, textarea, [role=menu]')) return;
     const moves: Record<string, [number, number]> = {
       ArrowDown: [1, 0], ArrowUp: [-1, 0], ArrowRight: [0, 1], ArrowLeft: [0, -1], PageDown: [10, 0], PageUp: [-10, 0],
     };
     if (moves[event.key]) { event.preventDefault(); const [r, c] = moves[event.key]; focus(active.row + r, active.column + c); }
     else if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault(); focus(event.ctrlKey ? event.key === 'Home' ? 0 : rows.length - 1 : active.row, event.key === 'Home' ? 0 : columns.length - 1);
-    } else if (event.key === 'Enter' || event.key === 'F2') { event.preventDefault(); startEdit(event.target); }
+    } else if (event.key === 'Enter' || event.key === 'F2') {
+      event.preventDefault();
+      const cell = host.querySelector<HTMLElement>(`[data-row="${active.row}"][data-column="${active.column}"]`);
+      if (cell) startEdit(cell);
+    }
   }
   return {
     focus: (row: number, column: string) => focus(row, columns.findIndex(c => c.id === column)),

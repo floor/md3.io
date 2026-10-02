@@ -5,7 +5,7 @@ import { supportingTools } from './panes';
 import createSnackbar from 'material/components/snackbar';
 import createCheckbox from 'material/components/checkbox';
 import fixture from './dispatches.csv' with { type: 'text' };
-import { openCSV, edit, exportCSV, findCells, freshView, hideColumn, rowsInView, valueAt, type Document } from './model';
+import { openCSV, edit, exportCSV, findCells, freshView, hideColumn, rowsInView, valueAt, type Document } from './shared';
 import { button, field, element } from './ui';
 import { mountTable } from './table';
 
@@ -81,6 +81,7 @@ function render() {
         }
       });
     },
+    unavailable(message) { error.textContent = message; error.hidden = false; },
     sort(column, direction) { view.sort = { column: column.id, direction }; render(); },
     filter(column, value) { view.exact = { column: column.id, value }; render(); status.textContent = `Filter: ${column.label} equals ${value || '(empty)'}.`; },
     hide(column) { view = hideColumn(doc, view, column.id); render(); show.element.focus(); },

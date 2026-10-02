@@ -9,6 +9,7 @@ import { chromium } from 'playwright';
 import { handleRequest } from '../../server';
 import steps from './check';
 import screenshots from './screens';
+import audit from './audit';
 
 const [mode, scratch, screenDir] = process.argv.slice(2);
 if (!scratch?.startsWith('/tmp/')) throw new Error('Pass the absolute mktemp directory under /tmp.');
@@ -40,11 +41,12 @@ if (mode === 'build') {
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const problems: string[] = [];
-    page.on('pageerror', error => problems.push(error.message));
+    page.on('pageerror', error => { problems.push(error.stack ?? error.message); console.error('PAGE ERROR', error.message); });
     page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') problems.push(message.text()); });
     await page.goto(`${server.url}csv-review/`);
     page.setDefaultTimeout(8000);
     if (mode === 'screens') await screenshots(page, screenDir!);
+    else if (mode === 'audit') await audit(page, screenDir!);
     else await steps(page);
     if (problems.length) throw new Error(problems.join('\n'));
     console.log(`CSV review ${mode} passed.`);
