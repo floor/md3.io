@@ -1,0 +1,39 @@
+/* Layout only. Material and vlist supply their own component styles. */
+.csv { width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.csv__heading, .csv__toolbar, .csv__find { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+.csv h1, .csv p { margin: 0; }
+
+.csv__table { height: min(60vh, 600px); min-height: 280px; width: 100%; min-width: 0; }
+.csv__cell { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+.csv__cell > * { width: 100%; }
+
+.csv__find[hidden], .csv__empty[hidden], .csv__error[hidden] { display: none; }
+@media (max-width: 480px) { .csv__toolbar > *, .csv__find > * { max-width: 100%; } }
+.csv__cell--editing { overflow: visible; }
+.csv__cell--editing > * { position: absolute; z-index: 2; width: 280px; max-width: calc(100vw - 64px); }
+
+.csv__appbar { position: relative; height: 64px; flex: 0 0 64px; }
+.csv[data-pane="expanded"][data-tools-open="true"] { padding-inline-end: 384px; box-sizing: border-box; }
+.csv__toolbar { flex-direction: column; align-items: stretch; padding-bottom: 24px; }
+.csv__toolbar > * { width: 100%; }
+.csv__cell { min-height: 48px; display: flex; align-items: center; }
+.csv__info, .csv__help { color: var(--mtrl-sys-color-on-surface-variant); }
+.csv__error { color: var(--mtrl-sys-color-error); }
+.csv__status, .csv__cell { font-family: var(--mtrl-sys-typescale-body-medium-font); font-size: var(--mtrl-sys-typescale-body-medium-font-size); line-height: var(--mtrl-sys-typescale-body-medium-line-height); }
+.csv__table {
+  --vlist-bg: var(--mtrl-sys-color-surface);
+  --vlist-text: var(--mtrl-sys-color-on-surface);
+  --vlist-text-muted: var(--mtrl-sys-color-on-surface-variant);
+  --vlist-border: var(--mtrl-sys-color-outline-variant);
+  --vlist-bg-hover: var(--mtrl-sys-color-surface-container);
+  --vlist-bg-striped: var(--mtrl-sys-color-surface-container-low);
+  --vlist-bg-selected: var(--mtrl-sys-color-secondary-container);
+  --vlist-bg-selected-hover: var(--mtrl-sys-color-secondary-container);
+  --vlist-focus-ring: var(--mtrl-sys-color-primary);
+  --vlist-border-selected: var(--mtrl-sys-color-primary);
+  --vlist-border-radius: var(--mtrl-sys-shape-corner-small);
+}
+
+.csv__cell { font-variant-numeric: tabular-nums; }
+@media (max-width: 599px) { #app:has(.csv) { padding: 16px; } }
