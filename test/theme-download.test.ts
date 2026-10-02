@@ -45,7 +45,7 @@ describe('theme download', () => {
     expect(field?.[2]).toEqual({ variant: 'outlined', density: 'compact', label: 'Theme name', value: 'custom', supportingText: ' ' });
   });
   test('a refused name says so in the field; any other keeps its row a reserved blank', () => {
-    expect(nameSupportingText('desert')).toBe("That is a built-in theme's name");
+    expect(nameSupportingText('desert')).toBe('Built-in name: taken');
     expect(nameSupportingText('My Theme')).toBe(' ');
     expect(nameSupportingText('')).toBe(' ');
     expect(nameSupportingText(undefined)).toBe(' ');

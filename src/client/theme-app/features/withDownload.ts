@@ -13,8 +13,11 @@ type Format = keyof typeof FORMATS;
 /** The download menu's items, from the formats: CSS, JSON. */
 export const FORMAT_ITEMS: { id: Format; text: string }[] = (Object.keys(FORMATS) as Format[]).map(id => ({ id, text: id.toUpperCase() }));
 
-/** The Theme name field's supporting row: a reserved blank, or why the typed name is refused. */
-export const nameSupportingText = (raw: unknown): string => downloadName(raw) === null ? "That is a built-in theme's name" : ' ';
+/** The Theme name field's supporting row: why the typed name is refused, or the blank
+    the row is held open for (styles/theme-app.css reserves its height: a whitespace-only
+    helper draws no line box). One body-small line: "Built-in name: taken" fits the
+    200 px field with room to spare. */
+export const nameSupportingText = (raw: unknown): string => downloadName(raw) === null ? 'Built-in name: taken' : ' ';
 
 /** What a theme was generated from, for the file's header: its name no longer says. */
 const generatedFrom = ({ seed, variant, contrast, secondary }: NonNullable<ThemeData['spec']>) => [

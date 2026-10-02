@@ -49,7 +49,9 @@ export const layout = ({ themes, roles, selected }: LayoutData): unknown[] => [
       buttons: CONTRASTS.map(([value, , label], i) => ({ value: String(value), icon: CONTRAST_ICONS[i], ariaLabel: label, selected: value === 0 })),
     }],
     // The downloaded file's name: `custom` until typed; a built-in theme's name is refused.
-    // The supporting row is reserved from the start, as the variant select's is.
+    // The blank supporting text keeps the row element; its height is reserved in
+    // styles/theme-app.css — a whitespace-only helper draws no line box (the variant
+    // select needs no such rule: its row always holds the seed line).
     [createTextField, 'name', { variant: 'outlined', density: 'compact', label: 'Theme name', value: 'custom', supportingText: ' ' }],
   ],
   ['content', { tag: 'div', class: 'theme-app__content' },

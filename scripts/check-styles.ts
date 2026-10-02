@@ -173,8 +173,8 @@ try {
   // mtrl's CSS has, ?theme=<name> follows and opens it again, a tile copies its hex with
   // mtrl's snackbar, a theme without a seed says why it has no palettes, ten switches
   // leave the listener count flat, a switch paints within a frame, the Theme name field
-  // names the download (a built-in theme's name refused, saying so), and a phone does not
-  // scroll sideways.
+  // names the download (a built-in theme's name refused, saying so, in a row held open:
+  // no height, no card move), and a phone does not scroll sideways.
   console.log('Checking /styles/themes/');
   await page.goto(`${base}/styles/themes/`);
   const themeCss = await (await fetch(`${base}/dist/mtrl/themes/desert.css`)).text();
@@ -320,16 +320,31 @@ try {
   assert(json.name === 'mtrl-theme-custom.json' && tokens.name === 'custom' && tokens.seed === '#9a7a3e' && tokens.variant === 'tonal-spot' && tokens.light.primary.$value === desertPrimary && Object.keys(tokens.dark).length === THEME_ROLES.length, 'The JSON is named like the file, and has the seed, the variant and every role');
   console.log(`Download: ${cssFile.name} and ${json.name}, ${THEME_ROLES.length} roles light and dark, equal to desert.css`);
   // The Theme name field: the typed name names the file and its selector; a built-in
-  // theme's name is refused, says so in the field, and the download stays custom.
+  // theme's name is refused, says so in the field, and the download stays custom. The
+  // refusal brings no height with it: the helper's row is held open from the start
+  // (styles/theme-app.css), so the field's height and the Scheme card's top are the
+  // same with the message as without — at 1440 (the 200 px field; the field is a fixed
+  // 200 px at every width above 700, so this is 1280's case too), and at 390 and 375.
   const nameField = page.locator('.theme-app__controls > .mtrl-textfield:not(.mtrl-select)');
   const nameInput = page.getByLabel('Theme name', { exact: true });
   assert(await nameField.count() === 1 && await nameInput.count() === 1, 'The controls hold the labelled Theme name field');
   assert(await nameInput.inputValue() === 'custom', `The Theme name field starts on custom: ${await nameInput.inputValue()}`);
+  const nameFieldHeight = () => nameField.evaluate(element => element.getBoundingClientRect().height);
+  // In the document, not the viewport: a scroll (or scroll anchoring) can hide a move.
+  const schemeCardTop = () => page.locator('.md3-scheme-card').evaluate(element => element.getBoundingClientRect().top + window.scrollY);
+  const refusalAddsNoHeight = async (where: string) => {
+    await nameInput.fill('my theme');
+    const height = await nameFieldHeight();
+    const top = await schemeCardTop();
+    await nameInput.fill('desert');
+    await until(() => nameField.locator('.mtrl-textfield__helper').textContent().then(text => text?.trim()), 'Built-in name: taken', `A built-in theme's name is refused at ${where}, and the field says so`);
+    assert(Math.abs(await nameFieldHeight() - height) < 0.5, `The field keeps its height when the refusal appears at ${where}: ${height} → ${await nameFieldHeight()} px`);
+    assert(Math.abs(await schemeCardTop() - top) < 0.5, `The Scheme card does not move when the refusal appears at ${where}: ${top} → ${await schemeCardTop()} px`);
+  };
   await nameInput.fill('my theme');
   const namedCss = await downloadAs('CSS');
   assert(namedCss.name === 'mtrl-theme-my-theme.css' && namedCss.text.includes('[data-theme="my-theme"]'), `The typed name names the file and its selector: ${namedCss.name}`);
-  await nameInput.fill('desert');
-  await until(() => nameField.locator('.mtrl-textfield__helper').textContent().then(text => text?.trim()), "That is a built-in theme's name", 'A built-in theme\'s name is refused, and the field says so');
+  await refusalAddsNoHeight('1440 px');
   const refusedCss = await downloadAs('CSS');
   assert(refusedCss.name === 'mtrl-theme-custom.css' && refusedCss.text.includes('[data-theme="custom"]'), `A refused name keeps the download on custom: ${refusedCss.name}`);
   await nameInput.fill('');
@@ -466,6 +481,11 @@ try {
   const surfaceTile = await page.locator('.md3-scheme-card [data-role="surface-dim"]').boundingBox();
   assert(errorTile!.y > surfaceTile!.y, 'At 390 px the Error column wraps under the main block');
   await page.screenshot({ animations: 'disabled', path: `${output}/styles-themes-390.png`, fullPage: true });
+  // The reserved line at the narrow layout too: the field's height and the Scheme card's
+  // top are the same with the refusal message as with an allowed name, at 390 and 375.
+  await refusalAddsNoHeight('390 px');
+  await page.setViewportSize({ width: 375, height: 800 });
+  await refusalAddsNoHeight('375 px');
   await page.setViewportSize({ width: 1440, height: 900 });
   // The app can be destroyed: its element empties and its popups go.
   await page.evaluate(() => (window as unknown as { themeApp: { destroy(): void } }).themeApp.destroy());
@@ -499,7 +519,7 @@ try {
     }
   }
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
-  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, the Theme name field, destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
+  console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, the Theme name field (its reserved row: no jump through a refusal at 1440, 390 and 375 px), destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
   await browser.close();
   server?.stop();
