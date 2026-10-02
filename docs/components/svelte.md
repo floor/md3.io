@@ -13,7 +13,8 @@ has the install and the base stylesheet, and each component page has its options
 
 ## Components
 
-The components are named after the element: `Button`, `Switch`, `TextField`, `Tabs`. Import
+The components are named after the element: `Button`, `Switch`, `Tabs`. The text field is the one
+exception: the element is `m-textfield`, the component `TextField`. Import
 them where you use them:
 
 ```svelte

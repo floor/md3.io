@@ -134,7 +134,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `setVariant(variant)` / `getVariant()` | `variant: 'filled' \| 'outlined'` | `TextFieldComponent` / `TextfieldVariant` | The container style |
+| `setVariant(variant)` / `getVariant()` | `variant: 'filled' \| 'outlined'` | `TextFieldComponent` / `'filled' \| 'outlined'` | The container style |
 | `setDensity(density)` / `getDensity()` | `density: 'default' \| 'compact'` | `TextFieldComponent` / `string` | The field height |
 | `setLabel(text)` / `getLabel()` | `text: string` | `TextFieldComponent` / `string` | The floating label |
 

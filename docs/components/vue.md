@@ -14,7 +14,8 @@ install and the base stylesheet, and each component page has its options and eve
 ## Components
 
 The components are named after the element with an `M` in front: `MButton`, `MSwitch`,
-`MTextField`, `MTabs`. Import them where you use them:
+`MTabs`. The text field is the one exception: the element is `m-textfield`, the component
+`MTextField`. Import them where you use them:
 
 ```vue
 <script setup lang="ts">
