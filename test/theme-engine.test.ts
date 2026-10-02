@@ -27,19 +27,17 @@ let script = await Bun.file(join(mtrl, 'scripts/generate-themes.ts')).text();
 script = rewrite(script, '@material/material-color-utilities', Bun.resolveSync('@material/material-color-utilities', import.meta.dir));
 script = rewrite(script, 'sass', Bun.resolveSync('sass', import.meta.dir));
 script = rewrite(script, '../src/core/theme', join(mtrl, 'src/core/theme/index.ts'));
+// The script reads files cwd-relative too: importing it lists src/styles/themes
+// (HAND_THEMES), and standardTokens compiles from src/styles/themes and reads its
+// _baseline.scss. Point that literal, with its opening quote, at mtrl's tree, as
+// the imports are; the quote keeps the doc comment and renderThemes' template
+// paths (src/styles/themes/_<name>.scss) out of the rewrite.
+const themes = '"src/styles/themes';
+if (!script.includes(themes)) throw new Error(`generate-themes.ts no longer has ${themes}: update the copy's path rewrite`);
+script = script.replaceAll(themes, JSON.stringify(join(mtrl, 'src/styles/themes')).slice(0, -1));
 const copy = join(mkdtempSync(join(tmpdir(), 'md3-themes-')), 'generate-themes.ts');
 writeFileSync(copy, script);
-// The script also reads cwd-relative paths (importing it scans
-// src/styles/themes for HAND_THEMES), so the copy is imported with mtrl as the
-// working directory, as mtrl itself runs it, then md3.io's cwd is restored.
-const cwd = process.cwd();
-let generator: typeof import('../node_modules/mtrl/scripts/generate-themes');
-try {
-  process.chdir(mtrl);
-  generator = await import(copy) as typeof import('../node_modules/mtrl/scripts/generate-themes');
-} finally {
-  process.chdir(cwd);
-}
+const generator = await import(copy) as typeof import('../node_modules/mtrl/scripts/generate-themes');
 const { BASELINE_SEED, THEMES, rolesOf: mtrlRolesOf, schemeFor: mtrlSchemeFor } = generator;
 import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec } from '../src/shared/theme-engine';
 
