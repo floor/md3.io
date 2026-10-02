@@ -23,12 +23,12 @@ form, and are enabled while its data differs from what it started with.
 
 ```javascript
 import { createForm } from 'mtrl-addons';
-import { createTextfield, createSwitch, createButton } from 'mtrl';
+import { createTextField, createSwitch, createButton } from 'mtrl';
 
 const form = createForm({
   layout: [
-    [createTextfield, 'info.name', { label: 'Name' }],
-    [createTextfield, 'info.email', { label: 'Email', type: 'email' }],
+    [createTextField, 'info.name', { label: 'Name' }],
+    [createTextField, 'info.email', { label: 'Email', type: 'email' }],
     [createSwitch, 'info.newsletter', { label: 'Newsletter' }],
     [createButton, 'cancel', { text: 'Cancel', variant: 'text' }],
     [createButton, 'submit', { text: 'Save', variant: 'filled' }],
@@ -51,12 +51,12 @@ message. `validate()` shows the messages on the fields, and `submit()` validates
 
 ```javascript
 import { createForm } from 'mtrl-addons';
-import { createTextfield } from 'mtrl';
+import { createTextField } from 'mtrl';
 
 const form = createForm({
   layout: [
-    [createTextfield, 'info.password', { label: 'Password', type: 'password' }],
-    [createTextfield, 'info.confirm', { label: 'Confirm password', type: 'password' }],
+    [createTextField, 'info.password', { label: 'Password', type: 'password' }],
+    [createTextField, 'info.confirm', { label: 'Confirm password', type: 'password' }],
   ],
   validation: [
     { field: 'password', validate: (value) => String(value ?? '').length >= 8 || 'At least 8 characters' },
@@ -75,13 +75,13 @@ default); `onSubmit` replaces the request. While it submits, the controls are di
 
 ```javascript
 import { createForm } from 'mtrl-addons';
-import { createTextfield, createButton } from 'mtrl';
+import { createTextField, createButton } from 'mtrl';
 
 const form = createForm({
   action: '/api/profile',
   method: 'PUT',
   layout: [
-    [createTextfield, 'info.city', { label: 'City' }],
+    [createTextField, 'info.city', { label: 'City' }],
     [createButton, 'submit', { text: 'Save', variant: 'filled' }],
   ],
   container: document.body,
@@ -97,10 +97,10 @@ form.on('submit:success', () => router.go('/profile'));
 
 ```javascript
 import { createForm } from 'mtrl-addons';
-import { createTextfield } from 'mtrl';
+import { createTextField } from 'mtrl';
 
 const form = createForm({
-  layout: [[createTextfield, 'info.name', { label: 'Name' }]],
+  layout: [[createTextField, 'info.name', { label: 'Name' }]],
   container: document.body,
 });
 

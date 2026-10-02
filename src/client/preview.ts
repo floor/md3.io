@@ -21,7 +21,7 @@ import createToolbar from 'mtrl/components/toolbar';
 import createSwitch from 'mtrl/components/switch';
 import createRadios from 'mtrl/components/radios';
 import createSlider from 'mtrl/components/slider';
-import createTextfield from 'mtrl/components/textfield';
+import createTextField from 'mtrl/components/textfield';
 import createSelect from 'mtrl/components/select';
 import createSearch from 'mtrl/components/search';
 import createDatePicker from 'mtrl/components/datepicker';
@@ -279,7 +279,7 @@ function create(state: ComponentState) {
       return control;
     }
     case 'textfield': {
-      const control = createTextfield(components.textfield.config(state));
+      const control = createTextField(components.textfield.config(state));
       if (!String(state.label).trim()) control.input.setAttribute('aria-label', 'Text field');
       control.input.addEventListener('input', () => { sync({ value: control.getValue() }); message('Text updated'); });
       return control;

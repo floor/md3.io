@@ -127,41 +127,41 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `getValue()` / `setValue(value)` | `value: string` | `string` / `TextfieldComponent` | The input's value; setting it refreshes the empty state |
-| `setAttribute(name, value)` / `getAttribute(name)` / `removeAttribute(name)` | `name: string, value: string` | `TextfieldComponent` / `string \| null` | An attribute of the input |
+| `getValue()` / `setValue(value)` | `value: string` | `string` / `TextFieldComponent` | The input's value; setting it refreshes the empty state |
+| `setAttribute(name, value)` / `getAttribute(name)` / `removeAttribute(name)` | `name: string, value: string` | `TextFieldComponent` / `string \| null` | An attribute of the input |
 
 #### Appearance
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `setVariant(variant)` / `getVariant()` | `variant: 'filled' \| 'outlined'` | `TextfieldComponent` / `TextfieldVariant` | The container style |
-| `setDensity(density)` / `getDensity()` | `density: 'default' \| 'compact'` | `TextfieldComponent` / `string` | The field height |
-| `setLabel(text)` / `getLabel()` | `text: string` | `TextfieldComponent` / `string` | The floating label |
+| `setVariant(variant)` / `getVariant()` | `variant: 'filled' \| 'outlined'` | `TextFieldComponent` / `'filled' \| 'outlined'` | The container style |
+| `setDensity(density)` / `getDensity()` | `density: 'default' \| 'compact'` | `TextFieldComponent` / `string` | The field height |
+| `setLabel(text)` / `getLabel()` | `text: string` | `TextFieldComponent` / `string` | The floating label |
 
 #### Icons and affixes
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `setLeadingIcon(html)` / `removeLeadingIcon()` | `html: string` | `TextfieldComponent` | The leading icon |
-| `setTrailingIcon(html)` / `removeTrailingIcon()` | `html: string` | `TextfieldComponent` | The trailing icon |
-| `setPrefixText(text)` / `removePrefixText()` | `text: string` | `TextfieldComponent` | The prefix text |
-| `setSuffixText(text)` / `removeSuffixText()` | `text: string` | `TextfieldComponent` | The suffix text |
-| `updatePositions()` | none | `TextfieldComponent` | Recomputes the label and input padding, after you change the surroundings yourself; the setters above do it |
+| `setLeadingIcon(html)` / `removeLeadingIcon()` | `html: string` | `TextFieldComponent` | The leading icon |
+| `setTrailingIcon(html)` / `removeTrailingIcon()` | `html: string` | `TextFieldComponent` | The trailing icon |
+| `setPrefixText(text)` / `removePrefixText()` | `text: string` | `TextFieldComponent` | The prefix text |
+| `setSuffixText(text)` / `removeSuffixText()` | `text: string` | `TextFieldComponent` | The suffix text |
+| `updatePositions()` | none | `TextFieldComponent` | Recomputes the label and input padding, after you change the surroundings yourself; the setters above do it |
 
 #### Supporting text and errors
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `setSupportingText(text, isError?)` / `removeSupportingText()` | `text: string, isError?: boolean` | `TextfieldComponent` | The helper text, optionally in the error style |
-| `setError(error, message?)` | `error: boolean, message?: string` | `TextfieldComponent` | The error state, with an optional message in place of the helper text |
+| `setSupportingText(text, isError?)` / `removeSupportingText()` | `text: string, isError?: boolean` | `TextFieldComponent` | The helper text, optionally in the error style |
+| `setError(error, message?)` | `error: boolean, message?: string` | `TextFieldComponent` | The error state, with an optional message in place of the helper text |
 | `isError()` | none | `boolean` | Whether the field is in error |
 
 #### State, events and lifecycle
 
 | Method | Parameters | Returns | Description |
 |--------|------------|---------|-------------|
-| `enable()` / `disable()` | none | `TextfieldComponent` | The disabled state |
-| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `TextfieldComponent` | Adds or removes a listener |
+| `enable()` / `disable()` | none | `TextFieldComponent` | The disabled state |
+| `on(event, handler)` / `off(event, handler)` | `event: string, handler: Function` | `TextFieldComponent` | Adds or removes a listener |
 | `destroy()` | none | `void` | Tears the component down and releases listeners |
 
 ### Events

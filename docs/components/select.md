@@ -132,7 +132,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Property | Type | Description |
 |----------|------|-------------|
 | `element` | `HTMLElement` | The root, which is the text field's |
-| `textfield` | `TextfieldComponent` | The text field |
+| `textfield` | `TextFieldComponent` | The text field |
 | `menu` | `MenuComponent` | The menu |
 
 ### Events

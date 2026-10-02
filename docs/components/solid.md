@@ -13,17 +13,18 @@ has the install and the base stylesheet, and each component page has its options
 
 ## Components and props
 
-The components are named after the element: `Button`, `Switch`, `Textfield`, `Tabs`. Import
+The components are named after the element: `Button`, `Switch`, `Tabs`. The text field is the one
+exception: the element is `m-textfield`, the component `TextField`. Import
 them where you use them. A component's props are its element's attributes, in camelCase:
 `supportingText` for `supporting-text`, `ariaLabel` for `aria-label`.
 
 ```tsx
-import { Button, Slider, Textfield } from 'mtrl/solid';
+import { Button, Slider, TextField } from 'mtrl/solid';
 
 export function Profile() {
   return (
     <>
-      <Textfield label="Email" type="email" supportingText="We never share it" required />
+      <TextField label="Email" type="email" supportingText="We never share it" required />
       <Slider ariaLabel="Volume" min={0} max={100} step={5} />
       <Button variant="filled">Save</Button>
     </>
@@ -47,7 +48,7 @@ Element events are `on` props in PascalCase: `onChange`, `onInput`, `onOpen`, `o
 component page lists its events and their fields.
 
 ```tsx
-import { Switch, Textfield } from 'mtrl/solid';
+import { Switch, TextField } from 'mtrl/solid';
 
 function search(query: string) {
   console.log('Searching for', query);
@@ -57,7 +58,7 @@ export function Settings() {
   return (
     <>
       <Switch onChange={(event) => console.log('Wi-Fi', event.detail.checked)}>Wi-Fi</Switch>
-      <Textfield label="Search" onInput={(event) => search(event.detail.value)} />
+      <TextField label="Search" onInput={(event) => search(event.detail.value)} />
     </>
   );
 }
@@ -149,14 +150,14 @@ Type it with the element's type from `mtrl/elements`, and use it in `onMount` or
 handler. A callback, `ref={(element) => …}`, works too.
 
 ```tsx
-import { Button, Textfield } from 'mtrl/solid';
-import type { TextfieldElement } from 'mtrl/elements';
+import { Button, TextField } from 'mtrl/solid';
+import type { TextFieldElement } from 'mtrl/elements';
 
 export function Name() {
-  let field: TextfieldElement | undefined;
+  let field: TextFieldElement | undefined;
   return (
     <>
-      <Textfield ref={field} label="Name" defaultValue="Ada Lovelace" />
+      <TextField ref={field} label="Name" defaultValue="Ada Lovelace" />
       <Button onClick={() => field?.select()}>Select the name</Button>
     </>
   );
