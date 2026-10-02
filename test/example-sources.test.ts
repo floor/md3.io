@@ -31,3 +31,11 @@ test("source generation follows shared, cyclic, type and dynamic imports without
     ]);
   }
 });
+
+test("source generation lists code files only, not imported data files", async () => {
+  const { exampleSources } = await import("../scripts/example-sources");
+  const dir = resolve(import.meta.dir, "fixtures/example-sources/assets");
+  expect((await exampleSources(dir, "vanilla.ts")).map(file => file.name)).toEqual([
+    "vanilla.ts", "Card.vue", "card-styles.ts", "helper.ts", "nested/deep.ts",
+  ]);
+});
