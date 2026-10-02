@@ -13,7 +13,7 @@ has the install and the base stylesheet, and each component page has its options
 
 ## Components
 
-The components are named after the element: `Button`, `Switch`, `Textfield`, `Tabs`. Import
+The components are named after the element: `Button`, `Switch`, `TextField`, `Tabs`. Import
 them where you use them:
 
 ```svelte
@@ -41,10 +41,10 @@ A component's props are its element's attributes, in camelCase: `supportingText`
 
 ```svelte
 <script lang="ts">
-  import { Slider, Textfield } from 'mtrl/svelte';
+  import { Slider, TextField } from 'mtrl/svelte';
 </script>
 
-<Textfield label="Email" type="email" supportingText="We never share it" required />
+<TextField label="Email" type="email" supportingText="We never share it" required />
 <Slider ariaLabel="Volume" min={0} max={100} step={5} />
 ```
 
@@ -63,7 +63,7 @@ data in `detail`; every component page lists its events and their fields.
 
 ```svelte
 <script lang="ts">
-  import { Switch, Textfield } from 'mtrl/svelte';
+  import { Switch, TextField } from 'mtrl/svelte';
 
   function setWifi(on: boolean) {
     console.log('Wi-Fi', on);
@@ -74,7 +74,7 @@ data in `detail`; every component page lists its events and their fields.
 </script>
 
 <Switch onchange={(event) => setWifi(event.detail.checked)}>Wi-Fi</Switch>
-<Textfield label="Search" oninput={(event) => search(event.detail.value)} />
+<TextField label="Search" oninput={(event) => search(event.detail.value)} />
 ```
 
 The events are typed, so `event.detail` is checked in your editor. Native events such as
@@ -181,12 +181,12 @@ its properties and methods. It is `null` until the component mounts. An attachme
 
 ```svelte
 <script lang="ts">
-  import { Button, Textfield } from 'mtrl/svelte';
+  import { Button, TextField } from 'mtrl/svelte';
 
-  let field = $state<ReturnType<typeof Textfield>>();
+  let field = $state<ReturnType<typeof TextField>>();
 </script>
 
-<Textfield bind:this={field} label="Name" defaultValue="Ada Lovelace" {@attach (element) => element.focus()} />
+<TextField bind:this={field} label="Name" defaultValue="Ada Lovelace" {@attach (element) => element.focus()} />
 <Button onclick={() => field?.element?.select()}>Select the name</Button>
 ```
 
