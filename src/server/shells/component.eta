@@ -39,10 +39,12 @@
     <form class="split-panel configuration" id="configuration">
       <div class="panel-heading"><h2 class="ui-title">CONFIGURATION</h2><button type="reset" class="reset-button">Reset</button></div>
       <div class="configuration-body">
+      <% if (it.component.scenarios.length) { %>
       <section class="ui-section scenario-setup">
         <div class="ui-row control-row"><label class="control-label" for="scenario">Scenario</label><select class="ui-select" id="scenario" aria-describedby="scenario-description"><option value="default" selected>Default</option><% it.component.scenarios.forEach(scenario => { %><option value="<%= scenario.id %>"><%= scenario.name %></option><% }); %><option value="custom">Custom</option></select></div>
         <p class="scenario-description" id="scenario-description">The options this playground starts with.</p>
       </section>
+      <% } %>
       <% [...new Set(it.component.controls.map(control => control.section))].forEach(section => { %>
       <section class="ui-section configuration-controls" aria-labelledby="section-<%= section.toLowerCase() %>">
       <h3 class="ui-title" id="section-<%= section.toLowerCase() %>"><%= section %></h3>
