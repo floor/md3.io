@@ -1,5 +1,6 @@
 import { Eta } from 'eta';
-import { resolve, extname, sep, basename } from 'node:path';
+import { resolve, extname, sep } from 'node:path';
+import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
@@ -22,26 +23,28 @@ import { jsonForScript, robotsTxt, sitemapXml, structuredData } from './src/serv
 
 const eta = new Eta({ views: resolve(root, 'src/server/shells'), cache: process.env.NODE_ENV === 'production' });
 const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' };
-// Every script and stylesheet link carries the build it belongs to. Their names stay the
-// same between deploys, so without it a browser or Cloudflare (whose default browser
-// cache is 4 hours) kept last deploy's playground.js against a new page's components.
-// Each build restarts the server, so the start time identifies the build.
-export const BUILD = Date.now().toString(36);
-// Lazy chunks import their entry back by its plain name (`./preview.js`); an import map
-// sends that to the versioned URL the page loaded, or the entry would run twice.
-// Only the entries the page loads: a page names no bundle it does not use.
+// Logical path → content-hashed path. Written by scripts/write-asset-manifest.ts.
+// Empty until the first build; the templates' own names are served then.
+const assetManifest = loadAssetManifest();
+// Lazy chunks import their entry back by its plain name (`./preview.js`). The HTML
+// loads the hashed name, so the import map sends the plain name to that same file,
+// or the entry would run twice. Only the entries this page links, as before.
 const importMap = (body: string) => {
   const entries = [...new Set([...body.matchAll(/src="(\/dist\/[^"/?#]+\.js)"/g)].map(match => match[1]!))];
-  return entries.length ? `<script type="importmap">${JSON.stringify({ imports: Object.fromEntries(entries.map(entry => [entry, `${entry}?v=${BUILD}`])) })}</script>` : '';
+  const imports = Object.fromEntries(entries.filter(entry => assetManifest[entry]).map(entry => [entry, assetManifest[entry]!]));
+  return Object.keys(imports).length ? `<script type="importmap">${JSON.stringify({ imports })}</script>` : '';
 };
-const versionAssets = (body: string) => body
-  .replace('<head>', `<head>\n  ${importMap(body)}`)
-  .replace(/((?:src|href)="\/(?:dist|styles)\/[^"?#]+\.(?:js|css))"/g, `$1?v=${BUILD}"`)
-  // The mark keeps its name across deploys, so the query is what makes the URL new.
-  .replace(/((?:src|href)="\/assets\/brand\/mark\.svg)"/g, `$1?v=${BUILD}"`);
-const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' } });
+const versionAssets = (body: string) => {
+  const mapped = importMap(body);
+  const rewritten = body.replace(/((?:src|href)=")(\/[^"?#]+)(")/g, (full, open, path, close) => {
+    const hashed = assetManifest[path];
+    return hashed ? `${open}${hashed}${close}` : full;
+  });
+  return mapped ? rewritten.replace('<head>', `<head>\n  ${mapped}`) : rewritten;
+};
+const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
-const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex' } });
+const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
 const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
@@ -125,9 +128,21 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (exampleStyle && exampleBySlug(exampleStyle[1]!)) {
     const file = Bun.file(resolve(root, 'examples', exampleStyle[1]!, 'styles.css'));
     const body = request.method === 'HEAD' ? null : minifyCss(await file.text());
-    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'text/css', 'Cache-Control': 'no-cache' } });
+    // The hashed copy is what new HTML links. This stable name stays for a page
+    // cached earlier, on the same short lifetime as HTML.
+    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'text/css', 'Cache-Control': SHORT_CACHE } });
   }
-  const staticMatch = /^\/(styles|fonts|dist|assets)\/(.+)$/.exec(path);
+  // Until 2027-01-03. Pages cached before this site's assets were content-hashed
+  // (2026-10-03), and pages that still say /dist/mtrl/… from before the material
+  // rename, request these stable names. They keep answering, with the short HTML
+  // cache, so those pages still load. The current bytes are served: a `?v=` query
+  // left over from the previous scheme does not select an old build.
+  // After 2027-01-03, remove this alias and stop serving the unhashed names
+  // (/dist/site.js, /dist/material/themes/*.css, /dist/css/*.css, /styles/*.css,
+  // /examples-styles/*.css, /assets/brand/mark.svg). Also delete hashed files left
+  // in dist that asset-manifest.json no longer lists (scripts/write-asset-manifest.ts).
+  const assetPath = path.replace(/^\/dist\/mtrl\//, '/dist/material/');
+  const staticMatch = /^\/(styles|fonts|dist|assets)\/(.+)$/.exec(assetPath);
   // /styles/ is also the Styles section: only a path with an extension is a file.
   if (staticMatch && extname(path)) {
     const base = resolve(root, staticMatch[1]!);
@@ -135,15 +150,16 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!filePath.startsWith(base + sep) || !mime[extname(filePath)]) return new Response('Not found', { status: 404 });
     const file = Bun.file(filePath);
     if (!await file.exists()) return new Response('Not found', { status: 404 });
-    // Fonts never change under a name (a new font gets a new file), and a versioned
-    // script or stylesheet (?v=, see versionAssets) is a new URL each build: both are
-    // cached for good. A lazy chunk's name is its content hash (chunk-<hash>.js), so
-    // that URL is new when its bytes change, and it is cached the same way. The rest
-    // revalidates.
-    const hashedChunk = staticMatch[1] === 'dist' && /^chunk-[0-9a-z]+\.js$/.test(basename(filePath));
-    const cache = staticMatch[1] === 'fonts' || url.searchParams.has('v') || hashedChunk ? 'public, max-age=31536000, immutable' : 'no-cache';
+    // A content hash in the name (or a font, whose name is the file) is cached for a
+    // year. The stable names above stay on the short cache. Other assets (playground
+    // images) revalidate, as they did.
+    const immutable = isImmutableAsset(path);
+    const short = path.startsWith('/dist/') || staticMatch[1] === 'styles' || path === '/assets/brand/mark.svg';
+    const cache = immutable ? IMMUTABLE_CACHE : short ? SHORT_CACHE : 'no-cache';
     const type = mime[extname(filePath)]!;
-    const body = request.method === 'HEAD' ? null : type === 'text/css' ? minifyCss(await file.text()) : file;
+    // Hashed CSS is already the minified bytes its name was hashed from. Minifying
+    // again would not match that name. The stable path is minified on the way out.
+    const body = request.method === 'HEAD' ? null : type === 'text/css' && !immutable ? minifyCss(await file.text()) : file;
     return new Response(body, { headers: { ...commonHeaders, 'Content-Type': type, 'Cache-Control': cache } });
   }
   if (rootFiles.has(path)) {

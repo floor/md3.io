@@ -36,7 +36,7 @@ describe('Themes page', () => {
     expect(data.themes.map((theme: { name: string }) => theme.name)).toEqual([...themes]);
     expect(data.themes.find((theme: { name: string }) => theme.name === 'summer').light[THEME_ROLES.indexOf('primary')]).toBe(summer.roles.light.primary);
     expect(html).toContain('<div class="theme-app" id="theme-app"');
-    expect(html).toContain('src="/dist/theme-app.js');
+    expect(html).toMatch(/src="\/dist\/theme-app\.[a-f0-9]{10}\.js"/);
     expect(html).not.toContain('src="/dist/styles.js');
     expect(html).toContain('id="theme-base"');
     const unknown = await (await handleRequest(new Request('http://localhost/styles/themes/?theme=nope'))).text();

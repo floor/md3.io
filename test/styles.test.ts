@@ -18,7 +18,7 @@ describe('Styles pages', () => {
       expect(html).toContain('<a href="/styles/" class="active">Styles</a>');
       expect(html).toContain('<span class="header__section">Styles</span>');
       expect(html).toContain(`href="${path}" aria-current="page"`);
-      expect(html).toContain('/dist/css/styles.css');
+      expect(html).toMatch(/\/dist\/css\/styles\.[a-f0-9]{10}\.css/);
       expect(html).not.toContain('/styles/styles-pages.css');
       expect(html).not.toContain('/styles/roboto.css');
       // mtrl's base.css would restyle the site: the Styles pages never load it.
@@ -76,9 +76,9 @@ describe('Styles pages', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
     const html = await response.text();
-    expect(html).toContain('/dist/material/styles/base.css');
-    for (const style of ['card', 'dialog', 'button', 'chips', 'text-field', 'checkbox']) expect(html).toContain(`/dist/material/styles/${style}.css`);
-    expect(html).toContain('/dist/styles-frame.js');
+    expect(html).toMatch(/\/dist\/material\/styles\/base\.[a-f0-9]{10}\.css/);
+    for (const style of ['card', 'dialog', 'button', 'chips', 'text-field', 'checkbox']) expect(html).toMatch(new RegExp(`/dist/material/styles/${style}\\.[a-f0-9]{10}\\.css`));
+    expect(html).toMatch(/\/dist\/styles-frame\.[a-f0-9]{10}\.js/);
   });
   test('the shape page is in the sitemap and the sidebar', async () => {
     expect(await (await get('/sitemap.xml')).text()).toContain('<loc>https://md3.io/styles/shape/</loc>');

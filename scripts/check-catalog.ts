@@ -57,12 +57,12 @@ try {
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
 
   // Before the script: the pre-upgrade rules and the fixed visual keep every card's box.
-  await page.route('**/dist/catalog.js', route => route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+  await page.route('**/dist/catalog*.js', route => route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
   await page.goto(`${base}/components/`);
   // Each card's box on the page, wherever it is scrolled to.
   const boxes = () => page.locator('.component-card').evaluateAll(cards => cards.map(card => { const box = card.getBoundingClientRect(); return [Math.round(box.top + scrollY), Math.round(box.left), Math.round(box.width), Math.round(box.height)]; }));
   const before = await boxes();
-  await page.unroute('**/dist/catalog.js');
+  await page.unroute('**/dist/catalog*.js');
   // Scrolls through the page, so every card comes near the viewport and loads its element,
   // then back to the top once all are upgraded.
   const loadAll = async () => {

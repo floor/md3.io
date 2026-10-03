@@ -282,36 +282,32 @@ describe('documentation front matter', () => {
   });
 });
 
-test('scripts and stylesheets carry the build, and a versioned file is cached for good', async () => {
-  const { BUILD } = await import('../server');
+test('scripts and stylesheets are the hashed files from the manifest', async () => {
+  const manifest = JSON.parse(readFileSync(resolve(import.meta.dir, '../dist/asset-manifest.json'), 'utf8')) as Record<string, string>;
   const page = await (await get('/components/button/')).text();
   const assets = [...page.matchAll(/(?:src|href)="(\/(?:dist|styles)\/[^"]+\.(?:js|css)[^"]*)"/g)].map(match => match[1]!);
-  // One sheet for the page, plus the scripts it loads.
-  expect([...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([`/dist/css/page.css?v=${BUILD}`]);
-  expect(assets).toContain(`/dist/site.js?v=${BUILD}`);
-  expect(assets).toContain(`/dist/playground.js?v=${BUILD}`);
-  for (const asset of assets) expect(asset).toEndWith(`?v=${BUILD}`);
+  // One sheet for the page, plus the scripts it loads. Both names carry the content hash.
+  expect([...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/page.css']]);
+  expect(assets).toContain(manifest['/dist/site.js']);
+  expect(assets).toContain(manifest['/dist/playground.js']);
+  for (const asset of assets) expect(Object.values(manifest)).toContain(asset);
   const home = await (await get('/')).text();
-  expect([...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([`/dist/css/home.css?v=${BUILD}`]);
+  expect([...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/home.css']]);
   expect(home).toContain('aria-label="Search (⌘K)"');
   expect(home).toContain('aria-keyshortcuts="Meta+K Control+K"');
-  const versioned = await get(`/styles/site.css?v=${BUILD}`);
-  expect(versioned.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
-  expect((await get('/styles/site.css')).headers.get('Cache-Control')).toBe('no-cache');
   // Whatever CSS the server sends is minified, including a file a page no longer links.
-  const served = await versioned.text();
+  const served = await (await get('/styles/site.css')).text();
   expect(served).not.toContain('/*');
   expect(served).toContain('font-family:inherit');
   const preview = await (await get('/preview/button/')).text();
-  expect(preview).toContain(`?v=${BUILD}"`);
   // Lazy chunks import their entry by its plain name: the import map sends it to the
-  // same versioned URL, so the entry runs once
+  // hashed file the page loaded, so the entry runs once.
   const map = JSON.parse(/<script type="importmap">(.*?)<\/script>/.exec(preview)![1]!) as { imports: Record<string, string> };
-  expect(map.imports['/dist/preview.js']).toBe(`/dist/preview.js?v=${BUILD}`);
+  expect(map.imports['/dist/preview.js']).toBe(manifest['/dist/preview.js']);
   expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
 });
 
-test('a content-hashed chunk is cached for good without a query, and a plain file is not', async () => {
+test('a content-hashed chunk is cached for a year, and a stable name is not', async () => {
   const dir = resolve(import.meta.dir, '../dist');
   mkdirSync(dir, { recursive: true });
   const chunk = resolve(dir, 'chunk-abc123.js');
@@ -320,7 +316,7 @@ test('a content-hashed chunk is cached for good without a query, and a plain fil
   writeFileSync(plain, 'export {}\n');
   try {
     expect((await get('/dist/chunk-abc123.js')).headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
-    expect((await get('/dist/plain.js')).headers.get('Cache-Control')).toBe('no-cache');
+    expect((await get('/dist/plain.js')).headers.get('Cache-Control')).toBe('public, max-age=60, stale-while-revalidate=600');
   } finally {
     unlinkSync(chunk);
     unlinkSync(plain);

@@ -26,10 +26,10 @@ describe('the components overview', () => {
   });
   test('the page loads the elements, their pre-upgrade rules and the scoped tokens, and no arrow', async () => {
     const html = await get('/components/');
-    // Versioned with the build (?v=), as every script and stylesheet is.
+    // Content-hashed names, as every script and stylesheet is.
     // Pre-upgrade rules ride in the page's one stylesheet, not their own link.
-    expect(html).toMatch(/<script type="module" src="\/dist\/catalog\.js\?v=[a-z0-9]+">/);
-    expect(html).toMatch(/<link rel="stylesheet" href="\/dist\/css\/catalog\.css\?v=[a-z0-9]+" \/>/);
+    expect(html).toMatch(/<script type="module" src="\/dist\/catalog\.[a-f0-9]{10}\.js">/);
+    expect(html).toMatch(/<link rel="stylesheet" href="\/dist\/css\/catalog\.[a-f0-9]{10}\.css" \/>/);
     expect(html).not.toContain('/dist/material/elements/preupgrade.css');
     expect(html).toContain(catalogTokens);
     expect(html).not.toContain('material/styles/base.css');
