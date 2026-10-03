@@ -18,8 +18,10 @@ const frame = document.querySelector<HTMLIFrameElement>('#preview')!;
 const code = document.querySelector<HTMLElement>('#generated-code')!;
 const status = document.querySelector<HTMLElement>('#playground-status')!;
 const scenarios = components[slug].scenarios;
-const scenarioSelect = document.querySelector<HTMLSelectElement>('#scenario')!;
-const scenarioDescription = document.querySelector<HTMLElement>('#scenario-description')!;
+// Only a component with scenarios renders the Scenario section; without it there is no
+// select to read, so every scenario path below is inert, `?scenario=` included.
+const scenarioSelect = document.querySelector<HTMLSelectElement>('#scenario');
+const scenarioDescription = document.querySelector<HTMLElement>('#scenario-description');
 let unknownScenario = false;
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
 const copyButton = document.querySelector<HTMLButtonElement>('#copy-code')!;
@@ -160,6 +162,7 @@ function update(send = true, reset = false) {
 const scenarioById = (id: string) => scenarios.find(scenario => scenario.id === id);
 /** The select and its one-line description, from the selected entry. */
 function showScenario(id: string) {
+  if (!scenarioSelect || !scenarioDescription) return;
   scenarioSelect.value = id;
   scenarioDescription.textContent = id === 'default' ? 'The options this playground starts with.'
     : id === 'custom' ? 'These options were changed from a scenario.'
@@ -167,6 +170,7 @@ function showScenario(id: string) {
 }
 /** `?scenario=`, written over the address as it is: path, other keys and hash stay. */
 function setScenarioParam(id: string | null) {
+  if (!scenarioSelect) return;
   const url = new URL(location.href);
   if ((url.searchParams.get('scenario') ?? null) === id) return;
   if (id === null) url.searchParams.delete('scenario'); else url.searchParams.set('scenario', id);
@@ -174,7 +178,7 @@ function setScenarioParam(id: string | null) {
 }
 /** A hand edit: the options no longer match a scenario, so the select says Custom. */
 function markCustom() {
-  if (scenarioSelect.value === 'custom') return;
+  if (!scenarioSelect || scenarioSelect.value === 'custom') return;
   showScenario('custom');
   setScenarioParam(null);
 }
@@ -189,7 +193,7 @@ function applyOptions(id: string, options: Readonly<Record<string, string | bool
 function applyScenario(scenario: Scenario) {
   applyOptions(scenario.id, scenario.options);
 }
-scenarioSelect.addEventListener('change', () => {
+scenarioSelect?.addEventListener('change', () => {
   const id = scenarioSelect.value;
   // Choosing Custom leaves the controls as they are; the address drops the scenario.
   if (id === 'custom') { setScenarioParam(null); return; }
@@ -263,8 +267,9 @@ copyButton.addEventListener('click', async () => {
 selectFramework(framework);
 try { if (localStorage.getItem(VIEW_KEY) === 'code') selectTab(codeTab); } catch { /* Storage may be unavailable. */ }
 // `?scenario=` is the only configuration parameter a load reads: a known id applies over
-// any control-key parameter, an unknown one falls back to Default and says so.
-const requested = new URL(location.href).searchParams.get('scenario');
+// any control-key parameter, an unknown one falls back to Default and says so. A page
+// without a Scenario section does not read it at all, so the parameter is left as it is.
+const requested = scenarioSelect ? new URL(location.href).searchParams.get('scenario') : null;
 const requestedScenario = requested ? scenarioById(requested) : undefined;
 if (requested && !requestedScenario) { unknownScenario = true; setScenarioParam(null); }
 if (requestedScenario) applyScenario(requestedScenario); else update();

@@ -22,6 +22,18 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   const frame = page.frameLocator('#preview');
+  /** What every named control shows on the page, read the way a person sees it. */
+  function readShown(keys: readonly string[]) {
+    return page.evaluate(names => Object.fromEntries(names.map(key => {
+      const elements = [...document.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[name="${key}"]`)];
+      const checkboxes = elements.filter((element): element is HTMLInputElement => element instanceof HTMLInputElement && element.type === 'checkbox');
+      if (checkboxes.length) return [key, checkboxes[0]!.checked];
+      const radio = elements.find(element => element instanceof HTMLInputElement && element.type === 'radio' && element.checked);
+      if (radio) return [key, (radio as HTMLInputElement).value];
+      const first = elements[0];
+      return [key, first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? ''];
+    })), [...keys]);
+  }
   for (const slug of componentSlugs) {
     for (const scenario of [null, ...components[slug].scenarios]) {
       const where = `${slug}${scenario ? `/?scenario=${scenario.id}` : ''}`;
@@ -31,19 +43,18 @@ try {
       await frame.locator('#stage > *').first().waitFor();
       assert(errors.length === 0, `${where}: ${errors.join('\n')}`);
       const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...(scenario?.options ?? {}) });
-      const selected = await page.locator('#scenario').inputValue();
-      assert(selected === (scenario?.id ?? 'default'), `${where}: the Scenario select shows "${selected}"`);
-      const description = await page.locator('#scenario-description').textContent();
-      assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
-      const shown = await page.evaluate(keys => Object.fromEntries(keys.map(key => {
-        const elements = [...document.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[name="${key}"]`)];
-        const checkboxes = elements.filter((element): element is HTMLInputElement => element instanceof HTMLInputElement && element.type === 'checkbox');
-        if (checkboxes.length) return [key, checkboxes[0]!.checked];
-        const radio = elements.find(element => element instanceof HTMLInputElement && element.type === 'radio' && element.checked);
-        if (radio) return [key, (radio as HTMLInputElement).value];
-        const first = elements[0];
-        return [key, first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? ''];
-      })), [...components[slug].controls.map(control => control.key), 'theme', 'mode']);
+      if (components[slug].scenarios.length) {
+        // (a) A component with scenarios has the section: select and description from it.
+        const selected = await page.locator('#scenario').inputValue();
+        assert(selected === (scenario?.id ?? 'default'), `${where}: the Scenario select shows "${selected}"`);
+        const description = await page.locator('#scenario-description').textContent();
+        assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
+      } else {
+        // (b) A component without scenarios has no Scenario section in the DOM at all.
+        assert((await page.locator('.scenario-setup').count()) === 0, `${where}: a component without scenarios shows the Scenario section`);
+        assert((await page.locator('#scenario').count()) === 0, `${where}: a component without scenarios shows a scenario select`);
+      }
+      const shown = await readShown([...components[slug].controls.map(control => control.key), 'theme', 'mode']);
       for (const control of components[slug].controls) {
         const expected = control.kind === 'toggle' ? state[control.key] === true : String(state[control.key]);
         assert(shown[control.key] === expected, `${where}: ${control.key} shows ${JSON.stringify(shown[control.key])}, expected ${JSON.stringify(expected)}`);
@@ -69,6 +80,24 @@ try {
   assert((await clear.boundingBox()) === null, 'text-field/search: the clear button still takes space on an empty field');
   await field.fill('Trail');
   assert(await clear.isVisible(), 'text-field/search: the clear button did not come back with a value');
+  // (c) `?scenario=` on a page with no Scenario section is ignored quietly: the load reports
+  // ready with the plain status line, the address keeps the parameter, and the controls are
+  // the Default ones, with no console error.
+  errors.length = 0;
+  await page.goto(`${base}components/checkbox/?scenario=x`);
+  // Wait for the ready round-trip without matching a status text: a scenario message would
+  // pass a "not loading" wait and must fail the assertion below, not the wait.
+  await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
+  const checkboxStatus = await page.locator('#playground-status').textContent();
+  assert(checkboxStatus === 'Ready to try', `checkbox/?scenario=x: the status reads ${JSON.stringify(checkboxStatus)}`);
+  assert(new URL(page.url()).searchParams.get('scenario') === 'x', 'checkbox/?scenario=x: the load rewrote the address');
+  const checkboxInitial = initialComponentState('checkbox');
+  const checkboxShown = await readShown(components.checkbox.controls.map(control => control.key));
+  for (const control of components.checkbox.controls) {
+    const expected = control.kind === 'toggle' ? checkboxInitial[control.key] === true : String(checkboxInitial[control.key]);
+    assert(checkboxShown[control.key] === expected, `checkbox/?scenario=x: ${control.key} shows ${JSON.stringify(checkboxShown[control.key])}, expected ${JSON.stringify(expected)}`);
+  }
+  assert(errors.length === 0, `checkbox/?scenario=x: ${errors.join('\n')}`);
   console.log(`Scenario checks passed: ${loads} loads over ${componentSlugs.length} components.`);
 } finally {
   await browser.close();
