@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
-import { components, componentSlugs } from '../src/shared/components';
+import { components, componentCode, componentSlugs, initialComponentState } from '../src/shared/components';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -22,7 +22,7 @@ try {
     if (await select.count()) await select.selectOption(value);
     else await page.locator(`label.choice:has(input[name="${name}"][value="${value}"])`).click();
   };
-  // The FAB menu is checked on its own below: it has no variant, disabled state or FAB placement controls.
+  // The FAB menu is checked on its own below: it has no variant or disabled control.
   for (const slug of componentSlugs.filter(value => value !== 'button' && value !== 'fab-menu' && components[value].group === 'Actions')) {
     await page.goto(`${server.url}components/${slug}/`);
     const root = frame.locator(`#stage > .mtrl-${slug}`);
@@ -140,6 +140,34 @@ try {
     await choose('items', count);
     await page.waitForFunction(count => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll('#stage [role="menuitem"]').length === Number(count), count);
   }
+  // Placement: three values, default none. none is absent from the config, the code
+  // and the factory class; bottom-end is in all three, and on <m-fab-menu>.
+  const placementControl = components['fab-menu'].controls.find(control => control.key === 'placement');
+  assert(placementControl?.kind === 'select' && placementControl.label === 'Placement' && placementControl.initial === 'none' && placementControl.options?.join(',') === 'none,bottom-end,bottom-start', `fab-menu placement control: ${JSON.stringify(placementControl)}`);
+  const noneState = initialComponentState('fab-menu');
+  assert(components['fab-menu'].config(noneState).placement === undefined, 'fab-menu: none puts placement in the config');
+  assert(!componentCode('fab-menu', noneState).includes('placement'), 'fab-menu: none mentions placement in the code');
+  const placed = components['fab-menu'].config({ ...noneState, placement: 'bottom-end' });
+  assert(placed.placement === 'bottom-end', `fab-menu: bottom-end config is ${placed.placement}`);
+  assert(componentCode('fab-menu', { ...noneState, placement: 'bottom-end' }).includes('placement: "bottom-end"'), 'fab-menu: bottom-end is missing from the vanilla code');
+  const menuRoot = () => frame.locator('#stage > .mtrl-fab-menu');
+  assert(!(await menuRoot().getAttribute('class'))?.includes('mtrl-fab-menu--bottom'), 'fab-menu: the default render has a placement class');
+  await choose('placement', 'bottom-end');
+  await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage > .mtrl-fab-menu')?.classList.contains('mtrl-fab-menu--bottom-end'));
+  const codeText = async () => page.locator('#generated-code').innerText();
+  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  assert((await codeText()).includes('placement: "bottom-end"'), 'fab-menu: the code panel omits placement: "bottom-end"');
+  await page.locator('.framework-tab[data-framework="html"]').click();
+  assert((await codeText()).includes('placement="bottom-end"'), 'fab-menu: the element code omits placement="bottom-end"');
+  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  await choose('placement', 'none');
+  await page.waitForFunction(() => {
+    const element = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage > .mtrl-fab-menu');
+    return !!element && !element.className.includes('mtrl-fab-menu--bottom');
+  });
+  assert(!(await codeText()).includes('placement'), 'fab-menu: none puts placement back in the code panel');
+  await page.getByRole('tab', { name: 'Live preview' }).click();
   await page.goto(`${server.url}components/`);
   assert(await page.locator('.component-card').count() === componentSlugs.length, 'Catalog is missing a component');
   await page.screenshot({ animations: 'disabled', path: `${output}/actions-catalog.png`, fullPage: true });
