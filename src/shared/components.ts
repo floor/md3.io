@@ -133,6 +133,8 @@ const carouselSlides = (state: ComponentState) => {
 };
 const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
+  // Only a segmented list writes the variant: standard is the factory's own default.
+  const variant = pick(state, 'variant', ['standard', 'segmented'], 'standard');
   const labels = (state.content === 'places'
     ? ['Mountain trail', 'Botanical garden', 'City museum', 'Riverside park', 'Local market']
     : ['Morning walk', 'Read a chapter', 'Try a new recipe', 'Call a friend', 'Plan a weekend']).slice(0, Number(state.count));
@@ -155,7 +157,7 @@ function listConfig(state: ComponentState): ListConfig<ListItem> {
       ...(state.disableLast && index === labels.length - 1 ? { disabled: true } : {}),
     });
   });
-  return { items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
+  return { ...(variant === 'standard' ? {} : { variant }), items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
     initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < labels.length && state.selection !== 'none' ? [String(index + 1)] : []) };
 }
 /** What a labelled trailing icon does on the text field. */
@@ -674,6 +676,7 @@ export const components = {
     summary: 'One, two, or three lines with flexible content slots.', styles: ['list'],
     scenarios: [],
     controls: [
+      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'segmented'], 'standard')]),
       ...section('Layout', [choose('lines', 'Text lines', ['1', '2', '3'], '2'), choose('leading', 'Leading', ['none', 'icon', 'avatar', 'image', 'video'], 'icon', 'select'), choose('trailing', 'Trailing', ['none', 'text', 'icon', 'control'], 'text', 'select'), choose('dividers', 'Dividers', ['none', 'full-width', 'inset'], 'none', 'select'), toggle('subheader', 'Subheader')]),
       ...section('Content', [choose('content', 'Items', ['activities', 'places'], 'activities'), choose('count', 'Item count', ['3', '5'], '3'), { ...text('supportingText', 'Supporting text', 'Make a little time for yourself'), enabledWhen: 'hasSupporting' }, toggle('overline', 'Overline', false, 'threeLines'), text('ariaLabel', 'Accessible label', 'Ideas for today')]),
       ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'single'), toggle('disableLast', 'Disable last item'), toggle('first', 'First selected', true, 'selectable'), toggle('second', 'Second selected', false, 'selectable'), toggle('third', 'Third selected', false, 'selectable'), toggle('fourth', 'Fourth selected', false, 'extraSelectable'), toggle('fifth', 'Fifth selected', false, 'extraSelectable')]),
