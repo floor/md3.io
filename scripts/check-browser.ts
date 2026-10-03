@@ -202,6 +202,14 @@ try {
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile landing overflows');
+  // The privacy page: the footer link reaches it from the home page and from a component page.
+  await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
+  await page.waitForURL(`${base}privacy/`);
+  await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
+  await page.goto(`${base}components/button/`);
+  await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
+  await page.waitForURL(`${base}privacy/`);
+  await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   console.log(`Browser checks passed. Screenshots: ${output}`);
 } finally {

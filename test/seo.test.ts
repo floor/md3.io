@@ -19,7 +19,7 @@ describe('sitemap and robots', () => {
     expect(response.headers.get('Content-Type')).toContain('application/xml');
     const xml = await response.text();
     const paths = [...xml.matchAll(/<loc>https:\/\/md3\.io([^<]*)<\/loc>/g)].map(match => match[1]!);
-    const expected = ['/', '/components/', '/docs/', '/examples/', ...componentSlugs.map(slug => `/components/${slug}/`), ...docSlugs.map(docHref),
+    const expected = ['/', '/components/', '/docs/', '/examples/', '/privacy/', ...componentSlugs.map(slug => `/components/${slug}/`), ...docSlugs.map(docHref),
       ...stylePages.map(page => page.href), ...examples.map(example => `/examples/${example.slug}/`)];
     expect([...paths].sort()).toEqual([...new Set(expected)].sort());
     expect(paths.filter(path => /^\/(preview|api)\/|\/frame\//.test(path))).toEqual([]);
