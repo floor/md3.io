@@ -177,6 +177,28 @@ try {
     await page.setViewportSize({ width: 1440, height: 900 });
     assert(errors.length === 0, errors.join('\n'));
   }
+  // The playground heading is shared by every component: at 1024 px every toolbar control
+  // stays inside it, and choosing Dark does not scroll the preview panel sideways (#11).
+  // The text field is the playground here, and the phone keeps the same toolbar.
+  const headingFits = async (where: string) => {
+    const heading = await page.locator('.preview-heading').boundingBox();
+    assert(heading, `${where}: the playground heading is not visible`);
+    for (const selector of ['#live-tab', '#code-tab', '.preview-dot', 'label[for="preview-theme"]', '#preview-theme', '.choice-group--mode']) {
+      const box = await page.locator(`.preview-heading ${selector}`).boundingBox();
+      assert(box && box.x >= heading.x - 0.5 && box.y >= heading.y - 0.5 && box.x + box.width <= heading.x + heading.width + 0.5 && box.y + box.height <= heading.y + heading.height + 0.5,
+        `${where}: the toolbar control ${selector} at ${JSON.stringify(box)} is not inside the heading ${JSON.stringify(heading)}`);
+    }
+  };
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto(`${server.url}components/text-field/`);
+  await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
+  await headingFits('text-field/1024');
+  await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
+  await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.themeMode === 'dark');
+  assert(await page.evaluate(() => document.querySelector<HTMLElement>('.preview-panel')!.scrollLeft) === 0, 'text-field/1024: choosing Dark scrolled the preview panel sideways');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await headingFits('text-field/390');
+  await page.setViewportSize({ width: 1440, height: 900 });
   console.log('Selection & input browser checks passed.');
 } finally {
   await browser.close();
