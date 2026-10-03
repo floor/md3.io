@@ -83,6 +83,6 @@
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>
-  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">floor</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub ↗</a><a href="/privacy/">Privacy</a></span></footer>
+  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub ↗</a><a href="/privacy/">Privacy</a></span></footer>
   <%~ include('search') %>
 </body></html>
