@@ -53,10 +53,13 @@ export function createIconNamer(): IconNamer {
 
 /**
  * Names the icons of generated vanilla code: every `key: "<svg…>"` becomes
- * `key: editIcon`, declared after the theme lines (or the imports).
+ * `key: editIcon`, declared after the theme lines (or the imports). `extra` are
+ * SVGs a generated handler names itself (`visibilityOffIcon`), which the code
+ * cannot show as literals: they are imported like the rest.
  */
-export function nameIcons(code: string): string {
+export function nameIcons(code: string, extra: readonly string[] = []): string {
   const icons = createIconNamer();
+  for (const svg of extra) icons.name(svg, 'icon');
   let named = code.replace(/^(\s*)(\w+): ("<svg(?:[^"\\]|\\.)*")/gm, (_, indent: string, key: string, literal: string) =>
     `${indent}${key}: ${icons.name(JSON.parse(literal) as string, key)}`);
   const imports = icons.imports();

@@ -74,6 +74,7 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .configuration .ui-section { padding: 14px 16px; }
 .configuration-controls > .ui-title { margin-bottom: 10px; }
 .configuration .ui-row + .ui-row { margin-top: 8px; }
+.configuration .scenario-description { margin: 6px 0 0; color: var(--text-dim); font-size: var(--fs-xs); line-height: 1.4; }
 .control-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 190px); gap: 8px; }
 .control-label { color: var(--text-muted); font-size: var(--fs-sm); font-weight: var(--fw-bold); line-height: 1.3; }
 .control-input { width: 100%; min-width: 0; }

@@ -2,7 +2,7 @@ import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
-import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
 hljs.registerLanguage('javascript', javascript);
@@ -17,6 +17,10 @@ const form = document.querySelector<HTMLFormElement>('#configuration')!;
 const frame = document.querySelector<HTMLIFrameElement>('#preview')!;
 const code = document.querySelector<HTMLElement>('#generated-code')!;
 const status = document.querySelector<HTMLElement>('#playground-status')!;
+const scenarios = components[slug].scenarios;
+const scenarioSelect = document.querySelector<HTMLSelectElement>('#scenario')!;
+const scenarioDescription = document.querySelector<HTMLElement>('#scenario-description')!;
+let unknownScenario = false;
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
 const copyButton = document.querySelector<HTMLButtonElement>('#copy-code')!;
 const previewDot = document.querySelector<HTMLElement>('.preview-dot')!;
@@ -149,12 +153,58 @@ function update(send = true, reset = false) {
   renderCode();
   if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state, reset }, location.origin);
 }
+
+// The Scenario select: Default, the component's named scenarios, and Custom. Custom is
+// how the select reports options that no longer match a scenario; it is not a
+// destination.
+const scenarioById = (id: string) => scenarios.find(scenario => scenario.id === id);
+/** The select and its one-line description, from the selected entry. */
+function showScenario(id: string) {
+  scenarioSelect.value = id;
+  scenarioDescription.textContent = id === 'default' ? 'The options this playground starts with.'
+    : id === 'custom' ? 'These options were changed from a scenario.'
+    : scenarioById(id)?.description ?? 'The options this playground starts with.';
+}
+/** `?scenario=`, written over the address as it is: path, other keys and hash stay. */
+function setScenarioParam(id: string | null) {
+  const url = new URL(location.href);
+  if ((url.searchParams.get('scenario') ?? null) === id) return;
+  if (id === null) url.searchParams.delete('scenario'); else url.searchParams.set('scenario', id);
+  history.replaceState(null, '', url);
+}
+/** A hand edit: the options no longer match a scenario, so the select says Custom. */
+function markCustom() {
+  if (scenarioSelect.value === 'custom') return;
+  showScenario('custom');
+  setScenarioParam(null);
+}
+/** Applies options over the initials, then updates through the same path as a hand edit. */
+function applyOptions(id: string, options: Readonly<Record<string, string | boolean>>) {
+  syncControls(normalizeComponentState(slug, { ...initialComponentState(slug), ...options }));
+  showScenario(id);
+  setScenarioParam(id === 'default' ? null : id);
+  update();
+}
+/** Applies a named scenario's options. */
+function applyScenario(scenario: Scenario) {
+  applyOptions(scenario.id, scenario.options);
+}
+scenarioSelect.addEventListener('change', () => {
+  const id = scenarioSelect.value;
+  // Choosing Custom leaves the controls as they are; the address drops the scenario.
+  if (id === 'custom') { setScenarioParam(null); return; }
+  const scenario = scenarioById(id);
+  if (scenario) applyScenario(scenario); else applyOptions('default', {});
+});
 form.addEventListener('input', event => {
   const target = event.target;
+  // The scenario select is a command, not an option: its own change handler applies it.
+  if (target === scenarioSelect) return;
   if (slug === 'list' && state.selection === 'single' && target instanceof HTMLInputElement && target.checked && ['first', 'second', 'third', 'fourth', 'fifth'].includes(target.name)) {
     for (const input of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) if (input !== target && ['first', 'second', 'third', 'fourth', 'fifth'].includes(input.name)) input.checked = false;
   }
   update();
+  markCustom();
 });
 // Form-associated footer controls participate in FormData/reset, but events bubble through the footer.
 document.querySelector('.preview-appearance')!.addEventListener('input', () => {
@@ -166,27 +216,38 @@ document.querySelector('.preview-appearance')!.addEventListener('input', () => {
 form.addEventListener('submit', event => event.preventDefault());
 form.addEventListener('reset', () => {
   status.textContent = 'Resetting configuration…';
-  setTimeout(() => update(true, true), 0);
+  // The scenario select resets with the form: its default is Default.
+  setTimeout(() => { showScenario('default'); setScenarioParam(null); update(true, true); }, 0);
 });
 frame.addEventListener('load', () => update());
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
-  if (event.data?.type === 'md3:ready') { update(); status.textContent = 'Ready to try'; }
+  // The unknown-id message belongs to the load that carried it: the flag is cleared here,
+  // so a later preview reload reports ready again.
+  if (event.data?.type === 'md3:ready') {
+    update();
+    status.textContent = unknownScenario ? 'Unknown scenario. Showing Default.' : 'Ready to try';
+    unknownScenario = false;
+  }
   if (event.data?.type === 'md3:reset') status.textContent = 'Configuration reset';
   if (event.data?.type === 'md3:click') status.textContent = `${components[slug].name} clicked · ${event.data.count}`;
   if (event.data?.type === 'md3:event' && typeof event.data.message === 'string') status.textContent = event.data.message;
+  // A change coming back from the preview writes a control, so the options are the
+  // person's own from here on, as a hand edit is.
   if (event.data?.type === 'md3:selected' && typeof event.data.selected === 'boolean') {
     const selected = form.querySelector<HTMLInputElement>('[name="selected"]');
-    if (selected) { selected.checked = event.data.selected; update(false); }
+    if (selected) { selected.checked = event.data.selected; update(false); markCustom(); }
   }
   if (event.data?.type === 'md3:checkbox' && slug === 'checkbox' && ['checked', 'unchecked', 'indeterminate'].includes(event.data.state)) {
     const control = form.querySelector<HTMLSelectElement>('[name="state"]')!;
     control.value = event.data.state;
     update(false);
+    markCustom();
   }
   if (event.data?.type === 'md3:values' && event.data.values && typeof event.data.values === 'object') {
     syncControls(normalizeComponentState(slug, { ...state, ...event.data.values }));
     update(false);
+    markCustom();
   }
   if (event.data?.type === 'md3:error') status.textContent = 'Preview could not load. Please reload the page.';
 });
@@ -201,4 +262,9 @@ copyButton.addEventListener('click', async () => {
 });
 selectFramework(framework);
 try { if (localStorage.getItem(VIEW_KEY) === 'code') selectTab(codeTab); } catch { /* Storage may be unavailable. */ }
-update();
+// `?scenario=` is the only configuration parameter a load reads: a known id applies over
+// any control-key parameter, an unknown one falls back to Default and says so.
+const requested = new URL(location.href).searchParams.get('scenario');
+const requestedScenario = requested ? scenarioById(requested) : undefined;
+if (requested && !requestedScenario) { unknownScenario = true; setScenarioParam(null); }
+if (requestedScenario) applyScenario(requestedScenario); else update();
