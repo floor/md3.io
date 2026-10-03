@@ -173,7 +173,7 @@ const textFieldScenarios: readonly Scenario[] = [
   },
   {
     id: 'password', name: 'Password', source: 'https://m3.material.io/components/text-fields/accessibility',
-    description: 'A password with a show or hide button. Not applied yet: needs the trailing icon label, 3.1.0.',
+    description: 'A password with a show or hide button. In the element, the button\'s label waits on `trailing-icon-label`, 3.1.0.',
     options: { type: 'password', label: 'Password', placeholder: '', supportingText: '', value: '', icon: 'none', trailingIcon: 'visibility', trailingIconLabel: 'Show password' },
   },
   {
