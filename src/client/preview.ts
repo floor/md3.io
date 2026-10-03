@@ -35,7 +35,7 @@ import createSplitButton from 'material/components/split-button';
 import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
-import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, trailingBehaviour, type ComponentState } from '../shared/components';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -284,11 +284,14 @@ function create(state: ComponentState) {
       const control = createTextField(config);
       if (!String(state.label).trim()) control.input.setAttribute('aria-label', 'Text field');
       control.input.addEventListener('input', () => { sync({ value: control.getValue() }); message('Text updated'); });
-      // The trailing button's behaviour is shared, keyed by the accessible name the config
-      // gives it: a clear button empties the field and shows while there is a value
-      // (m3.material.io text field guidelines); a password button swaps the type, the icon
-      // and its own label (text field accessibility).
-      if (config.trailingIconLabel === 'Clear') {
+      // The trailing button's behaviour is shared and keyed by the icon choice
+      // (`trailingBehaviour`); the label is only the accessible name, so typing one cannot
+      // change what the button does. The label's presence is what makes the icon a button:
+      // a clear button empties the field and shows while there is a value (m3.material.io
+      // text field guidelines); a password button swaps the type, the icon and its own
+      // label (text field accessibility).
+      const behaviour = config.trailingIconLabel ? trailingBehaviour(state) : undefined;
+      if (behaviour === 'clear') {
         // A component stylesheet sets `display: flex` on this element, which outranks the
         // `hidden` attribute; an inline display wins over both, and `''` hands the button
         // back to the component's own rule.
@@ -297,7 +300,7 @@ function create(state: ComponentState) {
         reflect();
         control.on('trailing', () => { control.setValue(''); reflect(); sync({ value: '' }); message('Text cleared'); });
       }
-      if (config.trailingIconLabel === 'Show password') {
+      if (behaviour === 'show-password') {
         control.on('trailing', () => {
           // A single-line field: the factory types the input as input-or-textarea.
           const input = control.input;

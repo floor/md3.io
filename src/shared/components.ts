@@ -158,6 +158,21 @@ function listConfig(state: ComponentState): ListConfig<ListItem> {
   return { items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
     initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < labels.length && state.selection !== 'none' ? [String(index + 1)] : []) };
 }
+/** What a labelled trailing icon does on the text field. */
+export type TrailingBehaviour = 'clear' | 'show-password';
+/**
+ * The behaviour of the text field's trailing button, from the trailing icon control's value:
+ * the stable key, so a label a visitor types cannot turn an arbitrary icon into a clear
+ * button or a password toggle. The label stays what it is in the config — the button's
+ * accessible name — and the icon, not the label, decides what activating it does. One
+ * behaviour per icon, shared by the preview and by the generator rule below.
+ */
+export function trailingBehaviour(state: ComponentState): TrailingBehaviour | undefined {
+  const icon = string(state, 'trailingIcon');
+  if (icon === 'close') return 'clear';
+  if (icon === 'visibility') return 'show-password';
+  return undefined;
+}
 /**
  * The text field's scenarios, from m3.material.io (read 3 October 2026). Options name
  * playground controls only; applying one is `normalizeComponentState(slug, { ...initials,
@@ -843,24 +858,28 @@ export function componentCode(slug: ComponentSlug, state: ComponentState): strin
 }
 
 /**
- * The text field's trailing button handler, which JSON cannot carry. The two icons the
- * password code names are declared with `icons`: the code shows no literals for them, so
- * `componentCode` imports them as `visibilityIcon` and `visibilityOffIcon` (their icons/
- * files' names, as `nameIcons` spells them).
+ * The text field's trailing button handler, which JSON cannot carry. Keyed by
+ * `trailingBehaviour`, like the preview behaviour it mirrors, so the icon decides and the
+ * label is only the accessible name. The two icons the password code names are declared
+ * with `icons`: the code shows no literals for them, so `componentCode` imports them as
+ * `visibilityIcon` and `visibilityOffIcon` (their icons/ files' names, as `nameIcons`
+ * spells them).
  */
 function trailingHandler(slug: ComponentSlug, state: ComponentState): { code: string; icons: readonly string[] } | undefined {
   if (slug !== 'text-field') return undefined;
-  const handlers: Record<string, { code: string; icons: readonly string[] }> = {
+  const behaviour = trailingBehaviour(state);
+  if (!behaviour) return undefined;
+  const handlers: Record<TrailingBehaviour, { code: string; icons: readonly string[] }> = {
     // m3.material.io text fields: "Clear icons let a person clear an entire input field."
-    Clear: { code: `onTrailingClick: () => textField.setValue(''),`, icons: [] },
+    clear: { code: `onTrailingClick: () => textField.setValue(''),`, icons: [] },
     // m3.material.io text field accessibility: hidden, the label is "Show password"; visible, "Hide password".
-    'Show password': { code: `onTrailingClick: () => {
+    'show-password': { code: `onTrailingClick: () => {
   const shown = textField.input.type === 'text';
   textField.input.type = shown ? 'password' : 'text';
   textField.setTrailingIcon(shown ? visibilityIcon : visibilityOffIcon, shown ? 'Show password' : 'Hide password');
 },`, icons: [symbols.visibility, symbols.visibilityOff] },
   };
-  return handlers[string(state, 'trailingIconLabel')];
+  return handlers[behaviour];
 }
 
 function buildComponentCode(slug: ComponentSlug, state: ComponentState): string {
