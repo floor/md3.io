@@ -170,7 +170,7 @@ export const components = {
     summary: 'Related actions. Shared shapes. Flexible selection.',
     styles: ['progress', 'button', 'icon-button', 'button-group'],
     controls: [
-      ...section('Appearance', [choose('kind', 'Kind', ['standard', 'connected'], 'standard'), choose('variant', 'Variant', variants, 'outlined', 'select'), size, square]),
+      ...section('Appearance', [choose('kind', 'Kind', ['standard', 'connected'], 'connected'), choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'),
         choose('density', 'Density', ['default', 'comfortable', 'compact'], 'default', 'select'), toggle('equalWidth', 'Equal widths')]),
       ...section('Content', [choose('content', 'Content', ['text', 'icons', 'both'], 'text'), choose('labels', 'Labels', ['always', 'selected'], 'always')]),
