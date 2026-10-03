@@ -17,6 +17,8 @@ try {
   const page = await context.newPage();
   page.setDefaultTimeout(10000);
   const errors: string[] = [];
+  // The page hears the preview frame too: Playwright reports a same-origin frame's uncaught
+  // errors on the page that owns it, so one listener covers what the spec asks for.
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   const frame = page.frameLocator('#preview');
