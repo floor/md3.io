@@ -209,17 +209,55 @@ const textFieldScenarios: readonly Scenario[] = [
     options: { type: 'multiline', label: 'Message', value: 'Hello', placeholder: '', supportingText: '', maxLength: '200' },
   },
 ];
+/**
+ * The button's scenarios, from m3.material.io (read 3 October 2026). Options name
+ * playground controls only. Favorite uses the factory's `toggle` and `selected`;
+ * the element has no toggle attribute, so the element snippet cannot select it,
+ * and the description says so.
+ */
+const buttonScenarios: readonly Scenario[] = [
+  {
+    id: 'save', name: 'Save', source: 'https://m3.material.io/components/buttons/guidelines',
+    description: 'A filled button for an important, final action, like Save.',
+    options: { variant: 'filled', text: 'Save', icon: 'none' },
+  },
+  {
+    id: 'download', name: 'Download', source: 'https://m3.material.io/components/buttons/guidelines',
+    description: 'A filled button with a leading icon before the label.',
+    options: { variant: 'filled', text: 'Download', icon: 'download' },
+  },
+  {
+    id: 'secondary', name: 'Secondary', source: 'https://m3.material.io/components/buttons/guidelines',
+    description: 'An outlined button for an alternative, secondary action.',
+    options: { variant: 'outlined', text: 'Next movie', icon: 'none' },
+  },
+  {
+    id: 'cancel', name: 'Cancel', source: 'https://m3.material.io/components/buttons/guidelines',
+    description: 'A text button for the lowest-priority action.',
+    options: { variant: 'text', text: 'Cancel', icon: 'none' },
+  },
+  {
+    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/buttons/guidelines',
+    description: 'A toggle button for a binary selection, shown selected. The element has no toggle attribute, so its snippet cannot select it.',
+    options: { variant: 'filled', text: 'Favorite', icon: 'heart', toggle: true, selected: true },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/buttons/overview',
+    description: 'A leading icon and a label at the large size.',
+    options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
     description: 'One action, many expressions. Find the right fit for yours.',
     summary: 'Five variants. Five sizes. Your next action.',
     styles: ['progress', 'button'],
-    scenarios: [],
+    scenarios: buttonScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Button')]),
-      ...section('Behavior', [disabled]),
+      ...section('Behavior', [toggle('toggle', 'Toggle button', false, 'toggleAllowed'), toggle('selected', 'Selected', false, 'toggle'), disabled]),
     ],
     config: (state: ComponentState) => buttonConfig(normalizeState({ ...state, shape: shape(state) })),
   },
@@ -834,6 +872,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   // The trailing label is only meaningful beside a trailing icon.
   if (slug === 'text-field') state.hasTrailingIcon = state.trailingIcon !== 'none';
+  // Text buttons have no toggle style (m3.material.io button specs).
+  if (slug === 'button') {
+    state.toggleAllowed = state.variant !== 'text';
+    if (!state.toggleAllowed) state.toggle = false;
+  }
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
