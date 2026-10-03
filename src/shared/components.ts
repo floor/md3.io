@@ -255,7 +255,7 @@ export const components = {
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Button')]),
-      ...section('Behavior', [toggle('toggle', 'Toggle button'), toggle('selected', 'Selected', false, 'toggle'), disabled]),
+      ...section('Behavior', [toggle('toggle', 'Toggle button', false, 'toggleAllowed'), toggle('selected', 'Selected', false, 'toggle'), disabled]),
     ],
     config: (state: ComponentState) => buttonConfig(normalizeState({ ...state, shape: shape(state) })),
   },
@@ -869,6 +869,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   // The trailing label is only meaningful beside a trailing icon.
   if (slug === 'text-field') state.hasTrailingIcon = state.trailingIcon !== 'none';
+  // Text buttons have no toggle style (m3.material.io button specs).
+  if (slug === 'button') {
+    state.toggleAllowed = state.variant !== 'text';
+    if (!state.toggleAllowed) state.toggle = false;
+  }
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
