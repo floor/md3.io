@@ -206,7 +206,7 @@ const textFieldScenarios: readonly Scenario[] = [
   {
     id: 'message', name: 'Message', source: 'https://m3.material.io/components/text-fields/guidelines',
     description: 'A multiline message with a character counter.',
-    options: { type: 'multiline', label: 'Message', value: 'Hello', placeholder: '', supportingText: '', maxLength: '20' },
+    options: { type: 'multiline', label: 'Message', value: 'Hello', placeholder: '', supportingText: '', maxLength: '200' },
   },
 ];
 export const components = {
@@ -450,7 +450,7 @@ export const components = {
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default'), icon(['none', 'heart', 'edit', 'send', 'mail', 'search'], 'none'),
         choose('trailingIcon', 'Trailing icon', ['none', 'close', 'error', 'visibility'], 'none', 'icons'), { ...text('trailingIconLabel', 'Trailing icon label', ''), enabledWhen: 'hasTrailingIcon' }]),
       ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed'),
-        { ...range('maxLength', 'Maximum length', '0'), max: 80 }]),
+        { ...range('maxLength', 'Maximum length', '0'), max: 500, step: 10 }]),
       ...section('Behavior', [toggle('error', 'Error'), toggle('required', 'Required'), toggle('readonly', 'Read only'), disabled]),
     ],
     config: (state: ComponentState): TextFieldConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), type: string(state, 'type'), label: string(state, 'label'),
