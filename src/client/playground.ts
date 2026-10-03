@@ -222,7 +222,13 @@ form.addEventListener('reset', () => {
 frame.addEventListener('load', () => update());
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
-  if (event.data?.type === 'md3:ready') { update(); status.textContent = unknownScenario ? 'Unknown scenario. Showing Default.' : 'Ready to try'; }
+  // The unknown-id message belongs to the load that carried it: the flag is cleared here,
+  // so a later preview reload reports ready again.
+  if (event.data?.type === 'md3:ready') {
+    update();
+    status.textContent = unknownScenario ? 'Unknown scenario. Showing Default.' : 'Ready to try';
+    unknownScenario = false;
+  }
   if (event.data?.type === 'md3:reset') status.textContent = 'Configuration reset';
   if (event.data?.type === 'md3:click') status.textContent = `${components[slug].name} clicked · ${event.data.count}`;
   if (event.data?.type === 'md3:event' && typeof event.data.message === 'string') status.textContent = event.data.message;
