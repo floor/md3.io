@@ -2,8 +2,9 @@
   <h1>Privacy</h1>
   <h2>How the site reaches you</h2>
   <p>md3.io is served through Cloudflare. To deliver the pages, Cloudflare processes information about your request, including your IP address. Cloudflare describes this in its <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>.</p>
+  <p>Cloudflare's responses also ask your browser to report failed requests: if a request to md3.io fails, a browser that supports this may send a report of the failure to Cloudflare, at <code>a.nel.cloudflare.com</code>.</p>
   <h2>Counting visits</h2>
-  <p>Visits are counted with Cloudflare Web Analytics. If your visit reaches Cloudflare through one of its data centers in the EU, the EEA, Switzerland or the UK, the analytics script isn't loaded (<a href="https://developers.cloudflare.com/speed/observatory/rum-beacon/">Cloudflare's description</a>, read on 3 October 2026). Otherwise, your browser loads the script from static.cloudflareinsights.com and reports to cloudflareinsights.com.</p>
+  <p>Visits are counted with Cloudflare Web Analytics. If your visit reaches Cloudflare through one of its data centers in the EU, the EEA, Switzerland or the UK, the analytics script isn't loaded (<a href="https://developers.cloudflare.com/speed/observatory/rum-beacon/">Cloudflare's description</a>, read on 3 October 2026). Otherwise, your browser loads the script from <code>static.cloudflareinsights.com</code> and reports to <code>cloudflareinsights.com</code>.</p>
   <p>Cloudflare says that Web Analytics "does not use any client-side state, such as cookies or localStorage, to collect usage metrics", and that it doesn't "fingerprint" individuals through their IP address, User Agent string, or any other data to display analytics. Source: <a href="https://www.cloudflare.com/web-analytics/">Cloudflare Web Analytics</a>, read on 3 October 2026.</p>
   <h2>Cookies and other sites</h2>
   <p>The site sets no cookies. Apart from Cloudflare's analytics script, where it is loaded, pages load nothing from other sites: fonts, scripts and styles come from md3.io itself.</p>
