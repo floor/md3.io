@@ -50,6 +50,10 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .text-link:hover, .catalog-note a:hover, .doc-toolbar a:hover { text-decoration: underline; }
 .playground { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: stretch; }
 .preview-panel { border: 1px solid var(--border); background: var(--bg-card); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+/* The playground panel clips its rounded corners but is not a scroll container: a control that
+   pokes outside it must not let the browser scroll the panel to reveal it (#11). Browsers
+   without overflow: clip keep the hidden above; the examples page keeps it too. */
+.playground .preview-panel { overflow: clip; }
 .panel-heading { min-height: 49px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); }
 .panel-heading .ui-title { margin: 0; }
 .preview-dot { height: 6px; width: 6px; border-radius: 50%; background: var(--green); }

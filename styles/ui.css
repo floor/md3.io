@@ -1179,5 +1179,8 @@ html[data-theme] .source__panel pre {
    the playground heading and the copy button over the code. */
 .component-size { margin-left: auto; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; cursor: help; }
 .playground-space > .preview-copy { position: absolute; top: 16px; right: 18px; z-index: 1; }
-@media (max-width: 400px) { .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; } }
+/* The playground heading fits on one row only when the preview panel is wide enough for its
+   toolbar; below 1150 px the two-column layout does not give it that, so the row wraps instead
+   of squeezing (#11). flex-wrap only wraps when it has to, so wider panels keep one row. */
+@media (max-width: 1150px) { .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; } }
 .component-size strong { color: var(--text-muted); font-family: var(--font-mono); font-weight: var(--fw-bold, 600); }
