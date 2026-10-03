@@ -34,4 +34,7 @@ await Promise.all((Object.keys(stylesheetBundles) as (keyof typeof stylesheetBun
 // Every example in every framework, into dist/examples.
 const examples = Bun.spawnSync(['bun', resolve(root, 'scripts/build-examples.ts')], { stdout: 'inherit', stderr: 'inherit' });
 if (examples.exitCode !== 0) process.exit(1);
+// Hashed names for every asset the HTML links, and the manifest the server reads.
+const manifest = Bun.spawnSync(['bun', resolve(root, 'scripts/write-asset-manifest.ts')], { stdout: 'inherit', stderr: 'inherit' });
+if (manifest.exitCode !== 0) process.exit(1);
 console.log('Built site, component playgrounds, and Material preview assets.');
