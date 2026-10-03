@@ -408,6 +408,12 @@ function create(state: ComponentState) {
     case 'button': {
       const button = createButton(components.button.config(state));
       button.on('click', clicked);
+      // The same path as the icon button: a toggle's change writes the Selected control.
+      button.on('change', ({ selected }) => {
+        if (current) current.selected = selected;
+        post({ type: 'md3:selected', selected });
+        message(selected ? 'Button selected' : 'Button deselected');
+      });
       return button;
     }
     case 'icon-button': {

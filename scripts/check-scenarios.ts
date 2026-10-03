@@ -98,6 +98,42 @@ try {
     assert(checkboxShown[control.key] === expected, `checkbox/?scenario=x: ${control.key} shows ${JSON.stringify(checkboxShown[control.key])}, expected ${JSON.stringify(expected)}`);
   }
   assert(errors.length === 0, `checkbox/?scenario=x: ${errors.join('\n')}`);
+  // The button's toggle controls: the selected state reaches the preview, the vanilla
+  // panel, and the element panel. The element has no toggle attribute, so that panel
+  // names toggle and selected as not yet exposed.
+  errors.length = 0;
+  await page.goto(`${base}components/button/?scenario=favorite`);
+  await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
+  const favorite = frame.locator('#stage button');
+  assert(await favorite.getAttribute('aria-pressed') === 'true', 'button/favorite: the preview is not pressed');
+  assert((await favorite.getAttribute('class'))?.includes('mtrl-button--selected') === true, 'button/favorite: the preview is not selected');
+  const vanilla = await page.locator('#generated-code').textContent();
+  assert(vanilla?.includes('toggle: true') === true && vanilla.includes('selected: true'), 'button/favorite: the vanilla panel does not show the selected toggle');
+  await page.locator('.framework-tab[data-framework="html"]').click();
+  const html = await page.locator('#generated-code').textContent();
+  assert(html?.includes('Not yet exposed by the element: toggle, selected.') === true, `button/favorite: the element panel reads ${JSON.stringify(html)}`);
+  // The framework tab opens the code view. The click is on the live preview, and the
+  // code it checks is the vanilla panel.
+  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await favorite.click();
+  await page.waitForFunction(() => {
+    const selected = document.querySelector<HTMLInputElement>('input[name="selected"]');
+    return selected?.checked === false && document.querySelector<HTMLSelectElement>('#scenario')?.value === 'custom';
+  });
+  assert(await page.locator('input[name="selected"]').isChecked() === false, 'button/favorite: the Selected control stayed checked after a click');
+  assert(await page.locator('#scenario').inputValue() === 'custom', 'button/favorite: the scenario stayed on Favorite after a click');
+  const afterClick = await page.locator('#generated-code').textContent();
+  assert(afterClick?.includes('selected: true') !== true, 'button/favorite: the code still says selected: true after a click');
+  assert(await favorite.getAttribute('aria-pressed') === 'false', 'button/favorite: the preview stayed pressed after a click');
+  await page.locator('select[name="variant"]').selectOption('text');
+  await page.waitForFunction(() => {
+    const toggle = document.querySelector<HTMLInputElement>('input[name="toggle"]');
+    const button = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage button');
+    return toggle?.disabled === true && toggle.checked === false && !!button && !button.hasAttribute('aria-pressed');
+  });
+  assert(await favorite.getAttribute('aria-pressed') === null, 'button/favorite: a text button is still a toggle');
+  assert(errors.length === 0, `button/favorite: ${errors.join('\n')}`);
   console.log(`Scenario checks passed: ${loads} loads over ${componentSlugs.length} components.`);
 } finally {
   await browser.close();
