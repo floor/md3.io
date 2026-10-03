@@ -207,6 +207,41 @@ const textFieldScenarios: readonly Scenario[] = [
     options: { type: 'multiline', label: 'Message', value: 'Hello', placeholder: '', supportingText: '', maxLength: '20' },
   },
 ];
+/**
+ * The chips' scenarios, from m3.material.io (read 3 October 2026). Labels stay Hiking, Music
+ * and Food (fixed in `config()`); options name playground controls only, so applying one is
+ * `normalizeComponentState(slug, { ...initials, ...options })`. Filters select two chips —
+ * "Multiple chips can be selected or unselected" — and One filter uses the set's single-select
+ * mode. Contacts' avatar is the input chip's leading image; Assist carries the leading icon its
+ * anatomy lists; the suggestion chip's anatomy is its container and label, so it has none.
+ */
+const chipsScenarios: readonly Scenario[] = [
+  {
+    id: 'filters', name: 'Filters', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Filter chips with several selected.',
+    options: { type: 'filter', multiSelect: true, hiking: true, music: true, food: false },
+  },
+  {
+    id: 'one-filter', name: 'One filter', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Filter chips with a single selection.',
+    options: { type: 'filter', multiSelect: false, hiking: true },
+  },
+  {
+    id: 'contacts', name: 'Contacts', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Input chips with an avatar.',
+    options: { type: 'input', avatar: true },
+  },
+  {
+    id: 'assist', name: 'Assist', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Assist chips with a leading icon.',
+    options: { type: 'assist', icons: true },
+  },
+  {
+    id: 'suggestion', name: 'Suggestion', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Suggestion chips.',
+    options: { type: 'suggestion' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -403,7 +438,7 @@ export const components = {
     group: 'Selection & input', name: 'Chips', factory: 'createChips', variable: 'chips',
     description: 'Explore compact choices and actions. Try the four chip types, elevation, icons and avatars, and single or multiple selection.',
     summary: 'Compact choices, filters, and actions.', styles: ['chips'],
-    scenarios: [],
+    scenarios: chipsScenarios,
     controls: [
       // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
       // avatar for input chips; selection for filter and input chips.
