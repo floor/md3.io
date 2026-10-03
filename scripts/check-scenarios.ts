@@ -98,6 +98,21 @@ try {
     assert(checkboxShown[control.key] === expected, `checkbox/?scenario=x: ${control.key} shows ${JSON.stringify(checkboxShown[control.key])}, expected ${JSON.stringify(expected)}`);
   }
   assert(errors.length === 0, `checkbox/?scenario=x: ${errors.join('\n')}`);
+  // The button's toggle controls: the selected state reaches the preview, the vanilla
+  // panel, and the element panel. The element has no toggle attribute, so that panel
+  // names toggle and selected as not yet exposed.
+  errors.length = 0;
+  await page.goto(`${base}components/button/?scenario=favorite`);
+  await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
+  const favorite = frame.locator('#stage button');
+  assert(await favorite.getAttribute('aria-pressed') === 'true', 'button/favorite: the preview is not pressed');
+  assert((await favorite.getAttribute('class'))?.includes('mtrl-button--selected') === true, 'button/favorite: the preview is not selected');
+  const vanilla = await page.locator('#generated-code').textContent();
+  assert(vanilla?.includes('toggle: true') === true && vanilla.includes('selected: true'), 'button/favorite: the vanilla panel does not show the selected toggle');
+  await page.locator('.framework-tab[data-framework="html"]').click();
+  const html = await page.locator('#generated-code').textContent();
+  assert(html?.includes('Not yet exposed by the element: toggle, selected.') === true, `button/favorite: the element panel reads ${JSON.stringify(html)}`);
+  assert(errors.length === 0, `button/favorite: ${errors.join('\n')}`);
   console.log(`Scenario checks passed: ${loads} loads over ${componentSlugs.length} components.`);
 } finally {
   await browser.close();
