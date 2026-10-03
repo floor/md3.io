@@ -289,7 +289,10 @@ function create(state: ComponentState) {
       // (m3.material.io text field guidelines); a password button swaps the type, the icon
       // and its own label (text field accessibility).
       if (config.trailingIconLabel === 'Clear') {
-        const reflect = () => { if (control.trailingIcon) control.trailingIcon.hidden = !control.getValue(); };
+        // A component stylesheet sets `display: flex` on this element, which outranks the
+        // `hidden` attribute; an inline display wins over both, and `''` hands the button
+        // back to the component's own rule.
+        const reflect = () => { if (control.trailingIcon) control.trailingIcon.style.display = control.getValue() ? '' : 'none'; };
         control.input.addEventListener('input', reflect);
         reflect();
         control.on('trailing', () => { control.setValue(''); reflect(); sync({ value: '' }); message('Text cleared'); });

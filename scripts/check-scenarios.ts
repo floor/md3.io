@@ -52,6 +52,21 @@ try {
       loads++;
     }
   }
+  // The search scenario's clear button (spec section 6): it shows only while the field has
+  // a value, and an empty field must not keep a button to focus.
+  await page.goto(`${base}components/text-field/?scenario=search`);
+  await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
+  // A CSS locator, not a role one: a hidden button leaves the accessibility tree, and a
+  // role locator would wait for it to come back instead of reporting it hidden.
+  const field = frame.locator('input.mtrl-text-field__input');
+  const clear = frame.locator('button.mtrl-text-field__trailing-icon');
+  assert(await clear.isVisible(), 'text-field/search: the clear button is hidden while the field has a value');
+  await clear.click();
+  assert((await field.inputValue()) === '', 'text-field/search: the clear button did not empty the field');
+  assert((await clear.evaluate(element => getComputedStyle(element).display)) === 'none', 'text-field/search: the empty field still displays the clear button');
+  assert((await clear.boundingBox()) === null, 'text-field/search: the clear button still takes space on an empty field');
+  await field.fill('Trail');
+  assert(await clear.isVisible(), 'text-field/search: the clear button did not come back with a value');
   console.log(`Scenario checks passed: ${loads} loads over ${componentSlugs.length} components.`);
 } finally {
   await browser.close();
