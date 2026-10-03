@@ -143,7 +143,15 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .home .site-footer { max-width: min(1040px, 100% - 80px); padding-inline: 0; }
 @media (max-width: 1150px) { .doc-toc { display: none; } .page-wrap { padding: 32px 28px 48px; } .playground { grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; } }
 @media (min-width: 1001px) {
-  .component-page { height: calc(100dvh - var(--header-height)); display: flex; flex-direction: column; padding-top: 8px; padding-bottom: 24px; }
+  /* The site footer is the window's last band on the playground pages: its height comes
+     out of the frame, so a desktop component page still ends at the window's edge and
+     scrolls nothing (check-actions, check-selection, check-containment, …). */
+  :root { --site-footer-height: 60px; }
+  .site-footer { height: var(--site-footer-height); align-items: center; padding-block: 0; }
+  .layout:has(.component-page) { min-height: calc(100dvh - var(--site-footer-height)); }
+  .layout:has(.component-page) .sidebar { height: calc(100dvh - var(--header-height) - var(--site-footer-height)); }
+  .content:has(.component-page) { min-height: calc(100dvh - var(--header-height) - var(--site-footer-height)); }
+  .component-page { height: calc(100dvh - var(--header-height) - var(--site-footer-height)); display: flex; flex-direction: column; padding-top: 8px; padding-bottom: 24px; }
   .component-page .page-heading { flex-shrink: 0; margin-bottom: 22px; }
   .component-page .playground { flex: 1; min-height: 0; }
   .component-page .playground-space { min-height: 0; }
