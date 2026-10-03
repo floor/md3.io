@@ -48,6 +48,15 @@ export const componentIcons: Record<string, string> = {
   bold: symbols.bold,
   italic: symbols.italic,
   underline: symbols.underline,
+  // The text field's leading and trailing icons: mail and search describe the input,
+  // the close and error icons are the clear and error signifiers (m3.material.io text
+  // fields), and the eye pair swaps on a password's show or hide button.
+  mail: symbols.mail,
+  search: symbols.search,
+  close: symbols.close,
+  error: symbols.error,
+  visibility: symbols.visibility,
+  visibilityOff: symbols.visibilityOff,
 };
 export type ComponentState = Record<string, string | boolean>;
 export interface Control {
@@ -62,6 +71,21 @@ export interface Control {
   min?: number;
   max?: number;
   step?: number;
+}
+export interface Scenario {
+  /** `?scenario=` value. Lower case, unique for this component, stable. */
+  id: string;
+  /** The select entry. */
+  name: string;
+  /** One line, shown under the select. */
+  description: string;
+  /**
+   * Playground state keys only. A toggle is boolean; every other control is a string.
+   * Omitted keys stay at the control's `initial` when the scenario is applied.
+   */
+  options: Readonly<Record<string, string | boolean>>;
+  /** The m3.material.io page this scenario follows. Not shown in the playground. */
+  source: string;
 }
 const section = (title: NonNullable<Control['section']>, controls: Control[]): Control[] => controls.map(control => ({ ...control, section: title }));
 const choose = (key: string, label: string, options: readonly string[], initial: string, kind: 'choice' | 'select' | 'icons' = 'choice'): Control => ({ key, label, options, initial, kind });
@@ -134,12 +158,47 @@ function listConfig(state: ComponentState): ListConfig<ListItem> {
   return { items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
     initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < labels.length && state.selection !== 'none' ? [String(index + 1)] : []) };
 }
+/**
+ * The text field's scenarios, from m3.material.io (read 3 October 2026). Options name
+ * playground controls only; applying one is `normalizeComponentState(slug, { ...initials,
+ * ...options })`. The password's show or hide button rides on the 3.0.0 factory's
+ * `trailingIconLabel`; the element has no `trailing-icon-label` attribute yet, so the
+ * element tabs' snippet cannot name the button, and the description says so.
+ */
+const textFieldScenarios: readonly Scenario[] = [
+  {
+    id: 'amount', name: 'Amount', source: 'https://m3.material.io/components/text-fields/guidelines',
+    description: 'An amount with a dollar prefix and a USD suffix.',
+    options: { type: 'number', label: 'Amount', prefixText: '$', suffixText: 'USD', placeholder: '', supportingText: '', value: '', icon: 'none' },
+  },
+  {
+    id: 'password', name: 'Password', source: 'https://m3.material.io/components/text-fields/accessibility',
+    description: 'A password with a show or hide button. Not applied yet: needs the trailing icon label, 3.1.0.',
+    options: { type: 'password', label: 'Password', placeholder: '', supportingText: '', value: '', icon: 'none', trailingIcon: 'visibility', trailingIconLabel: 'Show password' },
+  },
+  {
+    id: 'email', name: 'Email', source: 'https://m3.material.io/components/text-fields/guidelines',
+    description: 'An email address in error, with a leading icon.',
+    options: { type: 'email', label: 'Email', icon: 'mail', trailingIcon: 'error', error: true, supportingText: 'Enter an email address', placeholder: '', value: '' },
+  },
+  {
+    id: 'search', name: 'Search', source: 'https://m3.material.io/components/text-fields/guidelines',
+    description: 'A search field with a clear button.',
+    options: { type: 'search', label: 'Search', value: 'Trail', placeholder: '', supportingText: '', icon: 'none', trailingIcon: 'close', trailingIconLabel: 'Clear' },
+  },
+  {
+    id: 'message', name: 'Message', source: 'https://m3.material.io/components/text-fields/guidelines',
+    description: 'A multiline message with a character counter.',
+    options: { type: 'multiline', label: 'Message', value: 'Hello', placeholder: '', supportingText: '', maxLength: '20' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
     description: 'One action, many expressions. Find the right fit for yours.',
     summary: 'Five variants. Five sizes. Your next action.',
     styles: ['progress', 'button'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Button')]),
@@ -152,6 +211,7 @@ export const components = {
     description: 'A compact action with room for expression. Try its shape, width, and toggle state.',
     summary: 'Compact actions, with a shape for every state.',
     styles: ['icon-button'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'filled', 'tonal', 'outlined'], 'standard', 'select'), size, square,
         choose('width', 'Width', ['narrow', 'default', 'wide'], 'default')]),
@@ -169,6 +229,7 @@ export const components = {
     description: 'Bring related actions together. Explore connected shapes and single or multiple selection.',
     summary: 'Related actions. Shared shapes. Flexible selection.',
     styles: ['progress', 'button', 'icon-button', 'button-group'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('kind', 'Kind', ['standard', 'connected'], 'connected'), choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'),
@@ -192,6 +253,7 @@ export const components = {
     description: 'A primary action and more possibilities. Open the trailing menu to try the alternatives.',
     summary: 'One primary action, with more options close by.',
     styles: ['menu', 'progress', 'button', 'split-button'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled', 'select'), size]),
       ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
@@ -213,6 +275,7 @@ export const components = {
     description: 'Give your primary action a place to stand out. Explore color, size, and floating positions.',
     summary: 'A floating action with a clear purpose.',
     styles: ['fab'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [toneControl, choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
         position, toggle('lowered', 'Lowered elevation')]),
@@ -226,6 +289,7 @@ export const components = {
     group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
     description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
     summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('presentation', 'Presentation', ['list', 'menu', 'auto'], 'list'), choose('color', 'Color', ['primary', 'secondary', 'tertiary'], 'primary'), choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select')]),
       ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5', '6'], '3'), toggle('itemIcons', 'Item icons', true)]),
@@ -245,6 +309,7 @@ export const components = {
     description: 'Give your primary action a little more context. Try labels, icon placement, and a collapsed state.',
     summary: 'A floating action, with room for a label.',
     styles: ['extended-fab'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [toneControl, choose('size', 'Size', ['small', 'medium', 'large'], 'small'),
         choose('width', 'Width', ['fixed', 'fluid'], 'fixed'), position, toggle('lowered', 'Lowered elevation')]),
@@ -262,6 +327,7 @@ export const components = {
     description: 'Make a choice, or represent a partial selection. Explore checkbox states, labels, and form behavior.',
     summary: 'Single choices and mixed selections.',
     styles: ['checkbox'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
       // The m3.material.io checkbox guidelines' parent and children: the label names
@@ -283,6 +349,7 @@ export const components = {
     group: 'Selection & input', name: 'Switch', factory: 'createSwitch', variable: 'toggle',
     description: 'Turn a setting on or off. Try labels, supporting text, and interactive states.',
     summary: 'Settings that take effect immediately.', styles: ['switch'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('icons', 'Icons', ['none', 'selected', 'both'], 'selected'), choose('labelPosition', 'Label position', ['start', 'end'], 'start')]),
       ...section('Content', [text('label', 'Label', 'Notifications'), text('supportingText', 'Supporting text', 'Stay up to date'), text('name', 'Name', 'notifications')]),
@@ -299,6 +366,7 @@ export const components = {
     group: 'Selection & input', name: 'Radio buttons', factory: 'createRadios', variable: 'radios',
     description: 'Choose one option from a set. Explore orientation, label placement, and disabled options.',
     summary: 'One choice from a related set.', styles: ['radios'],
+    scenarios: [],
     controls: [
       ...section('Layout', [choose('direction', 'Direction', ['vertical', 'horizontal'], 'vertical'), toggle('labelBefore', 'Labels before')]),
       ...section('Content', [text('name', 'Name', 'delivery'), choose('value', 'Selected', ['standard', 'express', 'pickup'], 'standard', 'select')]),
@@ -312,6 +380,7 @@ export const components = {
     group: 'Selection & input', name: 'Chips', factory: 'createChips', variable: 'chips',
     description: 'Explore compact choices and actions. Try the four chip types, elevation, icons and avatars, and single or multiple selection.',
     summary: 'Compact choices, filters, and actions.', styles: ['chips'],
+    scenarios: [],
     controls: [
       // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
       // avatar for input chips; selection for filter and input chips.
@@ -330,6 +399,7 @@ export const components = {
     group: 'Selection & input', name: 'Slider', factory: 'createSlider', variable: 'slider',
     description: 'Choose a value or a range. Explore track sizes, steps, colors, and value indicators.',
     summary: 'Values and ranges along a track.', styles: ['slider'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('size', 'Size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('color', 'Color', ['primary', 'secondary', 'tertiary', 'error'], 'primary', 'select'), toggle('ticks', 'Tick marks'), toggle('showValue', 'Value indicator', true)]),
       ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }, toggle('insetIcon', 'Inset icon', false, 'insetIconAllowed')]),
@@ -350,21 +420,30 @@ export const components = {
     group: 'Selection & input', name: 'Text field', factory: 'createTextField', variable: 'textField',
     description: 'Enter text with helpful context. Explore field styles, input types, icons, and validation states.',
     summary: 'Text entry with labels and feedback.', styles: ['text-field'],
+    scenarios: textFieldScenarios,
     controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default'), icon(['none', 'heart', 'edit', 'send'], 'none')]),
-      ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed')]),
+      ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default'), icon(['none', 'heart', 'edit', 'send', 'mail', 'search'], 'none'),
+        choose('trailingIcon', 'Trailing icon', ['none', 'close', 'error', 'visibility'], 'none', 'icons'), { ...text('trailingIconLabel', 'Trailing icon label', ''), enabledWhen: 'hasTrailingIcon' }]),
+      ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed'),
+        { ...range('maxLength', 'Maximum length', '0'), max: 80 }]),
       ...section('Behavior', [toggle('error', 'Error'), toggle('required', 'Required'), toggle('readonly', 'Read only'), disabled]),
     ],
     config: (state: ComponentState): TextFieldConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), type: string(state, 'type'), label: string(state, 'label'),
       value: string(state, 'value'), placeholder: string(state, 'placeholder'), supportingText: string(state, 'supportingText'), name: 'name', ...(iconMarkup(state) ? { leadingIcon: iconMarkup(state) } : {}),
+      // A trailing icon is decorative until it has a label, which makes it a button emitting `trailing` (clear, show password)
+      ...(componentIcons[string(state, 'trailingIcon')] ? { trailingIcon: componentIcons[string(state, 'trailingIcon')] } : {}),
+      ...(componentIcons[string(state, 'trailingIcon')] && string(state, 'trailingIconLabel').trim() ? { trailingIconLabel: string(state, 'trailingIconLabel').trim() } : {}),
       // Prefix and suffix text ("$", "kg") sit beside the input; only set when given, so the default field has neither
       ...(string(state, 'prefixText') ? { prefixText: string(state, 'prefixText') } : {}), ...(string(state, 'suffixText') ? { suffixText: string(state, 'suffixText') } : {}),
+      // The counter shows `count/max` while the input has a maxlength; 0 leaves the field unlimited
+      ...(Number(state.maxLength) > 0 ? { maxLength: Number(state.maxLength) } : {}),
       error: bool(state, 'error'), required: bool(state, 'required'), readonly: bool(state, 'readonly'), disabled: bool(state, 'disabled') }),
   },
   select: {
     group: 'Selection & input', name: 'Select', factory: 'createSelect', variable: 'select',
     description: 'Pick an option from a menu. Explore field styles, selection, and validation states.',
     summary: 'A menu of choices in a field.', styles: ['text-field', 'menu', 'select'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default')]),
       ...section('Content', [text('label', 'Label', 'Fruit'), choose('value', 'Selected', ['', 'apple', 'banana', 'cherry'], 'apple', 'select'), text('supportingText', 'Supporting text', 'Choose a favorite')]),
@@ -378,6 +457,7 @@ export const components = {
     group: 'Selection & input', name: 'Search', factory: 'createSearch', variable: 'search',
     description: 'Start with a search bar, then explore suggestions in a docked or fullscreen view.',
     summary: 'Search with suggestions and an expanded view.', styles: ['search'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Style', ['contained', 'divided'], 'contained'), choose('initialState', 'State', ['bar', 'view'], 'bar'), choose('viewMode', 'View mode', ['docked', 'fullscreen'], 'docked')]),
       ...section('Content', [text('placeholder', 'Placeholder', 'Search places'), text('value', 'Query', ''), choose('suggestions', 'Suggestions', ['places', 'none'], 'places')]),
@@ -391,6 +471,7 @@ export const components = {
     group: 'Selection & input', name: 'Date picker', factory: 'createDatePicker', variable: 'datePicker',
     description: 'Choose a date or enter one by keyboard. Explore calendar and input modes, ranges, and selection limits.',
     summary: 'Calendar and keyboard entry for dates and ranges.', styles: ['datepicker'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input', 'fullscreen'], 'docked', 'select'), choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day')]),
       ...section('Content', [text('label', 'Label', 'Choose a date'), date('value', 'Date', '2026-09-21'), { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'range' }, choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select')]),
@@ -404,6 +485,7 @@ export const components = {
     group: 'Selection & input', name: 'Time picker', factory: 'createTimePicker', variable: 'timePicker',
     description: 'Choose a time with a dial or keyboard. Explore clock formats, orientation, and precision.',
     summary: 'Time entry with a dial or keyboard.', styles: ['progress', 'button', 'timepicker'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('type', 'Input mode', ['dial', 'input'], 'dial'), choose('format', 'Clock format', ['12h', '24h'], '12h'), choose('orientation', 'Orientation', ['vertical', 'horizontal'], 'vertical')]),
       ...section('Content', [text('title', 'Title', 'Select time'), { ...text('value', 'Time', '09:30'), kind: 'time' }]),
@@ -418,6 +500,7 @@ export const components = {
     group: 'Navigation', name: 'Navigation rail', factory: 'createNavigationRail', variable: 'rail',
     description: 'Move between destinations. Explore collapsed, expanded, and modal navigation.',
     summary: 'Primary destinations in an expressive rail.', styles: ['navigation-rail', 'button', 'progress'],
+    scenarios: [],
     controls: [
       ...section('Layout', [choose('layout', 'Layout', ['standard', 'modal'], 'standard'), toggle('expanded', 'Expanded'), { ...range('expandedWidth', 'Expanded width', '280'), min: 220, max: 360, step: 20 }, toggle('hideWhenCollapsed', 'Hide collapsed')]),
       ...section('Content', [activeDestination, toggle('badges', 'Badges', true), toggle('showToggle', 'Menu button', true)]),
@@ -430,6 +513,7 @@ export const components = {
     group: 'Navigation', name: 'Drawer', factory: 'createDrawer', variable: 'drawer',
     description: 'Explore a navigation drawer with destinations, section labels, and badges.',
     summary: 'Grouped destinations in a side panel.', styles: ['drawer', 'button', 'progress'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'standard'), toggle('dense', 'Dense')]),
       ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'start'), { ...range('width', 'Width', '280'), min: 220, max: 360, step: 20 }]),
@@ -443,6 +527,7 @@ export const components = {
     group: 'Navigation', name: 'Tabs', factory: 'createTabs', variable: 'tabs',
     description: 'Switch between related views. Try primary and secondary tabs, icons, and badges.',
     summary: 'Related views, one active tab.', styles: ['progress', 'button', 'badge', 'tabs'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['primary', 'secondary'], 'primary'), toggle('showDivider', 'Divider', true)]),
       ...section('Content', [{ ...activeDestination, options: ['inbox', 'favorites', 'sent', 'drafts', 'archive', 'trash'] }, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), choose('count', 'Tab count', ['3', '6'], '3')]),
@@ -454,6 +539,7 @@ export const components = {
     group: 'Navigation', name: 'Menu', factory: 'createMenu', variable: 'menu',
     description: 'Open a menu of actions. Explore placement, color, supporting text, and nested choices.',
     summary: 'Actions and nested choices on demand.', styles: ['menu', 'button', 'progress'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'vibrant', 'gap', 'baseline'], 'standard', 'select'), toggle('dense', 'Dense')]),
       ...section('Layout', [choose('position', 'Position', ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'], 'bottom-start', 'select')]),
@@ -470,6 +556,7 @@ export const components = {
     group: 'Navigation', name: 'Top app bar', factory: 'createTopAppBar', variable: 'topBar',
     description: 'Give a view its title and actions. Explore bar sizes and the scrolled appearance.',
     summary: 'A title, navigation, and contextual actions.', styles: ['top-app-bar', 'icon-button'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('type', 'Type', ['small', 'center', 'medium', 'large'], 'small', 'select'), toggle('scrolled', 'Scrolled state'), toggle('compressible', 'Compressible', true)]),
       ...section('Content', [text('title', 'Title', 'My library'), toggle('leading', 'Navigation button', true), choose('actions', 'Action count', ['0', '1', '2'], '1')]),
@@ -480,6 +567,7 @@ export const components = {
     group: 'Navigation', name: 'Bottom app bar', factory: 'createBottomAppBar', variable: 'bottomBar',
     description: 'Keep frequent actions within reach. Try a floating action button and different placements.',
     summary: 'Frequent actions with an optional FAB.', styles: ['bottom-app-bar', 'icon-button', 'fab'],
+    scenarios: [],
     controls: [
       ...section('Layout', [toggle('hasFab', 'Show FAB', true), choose('fabPosition', 'FAB position', ['center', 'end'], 'end')]),
       ...section('Content', [choose('actions', 'Action count', ['1', '2', '3'], '2'), text('fabLabel', 'FAB label', 'Compose')]),
@@ -491,6 +579,7 @@ export const components = {
     group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
     description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
     summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
@@ -510,6 +599,7 @@ export const components = {
     group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
     description: 'Bring content and actions together. Explore surfaces, media, and interactive cards.',
     summary: 'Content and actions on one surface.', styles: ['progress', 'button', 'card'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['elevated', 'filled', 'outlined'], 'elevated'), toggle('media', 'Show image', true), choose('aspectRatio', 'Image ratio', ['16:9', '4:3', '1:1'], '16:9'), choose('mediaPosition', 'Image position', ['top', 'bottom'], 'top')]),
       ...section('Content', [text('title', 'Title', 'A little time outside'), text('subtitle', 'Subtitle', 'Find your next escape'), text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), toggle('actions', 'Show actions', true)]),
@@ -521,6 +611,7 @@ export const components = {
     group: 'Containment', name: 'List', factory: 'createList', variable: 'list',
     description: 'Explore Material list anatomy. Configure text lines, media, supporting actions, and selection.',
     summary: 'One, two, or three lines with flexible content slots.', styles: ['list'],
+    scenarios: [],
     controls: [
       ...section('Layout', [choose('lines', 'Text lines', ['1', '2', '3'], '2'), choose('leading', 'Leading', ['none', 'icon', 'avatar', 'image', 'video'], 'icon', 'select'), choose('trailing', 'Trailing', ['none', 'text', 'icon', 'control'], 'text', 'select'), choose('dividers', 'Dividers', ['none', 'full-width', 'inset'], 'none', 'select'), toggle('subheader', 'Subheader')]),
       ...section('Content', [choose('content', 'Items', ['activities', 'places'], 'activities'), choose('count', 'Item count', ['3', '5'], '3'), { ...text('supportingText', 'Supporting text', 'Make a little time for yourself'), enabledWhen: 'hasSupporting' }, toggle('overline', 'Overline', false, 'threeLines'), text('ariaLabel', 'Accessible label', 'Ideas for today')]),
@@ -534,6 +625,7 @@ export const components = {
     summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
     // The preview's remote (icon buttons and a slider), which the copied code does not build.
     previewStyles: ['icon-button', 'slider'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
       ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
@@ -546,6 +638,7 @@ export const components = {
     group: 'Containment', name: 'Divider', factory: 'createDivider', variable: 'divider',
     description: 'Separate related content. Explore orientation, insets, line weight, and color.',
     summary: 'A quiet boundary between sections.', styles: ['divider'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['full-width', 'inset', 'middle-inset'], 'full-width', 'select'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), { ...range('thickness', 'Thickness', '1'), min: 1, max: 8 }, choose('color', 'Color', ['outline-variant', 'outline', 'primary', 'secondary'], 'outline-variant', 'select')]),
       ...section('Layout', [{ ...range('insetStart', 'Start inset', '16'), max: 64 }, { ...range('insetEnd', 'End inset', '16'), max: 64 }]),
@@ -556,6 +649,7 @@ export const components = {
     group: 'Containment', name: 'Dialog', factory: 'createDialog', variable: 'dialog',
     description: 'Focus on a decision. Open a dialog to try its content, actions, and dismissal behavior.',
     summary: 'A focused surface for a task or decision.', styles: ['progress', 'button', 'divider', 'dialog'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('size', 'Size', ['small', 'medium', 'large', 'fullwidth', 'fullscreen'], 'small', 'select'), choose('animation', 'Animation', ['scale', 'slide-up', 'slide-down', 'fade'], 'scale', 'select'), toggle('divider', 'Dividers')]),
       ...section('Content', [text('title', 'Title', 'Save your changes?'), text('subtitle', 'Subtitle', ''), text('content', 'Body', 'Keep your changes before leaving this view.'), toggle('actions', 'Show actions', true), choose('footerAlignment', 'Action alignment', ['right', 'left', 'center', 'space-between'], 'right', 'select')]),
@@ -567,6 +661,7 @@ export const components = {
     group: 'Containment', name: 'Bottom sheet', factory: 'createBottomSheet', variable: 'sheet',
     description: 'Reveal more from the bottom edge. Try partial and expanded states, or drag the handle.',
     summary: 'Supporting content from the bottom edge.', styles: ['progress', 'button', 'bottom-sheet'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal'), toggle('dragHandle', 'Drag handle', true)]),
       ...section('Layout', [{ ...range('peekHeight', 'Peek height', '120'), min: 56, max: 240, step: 8 }, { ...range('maxWidth', 'Maximum width', '640'), min: 280, max: 640, step: 20 }]),
@@ -579,6 +674,7 @@ export const components = {
     group: 'Containment', name: 'Side sheet', factory: 'createSideSheet', variable: 'sheet',
     description: 'Keep supporting details close by. Explore standard and modal sheets on either edge.',
     summary: 'Supporting details beside the main content.', styles: ['progress', 'button', 'side-sheet'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal')]),
       ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'end'), { ...range('width', 'Width', '320'), min: 240, max: 400, step: 20 }]),
@@ -591,6 +687,7 @@ export const components = {
     group: 'Communication', name: 'Badge', factory: 'createBadge', variable: 'badge',
     description: 'Draw attention to something new. Try dots, counts, and labels attached to an action.',
     summary: 'A small signal for updates and counts.', styles: ['icon-button', 'badge'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['small', 'large'], 'large'), choose('color', 'Color', ['error', 'primary', 'secondary', 'tertiary', 'success', 'warning', 'info'], 'error', 'select'), choose('position', 'Position', ['top-right', 'top-left', 'bottom-right', 'bottom-left'], 'top-right', 'select')]),
       ...section('Content', [{ ...text('label', 'Label', '8'), enabledWhen: 'hasLabel' }, { ...choose('max', 'Maximum count', ['9', '99', '999'], '99'), enabledWhen: 'hasLabel' }]),
@@ -602,6 +699,7 @@ export const components = {
     group: 'Communication', name: 'Progress', factory: 'createProgress', variable: 'progress',
     description: 'Show how a task is progressing. Compare linear and circular indicators, with flat or wavy shapes.',
     summary: 'Linear and circular progress, flat or wavy.', styles: ['progress'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['linear', 'circular'], 'linear'), choose('shape', 'Shape', ['flat', 'wavy'], 'flat'), choose('thickness', 'Thickness', ['thin', 'thick'], 'thin'), { ...range('size', 'Circular size', '48'), min: 24, max: 240, step: 8, enabledWhen: 'circular' }, toggle('showStopIndicator', 'Stop indicator', true, 'linear')]),
       ...section('Content', [{ ...range('value', 'Value', '45'), enabledWhen: 'determinate' }, { ...range('buffer', 'Buffer', '70'), enabledWhen: 'linearDeterminate' }, toggle('showLabel', 'Show percentage', false, 'determinate'), text('ariaLabel', 'Accessible label', 'Uploading files')]),
@@ -613,6 +711,7 @@ export const components = {
     group: 'Communication', name: 'Loading indicator', factory: 'createLoadingIndicator', variable: 'indicator',
     description: 'Give short waits a little expression. Explore the morphing shape with or without its container.',
     summary: 'An expressive shape for short waits.', styles: ['loading-indicator'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [toggle('contained', 'Contained'), { ...range('size', 'Size', '48'), min: 24, max: 240, step: 8 }]),
       ...section('Content', [{ ...range('value', 'Value', '50'), enabledWhen: 'determinate' }, text('ariaLabel', 'Accessible label', 'Loading your content')]),
@@ -624,6 +723,7 @@ export const components = {
     group: 'Communication', name: 'Snackbar', factory: 'createSnackbar', variable: 'snackbar',
     description: 'Confirm an action without interrupting. Show a message, offer an undo, and try dismissal behavior.',
     summary: 'Brief feedback with an optional action.', styles: ['progress', 'button', 'icon-button', 'snackbar'],
+    scenarios: [],
     controls: [
       ...section('Layout', [choose('position', 'Position', ['start', 'center', 'end'], 'center')]),
       ...section('Content', [text('message', 'Message', 'Your changes have been saved.'), toggle('hasAction', 'Show action', true), { ...text('action', 'Action text', 'Undo'), enabledWhen: 'hasAction' }, { ...text('closeLabel', 'Dismiss label', 'Dismiss'), enabledWhen: 'dismissible' }]),
@@ -635,6 +735,7 @@ export const components = {
     group: 'Communication', name: 'Tooltip', factory: 'createTooltip', variable: 'tooltip',
     description: 'Add a little context. Hover or focus the action to explore tooltip styles, placement, and timing.',
     summary: 'Extra context on hover or focus.', styles: ['icon-button', 'tooltip'],
+    scenarios: [],
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['default', 'plain', 'rich'], 'default'), choose('position', 'Position', ['top', 'right', 'bottom', 'left', 'top-start', 'top-end', 'right-start', 'right-end', 'bottom-start', 'bottom-end', 'left-start', 'left-end'], 'bottom', 'select')]),
       ...section('Content', [text('text', 'Text', 'Save to favorites')]),
@@ -705,6 +806,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     let selected = false;
     for (const key of ['hiking', 'music', 'food']) { const keep: boolean = !!state[key] && !selected; selected ||= keep; state[key] = keep; }
   }
+  // The trailing label is only meaningful beside a trailing icon.
+  if (slug === 'text-field') state.hasTrailingIcon = state.trailingIcon !== 'none';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
@@ -736,7 +839,28 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
 }
 /** The vanilla code of a playground, with its icons as named constants (`editIcon`). */
 export function componentCode(slug: ComponentSlug, state: ComponentState): string {
-  return nameIcons(buildComponentCode(slug, state));
+  return nameIcons(buildComponentCode(slug, state), trailingHandler(slug, state)?.icons ?? []);
+}
+
+/**
+ * The text field's trailing button handler, which JSON cannot carry. The two icons the
+ * password code names are declared with `icons`: the code shows no literals for them, so
+ * `componentCode` imports them as `visibilityIcon` and `visibilityOffIcon` (their icons/
+ * files' names, as `nameIcons` spells them).
+ */
+function trailingHandler(slug: ComponentSlug, state: ComponentState): { code: string; icons: readonly string[] } | undefined {
+  if (slug !== 'text-field') return undefined;
+  const handlers: Record<string, { code: string; icons: readonly string[] }> = {
+    // m3.material.io text fields: "Clear icons let a person clear an entire input field."
+    Clear: { code: `onTrailingClick: () => textField.setValue(''),`, icons: [] },
+    // m3.material.io text field accessibility: hidden, the label is "Show password"; visible, "Hide password".
+    'Show password': { code: `onTrailingClick: () => {
+  const shown = textField.input.type === 'text';
+  textField.input.type = shown ? 'password' : 'text';
+  textField.setTrailingIcon(shown ? visibilityIcon : visibilityOffIcon, shown ? 'Show password' : 'Hide password');
+},`, icons: [symbols.visibility, symbols.visibilityOff] },
+  };
+  return handlers[string(state, 'trailingIconLabel')];
 }
 
 function buildComponentCode(slug: ComponentSlug, state: ComponentState): string {
@@ -745,8 +869,12 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
   if (components[slug].group === 'Communication') return communicationCode(slug, state);
   const component = components[slug];
   // A filter chip's trailing menu needs its handler, which JSON cannot carry.
+  const trailing = trailingHandler(slug, state);
   const config = JSON.stringify(component.config(state), null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
-    .replace(/^(\s*)trailingMenu: true/gm, '$1trailingMenu: true,\n$1onTrailingClick: (chip) => openMenu(chip)');
+    .replace(/^(\s*)trailingMenu: true/gm, '$1trailingMenu: true,\n$1onTrailingClick: (chip) => openMenu(chip)')
+    // Same for a labelled trailing button: its handler follows the label it belongs to.
+    .replace(/^(\s*)trailingIconLabel: "[^"]*",$/m, (line: string, indent: string) =>
+      trailing ? `${line}\n${trailing.code.split('\n').map(part => indent + part).join('\n')}` : line);
   const chipsSetup = slug === 'chips'
     ? `${state.filterType && state.trailingMenu ? "// Anchor a material menu to chip.trailingAction here.\nfunction openMenu(chip) { console.log('Open the menu for', chip.getLabel()); }\n" : ''}` +
       `${state.draggable ? 'chips.getChips().forEach(chip => { chip.element.draggable = true; });\n' : ''}`

@@ -36,6 +36,7 @@ import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
 import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -279,9 +280,31 @@ function create(state: ComponentState) {
       return control;
     }
     case 'text-field': {
-      const control = createTextField(components['text-field'].config(state));
+      const config = components['text-field'].config(state);
+      const control = createTextField(config);
       if (!String(state.label).trim()) control.input.setAttribute('aria-label', 'Text field');
       control.input.addEventListener('input', () => { sync({ value: control.getValue() }); message('Text updated'); });
+      // The trailing button's behaviour is shared, keyed by the accessible name the config
+      // gives it: a clear button empties the field and shows while there is a value
+      // (m3.material.io text field guidelines); a password button swaps the type, the icon
+      // and its own label (text field accessibility).
+      if (config.trailingIconLabel === 'Clear') {
+        const reflect = () => { if (control.trailingIcon) control.trailingIcon.hidden = !control.getValue(); };
+        control.input.addEventListener('input', reflect);
+        reflect();
+        control.on('trailing', () => { control.setValue(''); reflect(); sync({ value: '' }); message('Text cleared'); });
+      }
+      if (config.trailingIconLabel === 'Show password') {
+        control.on('trailing', () => {
+          // A single-line field: the factory types the input as input-or-textarea.
+          const input = control.input;
+          if (!(input instanceof HTMLInputElement)) return;
+          const shown = input.type === 'text';
+          input.type = shown ? 'password' : 'text';
+          control.setTrailingIcon(shown ? symbols.visibility : symbols.visibilityOff, shown ? 'Show password' : 'Hide password');
+          message(shown ? 'Password hidden' : 'Password shown');
+        });
+      }
       return control;
     }
     case 'select': {
