@@ -100,6 +100,29 @@ try {
       const configuredCode = await page.locator('#generated-code').textContent();
       assert(configuredCode?.includes('headline:') && configuredCode.includes('supportingText:') && configuredCode.includes('overline:') && configuredCode.includes('onListAction') && configuredCode.includes('kind: "divider"'), 'Code is missing configured list anatomy');
       await page.getByRole('tab', { name: 'Live preview' }).click();
+      // The Variant control: two values, standard by default; segmented reaches the config,
+      // the rendered class and both code panels, while standard keeps it out of the code.
+      const variantInput = (value: string) => page.locator(`#configuration input[name="variant"][value="${value}"]`);
+      assert(await page.locator('#configuration input[name="variant"]').count() === 2, 'The list Variant control does not offer two values');
+      assert(await variantInput('standard').isChecked(), 'The list does not start at the standard variant');
+      await choose('variant', 'segmented');
+      await frame.locator('.mtrl-list--segmented').waitFor();
+      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      assert((await page.locator('#generated-code').textContent())?.includes('variant: "segmented"') === true, 'The list code misses variant: "segmented"');
+      await page.getByRole('tab', { name: 'Web Components', exact: true }).click();
+      assert((await page.locator('#generated-code').textContent())?.includes('variant="segmented"') === true, 'The list element snippet misses variant="segmented"');
+      await page.getByRole('tab', { name: 'Vanilla', exact: true }).click();
+      await page.getByRole('tab', { name: 'Live preview' }).click();
+      await choose('variant', 'standard');
+      await frame.locator('.mtrl-list--standard').waitFor();
+      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      const standardCode = await page.locator('#generated-code').textContent();
+      assert(standardCode !== null && !standardCode.includes('variant:'), 'The standard list code carries a variant');
+      await page.getByRole('tab', { name: 'Web Components', exact: true }).click();
+      const standardElement = await page.locator('#generated-code').textContent();
+      assert(standardElement !== null && !standardElement.includes('variant='), 'The standard list element snippet carries a variant');
+      await page.getByRole('tab', { name: 'Vanilla', exact: true }).click();
+      await page.getByRole('tab', { name: 'Live preview' }).click();
     } else if (slug === 'carousel') {
       // The remote: mtrl icon buttons and a slider on the carousel's API, following its change event.
       const remote = frame.getByRole('group', { name: 'Carousel remote' });
