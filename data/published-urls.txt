@@ -102,6 +102,7 @@
 /docs/web-components/
 /examples/
 /examples/settings/
+/privacy/
 /styles/
 /styles/color/
 /styles/shape/

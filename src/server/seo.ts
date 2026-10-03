@@ -57,6 +57,7 @@ export function sitemapPages(): SitemapPage[] {
   for (const { href } of stylePages) add(href, href === '/styles/' ? '0.8' : '0.7', shell(STYLE_SHELLS[href] ?? 'styles-overview'), 'src/server/tokens.ts');
   add('/examples/', '0.8', shell('examples'), 'examples/index.ts');
   for (const { slug } of examples) add(`/examples/${slug}/`, '0.6', `examples/${slug}/`);
+  add('/privacy/', '0.3', shell('privacy'));
   return pages;
 }
 
