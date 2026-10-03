@@ -50,7 +50,7 @@
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>
-<body class="<%= it.isHome ? 'home' : '' %>">
+<body class="<%= it.isHome ? 'home' : it.noSidebar ? 'no-sidebar' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header<%= it.section && !it.sectionNamed ? ' header--section-only' : '' %>"><div class="header__inner">
     <a class="header__logo" href="/"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material<span class="brand-dot">.</span></a>
@@ -83,5 +83,6 @@
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>
+  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">floor</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub ↗</a><a href="/privacy/">Privacy</a></span></footer>
   <%~ include('search') %>
 </body></html>

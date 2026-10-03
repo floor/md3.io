@@ -48,14 +48,16 @@ function page(path: string, title: string, description: string, template: string
   const isExamples = path.startsWith('/examples');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
-  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : componentGroups;
+  // The privacy page stands outside the sections: no sidebar and no breadcrumb (base.eta).
+  const isPrivacy = template === 'privacy';
+  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isPrivacy ? [] : componentGroups;
   // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
   // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome ? '' : 'Components';
+  const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
   // Where the title already names the section, the compact header can drop the breadcrumb.
   // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
   const sectionNamed = section !== '' && title.toLowerCase().includes(section.toLowerCase());
@@ -63,7 +65,7 @@ function page(path: string, title: string, description: string, template: string
   const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'styles-themes' ? 'themes' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, isCatalog: template === 'catalog', catalogTokens, section, sectionNamed, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : undefined,
+    path, title, description, isHome, noSidebar: isPrivacy, isCatalog: template === 'catalog', catalogTokens, section, sectionNamed, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -195,6 +197,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/color/') response = page(path, 'Color — material', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
+  else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');
   else if (path === '/docs/') response = page(path, 'Documentation — material', 'Configuration and API references for the material library\'s components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });

@@ -125,6 +125,7 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .doc-toc a:hover { color: var(--accent-text); }
 .md table { display: block; max-width: 100%; overflow-x: auto; }
 .home .sidebar--home { display: none; }
+.no-sidebar .sidebar { display: none; }
 .landing { width: 100%; max-width: 1120px; margin: auto; padding: 0 40px; }
 .landing .hero { padding: 72px 0 48px; }
 .landing .hero__name { font-size: clamp(44px, 6vw, 72px); line-height: 1.08; margin: 24px 0; }
@@ -136,8 +137,10 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .landing-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 38px; border-top: 1px solid var(--border); padding: 32px 0 40px; }
 .landing-features h2 { font-size: var(--fs-lg); margin: 12px 0 8px; }
 .landing-features p { font-size: var(--fs-base); color: var(--text-muted); }
-.landing-footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border); padding: 20px 0; color: var(--text-dim); font-size: var(--fs-xs); }
-.landing-footer a { color: inherit; text-decoration: none; }
+.site-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; max-width: min(var(--layout-max-width), 100% - 2 * var(--layout-gutter)); margin: 0 auto; padding: 20px 12px 20px 8px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: var(--fs-xs); }
+.site-footer a { color: inherit; text-decoration: none; }
+.site-footer__links { display: flex; gap: 16px; }
+.home .site-footer { max-width: min(1040px, 100% - 80px); padding-inline: 0; }
 @media (max-width: 1150px) { .doc-toc { display: none; } .page-wrap { padding: 32px 28px 48px; } .playground { grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; } }
 @media (min-width: 1001px) {
   .component-page { height: calc(100dvh - var(--header-height)); display: flex; flex-direction: column; padding-top: 8px; padding-bottom: 24px; }
@@ -153,6 +156,9 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 @media (max-width: 720px) {
   .mobile-navigation { display: block; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
   .home .sidebar--home { display: block; }
+  .no-sidebar .sidebar { display: block; }
+  .site-footer { padding-inline: 12px; }
+  .home .site-footer { max-width: min(1040px, 100% - 44px); }
   .header__nav { display: none; }
   .header__theme { margin-left: auto; }
   .page-wrap { padding: 28px 18px 40px; }

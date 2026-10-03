@@ -1,0 +1,26 @@
+<article class="md">
+  <h1>Privacy</h1>
+  <h2>How the site reaches you</h2>
+  <p>md3.io is served through Cloudflare. To deliver the pages, Cloudflare processes information about your request, including your IP address. Cloudflare describes this in its <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>.</p>
+  <h2>Counting visits</h2>
+  <p>Visits are counted with Cloudflare Web Analytics. If your visit reaches Cloudflare through one of its data centers in the EU, the EEA, Switzerland or the UK, the analytics script isn't loaded (<a href="https://developers.cloudflare.com/speed/observatory/rum-beacon/">Cloudflare's description</a>, read on 3 October 2026). Otherwise, your browser loads the script from static.cloudflareinsights.com and reports to cloudflareinsights.com.</p>
+  <p>Cloudflare says that Web Analytics "does not use any client-side state, such as cookies or localStorage, to collect usage metrics", and that it doesn't "fingerprint" individuals through their IP address, User Agent string, or any other data to display analytics. Source: <a href="https://www.cloudflare.com/web-analytics/">Cloudflare Web Analytics</a>, read on 3 October 2026.</p>
+  <h2>Cookies and other sites</h2>
+  <p>The site sets no cookies. Apart from Cloudflare's analytics script, where it is loaded, pages load nothing from other sites: fonts, scripts and styles come from md3.io itself.</p>
+  <h2>What stays in your browser</h2>
+  <p>The site keeps your choices in your browser's local storage, and only once you change one of them:</p>
+  <ul>
+    <li>light or dark appearance for the site;</li>
+    <li>the framework the code samples show;</li>
+    <li>the package manager the install commands show;</li>
+    <li>the theme and light or dark mode of the previews;</li>
+    <li>the playground tab you last opened, code or preview;</li>
+    <li>the theme, mode and shape corners you set in Styles;</li>
+    <li>whether the Styles preview panel is open;</li>
+    <li>the device size and orientation of the example frame.</li>
+  </ul>
+  <p>These values never leave your browser: the site doesn't send them anywhere. To remove them, clear the site data for md3.io in your browser's settings.</p>
+  <h2>Contact</h2>
+  <p>Questions about this page: open an issue on <a href="https://github.com/floor/md3.io/issues">GitHub</a>.</p>
+  <p>Last updated 3 October 2026.</p>
+</article>
