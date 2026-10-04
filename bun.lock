@@ -20,7 +20,7 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "babel-preset-solid": "^1.9",
-        "material-addons": "3.0.0-next.0",
+        "material-addons": "3.0.0",
         "playwright": "^1.63.0",
         "react": "^19",
         "react-dom": "^19",
@@ -529,7 +529,7 @@
 
     "material": ["material@file:../material", { "devDependencies": { "@babel/core": "^7", "@babel/preset-typescript": "^7", "@material/material-color-utilities": "0.4.0", "@types/babel__core": "^7", "@types/bun": "latest", "@types/jsdom": "^21.1.7", "@types/react": "^19", "@types/react-dom": "^19", "@typescript-eslint/eslint-plugin": "^8.33.1", "@vue/server-renderer": "^3.5", "babel-preset-solid": "^1.9", "eslint": "8", "jsdom": "^26.0.0", "linkedom": "^0.18.13", "playwright": "^1.63.0", "react": "^19", "react-18": "npm:react@^18.3.1", "react-dom": "^19", "react-dom-18": "npm:react-dom@^18.3.1", "sass": "^1.85.1", "solid-js": "^1.9", "svelte": "^5", "typedoc": "^0.27.9", "typescript": "^5.8.2", "vite": "^8.2.2", "vue": "^3.5" }, "peerDependencies": { "react": ">=18", "solid-js": ">=1.8", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }],
 
-    "material-addons": ["material-addons@3.0.0-next.0", "", { "peerDependencies": { "material": "^3.0.0-next.0" } }, "sha512-HV62tTqR4WOr4vTKwivp+cxulKqG5Nflzr9KSpUO91T94A5vssEhMOYXuh2eAfPD0eTRGgcf4cz5DhvPmtWvRw=="],
+    "material-addons": ["material-addons@3.0.0", "", { "peerDependencies": { "material": "^3.0.0" } }, "sha512-HlvAlFOw92SBQgtMjfte3jgforhWOfCbYjmz4yTF5Mzjux7d1sHNFUAPsrBt/7GPAH0A+os0/MFUEDwcLQY67w=="],
 
     "mdurl": ["mdurl@2.1.0", "", {}, "sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg=="],
 

@@ -26,7 +26,9 @@ export const withState = (initial: Record<string, unknown>) => (app: App) => {
 
 /** `app.ui`: the layout's named parts. Its teardown destroys them and empties the layout's caches. */
 export const withUI = (layout: unknown[], container: HTMLElement) => (app: App) => {
-  const result = createLayout(layout, container, { prefix: false });
+  // No layout options: material-addons 3.0.0 applies an item's classes as written, and the
+  // deprecated prefix option has no effect.
+  const result = createLayout(layout, container);
   app.teardown.add(() => { result.destroy(); clearClassCache(); clearFragmentPool(); container.replaceChildren(); });
   return { ...app, ui: result.component as Record<string, any>, element: container };
 };

@@ -12,7 +12,7 @@ this one is built from M3 parts (a [text field](/docs/components/text-field/), a
 [icon button](/docs/components/icon-button/)) and the
 [M3 color system](https://m3.material.io/styles/color/system/overview).
 
-From **material-addons**, checked against 3.0.0-next.0. material-addons has no web components: the
+From **material-addons**, checked against 3.0.0. material-addons has no web components: the
 examples are the vanilla factory, which works in any framework.
 
 ## Usage
