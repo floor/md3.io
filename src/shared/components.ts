@@ -309,6 +309,37 @@ const drawerScenarios: readonly Scenario[] = [
     options: { variant: 'standard', open: true, dense: true },
   },
 ];
+/**
+ * Tabs scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const tabsScenarios: readonly Scenario[] = [
+  {
+    id: 'primary', name: 'Primary', source: 'https://m3.material.io/components/tabs/guidelines',
+    description: 'Primary tabs under an app bar to display main content destinations.',
+    options: { variant: 'primary', icons: true, badges: false },
+  },
+  {
+    id: 'secondary', name: 'Secondary', source: 'https://m3.material.io/components/tabs/guidelines',
+    description: 'Secondary tabs used within a content area to separate related content.',
+    options: { variant: 'secondary', icons: true, badges: false },
+  },
+  {
+    id: 'badges', name: 'With badges', source: 'https://m3.material.io/components/tabs/guidelines',
+    description: 'Tabs with notification badges communicating dynamic updates on destinations.',
+    options: { variant: 'primary', icons: true, badges: true },
+  },
+  {
+    id: 'scrollable', name: 'Scrollable', source: 'https://m3.material.io/components/tabs/guidelines',
+    description: 'A scrollable set of tabs for larger collections. The element does not expose the scrollable attribute, so its snippet omits it.',
+    options: { variant: 'primary', count: '6', scrollable: true, icons: true },
+  },
+  {
+    id: 'text-only', name: 'Text only', source: 'https://m3.material.io/components/tabs/guidelines',
+    description: 'Tabs with text labels and no icons.',
+    options: { variant: 'primary', icons: false, count: '3' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -652,7 +683,7 @@ export const components = {
     group: 'Navigation', name: 'Tabs', factory: 'createTabs', variable: 'tabs',
     description: 'Switch between related views. Try primary and secondary tabs, icons, and badges.',
     summary: 'Related views, one active tab.', styles: ['progress', 'button', 'badge', 'tabs'],
-    scenarios: [],
+    scenarios: tabsScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['primary', 'secondary'], 'primary'), toggle('showDivider', 'Divider', true)]),
       ...section('Content', [{ ...activeDestination, options: ['inbox', 'favorites', 'sent', 'drafts', 'archive', 'trash'] }, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), choose('count', 'Tab count', ['3', '6'], '3')]),
