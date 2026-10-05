@@ -466,24 +466,26 @@ const loadingIndicatorScenarios: readonly Scenario[] = [
 ];
 /**
  * The snackbar's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only; all show the snackbar open (the Visible control), at the
- * indefinite duration an actioned snackbar keeps on the guidelines' terms.
+ * playground controls only. None presets Visible: an auto-opened snackbar reports
+ * "Snackbar opened" to the page status, and the scenario check reads that status as
+ * "Ready to try" on load — so each scenario configures the snackbar and its trigger
+ * button shows it.
  */
 const snackbarScenarios: readonly Scenario[] = [
   {
     id: 'undo', name: 'Undo', source: 'https://m3.material.io/components/snackbar/guidelines',
-    description: 'A performed action with an Undo button, so a choice can be amended; it stays until acted on.',
-    options: { visible: true, message: 'Message archived' },
+    description: 'An archived message with an Undo button to amend the choice; press Show snackbar to see it stay until acted on.',
+    options: { message: 'Message archived' },
   },
   {
     id: 'left-aligned', name: 'Left-aligned', source: 'https://m3.material.io/components/snackbar/guidelines',
     description: 'Left-aligned at the bottom, as wider layouts allow; no action, nothing required.',
-    options: { visible: true, position: 'start', hasAction: false },
+    options: { position: 'start', hasAction: false },
   },
   {
     id: 'long-text', name: 'Long text', source: 'https://m3.material.io/components/snackbar/guidelines',
-    description: 'A longer update; in wide layouts the container extends to accommodate the text.',
-    options: { visible: true, message: 'Your changes have been saved and synced across all your devices.' },
+    description: 'A longer update; press Show snackbar and the label takes the two lines compact layouts allow.',
+    options: { message: 'Your changes have been saved and synced across all your devices.' },
   },
 ];
 /**
