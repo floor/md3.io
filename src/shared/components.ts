@@ -57,6 +57,10 @@ export const componentIcons: Record<string, string> = {
   error: symbols.error,
   visibility: symbols.visibility,
   visibilityOff: symbols.visibilityOff,
+  // Chips scenario icons: camera, restaurant, star.
+  addAPhoto: symbols.addAPhoto,
+  restaurant: symbols.restaurant,
+  star: symbols.star,
 };
 export type ComponentState = Record<string, string | boolean>;
 export interface Control {

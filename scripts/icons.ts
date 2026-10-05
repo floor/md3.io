@@ -17,6 +17,8 @@ const names = [
   'share', 'image', 'brightness_5', 'brightness_6', 'brightness_7', 'content_copy',
   // The text field's playground scenarios (src/shared/components.ts).
   'mail', 'error', 'search', 'visibility', 'visibility_off',
+  // Chips scenarios (src/shared/components.ts).
+  'add_a_photo', 'restaurant', 'star',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

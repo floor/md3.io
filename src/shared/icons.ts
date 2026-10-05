@@ -26,6 +26,9 @@ import visibility from '../../icons/visibility.svg' with { type: 'text' };
 import visibilityOff from '../../icons/visibility_off.svg' with { type: 'text' };
 import volumeOff from '../../icons/volume_off.svg' with { type: 'text' };
 import volumeUp from '../../icons/volume_up.svg' with { type: 'text' };
+import addAPhoto from '../../icons/add_a_photo.svg' with { type: 'text' };
+import restaurant from '../../icons/restaurant.svg' with { type: 'text' };
+import star from '../../icons/star.svg' with { type: 'text' };
 
 const trim = (svg: string) => svg.trim();
 export const symbols = {
@@ -34,6 +37,7 @@ export const symbols = {
   inbox: trim(inbox), menu: trim(menu), send: trim(send), volumeOff: trim(volumeOff), volumeUp: trim(volumeUp),
   firstPage: trim(firstPage), chevronLeft: trim(chevronLeft), chevronRight: trim(chevronRight), lastPage: trim(lastPage),
   mail: trim(mail), error: trim(error), search: trim(search), visibility: trim(visibility), visibilityOff: trim(visibilityOff),
+  addAPhoto: trim(addAPhoto), restaurant: trim(restaurant), star: trim(star),
 };
 
 /** Each symbol's file in icons/, named as fonts.google.com/icons names the symbol (`-fill` when filled). */
@@ -43,6 +47,7 @@ const files: Record<keyof typeof symbols, string> = {
   send: 'send', volumeOff: 'volume_off', volumeUp: 'volume_up',
   firstPage: 'first_page', chevronLeft: 'chevron_left', chevronRight: 'chevron_right', lastPage: 'last_page',
   mail: 'mail', error: 'error', search: 'search', visibility: 'visibility', visibilityOff: 'visibility_off',
+  addAPhoto: 'add_a_photo', restaurant: 'restaurant', star: 'star',
 };
 /** The icons/ file of a symbol's SVG (`edit`), when it is one of ours. */
 export const symbolFile = (svg: string): string | undefined => {
