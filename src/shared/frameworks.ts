@@ -1028,8 +1028,16 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
     slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`,
       slottedBody(child, nested => element(pascal(nested.element), svelteAttrs(nested.attrs), escapeText(nested.text)))),
     text: name => `{${name}}`,
-    // a dashed slot is a camelCase snippet: `header-action` → `headerAction`
-    region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`{#snippet ${camel(slot)}()}`, lines, '{/snippet}') },
+    // A dashed slot is a camelCase snippet (`header-action` → `headerAction`), but the
+    // wrapper's runtime wraps a snippet's content in a span that takes the slot: a
+    // slotted element with children of its own must be the assigned element itself (the
+    // toolbar anchors the overflow menu to its more button by it), so it is written as
+    // a plain child with the slot attribute instead of a snippet.
+    region: {
+      slots: (meta.slots ?? []).filter(slot => !p.slotted.some(child =>
+        child.children.length && child.attrs.some(attr => attr.name === 'slot' && attr.value === slot))),
+      wrap: (slot, lines) => block(`{#snippet ${camel(slot)}()}`, lines, '{/snippet}'),
+    },
   }, '  ', '');
   const model = p.model ? ` bind:${p.model.name}` : '';
   const handlers = ownHandlers(meta, p).map(h => ` on${h.event}={${arrow(readsPayload(h), [handlerCall(h, field => `event.detail.${field}`)])}}`).join('');
