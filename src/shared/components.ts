@@ -396,6 +396,28 @@ const sliderScenarios: readonly Scenario[] = [
     options: { orientation: 'vertical', value: '50' },
   },
 ];
+/**
+ * The badge's scenarios, from m3.material.io (read 5 October 2026). Options name playground
+ * controls only; the badge stays on the playground's inbox icon button, at the default
+ * error color and top-trailing corner the guidelines keep.
+ */
+const badgeScenarios: readonly Scenario[] = [
+  {
+    id: 'small', name: 'Small', source: 'https://m3.material.io/components/badges/guidelines',
+    description: 'The small badge: a simple circle for one unread notification.',
+    options: { variant: 'small' },
+  },
+  {
+    id: 'max', name: 'Count over max', source: 'https://m3.material.io/components/badges/guidelines',
+    description: 'A count past its maximum truncates to 99+, the four-character limit with its +.',
+    options: { label: '999', max: '99' },
+  },
+  {
+    id: 'status', name: 'Status word', source: 'https://m3.material.io/components/badges/guidelines',
+    description: 'A large badge labelled with a status word instead of a count.',
+    options: { label: 'New' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -900,7 +922,7 @@ export const components = {
     group: 'Communication', name: 'Badge', factory: 'createBadge', variable: 'badge',
     description: 'Draw attention to something new. Try dots, counts, and labels attached to an action.',
     summary: 'A small signal for updates and counts.', styles: ['icon-button', 'badge'],
-    scenarios: [],
+    scenarios: badgeScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['small', 'large'], 'large'), choose('color', 'Color', ['error', 'primary', 'secondary', 'tertiary', 'success', 'warning', 'info'], 'error', 'select'), choose('position', 'Position', ['top-right', 'top-left', 'bottom-right', 'bottom-left'], 'top-right', 'select')]),
       ...section('Content', [{ ...text('label', 'Label', '8'), enabledWhen: 'hasLabel' }, { ...choose('max', 'Maximum count', ['9', '99', '999'], '99'), enabledWhen: 'hasLabel' }]),
