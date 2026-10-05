@@ -269,6 +269,37 @@ const iconButtonScenarios: readonly Scenario[] = [
     options: { variant: 'filled', icon: 'download', ariaLabel: 'Download' },
   },
 ];
+/**
+ * The button group's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; the items stay the playground's bold, italic, and underline.
+ */
+const buttonGroupScenarios: readonly Scenario[] = [
+  {
+    id: 'multi', name: 'Multi-select', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A connected group with multi-select: bold, italic, and underline independently.',
+    options: { selection: 'multi' },
+  },
+  {
+    id: 'single', name: 'Single-select', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A connected group with single-select, for switching between related options.',
+    options: { selection: 'single' },
+  },
+  {
+    id: 'required', name: 'Required', source: 'https://m3.material.io/components/button-groups/overview',
+    description: 'A single-select group that requires a selection.',
+    options: { selection: 'single', required: true },
+  },
+  {
+    id: 'standard', name: 'Standard', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A standard group of icon buttons; adjacent buttons respond to one another when pressed.',
+    options: { kind: 'standard', content: 'icons' },
+  },
+  {
+    id: 'equal-width', name: 'Equal widths', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A connected group spanning its surface, the buttons inside widened equally.',
+    options: { equalWidth: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -306,7 +337,7 @@ export const components = {
     description: 'Bring related actions together. Explore connected shapes and single or multiple selection.',
     summary: 'Related actions. Shared shapes. Flexible selection.',
     styles: ['progress', 'button', 'icon-button', 'button-group'],
-    scenarios: [],
+    scenarios: buttonGroupScenarios,
     controls: [
       ...section('Appearance', [choose('kind', 'Kind', ['standard', 'connected'], 'connected'), choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'),
