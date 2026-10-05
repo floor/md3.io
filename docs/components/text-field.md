@@ -204,7 +204,7 @@ it holds a helper or a counter.
 ```
 
 The row is in the flow: a helper that wraps pushes what follows down, and a field without one
-is 56dp tall. Since mtrl 0.10 (FLO-300) the label, input and slots are inside `__field`, not
+is 56dp tall. Since mtrl 0.10 the label, input and slots are inside `__field`, not
 direct children of the root: CSS written as `.mtrl-text-field > .mtrl-text-field__input` now goes
 through the field, `.mtrl-text-field__field > …`. The filled indicator is
 `.mtrl-text-field__field::before`.

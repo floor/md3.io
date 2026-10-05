@@ -58,7 +58,7 @@
 
   <section aria-labelledby="shape-library-title" class="shape-library" id="shape-library">
     <h2 id="shape-library-title" class="type-section__title">Expressive shapes</h2>
-    <p class="type-section__lead">M3 defines <%= it.m3ShapeCount %> shapes; <code>material</code> ships these <%= it.library.length %> today (FLO-346), drawn here by <code>material/core/shapes</code>, the geometry its loading indicator morphs through.</p>
+    <p class="type-section__lead">M3 defines <%= it.m3ShapeCount %> shapes; <code>material</code> ships these <%= it.library.length %> today, drawn here by <code>material/core/shapes</code>, the geometry its loading indicator morphs through.</p>
     <div class="shape-library__body">
       <ul class="shape-library__grid">
         <% it.library.forEach(shape => { %>
