@@ -956,16 +956,19 @@ export const components = {
       ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }, toggle('insetIcon', 'Inset icon', false, 'insetIconAllowed')]),
       ...section('Behavior', [choose('variant', 'Variant', ['standard', 'centered', 'range'], 'standard'), choose('step', 'Step', ['5', '10'], '10'), disabled]),
     ],
-    // The three M3 variants. A centred slider runs from -50 to 50 around zero, so the
-    // 0-100 value control is shifted onto that range.
-    config: (state: ComponentState): SliderConfig => ({
-      ...(state.variant === 'centered' ? { min: -50, max: 50, value: Number(state.value) - 50, centered: true } : { min: 0, max: 100, value: Number(state.value) }),
-      ...(state.variant === 'range' ? { secondValue: Number(state.secondValue) } : {}),
-      step: Number(state.step), range: state.variant === 'range',
-      ...(state.orientation === 'vertical' ? { orientation: 'vertical' as const } : {}),
-      // The guidelines' example: volume, swapping to mute at the minimum.
-      ...(state.insetIconAllowed && state.insetIcon ? { insetIcon: symbols.volumeUp, insetIconAtMin: symbols.volumeOff } : {}), size: pick(state, 'size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), color: pick(state, 'color', ['primary', 'secondary', 'tertiary', 'error'], 'primary'),
-      ticks: bool(state, 'ticks'), showValue: bool(state, 'showValue'), label: string(state, 'label'), ariaLabel: string(state, 'label').trim() || 'Volume', disabled: bool(state, 'disabled'), name: 'volume' }),
+    config: (state: ComponentState): SliderConfig => {
+      const label = string(state, 'label');
+      const name = string(state, 'name') || label.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'volume';
+      return {
+        ...(state.variant === 'centered' ? { min: -50, max: 50, value: Number(state.value) - 50, centered: true } : { min: 0, max: 100, value: Number(state.value) }),
+        ...(state.variant === 'range' ? { secondValue: Number(state.secondValue) } : {}),
+        step: Number(state.step), range: state.variant === 'range',
+        ...(state.orientation === 'vertical' ? { orientation: 'vertical' as const } : {}),
+        // The guidelines' example: volume, swapping to mute at the minimum.
+        ...(state.insetIconAllowed && state.insetIcon ? { insetIcon: symbols.volumeUp, insetIconAtMin: symbols.volumeOff } : {}), size: pick(state, 'size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), color: pick(state, 'color', ['primary', 'secondary', 'tertiary', 'error'], 'primary'),
+        ticks: bool(state, 'ticks'), showValue: bool(state, 'showValue'), label, ariaLabel: label.trim() || 'Volume', disabled: bool(state, 'disabled'), name,
+      };
+    },
   },
   'text-field': {
     group: 'Selection & input', name: 'Text field', factory: 'createTextField', variable: 'textField',
