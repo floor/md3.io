@@ -58,55 +58,10 @@ export const componentIcons: Record<string, string> = {
   visibility: symbols.visibility,
   visibilityOff: symbols.visibilityOff,
 };
-export type ComponentState = Record<string, string | boolean>;
-export interface Control {
-  section?: 'Appearance' | 'Layout' | 'Content' | 'Behavior';
-  key: string;
-  label: string;
-  kind: 'choice' | 'icons' | 'select' | 'toggle' | 'text' | 'range' | 'date' | 'time';
-  initial: string | boolean;
-  options?: readonly string[];
-  labels?: Record<string, string>;
-  enabledWhen?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-}
-export interface Scenario {
-  /** `?scenario=` value. Lower case, unique for this component, stable. */
-  id: string;
-  /** The select entry. */
-  name: string;
-  /** One line, shown under the select. */
-  description: string;
-  /**
-   * Playground state keys only. A toggle is boolean; every other control is a string.
-   * Omitted keys stay at the control's `initial` when the scenario is applied.
-   */
-  options: Readonly<Record<string, string | boolean>>;
-  /** The m3.material.io page this scenario follows. Not shown in the playground. */
-  source: string;
-}
-const section = (title: NonNullable<Control['section']>, controls: Control[]): Control[] => controls.map(control => ({ ...control, section: title }));
-const choose = (key: string, label: string, options: readonly string[], initial: string, kind: 'choice' | 'select' | 'icons' = 'choice'): Control => ({ key, label, options, initial, kind });
-const toggle = (key: string, label: string, initial = false, enabledWhen?: string): Control => ({ key, label, initial, kind: 'toggle', enabledWhen });
-const text = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'text' });
-const range = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'range', min: 0, max: 100, step: 1 });
-const date = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'date' });
-const size = choose('size', 'Size', sizes, 's');
-const square = toggle('square', 'Square shape');
-const disabled = toggle('disabled', 'Disabled');
-const icon = (options: readonly string[], initial: string) => choose('icon', 'Icon', options, initial, 'icons');
-const pick = <const T extends readonly string[]>(state: ComponentState, key: string, values: T, fallback: T[number]): T[number] => values.find(value => value === state[key]) ?? fallback;
-const string = (state: ComponentState, key: string) => typeof state[key] === 'string' ? state[key] as string : '';
-const bool = (state: ComponentState, key: string) => state[key] === true;
-const shape = (state: ComponentState) => bool(state, 'square') ? 'square' as const : 'round' as const;
-const tones = ['primary-container', 'secondary-container', 'tertiary-container', 'primary', 'secondary', 'tertiary'] as const;
-const positions = ['center', 'bottom-right', 'bottom-left', 'top-right', 'top-left'] as const;
-const position = choose('position', 'Position', positions, 'center', 'select');
-const toneControl: Control = choose('variant', 'Color', tones, 'primary-container', 'select');
-const iconMarkup = (state: ComponentState) => componentIcons[string(state, 'icon')] || '';
-const fabPosition = (state: ComponentState) => state.position === 'center' ? {} : { position: string(state, 'position') };
+// The types and control helpers live in content/types.ts so the content modules can
+// import them without importing this registry; re-exported here for their consumers.
+import { type ComponentState, type Control, type Scenario, section, choose, toggle, text, range, date, size, square, disabled, icon, pick, string, bool, shape, tones, positions, position, toneControl, iconMarkup, fabPosition, paragraph, landscape } from './content/types';
+export type { ComponentState, Control, Scenario } from './content/types';
 const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'Italic' }, { value: 'underline', text: 'Underline' }];
 
 const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
@@ -295,13 +250,11 @@ const toolbarScenarios: readonly Scenario[] = [
     options: { actions: 'email-actions', variant: 'docked', color: 'vibrant', arrangement: 'spread' },
   },
 ];
-const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 /** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
 const carouselSlides = (state: ComponentState) => {
   const variant = pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse');
   return carouselPhotos(variant).map(photo => ({ image: carouselPhotoUrl(variant, photo.id), alt: `${photo.title}, ${photo.location}`, ...(state.captions ? { title: photo.title, description: photo.location } : {}) }));
 };
-const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
 function listConfig(state: ComponentState): ListConfig<ListItem> {
   // Only a segmented list writes the variant: standard is the factory's own default.
   const variant = pick(state, 'variant', ['standard', 'segmented'], 'standard');
