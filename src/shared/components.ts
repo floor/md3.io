@@ -363,21 +363,33 @@ export const chipSets: Record<string, ChipSetDefinition> = {
       { value: 'thank-you', label: 'Thank you', type: 'suggestion' },
     ],
   },
-  'catalog-filters': {
-    name: 'Catalog filters',
-    label: 'Categories',
+  'category-filters': {
+    name: 'Category filters',
+    label: 'Category',
     type: 'filter',
     chips: [
       { value: 'apartment', label: 'Apartment', type: 'filter' },
       { value: 'accessories', label: 'Accessories', type: 'filter' },
-      { value: 'tops', label: 'Tops', type: 'filter' },
-      { value: 'robins-egg', label: 'Robins Egg', type: 'filter', selected: true },
+      { value: 'tops', label: 'Tops', type: 'filter', selected: true },
+      { value: 'shoes', label: 'Shoes', type: 'filter' },
     ],
   },
 };
+chipSets['catalog-filters'] = chipSets['category-filters'];
+
+const defaultChipSet: ChipSetDefinition = {
+  name: 'Default',
+  label: 'Interests',
+  type: 'filter',
+  chips: [
+    { value: 'hiking', label: 'Hiking', type: 'filter', selected: true },
+    { value: 'music', label: 'Music', type: 'filter', selected: false },
+    { value: 'food', label: 'Food', type: 'filter', selected: false },
+  ],
+};
 
 const chipSetControl: Control = {
-  ...choose('chipSet', 'Chip set', ['default', ...Object.keys(chipSets)], 'default', 'select'),
+  ...choose('chipSet', 'Chip set', ['default', 'email-recipients', 'experience-actions', 'quick-replies', 'category-filters'], 'default', 'select'),
   labels: { default: 'Default', ...Object.fromEntries(Object.entries(chipSets).map(([id, set]) => [id, set.name])) },
 };
 
@@ -405,9 +417,9 @@ const chipsScenarios: readonly Scenario[] = [
     options: { chipSet: 'quick-replies', type: 'suggestion', label: 'Suggested replies' },
   },
   {
-    id: 'catalog-filters', name: 'Catalog filters', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Filtering an apparel catalog by product type and color attributes, with an active filter selected.',
-    options: { chipSet: 'catalog-filters', type: 'filter', label: 'Categories', multiSelect: true },
+    id: 'catalog-filters', name: 'Category filters', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Filtering a catalog by department in a filter results sheet, with Tops selected.',
+    options: { chipSet: 'category-filters', type: 'filter', label: 'Category', multiSelect: true },
   },
 ];
 export interface CheckboxChild {
@@ -871,7 +883,7 @@ export const components = {
     controls: [
       ...section('Layout', [choose('direction', 'Direction', ['vertical', 'horizontal'], 'vertical'), toggle('labelBefore', 'Labels before')]),
       ...section('Content', [optionSetControl, text('name', 'Name', 'delivery'), radioValueControl]),
-      ...section('Behavior', [toggle('disableExpress', 'Disable express', false, 'isDelivery'), disabled]),
+      ...section('Behavior', [toggle('disableExpress', 'Disable an option', false, 'isDelivery'), disabled]),
     ],
     config: (state: ComponentState): RadiosConfig => {
       const set = radioOptionSets[string(state, 'optionSet')];
@@ -909,40 +921,41 @@ export const components = {
       // avatar for input chips; selection for filter and input chips.
       ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType'), toggle('trailingMenu', 'Trailing menu', false, 'filterType'), toggle('draggable', 'Draggable')]),
       ...section('Content', [chipSetControl, text('label', 'Group label', 'Interests')]),
-      ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('selectionRequired', 'Selection required', false, 'selectable'), toggle('hiking', 'Hiking selected', true, 'selectable'), toggle('music', 'Music selected', false, 'selectable'), toggle('food', 'Food selected', false, 'selectable'), disabled]),
+      ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('selectionRequired', 'Selection required', false, 'selectable'), disabled]),
     ],
     config: (state: ComponentState): ChipsConfig => {
-      const set = chipSets[string(state, 'chipSet')];
-      if (set) {
-        return {
-          label: string(state, 'label') || set.label,
-          vertical: bool(state, 'vertical'),
-          multiSelect: bool(state, 'multiSelect'),
-          selectionRequired: bool(state, 'selectionRequired'),
-          chips: set.chips.map(chip => ({
-            ...chip,
-            type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], set.type),
-            ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
-            disabled: bool(state, 'disabled'),
-            ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
-          })),
-        };
-      }
+      const set = chipSets[string(state, 'chipSet')] ?? defaultChipSet;
+      const isDefault = set === defaultChipSet;
+      let singleSelectedSeen = false;
       return {
-        label: string(state, 'label'),
+        label: string(state, 'label') || set.label,
         vertical: bool(state, 'vertical'),
         multiSelect: bool(state, 'multiSelect'),
         selectionRequired: bool(state, 'selectionRequired'),
-        chips: ['hiking', 'music', 'food'].map((value, index) => ({
-          value,
-          label: ['Hiking', 'Music', 'Food'][index],
-          type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], 'filter'),
-          ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
-          ...(state.selectable ? { selected: bool(state, value) } : {}),
-          disabled: bool(state, 'disabled'),
-          ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
-          ...(state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}),
-        })),
+        chips: set.chips.map(chip => {
+          let isSelected = typeof state.selectedChips === 'string'
+            ? state.selectedChips === '__none__'
+              ? false
+              : state.selectedChips.split(',').filter(Boolean).includes(chip.value)
+            : chip.selected === true;
+          if (!bool(state, 'multiSelect')) {
+            if (isSelected && !singleSelectedSeen) {
+              singleSelectedSeen = true;
+            } else {
+              isSelected = false;
+            }
+          }
+          return {
+            ...chip,
+            type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], set.type),
+            ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
+            ...(state.selectable ? { selected: isSelected } : {}),
+            disabled: bool(state, 'disabled'),
+            ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
+            ...(isDefault && state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : {}),
+            ...(isDefault && bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}),
+          };
+        }),
       };
     },
   },
@@ -1352,15 +1365,12 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.secondValue = String(Math.max(Number(state.value), Math.round(Number(state.secondValue) / step) * step));
   }
   if (slug === 'chips') {
-    state.chipSetDefault = state.chipSet === 'default';
+    state.chipSetDefault = !state.chipSet || state.chipSet === 'default';
     state.selectable = state.type === 'filter' || state.type === 'input';
     state.elevatedAllowed = state.type !== 'input';
     state.inputType = state.type === 'input';
     state.filterType = state.type === 'filter';
-  }
-  if (slug === 'chips' && !state.multiSelect) {
-    let selected = false;
-    for (const key of ['hiking', 'music', 'food']) { const keep: boolean = !!state[key] && !selected; selected ||= keep; state[key] = keep; }
+    if (typeof raw.selectedChips === 'string' && raw.selectedChips !== '') state.selectedChips = raw.selectedChips;
   }
   // The trailing label is only meaningful beside a trailing icon.
   if (slug === 'text-field') state.hasTrailingIcon = state.trailingIcon !== 'none';
