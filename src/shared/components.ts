@@ -37,7 +37,7 @@ import type { FabConfig } from 'material/components/fab';
 import type { ExtendedFabConfig } from 'material/components/extended-fab';
 import { symbols } from './icons';
 import { nameIcons } from './icon-code';
-import { buttonConfig, icons as buttonIcons, normalizeState, sizes, themes, variants } from './button';
+import { icons as buttonIcons, themes } from './button';
 
 export const componentIcons: Record<string, string> = {
   ...buttonIcons,
@@ -62,7 +62,14 @@ export const componentIcons: Record<string, string> = {
 // import them without importing this registry; re-exported here for their consumers.
 import { type ComponentState, type Control, type Scenario, section, choose, toggle, text, range, date, size, square, disabled, icon, pick, string, bool, shape, tones, positions, position, toneControl, iconMarkup, fabPosition, paragraph, landscape } from './content/types';
 export type { ComponentState, Control, Scenario } from './content/types';
-const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'Italic' }, { value: 'underline', text: 'Underline' }];
+// The Actions components' content modules, one per component.
+import { buttonComponent } from './content/button';
+import { buttonGroupComponent } from './content/button-group';
+import { extendedFabComponent } from './content/extended-fab';
+import { fabComponent } from './content/fab';
+import { fabMenuComponent } from './content/fab-menu';
+import { iconButtonComponent } from './content/icon-button';
+import { splitButtonComponent } from './content/split-button';
 
 const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
 const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
@@ -333,109 +340,6 @@ const textFieldScenarios: readonly Scenario[] = [
   },
 ];
 /**
- * The button's scenarios, from m3.material.io (read 3 October 2026). Options name
- * playground controls only. Favorite uses the factory's `toggle` and `selected`;
- * the element has no toggle attribute, so the element snippet cannot select it,
- * and the description says so.
- */
-const buttonScenarios: readonly Scenario[] = [
-  {
-    id: 'save', name: 'Save', source: 'https://m3.material.io/components/buttons/guidelines',
-    description: 'A filled button for an important, final action, like Save.',
-    options: { variant: 'filled', text: 'Save', icon: 'none' },
-  },
-  {
-    id: 'download', name: 'Download', source: 'https://m3.material.io/components/buttons/guidelines',
-    description: 'A filled button with a leading icon before the label.',
-    options: { variant: 'filled', text: 'Download', icon: 'download' },
-  },
-  {
-    id: 'secondary', name: 'Secondary', source: 'https://m3.material.io/components/buttons/guidelines',
-    description: 'An outlined button for an alternative, secondary action.',
-    options: { variant: 'outlined', text: 'Next movie', icon: 'none' },
-  },
-  {
-    id: 'cancel', name: 'Cancel', source: 'https://m3.material.io/components/buttons/guidelines',
-    description: 'A text button for the lowest-priority action.',
-    options: { variant: 'text', text: 'Cancel', icon: 'none' },
-  },
-  {
-    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/buttons/guidelines',
-    description: 'A toggle button for a binary selection, shown selected. The element has no toggle attribute, so its snippet cannot select it.',
-    options: { variant: 'filled', text: 'Favorite', icon: 'heart', toggle: true, selected: true },
-  },
-  {
-    id: 'large', name: 'Large', source: 'https://m3.material.io/components/buttons/overview',
-    description: 'A leading icon and a label at the large size.',
-    options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
-  },
-];
-/**
- * The icon button's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only. The element takes `toggle` and `selected` as attributes, so
- * the toggle scenarios' snippets match the factory's.
- */
-const iconButtonScenarios: readonly Scenario[] = [
-  {
-    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A toggle button for a binary action, shown selected.',
-    options: { toggle: true, selected: true, icon: 'heart' },
-  },
-  {
-    id: 'bookmark', name: 'Bookmark', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A toggle button shown unselected; the outlined icon fills when selected.',
-    options: { toggle: true, icon: 'bookmark', ariaLabel: 'Bookmark' },
-  },
-  {
-    id: 'download', name: 'Download', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A filled button for a high emphasis action, like downloading.',
-    options: { variant: 'filled', icon: 'download', ariaLabel: 'Download' },
-  },
-];
-/**
- * The split button's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only; the menus stay the playground's save and share sets.
- */
-const splitButtonScenarios: readonly Scenario[] = [
-  {
-    id: 'share', name: 'Share', source: 'https://m3.material.io/components/split-button/overview',
-    description: 'An action with a menu of related actions: share, with link, email, and export.',
-    options: { text: 'Share', icon: 'send', menu: 'share', trailingLabel: 'More share options' },
-  },
-];
-/**
- * The FAB's scenarios, from m3.material.io (read 5 October 2026). Options name playground
- * controls only.
- */
-const fabScenarios: readonly Scenario[] = [
-  {
-    id: 'create', name: 'Create', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'The most important action on the screen, with a clear add icon.',
-    options: { ariaLabel: 'Create' },
-  },
-  {
-    id: 'edit', name: 'Edit', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'An edit action; the guidelines name the edit icon as clear and simple.',
-    options: { icon: 'edit', ariaLabel: 'Edit' },
-  },
-  {
-    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'A constructive Favorite action, one the guidelines name.',
-    options: { icon: 'heart', ariaLabel: 'Favorite' },
-  },
-];
-/**
- * The extended FAB's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only.
- */
-const extendedFabScenarios: readonly Scenario[] = [
-  {
-    id: 'create', name: 'Create', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: 'A labelled Create, for when an icon alone is ambiguous.',
-    options: { text: 'Create', icon: 'add' },
-  },
-];
-/**
  * The chips' scenarios, from m3.material.io (read 5 October 2026). Labels stay Hiking, Music
  * and Food (fixed in `config()`); options name playground controls only. Filters select two
  * chips — "Multiple chips can be selected or unselected".
@@ -459,143 +363,13 @@ const radiosScenarios: readonly Scenario[] = [
   },
 ];
 export const components = {
-  button: {
-    group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
-    description: 'One action, many expressions. Find the right fit for yours.',
-    summary: 'Five variants. Five sizes. Your next action.',
-    styles: ['progress', 'button'],
-    scenarios: buttonScenarios,
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
-      ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Button')]),
-      ...section('Behavior', [toggle('toggle', 'Toggle button', false, 'toggleAllowed'), toggle('selected', 'Selected', false, 'toggle'), disabled]),
-    ],
-    config: (state: ComponentState) => buttonConfig(normalizeState({ ...state, shape: shape(state) })),
-  },
-  'icon-button': {
-    group: 'Actions', name: 'Icon button', factory: 'createIconButton', variable: 'iconButton',
-    description: 'A compact action with room for expression. Try its shape, width, and toggle state.',
-    summary: 'Compact actions, with a shape for every state.',
-    styles: ['icon-button'],
-    scenarios: iconButtonScenarios,
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'filled', 'tonal', 'outlined'], 'standard', 'select'), size, square,
-        choose('width', 'Width', ['narrow', 'default', 'wide'], 'default')]),
-      ...section('Content', [icon(['heart', 'bookmark', 'download', 'send', 'add', 'edit'], 'heart'), text('ariaLabel', 'Accessible label', 'Add to favorites')]),
-      ...section('Behavior', [toggle('toggle', 'Toggle button'), toggle('selected', 'Selected', false, 'toggle'), disabled]),
-    ],
-    config: (state: ComponentState): IconButtonConfig => ({
-      variant: string(state, 'variant'), size: string(state, 'size'), shape: shape(state), width: string(state, 'width'),
-      icon: iconMarkup(state), ariaLabel: string(state, 'ariaLabel').trim() || 'Add to favorites',
-      toggle: bool(state, 'toggle'), selected: bool(state, 'toggle') && bool(state, 'selected'), disabled: bool(state, 'disabled'),
-    }),
-  },
-  'button-group': {
-    group: 'Actions', name: 'Button group', factory: 'createButtonGroup', variable: 'buttonGroup',
-    description: 'Bring related actions together. Explore connected shapes and single or multiple selection.',
-    summary: 'Related actions. Shared shapes. Flexible selection.',
-    styles: ['progress', 'button', 'icon-button', 'button-group'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('kind', 'Kind', ['standard', 'connected'], 'connected'), choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
-      ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'),
-        choose('density', 'Density', ['default', 'comfortable', 'compact'], 'default', 'select'), toggle('equalWidth', 'Equal widths')]),
-      ...section('Content', [choose('content', 'Content', ['text', 'icons', 'both'], 'text'), choose('labels', 'Labels', ['always', 'selected'], 'always')]),
-      ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'none'), toggle('required', 'Require a selection'), disabled]),
-    ],
-    config: (state: ComponentState): ButtonGroupConfig => ({
-      kind: pick(state, 'kind', ['standard', 'connected'], 'standard'), selection: pick(state, 'selection', ['none', 'single', 'multi'], 'none'),
-      variant: pick(state, 'variant', variants, 'outlined'), size: pick(state, 'size', sizes, 's'), shape: shape(state),
-      orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'), density: pick(state, 'density', ['default', 'comfortable', 'compact'], 'default'),
-      labels: pick(state, 'labels', ['always', 'selected'], 'always'), required: bool(state, 'required'), equalWidth: bool(state, 'equalWidth'), disabled: bool(state, 'disabled'),
-      ariaLabel: 'Text formatting',
-      buttons: groupItems.map(item => ({ value: item.value, ariaLabel: item.text,
-        ...(state.content !== 'icons' ? { text: item.text } : {}), ...(state.content !== 'text' ? { icon: componentIcons[item.value] } : {}),
-      })),
-    }),
-  },
-  'split-button': {
-    group: 'Actions', name: 'Split button', factory: 'createSplitButton', variable: 'splitButton',
-    description: 'A primary action and more possibilities. Open the trailing menu to try the alternatives.',
-    summary: 'One primary action, with more options close by.',
-    styles: ['menu', 'progress', 'button', 'split-button'],
-    scenarios: splitButtonScenarios,
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled', 'select'), size]),
-      ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
-        choose('menu', 'Menu options', ['save', 'share'], 'save')]),
-      ...section('Behavior', [disabled]),
-    ],
-    config: (state: ComponentState): SplitButtonConfig => ({
-      variant: pick(state, 'variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled'), size: pick(state, 'size', sizes, 's'),
-      text: string(state, 'text'), ...(iconMarkup(state) ? { icon: iconMarkup(state) } : {}),
-      ...(!string(state, 'text').trim() ? { ariaLabel: 'Primary action' } : {}),
-      trailingLabel: string(state, 'trailingLabel').trim() || 'More options', disabled: bool(state, 'disabled'),
-      items: state.menu === 'share'
-        ? [{ id: 'link', text: 'Copy link' }, { id: 'email', text: 'Send by email' }, { id: 'export', text: 'Export file' }]
-        : [{ id: 'save-as', text: 'Save as…' }, { id: 'save-copy', text: 'Save a copy' }, { id: 'download', text: 'Download' }],
-    }),
-  },
-  fab: {
-    group: 'Actions', name: 'FAB', factory: 'createFab', variable: 'fab',
-    description: 'Give your primary action a place to stand out. Explore color, size, and floating positions.',
-    summary: 'A floating action with a clear purpose.',
-    styles: ['fab'],
-    scenarios: fabScenarios,
-    controls: [
-      ...section('Appearance', [toneControl, choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
-        position, toggle('lowered', 'Lowered elevation')]),
-      ...section('Content', [icon(['add', 'edit', 'heart', 'download', 'send'], 'add'), text('ariaLabel', 'Accessible label', 'Create new item')]),
-      ...section('Behavior', [disabled]),
-    ],
-    config: (state: ComponentState): FabConfig => ({ variant: string(state, 'variant'), size: string(state, 'size'), icon: iconMarkup(state),
-      ariaLabel: string(state, 'ariaLabel').trim() || 'Create new item', disabled: bool(state, 'disabled'), ...fabPosition(state) }),
-  },
-  'fab-menu': {
-    group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
-    description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
-    summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('presentation', 'Presentation', ['list', 'menu', 'auto'], 'list'), choose('color', 'Color', ['primary', 'secondary', 'tertiary'], 'primary'), choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
-        // A select, as Size is: `bottom-end` and `bottom-start` are longer than the
-        // segmented Presentation and Color labels, and a select keeps the column narrow.
-        choose('placement', 'Placement', ['none', 'bottom-end', 'bottom-start'], 'none', 'select')]),
-      ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5', '6'], '3'), toggle('itemIcons', 'Item icons', true)]),
-    ],
-    config: (state: ComponentState): FabMenuConfig => {
-      // `none` is the library's own default, so the code names a placement only when one is set.
-      const placement = pick(state, 'placement', ['none', 'bottom-end', 'bottom-start'], 'none');
-      return {
-        icon: componentIcons.edit!, ariaLabel: 'Reply options',
-        presentation: pick(state, 'presentation', ['list', 'menu', 'auto'], 'list'),
-        color: pick(state, 'color', ['primary', 'secondary', 'tertiary'], 'primary'),
-        size: pick(state, 'size', ['default', 'medium', 'large'], 'default'),
-        ...(placement === 'none' ? {} : { placement }),
-        items: [['reply', 'Reply', 'send'], ['forward', 'Forward', 'send'], ['star', 'Favorite', 'heart'], ['save', 'Bookmark', 'bookmark'], ['download', 'Download', 'download'], ['inbox', 'Archive', 'inbox']]
-          .slice(0, Number(state.items))
-          .map(([id, text, icon]) => ({ id: id!, text: text!, ...(state.itemIcons ? { icon: componentIcons[icon!] } : {}) })),
-      };
-    },
-  },
-  'extended-fab': {
-    group: 'Actions', name: 'Extended FAB', factory: 'createExtendedFab', variable: 'extendedFab',
-    description: 'Give your primary action a little more context. Try labels, icon placement, and a collapsed state.',
-    summary: 'A floating action, with room for a label.',
-    styles: ['extended-fab'],
-    scenarios: extendedFabScenarios,
-    controls: [
-      ...section('Appearance', [toneControl, choose('size', 'Size', ['small', 'medium', 'large'], 'small'),
-        choose('width', 'Width', ['fixed', 'fluid'], 'fixed'), position, toggle('lowered', 'Lowered elevation')]),
-      ...section('Content', [icon(['add', 'edit', 'heart', 'download', 'send'], 'edit'), text('text', 'Text', 'Compose'), choose('iconPosition', 'Icon position', ['start', 'end'], 'start')]),
-      ...section('Behavior', [toggle('collapsed', 'Collapsed'), disabled]),
-    ],
-    config: (state: ComponentState): ExtendedFabConfig => ({
-      variant: string(state, 'variant'), size: pick(state, 'size', ['small', 'medium', 'large'], 'small'), icon: iconMarkup(state),
-      text: string(state, 'text'), ariaLabel: string(state, 'text').trim() || 'Compose', disabled: bool(state, 'disabled'),
-      iconPosition: pick(state, 'iconPosition', ['start', 'end'], 'start'), width: pick(state, 'width', ['fixed', 'fluid'], 'fixed'), ...fabPosition(state),
-    }),
-  },
+  button: buttonComponent,
+  'icon-button': iconButtonComponent,
+  'button-group': buttonGroupComponent,
+  'split-button': splitButtonComponent,
+  fab: fabComponent,
+  'fab-menu': fabMenuComponent,
+  'extended-fab': extendedFabComponent,
   checkbox: {
     group: 'Selection & input', name: 'Checkbox', factory: 'createCheckbox', variable: 'checkbox',
     description: 'Make a choice, or represent a partial selection. Explore checkbox states, labels, and form behavior.',
