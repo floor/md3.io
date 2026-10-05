@@ -62,6 +62,52 @@ try {
       assert(shown.theme === state.theme && shown.mode === state.mode, `${where}: the appearance is not baseline, light`);
       const code = await page.locator('#generated-code').textContent();
       assert(code === componentCode(slug, state), `${where}: the code panel does not match the state`);
+      // Styled, not just linked: every component root the preview shows must carry its
+      // stylesheet's computed style, and every menu an opener raises must come up as an
+      // elevated surface, not a bare list. The toolbar pilot lost both at once by
+      // borrowing a FAB and a menu without linking their styles. Only roots with an
+      // unambiguous unstyled signature are judged: without its stylesheet a FAB renders
+      // fully transparent. Menus are judged open, below, because they join the DOM then.
+      const findings: string[] = [];
+      const unstyledRoots = await frame.locator('#stage, #stage *').evaluateAll((nodes, roots) => {
+        const unstyled = new Set<string>();
+        for (const node of nodes) {
+          if (!(node instanceof HTMLElement)) continue;
+          for (const root of roots) {
+            if (node.classList.contains(root) && getComputedStyle(node).backgroundColor === 'rgba(0, 0, 0, 0)') unstyled.add(root);
+          }
+        }
+        return [...unstyled];
+      }, ['mtrl-fab', 'mtrl-extended-fab']);
+      for (const root of unstyledRoots) findings.push(`${root} is on the stage with a transparent background`);
+      // Buttons only: a combobox input also carries aria-haspopup, but it raises a
+      // listbox, never a menu, and clicking a readonly input is not what is being checked.
+      const openers = frame.locator('button[aria-haspopup]');
+      for (let index = 0; index < await openers.count(); index++) {
+        const opener = openers.nth(index);
+        if (!(await opener.isEnabled())) continue;
+        await opener.click();
+        const menu = frame.locator('.mtrl-menu').first();
+        let opened = true;
+        try { await menu.waitFor({ state: 'visible', timeout: 1000 }); }
+        catch { opened = false; }
+        if (!opened) {
+          // An opener may raise a list, a listbox or nothing; menus are what is judged
+          // here. Whatever did open still has to go, so the next opener starts clean.
+          await frame.locator('body').press('Escape');
+          continue;
+        }
+        const menuStyle = await menu.evaluate(element => {
+          const style = getComputedStyle(element);
+          return { background: style.backgroundColor, shadow: style.boxShadow };
+        });
+        if (menuStyle.background === 'rgba(0, 0, 0, 0)') findings.push('a menu opened with no surface background');
+        if (menuStyle.shadow === 'none') findings.push('a menu opened with no elevation');
+        await frame.locator('body').press('Escape');
+        try { await menu.waitFor({ state: 'detached', timeout: 1000 }); }
+        catch { /* Removed or not, the next page load reclaims the frame. */ }
+      }
+      assert(findings.length === 0, `${where}: ${findings.join('; ')}`);
       loads++;
     }
   }

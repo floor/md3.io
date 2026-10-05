@@ -35,7 +35,7 @@ import createSplitButton from 'material/components/split-button';
 import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
-import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, trailingBehaviour, type ComponentState } from '../shared/components';
+import { appBarContent, checkboxChildChecked, checkboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, toolbarContent, trailingBehaviour, type ComponentState } from '../shared/components';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -233,12 +233,21 @@ function create(state: ComponentState) {
       return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
     }
     case 'toolbar': {
-      const control = createToolbar(components.toolbar.config(state));
+      const content = toolbarContent(state);
+      const fab = content.fab ? createFab(content.fab) : null;
+      const overflow = content.overflow;
+      const control = createToolbar({
+        ...components.toolbar.config(state),
+        ...(fab ? { fab, fabPosition: content.fabPosition ?? 'end' } : {}),
+        ...(overflow ? { overflow: opener => createMenu({ opener, ...(content.overflowPosition ? { position: content.overflowPosition } : {}), items: overflow }) } : {}),
+      });
+      fab?.on('click', () => message(`${fab.element.getAttribute('aria-label')} clicked`));
       control.bar.addEventListener('click', (event) => {
         const item = (event.target as Element).closest('[aria-label]');
         if (item && item !== control.bar) message(`${item.getAttribute('aria-label')} clicked`);
       });
-      return control;
+      // The overflow menu's lifecycle is the toolbar's own: it destroys the menu it was given.
+      return { element: control.element, destroy: () => { fab?.destroy(); control.destroy(); } };
     }
 
     case 'switch': {

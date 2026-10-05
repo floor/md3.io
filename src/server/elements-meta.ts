@@ -153,8 +153,14 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
   ],
-  // The factory takes its items in its config; the element as its children.
-  toolbar: [{ from: 'items', element: 'icon-button' }],
+  // The factory takes its items in its config; the element as its children. A set's text
+  // buttons go to the element's default slot as `buttons` (the card's actions pattern),
+  // and its FAB to the slot the element anchors it in (the bottom app bar's pattern).
+  toolbar: [
+    { from: 'items', element: 'icon-button' },
+    { from: 'buttons', element: 'button' },
+    { from: 'fab', element: 'fab', slot: 'fab' },
+  ],
   'bottom-app-bar': [
     { from: 'actions', element: 'icon-button', add: 'addAction' },
     { from: 'fab', element: 'fab', slot: 'fab', add: 'addFab' },
