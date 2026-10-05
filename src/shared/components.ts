@@ -278,6 +278,37 @@ const cardScenarios: readonly Scenario[] = [
     options: { variant: 'outlined', media: false, actions: true },
   },
 ];
+/**
+ * List scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const listScenarios: readonly Scenario[] = [
+  {
+    id: 'single-line', name: 'Single-line', source: 'https://m3.material.io/components/lists/guidelines',
+    description: 'A single-line list with leading icons and trailing metadata text.',
+    options: { lines: '1', leading: 'icon', trailing: 'text', selection: 'none' },
+  },
+  {
+    id: 'two-line-avatar', name: 'Two-line with avatar', source: 'https://m3.material.io/components/lists/guidelines',
+    description: 'A two-line list featuring circular avatars and supporting text.',
+    options: { lines: '2', leading: 'avatar', trailing: 'none', selection: 'single' },
+  },
+  {
+    id: 'three-line', name: 'Three-line with overline', source: 'https://m3.material.io/components/lists/guidelines',
+    description: 'A three-line list displaying an overline, headline, supporting text, and leading image.',
+    options: { lines: '3', leading: 'image', overline: true, trailing: 'icon', selection: 'none' },
+  },
+  {
+    id: 'segmented', name: 'Segmented group', source: 'https://m3.material.io/components/lists/guidelines',
+    description: 'Contained list items separated by expressive shape gaps defining a group.',
+    options: { variant: 'segmented', lines: '2', leading: 'icon', trailing: 'text' },
+  },
+  {
+    id: 'multi-select', name: 'Multi-selection', source: 'https://m3.material.io/components/lists/guidelines',
+    description: 'A list with multi-item selection enabled across rows.',
+    options: { lines: '1', leading: 'icon', trailing: 'text', selection: 'multi' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -705,7 +736,7 @@ export const components = {
     group: 'Containment', name: 'List', factory: 'createList', variable: 'list',
     description: 'Explore Material list anatomy. Configure text lines, media, supporting actions, and selection.',
     summary: 'One, two, or three lines with flexible content slots.', styles: ['list'],
-    scenarios: [],
+    scenarios: listScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'segmented'], 'standard')]),
       ...section('Layout', [choose('lines', 'Text lines', ['1', '2', '3'], '2'), choose('leading', 'Leading', ['none', 'icon', 'avatar', 'image', 'video'], 'icon', 'select'), choose('trailing', 'Trailing', ['none', 'text', 'icon', 'control'], 'text', 'select'), choose('dividers', 'Dividers', ['none', 'full-width', 'inset'], 'none', 'select'), toggle('subheader', 'Subheader')]),
