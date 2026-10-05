@@ -173,7 +173,7 @@ function matchesStatedGap(missingClass: string, statedGaps: string[]): boolean {
   const stripped = missingClass.replace(/^mtrl-/, '').replace(/-/g, '').toLowerCase();
   return statedGaps.some(gap => {
     const norm = gap.replace(/-/g, '').toLowerCase();
-    return norm === stripped || stripped.includes(norm) || norm.includes(stripped);
+    return norm === stripped;
   });
 }
 
@@ -314,6 +314,12 @@ const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 page.setDefaultTimeout(10000);
 
+const pageErrors: string[] = [];
+page.on('pageerror', err => pageErrors.push(err.message));
+page.on('console', msg => {
+  if (msg.type() === 'error') pageErrors.push(msg.text());
+});
+
 const differences: string[] = [];
 let totalMounts = 0;
 let totalScenarios = 0;
@@ -363,20 +369,34 @@ try {
         const key = `${slug}/${scenarioId}/${tab}`;
         const tabInfo = tabBundles[key];
         totalMounts++;
+        pageErrors.length = 0;
 
-        await page.goto(`${tabServer.url}/?tab=${encodeURIComponent(key)}`);
-        // Wait for element upgrade / mount
-        await page.waitForFunction(() => {
-          const visit = (node: Element): boolean => {
-            for (const cls of node.classList) if (cls.startsWith('mtrl-')) return true;
-            if (node.shadowRoot) {
-              for (const child of node.shadowRoot.children) if (visit(child)) return true;
-            }
-            for (const child of node.children) if (visit(child)) return true;
-            return false;
-          };
-          return visit(document.body);
-        }, undefined, { timeout: 8000 });
+        try {
+          await page.goto(`${tabServer.url}/?tab=${encodeURIComponent(key)}`);
+          // Wait for element upgrade / mount
+          await page.waitForFunction(() => {
+            const visit = (node: Element): boolean => {
+              for (const cls of node.classList) if (cls.startsWith('mtrl-')) return true;
+              if (node.shadowRoot) {
+                for (const child of node.shadowRoot.children) if (visit(child)) return true;
+              }
+              for (const child of node.children) if (visit(child)) return true;
+              return false;
+            };
+            return visit(document.body);
+          }, undefined, { timeout: 8000 });
+        } catch (err) {
+          const detail = pageErrors.length > 0
+            ? pageErrors.join('; ')
+            : 'mount timed out — no mtrl-* class painted';
+          differences.push(`${slug} ${scenarioId} ${tab}: ${detail}`);
+          continue;
+        }
+
+        if (pageErrors.length > 0) {
+          differences.push(`${slug} ${scenarioId} ${tab}: ${pageErrors.join('; ')}`);
+          continue;
+        }
 
         // If preview had a more button, click the more button in mounted tab too
         if (hasMoreButton) {
