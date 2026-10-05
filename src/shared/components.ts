@@ -63,13 +63,6 @@ import { loadingIndicatorComponent } from './content/loading-indicator';
 import { progressComponent } from './content/progress';
 import { snackbarComponent } from './content/snackbar';
 import { tooltipComponent } from './content/tooltip';
-// Until the preview and its checkbox check import from the content modules, they keep
-// importing these from the registry.
-export { checkboxChildChecked, checkboxChildren } from './content/checkbox';
-export { trailingBehaviour } from './content/text-field';
-export type { TrailingBehaviour } from './content/text-field';
-export { appBarContent } from './content/top-app-bar';
-export { toolbarContent } from './content/toolbar';
 
 /**
  * The toolbar's config as its element takes it: icon buttons in `items`, text buttons in
