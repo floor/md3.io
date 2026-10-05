@@ -64,7 +64,7 @@ describe('Styles pages', () => {
     // The gallery frame, and the expressive shapes drawn by mtrl/core/shapes.
     expect(html).toContain('<iframe class="shape-gallery" src="/styles/frame/?view=gallery" data-theme-frame="theme"');
     expect(html.match(/<li class="shape-library__item"><svg viewBox="0 0 100 100" role="img" aria-label="[^"]+"><path d="M[^"]+Z" \/>/g)?.length).toBe(SHAPE_NAMES.length);
-    expect(html).toContain(`M3 defines ${M3_SHAPE_COUNT} shapes; <code>material</code> ships these ${SHAPE_NAMES.length} today (FLO-346)`);
+    expect(html).toContain(`M3 defines ${M3_SHAPE_COUNT} shapes; <code>material</code> ships these ${SHAPE_NAMES.length} today, drawn here by`);
     // The preview starts closed here: the gallery already shows the effect.
     expect(html).toMatch(/<aside class="styles-preview styles-preview--docked" id="styles-preview" aria-label="Live preview" data-collapsible data-open="false">/);
   });
