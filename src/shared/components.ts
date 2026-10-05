@@ -363,6 +363,37 @@ const fabScenarios: readonly Scenario[] = [
     options: { size: 'large' },
   },
 ];
+/**
+ * The FAB menu's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; the items stay the playground's reply set.
+ */
+const fabMenuScenarios: readonly Scenario[] = [
+  {
+    id: 'web', name: 'Web menu', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'On web, the FAB menu opens as a menu component, consistent with desktop apps.',
+    options: { presentation: 'menu' },
+  },
+  {
+    id: 'secondary', name: 'Secondary', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'The secondary color set, for a secondary or secondary container FAB.',
+    options: { color: 'secondary' },
+  },
+  {
+    id: 'tertiary', name: 'Tertiary', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'The tertiary color set, for a tertiary or tertiary container FAB.',
+    options: { color: 'tertiary' },
+  },
+  {
+    id: 'trailing', name: 'Trailing', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'Aligned to the trailing edge of the window, where the guidelines place it.',
+    options: { placement: 'bottom-end' },
+  },
+  {
+    id: 'six', name: 'Six items', source: 'https://m3.material.io/components/fab-menu/overview',
+    description: 'The most a FAB menu holds: six closely related actions.',
+    options: { items: '6' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -460,7 +491,7 @@ export const components = {
     group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
     description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
     summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
-    scenarios: [],
+    scenarios: fabMenuScenarios,
     controls: [
       ...section('Appearance', [choose('presentation', 'Presentation', ['list', 'menu', 'auto'], 'list'), choose('color', 'Color', ['primary', 'secondary', 'tertiary'], 'primary'), choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
         // A select, as Size is: `bottom-end` and `bottom-start` are longer than the
