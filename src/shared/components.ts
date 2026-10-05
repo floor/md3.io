@@ -275,6 +275,38 @@ const selectScenarios: readonly Scenario[] = [
     options: { error: true, supportingText: 'Select a fruit to continue' },
   },
 ];
+/**
+ * The search component's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. The element opens its view with an `open` attribute, so the
+ * focused scenarios' snippets match the factory's.
+ */
+const searchScenarios: readonly Scenario[] = [
+  {
+    id: 'messages', name: 'Messages', source: 'https://m3.material.io/components/search/guidelines',
+    description: 'The hinted text names what can be searched, like Search your messages.',
+    options: { placeholder: 'Search your messages' },
+  },
+  {
+    id: 'focused', name: 'Focused', source: 'https://m3.material.io/components/search/guidelines',
+    description: 'Focused search: the view opens with suggestions before typing.',
+    options: { initialState: 'view' },
+  },
+  {
+    id: 'fullscreen', name: 'Full screen', source: 'https://m3.material.io/components/search/guidelines',
+    description: 'The full-screen focused layout, the default for compact breakpoints.',
+    options: { initialState: 'view', viewMode: 'fullscreen' },
+  },
+  {
+    id: 'divided', name: 'Divided', source: 'https://m3.material.io/components/search/guidelines',
+    description: 'The divided style: a divider separates the bar and the results.',
+    options: { variant: 'divided' },
+  },
+  {
+    id: 'query', name: 'Query', source: 'https://m3.material.io/components/search/guidelines',
+    description: 'A typed query replaces the hinted text; the clear icon can remove it.',
+    options: { value: 'Paris' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -548,7 +580,7 @@ export const components = {
     group: 'Selection & input', name: 'Search', factory: 'createSearch', variable: 'search',
     description: 'Start with a search bar, then explore suggestions in a docked or fullscreen view.',
     summary: 'Search with suggestions and an expanded view.', styles: ['search'],
-    scenarios: [],
+    scenarios: searchScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Style', ['contained', 'divided'], 'contained'), choose('initialState', 'State', ['bar', 'view'], 'bar'), choose('viewMode', 'View mode', ['docked', 'fullscreen'], 'docked')]),
       ...section('Content', [text('placeholder', 'Placeholder', 'Search places'), text('value', 'Query', ''), choose('suggestions', 'Suggestions', ['places', 'none'], 'places')]),
