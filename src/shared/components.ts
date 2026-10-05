@@ -437,16 +437,6 @@ const drawerScenarios: readonly Scenario[] = [
     description: 'A modal drawer that uses a scrim to block interaction with the rest of the app.',
     options: { variant: 'modal', open: true },
   },
-  {
-    id: 'no-icons', name: 'Text only', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
-    description: 'A drawer with text destination labels and no icons.',
-    options: { variant: 'standard', open: true, icons: false },
-  },
-  {
-    id: 'dense', name: 'Dense', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
-    description: 'A compact navigation drawer using dense vertical spacing.',
-    options: { variant: 'standard', open: true, dense: true },
-  },
 ];
 /**
  * Tabs scenarios from m3.material.io (read 5 October 2026). Options name
