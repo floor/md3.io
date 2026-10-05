@@ -278,6 +278,37 @@ const navigationRailScenarios: readonly Scenario[] = [
     options: { layout: 'standard', expanded: false, showToggle: false },
   },
 ];
+/**
+ * Drawer scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const drawerScenarios: readonly Scenario[] = [
+  {
+    id: 'dismissible', name: 'Dismissible standard', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
+    description: 'A dismissible standard drawer opened and closed by a navigation icon.',
+    options: { variant: 'standard', open: true, dismissible: true },
+  },
+  {
+    id: 'permanent', name: 'Permanently visible', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
+    description: 'A permanently visible standard drawer that cannot be dismissed.',
+    options: { variant: 'standard', open: true, dismissible: false },
+  },
+  {
+    id: 'modal', name: 'Modal', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
+    description: 'A modal drawer that uses a scrim to block interaction with the rest of the app.',
+    options: { variant: 'modal', open: true },
+  },
+  {
+    id: 'no-icons', name: 'Text only', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
+    description: 'A drawer with text destination labels and no icons.',
+    options: { variant: 'standard', open: true, icons: false },
+  },
+  {
+    id: 'dense', name: 'Dense', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
+    description: 'A compact navigation drawer using dense vertical spacing.',
+    options: { variant: 'standard', open: true, dense: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -607,7 +638,7 @@ export const components = {
     group: 'Navigation', name: 'Drawer', factory: 'createDrawer', variable: 'drawer',
     description: 'Explore a navigation drawer with destinations, section labels, and badges.',
     summary: 'Grouped destinations in a side panel.', styles: ['drawer', 'button', 'progress'],
-    scenarios: [],
+    scenarios: drawerScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'standard'), toggle('dense', 'Dense')]),
       ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'start'), { ...range('width', 'Width', '280'), min: 220, max: 360, step: 20 }]),
