@@ -394,6 +394,38 @@ const fabMenuScenarios: readonly Scenario[] = [
     options: { items: '6' },
   },
 ];
+/**
+ * The extended FAB's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Collapsed is a method, not an attribute: the vanilla panel
+ * calls `collapse()`, and the element panel cannot show the state — its description says so.
+ */
+const extendedFabScenarios: readonly Scenario[] = [
+  {
+    id: 'create', name: 'Create', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'A labelled Create, for when an icon alone is ambiguous.',
+    options: { text: 'Create', icon: 'add' },
+  },
+  {
+    id: 'medium', name: 'Medium', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'The medium size, for larger breakpoints.',
+    options: { size: 'medium' },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'The large size, for one prominent action in a compact window.',
+    options: { size: 'large' },
+  },
+  {
+    id: 'rtl', name: 'Right to left', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'The icon after the label, as right-to-left languages mirror the layout.',
+    options: { iconPosition: 'end' },
+  },
+  {
+    id: 'collapsed', name: 'Collapsed', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'Collapsed, as on scroll. The vanilla panel calls collapse(); the element panel cannot show the state.',
+    options: { collapsed: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -519,7 +551,7 @@ export const components = {
     description: 'Give your primary action a little more context. Try labels, icon placement, and a collapsed state.',
     summary: 'A floating action, with room for a label.',
     styles: ['extended-fab'],
-    scenarios: [],
+    scenarios: extendedFabScenarios,
     controls: [
       ...section('Appearance', [toneControl, choose('size', 'Size', ['small', 'medium', 'large'], 'small'),
         choose('width', 'Width', ['fixed', 'fluid'], 'fixed'), position, toggle('lowered', 'Lowered elevation')]),
