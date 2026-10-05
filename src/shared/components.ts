@@ -338,6 +338,37 @@ const datePickerScenarios: readonly Scenario[] = [
     options: { initialView: 'year', label: 'Date of birth' },
   },
 ];
+/**
+ * The time picker's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only.
+ */
+const timePickerScenarios: readonly Scenario[] = [
+  {
+    id: 'alarm', name: 'Alarm', source: 'https://m3.material.io/components/time-pickers/guidelines',
+    description: 'Setting an alarm, one of the guidelines\' common uses.',
+    options: { title: 'Set alarm', value: '07:00' },
+  },
+  {
+    id: 'meeting', name: 'Meeting', source: 'https://m3.material.io/components/time-pickers/guidelines',
+    description: 'Scheduling a meeting, one of the guidelines\' common uses.',
+    options: { title: 'Schedule a meeting', value: '14:30' },
+  },
+  {
+    id: 'input', name: 'Input', source: 'https://m3.material.io/components/time-pickers/guidelines',
+    description: 'The input variant, for specifying a time with keyboard numbers.',
+    options: { type: 'input' },
+  },
+  {
+    id: '24-hour', name: '24-hour', source: 'https://m3.material.io/components/time-pickers/guidelines',
+    description: 'The dial across 24 hours, as system settings choose it.',
+    options: { format: '24h' },
+  },
+  {
+    id: 'landscape', name: 'Landscape', source: 'https://m3.material.io/components/time-pickers/guidelines',
+    description: 'The landscape orientation, with input and selection side by side.',
+    options: { orientation: 'horizontal' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -639,7 +670,7 @@ export const components = {
     group: 'Selection & input', name: 'Time picker', factory: 'createTimePicker', variable: 'timePicker',
     description: 'Choose a time with a dial or keyboard. Explore clock formats, orientation, and precision.',
     summary: 'Time entry with a dial or keyboard.', styles: ['progress', 'button', 'timepicker'],
-    scenarios: [],
+    scenarios: timePickerScenarios,
     controls: [
       ...section('Appearance', [choose('type', 'Input mode', ['dial', 'input'], 'dial'), choose('format', 'Clock format', ['12h', '24h'], '12h'), choose('orientation', 'Orientation', ['vertical', 'horizontal'], 'vertical')]),
       ...section('Content', [text('title', 'Title', 'Select time'), { ...text('value', 'Time', '09:30'), kind: 'time' }]),
