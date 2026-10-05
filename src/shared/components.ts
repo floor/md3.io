@@ -622,24 +622,24 @@ const checkboxScenarios: readonly Scenario[] = [
  */
 const switchScenarios: readonly Scenario[] = [
   {
-    id: 'off', name: 'Off', source: 'https://m3.material.io/components/switch/guidelines',
-    description: 'A switch in the unselected, off position.',
-    options: { checked: false },
+    id: 'play-over-notifications', name: 'Play over notifications', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'Toggling whether audio playback continues uninterrupted during incoming notifications.',
+    options: { label: 'Play over notifications', supportingText: 'Keep listening while alerts sound', checked: true, icons: 'selected' },
   },
   {
-    id: 'both-icons', name: 'Both icons', source: 'https://m3.material.io/components/switch/guidelines',
-    description: 'A switch with checkmark and close icons. The element does not expose the unselected icon, so its snippet omits it.',
-    options: { icons: 'both', checked: true },
+    id: 'camera-access', name: 'Camera access', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'Enabling or disabling camera sensor hardware permissions for an application.',
+    options: { label: 'Camera access', supportingText: 'App has access to your camera', checked: true, icons: 'both' },
   },
   {
-    id: 'no-icon', name: 'No icon', source: 'https://m3.material.io/components/switch/guidelines',
-    description: 'A switch without an icon in the handle.',
-    options: { icons: 'none' },
+    id: 'show-password', name: 'Show password', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'Toggling plaintext password character visibility in a login form.',
+    options: { label: 'Show password', supportingText: '', checked: false, icons: 'none' },
   },
   {
-    id: 'disabled', name: 'Disabled', source: 'https://m3.material.io/components/switch/overview',
-    description: 'A disabled switch that cannot be toggled.',
-    options: { disabled: true },
+    id: 'airplane-mode', name: 'Airplane mode', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'Disabling wireless transmission functions in device system preferences.',
+    options: { label: 'Airplane mode', supportingText: 'Turn off cellular, Wi-Fi, and Bluetooth', checked: false, icons: 'none' },
   },
 ];
 /**
