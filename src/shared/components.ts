@@ -248,6 +248,180 @@ const buttonScenarios: readonly Scenario[] = [
   },
 ];
 /**
+ * The icon button's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. The element takes `toggle` and `selected` as attributes, so
+ * the toggle scenarios' snippets match the factory's.
+ */
+const iconButtonScenarios: readonly Scenario[] = [
+  {
+    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A toggle button for a binary action, shown selected.',
+    options: { toggle: true, selected: true, icon: 'heart' },
+  },
+  {
+    id: 'bookmark', name: 'Bookmark', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A toggle button shown unselected; the outlined icon fills when selected.',
+    options: { toggle: true, icon: 'bookmark', ariaLabel: 'Bookmark' },
+  },
+  {
+    id: 'download', name: 'Download', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A filled button for a high emphasis action, like downloading.',
+    options: { variant: 'filled', icon: 'download', ariaLabel: 'Download' },
+  },
+];
+/**
+ * The button group's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; the items stay the playground's bold, italic, and underline.
+ */
+const buttonGroupScenarios: readonly Scenario[] = [
+  {
+    id: 'multi', name: 'Multi-select', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A connected group with multi-select: bold, italic, and underline independently.',
+    options: { selection: 'multi' },
+  },
+  {
+    id: 'single', name: 'Single-select', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A connected group with single-select, for switching between related options.',
+    options: { selection: 'single' },
+  },
+  {
+    id: 'required', name: 'Required', source: 'https://m3.material.io/components/button-groups/overview',
+    description: 'A single-select group that requires a selection.',
+    options: { selection: 'single', required: true },
+  },
+  {
+    id: 'standard', name: 'Standard', source: 'https://m3.material.io/components/button-groups/guidelines',
+    description: 'A standard group of icon buttons; adjacent buttons respond to one another when pressed.',
+    options: { kind: 'standard', content: 'icons' },
+  },
+];
+/**
+ * The split button's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; the menus stay the playground's save and share sets.
+ */
+const splitButtonScenarios: readonly Scenario[] = [
+  {
+    id: 'share', name: 'Share', source: 'https://m3.material.io/components/split-button/overview',
+    description: 'An action with a menu of related actions: share, with link, email, and export.',
+    options: { text: 'Share', icon: 'send', menu: 'share', trailingLabel: 'More share options' },
+  },
+  {
+    id: 'tonal', name: 'Tonal', source: 'https://m3.material.io/components/split-button/overview',
+    description: 'The tonal color style, at home beside common buttons.',
+    options: { variant: 'tonal' },
+  },
+  {
+    id: 'outlined', name: 'Outlined', source: 'https://m3.material.io/components/split-button/overview',
+    description: 'The outlined color style, a quieter action with its menu.',
+    options: { variant: 'outlined' },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/split-button/guidelines',
+    description: 'Scaled up for large breakpoints, or extra emphasis in smaller windows.',
+    options: { size: 'l' },
+  },
+];
+/**
+ * The FAB's scenarios, from m3.material.io (read 5 October 2026). Options name playground
+ * controls only. Share uses the send icon: the guidelines name the action, the playground's
+ * icon control has no share icon.
+ */
+const fabScenarios: readonly Scenario[] = [
+  {
+    id: 'create', name: 'Create', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'The most important action on the screen, with a clear add icon.',
+    options: { ariaLabel: 'Create' },
+  },
+  {
+    id: 'edit', name: 'Edit', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'An edit action; the guidelines name the edit icon as clear and simple.',
+    options: { icon: 'edit', ariaLabel: 'Edit' },
+  },
+  {
+    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'A constructive Favorite action, one the guidelines name.',
+    options: { icon: 'heart', ariaLabel: 'Favorite' },
+  },
+  {
+    id: 'share', name: 'Share', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'A constructive Share action; the send icon stands in for share.',
+    options: { icon: 'send', ariaLabel: 'Share' },
+  },
+  {
+    id: 'medium', name: 'Medium', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'The medium size, recommended for most situations.',
+    options: { size: 'medium' },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'The large size, when the primary action needs to be prominent.',
+    options: { size: 'large' },
+  },
+];
+/**
+ * The FAB menu's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; the items stay the playground's reply set.
+ */
+const fabMenuScenarios: readonly Scenario[] = [
+  {
+    id: 'web', name: 'Web menu', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'On web, the FAB menu opens as a menu component, consistent with desktop apps.',
+    options: { presentation: 'menu' },
+  },
+  {
+    id: 'secondary', name: 'Secondary', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'The secondary color set, for a secondary or secondary container FAB.',
+    options: { color: 'secondary' },
+  },
+  {
+    id: 'tertiary', name: 'Tertiary', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'The tertiary color set, for a tertiary or tertiary container FAB.',
+    options: { color: 'tertiary' },
+  },
+  {
+    id: 'trailing', name: 'Trailing', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'Aligned to the trailing edge of the window, where the guidelines place it.',
+    options: { placement: 'bottom-end' },
+  },
+  {
+    id: 'six', name: 'Six items', source: 'https://m3.material.io/components/fab-menu/overview',
+    description: 'The most a FAB menu holds: six closely related actions.',
+    options: { items: '6' },
+  },
+];
+/**
+ * The extended FAB's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Collapsed is a method, not an attribute: the vanilla panel
+ * calls `collapse()`, and the element panel cannot show the state — its description says so.
+ */
+const extendedFabScenarios: readonly Scenario[] = [
+  {
+    id: 'create', name: 'Create', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'A labelled Create, for when an icon alone is ambiguous.',
+    options: { text: 'Create', icon: 'add' },
+  },
+  {
+    id: 'medium', name: 'Medium', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'The medium size, for larger breakpoints.',
+    options: { size: 'medium' },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'The large size, for one prominent action in a compact window.',
+    options: { size: 'large' },
+  },
+  {
+    id: 'rtl', name: 'Right to left', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'The icon after the label, as right-to-left languages mirror the layout.',
+    options: { iconPosition: 'end' },
+  },
+  {
+    id: 'collapsed', name: 'Collapsed', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'Collapsed, as on scroll. The vanilla panel calls collapse(); the element panel cannot show the state.',
+    options: { collapsed: true },
+  },
+];
+/**
  * The chips' scenarios, from m3.material.io (read 5 October 2026). Labels stay Hiking, Music
  * and Food (fixed in `config()`); options name playground controls only, so applying one is
  * `normalizeComponentState(slug, { ...initials, ...options })`. Filters select two chips —
@@ -586,7 +760,7 @@ export const components = {
     description: 'A compact action with room for expression. Try its shape, width, and toggle state.',
     summary: 'Compact actions, with a shape for every state.',
     styles: ['icon-button'],
-    scenarios: [],
+    scenarios: iconButtonScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'filled', 'tonal', 'outlined'], 'standard', 'select'), size, square,
         choose('width', 'Width', ['narrow', 'default', 'wide'], 'default')]),
@@ -604,7 +778,7 @@ export const components = {
     description: 'Bring related actions together. Explore connected shapes and single or multiple selection.',
     summary: 'Related actions. Shared shapes. Flexible selection.',
     styles: ['progress', 'button', 'icon-button', 'button-group'],
-    scenarios: [],
+    scenarios: buttonGroupScenarios,
     controls: [
       ...section('Appearance', [choose('kind', 'Kind', ['standard', 'connected'], 'connected'), choose('variant', 'Variant', variants, 'filled', 'select'), size, square]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'),
@@ -628,7 +802,7 @@ export const components = {
     description: 'A primary action and more possibilities. Open the trailing menu to try the alternatives.',
     summary: 'One primary action, with more options close by.',
     styles: ['menu', 'progress', 'button', 'split-button'],
-    scenarios: [],
+    scenarios: splitButtonScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled', 'select'), size]),
       ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
@@ -650,7 +824,7 @@ export const components = {
     description: 'Give your primary action a place to stand out. Explore color, size, and floating positions.',
     summary: 'A floating action with a clear purpose.',
     styles: ['fab'],
-    scenarios: [],
+    scenarios: fabScenarios,
     controls: [
       ...section('Appearance', [toneControl, choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
         position, toggle('lowered', 'Lowered elevation')]),
@@ -664,7 +838,7 @@ export const components = {
     group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
     description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
     summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
-    scenarios: [],
+    scenarios: fabMenuScenarios,
     controls: [
       ...section('Appearance', [choose('presentation', 'Presentation', ['list', 'menu', 'auto'], 'list'), choose('color', 'Color', ['primary', 'secondary', 'tertiary'], 'primary'), choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
         // A select, as Size is: `bottom-end` and `bottom-start` are longer than the
@@ -692,7 +866,7 @@ export const components = {
     description: 'Give your primary action a little more context. Try labels, icon placement, and a collapsed state.',
     summary: 'A floating action, with room for a label.',
     styles: ['extended-fab'],
-    scenarios: [],
+    scenarios: extendedFabScenarios,
     controls: [
       ...section('Appearance', [toneControl, choose('size', 'Size', ['small', 'medium', 'large'], 'small'),
         choose('width', 'Width', ['fixed', 'fluid'], 'fixed'), position, toggle('lowered', 'Lowered elevation')]),
