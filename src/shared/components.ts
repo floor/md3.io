@@ -371,6 +371,42 @@ const menuScenarios: readonly Scenario[] = [
     options: { disableDownload: true },
   },
 ];
+/**
+ * Top app bar scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const topAppBarScenarios: readonly Scenario[] = [
+  {
+    id: 'small', name: 'Small', source: 'https://m3.material.io/components/top-app-bar/guidelines',
+    description: 'A compact top app bar for dense layouts with a title and action.',
+    options: { type: 'small', leading: true, actions: '1' },
+  },
+  {
+    id: 'center-aligned', name: 'Center-aligned', source: 'https://m3.material.io/components/top-app-bar/guidelines',
+    description: 'A small app bar with a centered headline for pages with fewer navigation destinations.',
+    options: { type: 'center', leading: true, actions: '1' },
+  },
+  {
+    id: 'medium', name: 'Medium flexible', source: 'https://m3.material.io/components/top-app-bar/guidelines',
+    description: 'A medium top app bar with prominent headline text that can compress on scroll.',
+    options: { type: 'medium', leading: true, actions: '1' },
+  },
+  {
+    id: 'large', name: 'Large flexible', source: 'https://m3.material.io/components/top-app-bar/guidelines',
+    description: 'A tall top app bar with maximum headline emphasis for primary landing screens.',
+    options: { type: 'large', leading: true, actions: '1' },
+  },
+  {
+    id: 'scrolled', name: 'Scrolled', source: 'https://m3.material.io/components/top-app-bar/guidelines',
+    description: 'An app bar in the scrolled state, filling the container with contrasting color.',
+    options: { type: 'small', scrolled: true, leading: true, actions: '1' },
+  },
+  {
+    id: 'two-actions', name: 'Two actions', source: 'https://m3.material.io/components/top-app-bar/guidelines',
+    description: 'A top app bar providing two essential trailing actions beside the navigation button.',
+    options: { type: 'small', actions: '2', leading: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -743,7 +779,7 @@ export const components = {
     group: 'Navigation', name: 'Top app bar', factory: 'createTopAppBar', variable: 'topBar',
     description: 'Give a view its title and actions. Explore bar sizes and the scrolled appearance.',
     summary: 'A title, navigation, and contextual actions.', styles: ['top-app-bar', 'icon-button'],
-    scenarios: [],
+    scenarios: topAppBarScenarios,
     controls: [
       ...section('Appearance', [choose('type', 'Type', ['small', 'center', 'medium', 'large'], 'small', 'select'), toggle('scrolled', 'Scrolled state'), toggle('compressible', 'Compressible', true)]),
       ...section('Content', [text('title', 'Title', 'My library'), toggle('leading', 'Navigation button', true), choose('actions', 'Action count', ['0', '1', '2'], '1')]),
