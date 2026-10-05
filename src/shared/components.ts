@@ -464,6 +464,28 @@ const loadingIndicatorScenarios: readonly Scenario[] = [
     options: { size: '96' },
   },
 ];
+/**
+ * The snackbar's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; all show the snackbar open (the Visible control), at the
+ * indefinite duration an actioned snackbar keeps on the guidelines' terms.
+ */
+const snackbarScenarios: readonly Scenario[] = [
+  {
+    id: 'undo', name: 'Undo', source: 'https://m3.material.io/components/snackbar/guidelines',
+    description: 'A performed action with an Undo button, so a choice can be amended; it stays until acted on.',
+    options: { visible: true, message: 'Message archived' },
+  },
+  {
+    id: 'left-aligned', name: 'Left-aligned', source: 'https://m3.material.io/components/snackbar/guidelines',
+    description: 'Left-aligned at the bottom, as wider layouts allow; no action, nothing required.',
+    options: { visible: true, position: 'start', hasAction: false },
+  },
+  {
+    id: 'long-text', name: 'Long text', source: 'https://m3.material.io/components/snackbar/guidelines',
+    description: 'A longer update; in wide layouts the container extends to accommodate the text.',
+    options: { visible: true, message: 'Your changes have been saved and synced across all your devices.' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -1004,7 +1026,7 @@ export const components = {
     group: 'Communication', name: 'Snackbar', factory: 'createSnackbar', variable: 'snackbar',
     description: 'Confirm an action without interrupting. Show a message, offer an undo, and try dismissal behavior.',
     summary: 'Brief feedback with an optional action.', styles: ['progress', 'button', 'icon-button', 'snackbar'],
-    scenarios: [],
+    scenarios: snackbarScenarios,
     controls: [
       ...section('Layout', [choose('position', 'Position', ['start', 'center', 'end'], 'center')]),
       ...section('Content', [text('message', 'Message', 'Your changes have been saved.'), toggle('hasAction', 'Show action', true), { ...text('action', 'Action text', 'Undo'), enabledWhen: 'hasAction' }, { ...text('closeLabel', 'Dismiss label', 'Dismiss'), enabledWhen: 'dismissible' }]),
