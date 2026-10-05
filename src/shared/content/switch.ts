@@ -14,22 +14,22 @@ const switchScenarios: readonly Scenario[] = [
   {
     id: 'play-over-notifications', name: 'Play over notifications', source: 'https://m3.material.io/components/switch/guidelines',
     description: 'Toggling whether audio playback continues uninterrupted during incoming notifications.',
-    options: { label: 'Play over notifications', supportingText: 'Keep listening while alerts sound', checked: true, icons: 'selected' },
+    options: { label: 'Play over notifications', supportingText: 'Keep listening while alerts sound', checked: true, icons: 'selected', name: 'play-over-notifications' },
   },
   {
     id: 'camera-access', name: 'Camera access', source: 'https://m3.material.io/components/switch/guidelines',
     description: 'Enabling or disabling camera sensor hardware permissions for an application.',
-    options: { label: 'Camera access', supportingText: 'App has access to your camera', checked: true, icons: 'both' },
+    options: { label: 'Camera access', supportingText: 'App has access to your camera', checked: true, icons: 'both', name: 'camera-access' },
   },
   {
     id: 'show-password', name: 'Show password', source: 'https://m3.material.io/components/switch/guidelines',
     description: 'Toggling plaintext password character visibility in a login form.',
-    options: { label: 'Show password', supportingText: '', checked: false, icons: 'none' },
+    options: { label: 'Show password', supportingText: '', checked: false, icons: 'none', name: 'show-password' },
   },
   {
     id: 'airplane-mode', name: 'Airplane mode', source: 'https://m3.material.io/components/switch/guidelines',
     description: 'Disabling wireless transmission functions in device system preferences.',
-    options: { label: 'Airplane mode', supportingText: 'Turn off cellular, Wi-Fi, and Bluetooth', checked: false, icons: 'none' },
+    options: { label: 'Airplane mode', supportingText: 'Turn off cellular, Wi-Fi, and Bluetooth', checked: false, icons: 'none', name: 'airplane-mode' },
   },
 ];
 

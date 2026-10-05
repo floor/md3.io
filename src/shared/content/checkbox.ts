@@ -101,7 +101,7 @@ const checkboxScenarios: readonly Scenario[] = [
   {
     id: 'playlist-selection', name: 'Playlist selection', source: 'https://m3.material.io/components/checkbox/guidelines',
     description: 'Selecting multiple tracks in an 80s music playlist for batch addition to a queue.',
-    options: { familySet: 'playlist-selection', family: false, state: 'checked', label: "Jessie's Girl · Rick Springfield", name: 'playlist' },
+    options: { familySet: 'playlist-selection', family: false, state: 'checked', label: "Jessie's Girl · Rick Springfield", name: 'playlist', value: 'jessies-girl' },
   },
 ];
 
