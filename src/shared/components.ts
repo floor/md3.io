@@ -1,40 +1,4 @@
-import type { BadgeConfig } from 'material/components/badge';
-import type { ProgressConfig } from 'material/components/progress';
-import type { LoadingIndicatorConfig } from 'material/components/loading-indicator';
-import type { SnackbarConfig } from 'material/components/snackbar';
-import type { TooltipConfig } from 'material/components/tooltip';
-import type { CardConfig } from 'material/components/card';
-import type { ListConfig, ListItem, ListSlot } from 'material/components/list';
-import type { CarouselConfig } from 'material/components/carousel';
-import { carouselPhotos, carouselPhotoUrl } from './carousel-photos';
-import type { DividerConfig } from 'material/components/divider';
-import type { DialogConfig } from 'material/components/dialog';
-import type { BottomSheetConfig } from 'material/components/bottom-sheet';
-import type { SideSheetConfig } from 'material/components/side-sheet';
-import type { NavigationRailConfig } from 'material/components/navigation-rail';
-import type { DrawerConfig } from 'material/components/drawer';
-import type { TabsConfig } from 'material/components/tabs';
-import type { MenuConfig } from 'material/components/menu';
-import type { TopAppBarConfig } from 'material/components/top-app-bar';
-import type { BottomAppBarConfig } from 'material/components/bottom-app-bar';
-import type { ToolbarConfig, ToolbarButtonItem, ToolbarItem } from 'material/components/toolbar';
-import type { FabMenuConfig } from 'material/components/fab-menu';
-import type { SwitchConfig } from 'material/components/switch';
-import type { RadiosConfig } from 'material/components/radios';
-import type { ChipsConfig } from 'material/components/chips';
-import type { SliderConfig } from 'material/components/slider';
-import type { TextFieldConfig } from 'material/components/text-field';
-import type { SelectConfig } from 'material/components/select';
-import type { SearchConfig } from 'material/components/search';
-import type { DatePickerConfig } from 'material/components/datepicker';
-import type { TimePickerConfig } from 'material/components/timepicker';
-import { TIME_PICKER_TYPE, TIME_FORMAT, TIME_PICKER_ORIENTATION } from 'material/components/timepicker';
-import type { CheckboxConfig } from 'material/components/checkbox';
-import type { IconButtonConfig } from 'material/components/icon-button';
-import type { ButtonGroupConfig } from 'material/components/button-group';
-import type { SplitButtonConfig } from 'material/components/split-button';
-import type { FabConfig } from 'material/components/fab';
-import type { ExtendedFabConfig } from 'material/components/extended-fab';
+import type { ToolbarConfig, ToolbarButtonItem } from 'material/components/toolbar';
 import { symbols } from './icons';
 import { nameIcons } from './icon-code';
 import { icons as buttonIcons, themes } from './button';
@@ -60,10 +24,9 @@ export const componentIcons: Record<string, string> = {
 };
 // The types and control helpers live in content/types.ts so the content modules can
 // import them without importing this registry; re-exported here for their consumers.
-import { type ComponentState, type Control, type Scenario, section, choose, toggle, text, range, date, size, square, disabled, icon, pick, string, bool, shape, tones, positions, position, toneControl, iconMarkup, fabPosition, paragraph, landscape } from './content/types';
+import { type ComponentState, type Control, string, bool } from './content/types';
 export type { ComponentState, Control, Scenario } from './content/types';
-// The Actions, Selection & input and Navigation components' content modules, one per
-// component.
+// Every component's content module, one per component.
 import { buttonComponent } from './content/button';
 import { buttonGroupComponent } from './content/button-group';
 import { extendedFabComponent } from './content/extended-fab';
