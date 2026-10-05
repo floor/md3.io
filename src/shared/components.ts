@@ -613,6 +613,23 @@ const optionSetControl: Control = {
   },
 };
 
+const allRadioValues = [
+  'standard', 'express', 'pickup',
+  'relevance', 'lowest-price', 'highest-rating', 'most-reviewed',
+  'none', 'callisto', 'ganymede', 'luna',
+  'en', 'zh', 'es',
+] as const;
+
+const radioValueControl: Control = {
+  ...choose('value', 'Selected', allRadioValues, 'standard', 'select'),
+  labels: {
+    standard: 'Standard', express: 'Express', pickup: 'Pick up',
+    relevance: 'Relevance', 'lowest-price': 'Lowest price', 'highest-rating': 'Highest rating', 'most-reviewed': 'Most reviewed',
+    none: 'None', callisto: 'Callisto', ganymede: 'Ganymede', luna: 'Luna',
+    en: 'English', zh: 'Chinese (Mandarin)', es: 'Spanish',
+  },
+};
+
 /**
  * The radio buttons' scenarios, from m3.material.io (read 5 October 2026). Options name
  * playground controls only. Radio buttons allow selecting a single option from a set of
@@ -853,7 +870,7 @@ export const components = {
     scenarios: radiosScenarios,
     controls: [
       ...section('Layout', [choose('direction', 'Direction', ['vertical', 'horizontal'], 'vertical'), toggle('labelBefore', 'Labels before')]),
-      ...section('Content', [optionSetControl, text('name', 'Name', 'delivery'), choose('value', 'Selected', ['standard', 'express', 'pickup'], 'standard', 'select')]),
+      ...section('Content', [optionSetControl, text('name', 'Name', 'delivery'), radioValueControl]),
       ...section('Behavior', [toggle('disableExpress', 'Disable express', false, 'isDelivery'), disabled]),
     ],
     config: (state: ComponentState): RadiosConfig => {
