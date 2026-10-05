@@ -247,6 +247,155 @@ const buttonScenarios: readonly Scenario[] = [
     options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
   },
 ];
+/**
+ * The chips' scenarios, from m3.material.io (read 5 October 2026). Labels stay Hiking, Music
+ * and Food (fixed in `config()`); options name playground controls only, so applying one is
+ * `normalizeComponentState(slug, { ...initials, ...options })`. Filters select two chips —
+ * "Multiple chips can be selected or unselected" — and One filter uses the set's single-select
+ * mode. Contacts' avatar is the input chip's leading image; Assist carries the leading icon its
+ * anatomy lists; the suggestion chip's anatomy is its container and label, so it has none.
+ */
+const chipsScenarios: readonly Scenario[] = [
+  {
+    id: 'filters', name: 'Filters', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Filter chips with several selected.',
+    options: { type: 'filter', multiSelect: true, hiking: true, music: true, food: false },
+  },
+  {
+    id: 'one-filter', name: 'One filter', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Filter chips with a single selection.',
+    options: { type: 'filter', multiSelect: false, hiking: true },
+  },
+  {
+    id: 'contacts', name: 'Contacts', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Input chips with an avatar.',
+    options: { type: 'input', avatar: true },
+  },
+  {
+    id: 'assist', name: 'Assist', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Assist chips with a leading icon.',
+    options: { type: 'assist', icons: true },
+  },
+  {
+    id: 'suggestion', name: 'Suggestion', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Suggestion chips.',
+    options: { type: 'suggestion' },
+  },
+];
+/**
+ * The checkbox's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Parent and children sets (the guidelines' default with
+ * Pickles, Tomato, Lettuce, and Cheese) can have all items selected or unselected.
+ * A standalone checkbox turns a single item on or off. The error scenario displays an
+ * unselected required checkbox in an invalid state.
+ */
+const checkboxScenarios: readonly Scenario[] = [
+  {
+    id: 'all-selected', name: 'All selected', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'A parent checkbox with all child items selected.',
+    options: { family: true, state: 'checked' },
+  },
+  {
+    id: 'unselected', name: 'Unselected', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'A parent checkbox with all child items unselected.',
+    options: { family: true, state: 'unchecked' },
+  },
+  {
+    id: 'single', name: 'Single choice', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'A standalone checkbox to turn an item on or off.',
+    options: { family: false, state: 'checked' },
+  },
+  {
+    id: 'error', name: 'Error', source: 'https://m3.material.io/components/checkbox/overview',
+    description: 'An unselected required checkbox in an error state.',
+    options: { family: false, state: 'unchecked', error: true, required: true },
+  },
+];
+/**
+ * The switch's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Switches toggle settings on and off immediately. The handle
+ * can show no icon, a checkmark when selected, or both on and off icons; the element
+ * snippet omits the unselected icon because it is not yet exposed by <m-switch>.
+ */
+const switchScenarios: readonly Scenario[] = [
+  {
+    id: 'off', name: 'Off', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'A switch in the unselected, off position.',
+    options: { checked: false },
+  },
+  {
+    id: 'both-icons', name: 'Both icons', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'A switch with checkmark and close icons. The element does not expose the unselected icon, so its snippet omits it.',
+    options: { icons: 'both', checked: true },
+  },
+  {
+    id: 'no-icon', name: 'No icon', source: 'https://m3.material.io/components/switch/guidelines',
+    description: 'A switch without an icon in the handle.',
+    options: { icons: 'none' },
+  },
+  {
+    id: 'disabled', name: 'Disabled', source: 'https://m3.material.io/components/switch/overview',
+    description: 'A disabled switch that cannot be toggled.',
+    options: { disabled: true },
+  },
+];
+/**
+ * The radio buttons' scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Radio buttons allow selecting a single option from a set of
+ * five or fewer options. One option is always pre-selected, and unavailable options can be
+ * disabled.
+ */
+const radiosScenarios: readonly Scenario[] = [
+  {
+    id: 'selected', name: 'Express delivery', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'A radio button set with the express option selected.',
+    options: { value: 'express' },
+  },
+  {
+    id: 'disabled-option', name: 'Disabled option', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'A radio button set with an unavailable option disabled.',
+    options: { disableExpress: true },
+  },
+  {
+    id: 'disabled', name: 'Disabled', source: 'https://m3.material.io/components/radio-button/overview',
+    description: 'A disabled radio button set.',
+    options: { disabled: true },
+  },
+];
+/**
+ * The slider's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Follows the guidelines' three variants: standard, centered
+ * (around zero), and range (with two handles). Standard sliders at medium size can feature
+ * an inset icon that swaps to mute at the minimum, tick marks indicate discrete stops,
+ * and tracks can be vertical.
+ */
+const sliderScenarios: readonly Scenario[] = [
+  {
+    id: 'range', name: 'Range', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'A range slider with two handles defining a minimum and maximum value.',
+    options: { variant: 'range', value: '20', secondValue: '70' },
+  },
+  {
+    id: 'centered', name: 'Centered', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'A centered slider for a positive and negative value range around zero.',
+    options: { variant: 'centered', value: '70' },
+  },
+  {
+    id: 'inset-icon', name: 'Inset icon', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'A medium slider with a volume icon inside the track.',
+    options: { size: 'M', insetIcon: true, value: '40' },
+  },
+  {
+    id: 'stops', name: 'Discrete stops', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'A slider with tick marks at predetermined stop indicators.',
+    options: { ticks: true, step: '10', value: '40' },
+  },
+  {
+    id: 'vertical', name: 'Vertical', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'A standard slider in a vertical orientation.',
+    options: { orientation: 'vertical', value: '50' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -390,7 +539,7 @@ export const components = {
     description: 'Make a choice, or represent a partial selection. Explore checkbox states, labels, and form behavior.',
     summary: 'Single choices and mixed selections.',
     styles: ['checkbox'],
-    scenarios: [],
+    scenarios: checkboxScenarios,
     controls: [
       ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
       // The m3.material.io checkbox guidelines' parent and children: the label names
@@ -412,7 +561,7 @@ export const components = {
     group: 'Selection & input', name: 'Switch', factory: 'createSwitch', variable: 'toggle',
     description: 'Turn a setting on or off. Try labels, supporting text, and interactive states.',
     summary: 'Settings that take effect immediately.', styles: ['switch'],
-    scenarios: [],
+    scenarios: switchScenarios,
     controls: [
       ...section('Appearance', [choose('icons', 'Icons', ['none', 'selected', 'both'], 'selected'), choose('labelPosition', 'Label position', ['start', 'end'], 'start')]),
       ...section('Content', [text('label', 'Label', 'Notifications'), text('supportingText', 'Supporting text', 'Stay up to date'), text('name', 'Name', 'notifications')]),
@@ -429,7 +578,7 @@ export const components = {
     group: 'Selection & input', name: 'Radio buttons', factory: 'createRadios', variable: 'radios',
     description: 'Choose one option from a set. Explore orientation, label placement, and disabled options.',
     summary: 'One choice from a related set.', styles: ['radios'],
-    scenarios: [],
+    scenarios: radiosScenarios,
     controls: [
       ...section('Layout', [choose('direction', 'Direction', ['vertical', 'horizontal'], 'vertical'), toggle('labelBefore', 'Labels before')]),
       ...section('Content', [text('name', 'Name', 'delivery'), choose('value', 'Selected', ['standard', 'express', 'pickup'], 'standard', 'select')]),
@@ -443,7 +592,7 @@ export const components = {
     group: 'Selection & input', name: 'Chips', factory: 'createChips', variable: 'chips',
     description: 'Explore compact choices and actions. Try the four chip types, elevation, icons and avatars, and single or multiple selection.',
     summary: 'Compact choices, filters, and actions.', styles: ['chips'],
-    scenarios: [],
+    scenarios: chipsScenarios,
     controls: [
       // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
       // avatar for input chips; selection for filter and input chips.
@@ -462,7 +611,7 @@ export const components = {
     group: 'Selection & input', name: 'Slider', factory: 'createSlider', variable: 'slider',
     description: 'Choose a value or a range. Explore track sizes, steps, colors, and value indicators.',
     summary: 'Values and ranges along a track.', styles: ['slider'],
-    scenarios: [],
+    scenarios: sliderScenarios,
     controls: [
       ...section('Appearance', [choose('size', 'Size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('color', 'Color', ['primary', 'secondary', 'tertiary', 'error'], 'primary', 'select'), toggle('ticks', 'Tick marks'), toggle('showValue', 'Value indicator', true)]),
       ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }, toggle('insetIcon', 'Inset icon', false, 'insetIconAllowed')]),
