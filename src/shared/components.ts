@@ -342,8 +342,8 @@ const switchScenarios: readonly Scenario[] = [
 /**
  * The radio buttons' scenarios, from m3.material.io (read 5 October 2026). Options name
  * playground controls only. Radio buttons allow selecting a single option from a set of
- * five or fewer options. One option is always pre-selected, unavailable options can be
- * disabled, and orientation can be horizontal.
+ * five or fewer options. One option is always pre-selected, and unavailable options can be
+ * disabled.
  */
 const radiosScenarios: readonly Scenario[] = [
   {
@@ -355,11 +355,6 @@ const radiosScenarios: readonly Scenario[] = [
     id: 'disabled-option', name: 'Disabled option', source: 'https://m3.material.io/components/radio-button/guidelines',
     description: 'A radio button set with an unavailable option disabled.',
     options: { disableExpress: true },
-  },
-  {
-    id: 'horizontal', name: 'Horizontal', source: 'https://m3.material.io/components/radio-button/guidelines',
-    description: 'Radio buttons arranged horizontally in a row.',
-    options: { direction: 'horizontal' },
   },
   {
     id: 'disabled', name: 'Disabled', source: 'https://m3.material.io/components/radio-button/overview',
