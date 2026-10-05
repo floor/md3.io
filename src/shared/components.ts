@@ -300,6 +300,32 @@ const buttonGroupScenarios: readonly Scenario[] = [
     options: { equalWidth: true },
   },
 ];
+/**
+ * The split button's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; the menus stay the playground's save and share sets.
+ */
+const splitButtonScenarios: readonly Scenario[] = [
+  {
+    id: 'share', name: 'Share', source: 'https://m3.material.io/components/split-button/overview',
+    description: 'An action with a menu of related actions: share, with link, email, and export.',
+    options: { text: 'Share', icon: 'send', menu: 'share', trailingLabel: 'More share options' },
+  },
+  {
+    id: 'tonal', name: 'Tonal', source: 'https://m3.material.io/components/split-button/overview',
+    description: 'The tonal color style, at home beside common buttons.',
+    options: { variant: 'tonal' },
+  },
+  {
+    id: 'outlined', name: 'Outlined', source: 'https://m3.material.io/components/split-button/overview',
+    description: 'The outlined color style, a quieter action with its menu.',
+    options: { variant: 'outlined' },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/split-button/guidelines',
+    description: 'Scaled up for large breakpoints, or extra emphasis in smaller windows.',
+    options: { size: 'l' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -361,7 +387,7 @@ export const components = {
     description: 'A primary action and more possibilities. Open the trailing menu to try the alternatives.',
     summary: 'One primary action, with more options close by.',
     styles: ['menu', 'progress', 'button', 'split-button'],
-    scenarios: [],
+    scenarios: splitButtonScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled', 'select'), size]),
       ...section('Content', [icon(Object.keys(buttonIcons), 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
