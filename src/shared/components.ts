@@ -326,6 +326,43 @@ const splitButtonScenarios: readonly Scenario[] = [
     options: { size: 'l' },
   },
 ];
+/**
+ * The FAB's scenarios, from m3.material.io (read 5 October 2026). Options name playground
+ * controls only. Share uses the send icon: the guidelines name the action, the playground's
+ * icon control has no share icon.
+ */
+const fabScenarios: readonly Scenario[] = [
+  {
+    id: 'create', name: 'Create', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'The most important action on the screen, with a clear add icon.',
+    options: { ariaLabel: 'Create' },
+  },
+  {
+    id: 'edit', name: 'Edit', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'An edit action; the guidelines name the edit icon as clear and simple.',
+    options: { icon: 'edit', ariaLabel: 'Edit' },
+  },
+  {
+    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'A constructive Favorite action, one the guidelines name.',
+    options: { icon: 'heart', ariaLabel: 'Favorite' },
+  },
+  {
+    id: 'share', name: 'Share', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'A constructive Share action; the send icon stands in for share.',
+    options: { icon: 'send', ariaLabel: 'Share' },
+  },
+  {
+    id: 'medium', name: 'Medium', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'The medium size, recommended for most situations.',
+    options: { size: 'medium' },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'The large size, when the primary action needs to be prominent.',
+    options: { size: 'large' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -409,7 +446,7 @@ export const components = {
     description: 'Give your primary action a place to stand out. Explore color, size, and floating positions.',
     summary: 'A floating action with a clear purpose.',
     styles: ['fab'],
-    scenarios: [],
+    scenarios: fabScenarios,
     controls: [
       ...section('Appearance', [toneControl, choose('size', 'Size', ['default', 'medium', 'large'], 'default', 'select'),
         position, toggle('lowered', 'Lowered elevation')]),
