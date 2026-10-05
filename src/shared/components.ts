@@ -17,7 +17,7 @@ import type { TabsConfig } from 'material/components/tabs';
 import type { MenuConfig } from 'material/components/menu';
 import type { TopAppBarConfig } from 'material/components/top-app-bar';
 import type { BottomAppBarConfig } from 'material/components/bottom-app-bar';
-import type { ToolbarConfig } from 'material/components/toolbar';
+import type { ToolbarConfig, ToolbarButtonItem, ToolbarItem } from 'material/components/toolbar';
 import type { FabMenuConfig } from 'material/components/fab-menu';
 import type { SwitchConfig } from 'material/components/switch';
 import type { RadiosConfig } from 'material/components/radios';
@@ -125,6 +125,127 @@ const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
     : [['heart', 'Favorite'], ['bookmark', 'Bookmark'], ['send', 'Share'], ['inbox', 'Archive'], ['edit', 'Edit']])
     .slice(0, Number(state.items))
     .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
+/** What a named action set adds beside the toolbar's config: the FAB some sets pair with, and the trailing overflow menu's items. */
+export interface ToolbarContent {
+  fab?: FabConfig;
+  fabPosition?: 'start' | 'end';
+  /** The items of the menu the toolbar's own trailing more button opens. */
+  overflow?: { id: string; text: string }[];
+}
+/** One named action set: a real situation's items, with the FAB or overflow menu some call for. */
+export interface ToolbarActionSet extends ToolbarContent {
+  /** The set's name, as the Actions control shows it. */
+  name: string;
+  /** The toolbar's accessible name. */
+  ariaLabel: string;
+  items: ToolbarItem[];
+}
+/**
+ * The toolbar playground's named action sets, the situations of m3.material.io's toolbars
+ * figure (read 5 October 2026, /components/toolbars/guidelines): call controls with an
+ * end-call FAB, text formatting, browser navigation, a document editing rail, step
+ * navigation, and an open email's actions. Purely data — the preview and the generated
+ * code build the FAB and the overflow menu from them, and the element tabs slot the
+ * items and the FAB. No set is chosen (`default`) and these are all skipped: today's
+ * formatting and action sets stay exactly as they were.
+ */
+const toolbarActionSets: Record<string, ToolbarActionSet> = {
+  'video-call': {
+    name: 'Video call',
+    ariaLabel: 'Call controls',
+    items: [
+      { icon: symbols.videocamOff, ariaLabel: 'Camera off' },
+      { icon: symbols.mic, ariaLabel: 'Microphone' },
+      { icon: symbols.frontHand, ariaLabel: 'Raise hand', toggle: true, selected: true },
+    ],
+    // The figure's end-call button reads red; the FAB has no error colour, so it pairs as tertiary-container.
+    fab: { icon: symbols.callEnd, ariaLabel: 'End call', variant: 'tertiary-container' },
+    fabPosition: 'end',
+    overflow: [
+      { id: 'chat', text: 'Chat' },
+      { id: 'participants', text: 'Participants' },
+      { id: 'settings', text: 'Settings' },
+    ],
+  },
+  'text-formatting': {
+    name: 'Text formatting',
+    ariaLabel: 'Formatting',
+    items: [
+      { icon: symbols.bold, ariaLabel: 'Bold', toggle: true, selected: true },
+      { icon: symbols.italic, ariaLabel: 'Italic', toggle: true },
+      { icon: symbols.underline, ariaLabel: 'Underline', toggle: true },
+      { icon: symbols.formatColorText, ariaLabel: 'Text colour' },
+      { icon: symbols.formatColorFill, ariaLabel: 'Fill colour' },
+    ],
+  },
+  browser: {
+    name: 'Browser',
+    ariaLabel: 'Page navigation',
+    items: [
+      { icon: symbols.arrowBack, ariaLabel: 'Back' },
+      { icon: symbols.arrowForward, ariaLabel: 'Forward' },
+      // The guidelines' one emphasized action: filled and wide, mid-bar by item order.
+      { icon: symbols.add, ariaLabel: 'New tab', variant: 'filled', width: 'wide' },
+      { icon: symbols.tab, ariaLabel: 'Tabs' },
+    ],
+    overflow: [
+      { id: 'bookmarks', text: 'Bookmarks' },
+      { id: 'downloads', text: 'Downloads' },
+      { id: 'history', text: 'History' },
+    ],
+  },
+  'document-editing': {
+    name: 'Document editing',
+    ariaLabel: 'Editing tools',
+    items: [
+      { icon: symbols.undo, ariaLabel: 'Undo' },
+      { icon: symbols.redo, ariaLabel: 'Redo' },
+      { icon: symbols.add, ariaLabel: 'Add' },
+      { icon: symbols.formatColorText, ariaLabel: 'Text colour' },
+    ],
+    overflow: [
+      { id: 'link', text: 'Insert link' },
+      { id: 'image', text: 'Insert image' },
+      { id: 'find', text: 'Find and replace' },
+    ],
+  },
+  'step-navigation': {
+    name: 'Step navigation',
+    ariaLabel: 'Step navigation',
+    items: [{ text: 'Back', variant: 'text' }, { text: 'Next', variant: 'filled' }],
+  },
+  'email-actions': {
+    name: 'Email actions',
+    ariaLabel: 'Email actions',
+    items: [
+      { icon: symbols.archive, ariaLabel: 'Archive' },
+      { icon: symbols.delete, ariaLabel: 'Delete' },
+      { icon: symbols.markEmailUnread, ariaLabel: 'Mark as unread' },
+      { icon: symbols.snooze, ariaLabel: 'Snooze' },
+      { icon: symbols.star, ariaLabel: 'Star' },
+    ],
+  },
+};
+const toolbarSet = (state: ComponentState): ToolbarActionSet | undefined => toolbarActionSets[string(state, 'actions')];
+/** What a toolbar preview adds beside its config: the chosen set's FAB and overflow menu, if it has them. */
+export function toolbarContent(state: ComponentState): ToolbarContent {
+  const set = toolbarSet(state);
+  return set
+    ? { ...(set.fab ? { fab: set.fab, ...(set.fabPosition === 'start' ? { fabPosition: set.fabPosition } : {}) } : {}), ...(set.overflow ? { overflow: set.overflow } : {}) }
+    : {};
+}
+/** The toolbar's config as its element takes it: icon buttons in `items`, text buttons in `buttons`, and the FAB slotted beside them. */
+export function toolbarElementConfig(state: ComponentState): Record<string, unknown> {
+  const { items: allItems, ...config } = components.toolbar.config(state) as ToolbarConfig;
+  const items = (allItems ?? []).filter(item => typeof (item as ToolbarButtonItem).text !== 'string');
+  const buttons = (allItems ?? []).filter((item): item is ToolbarButtonItem => typeof (item as ToolbarButtonItem).text === 'string');
+  const content = toolbarContent(state);
+  return { ...config, ...(items.length ? { items } : {}), ...(buttons.length ? { buttons } : {}), ...(content.fab ? { fab: content.fab } : {}) };
+}
+const toolbarActions: Control = {
+  ...choose('actions', 'Actions', ['default', ...Object.keys(toolbarActionSets)], 'default', 'select'),
+  labels: { default: 'Default', ...Object.fromEntries(Object.entries(toolbarActionSets).map(([id, set]) => [id, set.name])) },
+};
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 /** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
 const carouselSlides = (state: ComponentState) => {
@@ -969,17 +1090,21 @@ export const components = {
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
-      ...section('Content', [choose('items', 'Item count', ['2', '3', '4', '5'], '4'), toggle('toggles', 'Formatting toggles', true)]),
+      // The item count and the toggles configure the default sets; a named set fixes the whole list.
+      ...section('Content', [toolbarActions, { ...choose('items', 'Item count', ['2', '3', '4', '5'], '4'), enabledWhen: 'actionsDefault' }, { ...toggle('toggles', 'Formatting toggles', true), enabledWhen: 'actionsDefault' }]),
     ],
-    config: (state: ComponentState): ToolbarConfig => ({
-      variant: pick(state, 'variant', ['docked', 'floating'], 'floating'),
-      color: pick(state, 'color', ['standard', 'vibrant'], 'standard'),
-      orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'),
-      arrangement: pick(state, 'arrangement', ['spread', 'center'], 'spread'),
-      ...(state.elevated ? {} : { elevated: false }),
-      ariaLabel: state.toggles ? 'Formatting' : 'Actions',
-      items: toolbarItems(state),
-    }),
+    config: (state: ComponentState): ToolbarConfig => {
+      const set = toolbarSet(state);
+      return {
+        variant: pick(state, 'variant', ['docked', 'floating'], 'floating'),
+        color: pick(state, 'color', ['standard', 'vibrant'], 'standard'),
+        orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'),
+        arrangement: pick(state, 'arrangement', ['spread', 'center'], 'spread'),
+        ...(state.elevated ? {} : { elevated: false }),
+        ariaLabel: set ? set.ariaLabel : state.toggles ? 'Formatting' : 'Actions',
+        items: set ? set.items : toolbarItems(state),
+      };
+    },
   },
   card: {
     group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
@@ -1200,6 +1325,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.toggleAllowed = state.variant !== 'text';
     if (!state.toggleAllowed) state.toggle = false;
   }
+  // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
+  if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
@@ -1217,6 +1344,7 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
   // The button beside an overlay that opens it: the drawer's while it is modal or closed.
   const trigger = (text: string, ariaLabel?: string) => ({ trigger: { text, variant: 'tonal', ...(ariaLabel ? { ariaLabel } : {}) } });
   switch (slug) {
+    case 'toolbar': return toolbarElementConfig(state);
     case 'menu': return { ...config, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
     case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
     case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
@@ -1364,10 +1492,29 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
       if (!state.visible) after += 'bottomBar.hide();\n';
     }
   }
+  // A toolbar's named action set pairs a FAB with the bar (passed at creation, as the
+  // factory takes it) and opens a menu from the trailing more button it adds itself.
+  let config = literal(component.config(state));
+  if (slug === 'toolbar') {
+    const content = toolbarContent(state);
+    if (content.fab) {
+      imports.push('createFab');
+      before = `const fab = createFab(${literal(content.fab)});\n\n`;
+      cleanup = '// fab.destroy();\n';
+    }
+    if (content.overflow) imports.push('createMenu');
+    // The menu's items, indented to sit inside the createMenu call in the config literal.
+    const menuItems = content.overflow ? literal(content.overflow).split('\n').map((line, index) => index ? `  ${line}` : line).join('\n') : '';
+    const extras = [
+      ...(content.fab ? ['fab: fab.element', ...(content.fabPosition === 'start' ? ["fabPosition: 'start'"] : [])] : []),
+      ...(content.overflow ? [`overflow: (opener) => createMenu({ opener, items: ${menuItems} })`] : []),
+    ];
+    if (extras.length) config = config.replace(/\n\}$/, `,\n  ${extras.join(',\n  ')}\n}`);
+  }
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `${before}const ${component.variable} = ${component.factory}(${literal(component.config(state))});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;
+    `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;
 }
 
 function communicationCode(slug: ComponentSlug, state: ComponentState): string {
