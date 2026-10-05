@@ -83,21 +83,22 @@ try {
   // (c) `?scenario=` on a page with no Scenario section is ignored quietly: the load reports
   // ready with the plain status line, the address keeps the parameter, and the controls are
   // the Default ones, with no console error.
+  // Divider is used because it has nothing to vary and stays without scenarios by design.
   errors.length = 0;
-  await page.goto(`${base}components/checkbox/?scenario=x`);
+  await page.goto(`${base}components/divider/?scenario=x`);
   // Wait for the ready round-trip without matching a status text: a scenario message would
   // pass a "not loading" wait and must fail the assertion below, not the wait.
   await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
-  const checkboxStatus = await page.locator('#playground-status').textContent();
-  assert(checkboxStatus === 'Ready to try', `checkbox/?scenario=x: the status reads ${JSON.stringify(checkboxStatus)}`);
-  assert(new URL(page.url()).searchParams.get('scenario') === 'x', 'checkbox/?scenario=x: the load rewrote the address');
-  const checkboxInitial = initialComponentState('checkbox');
-  const checkboxShown = await readShown(components.checkbox.controls.map(control => control.key));
-  for (const control of components.checkbox.controls) {
-    const expected = control.kind === 'toggle' ? checkboxInitial[control.key] === true : String(checkboxInitial[control.key]);
-    assert(checkboxShown[control.key] === expected, `checkbox/?scenario=x: ${control.key} shows ${JSON.stringify(checkboxShown[control.key])}, expected ${JSON.stringify(expected)}`);
+  const dividerStatus = await page.locator('#playground-status').textContent();
+  assert(dividerStatus === 'Ready to try', `divider/?scenario=x: the status reads ${JSON.stringify(dividerStatus)}`);
+  assert(new URL(page.url()).searchParams.get('scenario') === 'x', 'divider/?scenario=x: the load rewrote the address');
+  const dividerInitial = initialComponentState('divider');
+  const dividerShown = await readShown(components.divider.controls.map(control => control.key));
+  for (const control of components.divider.controls) {
+    const expected = control.kind === 'toggle' ? dividerInitial[control.key] === true : String(dividerInitial[control.key]);
+    assert(dividerShown[control.key] === expected, `divider/?scenario=x: ${control.key} shows ${JSON.stringify(dividerShown[control.key])}, expected ${JSON.stringify(expected)}`);
   }
-  assert(errors.length === 0, `checkbox/?scenario=x: ${errors.join('\n')}`);
+  assert(errors.length === 0, `divider/?scenario=x: ${errors.join('\n')}`);
   // The button's toggle controls: the selected state reaches the preview, the vanilla
   // panel, and the element panel. The element has no toggle attribute, so that panel
   // names toggle and selected as not yet exposed.
