@@ -307,6 +307,37 @@ const searchScenarios: readonly Scenario[] = [
     options: { value: 'Paris' },
   },
 ];
+/**
+ * The date picker's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only.
+ */
+const datePickerScenarios: readonly Scenario[] = [
+  {
+    id: 'range', name: 'Range', source: 'https://m3.material.io/components/date-pickers/guidelines',
+    description: 'A start and end date, as for booking a flight or reserving a hotel.',
+    options: { range: true },
+  },
+  {
+    id: 'modal', name: 'Modal', source: 'https://m3.material.io/components/date-pickers/guidelines',
+    description: 'The modal calendar, for dates not in the distant past or future.',
+    options: { variant: 'modal' },
+  },
+  {
+    id: 'modal-input', name: 'Modal input', source: 'https://m3.material.io/components/date-pickers/guidelines',
+    description: 'Manual entry with keyboard numbers, when no calendar view is needed.',
+    options: { variant: 'modal-input' },
+  },
+  {
+    id: 'fullscreen', name: 'Full screen', source: 'https://m3.material.io/components/date-pickers/guidelines',
+    description: 'The full-screen modal, recommended on compact breakpoints for readability.',
+    options: { variant: 'fullscreen' },
+  },
+  {
+    id: 'year', name: 'Year first', source: 'https://m3.material.io/components/date-pickers/guidelines',
+    description: 'The year view first, for a distant past or future date, like a date of birth.',
+    options: { initialView: 'year', label: 'Date of birth' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -594,7 +625,7 @@ export const components = {
     group: 'Selection & input', name: 'Date picker', factory: 'createDatePicker', variable: 'datePicker',
     description: 'Choose a date or enter one by keyboard. Explore calendar and input modes, ranges, and selection limits.',
     summary: 'Calendar and keyboard entry for dates and ranges.', styles: ['datepicker'],
-    scenarios: [],
+    scenarios: datePickerScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input', 'fullscreen'], 'docked', 'select'), choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day')]),
       ...section('Content', [text('label', 'Label', 'Choose a date'), date('value', 'Date', '2026-09-21'), { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'range' }, choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select')]),
