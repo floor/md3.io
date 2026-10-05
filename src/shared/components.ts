@@ -340,6 +340,32 @@ const carouselScenarios: readonly Scenario[] = [
     options: { variant: 'full-screen', snap: true },
   },
 ];
+/**
+ * Dialog scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const dialogScenarios: readonly Scenario[] = [
+  {
+    id: 'basic', name: 'Basic alert', source: 'https://m3.material.io/components/dialogs/guidelines',
+    description: 'A basic modal dialog confirming a decision with dismissive and confirming actions.',
+    options: { size: 'small', open: true, title: 'Save your changes?', content: 'Keep your changes before leaving this view.', actions: true },
+  },
+  {
+    id: 'with-dividers', name: 'Dividers', source: 'https://m3.material.io/components/dialogs/guidelines',
+    description: 'A dialog with dividers separating scrollable body content from header and actions.',
+    options: { size: 'medium', open: true, divider: true, title: 'Terms and conditions', content: 'Please review the updated agreement before proceeding.', actions: true },
+  },
+  {
+    id: 'fullscreen', name: 'Full-screen', source: 'https://m3.material.io/components/dialogs/guidelines',
+    description: 'A full-screen dialog for complex tasks with form fields and clear action buttons.',
+    options: { size: 'fullscreen', open: true, title: 'New event', content: 'Create a new calendar entry.', closeButton: true, actions: true },
+  },
+  {
+    id: 'acknowledgement', name: 'Acknowledgement', source: 'https://m3.material.io/components/dialogs/guidelines',
+    description: 'A simple notification dialog requiring only user acknowledgement.',
+    options: { size: 'small', open: true, title: 'Storage limit reached', content: 'Your account has reached its cloud storage capacity.', actions: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -806,7 +832,7 @@ export const components = {
     group: 'Containment', name: 'Dialog', factory: 'createDialog', variable: 'dialog',
     description: 'Focus on a decision. Open a dialog to try its content, actions, and dismissal behavior.',
     summary: 'A focused surface for a task or decision.', styles: ['progress', 'button', 'divider', 'dialog'],
-    scenarios: [],
+    scenarios: dialogScenarios,
     controls: [
       ...section('Appearance', [choose('size', 'Size', ['small', 'medium', 'large', 'fullwidth', 'fullscreen'], 'small', 'select'), choose('animation', 'Animation', ['scale', 'slide-up', 'slide-down', 'fade'], 'scale', 'select'), toggle('divider', 'Dividers')]),
       ...section('Content', [text('title', 'Title', 'Save your changes?'), text('subtitle', 'Subtitle', ''), text('content', 'Body', 'Keep your changes before leaving this view.'), toggle('actions', 'Show actions', true), choose('footerAlignment', 'Action alignment', ['right', 'left', 'center', 'space-between'], 'right', 'select')]),
