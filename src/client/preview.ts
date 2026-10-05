@@ -35,7 +35,12 @@ import createSplitButton from 'material/components/split-button';
 import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
-import { appBarContent, checkboxChildChecked, checkboxChildren, currentCheckboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, radioAriaLabel, toolbarContent, trailingBehaviour, type ComponentState } from '../shared/components';
+import { componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { checkboxChildChecked, checkboxChildren, currentCheckboxChildren } from '../shared/content/checkbox';
+import { radioAriaLabel } from '../shared/content/radios';
+import { trailingBehaviour } from '../shared/content/text-field';
+import { toolbarContent } from '../shared/content/toolbar';
+import { appBarContent } from '../shared/content/top-app-bar';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;

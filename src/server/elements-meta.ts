@@ -160,6 +160,10 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'items', element: 'icon-button' },
     { from: 'buttons', element: 'button' },
     { from: 'fab', element: 'fab', slot: 'fab' },
+    // The overflow menu: the element anchors a slotted `slot="overflow"` child to its
+    // own trailing more button and opens it from there; the config array is the menu's
+    // items and `overflowPosition` the menu's `position`.
+    { from: 'overflow', element: 'menu', slot: 'overflow', nest: { element: 'menu-item', keys: { id: 'value' }, text: 'text' }, attribute: { from: 'overflowPosition', name: 'position' } },
   ],
   'bottom-app-bar': [
     { from: 'actions', element: 'icon-button', add: 'addAction' },

@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
-import { checkboxChildren } from '../src/shared/components';
+import { checkboxChildren } from '../src/shared/content/checkbox';
 
 // The checkbox playground (FLO-269): by default a parent ("Additions") over M3's four
 // children, mixed with Tomato alone checked. `family` off gives a single checkbox.

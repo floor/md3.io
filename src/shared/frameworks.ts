@@ -90,6 +90,13 @@ export interface SlottedMeta {
   closes?: string;
   /** In Vanilla, the factory's method that takes each child's element, when its config does not: the top app bar's `addTrailingElement`. */
   add?: string;
+  /**
+   * The config array is this element's own children: one slotted element wraps each item
+   * (the toolbar's overflow menu), the item keys mapped like a declaration child's.
+   */
+  nest?: { element: string; keys?: Record<string, string>; text?: string };
+  /** A second config key written as an attribute on the slotted element itself: the menu's `position` from `overflowPosition`. */
+  attribute?: { from: string; name: string };
 }
 
 /**
@@ -194,7 +201,9 @@ type Attr = { name: string; value: string | number | true; ref?: string; state?:
 /** A live property: set in script for HTML, a prop in the frameworks. */
 type Prop = { name: string; value: string | number | boolean; state?: string; ref?: string };
 /** A child element in one of the parent's slots; `closes` when a click on it closes the parent. */
-type Slotted = { element: string; native: boolean; attrs: Attr[]; text: string; after: boolean; closes: boolean };
+type Slotted = { element: string; native: boolean; attrs: Attr[]; text: string; after: boolean; closes: boolean; children: NestedChild[] };
+/** A child inside a slotted element: the overflow menu's items. */
+type NestedChild = { element: string; attrs: Attr[]; text: string };
 /** A declaration child, with its own children (a submenu). */
 type Child = { attrs: Attr[]; text: string; children: Child[] };
 
@@ -436,7 +445,7 @@ function plan(meta: ElementMeta, config: Config): Plan {
         if (written !== undefined) childAttrs.push({ name: entry.attributes[key]!, value: written });
       } else if (isSet(value) && !(entry.ignore?.[key] as unknown[] | undefined)?.includes(value)) omit(`${path}.${key}`);
     }
-    return { element: entry.element, native: !!entry.native, attrs: childAttrs, text: childText, after: 'after' in entry && !!entry.after, closes };
+    return { element: entry.element, native: !!entry.native, attrs: childAttrs, text: childText, after: 'after' in entry && !!entry.after, closes, children: [] };
   };
   const slotted: Slotted[] = [];
   for (const entry of meta.slotted ?? []) {
@@ -444,11 +453,41 @@ function plan(meta: ElementMeta, config: Config): Plan {
     if (raw === undefined || raw === null) continue;
     used.add(entry.from);
     const path = Array.isArray(raw) ? `${entry.from}[]` : entry.from;
+    // The config array is the slotted element's own children (the toolbar's overflow
+    // menu): one element holds them all, its position a second key, and the element
+    // anchors and opens it itself — no trigger, no open state to write.
+    if (entry.nest) {
+      const nestAttrs: Attr[] = entry.slot ? [{ name: 'slot', value: entry.slot }] : [];
+      if (entry.attribute) {
+        used.add(entry.attribute.from);
+        const position = plainValue(config[entry.attribute.from]);
+        if (position !== undefined) nestAttrs.push({ name: entry.attribute.name, value: position });
+      }
+      const nestedKeys = entry.nest.keys ?? {};
+      const nested: NestedChild[] = [raw].flat().flatMap(item => {
+        if (!isRecord(item)) {
+          omit(`${path}[]`);
+          return [];
+        }
+        const itemAttrs: Attr[] = [];
+        let itemText = '';
+        for (const [key, value] of Object.entries(item)) {
+          if (key === entry.nest!.text) itemText = String(value ?? '');
+          else if (nestedKeys[key]) {
+            const written = plainValue(value);
+            if (written !== undefined) itemAttrs.push({ name: nestedKeys[key]!, value: written });
+          } else if (isSet(value)) omit(`${path}[].${key}`);
+        }
+        return [{ element: entry.nest!.element, attrs: itemAttrs, text: itemText }];
+      });
+      slotted.push({ element: entry.element, native: !!entry.native, attrs: nestAttrs, text: '', after: !!entry.after, closes: false, children: nested });
+      continue;
+    }
     for (const item of [raw].flat()) {
       const childAttrs: Attr[] = entry.slot ? [{ name: 'slot', value: entry.slot }] : [];
       if (entry.markup && typeof item === 'string') {
         const markupValue = markupText(entry.element, item);
-        if (markupValue) slotted.push({ element: entry.element, native: !!entry.native, attrs: childAttrs, text: markupValue, after: !!entry.after, closes: false });
+        if (markupValue) slotted.push({ element: entry.element, native: !!entry.native, attrs: childAttrs, text: markupValue, after: !!entry.after, closes: false, children: [] });
       } else if (isRecord(item)) slotted.push(slottedChild(entry, item, path, childAttrs));
     }
   }
@@ -652,6 +691,10 @@ const literal = (value: unknown): string => (typeof value === 'string' ? quoteJs
 const element = (name: string, attributes: string, body: string): string =>
   body ? `<${name}${attributes}>${body}</${name}>` : `<${name}${attributes} />`;
 
+/** A slotted child's body: its text, or its own children (a menu's items) each on a line. */
+const slottedBody = (child: Slotted, item: (nested: NestedChild) => string): string =>
+  child.children.length ? `${child.children.map(nested => `\n  ${item(nested).replaceAll('\n', '\n  ')}`).join('')}\n` : escapeText(child.text);
+
 /**
  * The element's content, as each framework writes it: the declaration children,
  * or the slotted children around the text. Text alone stays on the tag's line.
@@ -718,7 +761,7 @@ function content(p: Plan, markup: Markup, indent: string, closing: string): stri
 /** The framework components a plan renders, host first: `Tabs`, `Tab`, `IconButton`. */
 const componentNames = (meta: ElementMeta, p: Plan, name: (element: string) => string): string[] =>
   [...new Set([meta.name, ...(meta.children && p.children.length ? [meta.children.name] : []),
-    ...p.slotted.filter(s => !s.native).map(s => s.element), ...(p.trigger && !p.trigger.native ? [p.trigger.element] : [])].map(name))];
+    ...p.slotted.filter(s => !s.native).flatMap(s => [s.element, ...s.children.map(nested => nested.element)]), ...(p.trigger && !p.trigger.native ? [p.trigger.element] : [])].map(name))];
 
 /**
  * The playground's theme and mode; or a docs example, which leaves out the setup
@@ -727,6 +770,12 @@ const componentNames = (meta: ElementMeta, p: Plan, name: (element: string) => s
  */
 export type CodeContext = { theme: string; mode: string; example?: undefined } | { theme?: undefined; mode?: undefined; example: ExampleParts };
 
+/**
+ * The base stylesheet is all a generated tab imports: the framework adapters (React,
+ * Vue, Svelte, Solid) and the web components adopt each component's CSS into their
+ * shadow roots themselves — every wrapper imports `material/elements/css/<name>` — so
+ * only the hand-written Vanilla tab lists the component's own styles.
+ */
 const styleImports = (context: CodeContext): string =>
   context.example ? '' : `import 'material/styles/base';\n${context.theme === 'baseline' ? '' : `import 'material/themes/${context.theme}';\n`}`;
 
@@ -748,7 +797,7 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const body = content(p, {
     child: { tag: childName, attrs: htmlAttrs, html: true },
     slotted: child => (child.native ? (child.text ? `<${child.element}${htmlAttrs(child.attrs)}>${escapeText(child.text)}</${child.element}>` : `<${child.element}${htmlAttrs(child.attrs)}>`)
-      : `<m-${child.element}${htmlAttrs(child.attrs)}>${escapeText(child.text)}</m-${child.element}>`),
+      : `<m-${child.element}${htmlAttrs(child.attrs)}>${slottedBody(child, nested => `<m-${nested.element}${htmlAttrs(nested.attrs)}>${escapeText(nested.text)}</m-${nested.element}>`)}</m-${child.element}>`),
   }, '  ', '');
   const variable = hostVariable(meta);
   const event = logEvent(meta);
@@ -928,7 +977,8 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const depth = p.trigger ? '  ' : '';
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
-    slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`, escapeText(child.text)),
+    slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`,
+      slottedBody(child, nested => element(pascal(nested.element), jsxAttrs(nested.attrs, !solid), escapeText(nested.text)))),
     text: name => `{${reads(name)}}`,
   }, `      ${depth}`, `    ${depth}`);
   const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(bindState(p.attrs, reads), !solid)}${jsxProps(bindState(p.props, reads))}`, body);
@@ -949,7 +999,8 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const constants = hoist(meta, p);
   const body = content(p, {
     child: { tag: Child, attrs: vueAttrs },
-    slotted: child => element(child.native ? child.element : `M${pascal(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`, escapeText(child.text)),
+    slotted: child => element(child.native ? child.element : `M${pascal(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`,
+      slottedBody(child, nested => element(`M${pascal(nested.element)}`, vueAttrs(nested.attrs), escapeText(nested.text)))),
     text: name => `{{ ${name} }}`,
     region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`<template #${slot}>`, lines, '</template>') },
   }, '    ', '  ');
@@ -974,10 +1025,19 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const constants = hoist(meta, p, '  ');
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
-    slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`, escapeText(child.text)),
+    slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`,
+      slottedBody(child, nested => element(pascal(nested.element), svelteAttrs(nested.attrs), escapeText(nested.text)))),
     text: name => `{${name}}`,
-    // a dashed slot is a camelCase snippet: `header-action` → `headerAction`
-    region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`{#snippet ${camel(slot)}()}`, lines, '{/snippet}') },
+    // A dashed slot is a camelCase snippet (`header-action` → `headerAction`), but the
+    // wrapper's runtime wraps a snippet's content in a span that takes the slot: a
+    // slotted element with children of its own must be the assigned element itself (the
+    // toolbar anchors the overflow menu to its more button by it), so it is written as
+    // a plain child with the slot attribute instead of a snippet.
+    region: {
+      slots: (meta.slots ?? []).filter(slot => !p.slotted.some(child =>
+        child.children.length && child.attrs.some(attr => attr.name === 'slot' && attr.value === slot))),
+      wrap: (slot, lines) => block(`{#snippet ${camel(slot)}()}`, lines, '{/snippet}'),
+    },
   }, '  ', '');
   const model = p.model ? ` bind:${p.model.name}` : '';
   const handlers = ownHandlers(meta, p).map(h => ` on${h.event}={${arrow(readsPayload(h), [handlerCall(h, field => `event.detail.${field}`)])}}`).join('');
