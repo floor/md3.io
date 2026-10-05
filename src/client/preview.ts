@@ -239,7 +239,7 @@ function create(state: ComponentState) {
       const control = createToolbar({
         ...components.toolbar.config(state),
         ...(fab ? { fab, fabPosition: content.fabPosition ?? 'end' } : {}),
-        ...(overflow ? { overflow: opener => createMenu({ opener, items: overflow }) } : {}),
+        ...(overflow ? { overflow: opener => createMenu({ opener, ...(content.overflowPosition ? { position: content.overflowPosition } : {}), items: overflow }) } : {}),
       });
       fab?.on('click', () => message(`${fab.element.getAttribute('aria-label')} clicked`));
       control.bar.addEventListener('click', (event) => {

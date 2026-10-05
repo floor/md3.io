@@ -131,6 +131,12 @@ export interface ToolbarContent {
   fabPosition?: 'start' | 'end';
   /** The items of the menu the toolbar's own trailing more button opens. */
   overflow?: { id: string; text: string }[];
+  /**
+   * Where that menu opens. A vertical rail's more button sits at its bottom, and the
+   * menu's default below-the-opener placement lands on top of the tools; beside the
+   * rail, on its inline end, is the natural side.
+   */
+  overflowPosition?: 'right-start';
 }
 /** One named action set: a real situation's items, with the FAB or overflow menu some call for. */
 export interface ToolbarActionSet extends ToolbarContent {
@@ -208,6 +214,10 @@ const toolbarActionSets: Record<string, ToolbarActionSet> = {
       { id: 'image', text: 'Insert image' },
       { id: 'find', text: 'Find and replace' },
     ],
+    // The rail's tools sit under the more button; its menu opens beside the rail
+    // instead (the menu's position, inline end of a vertical bar) — read in the
+    // menu's MENU_POSITION: 'right-start' places it right of the opener, top-aligned.
+    overflowPosition: 'right-start',
   },
   'step-navigation': {
     name: 'Step navigation',
@@ -231,7 +241,7 @@ const toolbarSet = (state: ComponentState): ToolbarActionSet | undefined => tool
 export function toolbarContent(state: ComponentState): ToolbarContent {
   const set = toolbarSet(state);
   return set
-    ? { ...(set.fab ? { fab: set.fab, ...(set.fabPosition === 'start' ? { fabPosition: set.fabPosition } : {}) } : {}), ...(set.overflow ? { overflow: set.overflow } : {}) }
+    ? { ...(set.fab ? { fab: set.fab, ...(set.fabPosition === 'start' ? { fabPosition: set.fabPosition } : {}) } : {}), ...(set.overflow ? { overflow: set.overflow } : {}), ...(set.overflowPosition ? { overflowPosition: set.overflowPosition } : {}) }
     : {};
 }
 /** The toolbar's config as its element takes it: icon buttons in `items`, text buttons in `buttons`, and the FAB slotted beside them. */
@@ -1546,7 +1556,7 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     const menuItems = content.overflow ? literal(content.overflow).split('\n').map((line, index) => index ? `  ${line}` : line).join('\n') : '';
     const extras = [
       ...(content.fab ? ['fab: fab.element', ...(content.fabPosition === 'start' ? ["fabPosition: 'start'"] : [])] : []),
-      ...(content.overflow ? [`overflow: (opener) => createMenu({ opener, items: ${menuItems} })`] : []),
+      ...(content.overflow ? [`overflow: (opener) => createMenu({ opener,${content.overflowPosition ? ` position: '${content.overflowPosition}',` : ''} items: ${menuItems} })`] : []),
     ];
     if (extras.length) config = config.replace(/\n\}$/, `,\n  ${extras.join(',\n  ')}\n}`);
   }
