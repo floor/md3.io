@@ -62,7 +62,8 @@ export const componentIcons: Record<string, string> = {
 // import them without importing this registry; re-exported here for their consumers.
 import { type ComponentState, type Control, type Scenario, section, choose, toggle, text, range, date, size, square, disabled, icon, pick, string, bool, shape, tones, positions, position, toneControl, iconMarkup, fabPosition, paragraph, landscape } from './content/types';
 export type { ComponentState, Control, Scenario } from './content/types';
-// The Actions and Selection & input components' content modules, one per component.
+// The Actions, Selection & input and Navigation components' content modules, one per
+// component.
 import { buttonComponent } from './content/button';
 import { buttonGroupComponent } from './content/button-group';
 import { extendedFabComponent } from './content/extended-fab';
@@ -80,147 +81,21 @@ import { sliderComponent } from './content/slider';
 import { switchComponent } from './content/switch';
 import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from './content/text-field';
 import { timePickerComponent } from './content/timepicker';
+import { bottomAppBarComponent } from './content/bottom-app-bar';
+import { drawerComponent } from './content/drawer';
+import { menuComponent } from './content/menu';
+import { navigationRailComponent } from './content/navigation-rail';
+import { tabsComponent } from './content/tabs';
+import { toolbarComponent, toolbarContent } from './content/toolbar';
+import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
 // Until the preview and its checkbox check import from the content modules, they keep
 // importing these from the registry.
 export { checkboxChildChecked, checkboxChildren } from './content/checkbox';
 export { trailingBehaviour } from './content/text-field';
 export type { TrailingBehaviour } from './content/text-field';
+export { appBarContent } from './content/top-app-bar';
+export { toolbarContent } from './content/toolbar';
 
-const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
-const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
-export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: componentIcons[icon], ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon] ?? icon, variant: 'standard' }));
-/** What an app bar preview adds beside its config: the icon buttons, the FAB, and the state it is put in. */
-export function appBarContent(slug: 'top-app-bar' | 'bottom-app-bar', state: ComponentState): { leading?: IconButtonConfig; actions: IconButtonConfig[]; fab?: FabConfig; scrolled?: boolean; visible?: boolean } {
-  return slug === 'top-app-bar'
-    ? { ...(state.leading ? { leading: { icon: componentIcons.menu, ariaLabel: 'Open navigation' } } : {}), actions: appBarActions(state), scrolled: state.scrolled === true }
-    : { actions: appBarActions(state), ...(state.hasFab ? { fab: { icon: componentIcons.add, ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
-}
-/** The toolbar preview's items: formatting toggles, or actions. */
-const toolbarItems = (state: ComponentState): IconButtonConfig[] =>
-  (state.toggles
-    ? [['bold', 'Bold'], ['italic', 'Italic'], ['underline', 'Underline'], ['edit', 'Edit'], ['add', 'Add']]
-    : [['heart', 'Favorite'], ['bookmark', 'Bookmark'], ['send', 'Share'], ['inbox', 'Archive'], ['edit', 'Edit']])
-    .slice(0, Number(state.items))
-    .map(([icon, ariaLabel], index) => ({ icon: componentIcons[icon!], ariaLabel, ...(state.toggles && index < 3 ? { toggle: true, selected: index === 0 } : {}) }));
-/** What a named action set adds beside the toolbar's config: the FAB some sets pair with, and the trailing overflow menu's items. */
-export interface ToolbarContent {
-  fab?: FabConfig;
-  fabPosition?: 'start' | 'end';
-  /** The items of the menu the toolbar's own trailing more button opens. */
-  overflow?: { id: string; text: string }[];
-  /**
-   * Where that menu opens. A vertical rail's more button sits at its bottom, and the
-   * menu's default below-the-opener placement lands on top of the tools; beside the
-   * rail, on its inline end, is the natural side.
-   */
-  overflowPosition?: 'right-start';
-}
-/** One named action set: a real situation's items, with the FAB or overflow menu some call for. */
-export interface ToolbarActionSet extends ToolbarContent {
-  /** The set's name, as the Actions control shows it. */
-  name: string;
-  /** The toolbar's accessible name. */
-  ariaLabel: string;
-  items: ToolbarItem[];
-}
-/**
- * The toolbar playground's named action sets, the situations of m3.material.io's toolbars
- * figure (read 5 October 2026, /components/toolbars/guidelines): call controls with an
- * end-call FAB, text formatting, browser navigation, a document editing rail, step
- * navigation, and an open email's actions. Purely data — the preview and the generated
- * code build the FAB and the overflow menu from them, and the element tabs slot the
- * items and the FAB. No set is chosen (`default`) and these are all skipped: today's
- * formatting and action sets stay exactly as they were.
- */
-const toolbarActionSets: Record<string, ToolbarActionSet> = {
-  'video-call': {
-    name: 'Video call',
-    ariaLabel: 'Call controls',
-    items: [
-      { icon: symbols.videocamOff, ariaLabel: 'Camera off' },
-      { icon: symbols.mic, ariaLabel: 'Microphone' },
-      { icon: symbols.frontHand, ariaLabel: 'Raise hand', toggle: true, selected: true },
-    ],
-    // The figure's end-call button reads red; the FAB has no error colour, so it pairs as tertiary-container.
-    fab: { icon: symbols.callEnd, ariaLabel: 'End call', variant: 'tertiary-container' },
-    fabPosition: 'end',
-    overflow: [
-      { id: 'chat', text: 'Chat' },
-      { id: 'participants', text: 'Participants' },
-      { id: 'settings', text: 'Settings' },
-    ],
-  },
-  'text-formatting': {
-    name: 'Text formatting',
-    ariaLabel: 'Formatting',
-    items: [
-      { icon: symbols.bold, ariaLabel: 'Bold', toggle: true, selected: true },
-      { icon: symbols.italic, ariaLabel: 'Italic', toggle: true },
-      { icon: symbols.underline, ariaLabel: 'Underline', toggle: true },
-      { icon: symbols.formatColorText, ariaLabel: 'Text colour' },
-      { icon: symbols.formatColorFill, ariaLabel: 'Fill colour' },
-    ],
-  },
-  browser: {
-    name: 'Browser',
-    ariaLabel: 'Page navigation',
-    items: [
-      { icon: symbols.arrowBack, ariaLabel: 'Back' },
-      { icon: symbols.arrowForward, ariaLabel: 'Forward' },
-      // The guidelines' one emphasized action: filled and wide, mid-bar by item order.
-      { icon: symbols.add, ariaLabel: 'New tab', variant: 'filled', width: 'wide' },
-      { icon: symbols.tab, ariaLabel: 'Tabs' },
-    ],
-    overflow: [
-      { id: 'bookmarks', text: 'Bookmarks' },
-      { id: 'downloads', text: 'Downloads' },
-      { id: 'history', text: 'History' },
-    ],
-  },
-  'document-editing': {
-    name: 'Document editing',
-    ariaLabel: 'Editing tools',
-    items: [
-      { icon: symbols.undo, ariaLabel: 'Undo' },
-      { icon: symbols.redo, ariaLabel: 'Redo' },
-      { icon: symbols.add, ariaLabel: 'Add' },
-      { icon: symbols.formatColorText, ariaLabel: 'Text colour' },
-    ],
-    overflow: [
-      { id: 'link', text: 'Insert link' },
-      { id: 'image', text: 'Insert image' },
-      { id: 'find', text: 'Find and replace' },
-    ],
-    // The rail's tools sit under the more button; its menu opens beside the rail
-    // instead (the menu's position, inline end of a vertical bar) — read in the
-    // menu's MENU_POSITION: 'right-start' places it right of the opener, top-aligned.
-    overflowPosition: 'right-start',
-  },
-  'step-navigation': {
-    name: 'Step navigation',
-    ariaLabel: 'Step navigation',
-    items: [{ text: 'Back', variant: 'text' }, { text: 'Next', variant: 'filled' }],
-  },
-  'email-actions': {
-    name: 'Email actions',
-    ariaLabel: 'Email actions',
-    items: [
-      { icon: symbols.archive, ariaLabel: 'Archive' },
-      { icon: symbols.delete, ariaLabel: 'Delete' },
-      { icon: symbols.markEmailUnread, ariaLabel: 'Mark as unread' },
-      { icon: symbols.snooze, ariaLabel: 'Snooze' },
-      { icon: symbols.star, ariaLabel: 'Star' },
-    ],
-  },
-};
-const toolbarSet = (state: ComponentState): ToolbarActionSet | undefined => toolbarActionSets[string(state, 'actions')];
-/** What a toolbar preview adds beside its config: the chosen set's FAB and overflow menu, if it has them. */
-export function toolbarContent(state: ComponentState): ToolbarContent {
-  const set = toolbarSet(state);
-  return set
-    ? { ...(set.fab ? { fab: set.fab, ...(set.fabPosition === 'start' ? { fabPosition: set.fabPosition } : {}) } : {}), ...(set.overflow ? { overflow: set.overflow } : {}), ...(set.overflowPosition ? { overflowPosition: set.overflowPosition } : {}) }
-    : {};
-}
 /** The toolbar's config as its element takes it: icon buttons in `items`, text buttons in `buttons`, and the FAB slotted beside them. */
 export function toolbarElementConfig(state: ComponentState): Record<string, unknown> {
   const { items: allItems, ...config } = components.toolbar.config(state) as ToolbarConfig;
@@ -229,49 +104,6 @@ export function toolbarElementConfig(state: ComponentState): Record<string, unkn
   const content = toolbarContent(state);
   return { ...config, ...(items.length ? { items } : {}), ...(buttons.length ? { buttons } : {}), ...(content.fab ? { fab: content.fab } : {}) };
 }
-const toolbarActions: Control = {
-  ...choose('actions', 'Actions', ['default', ...Object.keys(toolbarActionSets)], 'default', 'select'),
-  labels: { default: 'Default', ...Object.fromEntries(Object.entries(toolbarActionSets).map(([id, set]) => [id, set.name])) },
-};
-/**
- * The toolbar's scenarios, from m3.material.io (read 5 October 2026). Each pairs one
- * named action set with the placement its situation calls for; options name playground
- * controls only. The video call's end-call FAB is a tertiary container — the FAB has no
- * error colour for the figure's red — and step navigation's Back and Next reach the
- * edges through the spread arrangement, the closest the toolbar offers.
- */
-const toolbarScenarios: readonly Scenario[] = [
-  {
-    id: 'video-call', name: 'Video call', source: 'https://m3.material.io/components/toolbars/guidelines',
-    description: 'A video call\'s controls — camera, microphone, raise hand — floating beside an end-call FAB.',
-    options: { actions: 'video-call', variant: 'floating', color: 'standard', orientation: 'horizontal', elevated: true },
-  },
-  {
-    id: 'text-formatting', name: 'Text formatting', source: 'https://m3.material.io/components/toolbars/guidelines',
-    description: 'Formatting a text selection: bold on, with italic, underline and colour picks, in the vibrant colour that signals an edit mode.',
-    options: { actions: 'text-formatting', variant: 'floating', color: 'vibrant', orientation: 'horizontal', elevated: true },
-  },
-  {
-    id: 'browser', name: 'Browser', source: 'https://m3.material.io/components/toolbars/guidelines',
-    description: 'Page navigation in a browser: back, forward and tabs, with a filled, wide new-tab action standing out mid-bar.',
-    options: { actions: 'browser', variant: 'floating', color: 'standard', orientation: 'horizontal', elevated: true },
-  },
-  {
-    id: 'document-editing', name: 'Document editing', source: 'https://m3.material.io/components/toolbars/guidelines',
-    description: 'Editing a document on a large screen: undo, redo and insert tools in a vertical rail beside the text.',
-    options: { actions: 'document-editing', variant: 'floating', color: 'standard', orientation: 'vertical', elevated: true },
-  },
-  {
-    id: 'step-navigation', name: 'Step navigation', source: 'https://m3.material.io/components/toolbars/guidelines',
-    description: 'A step-by-step flow: Back at the start and Next at the end of a full-width bar.',
-    options: { actions: 'step-navigation', variant: 'docked', color: 'standard', arrangement: 'spread' },
-  },
-  {
-    id: 'email-actions', name: 'Email actions', source: 'https://m3.material.io/components/toolbars/guidelines',
-    description: 'Acting on an open email — archive, delete, mark unread, snooze, star — in the vibrant bar that marks the temporary mode.',
-    options: { actions: 'email-actions', variant: 'docked', color: 'vibrant', arrangement: 'spread' },
-  },
-];
 /** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
 const carouselSlides = (state: ComponentState) => {
   const variant = pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse');
@@ -323,109 +155,13 @@ export const components = {
   search: searchComponent,
   datepicker: datepickerComponent,
   timepicker: timePickerComponent,
-  'navigation-rail': {
-    group: 'Navigation', name: 'Navigation rail', factory: 'createNavigationRail', variable: 'rail',
-    description: 'Move between destinations. Explore collapsed, expanded, and modal navigation.',
-    summary: 'Primary destinations in an expressive rail.', styles: ['navigation-rail', 'button', 'progress'],
-    scenarios: [],
-    controls: [
-      ...section('Layout', [choose('layout', 'Layout', ['standard', 'modal'], 'standard'), toggle('expanded', 'Expanded'), { ...range('expandedWidth', 'Expanded width', '280'), min: 220, max: 360, step: 20 }, toggle('hideWhenCollapsed', 'Hide collapsed')]),
-      ...section('Content', [activeDestination, toggle('badges', 'Badges', true), toggle('showToggle', 'Menu button', true)]),
-      ...section('Behavior', [toggle('disableSent', 'Disable Sent'), toggle('ripple', 'Ripple', true)]),
-    ],
-    config: (state: ComponentState): NavigationRailConfig => ({ layout: pick(state, 'layout', ['standard', 'modal'], 'standard'), expanded: bool(state, 'expanded'), expandedWidth: Number(state.expandedWidth), hideWhenCollapsed: bool(state, 'hideWhenCollapsed'), showToggle: bool(state, 'showToggle'), ripple: bool(state, 'ripple'), ariaLabel: 'Mail navigation',
-      items: destinations.map(item => ({ ...item, active: state.active === item.id, disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.badges && item.id === 'inbox' ? { badge: 8, badgeLabel: '8 unread messages' } : {}) })) }),
-  },
-  drawer: {
-    group: 'Navigation', name: 'Drawer', factory: 'createDrawer', variable: 'drawer',
-    description: 'Explore a navigation drawer with destinations, section labels, and badges.',
-    summary: 'Grouped destinations in a side panel.', styles: ['drawer', 'button', 'progress'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'standard'), toggle('dense', 'Dense')]),
-      ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'start'), { ...range('width', 'Width', '280'), min: 220, max: 360, step: 20 }]),
-      ...section('Content', [text('headline', 'Headline', 'Mail'), activeDestination, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true), toggle('sections', 'Section labels', true)]),
-      ...section('Behavior', [toggle('open', 'Open', true), toggle('dismissible', 'Dismissible', true), toggle('disableSent', 'Disable Sent')]),
-    ],
-    config: (state: ComponentState): DrawerConfig => ({ variant: string(state, 'variant'), position: string(state, 'position'), width: Number(state.width), dense: bool(state, 'dense'), headline: string(state, 'headline'), open: bool(state, 'open'), dismissible: bool(state, 'dismissible'),
-      items: [...(state.sections ? [{ type: 'section' as const, sectionLabel: 'Your mailbox' }] : []), ...destinations.map(item => ({ id: item.id, label: item.label, ...(state.icons ? { icon: item.icon } : {}), active: state.active === item.id, disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.badges && item.id === 'inbox' ? { badge: '8' } : {}) }))] }),
-  },
-  tabs: {
-    group: 'Navigation', name: 'Tabs', factory: 'createTabs', variable: 'tabs',
-    description: 'Switch between related views. Try primary and secondary tabs, icons, and badges.',
-    summary: 'Related views, one active tab.', styles: ['progress', 'button', 'badge', 'tabs'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['primary', 'secondary'], 'primary'), toggle('showDivider', 'Divider', true)]),
-      ...section('Content', [{ ...activeDestination, options: ['inbox', 'favorites', 'sent', 'drafts', 'archive', 'trash'] }, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), choose('count', 'Tab count', ['3', '6'], '3')]),
-      ...section('Behavior', [toggle('scrollable', 'Scrollable'), toggle('autoActivate', 'Select on arrow keys'), toggle('disableSent', 'Disable Sent')]),
-    ],
-    config: (state: ComponentState): TabsConfig => ({ variant: string(state, 'variant'), showDivider: bool(state, 'showDivider'), scrollable: bool(state, 'scrollable'), ...(state.autoActivate ? { autoActivate: true } : {}), tabs: [...destinations, ...(state.count === '6' ? ['Drafts', 'Archive', 'Trash'].map(label => ({ id: label.toLowerCase(), label, icon: componentIcons.inbox! })) : [])].map(item => ({ text: item.label, value: item.id, state: state.active === item.id ? 'active' : 'inactive', disabled: item.id === 'sent' && bool(state, 'disableSent'), ...(state.icons ? { icon: item.icon } : {}), ...(state.badges && item.id === 'inbox' ? { badge: 8 } : {}) })) }),
-  },
-  menu: {
-    group: 'Navigation', name: 'Menu', factory: 'createMenu', variable: 'menu',
-    description: 'Open a menu of actions. Explore placement, color, supporting text, and nested choices.',
-    summary: 'Actions and nested choices on demand.', styles: ['menu', 'button', 'progress'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'vibrant', 'gap', 'baseline'], 'standard', 'select'), toggle('dense', 'Dense')]),
-      ...section('Layout', [choose('position', 'Position', ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'], 'bottom-start', 'select')]),
-      ...section('Content', [text('text', 'Button label', 'Open menu'), toggle('icons', 'Icons', true), toggle('supportingText', 'Supporting text'), toggle('submenu', 'Submenu')]),
-      ...section('Behavior', [toggle('closeOnSelect', 'Close on selection', true), toggle('disableDownload', 'Disable download')]),
-    ],
-    config: (state: ComponentState): MenuConfig => ({ opener: '#menu-trigger', variant: state.variant === 'baseline' ? 'baseline' : 'vertical', color: state.variant === 'vibrant' ? 'vibrant' : 'standard', position: pick(state, 'position', ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'], 'bottom-start'), dense: bool(state, 'dense'), closeOnSelect: bool(state, 'closeOnSelect'), items: [
-      { id: 'save', text: 'Save', ...(state.icons ? { icon: componentIcons.bookmark } : {}), ...(state.supportingText ? { supportingText: 'Keep for later' } : {}) },
-      { id: 'share', text: 'Share', ...(state.icons ? { icon: componentIcons.send } : {}), ...(state.submenu ? { hasSubmenu: true, submenu: [{ id: 'link', text: 'Copy link' }, { id: 'email', text: 'Email' }] } : {}) },
-      { type: state.variant === 'gap' ? 'gap' : 'divider' }, { id: 'download', text: 'Download', disabled: bool(state, 'disableDownload'), ...(state.icons ? { icon: componentIcons.download } : {}) },
-    ] }),
-  },
-  'top-app-bar': {
-    group: 'Navigation', name: 'Top app bar', factory: 'createTopAppBar', variable: 'topBar',
-    description: 'Give a view its title and actions. Explore bar sizes and the scrolled appearance.',
-    summary: 'A title, navigation, and contextual actions.', styles: ['top-app-bar', 'icon-button'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('type', 'Type', ['small', 'center', 'medium', 'large'], 'small', 'select'), toggle('scrolled', 'Scrolled state'), toggle('compressible', 'Compressible', true)]),
-      ...section('Content', [text('title', 'Title', 'My library'), toggle('leading', 'Navigation button', true), choose('actions', 'Action count', ['0', '1', '2'], '1')]),
-    ],
-    config: (state: ComponentState): TopAppBarConfig => ({ type: pick(state, 'type', ['small', 'center', 'medium', 'large'], 'small'), title: string(state, 'title'), compressible: bool(state, 'compressible'), scrollable: false }),
-  },
-  'bottom-app-bar': {
-    group: 'Navigation', name: 'Bottom app bar', factory: 'createBottomAppBar', variable: 'bottomBar',
-    description: 'Keep frequent actions within reach. Try a floating action button and different placements.',
-    summary: 'Frequent actions with an optional FAB.', styles: ['bottom-app-bar', 'icon-button', 'fab'],
-    scenarios: [],
-    controls: [
-      ...section('Layout', [toggle('hasFab', 'Show FAB', true), choose('fabPosition', 'FAB position', ['center', 'end'], 'end')]),
-      ...section('Content', [choose('actions', 'Action count', ['1', '2', '3'], '2'), text('fabLabel', 'FAB label', 'Compose')]),
-      ...section('Behavior', [toggle('visible', 'Visible', true)]),
-    ],
-    config: (state: ComponentState): BottomAppBarConfig => ({ hasFab: bool(state, 'hasFab'), fabPosition: pick(state, 'fabPosition', ['center', 'end'], 'end'), autoHide: false }),
-  },
-  toolbar: {
-    group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
-    description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
-    summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button', 'fab', 'menu', 'progress'],
-    scenarios: toolbarScenarios,
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
-      ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
-      // The item count and the toggles configure the default sets; a named set fixes the whole list.
-      ...section('Content', [toolbarActions, { ...choose('items', 'Item count', ['2', '3', '4', '5'], '4'), enabledWhen: 'actionsDefault' }, { ...toggle('toggles', 'Formatting toggles', true), enabledWhen: 'actionsDefault' }]),
-    ],
-    config: (state: ComponentState): ToolbarConfig => {
-      const set = toolbarSet(state);
-      return {
-        variant: pick(state, 'variant', ['docked', 'floating'], 'floating'),
-        color: pick(state, 'color', ['standard', 'vibrant'], 'standard'),
-        orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'),
-        arrangement: pick(state, 'arrangement', ['spread', 'center'], 'spread'),
-        ...(state.elevated ? {} : { elevated: false }),
-        ariaLabel: set ? set.ariaLabel : state.toggles ? 'Formatting' : 'Actions',
-        items: set ? set.items : toolbarItems(state),
-      };
-    },
-  },
+  'navigation-rail': navigationRailComponent,
+  drawer: drawerComponent,
+  tabs: tabsComponent,
+  menu: menuComponent,
+  'top-app-bar': topAppBarComponent,
+  'bottom-app-bar': bottomAppBarComponent,
+  toolbar: toolbarComponent,
   card: {
     group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
     description: 'Bring content and actions together. Explore surfaces, media, and interactive cards.',
