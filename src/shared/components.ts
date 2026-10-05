@@ -425,39 +425,98 @@ const extendedFabScenarios: readonly Scenario[] = [
     options: { collapsed: true },
   },
 ];
+
+export interface ChipItemData {
+  value: string;
+  label: string;
+  type?: 'assist' | 'filter' | 'input' | 'suggestion';
+  selected?: boolean;
+  avatar?: string;
+  leadingIcon?: string;
+}
+
+export interface ChipSetDefinition {
+  name: string;
+  label: string;
+  type: 'assist' | 'filter' | 'input' | 'suggestion';
+  chips: readonly ChipItemData[];
+}
+
+export const chipSets: Record<string, ChipSetDefinition> = {
+  'email-recipients': {
+    name: 'Email recipients',
+    label: 'To',
+    type: 'input',
+    chips: [
+      { value: 'ziad', label: 'Ziad Aouad', type: 'input', avatar: symbols.accountCircle },
+      { value: 'mohammad', label: 'Mohammad', type: 'input', avatar: symbols.accountCircle },
+    ],
+  },
+  'experience-actions': {
+    name: 'Experience actions',
+    label: 'Add to review',
+    type: 'assist',
+    chips: [
+      { value: 'photos', label: 'Add photos', type: 'assist', leadingIcon: componentIcons.addAPhoto },
+      { value: 'dishes', label: 'Add dishes', type: 'assist', leadingIcon: componentIcons.restaurant },
+      { value: 'rate', label: 'Rate location', type: 'assist', leadingIcon: componentIcons.star },
+    ],
+  },
+  'quick-replies': {
+    name: 'Quick replies',
+    label: 'Suggested replies',
+    type: 'suggestion',
+    chips: [
+      { value: 'agree', label: 'I agree', type: 'suggestion' },
+      { value: 'looks-good', label: 'Looks good to me', type: 'suggestion' },
+      { value: 'thank-you', label: 'Thank you', type: 'suggestion' },
+    ],
+  },
+  'catalog-filters': {
+    name: 'Catalog filters',
+    label: 'Categories',
+    type: 'filter',
+    chips: [
+      { value: 'apartment', label: 'Apartment', type: 'filter' },
+      { value: 'accessories', label: 'Accessories', type: 'filter' },
+      { value: 'tops', label: 'Tops', type: 'filter' },
+      { value: 'robins-egg', label: 'Robins Egg', type: 'filter', selected: true },
+    ],
+  },
+};
+
+const chipSetControl: Control = {
+  ...choose('chipSet', 'Chip set', ['default', ...Object.keys(chipSets)], 'default', 'select'),
+  labels: { default: 'Default', ...Object.fromEntries(Object.entries(chipSets).map(([id, set]) => [id, set.name])) },
+};
+
 /**
- * The chips' scenarios, from m3.material.io (read 5 October 2026). Labels stay Hiking, Music
- * and Food (fixed in `config()`); options name playground controls only, so applying one is
- * `normalizeComponentState(slug, { ...initials, ...options })`. Filters select two chips —
- * "Multiple chips can be selected or unselected" — and One filter uses the set's single-select
- * mode. Contacts' avatar is the input chip's leading image; Assist carries the leading icon its
- * anatomy lists; the suggestion chip's anatomy is its container and label, so it has none.
+ * The chips' scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. Named chip sets provide authentic situations for each
+ * chip variant: contact input chips with avatars and remove buttons, assist chips
+ * with action icons, quick replies for chat suggestions, and catalog filter chips
+ * with active multi-selection.
  */
 const chipsScenarios: readonly Scenario[] = [
   {
-    id: 'filters', name: 'Filters', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Filter chips with several selected.',
-    options: { type: 'filter', multiSelect: true, hiking: true, music: true, food: false },
+    id: 'email-recipients', name: 'Email recipients', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Addressing an email draft with recipient contact chips showing avatars and remove buttons.',
+    options: { chipSet: 'email-recipients', type: 'input', label: 'To' },
   },
   {
-    id: 'one-filter', name: 'One filter', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Filter chips with a single selection.',
-    options: { type: 'filter', multiSelect: false, hiking: true },
+    id: 'experience-actions', name: 'Experience actions', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Prompting follow-up actions (Add photos, Add dishes, Rate location) on a restaurant review.',
+    options: { chipSet: 'experience-actions', type: 'assist', label: 'Add to review' },
   },
   {
-    id: 'contacts', name: 'Contacts', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Input chips with an avatar.',
-    options: { type: 'input', avatar: true },
+    id: 'quick-replies', name: 'Quick replies', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Prompting one-tap conversational response phrases below an incoming message.',
+    options: { chipSet: 'quick-replies', type: 'suggestion', label: 'Suggested replies' },
   },
   {
-    id: 'assist', name: 'Assist', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Assist chips with a leading icon.',
-    options: { type: 'assist', icons: true },
-  },
-  {
-    id: 'suggestion', name: 'Suggestion', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Suggestion chips.',
-    options: { type: 'suggestion' },
+    id: 'catalog-filters', name: 'Catalog filters', source: 'https://m3.material.io/components/chips/guidelines',
+    description: 'Filtering an apparel catalog by product type and color attributes, with an active filter selected.',
+    options: { chipSet: 'catalog-filters', type: 'filter', label: 'Categories', multiSelect: true },
   },
 ];
 /**
@@ -775,15 +834,43 @@ export const components = {
       // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
       // avatar for input chips; selection for filter and input chips.
       ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType'), toggle('trailingMenu', 'Trailing menu', false, 'filterType'), toggle('draggable', 'Draggable')]),
-      ...section('Content', [text('label', 'Group label', 'Interests')]),
+      ...section('Content', [chipSetControl, text('label', 'Group label', 'Interests')]),
       ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('selectionRequired', 'Selection required', false, 'selectable'), toggle('hiking', 'Hiking selected', true, 'selectable'), toggle('music', 'Music selected', false, 'selectable'), toggle('food', 'Food selected', false, 'selectable'), disabled]),
     ],
-    config: (state: ComponentState): ChipsConfig => ({ label: string(state, 'label'), vertical: bool(state, 'vertical'), multiSelect: bool(state, 'multiSelect'), selectionRequired: bool(state, 'selectionRequired'),
-      chips: ['hiking', 'music', 'food'].map((value, index) => ({ value, label: ['Hiking', 'Music', 'Food'][index], type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], 'filter'),
-        ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
-        ...(state.selectable ? { selected: bool(state, value) } : {}), disabled: bool(state, 'disabled'),
-        ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
-        ...(state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}) })) }),
+    config: (state: ComponentState): ChipsConfig => {
+      const set = chipSets[string(state, 'chipSet')];
+      if (set) {
+        return {
+          label: string(state, 'label') || set.label,
+          vertical: bool(state, 'vertical'),
+          multiSelect: bool(state, 'multiSelect'),
+          selectionRequired: bool(state, 'selectionRequired'),
+          chips: set.chips.map(chip => ({
+            ...chip,
+            type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], set.type),
+            ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
+            disabled: bool(state, 'disabled'),
+            ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
+          })),
+        };
+      }
+      return {
+        label: string(state, 'label'),
+        vertical: bool(state, 'vertical'),
+        multiSelect: bool(state, 'multiSelect'),
+        selectionRequired: bool(state, 'selectionRequired'),
+        chips: ['hiking', 'music', 'food'].map((value, index) => ({
+          value,
+          label: ['Hiking', 'Music', 'Food'][index],
+          type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], 'filter'),
+          ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
+          ...(state.selectable ? { selected: bool(state, value) } : {}),
+          disabled: bool(state, 'disabled'),
+          ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
+          ...(state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}),
+        })),
+      };
+    },
   },
   slider: {
     group: 'Selection & input', name: 'Slider', factory: 'createSlider', variable: 'slider',
@@ -1188,6 +1275,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.secondValue = String(Math.max(Number(state.value), Math.round(Number(state.secondValue) / step) * step));
   }
   if (slug === 'chips') {
+    state.chipSetDefault = state.chipSet === 'default';
     state.selectable = state.type === 'filter' || state.type === 'input';
     state.elevatedAllowed = state.type !== 'input';
     state.inputType = state.type === 'input';

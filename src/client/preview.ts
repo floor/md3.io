@@ -260,8 +260,13 @@ function create(state: ComponentState) {
       if (state.draggable) control.getChips().forEach(chip => { chip.element.draggable = true; });
       control.on('change', () => {
         const values = control.getSelectedValues();
-        sync(Object.fromEntries(['hiking', 'music', 'food'].map(value => [value, values.includes(value)])));
+        if (state.chipSetDefault) {
+          sync(Object.fromEntries(['hiking', 'music', 'food'].map(value => [value, values.includes(value)])));
+        }
         message(values.length ? `Selected: ${values.join(', ')}` : 'Selection cleared');
+      });
+      control.on('remove', event => {
+        message(`Removed: ${event.chip.getLabel()}`);
       });
       return control;
     }
