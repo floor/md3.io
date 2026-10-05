@@ -446,6 +446,24 @@ const progressScenarios: readonly Scenario[] = [
     options: { variant: 'circular', size: '240' },
   },
 ];
+/**
+ * The loading indicator's scenarios, from m3.material.io (read 5 October 2026). Options
+ * name playground controls only. Two scenarios, not three: the guidelines' loading
+ * indicator is short and indeterminate by definition (a determinate one is their Don't),
+ * so the expressible variations are the container and the size.
+ */
+const loadingIndicatorScenarios: readonly Scenario[] = [
+  {
+    id: 'contained', name: 'Contained', source: 'https://m3.material.io/components/loading-indicator/guidelines',
+    description: 'With its container, for standing out over other content and for pull-to-refresh.',
+    options: { contained: true },
+  },
+  {
+    id: 'large', name: 'Large', source: 'https://m3.material.io/components/loading-indicator/guidelines',
+    description: 'Scaled up from the 48dp default, as larger windows call for.',
+    options: { size: '96' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -974,7 +992,7 @@ export const components = {
     group: 'Communication', name: 'Loading indicator', factory: 'createLoadingIndicator', variable: 'indicator',
     description: 'Give short waits a little expression. Explore the morphing shape with or without its container.',
     summary: 'An expressive shape for short waits.', styles: ['loading-indicator'],
-    scenarios: [],
+    scenarios: loadingIndicatorScenarios,
     controls: [
       ...section('Appearance', [toggle('contained', 'Contained'), { ...range('size', 'Size', '48'), min: 24, max: 240, step: 8 }]),
       ...section('Content', [{ ...range('value', 'Value', '50'), enabledWhen: 'determinate' }, text('ariaLabel', 'Accessible label', 'Loading your content')]),
