@@ -642,27 +642,112 @@ const switchScenarios: readonly Scenario[] = [
     options: { label: 'Airplane mode', supportingText: 'Turn off cellular, Wi-Fi, and Bluetooth', checked: false, icons: 'none' },
   },
 ];
+export interface RadioOption {
+  readonly value: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+}
+
+export interface RadioOptionSet {
+  readonly name: string;
+  readonly groupName: string;
+  readonly ariaLabel: string;
+  readonly defaultValue: string;
+  readonly options: readonly RadioOption[];
+}
+
+export const radioOptionSets: Record<string, RadioOptionSet> = {
+  'express-delivery': {
+    name: 'Express delivery',
+    groupName: 'delivery',
+    ariaLabel: 'Delivery method',
+    defaultValue: 'express',
+    options: [
+      { value: 'standard', label: 'Standard' },
+      { value: 'express', label: 'Express' },
+      { value: 'pickup', label: 'Pick up' },
+    ],
+  },
+  'catalog-sort': {
+    name: 'Catalog sort',
+    groupName: 'sort',
+    ariaLabel: 'Sort by',
+    defaultValue: 'relevance',
+    options: [
+      { value: 'relevance', label: 'Relevance' },
+      { value: 'lowest-price', label: 'Lowest price' },
+      { value: 'highest-rating', label: 'Highest rating' },
+      { value: 'most-reviewed', label: 'Most reviewed' },
+    ],
+  },
+  'phone-ringtone': {
+    name: 'Phone ringtone',
+    groupName: 'ringtone',
+    ariaLabel: 'Ringtone',
+    defaultValue: 'callisto',
+    options: [
+      { value: 'none', label: 'None' },
+      { value: 'callisto', label: 'Callisto' },
+      { value: 'ganymede', label: 'Ganymede' },
+      { value: 'luna', label: 'Luna' },
+    ],
+  },
+  'app-language': {
+    name: 'App language',
+    groupName: 'language',
+    ariaLabel: 'Language',
+    defaultValue: 'en',
+    options: [
+      { value: 'en', label: 'English' },
+      { value: 'zh', label: 'Chinese (Mandarin)' },
+      { value: 'es', label: 'Spanish' },
+    ],
+  },
+};
+radioOptionSets['delivery'] = radioOptionSets['express-delivery'];
+
+export const radioAriaLabel = (state: ComponentState): string => {
+  const set = radioOptionSets[string(state, 'optionSet')];
+  return set ? set.ariaLabel : 'Delivery method';
+};
+
+const optionSetControl: Control = {
+  ...choose('optionSet', 'Options', ['default', 'express-delivery', 'catalog-sort', 'phone-ringtone', 'app-language'], 'default', 'select'),
+  labels: {
+    default: 'Default',
+    'express-delivery': 'Express delivery',
+    'catalog-sort': 'Catalog sort',
+    'phone-ringtone': 'Phone ringtone',
+    'app-language': 'App language',
+  },
+};
+
 /**
  * The radio buttons' scenarios, from m3.material.io (read 5 October 2026). Options name
  * playground controls only. Radio buttons allow selecting a single option from a set of
- * five or fewer options. One option is always pre-selected, and unavailable options can be
- * disabled.
+ * five or fewer options. One option is always pre-selected across shipping methods,
+ * catalog sorting, ringtone selection, and language settings.
  */
 const radiosScenarios: readonly Scenario[] = [
   {
-    id: 'selected', name: 'Express delivery', source: 'https://m3.material.io/components/radio-button/guidelines',
-    description: 'A radio button set with the express option selected.',
-    options: { value: 'express' },
+    id: 'express-delivery', name: 'Express delivery', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'Selecting shipping speed in a checkout form with expedited delivery chosen.',
+    options: { optionSet: 'express-delivery', value: 'express', name: 'delivery' },
   },
   {
-    id: 'disabled-option', name: 'Disabled option', source: 'https://m3.material.io/components/radio-button/guidelines',
-    description: 'A radio button set with an unavailable option disabled.',
-    options: { disableExpress: true },
+    id: 'catalog-sort', name: 'Catalog sort', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'Choosing how search results or catalog listings are ordered, with Relevance selected.',
+    options: { optionSet: 'catalog-sort', value: 'relevance', name: 'sort' },
   },
   {
-    id: 'disabled', name: 'Disabled', source: 'https://m3.material.io/components/radio-button/overview',
-    description: 'A disabled radio button set.',
-    options: { disabled: true },
+    id: 'phone-ringtone', name: 'Phone ringtone', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'Selecting an incoming call chime from a list of audio ringtones.',
+    options: { optionSet: 'phone-ringtone', value: 'callisto', name: 'ringtone' },
+  },
+  {
+    id: 'app-language', name: 'App language', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'Choosing interface display language from supported system locales.',
+    options: { optionSet: 'app-language', value: 'en', name: 'language' },
   },
 ];
 /**
@@ -884,12 +969,34 @@ export const components = {
     scenarios: radiosScenarios,
     controls: [
       ...section('Layout', [choose('direction', 'Direction', ['vertical', 'horizontal'], 'vertical'), toggle('labelBefore', 'Labels before')]),
-      ...section('Content', [text('name', 'Name', 'delivery'), choose('value', 'Selected', ['standard', 'express', 'pickup'], 'standard', 'select')]),
-      ...section('Behavior', [toggle('disableExpress', 'Disable express'), disabled]),
+      ...section('Content', [optionSetControl, text('name', 'Name', 'delivery'), choose('value', 'Selected', ['standard', 'express', 'pickup'], 'standard', 'select')]),
+      ...section('Behavior', [toggle('disableExpress', 'Disable express', false, 'isDelivery'), disabled]),
     ],
-    config: (state: ComponentState): RadiosConfig => ({ name: string(state, 'name') || 'delivery', direction: pick(state, 'direction', ['vertical', 'horizontal'], 'vertical'),
-      value: bool(state, 'disableExpress') && state.value === 'express' ? 'standard' : string(state, 'value'), disabled: bool(state, 'disabled'),
-      options: [{ value: 'standard', label: 'Standard' }, { value: 'express', label: 'Express', disabled: bool(state, 'disableExpress') }, { value: 'pickup', label: 'Pick up' }].map(option => ({ ...option, labelBefore: bool(state, 'labelBefore') })) }),
+    config: (state: ComponentState): RadiosConfig => {
+      const set = radioOptionSets[string(state, 'optionSet')];
+      const name = string(state, 'name') || (set ? set.groupName : 'delivery');
+      const isDelivery = !set || set.groupName === 'delivery';
+      const rawOptions = set
+        ? set.options.map(option => ({
+            ...option,
+            ...(isDelivery && option.value === 'express' && bool(state, 'disableExpress') ? { disabled: true } : {}),
+          }))
+        : [
+            { value: 'standard', label: 'Standard' },
+            { value: 'express', label: 'Express', disabled: bool(state, 'disableExpress') },
+            { value: 'pickup', label: 'Pick up' },
+          ];
+      const defaultValue = set ? set.defaultValue : 'standard';
+      let value = string(state, 'value') || defaultValue;
+      if (isDelivery && bool(state, 'disableExpress') && value === 'express') value = 'standard';
+      return {
+        name,
+        direction: pick(state, 'direction', ['vertical', 'horizontal'], 'vertical'),
+        value,
+        disabled: bool(state, 'disabled'),
+        options: rawOptions.map(option => ({ ...option, labelBefore: bool(state, 'labelBefore') })),
+      };
+    },
   },
   chips: {
     group: 'Selection & input', name: 'Chips', factory: 'createChips', variable: 'chips',
@@ -1360,7 +1467,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   if (slug === 'checkbox') state.familySetDefault = !state.familySet || state.familySet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
-  if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
+  if (slug === 'radios') {
+    state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
+    state.optionSetDefault = !state.optionSet || state.optionSet === 'default';
+    if (state.disableExpress && state.value === 'express') state.value = 'standard';
+  }
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
   state.theme = themes.find(theme => theme === raw.theme) ?? 'baseline';
   state.mode = raw.mode === 'dark' ? 'dark' : 'light';
@@ -1439,7 +1550,7 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     ? "checkbox.input.setAttribute('aria-label', 'Checkbox');\n"
     : '';
   const setup = checkboxSetup + chipsSetup + (
-    slug === 'radios' ? `radios.element.setAttribute('aria-label', 'Delivery method');\n` :
+    slug === 'radios' ? `radios.element.setAttribute('aria-label', '${radioAriaLabel(state)}');\n` :
     slug === 'text-field' && !string(state, 'label').trim() ? `textField.input.setAttribute('aria-label', 'Text field');\n` :
     slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
     slug === 'timepicker' ? `const openButton = createButton({ text: 'Choose time', variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.element.append(openButton.element);\n` : '');

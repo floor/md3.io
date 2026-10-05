@@ -35,7 +35,7 @@ import createSplitButton from 'material/components/split-button';
 import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
-import { appBarContent, checkboxChildChecked, checkboxChildren, currentCheckboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, trailingBehaviour, type ComponentState } from '../shared/components';
+import { appBarContent, checkboxChildChecked, checkboxChildren, currentCheckboxChildren, componentIcons, components, initialComponentState, isComponent, normalizeComponentState, radioAriaLabel, trailingBehaviour, type ComponentState } from '../shared/components';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -248,7 +248,7 @@ function create(state: ComponentState) {
     }
     case 'radios': {
       const control = createRadios(components.radios.config(state));
-      control.element.setAttribute('aria-label', 'Delivery method');
+      control.element.setAttribute('aria-label', radioAriaLabel(state));
       control.on('change', () => { sync({ value: control.getValue() ?? '' }); message(`Selected: ${control.getSelected()?.label}`); });
       return control;
     }
