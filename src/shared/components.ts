@@ -527,7 +527,7 @@ const topAppBarScenarios: readonly Scenario[] = [
   },
   {
     id: 'two-actions', name: 'Two actions', source: 'https://m3.material.io/components/top-app-bar/guidelines',
-    description: 'A top app bar providing two essential trailing actions beside the navigation button.',
+    description: 'A top app bar with two trailing actions; the guidelines advise one action, two if necessary.',
     options: { type: 'small', actions: '2', leading: true },
   },
 ];
