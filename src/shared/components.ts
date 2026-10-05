@@ -438,6 +438,42 @@ const bottomAppBarScenarios: readonly Scenario[] = [
     options: { hasFab: true, fabPosition: 'end', actions: '1' },
   },
 ];
+/**
+ * Toolbar scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const toolbarScenarios: readonly Scenario[] = [
+  {
+    id: 'docked', name: 'Docked spread', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A full-width docked toolbar spanning the bottom of the window with evenly spread actions.',
+    options: { variant: 'docked', arrangement: 'spread', color: 'standard', items: '4' },
+  },
+  {
+    id: 'docked-centered', name: 'Docked centered', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A docked toolbar with centered action items for spacious medium-to-large layouts.',
+    options: { variant: 'docked', arrangement: 'center', color: 'standard', items: '3' },
+  },
+  {
+    id: 'floating', name: 'Floating formatting', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A horizontal floating toolbar with elevated surface and text formatting toggles.',
+    options: { variant: 'floating', orientation: 'horizontal', color: 'standard', elevated: true, items: '4', toggles: true },
+  },
+  {
+    id: 'vibrant', name: 'Vibrant floating', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A floating toolbar in the vibrant color scheme for high emphasis or active editing modes.',
+    options: { variant: 'floating', color: 'vibrant', elevated: true, items: '4' },
+  },
+  {
+    id: 'vertical', name: 'Vertical floating', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A vertical floating toolbar placed along screen margins for larger breakpoints.',
+    options: { variant: 'floating', orientation: 'vertical', color: 'standard', elevated: true, items: '3' },
+  },
+  {
+    id: 'actions', name: 'Contextual actions', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A floating toolbar holding essential action icon buttons without toggle selection.',
+    options: { variant: 'floating', toggles: false, items: '4', color: 'standard' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -833,7 +869,7 @@ export const components = {
     group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
     description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
     summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button'],
-    scenarios: [],
+    scenarios: toolbarScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
