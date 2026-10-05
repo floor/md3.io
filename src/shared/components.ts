@@ -294,11 +294,6 @@ const buttonGroupScenarios: readonly Scenario[] = [
     description: 'A standard group of icon buttons; adjacent buttons respond to one another when pressed.',
     options: { kind: 'standard', content: 'icons' },
   },
-  {
-    id: 'equal-width', name: 'Equal widths', source: 'https://m3.material.io/components/button-groups/guidelines',
-    description: 'A connected group spanning its surface, the buttons inside widened equally.',
-    options: { equalWidth: true },
-  },
 ];
 /**
  * The split button's scenarios, from m3.material.io (read 5 October 2026). Options name
