@@ -416,16 +416,6 @@ const navigationRailScenarios: readonly Scenario[] = [
     description: 'A modal expanded rail that overlaps body content in a dialog.',
     options: { layout: 'modal', expanded: true, showToggle: true },
   },
-  {
-    id: 'hidden-collapsed', name: 'Hidden collapsed', source: 'https://m3.material.io/components/navigation-rail/guidelines',
-    description: 'An immersive navigation rail that stays hidden until opened.',
-    options: { layout: 'standard', expanded: false, hideWhenCollapsed: true, showToggle: true },
-  },
-  {
-    id: 'no-toggle', name: 'No menu button', source: 'https://m3.material.io/components/navigation-rail/guidelines',
-    description: 'A collapsed navigation rail without a menu toggle button.',
-    options: { layout: 'standard', expanded: false, showToggle: false },
-  },
 ];
 /**
  * Drawer scenarios from m3.material.io (read 5 October 2026). Options name
