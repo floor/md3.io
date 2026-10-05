@@ -727,6 +727,12 @@ const componentNames = (meta: ElementMeta, p: Plan, name: (element: string) => s
  */
 export type CodeContext = { theme: string; mode: string; example?: undefined } | { theme?: undefined; mode?: undefined; example: ExampleParts };
 
+/**
+ * The base stylesheet is all a generated tab imports: the framework adapters (React,
+ * Vue, Svelte, Solid) and the web components adopt each component's CSS into their
+ * shadow roots themselves — every wrapper imports `material/elements/css/<name>` — so
+ * only the hand-written Vanilla tab lists the component's own styles.
+ */
 const styleImports = (context: CodeContext): string =>
   context.example ? '' : `import 'material/styles/base';\n${context.theme === 'baseline' ? '' : `import 'material/themes/${context.theme}';\n`}`;
 
