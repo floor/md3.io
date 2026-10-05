@@ -366,6 +366,32 @@ const dialogScenarios: readonly Scenario[] = [
     options: { size: 'small', open: true, title: 'Storage limit reached', content: 'Your account has reached its cloud storage capacity.', actions: true },
   },
 ];
+/**
+ * Bottom sheet scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const bottomSheetScenarios: readonly Scenario[] = [
+  {
+    id: 'modal', name: 'Modal', source: 'https://m3.material.io/components/bottom-sheets/guidelines',
+    description: 'A modal bottom sheet with drag handle and scrim overlay for supplementary mobile actions.',
+    options: { variant: 'modal', initialState: 'partial', dragHandle: true },
+  },
+  {
+    id: 'standard', name: 'Standard co-existing', source: 'https://m3.material.io/components/bottom-sheets/guidelines',
+    description: 'A persistent standard bottom sheet co-existing with the main UI without a scrim.',
+    options: { variant: 'standard', initialState: 'partial', dragHandle: true },
+  },
+  {
+    id: 'expanded', name: 'Expanded', source: 'https://m3.material.io/components/bottom-sheets/guidelines',
+    description: 'A modal bottom sheet raised to its full height with rich content.',
+    options: { variant: 'modal', initialState: 'expanded', dragHandle: true },
+  },
+  {
+    id: 'no-handle', name: 'No drag handle', source: 'https://m3.material.io/components/bottom-sheets/guidelines',
+    description: 'A bottom sheet without a drag handle, relying on taps or gestures to dismiss.',
+    options: { variant: 'modal', initialState: 'partial', dragHandle: false },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -844,7 +870,7 @@ export const components = {
     group: 'Containment', name: 'Bottom sheet', factory: 'createBottomSheet', variable: 'sheet',
     description: 'Reveal more from the bottom edge. Try partial and expanded states, or drag the handle.',
     summary: 'Supporting content from the bottom edge.', styles: ['progress', 'button', 'bottom-sheet'],
-    scenarios: [],
+    scenarios: bottomSheetScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal'), toggle('dragHandle', 'Drag handle', true)]),
       ...section('Layout', [{ ...range('peekHeight', 'Peek height', '120'), min: 56, max: 240, step: 8 }, { ...range('maxWidth', 'Maximum width', '640'), min: 280, max: 640, step: 20 }]),
