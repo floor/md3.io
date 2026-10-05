@@ -469,11 +469,6 @@ const tabsScenarios: readonly Scenario[] = [
     options: { variant: 'primary', icons: true, badges: true },
   },
   {
-    id: 'scrollable', name: 'Scrollable', source: 'https://m3.material.io/components/tabs/guidelines',
-    description: 'A scrollable set of tabs for larger collections. The element does not expose the scrollable attribute, so its snippet omits it.',
-    options: { variant: 'primary', count: '6', scrollable: true, icons: true },
-  },
-  {
     id: 'text-only', name: 'Text only', source: 'https://m3.material.io/components/tabs/guidelines',
     description: 'Tabs with text labels and no icons.',
     options: { variant: 'primary', icons: false, count: '3' },
