@@ -83,6 +83,7 @@ try {
   // (c) `?scenario=` on a page with no Scenario section is ignored quietly: the load reports
   // ready with the plain status line, the address keeps the parameter, and the controls are
   // the Default ones, with no console error.
+  // Divider is used because it has nothing to vary and stays without scenarios by design.
   errors.length = 0;
   await page.goto(`${base}components/divider/?scenario=x`);
   // Wait for the ready round-trip without matching a status text: a scenario message would
