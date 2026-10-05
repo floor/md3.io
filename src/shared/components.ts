@@ -407,6 +407,37 @@ const topAppBarScenarios: readonly Scenario[] = [
     options: { type: 'small', actions: '2', leading: true },
   },
 ];
+/**
+ * Bottom app bar scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const bottomAppBarScenarios: readonly Scenario[] = [
+  {
+    id: 'fab-trailing', name: 'FAB trailing', source: 'https://m3.material.io/components/bottom-app-bar/guidelines',
+    description: 'A bottom app bar layout with a trailing floating action button and contextual action icons.',
+    options: { hasFab: true, fabPosition: 'end', actions: '2' },
+  },
+  {
+    id: 'fab-center', name: 'FAB center', source: 'https://m3.material.io/components/bottom-app-bar/guidelines',
+    description: 'A bottom app bar with a centered floating action button flanked by action icons.',
+    options: { hasFab: true, fabPosition: 'center', actions: '2' },
+  },
+  {
+    id: 'no-fab', name: 'No FAB', source: 'https://m3.material.io/components/bottom-app-bar/guidelines',
+    description: 'A bottom app bar displaying only contextual action icons without a floating action button.',
+    options: { hasFab: false, actions: '3' },
+  },
+  {
+    id: 'three-actions', name: 'Three actions', source: 'https://m3.material.io/components/bottom-app-bar/guidelines',
+    description: 'A bottom app bar paired with a trailing FAB and three frequent action icons.',
+    options: { hasFab: true, fabPosition: 'end', actions: '3' },
+  },
+  {
+    id: 'single-action', name: 'Single action', source: 'https://m3.material.io/components/bottom-app-bar/guidelines',
+    description: 'A focused bottom app bar with one action icon and a trailing FAB.',
+    options: { hasFab: true, fabPosition: 'end', actions: '1' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -790,7 +821,7 @@ export const components = {
     group: 'Navigation', name: 'Bottom app bar', factory: 'createBottomAppBar', variable: 'bottomBar',
     description: 'Keep frequent actions within reach. Try a floating action button and different placements.',
     summary: 'Frequent actions with an optional FAB.', styles: ['bottom-app-bar', 'icon-button', 'fab'],
-    scenarios: [],
+    scenarios: bottomAppBarScenarios,
     controls: [
       ...section('Layout', [toggle('hasFab', 'Show FAB', true), choose('fabPosition', 'FAB position', ['center', 'end'], 'end')]),
       ...section('Content', [choose('actions', 'Action count', ['1', '2', '3'], '2'), text('fabLabel', 'FAB label', 'Compose')]),
