@@ -392,6 +392,32 @@ const bottomSheetScenarios: readonly Scenario[] = [
     options: { variant: 'modal', initialState: 'partial', dragHandle: false },
   },
 ];
+/**
+ * Side sheet scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const sideSheetScenarios: readonly Scenario[] = [
+  {
+    id: 'standard', name: 'Standard', source: 'https://m3.material.io/components/side-sheets/guidelines',
+    description: 'A persistent standard side sheet displaying supplementary context alongside primary content.',
+    options: { variant: 'standard', open: true, position: 'end', closeButton: true },
+  },
+  {
+    id: 'modal', name: 'Modal', source: 'https://m3.material.io/components/side-sheets/guidelines',
+    description: 'A modal side sheet with a scrim overlay for focused tasks on smaller breakpoints.',
+    options: { variant: 'modal', open: true, position: 'end', closeButton: true },
+  },
+  {
+    id: 'start-positioned', name: 'Leading edge', source: 'https://m3.material.io/components/side-sheets/guidelines',
+    description: 'A side sheet positioned on the leading edge, suitable for left-aligned layouts or RTL.',
+    options: { variant: 'standard', open: true, position: 'start', closeButton: true },
+  },
+  {
+    id: 'no-close-button', name: 'No close button', source: 'https://m3.material.io/components/side-sheets/guidelines',
+    description: 'A side sheet without a header close button, relying on external triggers or scrim dismissal.',
+    options: { variant: 'modal', open: true, closeButton: false },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -883,7 +909,7 @@ export const components = {
     group: 'Containment', name: 'Side sheet', factory: 'createSideSheet', variable: 'sheet',
     description: 'Keep supporting details close by. Explore standard and modal sheets on either edge.',
     summary: 'Supporting details beside the main content.', styles: ['progress', 'button', 'side-sheet'],
-    scenarios: [],
+    scenarios: sideSheetScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal')]),
       ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'end'), { ...range('width', 'Width', '320'), min: 240, max: 400, step: 20 }]),
