@@ -66,10 +66,9 @@ import { tooltipComponent } from './content/tooltip';
 
 /**
  * The toolbar's config as its element takes it: icon buttons in `items`, text buttons in
- * `buttons`, and the FAB slotted beside them. The overflow menu and its position ride
- * along unmapped, so the generated tabs state them as not yet exposed: the element takes
- * the menu as a slotted `slot="overflow"` element it anchors to its own more button, which
- * the generator does not write — the gap is recorded in briefs/gaps.md.
+ * `buttons`, the FAB slotted beside them, and the overflow menu from `overflow` as a
+ * slotted `slot="overflow"` element the element anchors to its own more button, with
+ * `overflowPosition` as the menu's `position` — the generator writes it in the tabs.
  */
 export function toolbarElementConfig(state: ComponentState): Record<string, unknown> {
   const { items: allItems, ...config } = components.toolbar.config(state) as ToolbarConfig;
