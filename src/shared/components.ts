@@ -95,6 +95,11 @@ import { dialogComponent } from './content/dialog';
 import { dividerComponent } from './content/divider';
 import { listComponent } from './content/list';
 import { sideSheetComponent } from './content/side-sheet';
+import { badgeComponent } from './content/badge';
+import { loadingIndicatorComponent } from './content/loading-indicator';
+import { progressComponent } from './content/progress';
+import { snackbarComponent } from './content/snackbar';
+import { tooltipComponent } from './content/tooltip';
 // Until the preview and its checkbox check import from the content modules, they keep
 // importing these from the registry.
 export { checkboxChildChecked, checkboxChildren } from './content/checkbox';
@@ -152,66 +157,11 @@ export const components = {
   dialog: dialogComponent,
   'bottom-sheet': bottomSheetComponent,
   'side-sheet': sideSheetComponent,
-  badge: {
-    group: 'Communication', name: 'Badge', factory: 'createBadge', variable: 'badge',
-    description: 'Draw attention to something new. Try dots, counts, and labels attached to an action.',
-    summary: 'A small signal for updates and counts.', styles: ['icon-button', 'badge'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['small', 'large'], 'large'), choose('color', 'Color', ['error', 'primary', 'secondary', 'tertiary', 'success', 'warning', 'info'], 'error', 'select'), choose('position', 'Position', ['top-right', 'top-left', 'bottom-right', 'bottom-left'], 'top-right', 'select')]),
-      ...section('Content', [{ ...text('label', 'Label', '8'), enabledWhen: 'hasLabel' }, { ...choose('max', 'Maximum count', ['9', '99', '999'], '99'), enabledWhen: 'hasLabel' }]),
-      ...section('Behavior', [toggle('visible', 'Visible', true)]),
-    ],
-    config: (state: ComponentState): BadgeConfig => ({ variant: string(state, 'variant'), color: string(state, 'color'), position: string(state, 'position'), label: string(state, 'label'), max: Number(state.max), visible: bool(state, 'visible') }),
-  },
-  progress: {
-    group: 'Communication', name: 'Progress', factory: 'createProgress', variable: 'progress',
-    description: 'Show how a task is progressing. Compare linear and circular indicators, with flat or wavy shapes.',
-    summary: 'Linear and circular progress, flat or wavy.', styles: ['progress'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['linear', 'circular'], 'linear'), choose('shape', 'Shape', ['flat', 'wavy'], 'flat'), choose('thickness', 'Thickness', ['thin', 'thick'], 'thin'), { ...range('size', 'Circular size', '48'), min: 24, max: 240, step: 8, enabledWhen: 'circular' }, toggle('showStopIndicator', 'Stop indicator', true, 'linear')]),
-      ...section('Content', [{ ...range('value', 'Value', '45'), enabledWhen: 'determinate' }, { ...range('buffer', 'Buffer', '70'), enabledWhen: 'linearDeterminate' }, toggle('showLabel', 'Show percentage', false, 'determinate'), text('ariaLabel', 'Accessible label', 'Uploading files')]),
-      ...section('Behavior', [toggle('indeterminate', 'Indeterminate'), disabled]),
-    ],
-    config: (state: ComponentState): ProgressConfig => ({ variant: pick(state, 'variant', ['linear', 'circular'], 'linear'), shape: pick(state, 'shape', ['flat', 'wavy'], 'flat'), thickness: pick(state, 'thickness', ['thin', 'thick'], 'thin'), ...(state.variant === 'circular' ? { size: Number(state.size) } : {}), value: Number(state.value), max: 100, buffer: state.variant === 'linear' ? Number(state.buffer) : 0, showStopIndicator: bool(state, 'showStopIndicator'), showLabel: !state.indeterminate && bool(state, 'showLabel'), indeterminate: bool(state, 'indeterminate'), disabled: bool(state, 'disabled'), ariaLabel: string(state, 'ariaLabel').trim() || 'Uploading files' }),
-  },
-  'loading-indicator': {
-    group: 'Communication', name: 'Loading indicator', factory: 'createLoadingIndicator', variable: 'indicator',
-    description: 'Give short waits a little expression. Explore the morphing shape with or without its container.',
-    summary: 'An expressive shape for short waits.', styles: ['loading-indicator'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [toggle('contained', 'Contained'), { ...range('size', 'Size', '48'), min: 24, max: 240, step: 8 }]),
-      ...section('Content', [{ ...range('value', 'Value', '50'), enabledWhen: 'determinate' }, text('ariaLabel', 'Accessible label', 'Loading your content')]),
-      ...section('Behavior', [toggle('indeterminate', 'Indeterminate', true)]),
-    ],
-    config: (state: ComponentState): LoadingIndicatorConfig => ({ size: Number(state.size), contained: bool(state, 'contained'), value: state.indeterminate ? null : Number(state.value) / 100, ariaLabel: string(state, 'ariaLabel').trim() || 'Loading your content' }),
-  },
-  snackbar: {
-    group: 'Communication', name: 'Snackbar', factory: 'createSnackbar', variable: 'snackbar',
-    description: 'Confirm an action without interrupting. Show a message, offer an undo, and try dismissal behavior.',
-    summary: 'Brief feedback with an optional action.', styles: ['progress', 'button', 'icon-button', 'snackbar'],
-    scenarios: [],
-    controls: [
-      ...section('Layout', [choose('position', 'Position', ['start', 'center', 'end'], 'center')]),
-      ...section('Content', [text('message', 'Message', 'Your changes have been saved.'), toggle('hasAction', 'Show action', true), { ...text('action', 'Action text', 'Undo'), enabledWhen: 'hasAction' }, { ...text('closeLabel', 'Dismiss label', 'Dismiss'), enabledWhen: 'dismissible' }]),
-      ...section('Behavior', [choose('duration', 'Duration', ['short', 'long', 'indefinite'], 'indefinite', 'select'), toggle('dismissible', 'Close button', true), toggle('visible', 'Visible')]),
-    ],
-    config: (state: ComponentState): SnackbarConfig => ({ message: string(state, 'message').trim() || 'Your changes have been saved.', ...(state.hasAction ? { action: string(state, 'action') } : {}), closeLabel: string(state, 'closeLabel').trim() || 'Dismiss', position: pick(state, 'position', ['start', 'center', 'end'], 'center'), duration: pick(state, 'duration', ['short', 'long', 'indefinite'], 'indefinite'), dismissible: bool(state, 'dismissible') }),
-  },
-  tooltip: {
-    group: 'Communication', name: 'Tooltip', factory: 'createTooltip', variable: 'tooltip',
-    description: 'Add a little context. Hover or focus the action to explore tooltip styles, placement, and timing.',
-    summary: 'Extra context on hover or focus.', styles: ['icon-button', 'tooltip'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['default', 'plain', 'rich'], 'default'), choose('position', 'Position', ['top', 'right', 'bottom', 'left', 'top-start', 'top-end', 'right-start', 'right-end', 'bottom-start', 'bottom-end', 'left-start', 'left-end'], 'bottom', 'select')]),
-      ...section('Content', [text('text', 'Text', 'Save to favorites')]),
-      ...section('Behavior', [toggle('visible', 'Visible'), toggle('showOnHover', 'Show on hover', true), toggle('showOnFocus', 'Show on focus', true), { ...range('showDelay', 'Show delay (ms)', '300'), max: 1500, step: 100 }, { ...range('hideDelay', 'Hide delay (ms)', '100'), max: 1500, step: 100 }]),
-    ],
-    config: (state: ComponentState): TooltipConfig => ({ text: string(state, 'text'), variant: string(state, 'variant'), position: string(state, 'position'), visible: bool(state, 'visible'), showDelay: Number(state.showDelay), hideDelay: Number(state.hideDelay), showOnFocus: bool(state, 'showOnFocus'), showOnHover: bool(state, 'showOnHover') }),
-  },
+  badge: badgeComponent,
+  progress: progressComponent,
+  'loading-indicator': loadingIndicatorComponent,
+  snackbar: snackbarComponent,
+  tooltip: tooltipComponent,
 };
 export type ComponentSlug = keyof typeof components;
 export const componentSlugs = Object.keys(components) as ComponentSlug[];
