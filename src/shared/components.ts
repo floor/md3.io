@@ -88,6 +88,13 @@ import { navigationRailComponent } from './content/navigation-rail';
 import { tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
 import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
+import { bottomSheetComponent } from './content/bottom-sheet';
+import { cardComponent } from './content/card';
+import { carouselComponent } from './content/carousel';
+import { dialogComponent } from './content/dialog';
+import { dividerComponent } from './content/divider';
+import { listComponent } from './content/list';
+import { sideSheetComponent } from './content/side-sheet';
 // Until the preview and its checkbox check import from the content modules, they keep
 // importing these from the registry.
 export { checkboxChildChecked, checkboxChildren } from './content/checkbox';
@@ -112,39 +119,6 @@ export function toolbarElementConfig(state: ComponentState): Record<string, unkn
     ...config, ...(items.length ? { items } : {}), ...(buttons.length ? { buttons } : {}), ...(content.fab ? { fab: content.fab } : {}),
     ...(content.overflow ? { overflow: content.overflow } : {}), ...(content.overflowPosition ? { overflowPosition: content.overflowPosition } : {}),
   };
-}
-/** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
-const carouselSlides = (state: ComponentState) => {
-  const variant = pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse');
-  return carouselPhotos(variant).map(photo => ({ image: carouselPhotoUrl(variant, photo.id), alt: `${photo.title}, ${photo.location}`, ...(state.captions ? { title: photo.title, description: photo.location } : {}) }));
-};
-function listConfig(state: ComponentState): ListConfig<ListItem> {
-  // Only a segmented list writes the variant: standard is the factory's own default.
-  const variant = pick(state, 'variant', ['standard', 'segmented'], 'standard');
-  const labels = (state.content === 'places'
-    ? ['Mountain trail', 'Botanical garden', 'City museum', 'Riverside park', 'Local market']
-    : ['Morning walk', 'Read a chapter', 'Try a new recipe', 'Call a friend', 'Plan a weekend']).slice(0, Number(state.count));
-  const items: ListItem[] = [];
-  if (state.subheader) items.push({ kind: 'subheader', headline: state.content === 'places' ? 'Places to explore' : 'Ideas for today' });
-  labels.forEach((headline, index) => {
-    if (index && state.dividers !== 'none') items.push({ kind: 'divider', ...(state.dividers === 'inset' ? { inset: true } : {}) });
-    let leading: ListSlot | undefined;
-    if (state.leading === 'icon') leading = { type: 'icon', content: componentIcons[['heart', 'bookmark', 'download'][index % 3]!]! };
-    if (state.leading === 'avatar') leading = { type: 'avatar', content: headline.split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase() };
-    if (state.leading === 'image' || state.leading === 'video') leading = { type: state.leading, content: `<img src="${landscape(index)}" alt="">` };
-    let trailing: ListSlot | undefined;
-    if (state.trailing === 'text') trailing = { type: 'text', content: `${(index + 1) * 5} min` };
-    if (state.trailing === 'icon') trailing = { type: 'icon', content: componentIcons.bookmark! };
-    if (state.trailing === 'control') trailing = { type: 'control', content: `<button type="button" data-list-action="${headline}" aria-label="Save ${headline}" style="color:inherit;font:inherit;min-width:48px;min-height:48px;background:transparent;border:0;cursor:pointer">Save</button>` };
-    items.push({ id: String(index + 1), headline, lines: Number(state.lines) as 1 | 2 | 3,
-      ...(state.lines !== '1' ? { supportingText: string(state, 'supportingText') } : {}),
-      ...(state.lines === '3' && state.overline ? { overline: state.content === 'places' ? 'Explore nearby' : 'Daily inspiration' } : {}),
-      ...(leading ? { leading } : {}), ...(trailing ? { trailing } : {}),
-      ...(state.disableLast && index === labels.length - 1 ? { disabled: true } : {}),
-    });
-  });
-  return { ...(variant === 'standard' ? {} : { variant }), items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
-    initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < labels.length && state.selection !== 'none' ? [String(index + 1)] : []) };
 }
 export const components = {
   button: buttonComponent,
@@ -171,95 +145,13 @@ export const components = {
   'top-app-bar': topAppBarComponent,
   'bottom-app-bar': bottomAppBarComponent,
   toolbar: toolbarComponent,
-  card: {
-    group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
-    description: 'Bring content and actions together. Explore surfaces, media, and interactive cards.',
-    summary: 'Content and actions on one surface.', styles: ['progress', 'button', 'card'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['elevated', 'filled', 'outlined'], 'elevated'), toggle('media', 'Show image', true), choose('aspectRatio', 'Image ratio', ['16:9', '4:3', '1:1'], '16:9'), choose('mediaPosition', 'Image position', ['top', 'bottom'], 'top')]),
-      ...section('Content', [text('title', 'Title', 'A little time outside'), text('subtitle', 'Subtitle', 'Find your next escape'), text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), toggle('actions', 'Show actions', true)]),
-      ...section('Behavior', [toggle('clickable', 'Clickable'), toggle('draggable', 'Draggable')]),
-    ],
-    config: (state: ComponentState): CardConfig => ({ variant: string(state, 'variant'), clickable: bool(state, 'clickable'), interactive: bool(state, 'clickable'), draggable: bool(state, 'draggable'), header: { title: string(state, 'title'), subtitle: string(state, 'subtitle') }, content: { text: string(state, 'content') }, ...(state.media ? { media: { src: landscape(0), alt: 'Illustrated mountain landscape', aspectRatio: string(state, 'aspectRatio'), position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top') } } : {}), ...(state.actions ? { buttons: [{ text: 'Explore', variant: 'text' }, { text: 'Save', variant: 'tonal' }] } : {}) }),
-  },
-  list: {
-    group: 'Containment', name: 'List', factory: 'createList', variable: 'list',
-    description: 'Explore Material list anatomy. Configure text lines, media, supporting actions, and selection.',
-    summary: 'One, two, or three lines with flexible content slots.', styles: ['list'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'segmented'], 'standard')]),
-      ...section('Layout', [choose('lines', 'Text lines', ['1', '2', '3'], '2'), choose('leading', 'Leading', ['none', 'icon', 'avatar', 'image', 'video'], 'icon', 'select'), choose('trailing', 'Trailing', ['none', 'text', 'icon', 'control'], 'text', 'select'), choose('dividers', 'Dividers', ['none', 'full-width', 'inset'], 'none', 'select'), toggle('subheader', 'Subheader')]),
-      ...section('Content', [choose('content', 'Items', ['activities', 'places'], 'activities'), choose('count', 'Item count', ['3', '5'], '3'), { ...text('supportingText', 'Supporting text', 'Make a little time for yourself'), enabledWhen: 'hasSupporting' }, toggle('overline', 'Overline', false, 'threeLines'), text('ariaLabel', 'Accessible label', 'Ideas for today')]),
-      ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'single'), toggle('disableLast', 'Disable last item'), toggle('first', 'First selected', true, 'selectable'), toggle('second', 'Second selected', false, 'selectable'), toggle('third', 'Third selected', false, 'selectable'), toggle('fourth', 'Fourth selected', false, 'extraSelectable'), toggle('fifth', 'Fifth selected', false, 'extraSelectable')]),
-    ],
-    config: (state: ComponentState): ListConfig<ListItem> => listConfig(state),
-  },
-  carousel: {
-    group: 'Containment', name: 'Carousel', factory: 'createCarousel', variable: 'carousel',
-    description: 'Browse a collection with Material carousel layouts. Swipe, scroll, or use the arrow keys.',
-    summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
-    // The preview's remote (icon buttons and a slider), which the copied code does not build.
-    previewStyles: ['icon-button', 'slider'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
-      ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
-      ...section('Content', [toggle('captions', 'Captions', true), choose('initialSlide', 'Current slide', Array.from({ length: 24 }, (_, index) => String(index)), '0', 'select')]),
-      ...section('Behavior', [toggle('snap', 'Snap to items', true)]),
-    ],
-    config: (state: ComponentState): CarouselConfig => ({ variant: pick(state, 'variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse'), itemWidth: Number(state.itemWidth), gap: Number(state.gap), padding: Number(state.padding), cornerRadius: Number(state.cornerRadius), snap: bool(state, 'snap'), initialSlide: Number(state.initialSlide), ariaLabel: 'Places to explore', slides: carouselSlides(state) }),
-  },
-  divider: {
-    group: 'Containment', name: 'Divider', factory: 'createDivider', variable: 'divider',
-    description: 'Separate related content. Explore orientation, insets, line weight, and color.',
-    summary: 'A quiet boundary between sections.', styles: ['divider'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['full-width', 'inset', 'middle-inset'], 'full-width', 'select'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), { ...range('thickness', 'Thickness', '1'), min: 1, max: 8 }, choose('color', 'Color', ['outline-variant', 'outline', 'primary', 'secondary'], 'outline-variant', 'select')]),
-      ...section('Layout', [{ ...range('insetStart', 'Start inset', '16'), max: 64 }, { ...range('insetEnd', 'End inset', '16'), max: 64 }]),
-    ],
-    config: (state: ComponentState): DividerConfig => ({ variant: pick(state, 'variant', ['full-width', 'inset', 'middle-inset'], 'full-width'), orientation: pick(state, 'orientation', ['horizontal', 'vertical'], 'horizontal'), thickness: Number(state.thickness), insetStart: Number(state.insetStart), insetEnd: Number(state.insetEnd), color: `var(--mtrl-sys-color-${string(state, 'color')})` }),
-  },
-  dialog: {
-    group: 'Containment', name: 'Dialog', factory: 'createDialog', variable: 'dialog',
-    description: 'Focus on a decision. Open a dialog to try its content, actions, and dismissal behavior.',
-    summary: 'A focused surface for a task or decision.', styles: ['progress', 'button', 'divider', 'dialog'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('size', 'Size', ['small', 'medium', 'large', 'fullwidth', 'fullscreen'], 'small', 'select'), choose('animation', 'Animation', ['scale', 'slide-up', 'slide-down', 'fade'], 'scale', 'select'), toggle('divider', 'Dividers')]),
-      ...section('Content', [text('title', 'Title', 'Save your changes?'), text('subtitle', 'Subtitle', ''), text('content', 'Body', 'Keep your changes before leaving this view.'), toggle('actions', 'Show actions', true), choose('footerAlignment', 'Action alignment', ['right', 'left', 'center', 'space-between'], 'right', 'select')]),
-      ...section('Behavior', [toggle('open', 'Open'), toggle('closeButton', 'Close button', true), toggle('closeOnOverlayClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
-    ],
-    config: (state: ComponentState): DialogConfig => ({ title: string(state, 'title'), subtitle: string(state, 'subtitle'), content: paragraph(string(state, 'content')), ariaLabel: string(state, 'title').trim() || 'Example dialog', size: string(state, 'size'), animation: string(state, 'animation'), divider: bool(state, 'divider'), open: bool(state, 'open'), closeButton: bool(state, 'closeButton'), closeOnOverlayClick: bool(state, 'closeOnOverlayClick'), closeOnEscape: bool(state, 'closeOnEscape'), footerAlignment: string(state, 'footerAlignment'), buttons: state.actions ? [{ text: 'Cancel', variant: 'text', closeDialog: true }, { text: 'Save', variant: 'filled', closeDialog: true }] : [] }),
-  },
-  'bottom-sheet': {
-    group: 'Containment', name: 'Bottom sheet', factory: 'createBottomSheet', variable: 'sheet',
-    description: 'Reveal more from the bottom edge. Try partial and expanded states, or drag the handle.',
-    summary: 'Supporting content from the bottom edge.', styles: ['progress', 'button', 'bottom-sheet'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal'), toggle('dragHandle', 'Drag handle', true)]),
-      ...section('Layout', [{ ...range('peekHeight', 'Peek height', '120'), min: 56, max: 240, step: 8 }, { ...range('maxWidth', 'Maximum width', '640'), min: 280, max: 640, step: 20 }]),
-      ...section('Content', [text('title', 'Title', 'Plan your visit'), text('content', 'Body', 'Find a new trail, take in the view, and make time for a quiet moment.')]),
-      ...section('Behavior', [choose('initialState', 'State', ['hidden', 'partial', 'expanded'], 'hidden', 'select'), toggle('closeOnScrimClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
-    ],
-    config: (state: ComponentState): BottomSheetConfig => ({ variant: pick(state, 'variant', ['standard', 'modal'], 'modal'), initialState: pick(state, 'initialState', ['hidden', 'partial', 'expanded'], 'hidden'), dragHandle: bool(state, 'dragHandle'), peekHeight: Number(state.peekHeight), maxWidth: Number(state.maxWidth), title: string(state, 'title'), content: paragraph(string(state, 'content')), closeOnScrimClick: bool(state, 'closeOnScrimClick'), closeOnEscape: bool(state, 'closeOnEscape') }),
-  },
-  'side-sheet': {
-    group: 'Containment', name: 'Side sheet', factory: 'createSideSheet', variable: 'sheet',
-    description: 'Keep supporting details close by. Explore standard and modal sheets on either edge.',
-    summary: 'Supporting details beside the main content.', styles: ['progress', 'button', 'side-sheet'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal')]),
-      ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'end'), { ...range('width', 'Width', '320'), min: 240, max: 400, step: 20 }]),
-      ...section('Content', [text('title', 'Title', 'Details'), text('content', 'Body', 'A place for useful context, related information, and supporting actions.')]),
-      ...section('Behavior', [toggle('open', 'Open'), toggle('closeButton', 'Close button', true), toggle('closeOnScrimClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
-    ],
-    config: (state: ComponentState): SideSheetConfig => ({ variant: pick(state, 'variant', ['standard', 'modal'], 'modal'), position: pick(state, 'position', ['start', 'end'], 'end'), width: Number(state.width), title: string(state, 'title'), content: paragraph(string(state, 'content')), open: bool(state, 'open'), closeButton: bool(state, 'closeButton'), closeOnScrimClick: bool(state, 'closeOnScrimClick'), closeOnEscape: bool(state, 'closeOnEscape') }),
-  },
+  card: cardComponent,
+  list: listComponent,
+  carousel: carouselComponent,
+  divider: dividerComponent,
+  dialog: dialogComponent,
+  'bottom-sheet': bottomSheetComponent,
+  'side-sheet': sideSheetComponent,
   badge: {
     group: 'Communication', name: 'Badge', factory: 'createBadge', variable: 'badge',
     description: 'Draw attention to something new. Try dots, counts, and labels attached to an action.',
