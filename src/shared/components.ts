@@ -247,6 +247,28 @@ const buttonScenarios: readonly Scenario[] = [
     options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
   },
 ];
+/**
+ * The icon button's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only. The element takes `toggle` and `selected` as attributes, so
+ * the toggle scenarios' snippets match the factory's.
+ */
+const iconButtonScenarios: readonly Scenario[] = [
+  {
+    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A toggle button for a binary action, shown selected.',
+    options: { toggle: true, selected: true, icon: 'heart' },
+  },
+  {
+    id: 'bookmark', name: 'Bookmark', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A toggle button shown unselected; the outlined icon fills when selected.',
+    options: { toggle: true, icon: 'bookmark', ariaLabel: 'Bookmark' },
+  },
+  {
+    id: 'download', name: 'Download', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A filled button for a high emphasis action, like downloading.',
+    options: { variant: 'filled', icon: 'download', ariaLabel: 'Download' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -266,7 +288,7 @@ export const components = {
     description: 'A compact action with room for expression. Try its shape, width, and toggle state.',
     summary: 'Compact actions, with a shape for every state.',
     styles: ['icon-button'],
-    scenarios: [],
+    scenarios: iconButtonScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'filled', 'tonal', 'outlined'], 'standard', 'select'), size, square,
         choose('width', 'Width', ['narrow', 'default', 'wide'], 'default')]),
