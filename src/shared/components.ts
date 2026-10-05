@@ -244,13 +244,22 @@ export function toolbarContent(state: ComponentState): ToolbarContent {
     ? { ...(set.fab ? { fab: set.fab, ...(set.fabPosition === 'start' ? { fabPosition: set.fabPosition } : {}) } : {}), ...(set.overflow ? { overflow: set.overflow } : {}), ...(set.overflowPosition ? { overflowPosition: set.overflowPosition } : {}) }
     : {};
 }
-/** The toolbar's config as its element takes it: icon buttons in `items`, text buttons in `buttons`, and the FAB slotted beside them. */
+/**
+ * The toolbar's config as its element takes it: icon buttons in `items`, text buttons in
+ * `buttons`, and the FAB slotted beside them. The overflow menu and its position ride
+ * along unmapped, so the generated tabs state them as not yet exposed: the element takes
+ * the menu as a slotted `slot="overflow"` element it anchors to its own more button, which
+ * the generator does not write — the gap is recorded in briefs/gaps.md.
+ */
 export function toolbarElementConfig(state: ComponentState): Record<string, unknown> {
   const { items: allItems, ...config } = components.toolbar.config(state) as ToolbarConfig;
   const items = (allItems ?? []).filter(item => typeof (item as ToolbarButtonItem).text !== 'string');
   const buttons = (allItems ?? []).filter((item): item is ToolbarButtonItem => typeof (item as ToolbarButtonItem).text === 'string');
   const content = toolbarContent(state);
-  return { ...config, ...(items.length ? { items } : {}), ...(buttons.length ? { buttons } : {}), ...(content.fab ? { fab: content.fab } : {}) };
+  return {
+    ...config, ...(items.length ? { items } : {}), ...(buttons.length ? { buttons } : {}), ...(content.fab ? { fab: content.fab } : {}),
+    ...(content.overflow ? { overflow: content.overflow } : {}), ...(content.overflowPosition ? { overflowPosition: content.overflowPosition } : {}),
+  };
 }
 const toolbarActions: Control = {
   ...choose('actions', 'Actions', ['default', ...Object.keys(toolbarActionSets)], 'default', 'select'),
