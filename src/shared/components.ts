@@ -246,6 +246,45 @@ const toolbarActions: Control = {
   ...choose('actions', 'Actions', ['default', ...Object.keys(toolbarActionSets)], 'default', 'select'),
   labels: { default: 'Default', ...Object.fromEntries(Object.entries(toolbarActionSets).map(([id, set]) => [id, set.name])) },
 };
+/**
+ * The toolbar's scenarios, from m3.material.io (read 5 October 2026). Each pairs one
+ * named action set with the placement its situation calls for; options name playground
+ * controls only. The video call's end-call FAB is a tertiary container — the FAB has no
+ * error colour for the figure's red — and step navigation's Back and Next reach the
+ * edges through the spread arrangement, the closest the toolbar offers.
+ */
+const toolbarScenarios: readonly Scenario[] = [
+  {
+    id: 'video-call', name: 'Video call', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A video call\'s controls — camera, microphone, raise hand — floating beside an end-call FAB.',
+    options: { actions: 'video-call', variant: 'floating', color: 'standard', orientation: 'horizontal', elevated: true },
+  },
+  {
+    id: 'text-formatting', name: 'Text formatting', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'Formatting a text selection: bold on, with italic, underline and colour picks, in the vibrant colour that signals an edit mode.',
+    options: { actions: 'text-formatting', variant: 'floating', color: 'vibrant', orientation: 'horizontal', elevated: true },
+  },
+  {
+    id: 'browser', name: 'Browser', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'Page navigation in a browser: back, forward and tabs, with a filled, wide new-tab action standing out mid-bar.',
+    options: { actions: 'browser', variant: 'floating', color: 'standard', orientation: 'horizontal', elevated: true },
+  },
+  {
+    id: 'document-editing', name: 'Document editing', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'Editing a document on a large screen: undo, redo and insert tools in a vertical rail beside the text.',
+    options: { actions: 'document-editing', variant: 'floating', color: 'standard', orientation: 'vertical', elevated: true },
+  },
+  {
+    id: 'step-navigation', name: 'Step navigation', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'A step-by-step flow: Back at the start and Next at the end of a full-width bar.',
+    options: { actions: 'step-navigation', variant: 'docked', color: 'standard', arrangement: 'spread' },
+  },
+  {
+    id: 'email-actions', name: 'Email actions', source: 'https://m3.material.io/components/toolbars/guidelines',
+    description: 'Acting on an open email — archive, delete, mark unread, snooze, star — in the vibrant bar that marks the temporary mode.',
+    options: { actions: 'email-actions', variant: 'docked', color: 'vibrant', arrangement: 'spread' },
+  },
+];
 const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
 /** Twenty-four photos per layout, enough for each to scroll as it does with a real collection. */
 const carouselSlides = (state: ComponentState) => {
@@ -1086,7 +1125,7 @@ export const components = {
     group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
     description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
     summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button'],
-    scenarios: [],
+    scenarios: toolbarScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
       ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
