@@ -247,6 +247,34 @@ const buttonScenarios: readonly Scenario[] = [
     options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
   },
 ];
+/**
+ * The select's scenarios, from m3.material.io (read 5 October 2026). Options name playground
+ * controls only. m3.material.io has no select page (its components index lists none): the
+ * menu behaviour follows the menus guidelines ("Select menus", a disabled item stays in the
+ * list), the field style and error text the text fields guidelines.
+ */
+const selectScenarios: readonly Scenario[] = [
+  {
+    id: 'single-select', name: 'Single select', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A single-select menu: one item selected, the previous one unselected.',
+    options: { value: 'banana' },
+  },
+  {
+    id: 'disabled-option', name: 'Disabled option', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A menu item that cannot be used stays in the list, disabled.',
+    options: { disableBanana: true },
+  },
+  {
+    id: 'filled', name: 'Filled', source: 'https://m3.material.io/components/text-fields/guidelines',
+    description: 'The filled field style, for more emphasis than outlined.',
+    options: { variant: 'filled' },
+  },
+  {
+    id: 'error', name: 'Error', source: 'https://m3.material.io/components/text-fields/guidelines',
+    description: 'The error state; the supporting text says how to avoid the error.',
+    options: { error: true, supportingText: 'Select a fruit to continue' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -506,7 +534,7 @@ export const components = {
     group: 'Selection & input', name: 'Select', factory: 'createSelect', variable: 'select',
     description: 'Pick an option from a menu. Explore field styles, selection, and validation states.',
     summary: 'A menu of choices in a field.', styles: ['text-field', 'menu', 'select'],
-    scenarios: [],
+    scenarios: selectScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default')]),
       ...section('Content', [text('label', 'Label', 'Fruit'), choose('value', 'Selected', ['', 'apple', 'banana', 'cherry'], 'apple', 'select'), text('supportingText', 'Supporting text', 'Choose a favorite')]),
