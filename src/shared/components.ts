@@ -247,6 +247,37 @@ const buttonScenarios: readonly Scenario[] = [
     options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
   },
 ];
+/**
+ * Navigation rail scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const navigationRailScenarios: readonly Scenario[] = [
+  {
+    id: 'collapsed', name: 'Collapsed', source: 'https://m3.material.io/components/navigation-rail/guidelines',
+    description: 'A standard collapsed rail with destinations and a badge along the leading edge.',
+    options: { layout: 'standard', expanded: false, showToggle: true, badges: true },
+  },
+  {
+    id: 'expanded', name: 'Expanded', source: 'https://m3.material.io/components/navigation-rail/guidelines',
+    description: 'A standard expanded navigation rail placed beside body content.',
+    options: { layout: 'standard', expanded: true, showToggle: true, badges: true },
+  },
+  {
+    id: 'modal', name: 'Modal', source: 'https://m3.material.io/components/navigation-rail/guidelines',
+    description: 'A modal expanded rail that overlaps body content in a dialog.',
+    options: { layout: 'modal', expanded: true, showToggle: true },
+  },
+  {
+    id: 'hidden-collapsed', name: 'Hidden collapsed', source: 'https://m3.material.io/components/navigation-rail/guidelines',
+    description: 'An immersive navigation rail that stays hidden until opened.',
+    options: { layout: 'standard', expanded: false, hideWhenCollapsed: true, showToggle: true },
+  },
+  {
+    id: 'no-toggle', name: 'No menu button', source: 'https://m3.material.io/components/navigation-rail/guidelines',
+    description: 'A collapsed navigation rail without a menu toggle button.',
+    options: { layout: 'standard', expanded: false, showToggle: false },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -563,7 +594,7 @@ export const components = {
     group: 'Navigation', name: 'Navigation rail', factory: 'createNavigationRail', variable: 'rail',
     description: 'Move between destinations. Explore collapsed, expanded, and modal navigation.',
     summary: 'Primary destinations in an expressive rail.', styles: ['navigation-rail', 'button', 'progress'],
-    scenarios: [],
+    scenarios: navigationRailScenarios,
     controls: [
       ...section('Layout', [choose('layout', 'Layout', ['standard', 'modal'], 'standard'), toggle('expanded', 'Expanded'), { ...range('expandedWidth', 'Expanded width', '280'), min: 220, max: 360, step: 20 }, toggle('hideWhenCollapsed', 'Hide collapsed')]),
       ...section('Content', [activeDestination, toggle('badges', 'Badges', true), toggle('showToggle', 'Menu button', true)]),
