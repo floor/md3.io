@@ -519,33 +519,99 @@ const chipsScenarios: readonly Scenario[] = [
     options: { chipSet: 'catalog-filters', type: 'filter', label: 'Categories', multiSelect: true },
   },
 ];
+export interface CheckboxChild {
+  readonly label: string;
+  readonly value: string;
+  readonly checkedWhenMixed?: boolean;
+}
+
+export interface CheckboxFamily {
+  readonly name: string;
+  readonly parent: string;
+  readonly groupName: string;
+  readonly children: readonly CheckboxChild[];
+}
+
+export const checkboxFamilies: Record<string, CheckboxFamily> = {
+  'burger-additions': {
+    name: 'Burger additions',
+    parent: 'Additions',
+    groupName: 'additions',
+    children: [
+      { label: 'Pickles', value: 'pickles' },
+      { label: 'Tomato', value: 'tomato', checkedWhenMixed: true },
+      { label: 'Lettuce', value: 'lettuce' },
+    ],
+  },
+  'email-frequency': {
+    name: 'Email notifications',
+    parent: 'Receive emails',
+    groupName: 'notifications',
+    children: [
+      { label: 'Daily', value: 'daily' },
+      { label: 'Weekly', value: 'weekly', checkedWhenMixed: true },
+      { label: 'Monthly', value: 'monthly' },
+    ],
+  },
+  'genre-filter': {
+    name: 'Genre filter',
+    parent: 'View all',
+    groupName: 'genres',
+    children: [
+      { label: 'Rock', value: 'rock', checkedWhenMixed: true },
+      { label: 'Pop', value: 'pop', checkedWhenMixed: true },
+      { label: 'Hip Hop', value: 'hip-hop', checkedWhenMixed: true },
+    ],
+  },
+  'playlist-selection': {
+    name: 'Playlist selection',
+    parent: '80s playlist',
+    groupName: 'playlist',
+    children: [
+      { label: "Jessie's Girl · Rick Springfield", value: 'jessies-girl', checkedWhenMixed: true },
+      { label: "Another One Bites the Dust · Queen", value: 'another-one-bites-the-dust' },
+    ],
+  },
+};
+checkboxFamilies['email-notifications'] = checkboxFamilies['email-frequency'];
+
+const familySetControl: Control = {
+  ...choose('familySet', 'Options', ['default', 'burger-additions', 'email-frequency', 'genre-filter', 'playlist-selection'], 'default', 'select'),
+  labels: {
+    default: 'Default',
+    'burger-additions': 'Burger additions',
+    'email-frequency': 'Email notifications',
+    'genre-filter': 'Genre filter',
+    'playlist-selection': 'Playlist selection',
+  },
+};
+
 /**
  * The checkbox's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only. Parent and children sets (the guidelines' default with
- * Pickles, Tomato, Lettuce, and Cheese) can have all items selected or unselected.
- * A standalone checkbox turns a single item on or off. The error scenario displays an
- * unselected required checkbox in an invalid state.
+ * playground controls only. Parent and children sets can have all items selected or
+ * unselected, or represent real-world toppings, notification cadences, or genre filters.
+ * A standalone checkbox turns a single item on or off in a playlist queue.
  */
 const checkboxScenarios: readonly Scenario[] = [
   {
-    id: 'all-selected', name: 'All selected', source: 'https://m3.material.io/components/checkbox/guidelines',
-    description: 'A parent checkbox with all child items selected.',
-    options: { family: true, state: 'checked' },
+    id: 'burger-additions', name: 'Burger additions', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'Customising a food order with optional toppings under an indeterminate parent checkbox.',
+    options: { familySet: 'burger-additions', family: true, label: 'Additions', name: 'additions', state: 'indeterminate' },
   },
   {
-    id: 'unselected', name: 'Unselected', source: 'https://m3.material.io/components/checkbox/guidelines',
-    description: 'A parent checkbox with all child items unselected.',
-    options: { family: true, state: 'unchecked' },
+    id: 'email-frequency', name: 'Email notifications', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'Setting email digest frequencies with a parent toggle and child cadences.',
+    options: { familySet: 'email-frequency', family: true, label: 'Receive emails', name: 'notifications', state: 'indeterminate' },
   },
   {
-    id: 'single', name: 'Single choice', source: 'https://m3.material.io/components/checkbox/guidelines',
-    description: 'A standalone checkbox to turn an item on or off.',
-    options: { family: false, state: 'checked' },
+    id: 'genre-filter', name: 'Genre filter', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'Filtering a music catalog by genre in a side sheet filter panel.',
+    options: { familySet: 'genre-filter', family: true, label: 'View all', name: 'genres', state: 'checked' },
   },
   {
-    id: 'error', name: 'Error', source: 'https://m3.material.io/components/checkbox/overview',
-    description: 'An unselected required checkbox in an error state.',
-    options: { family: false, state: 'unchecked', error: true, required: true },
+    id: 'playlist-selection', name: 'Playlist selection', source: 'https://m3.material.io/components/checkbox/guidelines',
+    description: 'Selecting multiple tracks in an 80s music playlist for batch addition to a queue.',
+    options: { familySet: 'playlist-selection', family: false, state: 'checked', label: "Jessie's Girl · Rick Springfield", name: 'playlist' },
   },
 ];
 /**
@@ -781,7 +847,7 @@ export const components = {
       ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
       // The m3.material.io checkbox guidelines' parent and children: the label names
       // the parent, the children are the guideline's own. FLO-269.
-      ...section('Content', [toggle('family', 'Parent and children', true), text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), text('value', 'Value', 'on')]),
+      ...section('Content', [toggle('family', 'Parent and children', true), familySetControl, text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), text('value', 'Value', 'on')]),
       ...section('Behavior', [choose('state', 'State', ['unchecked', 'checked', 'indeterminate'], 'indeterminate', 'select'), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
     ],
     config: (state: ComponentState): CheckboxConfig => ({
@@ -1292,6 +1358,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.toggleAllowed = state.variant !== 'text';
     if (!state.toggleAllowed) state.toggle = false;
   }
+  if (slug === 'checkbox') state.familySetDefault = !state.familySet || state.familySet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios' && state.disableExpress && state.value === 'express') state.value = 'standard';
   if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
@@ -1389,15 +1456,27 @@ export const checkboxChildren = [
   { label: 'Lettuce', value: 'lettuce' }, { label: 'Cheese', value: 'cheese' },
 ] as const;
 
-/** Whether a child starts checked: all when the parent is, Tomato alone when it is mixed. */
-export const checkboxChildChecked = (state: ComponentState, value: string): boolean =>
-  state.state === 'checked' || (state.state === 'indeterminate' && value === 'tomato');
+/** The children of the current checkbox family, or the default burger toppings. */
+export const currentCheckboxChildren = (state: ComponentState): readonly CheckboxChild[] => {
+  const family = checkboxFamilies[string(state, 'familySet')];
+  return family ? family.children : checkboxChildren;
+};
+
+/** Whether a child starts checked: all when the parent is, or according to the family's mixed state. */
+export const checkboxChildChecked = (state: ComponentState, value: string): boolean => {
+  if (state.state === 'checked') return true;
+  if (state.state === 'unchecked') return false;
+  const children = currentCheckboxChildren(state);
+  const child = children.find(c => c.value === value);
+  if (child && 'checkedWhenMixed' in child) return !!child.checkedWhenMixed;
+  return value === 'tomato';
+};
 
 function checkboxFamilyCode(state: ComponentState): string {
   // The options every box shares, as the playground sets them.
   const rest = `${state.labelPosition === 'start' ? ", labelPosition: 'start'" : ''}${bool(state, 'error') ? ', error: true' : ''}` +
     `${bool(state, 'required') ? ', required: true' : ''}${bool(state, 'disabled') ? ', disabled: true' : ''}`;
-  const children = checkboxChildren.map(child => `  { label: '${child.label}', value: '${child.value}'${checkboxChildChecked(state, child.value) ? ', checked: true' : ''} }`).join(',\n');
+  const children = currentCheckboxChildren(state).map(child => `  { label: '${child.label}', value: '${child.value}'${checkboxChildChecked(state, child.value) ? ', checked: true' : ''} }`).join(',\n');
   const theme = state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`;
   return `import { createCheckbox } from 'material';\nimport 'material/styles/base';\nimport 'material/styles/checkbox';\n${theme}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
