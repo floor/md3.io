@@ -247,6 +247,37 @@ const buttonScenarios: readonly Scenario[] = [
     options: { variant: 'filled', size: 'l', text: 'Download', icon: 'download' },
   },
 ];
+/**
+ * Card scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const cardScenarios: readonly Scenario[] = [
+  {
+    id: 'elevated', name: 'Elevated', source: 'https://m3.material.io/components/cards/guidelines',
+    description: 'An elevated card with drop shadow, top media, and action buttons.',
+    options: { variant: 'elevated', media: true, actions: true },
+  },
+  {
+    id: 'filled', name: 'Filled', source: 'https://m3.material.io/components/cards/guidelines',
+    description: 'A filled card providing subtle separation from the background.',
+    options: { variant: 'filled', media: true, actions: true },
+  },
+  {
+    id: 'outlined', name: 'Outlined', source: 'https://m3.material.io/components/cards/guidelines',
+    description: 'An outlined card with a distinct visual boundary around the container.',
+    options: { variant: 'outlined', media: true, actions: true },
+  },
+  {
+    id: 'clickable', name: 'Clickable', source: 'https://m3.material.io/components/cards/guidelines',
+    description: 'A card functioning as a single touch target entry point into deeper content.',
+    options: { variant: 'elevated', clickable: true, actions: false },
+  },
+  {
+    id: 'text-only', name: 'Text only', source: 'https://m3.material.io/components/cards/guidelines',
+    description: 'A compact card with headline, subhead, body text, and no media.',
+    options: { variant: 'outlined', media: false, actions: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -662,7 +693,7 @@ export const components = {
     group: 'Containment', name: 'Card', factory: 'createCard', variable: 'card',
     description: 'Bring content and actions together. Explore surfaces, media, and interactive cards.',
     summary: 'Content and actions on one surface.', styles: ['progress', 'button', 'card'],
-    scenarios: [],
+    scenarios: cardScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['elevated', 'filled', 'outlined'], 'elevated'), toggle('media', 'Show image', true), choose('aspectRatio', 'Image ratio', ['16:9', '4:3', '1:1'], '16:9'), choose('mediaPosition', 'Image position', ['top', 'bottom'], 'top')]),
       ...section('Content', [text('title', 'Title', 'A little time outside'), text('subtitle', 'Subtitle', 'Find your next escape'), text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), toggle('actions', 'Show actions', true)]),
