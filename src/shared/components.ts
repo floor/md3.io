@@ -62,7 +62,7 @@ export const componentIcons: Record<string, string> = {
 // import them without importing this registry; re-exported here for their consumers.
 import { type ComponentState, type Control, type Scenario, section, choose, toggle, text, range, date, size, square, disabled, icon, pick, string, bool, shape, tones, positions, position, toneControl, iconMarkup, fabPosition, paragraph, landscape } from './content/types';
 export type { ComponentState, Control, Scenario } from './content/types';
-// The Actions components' content modules, one per component.
+// The Actions and Selection & input components' content modules, one per component.
 import { buttonComponent } from './content/button';
 import { buttonGroupComponent } from './content/button-group';
 import { extendedFabComponent } from './content/extended-fab';
@@ -70,6 +70,21 @@ import { fabComponent } from './content/fab';
 import { fabMenuComponent } from './content/fab-menu';
 import { iconButtonComponent } from './content/icon-button';
 import { splitButtonComponent } from './content/split-button';
+import { checkboxChildChecked, checkboxChildren, checkboxComponent } from './content/checkbox';
+import { chipsComponent } from './content/chips';
+import { datepickerComponent } from './content/datepicker';
+import { radiosComponent } from './content/radios';
+import { searchComponent } from './content/search';
+import { selectComponent } from './content/select';
+import { sliderComponent } from './content/slider';
+import { switchComponent } from './content/switch';
+import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from './content/text-field';
+import { timePickerComponent } from './content/timepicker';
+// Until the preview and its checkbox check import from the content modules, they keep
+// importing these from the registry.
+export { checkboxChildChecked, checkboxChildren } from './content/checkbox';
+export { trailingBehaviour } from './content/text-field';
+export type { TrailingBehaviour } from './content/text-field';
 
 const destinations = [{ id: 'inbox', label: 'Inbox', icon: componentIcons.inbox! }, { id: 'favorites', label: 'Favorites', icon: componentIcons.heart! }, { id: 'sent', label: 'Sent', icon: componentIcons.send! }];
 const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
@@ -290,78 +305,6 @@ function listConfig(state: ComponentState): ListConfig<ListItem> {
   return { ...(variant === 'standard' ? {} : { variant }), items, ariaLabel: string(state, 'ariaLabel').trim() || 'Ideas for today', trackSelection: state.selection !== 'none', multiSelect: state.selection === 'multi',
     initialSelection: ['first', 'second', 'third', 'fourth', 'fifth'].flatMap((key, index) => state[key] && index < labels.length && state.selection !== 'none' ? [String(index + 1)] : []) };
 }
-/** What a labelled trailing icon does on the text field. */
-export type TrailingBehaviour = 'clear' | 'show-password';
-/**
- * The behaviour of the text field's trailing button, from the trailing icon control's value:
- * the stable key, so a label a visitor types cannot turn an arbitrary icon into a clear
- * button or a password toggle. The label stays what it is in the config — the button's
- * accessible name — and the icon, not the label, decides what activating it does. One
- * behaviour per icon, shared by the preview and by the generator rule below.
- */
-export function trailingBehaviour(state: ComponentState): TrailingBehaviour | undefined {
-  const icon = string(state, 'trailingIcon');
-  if (icon === 'close') return 'clear';
-  if (icon === 'visibility') return 'show-password';
-  return undefined;
-}
-/**
- * The text field's scenarios, from m3.material.io (read 3 October 2026). Options name
- * playground controls only; applying one is `normalizeComponentState(slug, { ...initials,
- * ...options })`. The password's show or hide button rides on the 3.0.0 factory's
- * `trailingIconLabel`; the element has no `trailing-icon-label` attribute yet, so the
- * element tabs' snippet cannot name the button, and the description says so.
- */
-const textFieldScenarios: readonly Scenario[] = [
-  {
-    id: 'amount', name: 'Amount', source: 'https://m3.material.io/components/text-fields/guidelines',
-    description: 'An amount with a dollar prefix and a USD suffix.',
-    options: { type: 'number', label: 'Amount', prefixText: '$', suffixText: 'USD', placeholder: '', supportingText: '', value: '', icon: 'none' },
-  },
-  {
-    id: 'password', name: 'Password', source: 'https://m3.material.io/components/text-fields/accessibility',
-    description: 'A password with a show or hide button. In the element, the button\'s label waits on `trailing-icon-label`, 3.1.0.',
-    options: { type: 'password', label: 'Password', placeholder: '', supportingText: '', value: '', icon: 'none', trailingIcon: 'visibility', trailingIconLabel: 'Show password' },
-  },
-  {
-    id: 'email', name: 'Email', source: 'https://m3.material.io/components/text-fields/guidelines',
-    description: 'An email address in error, with a leading icon.',
-    options: { type: 'email', label: 'Email', icon: 'mail', trailingIcon: 'error', error: true, supportingText: 'Enter an email address', placeholder: '', value: '' },
-  },
-  {
-    id: 'search', name: 'Search', source: 'https://m3.material.io/components/text-fields/guidelines',
-    description: 'A search field with a clear button.',
-    options: { type: 'search', label: 'Search', value: 'Trail', placeholder: '', supportingText: '', icon: 'none', trailingIcon: 'close', trailingIconLabel: 'Clear' },
-  },
-  {
-    id: 'message', name: 'Message', source: 'https://m3.material.io/components/text-fields/guidelines',
-    description: 'A multiline message with a character counter.',
-    options: { type: 'multiline', label: 'Message', value: 'Hello', placeholder: '', supportingText: '', maxLength: '200' },
-  },
-];
-/**
- * The chips' scenarios, from m3.material.io (read 5 October 2026). Labels stay Hiking, Music
- * and Food (fixed in `config()`); options name playground controls only. Filters select two
- * chips — "Multiple chips can be selected or unselected".
- */
-const chipsScenarios: readonly Scenario[] = [
-  {
-    id: 'filters', name: 'Filters', source: 'https://m3.material.io/components/chips/guidelines',
-    description: 'Filter chips with several selected.',
-    options: { type: 'filter', multiSelect: true, hiking: true, music: true, food: false },
-  },
-];
-/**
- * The radio buttons' scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only.
- */
-const radiosScenarios: readonly Scenario[] = [
-  {
-    id: 'selected', name: 'Express delivery', source: 'https://m3.material.io/components/radio-button/guidelines',
-    description: 'A radio button set with the express option selected.',
-    options: { value: 'express' },
-  },
-];
 export const components = {
   button: buttonComponent,
   'icon-button': iconButtonComponent,
@@ -370,180 +313,16 @@ export const components = {
   fab: fabComponent,
   'fab-menu': fabMenuComponent,
   'extended-fab': extendedFabComponent,
-  checkbox: {
-    group: 'Selection & input', name: 'Checkbox', factory: 'createCheckbox', variable: 'checkbox',
-    description: 'Make a choice, or represent a partial selection. Explore checkbox states, labels, and form behavior.',
-    summary: 'Single choices and mixed selections.',
-    styles: ['checkbox'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
-      // The m3.material.io checkbox guidelines' parent and children: the label names
-      // the parent, the children are the guideline's own. FLO-269.
-      ...section('Content', [toggle('family', 'Parent and children', true), text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), text('value', 'Value', 'on')]),
-      ...section('Behavior', [choose('state', 'State', ['unchecked', 'checked', 'indeterminate'], 'indeterminate', 'select'), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
-    ],
-    config: (state: ComponentState): CheckboxConfig => ({
-      label: string(state, 'label'), name: string(state, 'name'), value: string(state, 'value') || 'on',
-      labelPosition: pick(state, 'labelPosition', ['start', 'end'], 'end'),
-      checked: state.state === 'checked', indeterminate: state.state === 'indeterminate',
-      // withInput writes boolean attributes by presence, so omit them when false.
-      ...(bool(state, 'disabled') ? { disabled: true } : {}),
-      ...(bool(state, 'required') ? { required: true } : {}),
-      ...(bool(state, 'error') ? { error: true } : {}),
-    }),
-  },
-  switch: {
-    group: 'Selection & input', name: 'Switch', factory: 'createSwitch', variable: 'toggle',
-    description: 'Turn a setting on or off. Try labels, supporting text, and interactive states.',
-    summary: 'Settings that take effect immediately.', styles: ['switch'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('icons', 'Icons', ['none', 'selected', 'both'], 'selected'), choose('labelPosition', 'Label position', ['start', 'end'], 'start')]),
-      ...section('Content', [text('label', 'Label', 'Notifications'), text('supportingText', 'Supporting text', 'Stay up to date'), text('name', 'Name', 'notifications')]),
-      ...section('Behavior', [toggle('checked', 'Checked', true), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
-    ],
-    config: (state: ComponentState): SwitchConfig => ({ label: string(state, 'label'), ariaLabel: string(state, 'label').trim() || 'Notifications',
-      labelPosition: pick(state, 'labelPosition', ['start', 'end'], 'start'),
-      // M3's three configurations: no icons, an icon when on, icons on both.
-      ...(state.icons === 'none' ? { icon: 'none' } : { icon: symbols.check }), ...(state.icons === 'both' ? { unselectedIcon: symbols.close } : {}),
-      supportingText: string(state, 'supportingText'), name: string(state, 'name'), checked: bool(state, 'checked'), error: bool(state, 'error'),
-      ...(bool(state, 'required') ? { required: true } : {}), ...(bool(state, 'disabled') ? { disabled: true } : {}) }),
-  },
-  radios: {
-    group: 'Selection & input', name: 'Radio buttons', factory: 'createRadios', variable: 'radios',
-    description: 'Choose one option from a set. Explore orientation, label placement, and disabled options.',
-    summary: 'One choice from a related set.', styles: ['radios'],
-    scenarios: radiosScenarios,
-    controls: [
-      ...section('Layout', [choose('direction', 'Direction', ['vertical', 'horizontal'], 'vertical'), toggle('labelBefore', 'Labels before')]),
-      ...section('Content', [text('name', 'Name', 'delivery'), choose('value', 'Selected', ['standard', 'express', 'pickup'], 'standard', 'select')]),
-      ...section('Behavior', [toggle('disableExpress', 'Disable express'), disabled]),
-    ],
-    config: (state: ComponentState): RadiosConfig => ({ name: string(state, 'name') || 'delivery', direction: pick(state, 'direction', ['vertical', 'horizontal'], 'vertical'),
-      value: bool(state, 'disableExpress') && state.value === 'express' ? 'standard' : string(state, 'value'), disabled: bool(state, 'disabled'),
-      options: [{ value: 'standard', label: 'Standard' }, { value: 'express', label: 'Express', disabled: bool(state, 'disableExpress') }, { value: 'pickup', label: 'Pick up' }].map(option => ({ ...option, labelBefore: bool(state, 'labelBefore') })) }),
-  },
-  chips: {
-    group: 'Selection & input', name: 'Chips', factory: 'createChips', variable: 'chips',
-    description: 'Explore compact choices and actions. Try the four chip types, elevation, icons and avatars, and single or multiple selection.',
-    summary: 'Compact choices, filters, and actions.', styles: ['chips'],
-    scenarios: chipsScenarios,
-    controls: [
-      // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
-      // avatar for input chips; selection for filter and input chips.
-      ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType'), toggle('trailingMenu', 'Trailing menu', false, 'filterType'), toggle('draggable', 'Draggable')]),
-      ...section('Content', [text('label', 'Group label', 'Interests')]),
-      ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('selectionRequired', 'Selection required', false, 'selectable'), toggle('hiking', 'Hiking selected', true, 'selectable'), toggle('music', 'Music selected', false, 'selectable'), toggle('food', 'Food selected', false, 'selectable'), disabled]),
-    ],
-    config: (state: ComponentState): ChipsConfig => ({ label: string(state, 'label'), vertical: bool(state, 'vertical'), multiSelect: bool(state, 'multiSelect'), selectionRequired: bool(state, 'selectionRequired'),
-      chips: ['hiking', 'music', 'food'].map((value, index) => ({ value, label: ['Hiking', 'Music', 'Food'][index], type: pick(state, 'type', ['assist', 'filter', 'input', 'suggestion'], 'filter'),
-        ...(state.elevatedAllowed && bool(state, 'elevated') ? { elevated: true } : {}),
-        ...(state.selectable ? { selected: bool(state, value) } : {}), disabled: bool(state, 'disabled'),
-        ...(state.filterType && bool(state, 'trailingMenu') ? { trailingMenu: true } : {}),
-        ...(state.inputType && bool(state, 'avatar') ? { avatar: symbols.accountCircle } : bool(state, 'icons') ? { leadingIcon: componentIcons.heart } : {}) })) }),
-  },
-  slider: {
-    group: 'Selection & input', name: 'Slider', factory: 'createSlider', variable: 'slider',
-    description: 'Choose a value or a range. Explore track sizes, steps, colors, and value indicators.',
-    summary: 'Values and ranges along a track.', styles: ['slider'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('size', 'Size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('color', 'Color', ['primary', 'secondary', 'tertiary', 'error'], 'primary', 'select'), toggle('ticks', 'Tick marks'), toggle('showValue', 'Value indicator', true)]),
-      ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }, toggle('insetIcon', 'Inset icon', false, 'insetIconAllowed')]),
-      ...section('Behavior', [choose('variant', 'Variant', ['standard', 'centered', 'range'], 'standard'), choose('step', 'Step', ['5', '10'], '10'), disabled]),
-    ],
-    // The three M3 variants. A centred slider runs from -50 to 50 around zero, so the
-    // 0-100 value control is shifted onto that range.
-    config: (state: ComponentState): SliderConfig => ({
-      ...(state.variant === 'centered' ? { min: -50, max: 50, value: Number(state.value) - 50, centered: true } : { min: 0, max: 100, value: Number(state.value) }),
-      ...(state.variant === 'range' ? { secondValue: Number(state.secondValue) } : {}),
-      step: Number(state.step), range: state.variant === 'range',
-      ...(state.orientation === 'vertical' ? { orientation: 'vertical' as const } : {}),
-      // The guidelines' example: volume, swapping to mute at the minimum.
-      ...(state.insetIconAllowed && state.insetIcon ? { insetIcon: symbols.volumeUp, insetIconAtMin: symbols.volumeOff } : {}), size: pick(state, 'size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), color: pick(state, 'color', ['primary', 'secondary', 'tertiary', 'error'], 'primary'),
-      ticks: bool(state, 'ticks'), showValue: bool(state, 'showValue'), label: string(state, 'label'), ariaLabel: string(state, 'label').trim() || 'Volume', disabled: bool(state, 'disabled'), name: 'volume' }),
-  },
-  'text-field': {
-    group: 'Selection & input', name: 'Text field', factory: 'createTextField', variable: 'textField',
-    description: 'Enter text with helpful context. Explore field styles, input types, icons, and validation states.',
-    summary: 'Text entry with labels and feedback.', styles: ['text-field'],
-    scenarios: textFieldScenarios,
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default'), icon(['none', 'heart', 'edit', 'send', 'mail', 'search'], 'none'),
-        choose('trailingIcon', 'Trailing icon', ['none', 'close', 'error', 'visibility'], 'none', 'icons'), { ...text('trailingIconLabel', 'Trailing icon label', ''), enabledWhen: 'hasTrailingIcon' }]),
-      ...section('Content', [choose('type', 'Input type', ['text', 'password', 'email', 'number', 'tel', 'url', 'search', 'multiline'], 'text', 'select'), text('label', 'Label', 'Name'), text('value', 'Value', ''), text('placeholder', 'Placeholder', 'Enter your name'), text('prefixText', 'Prefix', ''), text('suffixText', 'Suffix', ''), text('supportingText', 'Supporting text', 'As you would like it displayed'),
-        { ...range('maxLength', 'Maximum length', '0'), max: 500, step: 10 }]),
-      ...section('Behavior', [toggle('error', 'Error'), toggle('required', 'Required'), toggle('readonly', 'Read only'), disabled]),
-    ],
-    config: (state: ComponentState): TextFieldConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), type: string(state, 'type'), label: string(state, 'label'),
-      value: string(state, 'value'), placeholder: string(state, 'placeholder'), supportingText: string(state, 'supportingText'), name: 'name', ...(iconMarkup(state) ? { leadingIcon: iconMarkup(state) } : {}),
-      // A trailing icon is decorative until it has a label, which makes it a button emitting `trailing` (clear, show password)
-      ...(componentIcons[string(state, 'trailingIcon')] ? { trailingIcon: componentIcons[string(state, 'trailingIcon')] } : {}),
-      ...(componentIcons[string(state, 'trailingIcon')] && string(state, 'trailingIconLabel').trim() ? { trailingIconLabel: string(state, 'trailingIconLabel').trim() } : {}),
-      // Prefix and suffix text ("$", "kg") sit beside the input; only set when given, so the default field has neither
-      ...(string(state, 'prefixText') ? { prefixText: string(state, 'prefixText') } : {}), ...(string(state, 'suffixText') ? { suffixText: string(state, 'suffixText') } : {}),
-      // The counter shows `count/max` while the input has a maxlength; 0 leaves the field unlimited
-      ...(Number(state.maxLength) > 0 ? { maxLength: Number(state.maxLength) } : {}),
-      error: bool(state, 'error'), required: bool(state, 'required'), readonly: bool(state, 'readonly'), disabled: bool(state, 'disabled') }),
-  },
-  select: {
-    group: 'Selection & input', name: 'Select', factory: 'createSelect', variable: 'select',
-    description: 'Pick an option from a menu. Explore field styles, selection, and validation states.',
-    summary: 'A menu of choices in a field.', styles: ['text-field', 'menu', 'select'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default')]),
-      ...section('Content', [text('label', 'Label', 'Fruit'), choose('value', 'Selected', ['', 'apple', 'banana', 'cherry'], 'apple', 'select'), text('supportingText', 'Supporting text', 'Choose a favorite')]),
-      ...section('Behavior', [toggle('disableBanana', 'Disable banana'), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
-    ],
-    config: (state: ComponentState): SelectConfig => ({ variant: string(state, 'variant'), density: string(state, 'density'), label: string(state, 'label'), value: string(state, 'value'),
-      supportingText: string(state, 'supportingText'), error: bool(state, 'error'), required: bool(state, 'required'), disabled: bool(state, 'disabled'), name: 'fruit',
-      options: [{ id: 'apple', text: 'Apple' }, { id: 'banana', text: 'Banana', disabled: bool(state, 'disableBanana') }, { id: 'cherry', text: 'Cherry' }] }),
-  },
-  search: {
-    group: 'Selection & input', name: 'Search', factory: 'createSearch', variable: 'search',
-    description: 'Start with a search bar, then explore suggestions in a docked or fullscreen view.',
-    summary: 'Search with suggestions and an expanded view.', styles: ['search'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Style', ['contained', 'divided'], 'contained'), choose('initialState', 'State', ['bar', 'view'], 'bar'), choose('viewMode', 'View mode', ['docked', 'fullscreen'], 'docked')]),
-      ...section('Content', [text('placeholder', 'Placeholder', 'Search places'), text('value', 'Query', ''), choose('suggestions', 'Suggestions', ['places', 'none'], 'places')]),
-      ...section('Behavior', [toggle('showClearButton', 'Clear button', true), toggle('expandOnFocus', 'Expand on focus', true), toggle('collapseOnBlur', 'Collapse on blur', true), disabled]),
-    ],
-    config: (state: ComponentState): SearchConfig => ({ variant: pick(state, 'variant', ['contained', 'divided'], 'contained'), initialState: pick(state, 'initialState', ['bar', 'view'], 'bar'), viewMode: pick(state, 'viewMode', ['docked', 'fullscreen'], 'docked'),
-      placeholder: string(state, 'placeholder'), value: string(state, 'value'), suggestions: state.suggestions === 'none' ? [] : ['Paris', 'London', 'Lisbon', 'Tokyo'],
-      showClearButton: bool(state, 'showClearButton'), expandOnFocus: bool(state, 'expandOnFocus'), collapseOnBlur: bool(state, 'collapseOnBlur'), disabled: bool(state, 'disabled'), minWidth: 240, maxWidth: 480, name: 'query' }),
-  },
-  datepicker: {
-    group: 'Selection & input', name: 'Date picker', factory: 'createDatePicker', variable: 'datePicker',
-    description: 'Choose a date or enter one by keyboard. Explore calendar and input modes, ranges, and selection limits.',
-    summary: 'Calendar and keyboard entry for dates and ranges.', styles: ['datepicker'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input', 'fullscreen'], 'docked', 'select'), choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day')]),
-      ...section('Content', [text('label', 'Label', 'Choose a date'), date('value', 'Date', '2026-09-21'), { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'range' }, choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select')]),
-      ...section('Behavior', [toggle('range', 'Date range'), toggle('closeOnSelect', 'Close on selection'), disabled, toggle('bounded', 'Limit dates'), { ...date('minDate', 'Earliest date', '2026-09-01'), enabledWhen: 'bounded' }, { ...date('maxDate', 'Latest date', '2026-10-31'), enabledWhen: 'bounded' }]),
-    ],
-    config: (state: ComponentState): DatePickerConfig => ({ variant: string(state, 'variant'), initialView: string(state, 'initialView'), selectionMode: bool(state, 'range') ? 'range' : 'single',
-      ...(state.value ? { value: bool(state, 'range') && state.endDate ? [string(state, 'value'), string(state, 'endDate')] as [string, string] : string(state, 'value') } : {}), dateFormat: string(state, 'dateFormat'),
-      label: string(state, 'label'), closeOnSelect: bool(state, 'closeOnSelect'), disabled: bool(state, 'disabled'), ...(state.bounded ? { minDate: string(state, 'minDate'), maxDate: string(state, 'maxDate') } : {}) }),
-  },
-  timepicker: {
-    group: 'Selection & input', name: 'Time picker', factory: 'createTimePicker', variable: 'timePicker',
-    description: 'Choose a time with a dial or keyboard. Explore clock formats, orientation, and precision.',
-    summary: 'Time entry with a dial or keyboard.', styles: ['progress', 'button', 'timepicker'],
-    scenarios: [],
-    controls: [
-      ...section('Appearance', [choose('type', 'Input mode', ['dial', 'input'], 'dial'), choose('format', 'Clock format', ['12h', '24h'], '12h'), choose('orientation', 'Orientation', ['vertical', 'horizontal'], 'vertical')]),
-      ...section('Content', [text('title', 'Title', 'Select time'), { ...text('value', 'Time', '09:30'), kind: 'time' }]),
-      ...section('Behavior', [toggle('showSeconds', 'Show seconds'), choose('minuteStep', 'Minute step', ['1', '5', '15'], '1'), toggle('bounded', 'Limit times'), { ...text('minTime', 'Earliest time', '09:00'), kind: 'time', enabledWhen: 'bounded' }, { ...text('maxTime', 'Latest time', '17:30'), kind: 'time', enabledWhen: 'bounded' }]),
-    ],
-    config: (state: ComponentState): TimePickerConfig => ({ type: state.type === 'input' ? TIME_PICKER_TYPE.INPUT : TIME_PICKER_TYPE.DIAL,
-      format: state.format === '24h' ? TIME_FORMAT.MILITARY : TIME_FORMAT.AMPM,
-      orientation: state.orientation === 'horizontal' ? TIME_PICKER_ORIENTATION.HORIZONTAL : TIME_PICKER_ORIENTATION.VERTICAL,
-      title: string(state, 'title'), value: string(state, 'value'), showSeconds: bool(state, 'showSeconds'), minuteStep: Number(state.minuteStep), ...(state.bounded ? { minTime: string(state, 'minTime'), maxTime: string(state, 'maxTime') } : {}), name: 'time' }),
-  },
+  checkbox: checkboxComponent,
+  switch: switchComponent,
+  radios: radiosComponent,
+  chips: chipsComponent,
+  slider: sliderComponent,
+  'text-field': textFieldComponent,
+  select: selectComponent,
+  search: searchComponent,
+  datepicker: datepickerComponent,
+  timepicker: timePickerComponent,
   'navigation-rail': {
     group: 'Navigation', name: 'Navigation rail', factory: 'createNavigationRail', variable: 'rail',
     description: 'Move between destinations. Explore collapsed, expanded, and modal navigation.',
@@ -959,16 +738,6 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
 }
-
-/** The children of the checkbox playground's parent, from the m3.material.io guidelines. */
-export const checkboxChildren = [
-  { label: 'Pickles', value: 'pickles' }, { label: 'Tomato', value: 'tomato' },
-  { label: 'Lettuce', value: 'lettuce' }, { label: 'Cheese', value: 'cheese' },
-] as const;
-
-/** Whether a child starts checked: all when the parent is, Tomato alone when it is mixed. */
-export const checkboxChildChecked = (state: ComponentState, value: string): boolean =>
-  state.state === 'checked' || (state.state === 'indeterminate' && value === 'tomato');
 
 function checkboxFamilyCode(state: ComponentState): string {
   // The options every box shares, as the playground sets them.
