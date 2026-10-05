@@ -418,6 +418,34 @@ const badgeScenarios: readonly Scenario[] = [
     options: { label: 'New' },
   },
 ];
+/**
+ * The progress indicator's scenarios, from m3.material.io (read 5 October 2026). Options
+ * name playground controls only. The linear determinate fill is the playground's Default;
+ * these cover the states the guidelines name beyond it. Placement uses (a container's
+ * edge, the top of a page, inside a button) are the host's, not a control's.
+ */
+const progressScenarios: readonly Scenario[] = [
+  {
+    id: 'indeterminate', name: 'Indeterminate', source: 'https://m3.material.io/components/progress-indicators/guidelines',
+    description: 'The wait is unknown: the active indicator moves along the track, growing and shrinking.',
+    options: { indeterminate: true },
+  },
+  {
+    id: 'circular', name: 'Circular', source: 'https://m3.material.io/components/progress-indicators/guidelines',
+    description: 'A circular indicator on a loading page: a process underway, the wait unknown.',
+    options: { variant: 'circular', indeterminate: true },
+  },
+  {
+    id: 'wavy', name: 'Wavy', source: 'https://m3.material.io/components/progress-indicators/guidelines',
+    description: 'The wavy shape, making a longer process feel less static.',
+    options: { shape: 'wavy', value: '70' },
+  },
+  {
+    id: 'large', name: 'Large circular', source: 'https://m3.material.io/components/progress-indicators/guidelines',
+    description: 'A 240dp circular indicator, the size reserved for large and extra-large windows.',
+    options: { variant: 'circular', size: '240' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -934,7 +962,7 @@ export const components = {
     group: 'Communication', name: 'Progress', factory: 'createProgress', variable: 'progress',
     description: 'Show how a task is progressing. Compare linear and circular indicators, with flat or wavy shapes.',
     summary: 'Linear and circular progress, flat or wavy.', styles: ['progress'],
-    scenarios: [],
+    scenarios: progressScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['linear', 'circular'], 'linear'), choose('shape', 'Shape', ['flat', 'wavy'], 'flat'), choose('thickness', 'Thickness', ['thin', 'thick'], 'thin'), { ...range('size', 'Circular size', '48'), min: 24, max: 240, step: 8, enabledWhen: 'circular' }, toggle('showStopIndicator', 'Stop indicator', true, 'linear')]),
       ...section('Content', [{ ...range('value', 'Value', '45'), enabledWhen: 'determinate' }, { ...range('buffer', 'Buffer', '70'), enabledWhen: 'linearDeterminate' }, toggle('showLabel', 'Show percentage', false, 'determinate'), text('ariaLabel', 'Accessible label', 'Uploading files')]),
