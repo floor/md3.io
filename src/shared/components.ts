@@ -752,36 +752,29 @@ const radiosScenarios: readonly Scenario[] = [
 ];
 /**
  * The slider's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only. Follows the guidelines' three variants: standard, centered
- * (around zero), and range (with two handles). Standard sliders at medium size can feature
- * an inset icon that swaps to mute at the minimum, tick marks indicate discrete stops,
- * and tracks can be vertical.
+ * playground controls only. Sliders select values along continuous or discrete tracks
+ * across call volume, typographic font size scale, price budget ranges, and room climate controls.
  */
 const sliderScenarios: readonly Scenario[] = [
   {
-    id: 'range', name: 'Range', source: 'https://m3.material.io/components/sliders/guidelines',
-    description: 'A range slider with two handles defining a minimum and maximum value.',
-    options: { variant: 'range', value: '20', secondValue: '70' },
+    id: 'call-volume', name: 'Call volume', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'Adjusting incoming call loudness with an inset track speaker icon that mutes at zero.',
+    options: { label: 'Call volume', value: '40', size: 'M', insetIcon: true },
   },
   {
-    id: 'centered', name: 'Centered', source: 'https://m3.material.io/components/sliders/guidelines',
-    description: 'A centered slider for a positive and negative value range around zero.',
-    options: { variant: 'centered', value: '70' },
+    id: 'font-size', name: 'Font size', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'Selecting readable body font size along discrete typographic scale increments.',
+    options: { label: 'Font size', value: '30', ticks: true, step: '10' },
   },
   {
-    id: 'inset-icon', name: 'Inset icon', source: 'https://m3.material.io/components/sliders/guidelines',
-    description: 'A medium slider with a volume icon inside the track.',
-    options: { size: 'M', insetIcon: true, value: '40' },
+    id: 'price-budget', name: 'Price budget', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'Defining minimum and maximum spending limits in a search filter.',
+    options: { label: 'Price range', variant: 'range', value: '20', secondValue: '80' },
   },
   {
-    id: 'stops', name: 'Discrete stops', source: 'https://m3.material.io/components/sliders/guidelines',
-    description: 'A slider with tick marks at predetermined stop indicators.',
-    options: { ticks: true, step: '10', value: '40' },
-  },
-  {
-    id: 'vertical', name: 'Vertical', source: 'https://m3.material.io/components/sliders/guidelines',
-    description: 'A standard slider in a vertical orientation.',
-    options: { orientation: 'vertical', value: '50' },
+    id: 'living-room-climate', name: 'Living room climate', source: 'https://m3.material.io/components/sliders/guidelines',
+    description: 'Setting target thermostat temperature in a dedicated smart home climate screen.',
+    options: { label: 'Living Room', size: 'XL', value: '72', showValue: true },
   },
 ];
 export const components = {
