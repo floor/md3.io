@@ -309,6 +309,37 @@ const listScenarios: readonly Scenario[] = [
     options: { lines: '1', leading: 'icon', trailing: 'text', selection: 'multi' },
   },
 ];
+/**
+ * Carousel scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const carouselScenarios: readonly Scenario[] = [
+  {
+    id: 'multi-browse', name: 'Multi-browse', source: 'https://m3.material.io/components/carousel/guidelines',
+    description: 'A multi-browse carousel showing items of varying sizes with snap-scrolling.',
+    options: { variant: 'multi-browse', snap: true },
+  },
+  {
+    id: 'uncontained', name: 'Uncontained', source: 'https://m3.material.io/components/carousel/guidelines',
+    description: 'An uncontained carousel with uniform item widths flowing past the viewport edge.',
+    options: { variant: 'uncontained', snap: false },
+  },
+  {
+    id: 'hero', name: 'Hero', source: 'https://m3.material.io/components/carousel/guidelines',
+    description: 'A hero carousel highlighting one prominent item with a peek at the next.',
+    options: { variant: 'hero', snap: true },
+  },
+  {
+    id: 'hero-center', name: 'Center-aligned hero', source: 'https://m3.material.io/components/carousel/guidelines',
+    description: 'A center-aligned hero carousel with a large centered item flanked by preview items.',
+    options: { variant: 'hero-center', snap: true },
+  },
+  {
+    id: 'full-screen', name: 'Full-screen', source: 'https://m3.material.io/components/carousel/guidelines',
+    description: 'A full-screen carousel for immersive visually-rich media with snap-scrolling.',
+    options: { variant: 'full-screen', snap: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -751,7 +782,7 @@ export const components = {
     summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
     // The preview's remote (icon buttons and a slider), which the copied code does not build.
     previewStyles: ['icon-button', 'slider'],
-    scenarios: [],
+    scenarios: carouselScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
       ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
