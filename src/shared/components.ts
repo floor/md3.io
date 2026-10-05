@@ -486,6 +486,28 @@ const snackbarScenarios: readonly Scenario[] = [
     options: { visible: true, message: 'Your changes have been saved and synced across all your devices.' },
   },
 ];
+/**
+ * The tooltip's scenarios, from m3.material.io (read 5 October 2026). Options name
+ * playground controls only; each shows the tooltip open (the Visible control) on the
+ * playground's icon button host, as a hover would leave it.
+ */
+const tooltipScenarios: readonly Scenario[] = [
+  {
+    id: 'plain', name: 'Plain above', source: 'https://m3.material.io/components/tooltips/guidelines',
+    description: 'A plain tooltip above its target, labelling the icon-only button with its action.',
+    options: { variant: 'plain', position: 'top', visible: true },
+  },
+  {
+    id: 'below', name: 'Centered below', source: 'https://m3.material.io/components/tooltips/guidelines',
+    description: 'A plain tooltip centered below the target, as desktop placement does.',
+    options: { variant: 'plain', position: 'bottom', visible: true },
+  },
+  {
+    id: 'rich', name: 'Rich', source: 'https://m3.material.io/components/tooltips/guidelines',
+    description: 'A rich tooltip to the bottom end, longer explanatory text in its wider container.',
+    options: { variant: 'rich', position: 'bottom-end', visible: true, text: 'Favorites gather what you save so you can find it again.' },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -1038,7 +1060,7 @@ export const components = {
     group: 'Communication', name: 'Tooltip', factory: 'createTooltip', variable: 'tooltip',
     description: 'Add a little context. Hover or focus the action to explore tooltip styles, placement, and timing.',
     summary: 'Extra context on hover or focus.', styles: ['icon-button', 'tooltip'],
-    scenarios: [],
+    scenarios: tooltipScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['default', 'plain', 'rich'], 'default'), choose('position', 'Position', ['top', 'right', 'bottom', 'left', 'top-start', 'top-end', 'right-start', 'right-end', 'bottom-start', 'bottom-end', 'left-start', 'left-end'], 'bottom', 'select')]),
       ...section('Content', [text('text', 'Text', 'Save to favorites')]),
