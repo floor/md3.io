@@ -1124,7 +1124,7 @@ export const components = {
   toolbar: {
     group: 'Navigation', name: 'Toolbar', factory: 'createToolbar', variable: 'toolbar',
     description: 'Keep the page\'s actions, or a selection\'s tools, in reach. Try the docked and floating toolbars, the vibrant colour and a vertical layout.',
-    summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button'],
+    summary: 'Docked or floating actions, standard or vibrant.', styles: ['toolbar', 'icon-button', 'button', 'fab', 'menu', 'progress'],
     scenarios: toolbarScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
