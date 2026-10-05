@@ -340,6 +340,37 @@ const tabsScenarios: readonly Scenario[] = [
     options: { variant: 'primary', icons: false, count: '3' },
   },
 ];
+/**
+ * Menu scenarios from m3.material.io (read 5 October 2026). Options name
+ * existing playground controls only.
+ */
+const menuScenarios: readonly Scenario[] = [
+  {
+    id: 'vibrant', name: 'Vibrant', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A menu in the vibrant tertiary-based color style for higher visual emphasis.',
+    options: { variant: 'vibrant' },
+  },
+  {
+    id: 'gap', name: 'Grouped with gaps', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'Menu items grouped using expressive shape gaps to separate actions.',
+    options: { variant: 'gap' },
+  },
+  {
+    id: 'submenu', name: 'Submenu', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A menu with a nested cascading submenu revealing secondary actions.',
+    options: { submenu: true },
+  },
+  {
+    id: 'supporting-text', name: 'Supporting text', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'Menu items with supporting text providing additional context for each choice.',
+    options: { supportingText: true },
+  },
+  {
+    id: 'disabled-item', name: 'Disabled item', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A menu with an unavailable item shown in the disabled state.',
+    options: { disableDownload: true },
+  },
+];
 export const components = {
   button: {
     group: 'Actions', name: 'Button', factory: 'createButton', variable: 'button',
@@ -695,7 +726,7 @@ export const components = {
     group: 'Navigation', name: 'Menu', factory: 'createMenu', variable: 'menu',
     description: 'Open a menu of actions. Explore placement, color, supporting text, and nested choices.',
     summary: 'Actions and nested choices on demand.', styles: ['menu', 'button', 'progress'],
-    scenarios: [],
+    scenarios: menuScenarios,
     controls: [
       ...section('Appearance', [choose('variant', 'Variant', ['standard', 'vibrant', 'gap', 'baseline'], 'standard', 'select'), toggle('dense', 'Dense')]),
       ...section('Layout', [choose('position', 'Position', ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'left-start'], 'bottom-start', 'select')]),
