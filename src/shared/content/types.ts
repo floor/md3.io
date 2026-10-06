@@ -122,7 +122,8 @@ export const framedLandscape = (index: number, ratio: ArtRatio, label: string): 
  */
 export const artElement = (markup: string): HTMLElement => {
   const host = document.createElement('div');
-  host.setHTML(markup);
+  // The browser's Sanitizer API (`Element.setHTML`); the DOM typings in use predate it.
+  (host as unknown as Element & { setHTML(value: string): void }).setHTML(markup);
   host.setAttribute('role', 'img');
   host.setAttribute('aria-label', /aria-label="([^"]*)"/.exec(markup)?.[1] ?? '');
   return host;
