@@ -206,6 +206,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
   if (slug === 'menu') state.itemsDefault = !state.menuSet || state.menuSet === 'default';
+  // A named collection fixes the slides: the captions and the current-slide control are for the default's twenty-four.
+  if (slug === 'carousel') state.slidesDefault = !state.carouselSet || state.carouselSet === 'default';
   if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
@@ -492,10 +494,8 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const printable = art
     ? { ...shown, media: { element: '\u0000media', aspectRatio: (shown.media as { aspectRatio?: string }).aspectRatio, position: (shown.media as { position?: string }).position } }
     : shown;
-  // The preview's twenty-four photos would bury the code: three show the shape.
-  const slides = slug === 'carousel' ? (printable.slides as unknown[]) : [];
-  const config = JSON.stringify(slug === 'carousel' ? { ...printable, slides: slides.slice(0, 3) } : printable, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
-    .replace(/(\n  slides: \[)/, slides.length > 3 ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1')
+  // Every slide is listed, as the element tabs list them: the code shows what the preview shows.
+  const config = JSON.stringify(printable, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(elementRef, 'media');
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   const before = art ? `// The demo art is inline SVG, so this snippet needs no image files.\nconst media = document.createElement('div');\nmedia.setHTML(${JSON.stringify(art)});\n` : '';
@@ -504,7 +504,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   if (hasTrigger) setup = `const trigger = createButton({ text: 'Open ${component.name.toLowerCase()}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${slug === 'bottom-sheet' ? 'expand' : 'open'}());\ndocument.body.append(trigger.element);\n`;
   else {
     if (slug === 'divider') setup += `const container = document.createElement('div');\ncontainer.style.cssText = 'display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}';\ndivider.element.style.flex = '1';\ncontainer.append(divider.element);\ndocument.body.append(container);\n`;
-    if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n";
+    if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n// Capped as the playground's preview caps it, so the same photos stay in view.\ncarousel.element.style.maxWidth = '560px';\n";
     if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
     if (slug === 'carousel') setup += "\n// Drive it from your own controls: carousel.next(), carousel.prev(), carousel.goTo(index).\n// 'change' reports every move: from the API, a swipe, the keyboard or a trackpad.\ncarousel.on('change', ({ value }) => console.log(`Slide ${value + 1} of ${carousel.slides.getCount()}`));\n";
   }

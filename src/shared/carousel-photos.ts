@@ -141,6 +141,15 @@ const sets: Record<CarouselVariant, [number, string, string][]> = {
 
 export const carouselPhotos = (variant: CarouselVariant): CarouselPhoto[] => sets[variant].map(([id, title, location]) => ({ id, title, location }));
 
+/** One photo's catalog entry; every id sits in exactly one layout's list. */
+export const carouselPhoto = (id: number): CarouselPhoto => {
+  for (const photos of Object.values(sets)) {
+    const found = photos.find(([photoId]) => photoId === id);
+    if (found) return { id: found[0], title: found[1], location: found[2] };
+  }
+  throw new Error(`No carousel photo ${id}`);
+};
+
 // About twice the rendered slide: a browse item is up to 280 px wide by default and a hero
 // slide about 400 to 700 px, at 3:2; a full-screen slide fills a portrait frame up to
 // 400 × 600 px, at 2:3, as vlist.io's portrait set is.

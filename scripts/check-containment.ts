@@ -124,35 +124,27 @@ try {
       await page.getByRole('tab', { name: 'Vanilla', exact: true }).click();
       await page.getByRole('tab', { name: 'Live preview' }).click();
     } else if (slug === 'carousel') {
-      // The remote: mtrl icon buttons and a slider on the carousel's API, following its change event.
-      const remote = frame.getByRole('group', { name: 'Carousel remote' });
-      const remoteButton = (name: string) => remote.getByRole('button', { name, exact: true });
-      const counterIs = (text: string) => frame.locator('.carousel-remote__counter').filter({ hasText: new RegExp(`^${text}$`) }).waitFor();
-      await counterIs('1 / 24');
-      assert(await remoteButton('First slide').isDisabled() && await remoteButton('Previous slide').isDisabled() && await remoteButton('Next slide').isEnabled(), 'The remote does not start on the first slide');
-      await remoteButton('Next slide').click();
-      await counterIs('2 / 24');
-      await valueIs('initialSlide', '1');
-      await remoteButton('Last slide').click();
-      await counterIs('24 / 24');
-      assert(await remoteButton('Next slide').isDisabled() && await remoteButton('Last slide').isDisabled() && await remoteButton('Previous slide').isEnabled(), 'The remote does not stop on the last slide');
-      assert(await remote.getByRole('slider', { name: 'Slide' }).getAttribute('aria-valuenow') === '24', 'The remote slider does not follow the carousel');
-      await remoteButton('First slide').click();
-      await counterIs('1 / 24');
+      // The keyboard drives the carousel (the docs: Left and Right, Up and Down full
+      // screen, Home and End to the ends); the Current slide control follows every
+      // move. Keys land on the focal item: an item scrolled out of view takes none.
+      await valueIs('initialSlide', '0');
       await frame.locator('.mtrl-carousel__item').first().press('ArrowRight');
       await valueIs('initialSlide', '1');
+      await frame.locator('.mtrl-carousel__item').nth(23).press('End');
+      await valueIs('initialSlide', '23');
+      await frame.locator('.mtrl-carousel__item').nth(23).press('Home');
+      await valueIs('initialSlide', '0');
       await choose('variant', 'full-screen');
       await frame.locator('.mtrl-carousel--vertical').waitFor();
       await frame.locator('.mtrl-carousel__item').nth(1).press('ArrowDown');
       await valueIs('initialSlide', '2');
-      // A recreated carousel gets one fresh remote, still wired, under the portrait frame.
-      await counterIs('3 / 24');
-      assert(await frame.locator('.carousel-remote').count() === 1, 'A stale remote survived the carousel');
-      const [frameBox, remoteBox] = await Promise.all([frame.locator('.mtrl-carousel').boundingBox(), remote.boundingBox()]);
-      assert(frameBox && remoteBox && remoteBox.y >= frameBox.y + frameBox.height, 'The remote is not under the full-screen frame');
-      await remoteButton('Previous slide').click();
-      await counterIs('2 / 24');
-      await valueIs('initialSlide', '1');
+      // A variant change recreates the carousel: one stage, no stale carousel left.
+      assert(await frame.locator('.mtrl-carousel').count() === 1, 'A stale carousel survived a variant change');
+      await choose('variant', 'multi-browse');
+      await frame.locator('.mtrl-carousel__item').nth(2).waitFor();
+      // The new carousel starts where the last one stood, its focal item third.
+      await frame.locator('.mtrl-carousel__item').nth(2).press('ArrowRight');
+      await valueIs('initialSlide', '3');
     } else if (slug === 'divider') {
       await choose('orientation', 'vertical');
       await frame.getByRole('separator').waitFor();
