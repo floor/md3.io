@@ -1,6 +1,6 @@
 // Every component with scenarios: for each scenario (including default), every framework tab
 // (vanilla, html/web-components, react, vue, svelte, solid) is generated, bundled, mounted in
-// a headless page, and checked against the preview frame's mtrl-* root classes.
+// a headless page, and checked against the preview frame's mtrl-* root classes and visible text.
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,6 +13,7 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
+import { currentCheckboxChildren } from '../src/shared/content/checkbox';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -177,18 +178,97 @@ function matchesStatedGap(missingClass: string, statedGaps: string[]): boolean {
   });
 }
 
-// Known differences allowlist:
-// Any difference on main is recorded here with its reason to keep the suite green and visible.
-interface KnownDifference {
-  component: string;
-  scenario: string;
-  tab: string;
-  reason: string;
-  allowedMissing?: string[];
-  allowedExtra?: string[];
+// Text carried by element options which framework tabs can explicitly say they do not expose.
+// `undefined` means that the option affects no visible text, and therefore excuses nothing.
+const STATED_GAP_TEXT: Record<string, (slug: string, state: Parameters<typeof currentCheckboxChildren>[0]) => string[] | undefined> = {
+  // A checkbox family renders one child label for every child option.
+  children: (slug, state) => slug === 'checkbox'
+    ? currentCheckboxChildren(state).map(child => child.label)
+    : undefined,
+};
+
+function textAllowedByStatedGaps(slug: string, state: Parameters<typeof currentCheckboxChildren>[0], statedGaps: string[]): string[] {
+  return statedGaps.flatMap(gap => STATED_GAP_TEXT[gap]?.(slug, state) ?? []);
 }
 
-const KNOWN_DIFFERENCES: KnownDifference[] = [];
+function multisetDifference(left: string[], right: string[]): string[] {
+  const remaining = new Map<string, number>();
+  for (const item of right) remaining.set(item, (remaining.get(item) ?? 0) + 1);
+  return left.filter(item => {
+    const count = remaining.get(item) ?? 0;
+    if (count === 0) return true;
+    remaining.set(item, count - 1);
+    return false;
+  });
+}
+
+const collectVisibleText = () => {
+  const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const isVisible = (start: Element) => {
+    let element: Element | null = start;
+    while (element) {
+      const style = getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || element.getClientRects().length === 0) return false;
+      const root = element.getRootNode();
+      element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+    }
+    return true;
+  };
+  const textHasRect = (node: Text) => {
+    const range = document.createRange();
+    range.selectNode(node);
+    return range.getClientRects().length > 0;
+  };
+  const text: string[] = [];
+  const visit = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textNode = node as Text;
+      const parent = textNode.parentElement;
+      // Split buttons render their light-DOM primary label through a shadow-tree label.
+      if (!parent || (parent.localName === 'm-split-button' && parent.shadowRoot) || parent.closest('script, style') || !isVisible(parent) || !textHasRect(textNode)) return;
+      const value = normalise(node.textContent ?? '');
+      if (value) text.push(value);
+      return;
+    }
+    if (!(node instanceof Element) || node.matches('script, style')) return;
+    if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && isVisible(node)) {
+      if (node instanceof HTMLInputElement) {
+        const ariaLabel = normalise(node.getAttribute('aria-label') ?? '');
+        if (ariaLabel) text.push(ariaLabel);
+      }
+      // Checkbox/radio values identify form submissions; they are not user-visible values.
+      if (!(node instanceof HTMLInputElement) || !['checkbox', 'radio', 'hidden', 'button', 'submit', 'reset', 'file', 'image'].includes(node.type)) {
+        const value = normalise(node.value);
+        if (value) text.push(value);
+      }
+      // Textarea fallback content is its default value, not a second visible label.
+      return;
+    }
+    node.childNodes.forEach(visit);
+    node.shadowRoot?.childNodes.forEach(visit);
+  };
+  visit(document.body);
+  return text;
+};
+
+const hasVisibleMenu = () => {
+  const isVisible = (element: Element) => {
+    let current: Element | null = element;
+    while (current) {
+      const style = getComputedStyle(current);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || current.getClientRects().length === 0) return false;
+      const root = current.getRootNode();
+      current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+    }
+    return true;
+  };
+  const visit = (node: Element): boolean => {
+    if ((node.matches('m-menu') || [...node.classList].some(className => className.includes('mtrl-menu'))) && isVisible(node)) return true;
+    if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
+    return [...node.children].some(visit);
+  };
+  return visit(document.body);
+};
 
 // --- Generate and bundle every tab ---
 const targetSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
@@ -202,6 +282,7 @@ interface TabInfo {
   js: string;
   css?: string;
   statedGaps: string[];
+  allowedMissingText: string[];
 }
 
 const tabBundles: Record<string, TabInfo> = {};
@@ -263,6 +344,7 @@ for (const slug of targetSlugs) {
         js,
         css,
         statedGaps: getStatedGaps(code),
+        allowedMissingText: textAllowedByStatedGaps(slug, state, getStatedGaps(code)),
       };
     }
   }
@@ -334,7 +416,6 @@ try {
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
       await page.goto(`${siteServer.url}components/${slug}/${scenarioParam}`);
-      await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
       await page.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = page.frames().find(f => f !== page.mainFrame() && f.url().includes('preview')) ?? page.frames()[1]!;
@@ -342,14 +423,12 @@ try {
       // Click "more" button if present in preview
       const previewMore = previewFrame.locator('button[aria-haspopup]');
       const hasMoreButton = (await previewMore.count()) > 0;
-      if (hasMoreButton) {
+      const previewMenuOpened = hasMoreButton && await (async () => {
         await previewMore.first().click().catch(() => {});
-        await previewFrame.waitForFunction(
-          () => [...document.querySelectorAll('[class*="mtrl-menu"]')].some(el => (el as HTMLElement).getClientRects().length > 0),
-          undefined,
-          { timeout: 2000 }
-        ).catch(() => {});
-      }
+        return previewFrame.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+          .then(() => true)
+          .catch(() => false);
+      })();
 
       // Collect root classes from preview frame
       const previewClasses = await previewFrame.evaluate(() => {
@@ -363,6 +442,7 @@ try {
         return [...found];
       });
       const previewRoots = previewClasses.filter(isRootClass);
+      const previewText = await previewFrame.evaluate(collectVisibleText);
 
       // 2. Mount each tab and compare
       for (const tab of TABS) {
@@ -398,18 +478,12 @@ try {
           continue;
         }
 
-        // If preview had a more button, click the more button in mounted tab too
-        if (hasMoreButton) {
+        // Compare text only after both sides reach the same menu state.
+        if (previewMenuOpened) {
           const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
           if ((await tabMore.count()) > 0) {
             await tabMore.first().click().catch(() => {});
-            await page.waitForFunction(
-              () => [...document.querySelectorAll('m-menu, [class*="mtrl-menu"]')].some(
-                m => m.hasAttribute('open') || (m as unknown as { open?: boolean }).open === true || (m as HTMLElement).getClientRects().length > 0
-              ),
-              undefined,
-              { timeout: 2000 }
-            ).catch(() => {});
+            await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 }).catch(() => {});
           }
         }
 
@@ -425,6 +499,7 @@ try {
           return [...found];
         });
         const tabRoots = tabClasses.filter(isRootClass);
+        const tabText = await page.evaluate(collectVisibleText);
 
         let missing = previewRoots.filter(c => !tabRoots.includes(c));
         let extra = tabRoots.filter(c => !previewRoots.includes(c));
@@ -434,19 +509,19 @@ try {
           missing = missing.filter(c => !matchesStatedGap(c, tabInfo.statedGaps));
         }
 
-        // Check against known differences allowlist
-        const known = KNOWN_DIFFERENCES.find(k => k.component === slug && k.scenario === scenarioId && k.tab === tab);
-        if (known) {
-          if (known.allowedMissing) missing = missing.filter(c => !known.allowedMissing!.includes(c));
-          if (known.allowedExtra) extra = extra.filter(c => !known.allowedExtra!.includes(c));
-          console.log(`Known difference noted: ${slug}/${scenarioId} [${tab}]: ${known.reason}`);
-        }
-
         if (missing.length > 0 || extra.length > 0) {
           const parts: string[] = [];
           if (missing.length > 0) parts.push(`lacks [${missing.join(', ')}]`);
           if (extra.length > 0) parts.push(`extra [${extra.join(', ')}]`);
           differences.push(`${slug} ${scenarioId} ${tab}: ${parts.join(', ')} (preview roots: [${previewRoots.join(', ')}], tab roots: [${tabRoots.join(', ')}])`);
+        }
+
+        let missingText = multisetDifference(previewText, tabText);
+        let extraText = multisetDifference(tabText, previewText);
+        const statedText = tabInfo.allowedMissingText;
+        if (statedText.length > 0) missingText = multisetDifference(missingText, statedText);
+        if (missingText.length > 0 || extraText.length > 0) {
+          differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
         }
       }
     }
@@ -465,4 +540,4 @@ if (differences.length > 0) {
   process.exit(1);
 }
 
-console.log(`Tab checks passed: ${totalMounts} mounts over ${totalScenarios} scenarios.`);
+console.log(`Tab checks passed: ${totalMounts} mounts over ${totalScenarios} scenarios, roots and text.`);
