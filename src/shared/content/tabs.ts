@@ -25,8 +25,9 @@ interface TabSet {
 /**
  * Named tab sets from m3.material.io/components/tabs/guidelines (read 6 October
  * 2026). `default` is not here: today's mailbox views stay exactly as they were.
- * Media gallery and Saved media badges use the same three words because both
- * figures do; the Photos badge is the difference.
+ * Saved media badges is not a set: a badge passed when the tab is created never
+ * attaches, because the tab button has no parent yet
+ * (material/src/components/badge/features.ts, withAttachment).
  */
 const tabSets: Record<string, TabSet> = {
   'trip-planner': {
@@ -46,16 +47,6 @@ const tabSets: Record<string, TabSet> = {
     items: [
       { id: 'video', label: 'Video', icon: symbols.videocam },
       { id: 'photos', label: 'Photos', icon: symbols.photoLibrary },
-      { id: 'audio', label: 'Audio', icon: symbols.musicNote },
-    ],
-  },
-  'saved-media-badges': {
-    name: 'Saved media badges',
-    ariaLabel: 'Saved media',
-    active: 'video',
-    items: [
-      { id: 'video', label: 'Video', icon: symbols.videocam },
-      { id: 'photos', label: 'Photos', icon: symbols.photoLibrary, badge: '999+' },
       { id: 'audio', label: 'Audio', icon: symbols.musicNote },
     ],
   },
@@ -99,7 +90,7 @@ const selectable = [
 ];
 
 const tabSetControl: Control = {
-  ...choose('tabSet', 'Tabs', ['default', 'trip-planner', 'media-gallery', 'saved-media-badges', 'recipe-sections'], 'default', 'select'),
+  ...choose('tabSet', 'Tabs', ['default', 'trip-planner', 'media-gallery', 'recipe-sections'], 'default', 'select'),
   labels: { default: 'Default', ...Object.fromEntries(Object.entries(tabSets).map(([id, set]) => [id, set.name])) },
 };
 
@@ -110,8 +101,8 @@ const activeControl: Control = {
 
 /**
  * The tabs' scenarios, from m3.material.io (read 6 October 2026). Options name
- * playground controls only. Trip planner is the travel bar; the two media bars
- * are the same library, one with a count on Photos; Recipe sections is the text bar.
+ * playground controls only. Trip planner is the travel bar, Media gallery the
+ * library, and Recipe sections the text bar.
  */
 const tabsScenarios: readonly Scenario[] = [
   {
@@ -123,11 +114,6 @@ const tabsScenarios: readonly Scenario[] = [
     id: 'media-gallery', name: 'Media gallery', source: 'https://m3.material.io/components/tabs/guidelines',
     description: 'Switching a saved-media library between Video, Photos and Audio.',
     options: { tabSet: 'media-gallery', variant: 'primary', icons: true, badges: false, active: 'video' },
-  },
-  {
-    id: 'saved-media-badges', name: 'Saved media badges', source: 'https://m3.material.io/components/tabs/guidelines',
-    description: 'The same library with a count on Photos.',
-    options: { tabSet: 'saved-media-badges', variant: 'primary', icons: true, badges: true, active: 'video' },
   },
   {
     id: 'recipe-sections', name: 'Recipe sections', source: 'https://m3.material.io/components/tabs/guidelines',
