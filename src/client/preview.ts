@@ -43,7 +43,7 @@ import { toolbarContent } from '../shared/content/toolbar';
 import { appBarContent } from '../shared/content/top-app-bar';
 import { railHeader } from '../shared/content/navigation-rail';
 import { tabsAriaLabel } from '../shared/content/tabs';
-import { menuOpenSubmenu, menuSelectedId } from '../shared/content/menu';
+import { menuSelectedId } from '../shared/content/menu';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -216,18 +216,20 @@ function create(state: ComponentState) {
     }
     case 'menu': {
       const trigger = createButton({ text: String(state.text), variant: 'tonal', ariaLabel: String(state.text).trim() || 'Open menu' });
-      const control = createMenu({ ...components.menu.config(state), opener: trigger.element });
+      // `visible` only marks a menu that is already in the page. A named menu is opened
+      // once its button is in the stage: open() inserts it. The first open is this one,
+      // so it does not replace "Ready to try".
+      const named = state.menuSet && state.menuSet !== 'default';
+      const control = createMenu({ ...components.menu.config(state), opener: trigger.element, ...(named ? { visible: false } : {}) });
       const selected = menuSelectedId(state);
-      if (selected) control.setSelected(selected);
-      const submenu = menuOpenSubmenu(state);
-      if (submenu) setTimeout(() => {
-        const item = control.element.querySelector<HTMLElement>(`[data-id="${submenu}"]`);
-        item?.focus();
-        item?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-      }, 0);
-      control.on('select', event => message(`Selected: ${event.item.text}`));
-      control.on('open', () => message('Menu opened'));
+      let opened = !named;
+      control.on('open', () => { if (!opened) { opened = true; return; } message('Menu opened'); });
       control.on('close', () => message('Menu closed'));
+      control.on('select', event => message(`Selected: ${event.item.text}`));
+      if (named) setTimeout(() => {
+        control.open();
+        if (selected) control.setSelected(selected);
+      }, 0);
       return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
     }
     case 'top-app-bar': {

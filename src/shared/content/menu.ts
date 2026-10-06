@@ -8,8 +8,6 @@ interface MenuSet {
   name: string;
   /** The item `setSelected` marks. One id: the menu keeps a single selection. */
   selected?: string;
-  /** The item whose submenu the preview opens, when the figure shows one. */
-  openSubmenu?: string;
   items: readonly MenuContent[];
 }
 
@@ -44,7 +42,6 @@ const menuSets: Record<string, MenuSet> = {
   'file-actions': {
     name: 'File actions',
     selected: 'offline',
-    openSubmenu: 'create',
     items: [
       { id: 'open', text: 'Open', icon: symbols.folderOpen },
       { id: 'make-copy', text: 'Make a copy', icon: symbols.contentCopy },
@@ -76,11 +73,6 @@ const menuSet = (state: ComponentState): MenuSet | undefined => menuSets[string(
 /** The item a named menu marks selected, if it marks one. */
 export function menuSelectedId(state: ComponentState): string | undefined {
   return menuSet(state)?.selected;
-}
-
-/** The submenu a named menu opens, when its figure shows that submenu. */
-export function menuOpenSubmenu(state: ComponentState): string | undefined {
-  return menuSet(state)?.openSubmenu;
 }
 
 const stripIcon = (item: MenuContent, icons: boolean): MenuContent => {
@@ -119,7 +111,7 @@ const menuScenarios: readonly Scenario[] = [
   },
   {
     id: 'file-actions', name: 'File actions', source: 'https://m3.material.io/components/menus/guidelines',
-    description: 'A file menu with Create open, and Offline mode selected.',
+    description: 'A file menu: Open, Make a copy, Create, Offline mode selected, Share and Download.',
     options: { menuSet: 'file-actions', text: 'File', variant: 'standard', icons: true, submenu: true },
   },
   {

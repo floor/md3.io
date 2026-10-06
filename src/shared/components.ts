@@ -46,7 +46,7 @@ import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from '.
 import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent } from './content/bottom-app-bar';
 import { drawerActiveOptions, drawerComponent } from './content/drawer';
-import { menuComponent, menuOpenSubmenu, menuSelectedId } from './content/menu';
+import { menuComponent, menuSelectedId } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
 import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
@@ -363,8 +363,6 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     after = `menu.on('select', event => console.log(event.item.text));\n`;
     const selected = menuSelectedId(state);
     if (selected) after += `menu.setSelected('${selected}');\n`;
-    const submenu = menuOpenSubmenu(state);
-    if (submenu) after += `setTimeout(() => {\n  const item = menu.element.querySelector('[data-id="${submenu}"]');\n  item?.focus();\n  item?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));\n}, 0);\n`;
     cleanup = '// trigger.destroy();\n';
   }
   if (slug === 'drawer' || slug === 'navigation-rail') {
