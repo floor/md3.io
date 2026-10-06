@@ -281,10 +281,9 @@ const hasVisibleMenu = () => {
 const hasMenuSurfaceThatCouldOpen = () => {
   const visit = (node: Element): boolean => {
     if (node.classList.contains('mtrl-menu')) {
-      const style = getComputedStyle(node);
-      const rect = node.getBoundingClientRect();
-      if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse'
-        && (rect.height > 0 || node.getAnimations().some(animation => animation.playState === 'running'))) return true;
+      // An opening surface starts hidden at scaleY(0): only display tells a
+      // surface that is on its way from one that is not rendered at all.
+      if (getComputedStyle(node).display !== 'none') return true;
     }
     if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
     return [...node.children].some(visit);
@@ -301,6 +300,12 @@ const settledMenuState = async (target: import('playwright').Page | import('play
     .then(() => true)
     .catch(() => false);
 };
+
+// After a trigger click the surface may not be in the page yet: wait for it.
+const menuShownAfterClick = (target: import('playwright').Page | import('playwright').Frame): Promise<boolean> =>
+  target.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+    .then(() => true)
+    .catch(() => false);
 
 // --- Generate and bundle every tab ---
 const targetSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
@@ -501,14 +506,12 @@ try {
           const previewMore = previewFrame.locator('button[aria-haspopup]');
           if ((await previewMore.count()) > 0) {
             const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
-            await Promise.all([
-              previewMore.first().click().catch(() => {}),
-              tabMore.first().click().catch(() => {}),
-            ]);
-            const [previewMenuOpened, tabMenuOpened] = await Promise.all([
-              settledMenuState(previewFrame),
-              settledMenuState(page),
-            ]);
+            // The trigger is a toggle and the preview page is shared by the six
+            // tabs: click it only while its menu is closed.
+            if (!await previewFrame.evaluate(hasVisibleMenu)) await previewMore.first().click().catch(() => {});
+            await tabMore.first().click().catch(() => {});
+            const previewMenuOpened = await menuShownAfterClick(previewFrame);
+            const tabMenuOpened = await menuShownAfterClick(page);
             if (!previewMenuOpened || !tabMenuOpened) {
               differences.push(`${slug} ${scenarioId} ${tab}: menu surface after opening differs (preview ${previewMenuOpened ? 'shown' : 'not shown'}, tab ${tabMenuOpened ? 'shown' : 'not shown'})`);
               continue;
