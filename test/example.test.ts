@@ -217,7 +217,8 @@ describe('inline styles the element needs', () => {
   test('Vanilla gives the factory element the same, as the web component has them', () => {
     const carousel = 'carousel:\n  slides:\n    - { image: /a.svg, alt: A }\n';
     expect(code(carousel, 'vanilla')).toContain("carousel.element.style.height = '320px';\n");
-    expect(code(carousel, 'html')).toContain('style="height: 320px"');
+    expect(code(carousel, 'vanilla')).toContain("carousel.element.style.maxWidth = '560px';\n");
+    expect(code(carousel, 'html')).toContain('style="height: 320px; max-width: 560px"');
   });
 });
 
