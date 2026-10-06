@@ -32,7 +32,8 @@ export const chipSets: Record<string, ChipSetDefinition> = {
   },
   'experience-actions': {
     name: 'Experience actions',
-    label: 'Add to review',
+    // No group label: the m3.material.io figure shows the chips alone.
+    label: '',
     type: 'assist',
     chips: [
       { value: 'photos', label: 'Add photos', type: 'assist', leadingIcon: symbols.addAPhoto },
@@ -42,7 +43,8 @@ export const chipSets: Record<string, ChipSetDefinition> = {
   },
   'quick-replies': {
     name: 'Quick replies',
-    label: 'Suggested replies',
+    // No group label: the m3.material.io figure shows the chips alone.
+    label: '',
     type: 'suggestion',
     chips: [
       { value: 'agree', label: 'I agree', type: 'suggestion' },
@@ -96,12 +98,12 @@ const chipsScenarios: readonly Scenario[] = [
   {
     id: 'experience-actions', name: 'Experience actions', source: 'https://m3.material.io/components/chips/guidelines',
     description: 'Prompting follow-up actions (Add photos, Add dishes, Rate location) on a restaurant review.',
-    options: { chipSet: 'experience-actions', type: 'assist', label: 'Add to review' },
+    options: { chipSet: 'experience-actions', type: 'assist', label: '' },
   },
   {
     id: 'quick-replies', name: 'Quick replies', source: 'https://m3.material.io/components/chips/guidelines',
     description: 'Prompting one-tap conversational response phrases below an incoming message.',
-    options: { chipSet: 'quick-replies', type: 'suggestion', label: 'Suggested replies' },
+    options: { chipSet: 'quick-replies', type: 'suggestion', label: '' },
   },
   {
     id: 'catalog-filters', name: 'Category filters', source: 'https://m3.material.io/components/chips/guidelines',
