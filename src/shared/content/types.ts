@@ -80,5 +80,50 @@ export const iconMarkup = (state: ComponentState) => iconByName(string(state, 'i
 export const fabPosition = (state: ComponentState) => state.position === 'center' ? {} : { position: string(state, 'position') };
 /** A config's `content` text, as the paragraph the components render. */
 export const paragraph = (value: string) => `<p>${value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</p>`;
-/** The playground's landscape placeholders, one per carousel slide or list leading image. */
-export const landscape = (index: number) => `/assets/playground/landscape-${index + 1}.svg`;
+// Placeholder art as inline SVG markup: a framework tab's code is mounted on a scratch
+// server that serves no assets (a fetched image URL would 404 there), and the library
+// refuses every URL scheme but http(s) in a media `src` — inline art is the one
+// placeholder that renders in the preview and in every tab.
+import landscape1 from '../../../assets/playground/landscape-1.svg' with { type: 'text' };
+import landscape2 from '../../../assets/playground/landscape-2.svg' with { type: 'text' };
+import landscape3 from '../../../assets/playground/landscape-3.svg' with { type: 'text' };
+import landscape4 from '../../../assets/playground/landscape-4.svg' with { type: 'text' };
+import landscape5 from '../../../assets/playground/landscape-5.svg' with { type: 'text' };
+
+const art = [landscape1, landscape2, landscape3, landscape4, landscape5].map(svg => svg.trim());
+/** The landscape placeholder, as the URL the preview serves it on (a list's leading image). */
+export const landscape = (index: number): string => `/assets/playground/landscape-${index + 1}.svg`;
+/** The same placeholder as inline SVG markup. */
+export const landscapeArt = (index: number): string => art[index] ?? art[0]!;
+
+/** The media box ratios the playground's art can be framed for. */
+export type ArtRatio = '16:9' | '4:3' | '1:1';
+
+/**
+ * Landscape art framed for a media box: the art covers the frame, centred, as
+ * `object-fit: cover` would crop it, and named for assistive technology.
+ */
+export const framedLandscape = (index: number, ratio: ArtRatio, label: string): string => {
+  const [wide, high] = ratio.split(':').map(Number) as [number, number];
+  const width = 800;
+  const height = Math.round((width * high) / wide);
+  const scale = Math.max(width / 800, height / 600);
+  const place = (value: number): number => Math.round(value * scale * 100) / 100;
+  // The art's own root svg is the covering layer: placed centred in the frame.
+  const inner = landscapeArt(index).replace('<svg ', `<svg x="${Math.round(((width - 800 * scale) / 2) * 100) / 100}" y="${Math.round(((height - 600 * scale) / 2) * 100) / 100}" width="${place(800)}" height="${place(600)}" `);
+  return `<svg role="img" aria-label="${label}" viewBox="0 0 ${width} ${height}" width="100%" style="display: block">${inner}</svg>`;
+};
+
+/**
+ * Markup as a live element, for a config the library takes an element for (card
+ * media takes an `HTMLElement`, so the art rides in a host that carries its
+ * accessible name — the sanitizer inside `setHTML` drops the svg's own). Called
+ * from the preview only: the code panels print the markup itself.
+ */
+export const artElement = (markup: string): HTMLElement => {
+  const host = document.createElement('div');
+  host.setHTML(markup);
+  host.setAttribute('role', 'img');
+  host.setAttribute('aria-label', /aria-label="([^"]*)"/.exec(markup)?.[1] ?? '');
+  return host;
+};

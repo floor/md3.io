@@ -86,6 +86,8 @@ export interface SlottedMeta {
   after?: boolean;
   /** The config value is markup of this native element, whose text is the child's: the dialog's `<p>` content. */
   markup?: boolean;
+  /** The item's `markup` key is a native element's markup, slotted whole as a tree: the card's inline `<svg>` art. */
+  markupTree?: true;
   /** An item key that, true, makes a click on the child close the parent: the dialog's `closeDialog`. */
   closes?: string;
   /** In Vanilla, the factory's method that takes each child's element, when its config does not: the top app bar's `addTrailingElement`. */
@@ -202,8 +204,8 @@ type Attr = { name: string; value: string | number | true; ref?: string; state?:
 type Prop = { name: string; value: string | number | boolean; state?: string; ref?: string };
 /** A child element in one of the parent's slots; `closes` when a click on it closes the parent. */
 type Slotted = { element: string; native: boolean; attrs: Attr[]; text: string; after: boolean; closes: boolean; children: NestedChild[] };
-/** A child inside a slotted element: the overflow menu's items. */
-type NestedChild = { element: string; attrs: Attr[]; text: string };
+/** A child inside a slotted element: the overflow menu's items, or a native tree's nodes. */
+type NestedChild = { element: string; attrs: Attr[]; text: string; native?: boolean; children?: NestedChild[] };
 /** A declaration child, with its own children (a submenu). */
 type Child = { attrs: Attr[]; text: string; children: Child[] };
 
@@ -283,6 +285,35 @@ const markupText = (element: string, value: string): string => {
   const inner = new RegExp(`^\\s*<${element}\\b[^>]*>([\\s\\S]*)</${element}>\\s*$`).exec(value)?.[1] ?? value;
   return inner.replace(/<[^>]*>/g, '').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&');
 };
+
+/**
+ * A native element's markup, parsed into the tree the slotted printers write: the
+ * playground's own art, which is elements and double-quoted attributes only, with
+ * no text. Anything else parses to nothing.
+ */
+function parseNativeTree(markup: string): NestedChild | null {
+  const tags = /<([a-z][\w-]*)((?:\s+[\w:-]+="[^"]*")*)(\/?)>|<\/([a-z][\w-]*)>/g;
+  let match: RegExpExecArray | null;
+  const root: NestedChild[] = [];
+  const stack: NestedChild[] = [];
+  const place = (done: NestedChild): void => {
+    const parent = stack.at(-1);
+    if (parent) (parent.children ??= []).push(done);
+    else root.push(done);
+  };
+  while ((match = tags.exec(markup))) {
+    if (match[4]) {
+      if (!stack.length) return null;
+      place(stack.pop()!);
+    } else if (match[1]) {
+      const attrs: Attr[] = [...(match[2] ?? '').matchAll(/([\w:-]+)="([^"]*)"/g)].map((attribute) => ({ name: attribute[1]!, value: attribute[2]! }));
+      const opened: NestedChild = { element: match[1], attrs, text: '', native: true };
+      if (match[3]) place(opened);
+      else stack.push(opened);
+    }
+  }
+  return stack.length === 0 && root.length === 1 ? root[0]! : null;
+}
 
 function plan(meta: ElementMeta, config: Config): Plan {
   const used = new Set<string>();
@@ -488,6 +519,15 @@ function plan(meta: ElementMeta, config: Config): Plan {
       if (entry.markup && typeof item === 'string') {
         const markupValue = markupText(entry.element, item);
         if (markupValue) slotted.push({ element: entry.element, native: !!entry.native, attrs: childAttrs, text: markupValue, after: !!entry.after, closes: false, children: [] });
+      } else if (entry.markupTree && isRecord(item) && isMarkup(item.markup)) {
+        const tree = parseNativeTree(item.markup);
+        if (tree) {
+          // The tree stands in for the child; every other key of the item stays the element's gap to name.
+          for (const [key, value] of Object.entries(item)) {
+            if (key !== 'markup' && isSet(value) && !(entry.ignore?.[key] as unknown[] | undefined)?.includes(value)) omit(`${path}.${key}`);
+          }
+          slotted.push({ element: tree.element, native: true, attrs: [...childAttrs, ...tree.attrs], text: '', after: !!entry.after, closes: false, children: tree.children ?? [] });
+        } else slotted.push(slottedChild(entry, item, path, childAttrs));
       } else if (isRecord(item)) slotted.push(slottedChild(entry, item, path, childAttrs));
     }
   }
@@ -667,10 +707,15 @@ const jsxAttrs = (attrs: Attr[], react = false): string =>
  * slot: spread, it reaches the element as an attribute. Only a slot the element
  * does not declare is written so; a declared one is a snippet (`region`).
  */
-const svelteAttrs = (attrs: Attr[]): string => {
+const svelteAttrs = (attrs: Attr[], native = false): string => {
   const slot = attrs.find(a => a.name === 'slot');
-  return `${slot ? ` {...{ slot: ${quoteJs(String(slot.value)).replaceAll('"', "'")} }}` : ''}${jsxAttrs(attrs.filter(a => a !== slot))}`;
+  const rest = native ? svelteNativeAttrs(attrs.filter(a => a !== slot)) : jsxAttrs(attrs.filter(a => a !== slot));
+  return `${slot ? ` {...{ slot: ${quoteJs(String(slot.value)).replaceAll('"', "'")} }}` : ''}${rest}`;
 };
+
+/** Svelte native-element attributes: names verbatim (svg's `aria-label`), values as JSX quotes them. */
+const svelteNativeAttrs = (attrs: Attr[]): string =>
+  attrs.map(a => (a.value === true ? ` ${a.name}` : typeof a.value === 'number' || /["\\{}]/.test(a.value) ? ` ${a.name}={${typeof a.value === 'number' ? a.value : quoteJs(a.value)}}` : ` ${a.name}=${quoteJs(a.value)}`)).join('');
 
 /** Vue props: kebab-case attributes, numbers bound. */
 const vueAttrs = (attrs: Attr[]): string =>
@@ -694,6 +739,36 @@ const element = (name: string, attributes: string, body: string): string =>
 /** A slotted child's body: its text, or its own children (a menu's items) each on a line. */
 const slottedBody = (child: Slotted, item: (nested: NestedChild) => string): string =>
   child.children.length ? `${child.children.map(nested => `\n  ${item(nested).replaceAll('\n', '\n  ')}`).join('')}\n` : escapeText(child.text);
+
+/** A native tree's body: each node written by its writer, one indent deeper — the writer recurses. */
+const nativeBody = (children: NestedChild[], node: (nested: NestedChild) => string): string =>
+  `${children.map(child => `\n  ${node(child).replaceAll('\n', '\n  ')}`).join('')}\n`;
+
+/** A nested node in the HTML tab: an mtrl element with its text, or a native tree recursing. */
+const htmlNode = (nested: NestedChild): string => nested.native
+  ? `<${nested.element}${htmlAttrs(nested.attrs)}>${nested.children?.length ? nativeBody(nested.children, htmlNode) : escapeText(nested.text)}</${nested.element}>`
+  : `<m-${nested.element}${htmlAttrs(nested.attrs)}>${escapeText(nested.text)}</m-${nested.element}>`;
+
+/** A nested node in React or Solid: an mtrl component, or a native tree recursing. */
+const jsxNode = (nested: NestedChild, react: boolean): string => element(
+  nested.native ? nested.element : pascal(nested.element),
+  jsxAttrs(nested.attrs, react),
+  nested.native && nested.children?.length ? nativeBody(nested.children, child => jsxNode(child, react)) : escapeText(nested.text),
+);
+
+/** A nested node in Vue: an mtrl component, or a native tree recursing. */
+const vueNode = (nested: NestedChild): string => element(
+  nested.native ? nested.element : `M${pascal(nested.element)}`,
+  vueAttrs(nested.attrs),
+  nested.native && nested.children?.length ? nativeBody(nested.children, vueNode) : escapeText(nested.text),
+);
+
+/** A nested node in Svelte: an mtrl component, or a native tree recursing with verbatim attribute names. */
+const svelteNode = (nested: NestedChild): string => element(
+  nested.native ? nested.element : pascal(nested.element),
+  svelteAttrs(nested.attrs, nested.native),
+  nested.native && nested.children?.length ? nativeBody(nested.children, svelteNode) : escapeText(nested.text),
+);
 
 /**
  * The element's content, as each framework writes it: the declaration children,
@@ -796,8 +871,11 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const childName = meta.children ? `m-${meta.children.name}` : '';
   const body = content(p, {
     child: { tag: childName, attrs: htmlAttrs, html: true },
-    slotted: child => (child.native ? (child.text ? `<${child.element}${htmlAttrs(child.attrs)}>${escapeText(child.text)}</${child.element}>` : `<${child.element}${htmlAttrs(child.attrs)}>`)
-      : `<m-${child.element}${htmlAttrs(child.attrs)}>${slottedBody(child, nested => `<m-${nested.element}${htmlAttrs(nested.attrs)}>${escapeText(nested.text)}</m-${nested.element}>`)}</m-${child.element}>`),
+    slotted: child => (child.native
+      ? (child.children.length
+        ? `<${child.element}${htmlAttrs(child.attrs)}>${nativeBody(child.children, htmlNode)}</${child.element}>`
+        : child.text ? `<${child.element}${htmlAttrs(child.attrs)}>${escapeText(child.text)}</${child.element}>` : `<${child.element}${htmlAttrs(child.attrs)}>`)
+      : `<m-${child.element}${htmlAttrs(child.attrs)}>${slottedBody(child, htmlNode)}</m-${child.element}>`),
   }, '  ', '');
   const variable = hostVariable(meta);
   const event = logEvent(meta);
@@ -978,7 +1056,7 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
     slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`,
-      slottedBody(child, nested => element(pascal(nested.element), jsxAttrs(nested.attrs, !solid), escapeText(nested.text)))),
+      slottedBody(child, nested => jsxNode(nested, !solid))),
     text: name => `{${reads(name)}}`,
   }, `      ${depth}`, `    ${depth}`);
   const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(bindState(p.attrs, reads), !solid)}${jsxProps(bindState(p.props, reads))}`, body);
@@ -1000,7 +1078,7 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const body = content(p, {
     child: { tag: Child, attrs: vueAttrs },
     slotted: child => element(child.native ? child.element : `M${pascal(child.element)}`, `${vueAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, vueOpen, false) : ''}`,
-      slottedBody(child, nested => element(`M${pascal(nested.element)}`, vueAttrs(nested.attrs), escapeText(nested.text)))),
+      slottedBody(child, vueNode)),
     text: name => `{{ ${name} }}`,
     region: { slots: meta.slots ?? [], wrap: (slot, lines) => block(`<template #${slot}>`, lines, '</template>') },
   }, '    ', '  ');
@@ -1025,8 +1103,8 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const constants = hoist(meta, p, '  ');
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
-    slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`,
-      slottedBody(child, nested => element(pascal(nested.element), svelteAttrs(nested.attrs), escapeText(nested.text)))),
+    slotted: child => element(child.native ? child.element : pascal(child.element), `${svelteAttrs(child.attrs, child.native)}${child.closes ? clickOpens(meta, p, svelteOpen, false) : ''}`,
+      slottedBody(child, svelteNode)),
     text: name => `{${name}}`,
     // A dashed slot is a camelCase snippet (`header-action` → `headerAction`), but the
     // wrapper's runtime wraps a snippet's content in a span that takes the slot: a

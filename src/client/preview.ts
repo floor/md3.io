@@ -4,6 +4,7 @@ import createLoadingIndicator from 'material/components/loading-indicator';
 import createSnackbar from 'material/components/snackbar';
 import createTooltip from 'material/components/tooltip';
 import createCard from 'material/components/card';
+import type { CardConfig } from 'material/components/card';
 import createList from 'material/components/list';
 import createCarousel from 'material/components/carousel';
 import { createCarouselRemote } from './carousel-remote';
@@ -44,6 +45,7 @@ import { appBarContent } from '../shared/content/top-app-bar';
 import { railHeader } from '../shared/content/navigation-rail';
 import { tabsAriaLabel } from '../shared/content/tabs';
 import { menuSelectedId } from '../shared/content/menu';
+import { artElement } from '../shared/content/types';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -104,7 +106,10 @@ function create(state: ComponentState) {
       return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
     }
     case 'card': {
-      const control = createCard(components.card.config(state));
+      const config = components.card.config(state) as CardConfig & { media?: { markup?: string } & CardConfig['media'] };
+      // Inline art: the library's media API takes an element, so the shared markup is resolved into one.
+      if (config.media?.markup) config.media = { aspectRatio: config.media.aspectRatio, position: config.media.position, element: artElement(config.media.markup) };
+      const control = createCard(config);
       control.element.addEventListener('click', event => {
         const button = (event.target as Element).closest('button');
         if (button) message(`${button.textContent?.trim()} clicked`);

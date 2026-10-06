@@ -146,7 +146,8 @@ const keys: Record<string, Record<string, ConfigKey>> = {
 type Slotted = Omit<SlottedMeta, 'attributes' | 'text'> & { attributes?: Record<string, string> };
 const slotted: Record<string, Slotted[]> = {
   card: [
-    { from: 'media', element: 'img', native: true, slot: 'media', attributes: { src: 'src', alt: 'alt' }, ignore: { position: ['top'] } },
+    // The media is inline art: its `markup` key is a native `<svg>` tree, slotted whole.
+    { from: 'media', element: 'svg', native: true, slot: 'media', markupTree: true, ignore: { position: ['top'] } },
     { from: 'buttons', element: 'button', slot: 'actions', after: true },
   ],
   'top-app-bar': [
