@@ -27,7 +27,7 @@ const drawerSets: Record<string, DrawerSet> = {
     active: 'inbox',
     items: [
       { id: 'inbox', label: 'Inbox', icon: symbols.inbox, badge: '24' },
-      { id: 'outbox', label: 'Outbox', icon: symbols.outbox, badge: '100+' },
+      { id: 'outbox', label: 'Outbox', icon: symbols.send, badge: '100+' },
       { id: 'favorites', label: 'Favorites', icon: symbols.heart },
       { id: 'trash', label: 'Trash', icon: symbols.delete },
       { type: 'divider' },
