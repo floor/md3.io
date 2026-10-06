@@ -717,16 +717,17 @@ const callsNote = (meta: ElementMeta, p: Plan, comment: (text: string) => string
 const htmlAttrs = (attrs: Attr[]): string =>
   attrs.filter(a => !a.ref && !a.unset).map(a => (a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
 
-/** JSX prop names: camelCase, except `aria-*` and `data-*`, which every framework takes dashed. */
+/** A native node's JSX attribute names: verbatim `aria-*` and `data-*` (the DOM takes them dashed), the rest camelCase. */
 const jsxName = (name: string): string => (/^(aria|data)-/.test(name) ? name : camel(name));
 
-/** JSX / Svelte props: camelCase, booleans bare, numbers in braces. React takes `style` as an object. */
-const jsxAttrs = (attrs: Attr[], react = false): string =>
+/** JSX / Svelte props: camelCase, booleans bare, numbers in braces. React takes `style` as an object.
+ * A component's props are its adapter's (camelCase); a native node's names are the DOM's own. */
+const jsxAttrs = (attrs: Attr[], react = false, native = false): string =>
   attrs.map(a => {
     // A checkbox's initial state, as React writes it: `checked` alone is the controlled
     // spelling, which warns without an onChange handler a static tab does not have.
     if (react && a.name === 'checked') return ' defaultChecked';
-    const name = jsxName(a.name);
+    const name = native ? jsxName(a.name) : camel(a.name);
     if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
     if (a.ref) return ` ${name}={${a.ref}}`;
     if (a.value === true) return ` ${name}`;
@@ -790,7 +791,7 @@ const htmlNode = (nested: NestedChild): string => nested.native
 /** A nested node in React or Solid: an mtrl component, or a native tree recursing. */
 const jsxNode = (nested: NestedChild, react: boolean): string => element(
   nested.native ? nested.element : pascal(nested.element),
-  jsxAttrs(nested.attrs, react),
+  jsxAttrs(nested.attrs, react, nested.native),
   nested.native && nested.children?.length ? nativeBody(nested.children, child => jsxNode(child, react)) : escapeText(nested.text),
 );
 
@@ -1093,13 +1094,13 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const depth = p.trigger ? '  ' : '';
   const body = content(p, {
     child: { tag: Child, attrs: attrs => jsxAttrs(attrs) },
-    slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`,
+    slotted: child => element(child.native ? child.element : pascal(child.element), `${jsxAttrs(child.attrs, !solid, child.native)}${child.closes ? clickOpens(meta, p, syntax, false) : ''}`,
       slottedBody(child, nested => jsxNode(nested, !solid))),
     text: name => `{${reads(name)}}`,
   }, `      ${depth}`, `    ${depth}`);
   const host = element(Name, `${modelProps}${openProps(meta, p, syntax)}${jsxAttrs(bindState(p.attrs, reads), !solid)}${jsxProps(bindState(p.props, reads))}`, body);
   const trigger = p.trigger
-    ? element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid)}${clickOpens(meta, p, syntax, true)}`, triggerBody(meta, p, `{${read}}`)) : '';
+    ? element(p.trigger.native ? p.trigger.element : pascal(p.trigger.element), `${jsxAttrs(p.trigger.attrs, !solid, p.trigger.native)}${clickOpens(meta, p, syntax, true)}`, triggerBody(meta, p, `{${read}}`)) : '';
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `set${pascal(step.state)}(${jsValue(step.value)})`), '  ', true)).join('');
   return `${imports}\n${constants ? `${constants}\n` : ''}${omittedNote(p, t => `// ${t}`)}${callsNote(meta, p, t => `// ${t}`)}export function Example() {\n` +
     (p.model ? `  const [${state}, ${setter}] = ${hook}(${literal(p.model.value)});\n` : '') +
