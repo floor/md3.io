@@ -14,7 +14,7 @@ const switchScenarios: readonly Scenario[] = [
   {
     id: 'play-over-notifications', name: 'Play over notifications', source: 'https://m3.material.io/components/switch/guidelines',
     description: 'Toggling whether audio playback continues uninterrupted during incoming notifications.',
-    options: { label: 'Play over notifications', supportingText: 'Keep listening while alerts sound', checked: true, icons: 'selected', name: 'play-over-notifications' },
+    options: { label: 'Play over notifications', supportingText: 'Keep playing even when other apps, like notifications or navigation, play sounds', checked: true, icons: 'selected', name: 'play-over-notifications' },
   },
   {
     id: 'camera-access', name: 'Camera access', source: 'https://m3.material.io/components/switch/guidelines',
@@ -29,7 +29,7 @@ const switchScenarios: readonly Scenario[] = [
   {
     id: 'airplane-mode', name: 'Airplane mode', source: 'https://m3.material.io/components/switch/guidelines',
     description: 'Disabling wireless transmission functions in device system preferences.',
-    options: { label: 'Airplane mode', supportingText: 'Turn off cellular, Wi-Fi, and Bluetooth', checked: false, icons: 'none', name: 'airplane-mode' },
+    options: { label: 'Airplane mode', supportingText: '', checked: true, icons: 'none', name: 'airplane-mode' },
   },
 ];
 
