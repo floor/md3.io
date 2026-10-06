@@ -282,12 +282,24 @@ const hasMenuSurfaceThatCouldOpen = () => {
   const visit = (node: Element): boolean => {
     if (node.classList.contains('mtrl-menu')) {
       const style = getComputedStyle(node);
-      if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse') return true;
+      const rect = node.getBoundingClientRect();
+      if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse'
+        && (rect.height > 0 || node.getAnimations().some(animation => animation.playState === 'running'))) return true;
     }
     if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
     return [...node.children].some(visit);
   };
   return visit(document.body);
+};
+
+// Give a newly mounted page the same chance to finish its initial render on
+// either side, then treat a menu as open only once its painted surface shows.
+const settledMenuState = async (target: import('playwright').Page | import('playwright').Frame): Promise<boolean> => {
+  await target.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  if (!await target.evaluate(hasMenuSurfaceThatCouldOpen)) return false;
+  return target.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+    .then(() => true)
+    .catch(() => false);
 };
 
 // --- Generate and bundle every tab ---
@@ -441,6 +453,9 @@ try {
       await previewPage.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = previewPage.frames().find(f => f !== previewPage.mainFrame() && f.url().includes('preview')) ?? previewPage.frames()[1]!;
+      // This is deliberately read once: opening a menu for one tab must not
+      // turn into evidence that it was open on load for later tabs.
+      const previewMenuOnLoad = await settledMenuState(previewFrame);
 
       // 2. Mount each tab and compare
       for (const tab of TABS) {
@@ -476,37 +491,28 @@ try {
           continue;
         }
 
-        // Framework mounts may schedule the element upgrade just after the
-        // first painted root (usually the trigger). Let that work reach the
-        // surface before deciding whether an opening transition is expected.
-        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-        let previewMenuOpened = await previewFrame.evaluate(hasVisibleMenu);
-        const tabMenuOpened = await page.evaluate(hasMenuSurfaceThatCouldOpen)
-          ? await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
-            .then(() => true)
-            .catch(() => false)
-          : false;
-        // A tab that declares its menu open needs the preview's interactive
-        // stage in the same state. Never make that change in the tab itself.
-        if (tabMenuOpened && !previewMenuOpened) {
-          const previewMore = previewFrame.locator('button[aria-haspopup]');
-          if ((await previewMore.count()) > 0) {
-            await previewMore.first().click().catch(() => {});
-            previewMenuOpened = await previewFrame.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
-              .then(() => true)
-              .catch(() => false);
-          }
+        const tabMenuOnLoad = await settledMenuState(page);
+        if (previewMenuOnLoad !== tabMenuOnLoad) {
+          differences.push(`${slug} ${scenarioId} ${tab}: menu surface on load differs (preview ${previewMenuOnLoad ? 'open' : 'closed'}, tab ${tabMenuOnLoad ? 'open' : 'closed'})`);
+          continue;
         }
 
-        // Read only after both pages' painted menu surfaces agree. A closed tab
-        // is deliberately left closed so this remains a detectable mismatch.
-        if (previewMenuOpened) {
-          const tabSurfaceShown = await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
-            .then(() => true)
-            .catch(() => false);
-          if (!tabSurfaceShown) {
-            differences.push(`${slug} ${scenarioId} ${tab}: preview menu surface is open, tab menu surface is not`);
-            continue;
+        if (!previewMenuOnLoad) {
+          const previewMore = previewFrame.locator('button[aria-haspopup]');
+          if ((await previewMore.count()) > 0) {
+            const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
+            await Promise.all([
+              previewMore.first().click().catch(() => {}),
+              tabMore.first().click().catch(() => {}),
+            ]);
+            const [previewMenuOpened, tabMenuOpened] = await Promise.all([
+              settledMenuState(previewFrame),
+              settledMenuState(page),
+            ]);
+            if (!previewMenuOpened || !tabMenuOpened) {
+              differences.push(`${slug} ${scenarioId} ${tab}: menu surface after opening differs (preview ${previewMenuOpened ? 'shown' : 'not shown'}, tab ${tabMenuOpened ? 'shown' : 'not shown'})`);
+              continue;
+            }
           }
         }
 
@@ -514,10 +520,7 @@ try {
         const previewClasses = await previewFrame.evaluate(() => {
           const found = new Set<string>();
           const visit = (node: Element) => {
-            const style = getComputedStyle(node);
-            if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse') {
-              for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
-            }
+            for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
@@ -529,12 +532,9 @@ try {
 
         // Collect root classes from mounted tab
         const tabClasses = await page.evaluate(() => {
-        const found = new Set<string>();
-        const visit = (node: Element) => {
-          const style = getComputedStyle(node);
-          if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse') {
+          const found = new Set<string>();
+          const visit = (node: Element) => {
             for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
-          }
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
