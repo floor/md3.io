@@ -95,7 +95,8 @@ const menuSetControl: Control = {
 
 /**
  * The menu's scenarios, from m3.material.io (read 6 October 2026). Options name
- * playground controls only. Each one opens. File actions also opens Create.
+ * playground controls only. Each one opens. Create's children are in the file
+ * menu; the panel opens on hover or ArrowRight and is not open on the stage.
  * Dietary marks Nut-free; the figure's second check is a gap.
  */
 const menuScenarios: readonly Scenario[] = [

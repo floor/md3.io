@@ -40,6 +40,8 @@ const railSets: Record<string, RailSet> = {
     name: 'Timer',
     ariaLabel: 'Clock navigation',
     active: 'timer',
+    // The collapsed half of the figure is an hourglass button with no words.
+    // The expanded half writes "Add timer", which the expanded-clock header shows.
     header: { icon: symbols.hourglassBottom, ariaLabel: 'Add timer' },
     items: [
       { id: 'alarm', label: 'Alarm', icon: symbols.alarm },
@@ -100,7 +102,7 @@ const activeControl: Control = {
 const navigationRailScenarios: readonly Scenario[] = [
   {
     id: 'timer', name: 'Timer', source: 'https://m3.material.io/components/navigation-rail/guidelines',
-    description: 'Switching clock tools on a tablet: Alarm, Clock, Timer and Stopwatch, with an Add timer action.',
+    description: 'Switching clock tools on a tablet: Alarm, Clock, Timer and Stopwatch.',
     options: { destinations: 'timer', layout: 'standard', expanded: false, active: 'timer', badges: false, showToggle: true },
   },
   {
