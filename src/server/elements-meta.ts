@@ -180,7 +180,9 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'content', element: 'p', native: true, markup: true },
     { from: 'buttons', element: 'button', slot: 'actions', closes: 'closeDialog' },
   ],
-  'bottom-sheet': [{ from: 'content', element: 'p', native: true, markup: true }],
+  // A named set's content is a native tree the sheet has no template of its own for;
+  // the default's single `<p>` parses to the same child the markup path wrote.
+  'bottom-sheet': [{ from: 'content', element: 'p', native: true, markupTree: true }],
   'side-sheet': [{ from: 'content', element: 'p', native: true, markup: true }],
 };
 

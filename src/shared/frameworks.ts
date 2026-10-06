@@ -280,36 +280,54 @@ const read = (config: Config, path: string): unknown =>
 const imageSource = (value: unknown): unknown =>
   typeof value === 'string' ? (/^<img\b[^>]*\bsrc="([^"]*)"/.exec(value)?.[1] ?? value) : value;
 
+/** A markup value's entities, decoded: the characters `paragraph` escapes, back again. */
+const decodeEntities = (value: string): string =>
+  value.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&');
+
 /** The text of an element's markup (`<p>Text</p>`), its entities decoded. */
 const markupText = (element: string, value: string): string => {
   const inner = new RegExp(`^\\s*<${element}\\b[^>]*>([\\s\\S]*)</${element}>\\s*$`).exec(value)?.[1] ?? value;
-  return inner.replace(/<[^>]*>/g, '').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&#39;', "'").replaceAll('&amp;', '&');
+  return decodeEntities(inner.replace(/<[^>]*>/g, ''));
 };
 
 /**
  * A native element's markup, parsed into the tree the slotted printers write: the
- * playground's own art, which is elements and double-quoted attributes only, with
- * no text. Anything else parses to nothing.
+ * playground's own art and the sheet's content, which is elements, double-quoted
+ * attributes and one text run per element — no mixed content. Anything else
+ * parses to nothing.
  */
 function parseNativeTree(markup: string): NestedChild | null {
-  const tags = /<([a-z][\w-]*)((?:\s+[\w:-]+="[^"]*")*)(\/?)>|<\/([a-z][\w-]*)>/g;
+  const tags = /<([a-z][\w-]*)((?:\s+[\w:-]+="[^"]*")*)(\s*\/?)>|<\/([a-z][\w-]*)>|([^<]+)/g;
   let match: RegExpExecArray | null;
   const root: NestedChild[] = [];
   const stack: NestedChild[] = [];
-  const place = (done: NestedChild): void => {
+  const place = (done: NestedChild): boolean => {
     const parent = stack.at(-1);
-    if (parent) (parent.children ??= []).push(done);
-    else root.push(done);
+    if (!parent) {
+      root.push(done);
+      return true;
+    }
+    // An element beside text is mixed content, which the printers cannot write.
+    if (parent.text) return false;
+    (parent.children ??= []).push(done);
+    return true;
   };
   while ((match = tags.exec(markup))) {
     if (match[4]) {
-      if (!stack.length) return null;
-      place(stack.pop()!);
+      if (!stack.length || !place(stack.pop()!)) return null;
+    } else if (match[5] !== undefined) {
+      // A run between tags: the open element's whole text, or whitespace that is layout.
+      const run = decodeEntities(match[5]);
+      if (!run.trim()) continue;
+      const open = stack.at(-1);
+      if (!open || open.children?.length || open.text) return null;
+      open.text = run.trim();
     } else if (match[1]) {
       const attrs: Attr[] = [...(match[2] ?? '').matchAll(/([\w:-]+)="([^"]*)"/g)].map((attribute) => ({ name: attribute[1]!, value: attribute[2]! }));
       const opened: NestedChild = { element: match[1], attrs, text: '', native: true };
-      if (match[3]) place(opened);
-      else stack.push(opened);
+      if (match[3]) {
+        if (!place(opened)) return null;
+      } else stack.push(opened);
     }
   }
   return stack.length === 0 && root.length === 1 ? root[0]! : null;
@@ -519,15 +537,21 @@ function plan(meta: ElementMeta, config: Config): Plan {
       if (entry.markup && typeof item === 'string') {
         const markupValue = markupText(entry.element, item);
         if (markupValue) slotted.push({ element: entry.element, native: !!entry.native, attrs: childAttrs, text: markupValue, after: !!entry.after, closes: false, children: [] });
-      } else if (entry.markupTree && isRecord(item) && isMarkup(item.markup)) {
-        const tree = parseNativeTree(item.markup);
+      } else if (entry.markupTree) {
+        // A tree given whole (the card's `markup` key) or a content string that is one (the sheet's sets).
+        const markup = typeof item === 'string' ? item : isRecord(item) && isMarkup(item.markup) ? item.markup : undefined;
+        const tree = markup !== undefined ? parseNativeTree(markup) : null;
         if (tree) {
           // The tree stands in for the child; every other key of the item stays the element's gap to name.
-          for (const [key, value] of Object.entries(item)) {
+          if (isRecord(item)) for (const [key, value] of Object.entries(item)) {
             if (key !== 'markup' && isSet(value) && !(entry.ignore?.[key] as unknown[] | undefined)?.includes(value)) omit(`${path}.${key}`);
           }
-          slotted.push({ element: tree.element, native: true, attrs: [...childAttrs, ...tree.attrs], text: '', after: !!entry.after, closes: false, children: tree.children ?? [] });
-        } else slotted.push(slottedChild(entry, item, path, childAttrs));
+          slotted.push({ element: tree.element, native: true, attrs: [...childAttrs, ...tree.attrs], text: tree.text, after: !!entry.after, closes: false, children: tree.children ?? [] });
+        } else if (typeof item === 'string') {
+          // Content the parser cannot read falls back to the plain text the markup path writes.
+          const markupValue = markupText(entry.element, item);
+          if (markupValue) slotted.push({ element: entry.element, native: !!entry.native, attrs: childAttrs, text: markupValue, after: !!entry.after, closes: false, children: [] });
+        } else if (isRecord(item)) slotted.push(slottedChild(entry, item, path, childAttrs));
       } else if (isRecord(item)) slotted.push(slottedChild(entry, item, path, childAttrs));
     }
   }
@@ -690,10 +714,16 @@ const callsNote = (meta: ElementMeta, p: Plan, comment: (text: string) => string
 const htmlAttrs = (attrs: Attr[]): string =>
   attrs.filter(a => !a.ref && !a.unset).map(a => (a.value === true ? ` ${a.name}` : ` ${a.name}="${escapeAttr(String(a.value))}"`)).join('');
 
+/** JSX prop names: camelCase, except `aria-*` and `data-*`, which every framework takes dashed. */
+const jsxName = (name: string): string => (/^(aria|data)-/.test(name) ? name : camel(name));
+
 /** JSX / Svelte props: camelCase, booleans bare, numbers in braces. React takes `style` as an object. */
 const jsxAttrs = (attrs: Attr[], react = false): string =>
   attrs.map(a => {
-    const name = camel(a.name);
+    // A checkbox's initial state, as React writes it: `checked` alone is the controlled
+    // spelling, which warns without an onChange handler a static tab does not have.
+    if (react && a.name === 'checked') return ' defaultChecked';
+    const name = jsxName(a.name);
     if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
     if (a.ref) return ` ${name}={${a.ref}}`;
     if (a.value === true) return ` ${name}`;
@@ -744,9 +774,14 @@ const slottedBody = (child: Slotted, item: (nested: NestedChild) => string): str
 const nativeBody = (children: NestedChild[], node: (nested: NestedChild) => string): string =>
   `${children.map(child => `\n  ${node(child).replaceAll('\n', '\n  ')}`).join('')}\n`;
 
+/** Native elements HTML closes by themselves: their tree node prints self-closed, never `</img>`. */
+const voidTag = (element: string): boolean => ['img', 'input', 'br', 'hr', 'source', 'wbr'].includes(element);
+
 /** A nested node in the HTML tab: an mtrl element with its text, or a native tree recursing. */
 const htmlNode = (nested: NestedChild): string => nested.native
-  ? `<${nested.element}${htmlAttrs(nested.attrs)}>${nested.children?.length ? nativeBody(nested.children, htmlNode) : escapeText(nested.text)}</${nested.element}>`
+  ? (nested.children?.length || nested.text || !voidTag(nested.element)
+    ? `<${nested.element}${htmlAttrs(nested.attrs)}>${nested.children?.length ? nativeBody(nested.children, htmlNode) : escapeText(nested.text)}</${nested.element}>`
+    : `<${nested.element}${htmlAttrs(nested.attrs)} />`)
   : `<m-${nested.element}${htmlAttrs(nested.attrs)}>${escapeText(nested.text)}</m-${nested.element}>`;
 
 /** A nested node in React or Solid: an mtrl component, or a native tree recursing. */

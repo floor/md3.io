@@ -209,6 +209,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   // A named collection fixes the slides: the captions and the current-slide control are for the default's twenty-four.
   if (slug === 'carousel') state.slidesDefault = !state.carouselSet || state.carouselSet === 'default';
   if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
+  // A named sheet fixes the content: the title and body controls are for the default's own.
+  if (slug === 'bottom-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
