@@ -208,7 +208,9 @@ const collectVisibleText = () => {
     let element: Element | null = start;
     while (element) {
       const style = getComputedStyle(element);
-      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || element.getClientRects().length === 0) return false;
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+      // A contents element has no box of its own, but it does not hide its children.
+      if (style.display !== 'contents' && element.getClientRects().length === 0) return false;
       const root = element.getRootNode();
       element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
     }
@@ -256,14 +258,32 @@ const hasVisibleMenu = () => {
     let current: Element | null = element;
     while (current) {
       const style = getComputedStyle(current);
-      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || current.getClientRects().length === 0) return false;
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+      if (style.display !== 'contents' && current.getClientRects().length === 0) return false;
       const root = current.getRootNode();
       current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
     }
     return true;
   };
   const visit = (node: Element): boolean => {
-    if ((node.matches('m-menu') || [...node.classList].some(className => className.includes('mtrl-menu'))) && isVisible(node)) return true;
+    // Only the surface paints a menu.  Its height and animations distinguish a
+    // finished opening transition from a contents host or a scaleY(0) surface.
+    if (node.classList.contains('mtrl-menu') && isVisible(node)) {
+      const rect = node.getBoundingClientRect();
+      if (rect.height > 0 && node.getAnimations().every(animation => animation.playState !== 'running')) return true;
+    }
+    if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
+    return [...node.children].some(visit);
+  };
+  return visit(document.body);
+};
+
+const hasMenuSurfaceThatCouldOpen = () => {
+  const visit = (node: Element): boolean => {
+    if (node.classList.contains('mtrl-menu')) {
+      const style = getComputedStyle(node);
+      if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse') return true;
+    }
     if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
     return [...node.children].some(visit);
   };
@@ -394,7 +414,9 @@ const siteServer = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequ
 // --- Browser check ---
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const previewPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 page.setDefaultTimeout(10000);
+previewPage.setDefaultTimeout(10000);
 
 const pageErrors: string[] = [];
 page.on('pageerror', err => pageErrors.push(err.message));
@@ -415,34 +437,10 @@ try {
 
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
-      await page.goto(`${siteServer.url}components/${slug}/${scenarioParam}`);
-      await page.frameLocator('#preview').locator('#stage > *').first().waitFor();
+      await previewPage.goto(`${siteServer.url}components/${slug}/${scenarioParam}`);
+      await previewPage.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
-      const previewFrame = page.frames().find(f => f !== page.mainFrame() && f.url().includes('preview')) ?? page.frames()[1]!;
-
-      // Click "more" button if present in preview
-      const previewMore = previewFrame.locator('button[aria-haspopup]');
-      const hasMoreButton = (await previewMore.count()) > 0;
-      const previewMenuOpened = hasMoreButton && await (async () => {
-        await previewMore.first().click().catch(() => {});
-        return previewFrame.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
-          .then(() => true)
-          .catch(() => false);
-      })();
-
-      // Collect root classes from preview frame
-      const previewClasses = await previewFrame.evaluate(() => {
-        const found = new Set<string>();
-        const visit = (node: Element) => {
-          for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
-          if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
-          [...node.children].forEach(visit);
-        };
-        visit(document.body);
-        return [...found];
-      });
-      const previewRoots = previewClasses.filter(isRootClass);
-      const previewText = await previewFrame.evaluate(collectVisibleText);
+      const previewFrame = previewPage.frames().find(f => f !== previewPage.mainFrame() && f.url().includes('preview')) ?? previewPage.frames()[1]!;
 
       // 2. Mount each tab and compare
       for (const tab of TABS) {
@@ -478,20 +476,65 @@ try {
           continue;
         }
 
-        // Compare text only after both sides reach the same menu state.
-        if (previewMenuOpened) {
-          const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
-          if ((await tabMore.count()) > 0) {
-            await tabMore.first().click().catch(() => {});
-            await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 }).catch(() => {});
+        // Framework mounts may schedule the element upgrade just after the
+        // first painted root (usually the trigger). Let that work reach the
+        // surface before deciding whether an opening transition is expected.
+        await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+        let previewMenuOpened = await previewFrame.evaluate(hasVisibleMenu);
+        const tabMenuOpened = await page.evaluate(hasMenuSurfaceThatCouldOpen)
+          ? await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+            .then(() => true)
+            .catch(() => false)
+          : false;
+        // A tab that declares its menu open needs the preview's interactive
+        // stage in the same state. Never make that change in the tab itself.
+        if (tabMenuOpened && !previewMenuOpened) {
+          const previewMore = previewFrame.locator('button[aria-haspopup]');
+          if ((await previewMore.count()) > 0) {
+            await previewMore.first().click().catch(() => {});
+            previewMenuOpened = await previewFrame.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+              .then(() => true)
+              .catch(() => false);
           }
         }
 
-        // Collect root classes from mounted tab
-        const tabClasses = await page.evaluate(() => {
+        // Read only after both pages' painted menu surfaces agree. A closed tab
+        // is deliberately left closed so this remains a detectable mismatch.
+        if (previewMenuOpened) {
+          const tabSurfaceShown = await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+            .then(() => true)
+            .catch(() => false);
+          if (!tabSurfaceShown) {
+            differences.push(`${slug} ${scenarioId} ${tab}: preview menu surface is open, tab menu surface is not`);
+            continue;
+          }
+        }
+
+        // Collect preview contents after its menu state has been settled.
+        const previewClasses = await previewFrame.evaluate(() => {
           const found = new Set<string>();
           const visit = (node: Element) => {
+            const style = getComputedStyle(node);
+            if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse') {
+              for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
+            }
+            if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
+            [...node.children].forEach(visit);
+          };
+          visit(document.body);
+          return [...found];
+        });
+        const previewRoots = previewClasses.filter(isRootClass);
+        const previewText = await previewFrame.evaluate(collectVisibleText);
+
+        // Collect root classes from mounted tab
+        const tabClasses = await page.evaluate(() => {
+        const found = new Set<string>();
+        const visit = (node: Element) => {
+          const style = getComputedStyle(node);
+          if (style.display !== 'none' && style.visibility !== 'hidden' && style.visibility !== 'collapse') {
             for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
+          }
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
