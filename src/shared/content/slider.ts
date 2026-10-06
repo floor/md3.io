@@ -28,7 +28,7 @@ const sliderScenarios: readonly Scenario[] = [
   {
     id: 'living-room-climate', name: 'Living room climate', source: 'https://m3.material.io/components/sliders/guidelines',
     description: 'Setting target thermostat temperature in a dedicated smart home climate screen.',
-    options: { label: 'Living Room', size: 'XL', value: '72', showValue: true },
+    options: { label: 'Living Room', size: 'XL', value: '72', step: '1', showValue: true },
   },
 ];
 
@@ -40,7 +40,7 @@ export const sliderComponent = {
   controls: [
     ...section('Appearance', [choose('size', 'Size', ['XS', 'S', 'M', 'L', 'XL'], 'XS'), choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('color', 'Color', ['primary', 'secondary', 'tertiary', 'error'], 'primary', 'select'), toggle('ticks', 'Tick marks'), toggle('showValue', 'Value indicator', true)]),
     ...section('Content', [text('label', 'Label', 'Volume'), range('value', 'Value', '40'), { ...range('secondValue', 'Range end', '80'), enabledWhen: 'range' }, toggle('insetIcon', 'Inset icon', false, 'insetIconAllowed')]),
-    ...section('Behavior', [choose('variant', 'Variant', ['standard', 'centered', 'range'], 'standard'), choose('step', 'Step', ['5', '10'], '10'), disabled]),
+    ...section('Behavior', [choose('variant', 'Variant', ['standard', 'centered', 'range'], 'standard'), choose('step', 'Step', ['1', '5', '10'], '10'), disabled]),
   ],
   config: (state: ComponentState): SliderConfig => {
     const label = string(state, 'label');
