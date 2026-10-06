@@ -43,44 +43,22 @@ export const checkboxFamilies: Record<string, CheckboxFamily> = {
       { label: 'Monthly', value: 'monthly' },
     ],
   },
-  'genre-filter': {
-    name: 'Genre filter',
-    parent: 'View all',
-    groupName: 'genres',
-    children: [
-      { label: 'Rock', value: 'rock', checkedWhenMixed: true },
-      { label: 'Pop', value: 'pop', checkedWhenMixed: true },
-      { label: 'Hip Hop', value: 'hip-hop', checkedWhenMixed: true },
-    ],
-  },
-  'playlist-selection': {
-    name: 'Playlist selection',
-    parent: '80s playlist',
-    groupName: 'playlist',
-    children: [
-      { label: "Jessie's Girl · Rick Springfield", value: 'jessies-girl', checkedWhenMixed: true },
-      { label: "Another One Bites the Dust · Queen", value: 'another-one-bites-the-dust' },
-    ],
-  },
 };
 checkboxFamilies['email-notifications'] = checkboxFamilies['email-frequency'];
 
 const familySetControl: Control = {
-  ...choose('familySet', 'Options', ['default', 'burger-additions', 'email-frequency', 'genre-filter', 'playlist-selection'], 'default', 'select'),
+  ...choose('familySet', 'Options', ['default', 'burger-additions', 'email-frequency'], 'default', 'select'),
   labels: {
     default: 'Default',
     'burger-additions': 'Burger additions',
     'email-frequency': 'Email notifications',
-    'genre-filter': 'Genre filter',
-    'playlist-selection': 'Playlist selection',
   },
 };
 
 /**
  * The checkbox's scenarios, from m3.material.io (read 5 October 2026). Options name
  * playground controls only. Parent and children sets can have all items selected or
- * unselected, or represent real-world toppings, notification cadences, or genre filters.
- * A standalone checkbox turns a single item on or off in a playlist queue.
+ * unselected, or represent real-world toppings or notification cadences.
  */
 const checkboxScenarios: readonly Scenario[] = [
   {
@@ -92,16 +70,6 @@ const checkboxScenarios: readonly Scenario[] = [
     id: 'email-frequency', name: 'Email notifications', source: 'https://m3.material.io/components/checkbox/guidelines',
     description: 'Setting email digest frequencies with a parent toggle and child cadences.',
     options: { familySet: 'email-frequency', family: true, label: 'Receive emails', name: 'notifications', state: 'indeterminate' },
-  },
-  {
-    id: 'genre-filter', name: 'Genre filter', source: 'https://m3.material.io/components/checkbox/guidelines',
-    description: 'Filtering a music catalog by genre in a side sheet filter panel.',
-    options: { familySet: 'genre-filter', family: true, label: 'View all', name: 'genres', state: 'checked' },
-  },
-  {
-    id: 'playlist-selection', name: 'Playlist selection', source: 'https://m3.material.io/components/checkbox/guidelines',
-    description: 'Selecting multiple tracks in an 80s music playlist for batch addition to a queue.',
-    options: { familySet: 'playlist-selection', family: false, state: 'checked', label: "Jessie's Girl · Rick Springfield", name: 'playlist', value: 'jessies-girl' },
   },
 ];
 
@@ -131,7 +99,9 @@ export const checkboxComponent = {
     ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
     // The m3.material.io checkbox guidelines' parent and children: the label names
     // the parent, the children are the guideline's own. FLO-269.
-    ...section('Content', [toggle('family', 'Parent and children', true), familySetControl, text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), text('value', 'Value', 'on')]),
+    // Value names the one standalone box's submitted value; a family's boxes carry
+    // their own, so the control waits for a standalone box (`standalone`, derived).
+    ...section('Content', [toggle('family', 'Parent and children', true), familySetControl, text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), { ...text('value', 'Value', 'on'), enabledWhen: 'standalone' }]),
     ...section('Behavior', [choose('state', 'State', ['unchecked', 'checked', 'indeterminate'], 'indeterminate', 'select'), toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
   ],
   config: (state: ComponentState): CheckboxConfig => ({

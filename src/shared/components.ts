@@ -34,7 +34,7 @@ import { fabComponent } from './content/fab';
 import { fabMenuComponent } from './content/fab-menu';
 import { iconButtonComponent } from './content/icon-button';
 import { splitButtonComponent } from './content/split-button';
-import { checkboxChildChecked, checkboxChildren, checkboxComponent } from './content/checkbox';
+import { checkboxChildChecked, checkboxComponent, currentCheckboxChildren } from './content/checkbox';
 import { chipsComponent } from './content/chips';
 import { datepickerComponent } from './content/datepicker';
 import { radiosComponent, radioAriaLabel } from './content/radios';
@@ -185,7 +185,12 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.toggleAllowed = state.variant !== 'text';
     if (!state.toggleAllowed) state.toggle = false;
   }
-  if (slug === 'checkbox') state.familySetDefault = !state.familySet || state.familySet === 'default';
+  if (slug === 'checkbox') {
+    state.familySetDefault = !state.familySet || state.familySet === 'default';
+    // The Value control is for the one standalone box; a parent-and-children group's
+    // boxes submit their own values, so it disables while the family is on.
+    state.standalone = state.family !== true;
+  }
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
@@ -219,6 +224,15 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
+    // A parent over its children is not one element: m-checkbox's only slot is its
+    // label (material/src/elements/checkbox.ts), so the element tabs render the
+    // parent and carry the children as a stated gap (`Not yet exposed by the
+    // element: children.`).
+    case 'checkbox': return state.family === true
+      ? { ...config, children: currentCheckboxChildren(state).map(child => ({
+          label: child.label, value: child.value, ...(checkboxChildChecked(state, child.value) ? { checked: true } : {}),
+        })) }
+      : config;
     default: return config;
   }
 }
@@ -288,7 +302,7 @@ function checkboxFamilyCode(state: ComponentState): string {
   // The options every box shares, as the playground sets them.
   const rest = `${state.labelPosition === 'start' ? ", labelPosition: 'start'" : ''}${bool(state, 'error') ? ', error: true' : ''}` +
     `${bool(state, 'required') ? ', required: true' : ''}${bool(state, 'disabled') ? ', disabled: true' : ''}`;
-  const children = checkboxChildren.map(child => `  { label: '${child.label}', value: '${child.value}'${checkboxChildChecked(state, child.value) ? ', checked: true' : ''} }`).join(',\n');
+  const children = currentCheckboxChildren(state).map(child => `  { label: '${child.label}', value: '${child.value}'${checkboxChildChecked(state, child.value) ? ', checked: true' : ''} }`).join(',\n');
   const theme = state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`;
   return `import { createCheckbox } from 'material';\nimport 'material/styles/base';\nimport 'material/styles/checkbox';\n${theme}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
