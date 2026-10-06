@@ -3,6 +3,7 @@
 // the symbol each one shows.
 import accountCircle from '../../icons/account_circle-fill.svg' with { type: 'text' };
 import add from '../../icons/add.svg' with { type: 'text' };
+import addAPhoto from '../../icons/add_a_photo.svg' with { type: 'text' };
 import archive from '../../icons/archive.svg' with { type: 'text' };
 import arrowBack from '../../icons/arrow_back.svg' with { type: 'text' };
 import arrowForward from '../../icons/arrow_forward.svg' with { type: 'text' };
@@ -31,6 +32,7 @@ import markEmailUnread from '../../icons/mark_email_unread.svg' with { type: 'te
 import menu from '../../icons/menu.svg' with { type: 'text' };
 import mic from '../../icons/mic.svg' with { type: 'text' };
 import redo from '../../icons/redo.svg' with { type: 'text' };
+import restaurant from '../../icons/restaurant.svg' with { type: 'text' };
 import search from '../../icons/search.svg' with { type: 'text' };
 import send from '../../icons/send.svg' with { type: 'text' };
 import snooze from '../../icons/snooze.svg' with { type: 'text' };
@@ -72,6 +74,9 @@ export const symbols = {
   search: trim(search),
   visibility: trim(visibility),
   visibilityOff: trim(visibilityOff),
+  // The chips playground's named sets (src/shared/content/chips.ts).
+  addAPhoto: trim(addAPhoto),
+  restaurant: trim(restaurant),
   // The toolbar playground's action sets (src/shared/content/toolbar.ts).
   archive: trim(archive),
   arrowBack: trim(arrowBack),
@@ -120,6 +125,9 @@ const files: Record<keyof typeof symbols, string> = {
   search: 'search',
   visibility: 'visibility',
   visibilityOff: 'visibility_off',
+  // The chips playground's named sets (src/shared/content/chips.ts).
+  addAPhoto: 'add_a_photo',
+  restaurant: 'restaurant',
   // The toolbar playground's action sets (src/shared/content/toolbar.ts).
   archive: 'archive',
   arrowBack: 'arrow_back',

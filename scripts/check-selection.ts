@@ -52,10 +52,10 @@ try {
       await valueIs('value', 'standard');
     } else if (slug === 'chips') {
       await frame.getByText('Music', { exact: true }).click();
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration input[name="music"]')?.checked);
+      await page.waitForFunction(() => /\{\s*value:\s*"music"[^}]*selected:\s*true/.test(document.querySelector('#generated-code')?.textContent ?? ''));
       await toggle('multiSelect');
       await frame.getByText('Food', { exact: true }).click();
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration input[name="food"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration input[name="hiking"]')?.checked);
+      await page.waitForFunction(() => /\{\s*value:\s*"food"[^}]*selected:\s*true/.test(document.querySelector('#generated-code')?.textContent ?? '') && !/\{\s*value:\s*"hiking"[^}]*selected:\s*true/.test(document.querySelector('#generated-code')?.textContent ?? ''));
     } else if (slug === 'slider') {
       // Step 10 by default.
       await frame.getByRole('slider').first().press('ArrowRight');

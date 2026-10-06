@@ -36,7 +36,8 @@ import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
 import { componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
-import { checkboxChildChecked, checkboxChildren } from '../shared/content/checkbox';
+import { checkboxChildChecked, checkboxChildren, currentCheckboxChildren } from '../shared/content/checkbox';
+import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
 import { toolbarContent } from '../shared/content/toolbar';
 import { appBarContent } from '../shared/content/top-app-bar';
@@ -261,7 +262,7 @@ function create(state: ComponentState) {
     }
     case 'radios': {
       const control = createRadios(components.radios.config(state));
-      control.element.setAttribute('aria-label', 'Delivery method');
+      control.element.setAttribute('aria-label', radioAriaLabel(state));
       control.on('change', () => { sync({ value: control.getValue() ?? '' }); message(`Selected: ${control.getSelected()?.label}`); });
       return control;
     }
@@ -273,8 +274,12 @@ function create(state: ComponentState) {
       if (state.draggable) control.getChips().forEach(chip => { chip.element.draggable = true; });
       control.on('change', () => {
         const values = control.getSelectedValues();
-        sync(Object.fromEntries(['hiking', 'music', 'food'].map(value => [value, values.includes(value)])));
+        const selectedChips = values.length ? values.join(',') : '__none__';
+        sync({ selectedChips });
         message(values.length ? `Selected: ${values.join(', ')}` : 'Selection cleared');
+      });
+      control.on('remove', event => {
+        message(`Removed: ${event.chip.getLabel()}`);
       });
       return control;
     }
@@ -389,7 +394,7 @@ function create(state: ComponentState) {
       // checking the parent checks every child, unchecking it unchecks them, and a mix
       // makes it indeterminate; checking an indeterminate parent checks them all.
       const { label, value: _value, checked: _checked, indeterminate: _indeterminate, name, ...common } = components.checkbox.config(state);
-      const children = checkboxChildren.map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
+      const children = currentCheckboxChildren(state).map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
       const parentBox = createCheckbox({ ...common, label: label || 'Additions', checked: state.state === 'checked', indeterminate: state.state === 'indeterminate' });
       parentBox.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));
       const reflect = () => {
@@ -400,7 +405,7 @@ function create(state: ComponentState) {
         else { parentBox.uncheck(); parentBox.setIndeterminate(true); }
         const nextState = on === children.length ? 'checked' : on === 0 ? 'unchecked' : 'indeterminate';
         report(nextState);
-        message(on === 0 ? 'No additions' : `${on} of ${children.length} additions`);
+        message(on === 0 ? `No ${label ? label.toLowerCase() : 'additions'}` : `${on} of ${children.length} ${label ? label.toLowerCase() : 'additions'}`);
       };
       // Only user changes: check() and uncheck() emit change as well, without nativeEvent.
       parentBox.on('change', ({ checked, nativeEvent }) => {

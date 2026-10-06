@@ -46,6 +46,9 @@ const names = [
   'search',
   'visibility',
   'visibility_off',
+  // The chips playground's named sets (src/shared/content/chips.ts).
+  'add_a_photo',
+  'restaurant',
   // The toolbar playground's action sets (src/shared/content/toolbar.ts).
   'archive',
   'arrow_back',

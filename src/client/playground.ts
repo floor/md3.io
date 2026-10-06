@@ -147,6 +147,8 @@ function syncControls(next: ComponentState) {
     }
   }
   for (const output of form.querySelectorAll<HTMLOutputElement>('[data-value-for]')) output.value = String(next[output.dataset.valueFor!]);
+  const selectedChipsInput = form.querySelector<HTMLInputElement>('[name="selectedChips"]');
+  if (selectedChipsInput) selectedChipsInput.value = next.selectedChips !== undefined ? String(next.selectedChips) : '';
 }
 function update(send = true, reset = false) {
   state = readForm();

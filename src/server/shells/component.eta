@@ -39,6 +39,7 @@
     <form class="split-panel configuration" id="configuration">
       <div class="panel-heading"><h2 class="ui-title">CONFIGURATION</h2><button type="reset" class="reset-button">Reset</button></div>
       <div class="configuration-body">
+      <% if (it.slug === 'chips') { %><input type="hidden" name="selectedChips" id="chips-selectedChips" value="" /><% } %>
       <% if (it.component.scenarios.length) { %>
       <section class="ui-section scenario-setup">
         <div class="ui-row control-row"><label class="control-label" for="scenario">Scenario</label><select class="ui-select" id="scenario" aria-describedby="scenario-description"><option value="default" selected>Default</option><% it.component.scenarios.forEach(scenario => { %><option value="<%= scenario.id %>"><%= scenario.name %></option><% }); %><option value="custom">Custom</option></select></div>

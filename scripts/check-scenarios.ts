@@ -181,6 +181,12 @@ try {
   });
   assert(await favorite.getAttribute('aria-pressed') === null, 'button/favorite: a text button is still a toggle');
   assert(errors.length === 0, `button/favorite: ${errors.join('\n')}`);
+  // Old state keys (e.g. ?hiking=true) must load quietly with no error and no unknown banner.
+  errors.length = 0;
+  await page.goto(`${base}components/chips/?hiking=true`);
+  await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
+  assert(await page.locator('#playground-status').textContent() === 'Ready to try', 'chips/?hiking=true: status is not Ready to try');
+  assert(errors.length === 0, `chips/?hiking=true: ${errors.join('\n')}`);
   console.log(`Scenario checks passed: ${loads} loads over ${componentSlugs.length} components.`);
 } finally {
   await browser.close();
