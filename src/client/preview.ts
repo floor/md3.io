@@ -390,7 +390,7 @@ function create(state: ComponentState) {
         });
         return checkbox;
       }
-      // The m3.material.io checkbox guidelines' parent and children (FLO-269):
+      // The m3.material.io checkbox guidelines' parent and children:
       // checking the parent checks every child, unchecking it unchecks them, and a mix
       // makes it indeterminate; checking an indeterminate parent checks them all.
       const { label, value: _value, checked: _checked, indeterminate: _indeterminate, name, ...common } = components.checkbox.config(state);
