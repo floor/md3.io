@@ -42,6 +42,7 @@ import { trailingBehaviour } from '../shared/content/text-field';
 import { toolbarContent } from '../shared/content/toolbar';
 import { appBarContent } from '../shared/content/top-app-bar';
 import { railHeader } from '../shared/content/navigation-rail';
+import { tabsAriaLabel } from '../shared/content/tabs';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -208,7 +209,7 @@ function create(state: ComponentState) {
     }
     case 'tabs': {
       const control = createTabs(components.tabs.config(state));
-      control.element.setAttribute('aria-label', 'Mailbox views');
+      control.element.setAttribute('aria-label', tabsAriaLabel(state));
       control.on('change', (event: { value: string }) => { sync({ active: event.value }); message(`Selected: ${event.value}`); });
       return control;
     }

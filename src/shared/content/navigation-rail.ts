@@ -4,9 +4,6 @@ import type { NavigationRailConfig } from 'material/components/navigation-rail';
 import { symbols } from '../icons';
 import { type ComponentState, type Control, type Scenario, bool, choose, iconByName, pick, range, section, string, toggle } from './types';
 
-/** The Selected control the drawer and the tabs still share, until each has its own. */
-export const activeDestination = choose('active', 'Selected', ['inbox', 'favorites', 'sent'], 'inbox', 'select');
-
 export const destinations = [{ id: 'inbox', label: 'Inbox', icon: iconByName('inbox') }, { id: 'favorites', label: 'Favorites', icon: iconByName('heart') }, { id: 'sent', label: 'Sent', icon: iconByName('send') }];
 
 /** One destination on a named rail. */

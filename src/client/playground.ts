@@ -5,6 +5,7 @@ import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
 import { drawerActiveOptions } from '../shared/content/drawer';
 import { railActiveOptions } from '../shared/content/navigation-rail';
+import { tabActiveOptions } from '../shared/content/tabs';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
 hljs.registerLanguage('javascript', javascript);
@@ -154,7 +155,7 @@ function syncControls(next: ComponentState) {
 }
 /** The Selected list names only the destinations on the stage. */
 function refreshActiveSelect(next: ComponentState) {
-  const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'drawer' ? drawerActiveOptions(next) : null;
+  const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'drawer' ? drawerActiveOptions(next) : slug === 'tabs' ? tabActiveOptions(next) : null;
   if (!options) return;
   const select = form.querySelector<HTMLSelectElement>('[name="active"]');
   if (!select) return;

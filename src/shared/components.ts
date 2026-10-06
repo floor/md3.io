@@ -48,7 +48,7 @@ import { bottomAppBarComponent } from './content/bottom-app-bar';
 import { drawerActiveOptions, drawerComponent } from './content/drawer';
 import { menuComponent } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
-import { tabsComponent } from './content/tabs';
+import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
 import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
 import { bottomSheetComponent } from './content/bottom-sheet';
@@ -141,7 +141,6 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     if (control.kind === 'date' && !(slug === 'datepicker' && ['value', 'endDate'].includes(control.key) && state[control.key] === '') && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
     if (control.kind === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(String(state[control.key]))) state[control.key] = control.initial;
   }
-  if (slug === 'tabs' && state.disableSent && state.active === 'sent') state.active = 'inbox';
   if (slug === 'navigation-rail') {
     const allowed = railActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
@@ -150,7 +149,12 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     const allowed = drawerActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
   }
-  if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
+  if (slug === 'tabs') {
+    state.tabsDefault = !state.tabSet || state.tabSet === 'default';
+    if (state.tabsDefault && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
+    const allowed = tabActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
   if (slug === 'badge') state.hasLabel = state.variant === 'large';
   if (slug === 'progress' || slug === 'loading-indicator') state.determinate = !state.indeterminate;
   if (slug === 'progress') {
@@ -368,7 +372,7 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
       cleanup = `// header.destroy();\n${cleanup}`;
     }
   }
-  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', 'Mailbox views');\ntabs.on('change', event => console.log(event.value));\n`;
+  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', '${tabsAriaLabel(state)}');\ntabs.on('change', event => console.log(event.value));\n`;
   if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
     after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
