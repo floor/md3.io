@@ -65,6 +65,14 @@ import visibility from '../../icons/visibility.svg' with { type: 'text' };
 import visibilityOff from '../../icons/visibility_off.svg' with { type: 'text' };
 import volumeOff from '../../icons/volume_off.svg' with { type: 'text' };
 import volumeUp from '../../icons/volume_up.svg' with { type: 'text' };
+import album from '../../icons/album.svg' with { type: 'text' };
+import cloud from '../../icons/cloud.svg' with { type: 'text' };
+import nearMe from '../../icons/near_me.svg' with { type: 'text' };
+import pause from '../../icons/pause.svg' with { type: 'text' };
+import personSearch from '../../icons/person_search.svg' with { type: 'text' };
+import playlistAdd from '../../icons/playlist_add.svg' with { type: 'text' };
+import playlistPlay from '../../icons/playlist_play.svg' with { type: 'text' };
+import skipNext from '../../icons/skip_next.svg' with { type: 'text' };
 
 const trim = (svg: string) => svg.trim();
 export const symbols = {
@@ -137,6 +145,15 @@ export const symbols = {
   share: trim(share),
   timer: trim(timer),
   videocam: trim(videocam),
+  // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
+  album: trim(album),
+  cloud: trim(cloud),
+  nearMe: trim(nearMe),
+  pause: trim(pause),
+  personSearch: trim(personSearch),
+  playlistAdd: trim(playlistAdd),
+  playlistPlay: trim(playlistPlay),
+  skipNext: trim(skipNext),
 };
 
 /** Each symbol's file in icons/, named as fonts.google.com/icons names the symbol (`-fill` when filled). */
@@ -210,6 +227,15 @@ const files: Record<keyof typeof symbols, string> = {
   share: 'share',
   timer: 'timer',
   videocam: 'videocam',
+  // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
+  album: 'album',
+  cloud: 'cloud',
+  nearMe: 'near_me',
+  pause: 'pause',
+  personSearch: 'person_search',
+  playlistAdd: 'playlist_add',
+  playlistPlay: 'playlist_play',
+  skipNext: 'skip_next',
 };
 /** The icons/ file of a symbol's SVG (`edit`), when it is one of ours. */
 export const symbolFile = (svg: string): string | undefined => {
