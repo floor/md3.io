@@ -505,7 +505,9 @@ try {
         if (!previewMenuOnLoad) {
           const previewMore = previewFrame.locator('button[aria-haspopup]');
           if ((await previewMore.count()) > 0) {
-            const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
+            // An element tab's trigger is a host (m-button), not a button: the
+            // element that says it opens a popup is the one a user would press.
+            const tabMore = page.locator('[aria-haspopup], [aria-label="More options"]');
             // The trigger is a toggle and the preview page is shared by the six
             // tabs: click it only while its menu is closed.
             if (!await previewFrame.evaluate(hasVisibleMenu)) await previewMore.first().click().catch(() => {});
