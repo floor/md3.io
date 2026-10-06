@@ -46,7 +46,7 @@ import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from '.
 import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent } from './content/bottom-app-bar';
 import { drawerActiveOptions, drawerComponent } from './content/drawer';
-import { menuComponent } from './content/menu';
+import { menuComponent, menuOpenSubmenu, menuSelectedId } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
 import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
@@ -205,6 +205,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
+  if (slug === 'menu') state.itemsDefault = !state.menuSet || state.menuSet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
@@ -227,7 +228,13 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
   const trigger = (text: string, ariaLabel?: string) => ({ trigger: { text, variant: 'tonal', ...(ariaLabel ? { ariaLabel } : {}) } });
   switch (slug) {
     case 'toolbar': return toolbarElementConfig(state);
-    case 'menu': return { ...config, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
+    case 'menu': {
+      const selected = menuSelectedId(state);
+      const items = selected && Array.isArray(config.items)
+        ? config.items.map(item => item && typeof item === 'object' && 'id' in item && item.id === selected ? { ...item, selected: true } : item)
+        : config.items;
+      return { ...config, items, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
+    }
     case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
     case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
     // The rail's while nothing else expands it, as the preview shows it.
@@ -353,6 +360,10 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     imports.push('createButton');
     before = `const trigger = createButton(${literal({ text: state.text, variant: 'tonal', ariaLabel: String(state.text).trim() || 'Open menu' })});\ntrigger.element.id = 'menu-trigger';\ndocument.body.append(trigger.element);\n\n`;
     after = `menu.on('select', event => console.log(event.item.text));\n`;
+    const selected = menuSelectedId(state);
+    if (selected) after += `menu.setSelected('${selected}');\n`;
+    const submenu = menuOpenSubmenu(state);
+    if (submenu) after += `setTimeout(() => {\n  const item = menu.element.querySelector('[data-id="${submenu}"]');\n  item?.focus();\n  item?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));\n}, 0);\n`;
     cleanup = '// trigger.destroy();\n';
   }
   if (slug === 'drawer' || slug === 'navigation-rail') {

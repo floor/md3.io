@@ -204,7 +204,9 @@ const triggers: Record<string, Trigger> = {
 // bottom sheet). The drawer has none: the HTML sets `open`. The rail's is
 // `expanded`, which its trigger expands and Escape collapses.
 const open: Record<string, OpenMeta> = {
-  menu: { show: 'show', hide: 'hide' },
+  // `visible` is the factory's initially-open menu. The element reflects it as `open`,
+  // and setting that attribute opens quietly (material/src/elements/menu.ts).
+  menu: { config: 'visible', property: 'open', show: 'show', hide: 'hide' },
   'fab-menu': { show: 'show', hide: 'hide' },
   dialog: { config: 'open', show: 'show', hide: 'close' },
   'bottom-sheet': { config: 'initialState', values: ['partial', 'expanded'], show: 'expand', hide: 'close' },
