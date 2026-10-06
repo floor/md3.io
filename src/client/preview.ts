@@ -41,6 +41,7 @@ import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
 import { toolbarContent } from '../shared/content/toolbar';
 import { appBarContent } from '../shared/content/top-app-bar';
+import { railHeader } from '../shared/content/navigation-rail';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -168,7 +169,13 @@ function create(state: ComponentState) {
     }
 
     case 'navigation-rail': {
-      const control = createNavigationRail(components['navigation-rail'].config(state));
+      const headerSpec = railHeader(state);
+      const header = headerSpec
+        ? headerSpec.text
+          ? createExtendedFab({ icon: headerSpec.icon, text: headerSpec.text, ariaLabel: headerSpec.ariaLabel })
+          : createFab({ icon: headerSpec.icon, ariaLabel: headerSpec.ariaLabel })
+        : null;
+      const control = createNavigationRail({ ...components['navigation-rail'].config(state), ...(header ? { header: header.element } : {}) });
       const host = document.createElement('div');
       host.className = 'navigation-demo';
       host.append(control.element);
@@ -181,7 +188,7 @@ function create(state: ComponentState) {
       control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
       control.on('expand', () => { sync({ expanded: true }); updateTrigger(); message('Navigation expanded'); });
       control.on('collapse', () => { sync({ expanded: false }); updateTrigger(); message('Navigation collapsed'); });
-      return { element: host, destroy: () => { trigger.destroy(); control.destroy(); } };
+      return { element: host, destroy: () => { trigger.destroy(); header?.destroy(); control.destroy(); } };
     }
     case 'drawer': {
       const control = createDrawer(components.drawer.config(state));

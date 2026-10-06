@@ -165,6 +165,11 @@ const slotted: Record<string, Slotted[]> = {
     // items and `overflowPosition` the menu's `position`.
     { from: 'overflow', element: 'menu', slot: 'overflow', nest: { element: 'menu-item', keys: { id: 'value' }, text: 'text' }, attribute: { from: 'overflowPosition', name: 'position' } },
   ],
+  // The guidelines' header FAB sits in the rail's `header` slot: an icon FAB, or an extended one with a label.
+  'navigation-rail': [
+    { from: 'headerFab', element: 'fab', slot: 'header' },
+    { from: 'headerExtended', element: 'extended-fab', slot: 'header' },
+  ],
   'bottom-app-bar': [
     { from: 'actions', element: 'icon-button', add: 'addAction' },
     { from: 'fab', element: 'fab', slot: 'fab', add: 'addFab' },

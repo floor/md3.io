@@ -47,7 +47,7 @@ import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent } from './content/bottom-app-bar';
 import { drawerComponent } from './content/drawer';
 import { menuComponent } from './content/menu';
-import { navigationRailComponent } from './content/navigation-rail';
+import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
 import { tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
 import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
@@ -141,7 +141,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     if (control.kind === 'date' && !(slug === 'datepicker' && ['value', 'endDate'].includes(control.key) && state[control.key] === '') && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
     if (control.kind === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(String(state[control.key]))) state[control.key] = control.initial;
   }
-  if (['navigation-rail', 'drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
+  if (['drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
+  if (slug === 'navigation-rail') {
+    const allowed = railActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
   if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
   if (slug === 'badge') state.hasLabel = state.variant === 'large';
   if (slug === 'progress' || slug === 'loading-indicator') state.determinate = !state.indeterminate;
@@ -219,7 +223,15 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
     case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
     // The rail's while nothing else expands it, as the preview shows it.
-    case 'navigation-rail': return state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle ? { ...config, ...trigger('Open navigation') } : config;
+    case 'navigation-rail': {
+      const header = railHeader(state);
+      const headerSlot = header?.text
+        ? { headerExtended: { icon: header.icon, text: header.text, ariaLabel: header.ariaLabel } }
+        : header ? { headerFab: { icon: header.icon, ariaLabel: header.ariaLabel } } : {};
+      return state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle
+        ? { ...config, ...headerSlot, ...trigger('Open navigation') }
+        : { ...config, ...headerSlot };
+    }
     case 'timepicker': return { ...config, ...trigger('Choose time') };
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
@@ -341,6 +353,17 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n${component.variable}.on('select', event => console.log(event.id));\n`;
     cleanup = '// trigger.destroy();\n';
   }
+  if (slug === 'navigation-rail') {
+    const header = railHeader(state);
+    if (header) {
+      imports.push(header.text ? 'createExtendedFab' : 'createFab');
+      const fabConfig = header.text
+        ? { icon: header.icon, text: header.text, ariaLabel: header.ariaLabel }
+        : { icon: header.icon, ariaLabel: header.ariaLabel };
+      before = `const header = ${header.text ? 'createExtendedFab' : 'createFab'}(${literal(fabConfig)});\n\n`;
+      cleanup = `// header.destroy();\n${cleanup}`;
+    }
+  }
   if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', 'Mailbox views');\ntabs.on('change', event => console.log(event.value));\n`;
   if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
@@ -380,7 +403,9 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     ];
     if (extras.length) config = config.replace(/\n\}$/, `,\n  ${extras.join(',\n  ')}\n}`);
   }
-  const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  if (slug === 'navigation-rail' && railHeader(state)) config = config.replace(/\n\}$/, ',\n  header: header.element\n}');
+  const headerStyle = slug === 'navigation-rail' && railHeader(state)?.text ? 'extended-fab' : slug === 'navigation-rail' && railHeader(state) ? 'fab' : '';
+  const styles = ['base', ...component.styles, ...(headerStyle ? [headerStyle] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;

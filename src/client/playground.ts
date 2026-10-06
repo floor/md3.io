@@ -3,6 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
+import { railActiveOptions } from '../shared/content/navigation-rail';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
 hljs.registerLanguage('javascript', javascript);
@@ -150,8 +151,24 @@ function syncControls(next: ComponentState) {
   const selectedChipsInput = form.querySelector<HTMLInputElement>('[name="selectedChips"]');
   if (selectedChipsInput) selectedChipsInput.value = next.selectedChips !== undefined ? String(next.selectedChips) : '';
 }
+/** The Selected list names only the destinations on the stage. */
+function refreshActiveSelect(next: ComponentState) {
+  if (slug !== 'navigation-rail') return;
+  const select = form.querySelector<HTMLSelectElement>('[name="active"]');
+  if (!select) return;
+  const options = railActiveOptions(next);
+  const same = select.options.length === options.length && options.every((option, index) => select.options[index]?.value === option.value && select.options[index]?.textContent === option.label);
+  if (same) return;
+  select.replaceChildren(...options.map(option => {
+    const element = document.createElement('option');
+    element.value = option.value;
+    element.textContent = option.label;
+    return element;
+  }));
+}
 function update(send = true, reset = false) {
   state = readForm();
+  refreshActiveSelect(state);
   syncControls(state);
   for (const input of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]')) input.disabled = state[input.dataset.enabledWhen!] !== true;
   renderCode();
@@ -186,7 +203,9 @@ function markCustom() {
 }
 /** Applies options over the initials, then updates through the same path as a hand edit. */
 function applyOptions(id: string, options: Readonly<Record<string, string | boolean>>) {
-  syncControls(normalizeComponentState(slug, { ...initialComponentState(slug), ...options }));
+  const next = normalizeComponentState(slug, { ...initialComponentState(slug), ...options });
+  refreshActiveSelect(next);
+  syncControls(next);
   showScenario(id);
   setScenarioParam(id === 'default' ? null : id);
   update();
