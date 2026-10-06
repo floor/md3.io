@@ -206,6 +206,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
   if (slug === 'menu') state.itemsDefault = !state.menuSet || state.menuSet === 'default';
+  if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
@@ -384,7 +385,24 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     }
   }
   if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', '${tabsAriaLabel(state)}');\ntabs.on('change', event => console.log(event.value));\n`;
-  if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
+  if (slug === 'top-app-bar' && state.context && state.context !== 'default') {
+    const content = appBarContent('top-app-bar', state);
+    if (content.actions.length || content.leading) imports.push('createIconButton');
+    if (content.actions.length) {
+      after = `const actions = ${literal(content.actions)}.map(config => createIconButton(config));\nactions.forEach(button => topBar.addTrailingElement(button.element));\n`;
+      cleanup = '// actions.forEach(button => button.destroy());\n';
+    }
+    if (content.leading) {
+      after += `const navigation = createIconButton(${literal(content.leading)});\ntopBar.addLeadingElement(navigation.element);\n`;
+      cleanup += '// navigation.destroy();\n';
+    }
+    if (content.trailingButton) {
+      imports.push('createButton');
+      after += `const action = createButton(${literal(content.trailingButton)});\ntopBar.addTrailingElement(action.element);\n`;
+      cleanup += '// action.destroy();\n';
+    }
+    after += `topBar.setScrollState(${state.scrolled});\n`;
+  } else if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
     after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
     cleanup = '// actions.forEach(button => button.destroy());\n';
@@ -424,7 +442,8 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
   }
   if (slug === 'navigation-rail' && railHeader(state)) config = config.replace(/\n\}$/, ',\n  header: header.element\n}');
   const headerStyle = slug === 'navigation-rail' && railHeader(state)?.text ? 'extended-fab' : slug === 'navigation-rail' && railHeader(state) ? 'fab' : '';
-  const styles = ['base', ...component.styles, ...(headerStyle ? [headerStyle] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
+  const buttonStyle = slug === 'top-app-bar' && appBarContent('top-app-bar', state).trailingButton ? 'button' : '';
+  const styles = ['base', ...component.styles, ...(headerStyle ? [headerStyle] : []), ...(buttonStyle ? [buttonStyle] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;

@@ -152,6 +152,7 @@ const slotted: Record<string, Slotted[]> = {
   'top-app-bar': [
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
+    { from: 'trailingButton', element: 'button', slot: 'trailing', add: 'addTrailingElement' },
   ],
   // The factory takes its items in its config; the element as its children. A set's text
   // buttons go to the element's default slot as `buttons` (the card's actions pattern),

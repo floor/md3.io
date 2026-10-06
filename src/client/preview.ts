@@ -235,6 +235,8 @@ function create(state: ComponentState) {
       const content = appBarContent('top-app-bar', state);
       const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
+      const trailing = content.trailingButton ? createButton(content.trailingButton) : null;
+      if (trailing) { control.addTrailingElement(trailing.element); trailing.on('click', () => message(`${content.trailingButton!.text} clicked`)); }
       if (content.leading) {
         const navigation = createIconButton(content.leading);
         navigation.on('click', () => message('Navigation clicked'));
@@ -242,7 +244,7 @@ function create(state: ComponentState) {
         buttons.push(navigation);
       }
       control.setScrollState(content.scrolled === true);
-      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); control.destroy(); } };
+      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); trailing?.destroy(); control.destroy(); } };
     }
     case 'bottom-app-bar': {
       const control = createBottomAppBar(components['bottom-app-bar'].config(state));
