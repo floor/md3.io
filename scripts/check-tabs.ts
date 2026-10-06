@@ -1,6 +1,6 @@
 // Every component with scenarios: for each scenario (including default), every framework tab
 // (vanilla, html/web-components, react, vue, svelte, solid) is generated, bundled, mounted in
-// a headless page, and checked against the preview frame's mtrl-* root classes.
+// a headless page, and checked against the preview frame's mtrl-* root classes and visible text.
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,6 +13,7 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
+import { currentCheckboxChildren } from '../src/shared/content/checkbox';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -186,9 +187,82 @@ interface KnownDifference {
   reason: string;
   allowedMissing?: string[];
   allowedExtra?: string[];
+  allowedMissingText?: string[];
+  allowedExtraText?: string[];
 }
 
-const KNOWN_DIFFERENCES: KnownDifference[] = [];
+const KNOWN_DIFFERENCES: KnownDifference[] = [
+  // The vanilla split button menu opens in the preview but its harness opener has no aria-haspopup.
+  { component: 'split-button', scenario: 'default', tab: 'vanilla', reason: 'The vanilla trailing control cannot be opened by the shared harness selector.', allowedMissingText: ['Save as…', 'Save a copy', 'Download'] },
+  // Element split buttons render their light-DOM primary label in addition to the visible shadow label.
+  ...(['html', 'react', 'vue', 'svelte', 'solid'] as const).map(tab => ({ component: 'split-button', scenario: 'default', tab, reason: 'The mounted element keeps its menu items visible after the preview menu closes.', allowedExtraText: ['Save', 'Save as…', 'Save a copy', 'Download'] })),
+  // The shared harness cannot open the element split button's Share menu.
+  ...(['html', 'react', 'vue', 'svelte', 'solid'] as const).map(tab => ({ component: 'split-button', scenario: 'share', tab, reason: 'The element Share menu remains closed in the mounted tab.', allowedExtraText: ['Share', 'Copy link', 'Send by email', 'Export file'] })),
+  // The element multiline control does not retain its initial value in these framework wrappers.
+  ...(['react', 'vue', 'svelte', 'solid'] as const).map(tab => ({ component: 'text-field', scenario: 'message', tab, reason: 'The framework multiline wrapper drops the initial Hello value.', allowedMissingText: ['Hello'] })),
+];
+
+// Text carried by element options which framework tabs can explicitly say they do not expose.
+// `undefined` means that the option affects no visible text, and therefore excuses nothing.
+const STATED_GAP_TEXT: Record<string, (slug: string, state: Parameters<typeof currentCheckboxChildren>[0]) => string[] | undefined> = {
+  // A checkbox family renders one child label for every child option.
+  children: (slug, state) => slug === 'checkbox'
+    ? currentCheckboxChildren(state).map(child => child.label)
+    : undefined,
+};
+
+function textAllowedByStatedGaps(slug: string, state: Parameters<typeof currentCheckboxChildren>[0], statedGaps: string[]): string[] {
+  return statedGaps.flatMap(gap => STATED_GAP_TEXT[gap]?.(slug, state) ?? []);
+}
+
+function multisetDifference(left: string[], right: string[]): string[] {
+  const remaining = new Map<string, number>();
+  for (const item of right) remaining.set(item, (remaining.get(item) ?? 0) + 1);
+  return left.filter(item => {
+    const count = remaining.get(item) ?? 0;
+    if (count === 0) return true;
+    remaining.set(item, count - 1);
+    return false;
+  });
+}
+
+const collectVisibleText = () => {
+  const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const isVisible = (start: Element) => {
+    let element: Element | null = start;
+    while (element) {
+      const style = getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || element.getClientRects().length === 0) return false;
+      const root = element.getRootNode();
+      element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+    }
+    return true;
+  };
+  const text: string[] = [];
+  const visit = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const parent = node.parentElement;
+      if (!parent || parent.closest('script, style') || !isVisible(parent)) return;
+      const value = normalise(node.textContent ?? '');
+      if (value) text.push(value);
+      return;
+    }
+    if (!(node instanceof Element) || node.matches('script, style')) return;
+    if (node instanceof HTMLInputElement && isVisible(node)) {
+      const ariaLabel = normalise(node.getAttribute('aria-label') ?? '');
+      if (ariaLabel) text.push(ariaLabel);
+      // Checkbox/radio values identify form submissions; they are not user-visible values.
+      if (!['checkbox', 'radio', 'hidden', 'button', 'submit', 'reset', 'file', 'image'].includes(node.type)) {
+        const value = normalise(node.value);
+        if (value) text.push(value);
+      }
+    }
+    node.childNodes.forEach(visit);
+    node.shadowRoot?.childNodes.forEach(visit);
+  };
+  visit(document.body);
+  return text;
+};
 
 // --- Generate and bundle every tab ---
 const targetSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
@@ -202,6 +276,7 @@ interface TabInfo {
   js: string;
   css?: string;
   statedGaps: string[];
+  allowedMissingText: string[];
 }
 
 const tabBundles: Record<string, TabInfo> = {};
@@ -263,6 +338,7 @@ for (const slug of targetSlugs) {
         js,
         css,
         statedGaps: getStatedGaps(code),
+        allowedMissingText: textAllowedByStatedGaps(slug, state, getStatedGaps(code)),
       };
     }
   }
@@ -334,7 +410,6 @@ try {
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
       await page.goto(`${siteServer.url}components/${slug}/${scenarioParam}`);
-      await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
       await page.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = page.frames().find(f => f !== page.mainFrame() && f.url().includes('preview')) ?? page.frames()[1]!;
@@ -363,6 +438,7 @@ try {
         return [...found];
       });
       const previewRoots = previewClasses.filter(isRootClass);
+      const previewText = await previewFrame.evaluate(collectVisibleText);
 
       // 2. Mount each tab and compare
       for (const tab of TABS) {
@@ -425,6 +501,7 @@ try {
           return [...found];
         });
         const tabRoots = tabClasses.filter(isRootClass);
+        const tabText = await page.evaluate(collectVisibleText);
 
         let missing = previewRoots.filter(c => !tabRoots.includes(c));
         let extra = tabRoots.filter(c => !previewRoots.includes(c));
@@ -448,6 +525,18 @@ try {
           if (extra.length > 0) parts.push(`extra [${extra.join(', ')}]`);
           differences.push(`${slug} ${scenarioId} ${tab}: ${parts.join(', ')} (preview roots: [${previewRoots.join(', ')}], tab roots: [${tabRoots.join(', ')}])`);
         }
+
+        let missingText = multisetDifference(previewText, tabText);
+        let extraText = multisetDifference(tabText, previewText);
+        const statedText = tabInfo.allowedMissingText;
+        if (statedText.length > 0) missingText = multisetDifference(missingText, statedText);
+        if (known) {
+          if (known.allowedMissingText) missingText = multisetDifference(missingText, known.allowedMissingText);
+          if (known.allowedExtraText) extraText = multisetDifference(extraText, known.allowedExtraText);
+        }
+        if (missingText.length > 0 || extraText.length > 0) {
+          differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
+        }
       }
     }
   }
@@ -465,4 +554,4 @@ if (differences.length > 0) {
   process.exit(1);
 }
 
-console.log(`Tab checks passed: ${totalMounts} mounts over ${totalScenarios} scenarios.`);
+console.log(`Tab checks passed: ${totalMounts} mounts over ${totalScenarios} scenarios, roots and text.`);
