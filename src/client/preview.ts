@@ -181,16 +181,19 @@ function create(state: ComponentState) {
       const host = document.createElement('div');
       host.className = 'navigation-demo';
       host.append(control.element);
-      const trigger = createButton({ text: 'Open navigation', variant: 'tonal' });
-      trigger.element.classList.add('navigation-trigger');
-      trigger.on('click', () => control.expand());
-      const updateTrigger = () => { trigger.element.hidden = control.isExpanded() || !(state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle); };
-      updateTrigger();
-      host.append(trigger.element);
+      // A rail with its own toggle is the stage: the opener is only there while nothing else expands it.
+      const showsTrigger = state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle;
+      const trigger = showsTrigger ? createButton({ text: 'Open navigation', variant: 'tonal' }) : null;
+      if (trigger) {
+        trigger.element.classList.add('navigation-trigger');
+        trigger.on('click', () => control.expand());
+        trigger.element.hidden = control.isExpanded();
+        host.append(trigger.element);
+      }
       control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
-      control.on('expand', () => { sync({ expanded: true }); updateTrigger(); message('Navigation expanded'); });
-      control.on('collapse', () => { sync({ expanded: false }); updateTrigger(); message('Navigation collapsed'); });
-      return { element: host, destroy: () => { trigger.destroy(); header?.destroy(); control.destroy(); } };
+      control.on('expand', () => { sync({ expanded: true }); if (trigger) trigger.element.hidden = true; message('Navigation expanded'); });
+      control.on('collapse', () => { sync({ expanded: false }); if (trigger) trigger.element.hidden = false; message('Navigation collapsed'); });
+      return { element: host, destroy: () => { trigger?.destroy(); header?.destroy(); control.destroy(); } };
     }
     case 'drawer': {
       const control = createDrawer(components.drawer.config(state));
@@ -198,15 +201,19 @@ function create(state: ComponentState) {
       host.className = 'navigation-demo';
       host.dataset.position = String(state.position);
       host.append(control.element);
-      const trigger = createButton({ text: 'Open drawer', variant: 'tonal' });
-      trigger.element.classList.add('navigation-trigger');
-      trigger.element.hidden = control.isOpen();
-      trigger.on('click', () => control.open());
-      host.append(trigger.element);
+      // An open standard drawer is the stage: the opener is there while it is modal or closed.
+      const showsTrigger = state.variant === 'modal' || !state.open;
+      const trigger = showsTrigger ? createButton({ text: 'Open drawer', variant: 'tonal' }) : null;
+      if (trigger) {
+        trigger.element.classList.add('navigation-trigger');
+        trigger.element.hidden = control.isOpen();
+        trigger.on('click', () => control.open());
+        host.append(trigger.element);
+      }
       control.on('select', (event: { id: string; label: string }) => { sync({ active: event.id }); message(`Selected: ${event.label}`); });
-      control.on('open', () => { sync({ open: true }); trigger.element.hidden = true; message('Drawer opened'); });
-      control.on('close', () => { sync({ open: false }); trigger.element.hidden = false; message('Drawer closed'); });
-      return { element: host, destroy: () => { trigger.destroy(); control.destroy(); } };
+      control.on('open', () => { sync({ open: true }); if (trigger) trigger.element.hidden = true; message('Drawer opened'); });
+      control.on('close', () => { sync({ open: false }); if (trigger) trigger.element.hidden = false; message('Drawer closed'); });
+      return { element: host, destroy: () => { trigger?.destroy(); control.destroy(); } };
     }
     case 'tabs': {
       const control = createTabs(components.tabs.config(state));

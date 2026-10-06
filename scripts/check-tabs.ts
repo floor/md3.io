@@ -208,6 +208,13 @@ const collectVisibleText = () => {
     let element: Element | null = start;
     while (element) {
       const style = getComputedStyle(element);
+      // `display: contents` has no box (`getClientRects()` is empty) and does not hide its children:
+      // the menu host and a Svelte slot wrapper are both contents.
+      if (style.display === 'contents') {
+        const root = element.getRootNode();
+        element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+        continue;
+      }
       if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || element.getClientRects().length === 0) return false;
       const root = element.getRootNode();
       element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
@@ -256,6 +263,11 @@ const hasVisibleMenu = () => {
     let current: Element | null = element;
     while (current) {
       const style = getComputedStyle(current);
+      if (style.display === 'contents') {
+        const root = current.getRootNode();
+        current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+        continue;
+      }
       if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || current.getClientRects().length === 0) return false;
       const root = current.getRootNode();
       current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
@@ -263,7 +275,13 @@ const hasVisibleMenu = () => {
     return true;
   };
   const visit = (node: Element): boolean => {
-    if ((node.matches('m-menu') || [...node.classList].some(className => className.includes('mtrl-menu'))) && isVisible(node)) return true;
+    // The open surface, not an item and not the `display: contents` host. Wait past the
+    // opening scale: a surface still at scaleY(0) has no text rects yet.
+    if (node.classList.contains('mtrl-menu')) {
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      if (style.visibility !== 'hidden' && style.display !== 'none' && rect.height >= 8 && Number(style.opacity) >= 0.5 && isVisible(node)) return true;
+    }
     if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
     return [...node.children].some(visit);
   };
@@ -478,13 +496,31 @@ try {
           continue;
         }
 
-        // Compare text only after both sides reach the same menu state.
+        // Compare text only after both sides reach the same menu state. An open menu
+        // shows its surface a moment after `open` (the factory waits 20ms, then a
+        // transition). A click on an element menu's anchor blurs that anchor, and the
+        // menu closes, so a closed element menu is opened with its own show().
         if (previewMenuOpened) {
-          const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
-          if ((await tabMore.count()) > 0) {
-            await tabMore.first().click().catch(() => {});
-            await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 }).catch(() => {});
+          let opened = false;
+          if (slug === 'menu') {
+            opened = await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 800 }).then(() => true).catch(() => false);
+            if (!opened) {
+              const showed = await page.evaluate(() => {
+                const menu = document.querySelector('m-menu') as { show?: () => void } | null;
+                if (!menu?.show) return false;
+                menu.show();
+                return true;
+              });
+              if (!showed) {
+                const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
+                if ((await tabMore.count()) > 0) await tabMore.first().click().catch(() => {});
+              }
+            }
+          } else {
+            const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
+            if ((await tabMore.count()) > 0) await tabMore.first().click().catch(() => {});
           }
+          if (!opened) await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 }).catch(() => {});
         }
 
         // Collect root classes from mounted tab

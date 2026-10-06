@@ -366,10 +366,18 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     cleanup = '// trigger.destroy();\n';
   }
   if (slug === 'drawer' || slug === 'navigation-rail') {
-    imports.push('createButton');
+    // The opener is on the stage only while the rail or drawer does not show itself:
+    // a standard open drawer and a rail with its own toggle have none.
+    const showTrigger = slug === 'drawer'
+      ? state.variant === 'modal' || !state.open
+      : state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle;
     const method = slug === 'drawer' ? 'open' : 'expand';
-    after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n${component.variable}.on('select', event => console.log(event.id));\n`;
-    cleanup = '// trigger.destroy();\n';
+    after = `${component.variable}.on('select', event => console.log(event.id));\n`;
+    if (showTrigger) {
+      imports.push('createButton');
+      after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n` + after;
+      cleanup = '// trigger.destroy();\n';
+    }
   }
   if (slug === 'navigation-rail') {
     const header = railHeader(state);
