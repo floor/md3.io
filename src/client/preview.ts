@@ -226,7 +226,11 @@ function create(state: ComponentState) {
       // `visible` only marks a menu that is already in the page. A named menu is opened
       // once its button is in the stage: open() inserts it. The first open is this one,
       // so it does not replace "Ready to try".
+      // The stage centres its child, and an open menu hangs below the button
+      // (`position` bottom-start). A centred opener leaves the last row on the
+      // preview's bottom edge. Sit the opener at the top so that placement has the frame.
       const named = state.menuSet && state.menuSet !== 'default';
+      if (named) trigger.element.style.alignSelf = 'flex-start';
       const control = createMenu({ ...components.menu.config(state), opener: trigger.element, ...(named ? { visible: false } : {}) });
       const selected = menuSelectedId(state);
       let opened = !named;
