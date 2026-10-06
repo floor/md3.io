@@ -178,30 +178,6 @@ function matchesStatedGap(missingClass: string, statedGaps: string[]): boolean {
   });
 }
 
-// Known differences allowlist:
-// Any difference on main is recorded here with its reason to keep the suite green and visible.
-interface KnownDifference {
-  component: string;
-  scenario: string;
-  tab: string;
-  reason: string;
-  allowedMissing?: string[];
-  allowedExtra?: string[];
-  allowedMissingText?: string[];
-  allowedExtraText?: string[];
-}
-
-const KNOWN_DIFFERENCES: KnownDifference[] = [
-  // The vanilla split button menu opens in the preview but its harness opener has no aria-haspopup.
-  { component: 'split-button', scenario: 'default', tab: 'vanilla', reason: 'The vanilla trailing control cannot be opened by the shared harness selector.', allowedMissingText: ['Save as…', 'Save a copy', 'Download'] },
-  // Element split buttons render their light-DOM primary label in addition to the visible shadow label.
-  ...(['html', 'react', 'vue', 'svelte', 'solid'] as const).map(tab => ({ component: 'split-button', scenario: 'default', tab, reason: 'The mounted element keeps its menu items visible after the preview menu closes.', allowedExtraText: ['Save', 'Save as…', 'Save a copy', 'Download'] })),
-  // The shared harness cannot open the element split button's Share menu.
-  ...(['html', 'react', 'vue', 'svelte', 'solid'] as const).map(tab => ({ component: 'split-button', scenario: 'share', tab, reason: 'The element Share menu remains closed in the mounted tab.', allowedExtraText: ['Share', 'Copy link', 'Send by email', 'Export file'] })),
-  // The element multiline control does not retain its initial value in these framework wrappers.
-  ...(['react', 'vue', 'svelte', 'solid'] as const).map(tab => ({ component: 'text-field', scenario: 'message', tab, reason: 'The framework multiline wrapper drops the initial Hello value.', allowedMissingText: ['Hello'] })),
-];
-
 // Text carried by element options which framework tabs can explicitly say they do not expose.
 // `undefined` means that the option affects no visible text, and therefore excuses nothing.
 const STATED_GAP_TEXT: Record<string, (slug: string, state: Parameters<typeof currentCheckboxChildren>[0]) => string[] | undefined> = {
@@ -238,30 +214,60 @@ const collectVisibleText = () => {
     }
     return true;
   };
+  const textHasRect = (node: Text) => {
+    const range = document.createRange();
+    range.selectNode(node);
+    return range.getClientRects().length > 0;
+  };
   const text: string[] = [];
   const visit = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      const parent = node.parentElement;
-      if (!parent || parent.closest('script, style') || !isVisible(parent)) return;
+      const textNode = node as Text;
+      const parent = textNode.parentElement;
+      // Split buttons render their light-DOM primary label through a shadow-tree label.
+      if (!parent || (parent.localName === 'm-split-button' && parent.shadowRoot) || parent.closest('script, style') || !isVisible(parent) || !textHasRect(textNode)) return;
       const value = normalise(node.textContent ?? '');
       if (value) text.push(value);
       return;
     }
     if (!(node instanceof Element) || node.matches('script, style')) return;
-    if (node instanceof HTMLInputElement && isVisible(node)) {
-      const ariaLabel = normalise(node.getAttribute('aria-label') ?? '');
-      if (ariaLabel) text.push(ariaLabel);
+    if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && isVisible(node)) {
+      if (node instanceof HTMLInputElement) {
+        const ariaLabel = normalise(node.getAttribute('aria-label') ?? '');
+        if (ariaLabel) text.push(ariaLabel);
+      }
       // Checkbox/radio values identify form submissions; they are not user-visible values.
-      if (!['checkbox', 'radio', 'hidden', 'button', 'submit', 'reset', 'file', 'image'].includes(node.type)) {
+      if (!(node instanceof HTMLInputElement) || !['checkbox', 'radio', 'hidden', 'button', 'submit', 'reset', 'file', 'image'].includes(node.type)) {
         const value = normalise(node.value);
         if (value) text.push(value);
       }
+      // Textarea fallback content is its default value, not a second visible label.
+      return;
     }
     node.childNodes.forEach(visit);
     node.shadowRoot?.childNodes.forEach(visit);
   };
   visit(document.body);
   return text;
+};
+
+const hasVisibleMenu = () => {
+  const isVisible = (element: Element) => {
+    let current: Element | null = element;
+    while (current) {
+      const style = getComputedStyle(current);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || current.getClientRects().length === 0) return false;
+      const root = current.getRootNode();
+      current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+    }
+    return true;
+  };
+  const visit = (node: Element): boolean => {
+    if ((node.matches('m-menu') || [...node.classList].some(className => className.includes('mtrl-menu'))) && isVisible(node)) return true;
+    if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
+    return [...node.children].some(visit);
+  };
+  return visit(document.body);
 };
 
 // --- Generate and bundle every tab ---
@@ -417,14 +423,12 @@ try {
       // Click "more" button if present in preview
       const previewMore = previewFrame.locator('button[aria-haspopup]');
       const hasMoreButton = (await previewMore.count()) > 0;
-      if (hasMoreButton) {
+      const previewMenuOpened = hasMoreButton && await (async () => {
         await previewMore.first().click().catch(() => {});
-        await previewFrame.waitForFunction(
-          () => [...document.querySelectorAll('[class*="mtrl-menu"]')].some(el => (el as HTMLElement).getClientRects().length > 0),
-          undefined,
-          { timeout: 2000 }
-        ).catch(() => {});
-      }
+        return previewFrame.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
+          .then(() => true)
+          .catch(() => false);
+      })();
 
       // Collect root classes from preview frame
       const previewClasses = await previewFrame.evaluate(() => {
@@ -474,18 +478,12 @@ try {
           continue;
         }
 
-        // If preview had a more button, click the more button in mounted tab too
-        if (hasMoreButton) {
+        // Compare text only after both sides reach the same menu state.
+        if (previewMenuOpened) {
           const tabMore = page.locator('button[aria-haspopup], [aria-label="More options"]');
           if ((await tabMore.count()) > 0) {
             await tabMore.first().click().catch(() => {});
-            await page.waitForFunction(
-              () => [...document.querySelectorAll('m-menu, [class*="mtrl-menu"]')].some(
-                m => m.hasAttribute('open') || (m as unknown as { open?: boolean }).open === true || (m as HTMLElement).getClientRects().length > 0
-              ),
-              undefined,
-              { timeout: 2000 }
-            ).catch(() => {});
+            await page.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 }).catch(() => {});
           }
         }
 
@@ -511,14 +509,6 @@ try {
           missing = missing.filter(c => !matchesStatedGap(c, tabInfo.statedGaps));
         }
 
-        // Check against known differences allowlist
-        const known = KNOWN_DIFFERENCES.find(k => k.component === slug && k.scenario === scenarioId && k.tab === tab);
-        if (known) {
-          if (known.allowedMissing) missing = missing.filter(c => !known.allowedMissing!.includes(c));
-          if (known.allowedExtra) extra = extra.filter(c => !known.allowedExtra!.includes(c));
-          console.log(`Known difference noted: ${slug}/${scenarioId} [${tab}]: ${known.reason}`);
-        }
-
         if (missing.length > 0 || extra.length > 0) {
           const parts: string[] = [];
           if (missing.length > 0) parts.push(`lacks [${missing.join(', ')}]`);
@@ -530,10 +520,6 @@ try {
         let extraText = multisetDifference(tabText, previewText);
         const statedText = tabInfo.allowedMissingText;
         if (statedText.length > 0) missingText = multisetDifference(missingText, statedText);
-        if (known) {
-          if (known.allowedMissingText) missingText = multisetDifference(missingText, known.allowedMissingText);
-          if (known.allowedExtraText) extraText = multisetDifference(extraText, known.allowedExtraText);
-        }
         if (missingText.length > 0 || extraText.length > 0) {
           differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
         }
