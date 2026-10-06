@@ -448,7 +448,10 @@ function plan(meta: ElementMeta, config: Config): Plan {
         const slot = item[key];
         if (!isRecord(slot)) continue;
         const name = types[String(slot.type)];
-        const value = name ? valueOf('string', imageSource(slot.content)) : undefined;
+        // An image or video slot takes a URL (its content's src); the other slot
+        // types take their markup or text whole, as the element's spec says.
+        const takesUrl = slot.type === 'image' || slot.type === 'video';
+        const value = name ? valueOf('string', takesUrl ? imageSource(slot.content) : slot.content) : undefined;
         if (name && value !== undefined) childAttrs.push({ name, value });
         else omit(`${path}[].${key} (${String(slot.type)})`);
       }

@@ -163,13 +163,15 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.linearDeterminate = state.linear && state.determinate;
   }
   if (slug === 'list') {
-    state.hasSupporting = state.lines !== '1';
-    state.threeLines = state.lines === '3';
-    state.selectable = state.selection !== 'none';
+    // A named list fixes its items: the layout and content controls are for the default's own.
+    state.listContentDefault = !state.listSet || state.listSet === 'default';
+    state.hasSupporting = state.lines !== '1' && state.listContentDefault;
+    state.threeLines = state.lines === '3' && state.listContentDefault;
+    state.selectable = state.selection !== 'none' && state.listContentDefault;
     state.extraSelectable = state.selectable && state.count === '5';
     let selected = false;
     ['first', 'second', 'third', 'fourth', 'fifth'].forEach((key, index) => {
-      const keep = !!state[key] && state.selection !== 'none' && index < Number(state.count) && (state.selection === 'multi' || !selected);
+      const keep = !!state[key] && !!state.listContentDefault && state.selection !== 'none' && index < Number(state.count) && (state.selection === 'multi' || !selected);
       selected ||= keep;
       state[key] = keep;
     });
