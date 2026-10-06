@@ -45,10 +45,10 @@ import { switchComponent } from './content/switch';
 import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from './content/text-field';
 import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent } from './content/bottom-app-bar';
-import { drawerComponent } from './content/drawer';
-import { menuComponent } from './content/menu';
-import { navigationRailComponent } from './content/navigation-rail';
-import { tabsComponent } from './content/tabs';
+import { drawerActiveOptions, drawerComponent } from './content/drawer';
+import { menuComponent, menuSelectedId } from './content/menu';
+import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
+import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
 import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
 import { bottomSheetComponent } from './content/bottom-sheet';
@@ -141,8 +141,20 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     if (control.kind === 'date' && !(slug === 'datepicker' && ['value', 'endDate'].includes(control.key) && state[control.key] === '') && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
     if (control.kind === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(String(state[control.key]))) state[control.key] = control.initial;
   }
-  if (['navigation-rail', 'drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
-  if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
+  if (slug === 'navigation-rail') {
+    const allowed = railActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
+  if (slug === 'drawer') {
+    const allowed = drawerActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
+  if (slug === 'tabs') {
+    state.tabsDefault = !state.tabSet || state.tabSet === 'default';
+    if (state.tabsDefault && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
+    const allowed = tabActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
   if (slug === 'badge') state.hasLabel = state.variant === 'large';
   if (slug === 'progress' || slug === 'loading-indicator') state.determinate = !state.indeterminate;
   if (slug === 'progress') {
@@ -193,6 +205,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
+  if (slug === 'menu') state.itemsDefault = !state.menuSet || state.menuSet === 'default';
+  if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
@@ -215,11 +229,25 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
   const trigger = (text: string, ariaLabel?: string) => ({ trigger: { text, variant: 'tonal', ...(ariaLabel ? { ariaLabel } : {}) } });
   switch (slug) {
     case 'toolbar': return toolbarElementConfig(state);
-    case 'menu': return { ...config, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
+    case 'menu': {
+      const selected = menuSelectedId(state);
+      const items = selected && Array.isArray(config.items)
+        ? config.items.map(item => item && typeof item === 'object' && 'id' in item && item.id === selected ? { ...item, selected: true } : item)
+        : config.items;
+      return { ...config, items, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
+    }
     case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
     case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
     // The rail's while nothing else expands it, as the preview shows it.
-    case 'navigation-rail': return state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle ? { ...config, ...trigger('Open navigation') } : config;
+    case 'navigation-rail': {
+      const header = railHeader(state);
+      const headerSlot = header?.text
+        ? { headerExtended: { icon: header.icon, text: header.text, ariaLabel: header.ariaLabel } }
+        : header ? { headerFab: { icon: header.icon, ariaLabel: header.ariaLabel } } : {};
+      return state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle
+        ? { ...config, ...headerSlot, ...trigger('Open navigation') }
+        : { ...config, ...headerSlot };
+    }
     case 'timepicker': return { ...config, ...trigger('Choose time') };
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
@@ -333,16 +361,54 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     imports.push('createButton');
     before = `const trigger = createButton(${literal({ text: state.text, variant: 'tonal', ariaLabel: String(state.text).trim() || 'Open menu' })});\ntrigger.element.id = 'menu-trigger';\ndocument.body.append(trigger.element);\n\n`;
     after = `menu.on('select', event => console.log(event.item.text));\n`;
+    const selected = menuSelectedId(state);
+    if (selected) after += `menu.setSelected('${selected}');\n`;
     cleanup = '// trigger.destroy();\n';
   }
   if (slug === 'drawer' || slug === 'navigation-rail') {
-    imports.push('createButton');
+    // The opener is on the stage only while the rail or drawer does not show itself:
+    // a standard open drawer and a rail with its own toggle have none.
+    const showTrigger = slug === 'drawer'
+      ? state.variant === 'modal' || !state.open
+      : state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle;
     const method = slug === 'drawer' ? 'open' : 'expand';
-    after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n${component.variable}.on('select', event => console.log(event.id));\n`;
-    cleanup = '// trigger.destroy();\n';
+    after = `${component.variable}.on('select', event => console.log(event.id));\n`;
+    if (showTrigger) {
+      imports.push('createButton');
+      after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n` + after;
+      cleanup = '// trigger.destroy();\n';
+    }
   }
-  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', 'Mailbox views');\ntabs.on('change', event => console.log(event.value));\n`;
-  if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
+  if (slug === 'navigation-rail') {
+    const header = railHeader(state);
+    if (header) {
+      imports.push(header.text ? 'createExtendedFab' : 'createFab');
+      const fabConfig = header.text
+        ? { icon: header.icon, text: header.text, ariaLabel: header.ariaLabel }
+        : { icon: header.icon, ariaLabel: header.ariaLabel };
+      before = `const header = ${header.text ? 'createExtendedFab' : 'createFab'}(${literal(fabConfig)});\n\n`;
+      cleanup = `// header.destroy();\n${cleanup}`;
+    }
+  }
+  if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', '${tabsAriaLabel(state)}');\ntabs.on('change', event => console.log(event.value));\n`;
+  if (slug === 'top-app-bar' && state.context && state.context !== 'default') {
+    const content = appBarContent('top-app-bar', state);
+    if (content.actions.length || content.leading) imports.push('createIconButton');
+    if (content.actions.length) {
+      after = `const actions = ${literal(content.actions)}.map(config => createIconButton(config));\nactions.forEach(button => topBar.addTrailingElement(button.element));\n`;
+      cleanup = '// actions.forEach(button => button.destroy());\n';
+    }
+    if (content.leading) {
+      after += `const navigation = createIconButton(${literal(content.leading)});\ntopBar.addLeadingElement(navigation.element);\n`;
+      cleanup += '// navigation.destroy();\n';
+    }
+    if (content.trailingButton) {
+      imports.push('createButton');
+      after += `const action = createButton(${literal(content.trailingButton)});\ntopBar.addTrailingElement(action.element);\n`;
+      cleanup += '// action.destroy();\n';
+    }
+    after += `topBar.setScrollState(${state.scrolled});\n`;
+  } else if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
     after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
     cleanup = '// actions.forEach(button => button.destroy());\n';
@@ -380,7 +446,10 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     ];
     if (extras.length) config = config.replace(/\n\}$/, `,\n  ${extras.join(',\n  ')}\n}`);
   }
-  const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  if (slug === 'navigation-rail' && railHeader(state)) config = config.replace(/\n\}$/, ',\n  header: header.element\n}');
+  const headerStyle = slug === 'navigation-rail' && railHeader(state)?.text ? 'extended-fab' : slug === 'navigation-rail' && railHeader(state) ? 'fab' : '';
+  const buttonStyle = slug === 'top-app-bar' && appBarContent('top-app-bar', state).trailingButton ? 'button' : '';
+  const styles = ['base', ...component.styles, ...(headerStyle ? [headerStyle] : []), ...(buttonStyle ? [buttonStyle] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${cleanup}// ${component.variable}.destroy();\n`;

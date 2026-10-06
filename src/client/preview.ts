@@ -41,6 +41,9 @@ import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
 import { toolbarContent } from '../shared/content/toolbar';
 import { appBarContent } from '../shared/content/top-app-bar';
+import { railHeader } from '../shared/content/navigation-rail';
+import { tabsAriaLabel } from '../shared/content/tabs';
+import { menuSelectedId } from '../shared/content/menu';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -168,20 +171,29 @@ function create(state: ComponentState) {
     }
 
     case 'navigation-rail': {
-      const control = createNavigationRail(components['navigation-rail'].config(state));
+      const headerSpec = railHeader(state);
+      const header = headerSpec
+        ? headerSpec.text
+          ? createExtendedFab({ icon: headerSpec.icon, text: headerSpec.text, ariaLabel: headerSpec.ariaLabel })
+          : createFab({ icon: headerSpec.icon, ariaLabel: headerSpec.ariaLabel })
+        : null;
+      const control = createNavigationRail({ ...components['navigation-rail'].config(state), ...(header ? { header: header.element } : {}) });
       const host = document.createElement('div');
       host.className = 'navigation-demo';
       host.append(control.element);
-      const trigger = createButton({ text: 'Open navigation', variant: 'tonal' });
-      trigger.element.classList.add('navigation-trigger');
-      trigger.on('click', () => control.expand());
-      const updateTrigger = () => { trigger.element.hidden = control.isExpanded() || !(state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle); };
-      updateTrigger();
-      host.append(trigger.element);
+      // A rail with its own toggle is the stage: the opener is only there while nothing else expands it.
+      const showsTrigger = state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle;
+      const trigger = showsTrigger ? createButton({ text: 'Open navigation', variant: 'tonal' }) : null;
+      if (trigger) {
+        trigger.element.classList.add('navigation-trigger');
+        trigger.on('click', () => control.expand());
+        trigger.element.hidden = control.isExpanded();
+        host.append(trigger.element);
+      }
       control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
-      control.on('expand', () => { sync({ expanded: true }); updateTrigger(); message('Navigation expanded'); });
-      control.on('collapse', () => { sync({ expanded: false }); updateTrigger(); message('Navigation collapsed'); });
-      return { element: host, destroy: () => { trigger.destroy(); control.destroy(); } };
+      control.on('expand', () => { sync({ expanded: true }); if (trigger) trigger.element.hidden = true; message('Navigation expanded'); });
+      control.on('collapse', () => { sync({ expanded: false }); if (trigger) trigger.element.hidden = false; message('Navigation collapsed'); });
+      return { element: host, destroy: () => { trigger?.destroy(); header?.destroy(); control.destroy(); } };
     }
     case 'drawer': {
       const control = createDrawer(components.drawer.config(state));
@@ -189,28 +201,46 @@ function create(state: ComponentState) {
       host.className = 'navigation-demo';
       host.dataset.position = String(state.position);
       host.append(control.element);
-      const trigger = createButton({ text: 'Open drawer', variant: 'tonal' });
-      trigger.element.classList.add('navigation-trigger');
-      trigger.element.hidden = control.isOpen();
-      trigger.on('click', () => control.open());
-      host.append(trigger.element);
+      // An open standard drawer is the stage: the opener is there while it is modal or closed.
+      const showsTrigger = state.variant === 'modal' || !state.open;
+      const trigger = showsTrigger ? createButton({ text: 'Open drawer', variant: 'tonal' }) : null;
+      if (trigger) {
+        trigger.element.classList.add('navigation-trigger');
+        trigger.element.hidden = control.isOpen();
+        trigger.on('click', () => control.open());
+        host.append(trigger.element);
+      }
       control.on('select', (event: { id: string; label: string }) => { sync({ active: event.id }); message(`Selected: ${event.label}`); });
-      control.on('open', () => { sync({ open: true }); trigger.element.hidden = true; message('Drawer opened'); });
-      control.on('close', () => { sync({ open: false }); trigger.element.hidden = false; message('Drawer closed'); });
-      return { element: host, destroy: () => { trigger.destroy(); control.destroy(); } };
+      control.on('open', () => { sync({ open: true }); if (trigger) trigger.element.hidden = true; message('Drawer opened'); });
+      control.on('close', () => { sync({ open: false }); if (trigger) trigger.element.hidden = false; message('Drawer closed'); });
+      return { element: host, destroy: () => { trigger?.destroy(); control.destroy(); } };
     }
     case 'tabs': {
       const control = createTabs(components.tabs.config(state));
-      control.element.setAttribute('aria-label', 'Mailbox views');
+      control.element.setAttribute('aria-label', tabsAriaLabel(state));
       control.on('change', (event: { value: string }) => { sync({ active: event.value }); message(`Selected: ${event.value}`); });
       return control;
     }
     case 'menu': {
       const trigger = createButton({ text: String(state.text), variant: 'tonal', ariaLabel: String(state.text).trim() || 'Open menu' });
-      const control = createMenu({ ...components.menu.config(state), opener: trigger.element });
-      control.on('select', event => message(`Selected: ${event.item.text}`));
-      control.on('open', () => message('Menu opened'));
+      // `visible` only marks a menu that is already in the page. A named menu is opened
+      // once its button is in the stage: open() inserts it. The first open is this one,
+      // so it does not replace "Ready to try".
+      // The stage centres its child, and an open menu hangs below the button
+      // (`position` bottom-start). A centred opener leaves the last row on the
+      // preview's bottom edge. Sit the opener at the top so that placement has the frame.
+      const named = state.menuSet && state.menuSet !== 'default';
+      if (named) trigger.element.style.alignSelf = 'flex-start';
+      const control = createMenu({ ...components.menu.config(state), opener: trigger.element, ...(named ? { visible: false } : {}) });
+      const selected = menuSelectedId(state);
+      let opened = !named;
+      control.on('open', () => { if (!opened) { opened = true; return; } message('Menu opened'); });
       control.on('close', () => message('Menu closed'));
+      control.on('select', event => message(`Selected: ${event.item.text}`));
+      if (named) setTimeout(() => {
+        control.open();
+        if (selected) control.setSelected(selected);
+      }, 0);
       return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
     }
     case 'top-app-bar': {
@@ -218,6 +248,8 @@ function create(state: ComponentState) {
       const content = appBarContent('top-app-bar', state);
       const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
+      const trailing = content.trailingButton ? createButton(content.trailingButton) : null;
+      if (trailing) { control.addTrailingElement(trailing.element); trailing.on('click', () => message(`${content.trailingButton!.text} clicked`)); }
       if (content.leading) {
         const navigation = createIconButton(content.leading);
         navigation.on('click', () => message('Navigation clicked'));
@@ -225,7 +257,7 @@ function create(state: ComponentState) {
         buttons.push(navigation);
       }
       control.setScrollState(content.scrolled === true);
-      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); control.destroy(); } };
+      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); trailing?.destroy(); control.destroy(); } };
     }
     case 'bottom-app-bar': {
       const control = createBottomAppBar(components['bottom-app-bar'].config(state));

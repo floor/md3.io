@@ -40,6 +40,27 @@ import star from '../../icons/star.svg' with { type: 'text' };
 import tab from '../../icons/tab.svg' with { type: 'text' };
 import undo from '../../icons/undo.svg' with { type: 'text' };
 import videocamOff from '../../icons/videocam_off.svg' with { type: 'text' };
+import alarm from '../../icons/alarm.svg' with { type: 'text' };
+import barChart from '../../icons/bar_chart.svg' with { type: 'text' };
+import bedtime from '../../icons/bedtime.svg' with { type: 'text' };
+import contentCopy from '../../icons/content_copy.svg' with { type: 'text' };
+import contentCut from '../../icons/content_cut.svg' with { type: 'text' };
+import contentPaste from '../../icons/content_paste.svg' with { type: 'text' };
+import explore from '../../icons/explore.svg' with { type: 'text' };
+import flight from '../../icons/flight.svg' with { type: 'text' };
+import folder from '../../icons/folder.svg' with { type: 'text' };
+import folderOpen from '../../icons/folder_open.svg' with { type: 'text' };
+import hourglassBottom from '../../icons/hourglass_bottom.svg' with { type: 'text' };
+import luggage from '../../icons/luggage.svg' with { type: 'text' };
+import musicNote from '../../icons/music_note.svg' with { type: 'text' };
+import openInNew from '../../icons/open_in_new.svg' with { type: 'text' };
+import outbox from '../../icons/outbox.svg' with { type: 'text' };
+import photoLibrary from '../../icons/photo_library.svg' with { type: 'text' };
+import save from '../../icons/save.svg' with { type: 'text' };
+import schedule from '../../icons/schedule.svg' with { type: 'text' };
+import share from '../../icons/share.svg' with { type: 'text' };
+import timer from '../../icons/timer.svg' with { type: 'text' };
+import videocam from '../../icons/videocam.svg' with { type: 'text' };
 import visibility from '../../icons/visibility.svg' with { type: 'text' };
 import visibilityOff from '../../icons/visibility_off.svg' with { type: 'text' };
 import volumeOff from '../../icons/volume_off.svg' with { type: 'text' };
@@ -94,6 +115,28 @@ export const symbols = {
   tab: trim(tab),
   undo: trim(undo),
   videocamOff: trim(videocamOff),
+  // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
+  alarm: trim(alarm),
+  barChart: trim(barChart),
+  bedtime: trim(bedtime),
+  contentCopy: trim(contentCopy),
+  contentCut: trim(contentCut),
+  contentPaste: trim(contentPaste),
+  explore: trim(explore),
+  flight: trim(flight),
+  folder: trim(folder),
+  folderOpen: trim(folderOpen),
+  hourglassBottom: trim(hourglassBottom),
+  luggage: trim(luggage),
+  musicNote: trim(musicNote),
+  openInNew: trim(openInNew),
+  outbox: trim(outbox),
+  photoLibrary: trim(photoLibrary),
+  save: trim(save),
+  schedule: trim(schedule),
+  share: trim(share),
+  timer: trim(timer),
+  videocam: trim(videocam),
 };
 
 /** Each symbol's file in icons/, named as fonts.google.com/icons names the symbol (`-fill` when filled). */
@@ -145,6 +188,28 @@ const files: Record<keyof typeof symbols, string> = {
   tab: 'tab',
   undo: 'undo',
   videocamOff: 'videocam_off',
+  // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
+  alarm: 'alarm',
+  barChart: 'bar_chart',
+  bedtime: 'bedtime',
+  contentCopy: 'content_copy',
+  contentCut: 'content_cut',
+  contentPaste: 'content_paste',
+  explore: 'explore',
+  flight: 'flight',
+  folder: 'folder',
+  folderOpen: 'folder_open',
+  hourglassBottom: 'hourglass_bottom',
+  luggage: 'luggage',
+  musicNote: 'music_note',
+  openInNew: 'open_in_new',
+  outbox: 'outbox',
+  photoLibrary: 'photo_library',
+  save: 'save',
+  schedule: 'schedule',
+  share: 'share',
+  timer: 'timer',
+  videocam: 'videocam',
 };
 /** The icons/ file of a symbol's SVG (`edit`), when it is one of ours. */
 export const symbolFile = (svg: string): string | undefined => {

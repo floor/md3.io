@@ -152,6 +152,7 @@ const slotted: Record<string, Slotted[]> = {
   'top-app-bar': [
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
+    { from: 'trailingButton', element: 'button', slot: 'trailing', add: 'addTrailingElement' },
   ],
   // The factory takes its items in its config; the element as its children. A set's text
   // buttons go to the element's default slot as `buttons` (the card's actions pattern),
@@ -164,6 +165,11 @@ const slotted: Record<string, Slotted[]> = {
     // own trailing more button and opens it from there; the config array is the menu's
     // items and `overflowPosition` the menu's `position`.
     { from: 'overflow', element: 'menu', slot: 'overflow', nest: { element: 'menu-item', keys: { id: 'value' }, text: 'text' }, attribute: { from: 'overflowPosition', name: 'position' } },
+  ],
+  // The guidelines' header FAB sits in the rail's `header` slot: an icon FAB, or an extended one with a label.
+  'navigation-rail': [
+    { from: 'headerFab', element: 'fab', slot: 'header' },
+    { from: 'headerExtended', element: 'extended-fab', slot: 'header' },
   ],
   'bottom-app-bar': [
     { from: 'actions', element: 'icon-button', add: 'addAction' },
@@ -199,7 +205,9 @@ const triggers: Record<string, Trigger> = {
 // bottom sheet). The drawer has none: the HTML sets `open`. The rail's is
 // `expanded`, which its trigger expands and Escape collapses.
 const open: Record<string, OpenMeta> = {
-  menu: { show: 'show', hide: 'hide' },
+  // `visible` is the factory's initially-open menu. The element reflects it as `open`,
+  // and setting that attribute opens quietly (material/src/elements/menu.ts).
+  menu: { config: 'visible', property: 'open', show: 'show', hide: 'hide' },
   'fab-menu': { show: 'show', hide: 'hide' },
   dialog: { config: 'open', show: 'show', hide: 'close' },
   'bottom-sheet': { config: 'initialState', values: ['partial', 'expanded'], show: 'expand', hide: 'close' },
