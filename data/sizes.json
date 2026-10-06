@@ -1,6 +1,6 @@
 {
-  "material": "3.0.3",
-  "measured": "2026-10-05",
+  "material": "3.0.4",
+  "measured": "2026-10-06",
   "gzip": 9,
   "core": {
     "factory": 15526,
@@ -321,14 +321,14 @@
     },
     "carousel": {
       "factory": {
-        "alone": 14781,
+        "alone": 14796,
         "lazy": 0,
-        "added": 8080
+        "added": 8081
       },
       "element": {
-        "alone": 19376,
+        "alone": 19408,
         "lazy": 0,
-        "added": 8873
+        "added": 8884
       }
     },
     "divider": {
@@ -429,14 +429,14 @@
     },
     "tooltip": {
       "factory": {
-        "alone": 9689,
+        "alone": 9637,
         "lazy": 0,
-        "added": 2793
+        "added": 2741
       },
       "element": {
-        "alone": 14262,
+        "alone": 14191,
         "lazy": 0,
-        "added": 3506
+        "added": 3438
       }
     }
   }
