@@ -98,7 +98,7 @@ export const checkboxComponent = {
   controls: [
     ...section('Appearance', [choose('labelPosition', 'Label position', ['start', 'end'], 'end')]),
     // The m3.material.io checkbox guidelines' parent and children: the label names
-    // the parent, the children are the guideline's own. FLO-269.
+    // the parent, the children are the guideline's own.
     // Value names the one standalone box's submitted value; a family's boxes carry
     // their own, so the control waits for a standalone box (`standalone`, derived).
     ...section('Content', [toggle('family', 'Parent and children', true), familySetControl, text('label', 'Label', 'Additions'), text('name', 'Name', 'additions'), { ...text('value', 'Value', 'on'), enabledWhen: 'standalone' }]),

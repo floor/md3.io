@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { checkboxChildren } from '../src/shared/content/checkbox';
 
-// The checkbox playground (FLO-269): by default a parent ("Additions") over M3's four
+// The checkbox playground: by default a parent ("Additions") over M3's four
 // children, mixed with Tomato alone checked. `family` off gives a single checkbox.
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');

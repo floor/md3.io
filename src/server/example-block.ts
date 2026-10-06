@@ -112,7 +112,7 @@ const setters: Record<string, (value: unknown) => string> = {
 
 // Payload fields the factory names differently from the web component, which examples
 // use: the date picker's element sends the ISO string as `value` and the Date as `date`,
-// its factory the Date as `value` and the string as `iso` (FLO-320).
+// its factory the Date as `value` and the string as `iso`.
 const factoryFields: Record<string, Record<string, string>> = {
   datepicker: { value: 'iso', date: 'value' },
 };
