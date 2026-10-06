@@ -3,6 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
+import { drawerActiveOptions } from '../shared/content/drawer';
 import { railActiveOptions } from '../shared/content/navigation-rail';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
@@ -153,10 +154,10 @@ function syncControls(next: ComponentState) {
 }
 /** The Selected list names only the destinations on the stage. */
 function refreshActiveSelect(next: ComponentState) {
-  if (slug !== 'navigation-rail') return;
+  const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'drawer' ? drawerActiveOptions(next) : null;
+  if (!options) return;
   const select = form.querySelector<HTMLSelectElement>('[name="active"]');
   if (!select) return;
-  const options = railActiveOptions(next);
   const same = select.options.length === options.length && options.every((option, index) => select.options[index]?.value === option.value && select.options[index]?.textContent === option.label);
   if (same) return;
   select.replaceChildren(...options.map(option => {

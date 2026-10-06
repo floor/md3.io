@@ -45,7 +45,7 @@ import { switchComponent } from './content/switch';
 import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from './content/text-field';
 import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent } from './content/bottom-app-bar';
-import { drawerComponent } from './content/drawer';
+import { drawerActiveOptions, drawerComponent } from './content/drawer';
 import { menuComponent } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
 import { tabsComponent } from './content/tabs';
@@ -141,9 +141,13 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     if (control.kind === 'date' && !(slug === 'datepicker' && ['value', 'endDate'].includes(control.key) && state[control.key] === '') && !/^\d{4}-\d{2}-\d{2}$/.test(String(state[control.key]))) state[control.key] = control.initial;
     if (control.kind === 'time' && !/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(String(state[control.key]))) state[control.key] = control.initial;
   }
-  if (['drawer', 'tabs'].includes(slug) && state.disableSent && state.active === 'sent') state.active = 'inbox';
+  if (slug === 'tabs' && state.disableSent && state.active === 'sent') state.active = 'inbox';
   if (slug === 'navigation-rail') {
     const allowed = railActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
+  if (slug === 'drawer') {
+    const allowed = drawerActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
   }
   if (slug === 'tabs' && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
