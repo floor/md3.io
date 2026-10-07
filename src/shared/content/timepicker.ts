@@ -38,27 +38,29 @@ const gated = { enabledWhen: 'timeContentDefault' } as const;
 
 const source = 'https://m3.material.io/components/time-pickers/guidelines';
 
+const timepickerScenarios: readonly Scenario[] = [
+  {
+    id: 'event-time', name: 'Event time', source,
+    description: 'Select time, 07:00 AM, on the 12-hour dial.',
+    options: { timeSet: 'event-time' },
+  },
+  {
+    id: 'evening-event', name: 'Evening event', source,
+    description: 'Select time, 20:00, on the 24-hour dial.',
+    options: { timeSet: 'evening-event', format: '24h' },
+  },
+  {
+    id: 'typed-time', name: 'Typed time', source,
+    description: 'Enter time, with 9:00 AM in the hour and minute fields.',
+    options: { timeSet: 'typed-time', type: 'input' },
+  },
+];
+
 export const timePickerComponent = {
   group: 'Selection & input', name: 'Time picker', factory: 'createTimePicker', variable: 'timePicker',
   description: 'Choose a time with a dial or keyboard. Explore clock formats, orientation, and precision.',
   summary: 'Time entry with a dial or keyboard.', styles: ['progress', 'button', 'timepicker'],
-  scenarios: [
-    {
-      id: 'event-time', name: 'Event time', source,
-      description: 'Select time, 07:00 AM, on the 12-hour dial.',
-      options: { timeSet: 'event-time' },
-    },
-    {
-      id: 'evening-event', name: 'Evening event', source,
-      description: 'Select time, 20:00, on the 24-hour dial.',
-      options: { timeSet: 'evening-event', format: '24h' },
-    },
-    {
-      id: 'typed-time', name: 'Typed time', source,
-      description: 'Enter time, with 9:00 AM in the hour and minute fields.',
-      options: { timeSet: 'typed-time', type: 'input' },
-    },
-  ] as readonly Scenario[],
+  scenarios: timepickerScenarios,
   controls: [
     ...section('Appearance', [choose('type', 'Input mode', ['dial', 'input'], 'dial'), choose('format', 'Clock format', ['12h', '24h'], '12h'), choose('orientation', 'Orientation', ['vertical', 'horizontal'], 'vertical')]),
     ...section('Content', [timeSetControl, { ...text('title', 'Title', 'Select time'), ...gated }, { ...text('value', 'Time', '09:30'), kind: 'time', ...gated }]),

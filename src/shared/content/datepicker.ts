@@ -57,27 +57,29 @@ const gated = { enabledWhen: 'dateContentDefault' } as const;
 
 const source = 'https://m3.material.io/components/date-pickers/guidelines';
 
+const datepickerScenarios: readonly Scenario[] = [
+  {
+    id: 'profile-form', name: 'Profile form', source,
+    description: 'A DOB field, 08/18/1979, with the August 1979 calendar open on the 18th.',
+    options: { dateSet: 'profile-form' },
+  },
+  {
+    id: 'trip-dates', name: 'Trip dates', source,
+    description: 'Depart - Return dates, August 17 through 23, 2025, on a full-screen calendar.',
+    options: { dateSet: 'trip-dates', variant: 'fullscreen', range: true },
+  },
+  {
+    id: 'date-of-birth', name: 'Date of birth', source,
+    description: 'A date of birth dialog titled Date of birth, showing Aug 18, 1979.',
+    options: { dateSet: 'date-of-birth', variant: 'modal-input' },
+  },
+];
+
 export const datepickerComponent = {
   group: 'Selection & input', name: 'Date picker', factory: 'createDatePicker', variable: 'datePicker',
   description: 'Choose a date or enter one by keyboard. Explore calendar and input modes, ranges, and selection limits.',
   summary: 'Calendar and keyboard entry for dates and ranges.', styles: ['datepicker'],
-  scenarios: [
-    {
-      id: 'profile-form', name: 'Profile form', source,
-      description: 'A DOB field, 08/18/1979, with the August 1979 calendar open on the 18th.',
-      options: { dateSet: 'profile-form' },
-    },
-    {
-      id: 'trip-dates', name: 'Trip dates', source,
-      description: 'Depart - Return dates, August 17 through 23, 2025, on a full-screen calendar.',
-      options: { dateSet: 'trip-dates', variant: 'fullscreen', range: true },
-    },
-    {
-      id: 'date-of-birth', name: 'Date of birth', source,
-      description: 'A date of birth dialog titled Date of birth, showing Aug 18, 1979.',
-      options: { dateSet: 'date-of-birth', variant: 'modal-input' },
-    },
-  ] as readonly Scenario[],
+  scenarios: datepickerScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input', 'fullscreen'], 'docked', 'select'), { ...choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day'), ...gated }]),
     ...section('Content', [dateSetControl, { ...text('label', 'Label', 'Choose a date'), ...gated }, { ...date('value', 'Date', '2026-09-21'), ...gated }, { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'rangeEndEnabled' }, { ...choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select'), ...gated }]),

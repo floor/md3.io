@@ -78,27 +78,29 @@ const gated = { enabledWhen: 'searchContentDefault' } as const;
 
 const source = 'https://m3.material.io/components/search/guidelines';
 
+const searchScenarios: readonly Scenario[] = [
+  {
+    id: 'messages', name: 'Messages', source,
+    description: 'A search bar reading Search your messages, with a microphone.',
+    options: { searchSet: 'messages' },
+  },
+  {
+    id: 'contacts', name: 'Contacts', source,
+    description: 'Search contacts, open, with three people and their letter avatars.',
+    options: { searchSet: 'contacts', initialState: 'view', viewMode: 'fullscreen' },
+  },
+  {
+    id: 'recipes', name: 'Recipes', source,
+    description: 'Peanut typed in an open search, with two suggestions and a recipe result.',
+    options: { searchSet: 'recipes', initialState: 'view', viewMode: 'fullscreen' },
+  },
+];
+
 export const searchComponent = {
   group: 'Selection & input', name: 'Search', factory: 'createSearch', variable: 'search',
   description: 'Start with a search bar, then explore suggestions in a docked or fullscreen view.',
   summary: 'Search with suggestions and an expanded view.', styles: ['search'],
-  scenarios: [
-    {
-      id: 'messages', name: 'Messages', source,
-      description: 'A search bar reading Search your messages, with a microphone.',
-      options: { searchSet: 'messages' },
-    },
-    {
-      id: 'contacts', name: 'Contacts', source,
-      description: 'Search contacts, open, with three people and their letter avatars.',
-      options: { searchSet: 'contacts', initialState: 'view', viewMode: 'fullscreen' },
-    },
-    {
-      id: 'recipes', name: 'Recipes', source,
-      description: 'Peanut typed in an open search, with two suggestions and a recipe result.',
-      options: { searchSet: 'recipes', initialState: 'view', viewMode: 'fullscreen' },
-    },
-  ] as readonly Scenario[],
+  scenarios: searchScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Style', ['contained', 'divided'], 'contained'), choose('initialState', 'State', ['bar', 'view'], 'bar'), choose('viewMode', 'View mode', ['docked', 'fullscreen'], 'docked')]),
     ...section('Content', [searchSetControl, { ...text('placeholder', 'Placeholder', 'Search places'), ...gated }, { ...text('value', 'Query', ''), ...gated }, { ...choose('suggestions', 'Suggestions', ['places', 'none'], 'places'), ...gated }]),

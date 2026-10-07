@@ -39,17 +39,19 @@ const selectSetControl = {
 
 const gated = { enabledWhen: 'selectContentDefault' } as const;
 
+const selectScenarios: readonly Scenario[] = [
+  {
+    id: 'state', name: 'State', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A filled State field showing AK.',
+    options: { selectSet: 'state', variant: 'filled' },
+  },
+];
+
 export const selectComponent = {
   group: 'Selection & input', name: 'Select', factory: 'createSelect', variable: 'select',
   description: 'Pick an option from a menu. Explore field styles, selection, and validation states.',
   summary: 'A menu of choices in a field.', styles: ['text-field', 'menu', 'select'],
-  scenarios: [
-    {
-      id: 'state', name: 'State', source: 'https://m3.material.io/components/menus/guidelines',
-      description: 'A filled State field showing AK.',
-      options: { selectSet: 'state', variant: 'filled' },
-    },
-  ] as readonly Scenario[],
+  scenarios: selectScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default')]),
     ...section('Content', [selectSetControl, { ...text('label', 'Label', 'Fruit'), ...gated }, { ...choose('value', 'Selected', ['', 'apple', 'banana', 'cherry'], 'apple', 'select'), ...gated }, { ...text('supportingText', 'Supporting text', 'Choose a favorite'), ...gated }]),
