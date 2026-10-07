@@ -1,21 +1,14 @@
-// The search's playground content: its named content sets and its registry entry.
+// The search's playground content: its named content set and its registry entry.
 import type { SearchConfig, SearchSuggestion } from 'material/components/search';
 import { symbols } from '../icons';
 import { type ComponentState, type Scenario, bool, choose, disabled, pick, section, string, text, toggle } from './types';
 
 /**
- * A coloured disc with the figure's letter, or none. Not a photograph and not
- * the person's initials: the contacts figure draws Z, F, and a blank disc.
- */
-const disc = (letter: string, fill: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="20" fill="${fill}"/>${letter ? `<text x="20" y="26" text-anchor="middle" fill="#ffffff" font-size="18" font-family="sans-serif">${letter}</text>` : ''}</svg>`;
-
-const purple = '#6750A4';
-const grey = '#79747E';
-
-/**
- * A named search: the bar or the open view the guidelines figure shows.
- * `default` is not here: today's places search stays exactly as it was.
+ * A named search. `default` is not here: today's places search stays exactly
+ * as it was. Contacts and recipes are not here either: a search created already
+ * open focuses its back button, and that focus ring paints on the first letter
+ * (`material` `dist/components/search/features/states.js:243-247`). They wait
+ * for the library. The local branch `held/search-open-view` keeps them as built.
  */
 interface SearchSet {
   name: string;
@@ -25,15 +18,6 @@ interface SearchSet {
   trailing?: NonNullable<SearchConfig['trailingItems']>;
 }
 
-/**
- * Named searches from m3.material.io/components/search/guidelines (read 7
- * October 2026). A group name only inserts a divider
- * (`material/src/components/search/features/suggestions.ts`, the divider
- * between groups), so "Suggested" and "Quick results" are not written. A
- * suggestion has no trailing slot (`SearchSuggestion` in
- * `material/src/components/search/types.ts`), so the contacts' video and
- * phone icons are not written.
- */
 const searchSets: Record<string, SearchSet> = {
   messages: {
     name: 'Messages',
@@ -42,36 +26,13 @@ const searchSets: Record<string, SearchSet> = {
     suggestions: [],
     trailing: [{ id: 'mic', type: 'icon', content: symbols.mic, ariaLabel: 'Voice search' }],
   },
-  contacts: {
-    name: 'Contacts',
-    placeholder: 'Search contacts',
-    value: '',
-    suggestions: [
-      { text: 'In Yeong-hui', supportingText: 'Mobile', icon: disc('Z', purple) },
-      { text: 'Renée Claes', supportingText: 'Work', icon: disc('F', grey) },
-      { text: '(650) 605-3701', supportingText: 'Unknown', icon: disc('', purple) },
-    ],
-  },
-  recipes: {
-    name: 'Recipes',
-    placeholder: 'Search',
-    value: 'Peanut',
-    suggestions: [
-      { text: 'Peanut', icon: symbols.search },
-      { text: 'Recipes for Peanut', icon: symbols.search },
-      // The figure's third line and "Apr 21" are not a suggestion field. The
-      // photograph is not in the catalog, and an omitted icon becomes the
-      // history glyph, so this row carries a plain disc.
-      { text: 'Recipes for Peanut', supportingText: 'Here are some healthy recipes for Peanut', icon: disc('', grey) },
-    ],
-  },
 };
 
 const searchSet = (state: ComponentState): SearchSet | undefined => searchSets[string(state, 'searchSet')];
 
 const searchSetControl = {
-  ...choose('searchSet', 'Search', ['default', 'messages', 'contacts', 'recipes'], 'default', 'select'),
-  labels: { default: 'Default', messages: 'Messages', contacts: 'Contacts', recipes: 'Recipes' },
+  ...choose('searchSet', 'Search', ['default', 'messages'], 'default', 'select'),
+  labels: { default: 'Default', messages: 'Messages' },
 };
 
 const gated = { enabledWhen: 'searchContentDefault' } as const;
@@ -83,16 +44,6 @@ const searchScenarios: readonly Scenario[] = [
     id: 'messages', name: 'Messages', source,
     description: 'A search bar reading Search your messages, with a microphone.',
     options: { searchSet: 'messages' },
-  },
-  {
-    id: 'contacts', name: 'Contacts', source,
-    description: 'Search contacts, open, with three people and their letter avatars.',
-    options: { searchSet: 'contacts', initialState: 'view', viewMode: 'fullscreen' },
-  },
-  {
-    id: 'recipes', name: 'Recipes', source,
-    description: 'Peanut typed in an open search, with two suggestions and a recipe result.',
-    options: { searchSet: 'recipes', initialState: 'view', viewMode: 'fullscreen' },
   },
 ];
 
