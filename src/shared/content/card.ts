@@ -47,18 +47,26 @@ const cardSets: Record<string, CardSet> = {
 const cardSet = (state: ComponentState): CardSet | undefined => cardSets[string(state, 'cardSet')];
 
 /**
- * The concert figure is a photograph of a crowd at a show. The catalog photo the
- * curated-lists scenario already loads (id 453, "Stage Light, Concert") is that
- * picture; the other named cards keep the illustrated landscape.
+ * A catalog photograph the site already loads, cropped by the card's own ratio.
+ * 453 is the concert's stage. 39 is a turntable ("Vinyl Groove, Studio"): a
+ * record can stand as a show's cover, and the podcast's square frame crops it.
  */
+const catalogMedia = (state: ComponentState, id: number, variant: 'multi-browse' | 'hero'): CardConfig['media'] => {
+  const photo = carouselPhoto(id);
+  return {
+    src: carouselPhotoUrl(variant, photo.id),
+    alt: `${photo.title}, ${photo.location}`,
+    aspectRatio: string(state, 'aspectRatio'),
+    position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top'),
+  };
+};
+
 const namedMedia = (state: ComponentState): CardConfig['media'] | CardMediaArt => {
+  const set = string(state, 'cardSet');
+  if (set === 'concert-tour') return catalogMedia(state, 453, 'multi-browse');
+  if (set === 'podcast-episode') return catalogMedia(state, 39, 'hero');
   const ratio = pick(state, 'aspectRatio', ['16:9', '4:3', '1:1'] as const, '16:9');
-  const position = pick(state, 'mediaPosition', ['top', 'bottom'], 'top');
-  if (string(state, 'cardSet') === 'concert-tour') {
-    const photo = carouselPhoto(453);
-    return { src: carouselPhotoUrl('multi-browse', photo.id), alt: `${photo.title}, ${photo.location}`, aspectRatio: string(state, 'aspectRatio'), position };
-  }
-  return { markup: framedLandscape(0, ratio, 'Illustrated mountain landscape'), aspectRatio: string(state, 'aspectRatio'), position };
+  return { markup: framedLandscape(0, ratio, 'Illustrated mountain landscape'), aspectRatio: string(state, 'aspectRatio'), position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top') };
 };
 
 const cardSetControl: Control = {
@@ -100,9 +108,9 @@ export const cardComponent = {
   ],
   config: (state: ComponentState): Omit<CardConfig, 'media'> & { media?: CardConfig['media'] | CardMediaArt } => {
     const named = cardSet(state);
-    // A named card carries the figure's own words. The concert's picture is a catalog
-    // photo; the podcast keeps the inline landscape. The default stays today's
-    // mountain card, its title, subtitle and body controls driving it.
+    // A named card carries the figure's own words. The concert and the podcast each
+    // take a catalog photograph; the default stays today's mountain card, its title,
+    // subtitle and body controls driving it.
     if (named) {
       return {
         variant: pick(state, 'variant', ['elevated', 'filled', 'outlined'], 'elevated'),
