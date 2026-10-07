@@ -132,7 +132,11 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     closeOnEscape: { attribute: 'no-close-on-escape', values: { false: true }, ignore: [true] },
   },
   // A range is one `start/end` string.
-  datepicker: { value: { join: '/' }, initialView: { ignore: ['day'] }, closeOnSelect: { ignore: [false] } },
+  datepicker: {
+    value: { join: '/' }, initialView: { ignore: ['day'] }, closeOnSelect: { ignore: [false] },
+    // The factory config has no `open`. The element attribute does, set from the scenario.
+    open: { attribute: 'open', values: { true: true }, ignore: [false] },
+  },
   // `step` is in seconds: a minute step, or with seconds shown their step, which needs a one-minute step.
   timepicker: {
     minuteStep: { attribute: 'step', values: { 5: 300, 15: 900 }, ignore: [1] },
@@ -224,7 +228,8 @@ const open: Record<string, OpenMeta> = {
   snackbar: { config: 'open', show: 'show', hide: 'hide' },
   drawer: { config: 'open' },
   'navigation-rail': { config: 'expanded', property: 'expanded', events: ['expand', 'collapse'], show: 'expand', hide: 'collapse' },
-  timepicker: { show: 'show', hide: 'close' },
+  // `open` on the factory config starts the dialog open (`material/src/components/timepicker/timepicker.ts`).
+  timepicker: { config: 'open', show: 'show', hide: 'close' },
 };
 
 // Other state bound beside `open`: the bottom sheet's full height, which a drag changes too.

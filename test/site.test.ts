@@ -5,7 +5,7 @@ import { handleRequest } from '../server';
 import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
-import { symbolByFile } from '../src/shared/icons';
+import { symbolByFile, symbols } from '../src/shared/icons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
 
@@ -161,6 +161,38 @@ describe('list anatomy playground', () => {
   });
 });
 
+
+describe('search scenarios', () => {
+  test('only the closed messages bar is offered', () => {
+    expect(components.search.scenarios.map(item => item.id)).toEqual(['messages']);
+    const scenario = components.search.scenarios[0];
+    if (!scenario) throw new Error('missing messages');
+    const state = normalizeComponentState('search', { ...initialComponentState('search'), ...scenario.options });
+    const config = components.search.config(state);
+    expect(config.placeholder).toBe('Search your messages');
+    expect(config.value).toBe('');
+    expect(config.suggestions).toEqual([]);
+    expect(config.initialState).toBe('bar');
+    expect(config.viewMode).toBe('docked');
+    expect(config.trailingItems).toEqual([{ id: 'mic', type: 'icon', content: symbols.mic, ariaLabel: 'Voice search' }]);
+    expect(state.searchContentDefault).toBe(false);
+    const element = elementConfig('search', state);
+    expect(element.trailingItems).toBeUndefined();
+    expect(element.trailingIcon).toBe(symbols.mic);
+    expect(element.trailingLabel).toBe('Voice search');
+    expect(element.open).toBeUndefined();
+    const html = frameworkCode('html', elementMeta('search')!, element, { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('trailing-icon');
+    const choose = components.search.controls.find(control => control.key === 'searchSet');
+    expect(choose?.options).toEqual(['default', 'messages']);
+    const def = initialComponentState('search');
+    expect(def.searchSet).toBe('default');
+    expect(def.searchContentDefault).toBe(true);
+    expect(components.search.config(def).placeholder).toBe('Search places');
+    expect(components.search.config(def).suggestions).toEqual(['Paris', 'London', 'Lisbon', 'Tokyo']);
+    expect(components.search.config(def).trailingItems).toBeUndefined();
+  });
+});
 
 test('date picker clearing and partial ranges stay reproducible in View code', () => {
   const empty = normalizeComponentState('datepicker', { ...initialComponentState('datepicker'), value: '', endDate: '' });
