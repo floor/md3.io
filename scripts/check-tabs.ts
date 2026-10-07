@@ -228,8 +228,15 @@ function multisetDifference(left: string[], right: string[]): string[] {
   });
 }
 
+// One unit is one element's own words: its direct text nodes and the words inside
+// inline emphasis (`strong`, `em`, `b`, `i`, `mark`, …) joined into a single string.
+// A child that is not emphasis — another suggestion, a supporting line, a second
+// control — stays its own unit. The two units are compared as a multiset: two words
+// in two elements stay two entries, so one missing is still a difference. Document
+// order is not compared; the side sheet's opener and title already disagree on it.
 const collectVisibleText = (selectors: string[]) => {
   const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const emphasis = new Set(['strong', 'em', 'b', 'i', 'mark', 'small', 'abbr', 'sub', 'sup', 'u', 's', 'code']);
   const isPreviewOnly = (element: Element) => selectors.some(selector => element.matches(selector));
   const isVisible = (start: Element) => {
     let element: Element | null = start;
@@ -248,17 +255,17 @@ const collectVisibleText = (selectors: string[]) => {
     range.selectNode(node);
     return range.getClientRects().length > 0;
   };
+  const ownWords = (element: Element): Text[] => {
+    const nodes: Text[] = [];
+    const take = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) { nodes.push(node as Text); return; }
+      if (node instanceof Element && emphasis.has(node.localName)) node.childNodes.forEach(take);
+    };
+    element.childNodes.forEach(take);
+    return nodes;
+  };
   const text: string[] = [];
   const visit = (node: Node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const textNode = node as Text;
-      const parent = textNode.parentElement;
-      // Split buttons render their light-DOM primary label through a shadow-tree label.
-      if (!parent || (parent.localName === 'm-split-button' && parent.shadowRoot) || parent.closest('script, style') || !isVisible(parent) || !textHasRect(textNode)) return;
-      const value = normalise(node.textContent ?? '');
-      if (value) text.push(value);
-      return;
-    }
     if (!(node instanceof Element) || node.matches('script, style') || isPreviewOnly(node)) return;
     if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && isVisible(node)) {
       if (node instanceof HTMLInputElement) {
@@ -273,8 +280,15 @@ const collectVisibleText = (selectors: string[]) => {
       // Textarea fallback content is its default value, not a second visible label.
       return;
     }
-    node.childNodes.forEach(visit);
-    node.shadowRoot?.childNodes.forEach(visit);
+    // Split buttons render their light-DOM primary label through a shadow-tree label.
+    const skipOwn = node.localName === 'm-split-button' && !!node.shadowRoot;
+    if (!skipOwn && isVisible(node)) {
+      const nodes = ownWords(node);
+      const value = normalise(nodes.map(part => part.textContent ?? '').join(''));
+      if (value && nodes.some(textHasRect)) text.push(value);
+    }
+    for (const child of node.children) if (!emphasis.has(child.localName)) visit(child);
+    node.shadowRoot && [...node.shadowRoot.children].forEach(visit);
   };
   visit(document.body);
   return text;
