@@ -390,18 +390,21 @@ for (const slug of targetSlugs) {
 
 // --- Serve bundled tabs ---
 let currentTabKey = '';
-const harnessHtml = (key: string): string => {
+// `width` is the preview stage measured for this run. The tab mounts in a box
+// of that width, so a component is read at the same width on both sides.
+const harnessHtml = (key: string, width: number): string => {
   const info = tabBundles[key];
   if (!info) return '<!doctype html><html><body>Not found</body></html>';
+  const box = width > 0 ? `width:${width}px;max-width:${width}px;` : '';
   return `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   ${info.css ? '<link rel="stylesheet" href="/tab.css">' : ''}
 </head>
-<body style="margin:0">
+<body style="margin:0;${box}">
   ${info.markup ? `${info.markup}\n` : ''}
-  <div id="app" style="padding:16px"></div>
+  <div id="app" style="${width > 0 ? 'width:100%' : 'padding:16px'}"></div>
   <script type="module" src="/tab.js"></script>
 </body>
 </html>`;
@@ -415,7 +418,8 @@ const tabServer = Bun.serve({
     currentTabKey = url.searchParams.get('tab') ?? currentTabKey;
     const path = url.pathname.replace(/\/+$/, '') || '/';
     if (path === '/') {
-      return new Response(harnessHtml(currentTabKey), { headers: { 'content-type': 'text/html' } });
+      const width = Number(url.searchParams.get('width'));
+      return new Response(harnessHtml(currentTabKey, Number.isFinite(width) ? width : 0), { headers: { 'content-type': 'text/html' } });
     }
     if (path === '/tab.js' && tabBundles[currentTabKey]) {
       return new Response(tabBundles[currentTabKey].js, { headers: { 'content-type': 'text/javascript' } });
@@ -461,6 +465,14 @@ try {
       await previewPage.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = previewPage.frames().find(f => f !== previewPage.mainFrame() && f.url().includes('preview')) ?? previewPage.frames()[1]!;
+      // The stage's width on this run, not a width written into the check.
+      // Every tab of this scenario mounts in a box that wide.
+      const stageWidth = Math.round(await previewFrame.evaluate(() => document.querySelector('#stage')?.getBoundingClientRect().width ?? 0));
+      if (!(stageWidth > 0)) {
+        differences.push(`${slug} ${scenarioId}: the preview stage has no width`);
+        continue;
+      }
+      await page.setViewportSize({ width: stageWidth, height: 900 });
       // This is deliberately read once: opening a menu for one tab must not
       // turn into evidence that it was open on load for later tabs.
       const previewMenuOnLoad = await settledMenuState(previewFrame);
@@ -473,7 +485,7 @@ try {
         pageErrors.length = 0;
 
         try {
-          await page.goto(`${tabServer.url}/?tab=${encodeURIComponent(key)}`);
+          await page.goto(`${tabServer.url}/?tab=${encodeURIComponent(key)}&width=${stageWidth}`);
           // Wait for element upgrade / mount
           await page.waitForFunction(() => {
             const visit = (node: Element): boolean => {
