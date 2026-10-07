@@ -69,6 +69,7 @@ import album from '../../icons/album.svg' with { type: 'text' };
 import cloud from '../../icons/cloud.svg' with { type: 'text' };
 import nearMe from '../../icons/near_me.svg' with { type: 'text' };
 import pause from '../../icons/pause.svg' with { type: 'text' };
+import presentToAll from '../../icons/present_to_all.svg' with { type: 'text' };
 import personSearch from '../../icons/person_search.svg' with { type: 'text' };
 import playlistAdd from '../../icons/playlist_add.svg' with { type: 'text' };
 import playlistPlay from '../../icons/playlist_play.svg' with { type: 'text' };
@@ -151,6 +152,7 @@ export const symbols = {
   nearMe: trim(nearMe),
   pause: trim(pause),
   personSearch: trim(personSearch),
+  presentToAll: trim(presentToAll),
   playlistAdd: trim(playlistAdd),
   playlistPlay: trim(playlistPlay),
   skipNext: trim(skipNext),
@@ -233,6 +235,7 @@ const files: Record<keyof typeof symbols, string> = {
   nearMe: 'near_me',
   pause: 'pause',
   personSearch: 'person_search',
+  presentToAll: 'present_to_all',
   playlistAdd: 'playlist_add',
   playlistPlay: 'playlist_play',
   skipNext: 'skip_next',
