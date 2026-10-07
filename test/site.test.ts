@@ -255,6 +255,46 @@ describe('framework code for the overlay elements', () => {
     // A standard rail with its menu button expands itself: no trigger.
     expect(code('navigation-rail', 'html', { expanded: true })).not.toContain('navigation-rail-trigger');
   });
+  test('a collapsed clock rail writes the icon-only header, and an expanded one writes Add timer', () => {
+    const vanilla = (input: Record<string, unknown>) => componentCode('navigation-rail', normalizeComponentState('navigation-rail', { ...initialComponentState('navigation-rail'), ...input }));
+    const expanded = [
+      vanilla({ destinations: 'expanded-clock', expanded: true }),
+      code('navigation-rail', 'html', { destinations: 'expanded-clock', expanded: true }),
+      code('navigation-rail', 'react', { destinations: 'expanded-clock', expanded: true }),
+    ];
+    for (const source of expanded) {
+      expect(source).toContain('Add timer');
+      expect(source).toMatch(/createExtendedFab|<m-extended-fab |<ExtendedFab /);
+    }
+    const collapsedVanilla = vanilla({ destinations: 'expanded-clock', expanded: false });
+    expect(collapsedVanilla).toContain('createFab(');
+    expect(collapsedVanilla).not.toContain('createExtendedFab');
+    expect(collapsedVanilla).toContain('ariaLabel: "Add timer"');
+    expect(collapsedVanilla).not.toContain('text:');
+    const collapsedHtml = code('navigation-rail', 'html', { destinations: 'expanded-clock', expanded: false });
+    expect(collapsedHtml).toContain('<m-fab ');
+    expect(collapsedHtml).toContain('slot="header"');
+    expect(collapsedHtml).toContain('aria-label="Add timer"');
+    expect(collapsedHtml).not.toContain('m-extended-fab');
+    expect(collapsedHtml).not.toContain('>Add timer<');
+    const collapsedReact = code('navigation-rail', 'react', { destinations: 'expanded-clock', expanded: false });
+    expect(collapsedReact).toContain('<Fab ');
+    expect(collapsedReact).toContain('slot="header"');
+    expect(collapsedReact).toContain('ariaLabel="Add timer"');
+    expect(collapsedReact).not.toContain('ExtendedFab');
+    expect(collapsedReact).not.toContain('>Add timer<');
+    for (const expandedState of [true, false]) {
+      const source = vanilla({ destinations: 'timer', expanded: expandedState });
+      expect(source).toContain('createFab(');
+      expect(source).not.toContain('createExtendedFab');
+      expect(source).not.toContain('text:');
+      const html = code('navigation-rail', 'html', { destinations: 'timer', expanded: expandedState });
+      expect(html).toContain('<m-fab ');
+      expect(html).toContain('aria-label="Add timer"');
+      expect(html).not.toContain('m-extended-fab');
+      expect(html).not.toContain('>Add timer<');
+    }
+  });
   test('the bottom sheet binds its expanded state instead of calling expand()', () => {
     const react = code('bottom-sheet', 'react', { initialState: 'expanded' });
     expect(react).toContain('const [expanded, setExpanded] = useState(true);');

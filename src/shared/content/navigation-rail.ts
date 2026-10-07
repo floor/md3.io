@@ -81,6 +81,21 @@ export function railHeader(state: ComponentState): RailHeader | undefined {
   return railSet(state)?.header;
 }
 
+/**
+ * The header the page actually builds. A text header is the extended FAB only while
+ * the rail is expanded; collapsed, it is the icon-only FAB with the same icon and
+ * the same accessible name. An icon-only header stays that FAB in both states.
+ */
+export function railHeaderForm(state: ComponentState):
+  | { kind: 'extended'; icon: string; text: string; ariaLabel: string }
+  | { kind: 'fab'; icon: string; ariaLabel: string }
+  | undefined {
+  const header = railHeader(state);
+  if (!header) return;
+  if (header.text && bool(state, 'expanded')) return { kind: 'extended', icon: header.icon, text: header.text, ariaLabel: header.ariaLabel };
+  return { kind: 'fab', icon: header.icon, ariaLabel: header.ariaLabel };
+}
+
 const activeIds = [...destinations.map(item => item.id), ...Object.values(railSets).flatMap(set => set.items.map(item => item.id))];
 const activeLabels = Object.fromEntries([...destinations, ...Object.values(railSets).flatMap(set => set.items)].map(item => [item.id, item.label]));
 
