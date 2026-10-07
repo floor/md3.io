@@ -66,17 +66,20 @@ const carouselSetControl: Control = {
 /**
  * The carousel's scenarios, from m3.material.io (read 6 October 2026). Options
  * name playground controls only; a named collection fixes its own captions.
+ * The featured set's width (460) holds its one large photo at the figure's
+ * share of the stage; the curated set's (240) sits both captioned items at
+ * the largest keyline size, where their captions read in full.
  */
 const carouselScenarios: readonly Scenario[] = [
   {
     id: 'featured-collection', name: 'Featured collection', source: 'https://m3.material.io/components/carousel/guidelines',
     description: 'A garden features its plants: one large photo, narrow previews of more of the same kind.',
-    options: { carouselSet: 'featured-collection', variant: 'hero' },
+    options: { carouselSet: 'featured-collection', variant: 'hero', itemWidth: '460' },
   },
   {
     id: 'curated-lists', name: 'Curated lists', source: 'https://m3.material.io/components/carousel/guidelines',
     description: 'Browsing saved lists: 79 Events, 12 Cities, and a third with no label of its own.',
-    options: { carouselSet: 'curated-lists', variant: 'multi-browse' },
+    options: { carouselSet: 'curated-lists', variant: 'multi-browse', itemWidth: '240' },
   },
 ];
 

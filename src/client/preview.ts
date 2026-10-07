@@ -7,6 +7,7 @@ import createCard from 'material/components/card';
 import type { CardConfig } from 'material/components/card';
 import createList from 'material/components/list';
 import createCarousel from 'material/components/carousel';
+import { createCarouselRemote } from './carousel-remote';
 import { createDivider } from 'material/components/divider';
 import createDialog from 'material/components/dialog';
 import createBottomSheet from 'material/components/bottom-sheet';
@@ -135,8 +136,16 @@ function create(state: ComponentState) {
       const control = createCarousel(components.carousel.config(state));
       const count = control.slides.getCount();
       control.on('change', event => { sync({ initialSlide: String(event.value) }); message(`Slide ${event.value + 1} of ${count}`); });
-      // The stage is the carousel, as a page shows it: the copied code builds no remote,
-      // so the preview carries none either.
+      // The default keeps the remote under it, as on main; a named collection stands
+      // as a page shows it — the copied code builds no remote, so the preview carries none.
+      if (state.slidesDefault) {
+        // The remote under the carousel goes with it: a new carousel gets a new remote.
+        const remote = createCarouselRemote(control);
+        const host = document.createElement('div');
+        host.className = 'carousel-demo';
+        host.append(control.element, remote.element);
+        return { element: host, destroy: () => { remote.destroy(); control.destroy(); } };
+      }
       return control;
     }
     case 'divider': {

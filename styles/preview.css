@@ -27,9 +27,17 @@ html:is([data-component="card"], [data-component="list"], [data-component="carou
 #stage > .mtrl-card { width: min(100%, 340px); flex-shrink: 0; }
 #stage > .mtrl-list { width: min(100%, 560px); height: auto; min-height: 0; max-height: calc(100dvh - 64px); flex-shrink: 0; }
 html[data-component="carousel"] #stage { height: 100%; padding: 24px 0 16px; }
-/* Capped as the copied code caps it, so a mounted tab shows the same photos in view. */
-#stage > .mtrl-carousel { width: min(100%, 560px); height: min(360px, 100%); flex-shrink: 0; }
+/* The default's carousel, and its remote under it (48px for the remote, 12px between them). */
+.carousel-demo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; height: 100%; min-height: 0; }
+.carousel-demo > .mtrl-carousel { width: 100%; height: min(360px, calc(100% - 60px)); flex-shrink: 0; }
 /* Full-screen fills one screen, as on a phone: a centred 2:3 portrait frame. */
+.carousel-demo > .mtrl-carousel--full-screen { width: auto; max-width: calc(100% - 32px); height: min(600px, calc(100% - 60px)); aspect-ratio: 2 / 3; }
+.carousel-remote { display: flex; align-items: center; gap: 4px; width: min(100% - 32px, 480px); min-height: 48px; flex-shrink: 0; color: var(--mtrl-sys-color-on-surface-variant); }
+.carousel-remote > .mtrl-slider { flex: 1 1 auto; width: auto; min-width: 48px; margin-inline: 8px; }
+.carousel-remote__counter { min-width: 7ch; text-align: end; font: var(--mtrl-sys-typescale-label-large-font-weight) var(--mtrl-sys-typescale-label-large-font-size) / var(--mtrl-sys-typescale-label-large-line-height) var(--mtrl-sys-typescale-label-large-font); letter-spacing: var(--mtrl-sys-typescale-label-large-letter-spacing); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 400px) { .carousel-remote { gap: 0; } .carousel-remote > .mtrl-slider { margin-inline: 4px; } .carousel-remote__counter { min-width: 6ch; } }
+/* A named collection stands alone on the stage, capped as its copied code caps it. */
+#stage > .mtrl-carousel { width: min(100%, 560px); height: min(360px, 100%); flex-shrink: 0; }
 #stage > .mtrl-carousel--full-screen { width: auto; max-width: calc(100% - 32px); height: min(600px, 100%); aspect-ratio: 2 / 3; }
 .mtrl-dialog:not(.mtrl-dialog--fullscreen) { max-width: calc(100vw - 32px); max-height: calc(100dvh - 24px); }
 .mtrl-side-sheet__container { max-width: min(400px, 100vw) !important; }

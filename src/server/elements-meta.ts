@@ -235,10 +235,9 @@ const multiple: Record<string, ElementMeta['multiple']> = {
   list: { key: 'multiSelect', children: true },
 };
 
-// Inline styles the element needs, as the preview gives it: the carousel fills its
-// host's height, capped as the preview caps it so the same photos are in view.
+// Inline styles the element needs, as the preview gives it: the carousel fills its host's height.
 const styles: Record<string, Record<string, string>> = {
-  carousel: { height: '320px', 'max-width': '560px' },
+  carousel: { height: '320px' },
 };
 
 // Live properties that do not start false: a playground value equal to the
