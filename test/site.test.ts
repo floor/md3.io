@@ -173,6 +173,28 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   expect(code).not.toContain('MutationObserver');
 });
 
+describe('fab menu open', () => {
+  const code = (framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', open: boolean) => {
+    const config = { ...elementConfig('fab-menu', initialComponentState('fab-menu')), open };
+    return frameworkCode(framework, elementMeta('fab-menu')!, config, { theme: 'baseline', mode: 'light' });
+  };
+  test('a closed menu writes no open attribute and no gap', () => {
+    for (const framework of ['html', 'react', 'vue', 'svelte', 'solid'] as const) {
+      const source = code(framework, false);
+      expect(source).not.toContain('Not yet exposed');
+      expect(source).not.toMatch(/\sopen[\s=>]/);
+    }
+  });
+  test('every element tab declares the menu open from the config', () => {
+    expect(code('html', true)).toContain('<m-fab-menu open');
+    expect(code('react', true)).toContain('<FabMenu open');
+    expect(code('vue', true)).toContain('<MFabMenu open');
+    expect(code('svelte', true)).toContain('<FabMenu open');
+    expect(code('solid', true)).toContain('<FabMenu open');
+    for (const framework of ['html', 'react', 'vue', 'svelte', 'solid'] as const) expect(code(framework, true)).not.toContain('Not yet exposed');
+  });
+});
+
 describe('framework code for the overlay elements', () => {
   const code = (slug: Parameters<typeof initialComponentState>[0], framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', input: Record<string, unknown> = {}) => {
     const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...input });

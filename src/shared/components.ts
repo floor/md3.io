@@ -263,6 +263,9 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
+    // The factory opens with `open()`. The element tabs declare the same thing
+    // with the `open` attribute, which the generator writes from this key.
+    case 'fab-menu': return { ...config, open: state.open === true };
     // A parent over its children is not one element: m-checkbox's only slot is its
     // label (material/src/elements/checkbox.ts), so the element tabs render the
     // parent and carry the children as a stated gap (`Not yet exposed by the
