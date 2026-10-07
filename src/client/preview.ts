@@ -46,6 +46,7 @@ import { railHeader } from '../shared/content/navigation-rail';
 import { tabsAriaLabel } from '../shared/content/tabs';
 import { menuSelectedId } from '../shared/content/menu';
 import { artElement } from '../shared/content/types';
+import { tooltipTarget } from '../shared/content/tooltip';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -101,7 +102,10 @@ function create(state: ComponentState) {
       return { element: trigger.element, destroy: () => { control.hide(); control.destroy(); trigger.destroy(); } };
     }
     case 'tooltip': {
-      const target = createIconButton({ icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' });
+      const described = tooltipTarget(state);
+      const target = described.component === 'fab'
+        ? createFab({ icon: described.icon, ariaLabel: described.ariaLabel })
+        : createIconButton({ icon: described.icon, ariaLabel: described.ariaLabel, variant: described.variant ?? 'tonal' });
       // Positioning needs the target in the document before an initially visible tooltip is created.
       stage.append(target.element);
       // The factory shows a visible tooltip before this observer exists, so that show
@@ -118,7 +122,7 @@ function create(state: ComponentState) {
       });
       observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
       if (pageOpens) control.show(true);
-      target.on('click', () => message('Favorite clicked'));
+      target.on('click', () => message(`${described.ariaLabel} clicked`));
       return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
     }
     case 'card': {

@@ -62,7 +62,7 @@ import { badgeComponent } from './content/badge';
 import { loadingIndicatorComponent } from './content/loading-indicator';
 import { progressComponent } from './content/progress';
 import { snackbarComponent } from './content/snackbar';
-import { tooltipComponent } from './content/tooltip';
+import { tooltipComponent, tooltipTarget } from './content/tooltip';
 
 /**
  * The toolbar's config as its element takes it: icon buttons in `items`, text buttons in
@@ -261,7 +261,7 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     }
     case 'timepicker': return { ...config, ...trigger('Choose time') };
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
-    case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
+    case 'tooltip': return { ...config, target: tooltipTarget(state) };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
     // A parent over its children is not one element: m-checkbox's only slot is its
     // label (material/src/elements/checkbox.ts), so the element tabs render the
@@ -470,12 +470,27 @@ function communicationCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const literal = (value: unknown) => JSON.stringify(value, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const hasTarget = slug === 'badge' || slug === 'tooltip';
-  const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  const uploadTarget = slug === 'tooltip' && state.target === 'upload';
+  const presentTarget = slug === 'tooltip' && state.target === 'present';
+  // `fab` is a preview style, not one of `styles`: the default tabs do not import it.
+  const styles = ['base', ...component.styles, ...(uploadTarget ? ['fab'] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
   let before = '';
   let config = literal(component.config(state));
   let after = `document.body.append(${component.variable}.element);\n`;
   let cleanup = '';
-  if (hasTarget) {
+  if (uploadTarget) {
+    const target = tooltipTarget(state);
+    before = `const target = createFab(${literal({ icon: target.icon, ariaLabel: target.ariaLabel })});\ndocument.body.append(target.element);\n\n`;
+    config = config.replace(/\n}$/, ',\n  target: target.element\n}');
+    after = '';
+    cleanup = '// target.destroy();\n';
+  } else if (presentTarget) {
+    const target = tooltipTarget(state);
+    before = `const target = createIconButton(${literal({ icon: target.icon, ariaLabel: target.ariaLabel, variant: target.variant })});\ndocument.body.append(target.element);\n\n`;
+    config = config.replace(/\n}$/, ',\n  target: target.element\n}');
+    after = '';
+    cleanup = '// target.destroy();\n';
+  } else if (hasTarget) {
     before = `const target = createIconButton(${literal({ icon: componentIcons[slug === 'badge' ? 'inbox' : 'heart'], ariaLabel: slug === 'badge' ? 'Inbox' : 'Favorite', variant: 'tonal' })});\ndocument.body.append(target.element);\n\n`;
     config = config.replace(/\n}$/, ',\n  target: target.element\n}');
     after = '';
@@ -486,7 +501,7 @@ function communicationCode(slug: ComponentSlug, state: ComponentState): string {
   } else if (slug === 'progress' && state.variant === 'linear') {
     after = "progress.element.style.width = 'min(100%, 360px)';\n" + after;
   }
-  return `import { ${component.factory}${hasTarget ? ', createIconButton' : slug === 'snackbar' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
+  return `import { ${component.factory}${uploadTarget ? ', createFab' : hasTarget ? ', createIconButton' : slug === 'snackbar' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `${before}const ${component.variable} = ${component.factory}(${config});\n${after}\n// When the view is removed:\n${slug === 'snackbar' ? '// snackbar.hide();\n' : ''}// ${component.variable}.destroy();\n${cleanup}`;
 }

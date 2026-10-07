@@ -307,6 +307,30 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
 });
 
+describe('tooltip target', () => {
+  const html = (input: Record<string, unknown> = {}) => {
+    const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), ...input });
+    return frameworkCode('html', elementMeta('tooltip')!, elementConfig('tooltip', state), { theme: 'baseline', mode: 'light' });
+  };
+  test('the default stays the heart icon button in the tabs', () => {
+    expect(html()).toContain('<m-icon-button id="tooltip-target" aria-label="Favorite" variant="tonal"></m-icon-button>');
+    expect(html()).not.toContain('<m-fab');
+    const vanilla = componentCode('tooltip', initialComponentState('tooltip'));
+    expect(vanilla).toContain('createIconButton');
+    expect(vanilla).not.toContain('createFab');
+    expect(vanilla).not.toContain("material/styles/fab");
+  });
+  test('upload is the library FAB with the add icon, and the tooltip points at it', () => {
+    const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), target: 'upload' });
+    expect(html({ target: 'upload' })).toContain('<m-fab id="tooltip-target" aria-label="Upload"></m-fab>');
+    expect(html({ target: 'upload' })).toContain('for="tooltip-target"');
+    const vanilla = componentCode('tooltip', state);
+    expect(vanilla).toContain('createFab');
+    expect(vanilla).toContain("import 'material/styles/fab'");
+    expect(vanilla).toContain('target: target.element');
+  });
+});
+
 test('a content-hashed chunk is cached for a year, and a stable name is not', async () => {
   const dir = resolve(import.meta.dir, '../dist');
   mkdirSync(dir, { recursive: true });
