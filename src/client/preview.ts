@@ -114,7 +114,11 @@ function create(state: ComponentState) {
         message(control.isVisible() ? 'Tooltip shown' : 'Tooltip hidden');
       });
       observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
-      target.on('click', () => message(`${described.ariaLabel} clicked`));
+      // `target` is a fab or an icon button. Each `on` is its own generic, so the
+      // union is not callable; the click is registered on the concrete control.
+      const clicked = () => message(`${described.ariaLabel} clicked`);
+      if (described.component === 'fab') (target as ReturnType<typeof createFab>).on('click', clicked);
+      else (target as ReturnType<typeof createIconButton>).on('click', clicked);
       return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
     }
     case 'card': {
