@@ -3,6 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
+import { controlConcealed } from '../shared/content/types';
 import { drawerActiveOptions } from '../shared/content/drawer';
 import { railActiveOptions } from '../shared/content/navigation-rail';
 import { tabActiveOptions } from '../shared/content/tabs';
@@ -173,6 +174,15 @@ function update(send = true, reset = false) {
   refreshActiveSelect(state);
   syncControls(state);
   for (const input of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]')) input.disabled = state[input.dataset.enabledWhen!] !== true;
+  // A control a named set replaces leaves the panel while its gate is off. The
+  // input stays, so the value comes back with the default. `hidden` takes the
+  // row out of sight, the accessibility tree, and the tab order.
+  for (const control of components[slug].controls) {
+    if (!control.replaced) continue;
+    const field = form.querySelector<HTMLElement>(`[name="${control.key}"]`);
+    const row = field?.closest<HTMLElement>('[data-replaced]');
+    if (row) row.hidden = controlConcealed(control, state);
+  }
   renderCode();
   if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state, reset }, location.origin);
 }

@@ -94,7 +94,7 @@ export const carouselComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
     ...section('Layout', [{ ...range('itemWidth', 'Item width', '280'), min: 120, max: 480, step: 20 }, { ...range('gap', 'Gap', '8'), max: 32 }, { ...range('padding', 'Padding', '16'), max: 48 }]),
-    ...section('Content', [carouselSetControl, toggle('captions', 'Captions', true, 'slidesDefault'), { ...choose('initialSlide', 'Current slide', Array.from({ length: 24 }, (_, index) => String(index)), '0', 'select'), enabledWhen: 'slidesDefault' }]),
+    ...section('Content', [carouselSetControl, { ...toggle('captions', 'Captions', true, 'slidesDefault'), replaced: true }, { ...choose('initialSlide', 'Current slide', Array.from({ length: 24 }, (_, index) => String(index)), '0', 'select'), enabledWhen: 'slidesDefault' }]),
     ...section('Behavior', [toggle('snap', 'Snap to items', true)]),
   ],
   config: (state: ComponentState): CarouselConfig => {

@@ -14,6 +14,13 @@ export interface Control {
   options?: readonly string[];
   labels?: Record<string, string>;
   enabledWhen?: string;
+  /**
+   * A named set replaces what this control edits. While `enabledWhen` is off the
+   * row is hidden — not shown, not in the accessibility tree, not focusable —
+   * and its value is kept. Without this field the row stays and greys, which is
+   * how a dependent control behaves, and how a control the stage still reads does.
+   */
+  replaced?: true;
   min?: number;
   max?: number;
   step?: number;
@@ -57,6 +64,9 @@ export interface ComponentDefinition {
   config: (state: ComponentState) => unknown;
 }
 export const section = (title: NonNullable<Control['section']>, controls: Control[]): Control[] => controls.map(control => ({ ...control, section: title }));
+/** The row is hidden: the control declares `replaced` and its gate is not on. */
+export const controlConcealed = (control: Pick<Control, 'replaced' | 'enabledWhen'>, state: ComponentState): boolean =>
+  control.replaced === true && !!control.enabledWhen && state[control.enabledWhen] !== true;
 export const choose = (key: string, label: string, options: readonly string[], initial: string, kind: 'choice' | 'select' | 'icons' = 'choice'): Control => ({ key, label, options, initial, kind });
 export const toggle = (key: string, label: string, initial = false, enabledWhen?: string): Control => ({ key, label, initial, kind: 'toggle', enabledWhen });
 export const text = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'text' });

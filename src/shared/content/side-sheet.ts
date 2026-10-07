@@ -105,7 +105,7 @@ export const sideSheetComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal')]),
     ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'end'), { ...range('width', 'Width', '320'), min: 240, max: 400, step: 20 }]),
-    ...section('Content', [sheetSetControl, { ...text('title', 'Title', 'Details'), enabledWhen: 'sheetContentDefault' }, { ...text('content', 'Body', 'A place for useful context, related information, and supporting actions.'), enabledWhen: 'sheetContentDefault' }]),
+    ...section('Content', [sheetSetControl, { ...text('title', 'Title', 'Details'), enabledWhen: 'sheetContentDefault', replaced: true }, { ...text('content', 'Body', 'A place for useful context, related information, and supporting actions.'), enabledWhen: 'sheetContentDefault', replaced: true }]),
     ...section('Behavior', [toggle('open', 'Open'), toggle('closeButton', 'Close button', true), toggle('closeOnScrimClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
   ],
   config: (state: ComponentState): SideSheetConfig => {
