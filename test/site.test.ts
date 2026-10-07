@@ -230,6 +230,43 @@ describe('button group scenarios', () => {
   });
 });
 
+describe('split button scenarios', () => {
+  const apply = (id: string) => {
+    const scenario = components['split-button'].scenarios.find(item => item.id === id);
+    if (!scenario) throw new Error(`missing split button scenario ${id}`);
+    const state = normalizeComponentState('split-button', { ...initialComponentState('split-button'), ...scenario.options });
+    return { scenario, state, config: components['split-button'].config(state) };
+  };
+  test('the default menu is still Save as, Save a copy, Download', () => {
+    const config = components['split-button'].config(initialComponentState('split-button'));
+    expect(config.items?.map(item => 'text' in item ? item.text : item.type)).toEqual(['Save as…', 'Save a copy', 'Download']);
+  });
+  test('playback speed and slideshow stay closed, with the figure’s items', () => {
+    expect(components['split-button'].scenarios.map(item => item.id)).toEqual(['playback-speed', 'slideshow']);
+    const speed = apply('playback-speed');
+    expect(speed.config.variant).toBe('tonal');
+    expect(speed.config.text).toBe('1.5x');
+    expect(speed.config.icon).toBeUndefined();
+    expect(speed.config.items?.map(item => 'text' in item ? item.text : '')).toEqual(['0.5x', '1x', '1.5x', '2x']);
+    expect(speed.scenario.description).toContain('Not yet exposed by the element: open.');
+    expect(speed.scenario.description).toContain('Not yet exposed by the element: items[].selected.');
+    const show = apply('slideshow');
+    expect(show.config.variant).toBe('filled');
+    expect(show.config.text).toBe('Slideshow');
+    expect(show.config.icon).toBe(symbols.playCircle);
+    const last = show.config.items?.at(-1);
+    expect(last && 'text' in last && last.text).toBe('Start slideshow');
+    expect(last && 'icon' in last && last.icon).toBe(symbols.playCircle);
+    const vanilla = componentCode('split-button', show.state);
+    expect(vanilla).toContain('playCircleIcon');
+    expect(vanilla).not.toContain('.expand()');
+    const html = frameworkCode('html', elementMeta('split-button')!, elementConfig('split-button', speed.state), { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('>1.5x<');
+    expect(html).toContain('>0.5x<');
+    expect(html).not.toContain('expand()');
+  });
+});
+
 describe('fab menu open', () => {
   const code = (framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', open: boolean) => {
     const config = { ...elementConfig('fab-menu', initialComponentState('fab-menu')), open };
