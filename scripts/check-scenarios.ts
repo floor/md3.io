@@ -83,8 +83,9 @@ try {
       // Buttons only: a combobox input also carries aria-haspopup, but it raises a
       // listbox, never a menu, and clicking a readonly input is not what is being checked.
       // A trigger that already says expanded is not clicked: the popup is the state the
-      // click would produce. A dialog popup is the dialog's own open state; a menu popup
-      // is a visible menu, then its background and elevation.
+      // click would produce. A dialog stays the dialog's own open state. Any other popup
+      // is the element its opener names with aria-controls. A menu surface still has to
+      // finish opening. An opener that names nothing falls back to that menu surface.
       const openers = frame.locator('button[aria-haspopup]');
       for (let index = 0; index < await openers.count(); index++) {
         const opener = openers.nth(index);
@@ -101,28 +102,72 @@ try {
           else await frame.locator('body').press('Escape');
           continue;
         }
-        const menu = frame.locator('.mtrl-menu').first();
-        let opened = true;
-        try { await menu.waitFor({ state: 'visible', timeout: 1000 }); }
-        catch { opened = false; }
-        if (!opened) {
-          // Already expanded: the popup had to be showing, the same as after a click.
-          // A closed opener whose popup is a menu (`aria-haspopup="true"`, the menu
-          // surface this check judges) and does not show one fails. An opener that
-          // raises a list which is not that surface (the fab menu) is left as it was.
-          if (expanded || popup === 'true' || popup === 'listbox') findings.push('a menu popup is not shown');
+        const outcome = await opener.evaluate(button => new Promise<{ kind: 'menu' | 'other' | 'hidden' | 'fallback'; background?: string; shadow?: string }>(resolve => {
+          const isVisible = (element: Element) => {
+            let current: Element | null = element;
+            while (current) {
+              const style = getComputedStyle(current);
+              if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+              if (style.display !== 'contents' && current.getClientRects().length === 0) return false;
+              const root = current.getRootNode();
+              current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+            }
+            return true;
+          };
+          const menuSettled = (element: Element) => {
+            if (!element.classList.contains('mtrl-menu') || !isVisible(element)) return false;
+            const rect = element.getBoundingClientRect();
+            return rect.height > 0 && element.getAnimations().every(animation => animation.playState !== 'running');
+          };
+          const menuStyle = (element: Element) => {
+            const style = getComputedStyle(element);
+            return { background: style.backgroundColor, shadow: style.boxShadow };
+          };
+          const named = () => {
+            const id = button.getAttribute('aria-controls');
+            if (!id) return null;
+            const root = button.getRootNode();
+            const found = (root instanceof Document || root instanceof ShadowRoot) ? root.getElementById(id) : null;
+            return found ?? button.ownerDocument.getElementById(id);
+          };
+          const fallbackMenu = () => {
+            const visit = (node: Element): Element | null => {
+              if (menuSettled(node)) return node;
+              if (node.shadowRoot) for (const child of node.shadowRoot.children) { const found = visit(child); if (found) return found; }
+              for (const child of node.children) { const found = visit(child); if (found) return found; }
+              return null;
+            };
+            return visit(button.ownerDocument.body);
+          };
+          const start = performance.now();
+          const tick = () => {
+            const target = named();
+            if (target?.classList.contains('mtrl-menu') && menuSettled(target)) return resolve({ kind: 'menu', ...menuStyle(target) });
+            if (target && !target.classList.contains('mtrl-menu') && isVisible(target)) return resolve({ kind: 'other' });
+            const menu = target ? null : fallbackMenu();
+            if (menu) return resolve({ kind: 'menu', ...menuStyle(menu) });
+            if (performance.now() - start > 1000) return resolve({ kind: target ? 'hidden' : 'fallback' });
+            requestAnimationFrame(tick);
+          };
+          tick();
+        }));
+        if (outcome.kind === 'menu') {
+          if (outcome.background === 'rgba(0, 0, 0, 0)') findings.push('a menu opened with no surface background');
+          if (outcome.shadow === 'none') findings.push('a menu opened with no elevation');
+          await frame.locator('body').press('Escape');
+          try { await frame.locator('.mtrl-menu').first().waitFor({ state: 'detached', timeout: 1000 }); }
+          catch { /* Removed or not, the next page load reclaims the frame. */ }
+          continue;
+        }
+        if (outcome.kind === 'other') {
           await frame.locator('body').press('Escape');
           continue;
         }
-        const menuStyle = await menu.evaluate(element => {
-          const style = getComputedStyle(element);
-          return { background: style.backgroundColor, shadow: style.boxShadow };
-        });
-        if (menuStyle.background === 'rgba(0, 0, 0, 0)') findings.push('a menu opened with no surface background');
-        if (menuStyle.shadow === 'none') findings.push('a menu opened with no elevation');
+        // Named popup that stayed hidden, including one already expanded. An opener
+        // that names nothing keeps today's rule: a menu or listbox that does not
+        // show fails, and so does an opener that already said expanded.
+        if (outcome.kind === 'hidden' || expanded || popup === 'true' || popup === 'listbox') findings.push('a menu popup is not shown');
         await frame.locator('body').press('Escape');
-        try { await menu.waitFor({ state: 'detached', timeout: 1000 }); }
-        catch { /* Removed or not, the next page load reclaims the frame. */ }
       }
       assert(findings.length === 0, `${where}: ${findings.join('; ')}`);
       loads++;

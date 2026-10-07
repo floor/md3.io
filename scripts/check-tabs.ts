@@ -341,21 +341,107 @@ const hasMenuSurfaceThatCouldOpen = () => {
   return visit(document.body);
 };
 
-// Give a newly mounted page the same chance to finish its initial render on
-// either side, then treat a menu as open only once its painted surface shows.
+// True when some opener already shows the popup it controls. A menu that is
+// still settling is not yet shown; the caller waits for that surface. The
+// read stays inside this function: the page evaluates the function alone.
+const hasShownControlledPopup = () => {
+  const read = (opener: Element): boolean | null => {
+    const isVisible = (element: Element) => {
+      let current: Element | null = element;
+      while (current) {
+        const style = getComputedStyle(current);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+        if (style.display !== 'contents' && current.getClientRects().length === 0) return false;
+        const root = current.getRootNode();
+        current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+      }
+      return true;
+    };
+    const menuSettled = (element: Element) => {
+      if (!element.classList.contains('mtrl-menu') || !isVisible(element)) return false;
+      const rect = element.getBoundingClientRect();
+      return rect.height > 0 && element.getAnimations().every(animation => animation.playState !== 'running');
+    };
+    const id = opener.getAttribute('aria-controls');
+    const root = opener.getRootNode();
+    const named = id
+      ? ((root instanceof Document || root instanceof ShadowRoot) ? root.getElementById(id) : null) ?? opener.ownerDocument.getElementById(id)
+      : null;
+    if (named?.classList.contains('mtrl-menu')) return menuSettled(named);
+    if (named) return isVisible(named);
+    const visit = (node: Element): boolean => {
+      if (menuSettled(node)) return true;
+      if (node.shadowRoot) for (const child of node.shadowRoot.children) if (visit(child)) return true;
+      for (const child of node.children) if (visit(child)) return true;
+      return false;
+    };
+    return visit(opener.ownerDocument.body) ? true : null;
+  };
+  let open = false;
+  const walk = (node: Element) => {
+    if (node.getAttribute('aria-haspopup') && node.getAttribute('aria-haspopup') !== 'dialog' && read(node) === true) open = true;
+    if (node.shadowRoot) [...node.shadowRoot.children].forEach(walk);
+    [...node.children].forEach(walk);
+  };
+  walk(document.body);
+  return open;
+};
+
+// The open state once the frame has painted. A named popup that is already
+// shown counts, including one that is not a menu. A menu surface that can
+// still open is given time to finish. Otherwise the page loaded closed.
 const settledMenuState = async (target: import('playwright').Page | import('playwright').Frame): Promise<boolean> => {
   await target.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  if (await target.evaluate(hasShownControlledPopup)) return true;
   if (!await target.evaluate(hasMenuSurfaceThatCouldOpen)) return false;
   return target.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
     .then(() => true)
     .catch(() => false);
 };
 
-// After a trigger click the surface may not be in the page yet: wait for it.
-const menuShownAfterClick = (target: import('playwright').Page | import('playwright').Frame): Promise<boolean> =>
-  target.waitForFunction(hasVisibleMenu, undefined, { timeout: 2000 })
-    .then(() => true)
-    .catch(() => false);
+// After a click, the popup is the one that opener controls.
+const popupShownAfterClick = (opener: import('playwright').Locator): Promise<boolean> =>
+  opener.evaluate(button => new Promise<boolean>(resolve => {
+    const read = (opener: Element): boolean | null => {
+      const isVisible = (element: Element) => {
+        let current: Element | null = element;
+        while (current) {
+          const style = getComputedStyle(current);
+          if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+          if (style.display !== 'contents' && current.getClientRects().length === 0) return false;
+          const root = current.getRootNode();
+          current = current.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+        }
+        return true;
+      };
+      const menuSettled = (element: Element) => {
+        if (!element.classList.contains('mtrl-menu') || !isVisible(element)) return false;
+        const rect = element.getBoundingClientRect();
+        return rect.height > 0 && element.getAnimations().every(animation => animation.playState !== 'running');
+      };
+      const id = opener.getAttribute('aria-controls');
+      const root = opener.getRootNode();
+      const named = id
+        ? ((root instanceof Document || root instanceof ShadowRoot) ? root.getElementById(id) : null) ?? opener.ownerDocument.getElementById(id)
+        : null;
+      if (named?.classList.contains('mtrl-menu')) return menuSettled(named);
+      if (named) return isVisible(named);
+      const visit = (node: Element): boolean => {
+        if (menuSettled(node)) return true;
+        if (node.shadowRoot) for (const child of node.shadowRoot.children) if (visit(child)) return true;
+        for (const child of node.children) if (visit(child)) return true;
+        return false;
+      };
+      return visit(opener.ownerDocument.body) ? true : null;
+    };
+    const start = performance.now();
+    const tick = () => {
+      if (read(button) === true) return resolve(true);
+      if (performance.now() - start > 2000) return resolve(false);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  })).catch(() => false);
 
 // --- Generate and bundle every tab ---
 const targetSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
@@ -586,11 +672,35 @@ try {
             // element that says it opens a popup is the one a user would press.
             const tabMore = page.locator('[aria-haspopup="menu"], [aria-haspopup="true"], [aria-haspopup="listbox"], [aria-label="More options"]');
             // The trigger is a toggle and the preview page is shared by the six
-            // tabs: click it only while its menu is closed.
-            if (!await previewFrame.evaluate(hasVisibleMenu)) await previewMore.first().click().catch(() => {});
-            await tabMore.first().click().catch(() => {});
-            const previewMenuOpened = await menuShownAfterClick(previewFrame);
-            const tabMenuOpened = await menuShownAfterClick(page);
+            // tabs. An opener that already says expanded is not clicked, and one
+            // whose popup is already shown is not clicked again.
+            const clickUnlessShown = async (opener: import('playwright').Locator) => {
+              if ((await opener.count()) === 0) return;
+              const first = opener.first();
+              if ((await first.getAttribute('aria-expanded')) === 'true') return;
+              const shown = await first.evaluate(button => {
+                const id = button.getAttribute('aria-controls');
+                const root = button.getRootNode();
+                const named = id
+                  ? ((root instanceof Document || root instanceof ShadowRoot) ? root.getElementById(id) : null) ?? button.ownerDocument.getElementById(id)
+                  : null;
+                if (!named) return false;
+                let current: Element | null = named;
+                while (current) {
+                  const style = getComputedStyle(current);
+                  if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+                  if (style.display !== 'contents' && current.getClientRects().length === 0) return false;
+                  const parent = current.getRootNode();
+                  current = current.parentElement ?? (parent instanceof ShadowRoot ? parent.host : null);
+                }
+                return true;
+              });
+              if (!shown) await first.click().catch(() => {});
+            };
+            await clickUnlessShown(previewMore);
+            await clickUnlessShown(tabMore);
+            const previewMenuOpened = (await previewMore.count()) > 0 && await popupShownAfterClick(previewMore.first());
+            const tabMenuOpened = (await tabMore.count()) > 0 && await popupShownAfterClick(tabMore.first());
             if (!previewMenuOpened || !tabMenuOpened) {
               differences.push(`${slug} ${scenarioId} ${tab}: menu surface after opening differs (preview ${previewMenuOpened ? 'shown' : 'not shown'}, tab ${tabMenuOpened ? 'shown' : 'not shown'})`);
               continue;
