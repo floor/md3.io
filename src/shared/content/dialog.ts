@@ -74,7 +74,7 @@ export const dialogComponent = {
   scenarios: dialogScenarios,
   controls: [
     ...section('Appearance', [choose('size', 'Size', ['small', 'medium', 'large', 'fullwidth', 'fullscreen'], 'small', 'select'), choose('animation', 'Animation', ['scale', 'slide-up', 'slide-down', 'fade'], 'scale', 'select'), toggle('divider', 'Dividers')]),
-    ...section('Content', [dialogSetControl, text('title', 'Title', 'Save your changes?'), text('subtitle', 'Subtitle', ''), text('content', 'Body', 'Keep your changes before leaving this view.'), toggle('actions', 'Show actions', true), choose('footerAlignment', 'Action alignment', ['right', 'left', 'center', 'space-between'], 'right', 'select')]),
+    ...section('Content', [dialogSetControl, { ...text('title', 'Title', 'Save your changes?'), enabledWhen: 'dialogContentDefault' }, { ...text('subtitle', 'Subtitle', ''), enabledWhen: 'dialogContentDefault' }, { ...text('content', 'Body', 'Keep your changes before leaving this view.'), enabledWhen: 'dialogContentDefault' }, toggle('actions', 'Show actions', true), choose('footerAlignment', 'Action alignment', ['right', 'left', 'center', 'space-between'], 'right', 'select')]),
     ...section('Behavior', [toggle('open', 'Open'), toggle('closeButton', 'Close button', true), toggle('closeOnOverlayClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
   ],
   config: (state: ComponentState): DialogConfig => {

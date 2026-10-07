@@ -216,6 +216,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   if (slug === 'side-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
   // A named card fixes its words the same way: the title, subtitle and body controls are for the default's own.
   if (slug === 'card') state.cardContentDefault = !state.cardSet || state.cardSet === 'default';
+  // So does a named dialog: its title, subtitle and body controls are for the default's own.
+  if (slug === 'dialog') state.dialogContentDefault = !state.dialogSet || state.dialogSet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
