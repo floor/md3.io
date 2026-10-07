@@ -484,10 +484,8 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
   const shown = component.config(state) as Record<string, unknown>;
-  // The preview's twenty-four photos would bury the code: three show the shape.
-  const slides = slug === 'carousel' ? (shown.slides as unknown[]) : [];
-  const config = JSON.stringify(slug === 'carousel' ? { ...shown, slides: slides.slice(0, 3) } : shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
-    .replace(/(\n  slides: \[)/, slides.length > 3 ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1');
+  // The Vanilla snippet lists every slide the preview and the other tabs list.
+  const config = JSON.stringify(shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   let setup = '';
   if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
