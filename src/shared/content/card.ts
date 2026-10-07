@@ -86,7 +86,7 @@ const cardScenarios: readonly Scenario[] = [
   },
   {
     id: 'showtime-tickets', name: 'Showtime tickets', source: 'https://m3.material.io/components/cards/guidelines',
-    description: "Choosing which of tonight's shows to get tickets for.",
+    description: "See tonight's shows, with Get tickets at the end.",
     options: { cardSet: 'showtime-tickets', variant: 'outlined', media: false, actions: true },
   },
   {
