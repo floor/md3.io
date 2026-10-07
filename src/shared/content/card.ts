@@ -122,8 +122,10 @@ export const cardComponent = {
         ...(named.body ? { content: { text: named.body } } : {}),
         // Buy tickets sits at the start of the figure's action row. The factory's
         // buttons path aligns end unless `actions.align` says otherwise
-        // (material/src/components/card/config.ts). Showtime keeps that end default.
-        ...(state.actions && named.buttons ? { buttons: named.buttons, ...(string(state, 'cardSet') === 'concert-tour' ? { actions: { align: 'start' as const } } : {}) } : {}),
+        // (material/src/components/card/config.ts). A named card whose stage keeps
+        // that end says so, and the element tabs state the gap: the element has no
+        // attribute for the side. The default card does not set this key.
+        ...(state.actions && named.buttons ? { buttons: named.buttons, actions: { align: (string(state, 'cardSet') === 'concert-tour' ? 'start' : 'end') as 'start' | 'end' } } : {}),
       };
     }
     return {

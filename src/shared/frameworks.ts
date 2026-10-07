@@ -569,7 +569,10 @@ function plan(meta: ElementMeta, config: Config): Plan {
     // A key the element does not take is reported whatever its value, false too (the rail's `ripple`).
     if (used.has(key) || ['prefix', 'class', 'ariaLabel'].includes(key) || !(isSet(value) || (key in (meta.keys ?? {}) && value !== undefined))) continue;
     // A nested object some of whose keys are mapped: the others by their path.
-    const nested = [...used].some(path => path.startsWith(`${key}.`));
+    // A path the element's meta names (`actions.align`) counts, so a value it does
+    // not take is reported as that path rather than as the parent object.
+    const namedHere = Object.keys(meta.keys ?? {}).some(path => path.startsWith(`${key}.`) && read(config, path) !== undefined);
+    const nested = namedHere || [...used].some(path => path.startsWith(`${key}.`));
     if (nested && isRecord(value)) {
       for (const [inner, innerValue] of Object.entries(value)) {
         if (!used.has(`${key}.${inner}`) && isSet(innerValue)) omitted.push(`${key}.${inner}`);
