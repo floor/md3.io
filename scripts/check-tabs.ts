@@ -13,7 +13,6 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
-import { currentCheckboxChildren } from '../src/shared/content/checkbox';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -165,30 +164,57 @@ function isRootClass(className: string): boolean {
 }
 
 function getStatedGaps(code: string): string[] {
-  const match = /Not yet exposed by the element:\s*([^.\n]+)/.exec(code);
+  const match = /Not yet exposed by the element:\s*([^\n]+)/.exec(code);
   if (!match) return [];
-  return match[1].split(',').map(s => s.trim().toLowerCase());
+  // Paths contain dots (`media.aspectRatio`). The sentence ends at the last period.
+  const body = match[1].replace(/\s*-->.*/, '').replace(/\.\s*$/, '').trim();
+  return body.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 }
 
 function matchesStatedGap(missingClass: string, statedGaps: string[]): boolean {
   const stripped = missingClass.replace(/^mtrl-/, '').replace(/-/g, '').toLowerCase();
   return statedGaps.some(gap => {
-    const norm = gap.replace(/-/g, '').toLowerCase();
-    return norm === stripped;
+    const names = new Set<string>([gap.replace(/-/g, '').toLowerCase()]);
+    // A dotted path used to be read only up to its first dot, which is what let
+    // `media.aspectRatio` excuse `mtrl-media`. Each segment keeps that.
+    for (const part of gap.split('.')) names.add(part.replace(/\[\]/g, '').replace(/-/g, '').toLowerCase());
+    return names.has(stripped);
   });
 }
 
-// Text carried by element options which framework tabs can explicitly say they do not expose.
-// `undefined` means that the option affects no visible text, and therefore excuses nothing.
-const STATED_GAP_TEXT: Record<string, (slug: string, state: Parameters<typeof currentCheckboxChildren>[0]) => string[] | undefined> = {
-  // A checkbox family renders one child label for every child option.
-  children: (slug, state) => slug === 'checkbox'
-    ? currentCheckboxChildren(state).map(child => child.label)
-    : undefined,
-};
+/** String leaves of a config value: the words a preview can show for that value. */
+function stringsIn(value: unknown): string[] {
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : [];
+  if (typeof value === 'number') return [String(value)];
+  if (Array.isArray(value)) return value.flatMap(stringsIn);
+  if (value && typeof value === 'object') return Object.values(value).flatMap(stringsIn);
+  return [];
+}
 
-function textAllowedByStatedGaps(slug: string, state: Parameters<typeof currentCheckboxChildren>[0], statedGaps: string[]): string[] {
-  return statedGaps.flatMap(gap => STATED_GAP_TEXT[gap]?.(slug, state) ?? []);
+/** Config strings at a stated path (`children`, `media.aspectRatio`, `suggestions[].supportingText`). */
+function stringsAtPath(config: unknown, path: string): string[] {
+  const segments = path.split('.').map(part => part.trim()).filter(Boolean);
+  const step = (value: unknown, index: number): string[] => {
+    if (index >= segments.length) return stringsIn(value);
+    const segment = segments[index]!;
+    const array = segment.endsWith('[]');
+    const key = (array ? segment.slice(0, -2) : segment).toLowerCase();
+    if (Array.isArray(value)) return value.flatMap(item => step(item, index));
+    if (!value || typeof value !== 'object') return [];
+    return Object.entries(value).flatMap(([name, child]) => {
+      if (name.toLowerCase() !== key) return [];
+      if (!array) return step(child, index + 1);
+      const items = Array.isArray(child) ? child : [child];
+      return items.flatMap(item => step(item, index + 1));
+    });
+  };
+  return step(config, 0);
+}
+
+// A tab's `Not yet exposed by the element: <path>.` excuses only the preview text
+// that comes from the config values at that path.
+function textAllowedByStatedGaps(config: unknown, statedGaps: string[]): string[] {
+  return statedGaps.flatMap(gap => stringsAtPath(config, gap));
 }
 
 function multisetDifference(left: string[], right: string[]): string[] {
@@ -202,8 +228,15 @@ function multisetDifference(left: string[], right: string[]): string[] {
   });
 }
 
+// One unit is one element's own words: its direct text nodes and the words inside
+// inline emphasis (`strong`, `em`, `b`, `i`, `mark`, …) joined into a single string.
+// A child that is not emphasis — another suggestion, a supporting line, a second
+// control — stays its own unit. The two units are compared as a multiset: two words
+// in two elements stay two entries, so one missing is still a difference. Document
+// order is not compared; the side sheet's opener and title already disagree on it.
 const collectVisibleText = (selectors: string[]) => {
   const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const emphasis = new Set(['strong', 'em', 'b', 'i', 'mark', 'small', 'abbr', 'sub', 'sup', 'u', 's', 'code']);
   const isPreviewOnly = (element: Element) => selectors.some(selector => element.matches(selector));
   const isVisible = (start: Element) => {
     let element: Element | null = start;
@@ -222,17 +255,17 @@ const collectVisibleText = (selectors: string[]) => {
     range.selectNode(node);
     return range.getClientRects().length > 0;
   };
+  const ownWords = (element: Element): Text[] => {
+    const nodes: Text[] = [];
+    const take = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) { nodes.push(node as Text); return; }
+      if (node instanceof Element && emphasis.has(node.localName)) node.childNodes.forEach(take);
+    };
+    element.childNodes.forEach(take);
+    return nodes;
+  };
   const text: string[] = [];
   const visit = (node: Node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const textNode = node as Text;
-      const parent = textNode.parentElement;
-      // Split buttons render their light-DOM primary label through a shadow-tree label.
-      if (!parent || (parent.localName === 'm-split-button' && parent.shadowRoot) || parent.closest('script, style') || !isVisible(parent) || !textHasRect(textNode)) return;
-      const value = normalise(node.textContent ?? '');
-      if (value) text.push(value);
-      return;
-    }
     if (!(node instanceof Element) || node.matches('script, style') || isPreviewOnly(node)) return;
     if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && isVisible(node)) {
       if (node instanceof HTMLInputElement) {
@@ -247,8 +280,15 @@ const collectVisibleText = (selectors: string[]) => {
       // Textarea fallback content is its default value, not a second visible label.
       return;
     }
-    node.childNodes.forEach(visit);
-    node.shadowRoot?.childNodes.forEach(visit);
+    // Split buttons render their light-DOM primary label through a shadow-tree label.
+    const skipOwn = node.localName === 'm-split-button' && !!node.shadowRoot;
+    if (!skipOwn && isVisible(node)) {
+      const nodes = ownWords(node);
+      const value = normalise(nodes.map(part => part.textContent ?? '').join(''));
+      if (value && nodes.some(textHasRect)) text.push(value);
+    }
+    for (const child of node.children) if (!emphasis.has(child.localName)) visit(child);
+    node.shadowRoot && [...node.shadowRoot.children].forEach(visit);
   };
   visit(document.body);
   return text;
@@ -273,6 +313,15 @@ const hasVisibleMenu = () => {
       const rect = node.getBoundingClientRect();
       if (rect.height > 0 && node.getAnimations().every(animation => animation.playState !== 'running')) return true;
     }
+    if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
+    return [...node.children].some(visit);
+  };
+  return visit(document.body);
+};
+
+const hasOpenDialog = () => {
+  const visit = (node: Element): boolean => {
+    if (node instanceof HTMLDialogElement && node.open) return true;
     if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
     return [...node.children].some(visit);
   };
@@ -382,7 +431,7 @@ for (const slug of targetSlugs) {
         js,
         css,
         statedGaps: getStatedGaps(code),
-        allowedMissingText: textAllowedByStatedGaps(slug, state, getStatedGaps(code)),
+        allowedMissingText: textAllowedByStatedGaps(config, getStatedGaps(code)),
       };
     }
   }
@@ -517,12 +566,25 @@ try {
           continue;
         }
 
+        // A dialog popup is not a menu. Compare the dialog's own open state and
+        // leave its words to the text comparison below. Only a trigger that says
+        // its popup is a dialog: a side sheet's own dialog is not that trigger.
+        const dialogPopup = '[aria-haspopup="dialog"]';
+        if ((await previewFrame.locator(dialogPopup).count()) > 0 || (await page.locator(dialogPopup).count()) > 0) {
+          const previewDialogOpen = await previewFrame.evaluate(hasOpenDialog);
+          const tabDialogOpen = await page.evaluate(hasOpenDialog);
+          if (previewDialogOpen !== tabDialogOpen) {
+            differences.push(`${slug} ${scenarioId} ${tab}: dialog open state differs (preview ${previewDialogOpen ? 'open' : 'closed'}, tab ${tabDialogOpen ? 'open' : 'closed'})`);
+          }
+        }
+
         if (!previewMenuOnLoad) {
-          const previewMore = previewFrame.locator('button[aria-haspopup]');
+          const menuPopup = 'button[aria-haspopup="menu"], button[aria-haspopup="true"], button[aria-haspopup="listbox"]';
+          const previewMore = previewFrame.locator(menuPopup);
           if ((await previewMore.count()) > 0) {
             // An element tab's trigger is a host (m-button), not a button: the
             // element that says it opens a popup is the one a user would press.
-            const tabMore = page.locator('[aria-haspopup], [aria-label="More options"]');
+            const tabMore = page.locator('[aria-haspopup="menu"], [aria-haspopup="true"], [aria-haspopup="listbox"], [aria-label="More options"]');
             // The trigger is a toggle and the preview page is shared by the six
             // tabs: click it only while its menu is closed.
             if (!await previewFrame.evaluate(hasVisibleMenu)) await previewMore.first().click().catch(() => {});
