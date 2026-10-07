@@ -48,6 +48,7 @@ import { bottomAppBarComponent } from './content/bottom-app-bar';
 import { drawerActiveOptions, drawerComponent } from './content/drawer';
 import { menuComponent, menuSelectedId } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
+import { barActiveOptions, navigationBarComponent } from './content/navigation-bar';
 import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
 import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
@@ -99,6 +100,7 @@ export const components = {
   datepicker: datepickerComponent,
   timepicker: timePickerComponent,
   'navigation-rail': navigationRailComponent,
+  'navigation-bar': navigationBarComponent,
   drawer: drawerComponent,
   tabs: tabsComponent,
   menu: menuComponent,
@@ -143,6 +145,10 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   }
   if (slug === 'navigation-rail') {
     const allowed = railActiveOptions(state);
+    if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+  }
+  if (slug === 'navigation-bar') {
+    const allowed = barActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
   }
   if (slug === 'drawer') {
@@ -390,6 +396,7 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
       cleanup = '// trigger.destroy();\n';
     }
   }
+  if (slug === 'navigation-bar') after = `${component.variable}.on('select', event => console.log(event.id));\n`;
   if (slug === 'navigation-rail') {
     const header = railHeader(state);
     if (header) {

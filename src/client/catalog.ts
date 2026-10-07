@@ -31,6 +31,7 @@ const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
   datepicker: () => import('./catalog/datepicker'),
   timepicker: () => import('./catalog/timepicker'),
   'navigation-rail': () => import('./catalog/navigation-rail'),
+  'navigation-bar': () => import('./catalog/navigation-bar'),
   drawer: () => import('./catalog/drawer'),
   tabs: () => import('./catalog/tabs'),
   menu: () => import('./catalog/menu'),

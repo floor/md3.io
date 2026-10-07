@@ -13,6 +13,7 @@ import createDialog from 'material/components/dialog';
 import createBottomSheet from 'material/components/bottom-sheet';
 import createSideSheet from 'material/components/side-sheet';
 import createNavigationRail from 'material/components/navigation-rail';
+import createNavigationBar from 'material/components/navigation-bar';
 import createDrawer from 'material/components/drawer';
 import createTabs from 'material/components/tabs';
 import createMenu from 'material/components/menu';
@@ -204,6 +205,14 @@ function create(state: ComponentState) {
       control.on('expand', () => { sync({ expanded: true }); if (trigger) trigger.element.hidden = true; message('Navigation expanded'); });
       control.on('collapse', () => { sync({ expanded: false }); if (trigger) trigger.element.hidden = false; message('Navigation collapsed'); });
       return { element: host, destroy: () => { trigger?.destroy(); header?.destroy(); control.destroy(); } };
+    }
+    case 'navigation-bar': {
+      const control = createNavigationBar(components['navigation-bar'].config(state));
+      const host = document.createElement('div');
+      host.className = 'navigation-demo navigation-demo--bar';
+      host.append(control.element);
+      control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
+      return { element: host, destroy: () => control.destroy() };
     }
     case 'drawer': {
       const control = createDrawer(components.drawer.config(state));

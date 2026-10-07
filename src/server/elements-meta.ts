@@ -32,6 +32,11 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
     name: 'navigation-rail-item', declaration: 'navigationRailItem', from: 'items', text: 'label', keys: { id: 'value' },
     selected: { key: 'active', equals: true, value: 'id' },
   },
+  'navigation-bar': {
+    name: 'navigation-bar-item', declaration: 'navigationBarItem', from: 'items', text: 'label',
+    keys: { id: 'value', activeIcon: 'selected-icon' },
+    selected: { key: 'active', equals: true, value: 'id' },
+  },
   drawer: {
     // A section headline's text is its `sectionLabel`.
     name: 'drawer-item', declaration: 'drawerItem', from: 'items', text: ['label', 'sectionLabel'], keys: { id: 'value' },
@@ -69,6 +74,7 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     initialSelection: { model: true },
   },
   'navigation-rail': { showToggle: { attribute: 'no-toggle', values: { false: true }, ignore: [true] }, ripple: { ignore: [true] } },
+  'navigation-bar': { ripple: { attribute: 'no-ripple', values: { false: true }, ignore: [true] } },
   drawer: {
     variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
     // Not dismissible: neither the scrim nor Escape closes it.
