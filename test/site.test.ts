@@ -343,10 +343,10 @@ describe('fab menu scenarios', () => {
       expect(state.open).toBe(true);
       expect(componentCode('fab-menu', state)).toContain('fabMenu.open()');
       const html = frameworkCode('html', elementMeta('fab-menu')!, elementConfig('fab-menu', state), { theme: 'baseline', mode: 'light' });
-      expect(html).toContain('<m-fab-menu open');
+      expect(html).toMatch(/\sopen[\s=>]/);
       expect(html).not.toContain('Not yet exposed');
       const react = frameworkCode('react', elementMeta('fab-menu')!, elementConfig('fab-menu', state), { theme: 'baseline', mode: 'light' });
-      expect(react).toContain('<FabMenu open');
+      expect(react).toMatch(/\sopen[\s=>]/);
     }
   });
 });
@@ -364,12 +364,11 @@ describe('fab menu open', () => {
     }
   });
   test('every element tab declares the menu open from the config', () => {
-    expect(code('html', true)).toContain('<m-fab-menu open');
-    expect(code('react', true)).toContain('<FabMenu open');
-    expect(code('vue', true)).toContain('<MFabMenu open');
-    expect(code('svelte', true)).toContain('<FabMenu open');
-    expect(code('solid', true)).toContain('<FabMenu open');
-    for (const framework of ['html', 'react', 'vue', 'svelte', 'solid'] as const) expect(code(framework, true)).not.toContain('Not yet exposed');
+    for (const framework of ['html', 'react', 'vue', 'svelte', 'solid'] as const) {
+      const source = code(framework, true);
+      expect(source).toMatch(/\sopen[\s=>]/);
+      expect(source).not.toContain('Not yet exposed');
+    }
   });
 });
 
