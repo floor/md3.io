@@ -47,6 +47,11 @@ export interface ComponentDefinition {
   styles: readonly string[];
   /** Styles only the preview adds beside the component's own (the carousel's remote). */
   previewStyles?: readonly string[];
+  /**
+   * Selectors of playground chrome beside the component. The tab check leaves
+   * roots and text inside them out of the preview. Anything not named still counts.
+   */
+  previewOnly?: readonly string[];
   scenarios: readonly Scenario[];
   controls: Control[];
   config: (state: ComponentState) => unknown;

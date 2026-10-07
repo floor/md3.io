@@ -202,8 +202,9 @@ function multisetDifference(left: string[], right: string[]): string[] {
   });
 }
 
-const collectVisibleText = () => {
+const collectVisibleText = (selectors: string[]) => {
   const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const isPreviewOnly = (element: Element) => selectors.some(selector => element.matches(selector));
   const isVisible = (start: Element) => {
     let element: Element | null = start;
     while (element) {
@@ -232,7 +233,7 @@ const collectVisibleText = () => {
       if (value) text.push(value);
       return;
     }
-    if (!(node instanceof Element) || node.matches('script, style')) return;
+    if (!(node instanceof Element) || node.matches('script, style') || isPreviewOnly(node)) return;
     if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && isVisible(node)) {
       if (node instanceof HTMLInputElement) {
         const ariaLabel = normalise(node.getAttribute('aria-label') ?? '');
@@ -524,18 +525,23 @@ try {
         }
 
         // Collect preview contents after its menu state has been settled.
-        const previewClasses = await previewFrame.evaluate(() => {
+        // Declared preview-only chrome (a component's `previewOnly` selectors)
+        // is the playground's, not the copied code's, so its roots and text do not count.
+        const component = components[slug];
+        const previewOnly = 'previewOnly' in component && component.previewOnly ? [...component.previewOnly] : [];
+        const previewClasses = await previewFrame.evaluate((selectors: string[]) => {
           const found = new Set<string>();
           const visit = (node: Element) => {
+            if (selectors.some(selector => node.matches(selector))) return;
             for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
           visit(document.body);
           return [...found];
-        });
+        }, previewOnly);
         const previewRoots = previewClasses.filter(isRootClass);
-        const previewText = await previewFrame.evaluate(collectVisibleText);
+        const previewText = await previewFrame.evaluate(collectVisibleText, previewOnly);
 
         // Collect root classes from mounted tab
         const tabClasses = await page.evaluate(() => {
@@ -549,7 +555,7 @@ try {
           return [...found];
         });
         const tabRoots = tabClasses.filter(isRootClass);
-        const tabText = await page.evaluate(collectVisibleText);
+        const tabText = await page.evaluate(collectVisibleText, [] as string[]);
 
         let missing = previewRoots.filter(c => !tabRoots.includes(c));
         let extra = tabRoots.filter(c => !previewRoots.includes(c));
