@@ -224,7 +224,11 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.optionSetDefault = !state.optionSet || state.optionSet === 'default';
     if (state.disableExpress && state.value === 'express') state.value = 'standard';
   }
-  if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
+  if (slug === 'select') {
+    // A named field fixes its label, value and options: those controls are for the fruit field.
+    state.selectContentDefault = !state.selectSet || state.selectSet === 'default';
+    if (state.disableBanana && state.value === 'banana') state.value = 'apple';
+  }
   state.theme = themes.find(theme => theme === raw.theme) ?? 'baseline';
   state.mode = raw.mode === 'dark' ? 'dark' : 'light';
   return state;
