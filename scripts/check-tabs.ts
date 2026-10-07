@@ -238,11 +238,20 @@ const collectVisibleText = (selectors: string[]) => {
   const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
   const emphasis = new Set(['strong', 'em', 'b', 'i', 'mark', 'small', 'abbr', 'sub', 'sup', 'u', 's', 'code']);
   const isPreviewOnly = (element: Element) => selectors.some(selector => element.matches(selector));
+  const opacityResting = (element: Element) => !element.getAnimations().some(animation => {
+    if (animation.playState !== 'running') return false;
+    const effect = animation.effect;
+    if (!(effect instanceof KeyframeEffect)) return false;
+    return effect.getKeyframes().some(frame => Object.prototype.hasOwnProperty.call(frame, 'opacity'));
+  });
   const isVisible = (start: Element) => {
     let element: Element | null = start;
     while (element) {
       const style = getComputedStyle(element);
       if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') return false;
+      // Opacity 0 is hidden, on this element or an ancestor. A transition that
+      // is still running is not that rest state: the check waits it out first.
+      if (Number(style.opacity) === 0 && opacityResting(element)) return false;
       // A contents element has no box of its own, but it does not hide its children.
       if (style.display !== 'contents' && element.getClientRects().length === 0) return false;
       const root = element.getRootNode();
@@ -398,6 +407,27 @@ const settledMenuState = async (target: import('playwright').Page | import('play
     .then(() => true)
     .catch(() => false);
 };
+
+// An entrance that starts at opacity 0 has to finish before text and roots
+// are read. A resting opacity of 0 has no running animation, so it stays hidden.
+const opacityMotionSettled = () => {
+  const fading = (animation: Animation) => {
+    if (animation.playState !== 'running') return false;
+    const effect = animation.effect;
+    if (!(effect instanceof KeyframeEffect)) return false;
+    return effect.getKeyframes().some(frame => Object.prototype.hasOwnProperty.call(frame, 'opacity'));
+  };
+  const visit = (node: Element): boolean => {
+    if (node.getAnimations().some(fading)) return false;
+    if (node.shadowRoot) for (const child of node.shadowRoot.children) if (!visit(child)) return false;
+    for (const child of node.children) if (!visit(child)) return false;
+    return true;
+  };
+  return visit(document.body);
+};
+
+const waitForOpacity = (target: import('playwright').Page | import('playwright').Frame) =>
+  target.waitForFunction(opacityMotionSettled, undefined, { timeout: 2000 }).catch(() => {});
 
 // After a click, the popup is the one that opener controls.
 const popupShownAfterClick = (opener: import('playwright').Locator): Promise<boolean> =>
@@ -711,13 +741,32 @@ try {
         // Collect preview contents after its menu state has been settled.
         // Declared preview-only chrome (a component's `previewOnly` selectors)
         // is the playground's, not the copied code's, so its roots and text do not count.
+        // Opacity 0 hides a root the same way it hides a word, once any opacity
+        // transition has finished. The same rule runs on both sides.
+        await waitForOpacity(previewFrame);
+        await waitForOpacity(page);
         const component = components[slug];
         const previewOnly = 'previewOnly' in component && component.previewOnly ? [...component.previewOnly] : [];
         const previewClasses = await previewFrame.evaluate((selectors: string[]) => {
           const found = new Set<string>();
+          const hiddenByOpacity = (start: Element) => {
+            let element: Element | null = start;
+            while (element) {
+              const style = getComputedStyle(element);
+              const fading = element.getAnimations().some(animation => {
+                if (animation.playState !== 'running') return false;
+                const effect = animation.effect;
+                return effect instanceof KeyframeEffect && effect.getKeyframes().some(frame => Object.prototype.hasOwnProperty.call(frame, 'opacity'));
+              });
+              if (Number(style.opacity) === 0 && !fading) return true;
+              const root = element.getRootNode();
+              element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+            }
+            return false;
+          };
           const visit = (node: Element) => {
             if (selectors.some(selector => node.matches(selector))) return;
-            for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
+            if (!hiddenByOpacity(node)) for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
@@ -730,8 +779,23 @@ try {
         // Collect root classes from mounted tab
         const tabClasses = await page.evaluate(() => {
           const found = new Set<string>();
+          const hiddenByOpacity = (start: Element) => {
+            let element: Element | null = start;
+            while (element) {
+              const style = getComputedStyle(element);
+              const fading = element.getAnimations().some(animation => {
+                if (animation.playState !== 'running') return false;
+                const effect = animation.effect;
+                return effect instanceof KeyframeEffect && effect.getKeyframes().some(frame => Object.prototype.hasOwnProperty.call(frame, 'opacity'));
+              });
+              if (Number(style.opacity) === 0 && !fading) return true;
+              const root = element.getRootNode();
+              element = element.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+            }
+            return false;
+          };
           const visit = (node: Element) => {
-            for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
+            if (!hiddenByOpacity(node)) for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
