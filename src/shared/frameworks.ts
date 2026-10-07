@@ -261,7 +261,9 @@ const valueOf = (type: AttributeType, raw: unknown): string | number | true | un
   if (raw === undefined || raw === null || raw === '' || raw === false) return undefined;
   if (type === 'boolean') return raw ? true : undefined;
   if (type === 'number') return typeof raw === 'number' ? raw : Number(raw);
-  return String(raw);
+  // `true` on a string attribute is the attribute present and empty: a badge's dot.
+  // A count is not `true`, so it still stringifies. A boolean attribute is handled above.
+  return raw === true ? '' : String(raw);
 };
 
 /** A value written as it is: its type says how. */

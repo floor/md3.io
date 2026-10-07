@@ -173,6 +173,24 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   expect(code).not.toContain('MutationObserver');
 });
 
+test('a string attribute given true is present and empty', () => {
+  const html = frameworkCode('html', elementMeta('navigation-rail')!, {
+    ariaLabel: 'Mail',
+    items: [
+      { id: 'inbox', label: 'Inbox', icon: 'inbox', badge: 8, active: true },
+      { id: 'sent', label: 'Sent', icon: 'send', badge: '999+' },
+      { id: 'rooms', label: 'Rooms', icon: 'groups', badge: true },
+      { id: 'favorites', label: 'Favorites', icon: 'heart', disabled: true },
+    ],
+  }, { theme: 'baseline', mode: 'light' });
+  expect(html).toContain('badge="8"');
+  expect(html).toContain('badge="999+"');
+  expect(html).toContain('badge=""');
+  expect(html).not.toContain('badge="true"');
+  expect(html).toContain(' disabled>');
+  expect(html).not.toContain('disabled="true"');
+});
+
 describe('framework code for the overlay elements', () => {
   const code = (slug: Parameters<typeof initialComponentState>[0], framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', input: Record<string, unknown> = {}) => {
     const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...input });
