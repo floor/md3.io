@@ -26,6 +26,9 @@ export const componentIcons: Record<string, string> = {
   frontHand: symbols.frontHand,
   stop: symbols.stop,
   playCircle: symbols.playCircle,
+  shoppingCart: symbols.shoppingCart,
+  arrowUpward: symbols.arrowUpward,
+  flight: symbols.flight,
 };
 // The types and control helpers live in content/types.ts so the content modules can
 // import them without importing this registry; re-exported here for their consumers.

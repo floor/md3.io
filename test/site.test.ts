@@ -279,6 +279,41 @@ describe('fab scenario', () => {
   });
 });
 
+describe('extended fab scenarios', () => {
+  const apply = (id: string) => {
+    const scenario = components['extended-fab'].scenarios.find(item => item.id === id);
+    if (!scenario) throw new Error(`missing extended fab scenario ${id}`);
+    const state = normalizeComponentState('extended-fab', { ...initialComponentState('extended-fab'), ...scenario.options });
+    return components['extended-fab'].config(state);
+  };
+  test('the default pill still has its pencil and Compose', () => {
+    const config = components['extended-fab'].config(initialComponentState('extended-fab'));
+    expect(config.text).toBe('Compose');
+    expect(config.icon).toBe(symbols.edit);
+    expect(config.variant).toBe('primary-container');
+  });
+  test('each figure is the pill, and Save draft has no icon', () => {
+    expect(components['extended-fab'].scenarios.map(item => item.id)).toEqual(['compose', 'check-out', 'publish', 'new-task', 'find-flights', 'save-draft']);
+    expect(apply('compose').variant).toBe('tertiary-container');
+    expect(apply('compose').icon).toBe(symbols.edit);
+    expect(apply('check-out').text).toBe('Check out');
+    expect(apply('check-out').icon).toBe(symbols.shoppingCart);
+    expect(apply('check-out').variant).toBe('tertiary-container');
+    expect(apply('check-out').position).toBeUndefined();
+    expect(apply('publish').text).toBe('Publish');
+    expect(apply('publish').icon).toBe(symbols.arrowUpward);
+    expect(apply('new-task').text).toBe('New task');
+    expect(apply('new-task').icon).toBe(symbols.add);
+    expect(apply('find-flights').text).toBe('Find flights');
+    expect(apply('find-flights').icon).toBe(symbols.flight);
+    expect(apply('find-flights').variant).toBe('primary');
+    const draft = apply('save-draft');
+    expect(draft.text).toBe('Save draft');
+    expect(draft.icon).toBeUndefined();
+    expect(componentCode('extended-fab', normalizeComponentState('extended-fab', { ...initialComponentState('extended-fab'), icon: 'none', text: 'Save draft' }))).not.toContain('icon:');
+  });
+});
+
 describe('fab menu open', () => {
   const code = (framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', open: boolean) => {
     const config = { ...elementConfig('fab-menu', initialComponentState('fab-menu')), open };
