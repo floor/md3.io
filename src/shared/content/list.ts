@@ -39,14 +39,17 @@ const colorPicker: ListItem[] = [
 ];
 
 /**
- * Figure 10's cart: the two plants the figure shows of the four its subheader
- * counts, each in stock. Succulent's second line is cut in the figure; the
- * words on it are ours.
+ * Figure 10's cart: the subheader counts four. The crop ends after the second
+ * row, so Cactus and Succulent are the figure's (Succulent's second line is
+ * cut; the words on it are ours) and the next two are catalog plants of the
+ * same shape: a square photo, a name, "In stock", no price.
  */
 const plantCart: ListItem[] = [
   { kind: 'subheader', headline: '4 items in your cart' },
   { id: 'cactus', headline: 'Cactus', supportingText: 'In stock', leading: plantPhoto(530) },
   { id: 'succulent', headline: 'Succulent', supportingText: 'In stock', leading: plantPhoto(958) },
+  { id: 'moss', headline: 'Tropical moss', supportingText: 'In stock', leading: plantPhoto(803) },
+  { id: 'frangipani', headline: 'Frangipani', supportingText: 'In stock', leading: plantPhoto(106) },
 ];
 
 /** Figure 12's contacts: one line each, a photo apiece, nothing trailing. */
@@ -68,7 +71,8 @@ interface ListSet {
  * 2026), figures 17, 3, 10 and 12. `default` is not here: today's ideas list
  * stays exactly as it was. The senders and contacts are the same photos the
  * share sheet's contacts use; the cart's plants are the catalog's own
- * greenhouse photographs. See briefs/gaps.md.
+ * photographs (530 and 958 the figure's, 803 and 106 the two past its crop).
+ * See briefs/gaps.md.
  */
 const listSets: Record<string, ListSet> = {
   'inbox-threads': { name: 'Inbox threads', items: inboxThreads, ariaLabel: 'Inbox' },
