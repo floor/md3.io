@@ -73,6 +73,19 @@ import personSearch from '../../icons/person_search.svg' with { type: 'text' };
 import playlistAdd from '../../icons/playlist_add.svg' with { type: 'text' };
 import playlistPlay from '../../icons/playlist_play.svg' with { type: 'text' };
 import skipNext from '../../icons/skip_next.svg' with { type: 'text' };
+import arrowUpward from '../../icons/arrow_upward.svg' with { type: 'text' };
+import calendarToday from '../../icons/calendar_today.svg' with { type: 'text' };
+import chat from '../../icons/chat.svg' with { type: 'text' };
+import folderShared from '../../icons/folder_shared.svg' with { type: 'text' };
+import forest from '../../icons/forest.svg' with { type: 'text' };
+import landscape from '../../icons/landscape.svg' with { type: 'text' };
+import libraryMusic from '../../icons/library_music.svg' with { type: 'text' };
+import person from '../../icons/person.svg' with { type: 'text' };
+import pets from '../../icons/pets.svg' with { type: 'text' };
+import playCircle from '../../icons/play_circle.svg' with { type: 'text' };
+import radio from '../../icons/radio.svg' with { type: 'text' };
+import shoppingCart from '../../icons/shopping_cart.svg' with { type: 'text' };
+import stop from '../../icons/stop-fill.svg' with { type: 'text' };
 
 const trim = (svg: string) => svg.trim();
 export const symbols = {
@@ -154,6 +167,21 @@ export const symbols = {
   playlistAdd: trim(playlistAdd),
   playlistPlay: trim(playlistPlay),
   skipNext: trim(skipNext),
+  // The actions playground. `stop` is the filled square: the outlined file is a frame,
+  // and the timer figure is a solid square.
+  arrowUpward: trim(arrowUpward),
+  calendarToday: trim(calendarToday),
+  chat: trim(chat),
+  folderShared: trim(folderShared),
+  forest: trim(forest),
+  landscape: trim(landscape),
+  libraryMusic: trim(libraryMusic),
+  person: trim(person),
+  pets: trim(pets),
+  playCircle: trim(playCircle),
+  radio: trim(radio),
+  shoppingCart: trim(shoppingCart),
+  stop: trim(stop),
 };
 
 /** Each symbol's file in icons/, named as fonts.google.com/icons names the symbol (`-fill` when filled). */
@@ -236,6 +264,19 @@ const files: Record<keyof typeof symbols, string> = {
   playlistAdd: 'playlist_add',
   playlistPlay: 'playlist_play',
   skipNext: 'skip_next',
+  arrowUpward: 'arrow_upward',
+  calendarToday: 'calendar_today',
+  chat: 'chat',
+  folderShared: 'folder_shared',
+  forest: 'forest',
+  landscape: 'landscape',
+  libraryMusic: 'library_music',
+  person: 'person',
+  pets: 'pets',
+  playCircle: 'play_circle',
+  radio: 'radio',
+  shoppingCart: 'shopping_cart',
+  stop: 'stop-fill',
 };
 /** The icons/ file of a symbol's SVG (`edit`), when it is one of ours. */
 export const symbolFile = (svg: string): string | undefined => {

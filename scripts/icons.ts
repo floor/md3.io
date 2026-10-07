@@ -95,6 +95,20 @@ const names = [
   'playlist_add',
   'playlist_play',
   'skip_next',
+  // The actions playground (icon button, split button, extended FAB, FAB menu).
+  'arrow_upward',
+  'calendar_today',
+  'chat',
+  'folder_shared',
+  'forest',
+  'landscape',
+  'library_music',
+  'person',
+  'pets',
+  'play_circle',
+  'radio',
+  'shopping_cart',
+  'stop',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),
