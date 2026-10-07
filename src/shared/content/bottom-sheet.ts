@@ -98,7 +98,7 @@ const sheetSetControl: Control = {
 const bottomSheetScenarios: readonly Scenario[] = [
   {
     id: 'photo-sharing', name: 'Photo sharing', source: 'https://m3.material.io/components/bottom-sheets/guidelines',
-    description: 'Sharing a photo from the gallery: copy it, hand it to a contact, or send it through an app.',
+    description: 'Sharing a photo: copy it, or hand it to a contact.',
     options: { sheetSet: 'photo-sharing', variant: 'modal', dragHandle: true, initialState: 'expanded' },
   },
   {
@@ -108,7 +108,7 @@ const bottomSheetScenarios: readonly Scenario[] = [
   },
   {
     id: 'music-player', name: 'Music player', source: 'https://m3.material.io/components/bottom-sheets/guidelines',
-    description: 'Playback docked at the bottom edge while the library stays usable behind it.',
+    description: 'Playback docked at the bottom edge: Cassette Futurism, with pause and skip.',
     options: { sheetSet: 'music-player', variant: 'standard', dragHandle: false, initialState: 'partial', peekHeight: '64' },
   },
   {

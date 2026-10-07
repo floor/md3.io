@@ -82,17 +82,17 @@ const sheetSetControl: Control = {
 const sideSheetScenarios: readonly Scenario[] = [
   {
     id: 'photo-info', name: 'Photo info', source: 'https://m3.material.io/components/side-sheets/guidelines',
-    description: 'Inspecting a photo beside the gallery: its name and the albums it lives in.',
+    description: 'Inspecting a photo: its name, Festival concert, and the albums it lives in.',
     options: { sheetSet: 'photo-info', variant: 'standard', position: 'end', open: true },
   },
   {
     id: 'search-filters', name: 'Search filters', source: 'https://m3.material.io/components/side-sheets/guidelines',
-    description: 'Narrowing a search by label, the results dimmed behind the sheet.',
+    description: 'Filtering by label: Projects and Reminders checked.',
     options: { sheetSet: 'search-filters', variant: 'modal', position: 'end', open: true },
   },
   {
     id: 'appearance-settings', name: 'Appearance settings', source: 'https://m3.material.io/components/side-sheets/guidelines',
-    description: 'Choosing how dense the inbox reads, the change visible behind the sheet.',
+    description: 'Choosing a display density: Compact selected.',
     options: { sheetSet: 'appearance-settings', variant: 'standard', position: 'end', open: true },
   },
 ];
