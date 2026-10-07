@@ -1,6 +1,6 @@
 // The date picker's playground content: its named content sets and its registry entry.
 import type { DatePickerConfig } from 'material/components/datepicker';
-import { type ComponentState, bool, choose, date, disabled, section, string, text, toggle } from './types';
+import { type ComponentState, type Scenario, bool, choose, date, disabled, section, string, text, toggle } from './types';
 
 /**
  * A named date picker: the field the guidelines figure shows.
@@ -77,7 +77,7 @@ export const datepickerComponent = {
       description: 'A date of birth dialog titled Date of birth, showing Aug 18, 1979.',
       options: { dateSet: 'date-of-birth', variant: 'modal-input' },
     },
-  ],
+  ] as readonly Scenario[],
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['docked', 'modal', 'modal-input', 'fullscreen'], 'docked', 'select'), { ...choose('initialView', 'Initial view', ['day', 'month', 'year'], 'day'), ...gated }]),
     ...section('Content', [dateSetControl, { ...text('label', 'Label', 'Choose a date'), ...gated }, { ...date('value', 'Date', '2026-09-21'), ...gated }, { ...date('endDate', 'Range end', '2026-09-25'), enabledWhen: 'rangeEndEnabled' }, { ...choose('dateFormat', 'Date format', ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'], 'MM/DD/YYYY', 'select'), ...gated }]),

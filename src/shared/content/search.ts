@@ -1,7 +1,7 @@
 // The search's playground content: its named content sets and its registry entry.
 import type { SearchConfig, SearchSuggestion } from 'material/components/search';
 import { symbols } from '../icons';
-import { type ComponentState, bool, choose, disabled, pick, section, string, text, toggle } from './types';
+import { type ComponentState, type Scenario, bool, choose, disabled, pick, section, string, text, toggle } from './types';
 
 /**
  * A coloured disc with the figure's letter, or none. Not a photograph and not
@@ -98,7 +98,7 @@ export const searchComponent = {
       description: 'Peanut typed in an open search, with two suggestions and a recipe result.',
       options: { searchSet: 'recipes', initialState: 'view', viewMode: 'fullscreen' },
     },
-  ],
+  ] as readonly Scenario[],
   controls: [
     ...section('Appearance', [choose('variant', 'Style', ['contained', 'divided'], 'contained'), choose('initialState', 'State', ['bar', 'view'], 'bar'), choose('viewMode', 'View mode', ['docked', 'fullscreen'], 'docked')]),
     ...section('Content', [searchSetControl, { ...text('placeholder', 'Placeholder', 'Search places'), ...gated }, { ...text('value', 'Query', ''), ...gated }, { ...choose('suggestions', 'Suggestions', ['places', 'none'], 'places'), ...gated }]),

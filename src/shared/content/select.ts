@@ -1,6 +1,6 @@
 // The select's playground content: its named content sets and its registry entry.
 import type { SelectConfig } from 'material/components/select';
-import { type ComponentState, bool, choose, disabled, pick, section, string, text, toggle } from './types';
+import { type ComponentState, type Scenario, bool, choose, disabled, pick, section, string, text, toggle } from './types';
 
 /**
  * A named select: the field and the options the guidelines figure shows.
@@ -49,7 +49,7 @@ export const selectComponent = {
       description: 'A filled State field showing AK.',
       options: { selectSet: 'state', variant: 'filled' },
     },
-  ],
+  ] as readonly Scenario[],
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['filled', 'outlined'], 'outlined'), choose('density', 'Density', ['default', 'compact'], 'default')]),
     ...section('Content', [selectSetControl, { ...text('label', 'Label', 'Fruit'), ...gated }, { ...choose('value', 'Selected', ['', 'apple', 'banana', 'cherry'], 'apple', 'select'), ...gated }, { ...text('supportingText', 'Supporting text', 'Choose a favorite'), ...gated }]),

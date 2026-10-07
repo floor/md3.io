@@ -1,7 +1,7 @@
 // The time picker's playground content: its named content sets and its registry entry.
 import type { TimePickerConfig } from 'material/components/timepicker';
 import { TIME_FORMAT, TIME_PICKER_ORIENTATION, TIME_PICKER_TYPE } from 'material/components/timepicker';
-import { type ComponentState, bool, choose, disabled, section, string, text, toggle } from './types';
+import { type ComponentState, type Scenario, bool, choose, disabled, section, string, text, toggle } from './types';
 
 /**
  * A named time picker: the open dialog the guidelines figure shows.
@@ -58,7 +58,7 @@ export const timePickerComponent = {
       description: 'Enter time, with 9:00 AM in the hour and minute fields.',
       options: { timeSet: 'typed-time', type: 'input' },
     },
-  ],
+  ] as readonly Scenario[],
   controls: [
     ...section('Appearance', [choose('type', 'Input mode', ['dial', 'input'], 'dial'), choose('format', 'Clock format', ['12h', '24h'], '12h'), choose('orientation', 'Orientation', ['vertical', 'horizontal'], 'vertical')]),
     ...section('Content', [timeSetControl, { ...text('title', 'Title', 'Select time'), ...gated }, { ...text('value', 'Time', '09:30'), kind: 'time', ...gated }]),
