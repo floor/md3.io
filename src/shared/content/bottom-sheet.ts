@@ -126,7 +126,7 @@ export const bottomSheetComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'modal'), toggle('dragHandle', 'Drag handle', true)]),
     ...section('Layout', [{ ...range('peekHeight', 'Peek height', '120'), min: 56, max: 240, step: 8 }, { ...range('maxWidth', 'Maximum width', '640'), min: 280, max: 640, step: 20 }]),
-    ...section('Content', [sheetSetControl, { ...text('title', 'Title', 'Plan your visit'), enabledWhen: 'sheetContentDefault', replaced: true }, { ...text('content', 'Body', 'Find a new trail, take in the view, and make time for a quiet moment.'), enabledWhen: 'sheetContentDefault', replaced: true }]),
+    ...section('Content', [sheetSetControl, { ...text('title', 'Title', 'Plan your visit'), enabledWhen: 'sheetContentDefault', replaced: 'sheetContentDefault' }, { ...text('content', 'Body', 'Find a new trail, take in the view, and make time for a quiet moment.'), enabledWhen: 'sheetContentDefault', replaced: 'sheetContentDefault' }]),
     ...section('Behavior', [choose('initialState', 'State', ['hidden', 'partial', 'expanded'], 'hidden', 'select'), toggle('closeOnScrimClick', 'Dismiss on scrim', true), toggle('closeOnEscape', 'Dismiss with Escape', true)]),
   ],
   config: (state: ComponentState): BottomSheetConfig => {

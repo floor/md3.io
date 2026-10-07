@@ -174,9 +174,10 @@ function update(send = true, reset = false) {
   refreshActiveSelect(state);
   syncControls(state);
   for (const input of form.querySelectorAll<HTMLInputElement>('[data-enabled-when]')) input.disabled = state[input.dataset.enabledWhen!] !== true;
-  // A control a named set replaces leaves the panel while its gate is off. The
-  // input stays, so the value comes back with the default. `hidden` takes the
-  // row out of sight, the accessibility tree, and the tab order.
+  // A control a named set replaces leaves the panel while that key is off,
+  // whatever its sibling gate says. The input stays, so the value comes back
+  // with the default. `hidden` takes the row out of sight, the accessibility
+  // tree, and the tab order.
   for (const control of components[slug].controls) {
     if (!control.replaced) continue;
     const field = form.querySelector<HTMLElement>(`[name="${control.key}"]`);

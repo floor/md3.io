@@ -119,7 +119,7 @@ export const chipsComponent = {
   controls: [
     // The four M3 chip types. Elevation is for assist, filter and suggestion chips; an
     // avatar for input chips; selection for filter and input chips.
-    ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), toggle('avatar', 'Avatar', false, 'inputType'), toggle('trailingMenu', 'Trailing menu', false, 'filterType'), toggle('draggable', 'Draggable')]),
+    ...section('Appearance', [choose('type', 'Type', ['assist', 'filter', 'input', 'suggestion'], 'filter', 'select'), toggle('elevated', 'Elevated', false, 'elevatedAllowed'), toggle('vertical', 'Vertical layout'), toggle('icons', 'Leading icons'), { ...toggle('avatar', 'Avatar', false, 'inputType'), replaced: 'chipSetDefault' }, toggle('trailingMenu', 'Trailing menu', false, 'filterType'), toggle('draggable', 'Draggable')]),
     ...section('Content', [chipSetControl, text('label', 'Group label', 'Interests')]),
     ...section('Behavior', [toggle('multiSelect', 'Multiple selection', true, 'selectable'), toggle('selectionRequired', 'Selection required', false, 'selectable'), disabled]),
   ],

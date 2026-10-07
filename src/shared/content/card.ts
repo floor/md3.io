@@ -103,7 +103,7 @@ export const cardComponent = {
   scenarios: cardScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['elevated', 'filled', 'outlined'], 'elevated'), toggle('media', 'Show image', true), choose('aspectRatio', 'Image ratio', ['16:9', '4:3', '1:1'], '16:9'), choose('mediaPosition', 'Image position', ['top', 'bottom'], 'top')]),
-    ...section('Content', [cardSetControl, { ...text('title', 'Title', 'A little time outside'), enabledWhen: 'cardContentDefault', replaced: true }, { ...text('subtitle', 'Subtitle', 'Find your next escape'), enabledWhen: 'cardContentDefault', replaced: true }, { ...text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), enabledWhen: 'cardContentDefault', replaced: true }, toggle('actions', 'Show actions', true)]),
+    ...section('Content', [cardSetControl, { ...text('title', 'Title', 'A little time outside'), enabledWhen: 'cardContentDefault', replaced: 'cardContentDefault' }, { ...text('subtitle', 'Subtitle', 'Find your next escape'), enabledWhen: 'cardContentDefault', replaced: 'cardContentDefault' }, { ...text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), enabledWhen: 'cardContentDefault', replaced: 'cardContentDefault' }, toggle('actions', 'Show actions', true)]),
     ...section('Behavior', [toggle('clickable', 'Clickable'), toggle('draggable', 'Draggable')]),
   ],
   config: (state: ComponentState): Omit<CardConfig, 'media'> & { media?: CardConfig['media'] | CardMediaArt } => {

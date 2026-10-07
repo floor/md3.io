@@ -63,21 +63,77 @@ describe('a control a named set replaces', () => {
     expect(controlConcealed(end, volume)).toBe(false);
     expect(volume.secondValue).toBe('80');
 
-    const supporting = control('list', 'supportingText');
+  });
+
+  test('overline stays shown and greyed on a two-line default, hides under a named list, and returns greyed with its value', () => {
+    const overline = control('list', 'overline');
+    expect(overline.replaced).toBe('listContentDefault');
+    expect(overline.enabledWhen).toBe('threeLines');
+    const twoLines = initialComponentState('list');
+    expect(twoLines.lines).toBe('2');
+    expect(twoLines.listContentDefault).toBe(true);
+    expect(twoLines.threeLines).toBe(false);
+    expect(controlConcealed(overline, twoLines)).toBe(false);
+    expect(twoLines[overline.enabledWhen!] !== true).toBe(true);
+    expect(twoLines.overline).toBe(false);
+
     const named = normalizeComponentState('list', { ...initialComponentState('list'), listSet: 'inbox-threads' });
-    expect(named.hasSupporting).toBe(false);
-    expect(controlConcealed(supporting, named)).toBe(false);
-    expect(named.supportingText).toBe('Make a little time for yourself');
+    expect(named.listContentDefault).toBe(false);
+    expect(controlConcealed(overline, named)).toBe(true);
+    expect(named.overline).toBe(false);
+
+    const back = initialComponentState('list');
+    expect(controlConcealed(overline, back)).toBe(false);
+    expect(back[overline.enabledWhen!] !== true).toBe(true);
+    expect(back.overline).toBe(false);
+  });
+
+  test('a positional toggle stays shown and greyed on the default, hides under a named list, and returns greyed with its value', () => {
+    const fourth = control('list', 'fourth');
+    expect(fourth.replaced).toBe('listContentDefault');
+    expect(fourth.enabledWhen).toBe('extraSelectable');
+    const home = initialComponentState('list');
+    expect(home.count).toBe('3');
+    expect(home.listContentDefault).toBe(true);
+    expect(home.extraSelectable).toBe(false);
+    expect(controlConcealed(fourth, home)).toBe(false);
+    expect(home[fourth.enabledWhen!] !== true).toBe(true);
+    expect(home.fourth).toBe(false);
+
+    const named = normalizeComponentState('list', { ...initialComponentState('list'), listSet: 'inbox-threads' });
+    expect(controlConcealed(fourth, named)).toBe(true);
+    expect(named.fourth).toBe(false);
+
+    const back = initialComponentState('list');
+    expect(controlConcealed(fourth, back)).toBe(false);
+    expect(back[fourth.enabledWhen!] !== true).toBe(true);
+    expect(back.fourth).toBe(false);
+  });
+
+  test('the chips avatar hides under a named set and stays greyed on the default', () => {
+    const avatar = control('chips', 'avatar');
+    expect(avatar.replaced).toBe('chipSetDefault');
+    expect(avatar.enabledWhen).toBe('inputType');
+    const home = initialComponentState('chips');
+    expect(home.chipSetDefault).toBe(true);
+    expect(home.inputType).toBe(false);
+    expect(controlConcealed(avatar, home)).toBe(false);
+    expect(home[avatar.enabledWhen!] !== true).toBe(true);
+    expect(home.avatar).toBe(false);
+    const named = normalizeComponentState('chips', { ...initialComponentState('chips'), chipSet: 'email-recipients', type: 'input' });
+    expect(named.chipSetDefault).toBe(false);
+    expect(controlConcealed(avatar, named)).toBe(true);
+    expect(named.avatar).toBe(false);
   });
 
   test('a default page keeps its controls and only marks the rows a named set can replace', async () => {
     const list = await page('/components/list/');
-    for (const key of ['lines', 'leading', 'trailing', 'dividers', 'subheader', 'count', 'ariaLabel', 'disableLast']) {
+    for (const key of ['lines', 'leading', 'trailing', 'dividers', 'subheader', 'count', 'ariaLabel', 'disableLast', 'supportingText', 'overline', 'first', 'fourth', 'fifth']) {
       const open = rowOpen(list, key);
-      expect(open).toContain(' data-replaced>');
+      expect(open).toContain(' data-replaced="listContentDefault">');
       expect(open).not.toContain('hidden');
     }
-    for (const key of ['variant', 'supportingText', 'overline', 'selection', 'first', 'fifth']) {
+    for (const key of ['variant', 'selection']) {
       expect(rowOpen(list, key)).not.toContain('data-replaced');
     }
     expect(list).toContain('name="lines" value="2" data-enabled-when="listContentDefault" checked');
@@ -95,7 +151,7 @@ describe('a control a named set replaces', () => {
     expect(componentCode('list', initialComponentState('list'))).not.toContain('replaced');
 
     const carousel = await page('/components/carousel/');
-    expect(rowOpen(carousel, 'captions')).toContain(' data-replaced>');
+    expect(rowOpen(carousel, 'captions')).toContain(' data-replaced="slidesDefault">');
     expect(rowOpen(carousel, 'initialSlide')).not.toContain('data-replaced');
     expect(carousel).toContain('name="initialSlide" data-enabled-when="slidesDefault"');
     expect(carousel).toContain('value="0" selected');
@@ -108,5 +164,9 @@ describe('a control a named set replaces', () => {
     const checkbox = await page('/components/checkbox/');
     expect(rowOpen(checkbox, 'value')).not.toContain('data-replaced');
     expect(checkbox).toContain('name="value" value="on"');
+
+    const chips = await page('/components/chips/');
+    expect(rowOpen(chips, 'avatar')).toContain(' data-replaced="chipSetDefault">');
+    expect(rowOpen(chips, 'icons')).not.toContain('data-replaced');
   });
 });
