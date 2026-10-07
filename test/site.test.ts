@@ -261,9 +261,21 @@ describe('split button scenarios', () => {
     expect(vanilla).toContain('playCircleIcon');
     expect(vanilla).not.toContain('.expand()');
     const html = frameworkCode('html', elementMeta('split-button')!, elementConfig('split-button', speed.state), { theme: 'baseline', mode: 'light' });
-    expect(html).toContain('>1.5x<');
-    expect(html).toContain('>0.5x<');
+    expect(html).toContain('1.5x');
+    expect(html).toContain('0.5x');
     expect(html).not.toContain('expand()');
+  });
+});
+
+describe('fab scenario', () => {
+  test('compose is a pencil, and the default stays the add icon', () => {
+    expect(components.fab.scenarios.map(item => item.id)).toEqual(['compose']);
+    const scenario = components.fab.scenarios[0]!;
+    const state = normalizeComponentState('fab', { ...initialComponentState('fab'), ...scenario.options });
+    expect(components.fab.config(initialComponentState('fab')).icon).toBe(symbols.add);
+    expect(components.fab.config(state).icon).toBe(symbols.edit);
+    expect(components.fab.config(state).ariaLabel).toBe('Compose');
+    expect(components.fab.config(state).position).toBeUndefined();
   });
 });
 

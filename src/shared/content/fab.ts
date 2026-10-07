@@ -4,24 +4,14 @@ import type { FabConfig } from 'material/components/fab';
 import { type ComponentState, type Scenario, bool, choose, disabled, fabPosition, icon, iconMarkup, position, section, string, text, toneControl, toggle } from './types';
 
 /**
- * The FAB's scenarios, from m3.material.io (read 5 October 2026). Options name playground
- * controls only.
+ * The FAB's scenarios, from m3.material.io (read 7 October 2026). Options name playground
+ * controls only. The default picture is the add icon. The pencil is the one figure.
  */
 const fabScenarios: readonly Scenario[] = [
   {
-    id: 'create', name: 'Create', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'The most important action on the screen, with a clear add icon.',
-    options: { ariaLabel: 'Create' },
-  },
-  {
-    id: 'edit', name: 'Edit', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'An edit action; the guidelines name the edit icon as clear and simple.',
-    options: { icon: 'edit', ariaLabel: 'Edit' },
-  },
-  {
-    id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'A constructive Favorite action, one the guidelines name.',
-    options: { icon: 'heart', ariaLabel: 'Favorite' },
+    id: 'compose', name: 'Compose', source: 'https://m3.material.io/components/floating-action-button/guidelines',
+    description: 'A pencil. The inbox and the navigation bar are not part of the button.',
+    options: { icon: 'edit', ariaLabel: 'Compose' },
   },
 ];
 export const fabComponent = {
