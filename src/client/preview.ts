@@ -398,6 +398,8 @@ function create(state: ComponentState) {
       });
       control.on('open', () => message('Calendar opened'));
       control.on('close', () => message('Calendar closed'));
+      // After render appends the field: a modal dialog opens only once it is connected.
+      if (state.dateOpen === true) queueMicrotask(() => control.open());
       return control;
     }
     case 'timepicker': {

@@ -218,7 +218,13 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   if (slug === 'card') state.cardContentDefault = !state.cardSet || state.cardSet === 'default';
   // So does a named dialog: its title, subtitle and body controls are for the default's own.
   if (slug === 'dialog') state.dialogContentDefault = !state.dialogSet || state.dialogSet === 'default';
-  if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
+  if (slug === 'datepicker') {
+    // A named picker fixes its label and dates: those controls are for the default's own.
+    state.dateContentDefault = !state.dateSet || state.dateSet === 'default';
+    state.dateOpen = !state.dateContentDefault;
+    state.rangeEndEnabled = !!state.range && !!state.dateContentDefault;
+    if (state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
+  }
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
     state.optionSetDefault = !state.optionSet || state.optionSet === 'default';
@@ -265,6 +271,9 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
         : { ...config, ...headerSlot };
     }
     case 'timepicker': return { ...config, ...trigger('Choose time') };
+    // The factory config has no `open`. The element attribute does
+    // (`material/src/elements/datepicker.ts`, `open`), written when the scenario's calendar is open.
+    case 'datepicker': return state.dateOpen === true ? { ...config, open: true } : config;
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
@@ -348,10 +357,12 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
     slug === 'timepicker' ? `const openButton = createButton({ text: 'Choose time', variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.element.append(openButton.element);\n` : '');
   const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
+  // After the picker is in the page: a modal's dialog opens only once it is connected.
+  const openAfter = slug === 'datepicker' && state.dateOpen === true ? `${component.variable}.open();\n` : '';
   const styles = component.styles.includes('full') ? "import 'material/styles';\n" : ["base", ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
+    `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n${openAfter}\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
 }
 
 function checkboxFamilyCode(state: ComponentState): string {
