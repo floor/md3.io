@@ -1,6 +1,6 @@
 // The card's playground content: its named content sets and its registry entry.
 import type { CardConfig } from 'material/components/card';
-import { type ArtRatio, type ComponentState, type Control, type Scenario, bool, choose, framedLandscape, pick, section, string, text, toggle } from './types';
+import { type ArtRatio, type ComponentState, type Control, type Scenario, bool, choose, framedLandscape, landscape, pick, section, string, text, toggle } from './types';
 
 /**
  * The card's media as inline art: markup the preview resolves into the element the
@@ -79,32 +79,43 @@ export const cardComponent = {
   scenarios: cardScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['elevated', 'filled', 'outlined'], 'elevated'), toggle('media', 'Show image', true), choose('aspectRatio', 'Image ratio', ['16:9', '4:3', '1:1'], '16:9'), choose('mediaPosition', 'Image position', ['top', 'bottom'], 'top')]),
-    ...section('Content', [cardSetControl, text('title', 'Title', 'A little time outside'), text('subtitle', 'Subtitle', 'Find your next escape'), text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), toggle('actions', 'Show actions', true)]),
+    ...section('Content', [cardSetControl, { ...text('title', 'Title', 'A little time outside'), enabledWhen: 'cardContentDefault' }, { ...text('subtitle', 'Subtitle', 'Find your next escape'), enabledWhen: 'cardContentDefault' }, { ...text('content', 'Body', 'Take the scenic route. There is always something new to discover.'), enabledWhen: 'cardContentDefault' }, toggle('actions', 'Show actions', true)]),
     ...section('Behavior', [toggle('clickable', 'Clickable'), toggle('draggable', 'Draggable')]),
   ],
-  config: (state: ComponentState): Omit<CardConfig, 'media'> & { media?: CardMediaArt } => {
+  config: (state: ComponentState): Omit<CardConfig, 'media'> & { media?: CardConfig['media'] | CardMediaArt } => {
     const named = cardSet(state);
+    // A named card carries the figure's own words as inline art; the default stays
+    // today's mountain card exactly, its title, subtitle and body controls driving it.
+    if (named) {
+      return {
+        variant: pick(state, 'variant', ['elevated', 'filled', 'outlined'], 'elevated'),
+        clickable: bool(state, 'clickable'),
+        interactive: bool(state, 'clickable'),
+        draggable: bool(state, 'draggable'),
+        ...(state.media ? { media: {
+          markup: framedLandscape(0, pick(state, 'aspectRatio', ['16:9', '4:3', '1:1'] as const, '16:9'), 'Illustrated mountain landscape'),
+          aspectRatio: string(state, 'aspectRatio'),
+          position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top'),
+        } } : {}),
+        header: named.header,
+        ...(named.body ? { content: { text: named.body } } : {}),
+        ...(state.actions && named.buttons ? { buttons: named.buttons } : {}),
+      };
+    }
     return {
       variant: pick(state, 'variant', ['elevated', 'filled', 'outlined'], 'elevated'),
       clickable: bool(state, 'clickable'),
       interactive: bool(state, 'clickable'),
       draggable: bool(state, 'draggable'),
+      header: { title: string(state, 'title'), subtitle: string(state, 'subtitle') },
+      content: { text: string(state, 'content') },
       ...(state.media ? { media: {
-        markup: framedLandscape(0, pick(state, 'aspectRatio', ['16:9', '4:3', '1:1'] as const, '16:9'), 'Illustrated mountain landscape'),
+        src: landscape(0),
+        alt: 'Illustrated mountain landscape',
         aspectRatio: string(state, 'aspectRatio'),
         position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top'),
       } } : {}),
-      ...(named
-        ? {
-            header: named.header,
-            ...(named.body ? { content: { text: named.body } } : {}),
-            ...(state.actions && named.buttons ? { buttons: named.buttons } : {}),
-          }
-        : {
-            header: { title: string(state, 'title'), subtitle: string(state, 'subtitle') },
-            content: { text: string(state, 'content') },
-            ...(state.actions ? { buttons: [{ text: 'Explore', variant: 'text' }, { text: 'Save', variant: 'tonal' }] } : {}),
-          }),
+      ...(state.actions ? { buttons: [{ text: 'Explore', variant: 'text' }, { text: 'Save', variant: 'tonal' }] } : {}),
     };
   },
 };

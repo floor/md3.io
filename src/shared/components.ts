@@ -214,6 +214,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   // A named sheet fixes the content: the title and body controls are for the default's own.
   if (slug === 'bottom-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
   if (slug === 'side-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
+  // A named card fixes its words the same way: the title, subtitle and body controls are for the default's own.
+  if (slug === 'card') state.cardContentDefault = !state.cardSet || state.cardSet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
@@ -515,5 +517,5 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   }
   return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `${before}${slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
+    `${before}${slug === 'card' && state.media && !art || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
 }
