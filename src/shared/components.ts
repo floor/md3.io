@@ -229,6 +229,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.selectContentDefault = !state.selectSet || state.selectSet === 'default';
     if (state.disableBanana && state.value === 'banana') state.value = 'apple';
   }
+  if (slug === 'search') state.searchContentDefault = !state.searchSet || state.searchSet === 'default';
   state.theme = themes.find(theme => theme === raw.theme) ?? 'baseline';
   state.mode = raw.mode === 'dark' ? 'dark' : 'light';
   return state;
@@ -267,6 +268,18 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: { icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' } };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
+    // The factory takes `trailingItems`. The element takes `trailing-icon`
+    // (`material/src/elements/search.ts`, the attribute, mapped into `trailingItems` at create).
+    case 'search': {
+      const items = config.trailingItems;
+      if (!Array.isArray(items) || items.length === 0) return config;
+      const first = items[0];
+      if (!first || typeof first !== 'object' || !('content' in first)) return config;
+      const rest = { ...config };
+      delete rest.trailingItems;
+      const label = 'ariaLabel' in first && typeof first.ariaLabel === 'string' ? first.ariaLabel : undefined;
+      return { ...rest, trailingIcon: first.content, ...(label ? { trailingLabel: label } : {}) };
+    }
     // A parent over its children is not one element: m-checkbox's only slot is its
     // label (material/src/elements/checkbox.ts), so the element tabs render the
     // parent and carry the children as a stated gap (`Not yet exposed by the
