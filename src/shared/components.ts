@@ -47,7 +47,7 @@ import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent } from './content/bottom-app-bar';
 import { drawerActiveOptions, drawerComponent } from './content/drawer';
 import { menuComponent, menuSelectedId } from './content/menu';
-import { navigationRailComponent, railActiveOptions, railHeader } from './content/navigation-rail';
+import { navigationRailComponent, railActiveOptions, railHeaderForm } from './content/navigation-rail';
 import { barActiveOptions, navigationBarComponent } from './content/navigation-bar';
 import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
@@ -257,8 +257,8 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
     // The rail's while nothing else expands it, as the preview shows it.
     case 'navigation-rail': {
-      const header = railHeader(state);
-      const headerSlot = header?.text
+      const header = railHeaderForm(state);
+      const headerSlot = header?.kind === 'extended'
         ? { headerExtended: { icon: header.icon, text: header.text, ariaLabel: header.ariaLabel } }
         : header ? { headerFab: { icon: header.icon, ariaLabel: header.ariaLabel } } : {};
       return state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle
@@ -398,13 +398,14 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
   }
   if (slug === 'navigation-bar') after = `${component.variable}.on('select', event => console.log(event.id));\n`;
   if (slug === 'navigation-rail') {
-    const header = railHeader(state);
+    const header = railHeaderForm(state);
     if (header) {
-      imports.push(header.text ? 'createExtendedFab' : 'createFab');
-      const fabConfig = header.text
+      const extended = header.kind === 'extended';
+      imports.push(extended ? 'createExtendedFab' : 'createFab');
+      const fabConfig = extended
         ? { icon: header.icon, text: header.text, ariaLabel: header.ariaLabel }
         : { icon: header.icon, ariaLabel: header.ariaLabel };
-      before = `const header = ${header.text ? 'createExtendedFab' : 'createFab'}(${literal(fabConfig)});\n\n`;
+      before = `const header = ${extended ? 'createExtendedFab' : 'createFab'}(${literal(fabConfig)});\n\n`;
       cleanup = `// header.destroy();\n${cleanup}`;
     }
   }
@@ -464,8 +465,9 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     ];
     if (extras.length) config = config.replace(/\n\}$/, `,\n  ${extras.join(',\n  ')}\n}`);
   }
-  if (slug === 'navigation-rail' && railHeader(state)) config = config.replace(/\n\}$/, ',\n  header: header.element\n}');
-  const headerStyle = slug === 'navigation-rail' && railHeader(state)?.text ? 'extended-fab' : slug === 'navigation-rail' && railHeader(state) ? 'fab' : '';
+  const headerForm = slug === 'navigation-rail' ? railHeaderForm(state) : undefined;
+  if (headerForm) config = config.replace(/\n\}$/, ',\n  header: header.element\n}');
+  const headerStyle = headerForm?.kind === 'extended' ? 'extended-fab' : headerForm ? 'fab' : '';
   const buttonStyle = slug === 'top-app-bar' && appBarContent('top-app-bar', state).trailingButton ? 'button' : '';
   const styles = ['base', ...component.styles, ...(headerStyle ? [headerStyle] : []), ...(buttonStyle ? [buttonStyle] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
