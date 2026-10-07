@@ -307,6 +307,35 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
 });
 
+describe('snackbar scenarios', () => {
+  const rows = [
+    ['email-archived-undo', 'Email archived', 'Undo'],
+    ['saved-to-album', 'Saved in “Vacation” album', undefined],
+    ['all-changes-saved', 'All changes saved', undefined],
+    ['photo-added', 'Photo added to “Natural Light” album', 'Undo'],
+  ] as const;
+  test('each bar carries the figure’s words, open, with no close icon', () => {
+    for (const [id, message, action] of rows) {
+      const scenario = components.snackbar.scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing snackbar scenario ${id}`);
+      const state = normalizeComponentState('snackbar', { ...initialComponentState('snackbar'), ...scenario.options });
+      const config = components.snackbar.config(state);
+      expect(config.message).toBe(message);
+      expect(config.dismissible).toBe(false);
+      expect(config.action).toBe(action);
+      expect(state.visible).toBe(true);
+      expect(elementConfig('snackbar', state).open).toBe(true);
+      const vanilla = componentCode('snackbar', state);
+      expect(vanilla).toContain('snackbar.show()');
+      expect(vanilla).toContain(message);
+      const html = frameworkCode('html', elementMeta('snackbar')!, elementConfig('snackbar', state), { theme: 'baseline', mode: 'light' });
+      expect(html).toContain(message);
+      expect(html).toContain('snackbar.show()');
+      expect(html).not.toContain('dismissible');
+    }
+  });
+});
+
 describe('tooltip target', () => {
   const html = (input: Record<string, unknown> = {}) => {
     const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), ...input });
