@@ -14,7 +14,9 @@ interface MenuSet {
 /**
  * Named menus from m3.material.io/components/menus/guidelines (read 6 October
  * 2026). `default` is not here: today's Save, Share and Download stay exactly
- * as they were.
+ * as they were. Dietary marks only Nut-free: `setSelected` takes one id
+ * (material/.../menu/features/controller.ts). Share and Download carry a
+ * submenu arrow and no children, as the file figure shows them.
  */
 const menuSets: Record<string, MenuSet> = {
   'link-context': {
@@ -35,6 +37,33 @@ const menuSets: Record<string, MenuSet> = {
       { id: 'cut', text: 'Cut', icon: symbols.contentCut },
       { id: 'copy', text: 'Copy', icon: symbols.contentCopy },
       { id: 'paste', text: 'Paste', icon: symbols.contentPaste },
+    ],
+  },
+  'file-actions': {
+    name: 'File actions',
+    selected: 'offline',
+    items: [
+      { id: 'open', text: 'Open', icon: symbols.folderOpen },
+      { id: 'make-copy', text: 'Make a copy', icon: symbols.contentCopy },
+      { id: 'create', text: 'Create', icon: symbols.edit, hasSubmenu: true, submenu: [
+        { id: 'document', text: 'Document' },
+        { id: 'image', text: 'Image' },
+        { id: 'slides', text: 'Slides' },
+      ] },
+      { id: 'offline', text: 'Offline mode', icon: symbols.check },
+      { id: 'share', text: 'Share', icon: symbols.share, hasSubmenu: true },
+      { id: 'download', text: 'Download', icon: symbols.download, hasSubmenu: true },
+    ],
+  },
+  'dietary-filter': {
+    name: 'Dietary filter',
+    selected: 'nut-free',
+    items: [
+      { id: 'gluten-free', text: 'Gluten-free' },
+      { id: 'kosher', text: 'Kosher' },
+      { id: 'nut-free', text: 'Nut-free', icon: symbols.check },
+      { id: 'vegan', text: 'Vegan' },
+      { id: 'vegetarian', text: 'Vegetarian' },
     ],
   },
 };
@@ -60,13 +89,15 @@ const defaultItems = (state: ComponentState): MenuContent[] => [
 ];
 
 const menuSetControl: Control = {
-  ...choose('menuSet', 'Menu', ['default', 'link-context', 'text-actions'], 'default', 'select'),
+  ...choose('menuSet', 'Menu', ['default', 'link-context', 'text-actions', 'file-actions', 'dietary-filter'], 'default', 'select'),
   labels: { default: 'Default', ...Object.fromEntries(Object.entries(menuSets).map(([id, set]) => [id, set.name])) },
 };
 
 /**
  * The menu's scenarios, from m3.material.io (read 6 October 2026). Options name
- * playground controls only. Each one opens.
+ * playground controls only. Each one opens. Create's children are in the file
+ * menu; the panel opens on hover or ArrowRight and is not open on the stage.
+ * Dietary marks Nut-free; the figure's second check is a gap.
  */
 const menuScenarios: readonly Scenario[] = [
   {
@@ -78,6 +109,16 @@ const menuScenarios: readonly Scenario[] = [
     id: 'text-actions', name: 'Text actions', source: 'https://m3.material.io/components/menus/guidelines',
     description: 'Editing text: undo, a disabled redo, then cut, copy and paste.',
     options: { menuSet: 'text-actions', text: 'Edit', variant: 'standard', icons: true, submenu: false },
+  },
+  {
+    id: 'file-actions', name: 'File actions', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'A file menu: Open, Make a copy, Create, Offline mode selected, Share and Download.',
+    options: { menuSet: 'file-actions', text: 'File', variant: 'standard', icons: true, submenu: true },
+  },
+  {
+    id: 'dietary-filter', name: 'Dietary filter', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'Choosing a diet, with Nut-free selected and the menu staying open.',
+    options: { menuSet: 'dietary-filter', text: 'Diet', variant: 'vibrant', icons: true, closeOnSelect: false },
   },
 ];
 
