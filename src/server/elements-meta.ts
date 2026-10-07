@@ -89,6 +89,11 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     'content.text': { text: true },
     // A clickable card is interactive.
     interactive: { same: 'clickable' },
+    // The element builds its actions row with `createCardActions({})`
+    // (material/src/elements/card.ts:98) and has no attribute for the side. The
+    // stylesheet's flex row is the start, so `start` is not repeated. Any other
+    // align is the gap `actions.align`: the factory's buttons path defaults to end.
+    'actions.align': { ignore: ['start'] },
   },
   carousel: { snap: { ignore: [true] } },
   // The trigger is the anchor.
@@ -146,7 +151,9 @@ const keys: Record<string, Record<string, ConfigKey>> = {
 type Slotted = Omit<SlottedMeta, 'attributes' | 'text'> & { attributes?: Record<string, string> };
 const slotted: Record<string, Slotted[]> = {
   card: [
-    { from: 'media', element: 'img', native: true, slot: 'media', attributes: { src: 'src', alt: 'alt' }, ignore: { position: ['top'] } },
+    // The media is inline art: its `markup` key is a native `<svg>` tree, slotted whole;
+    // a `src`/`alt` pair stays the `<img>` the element has always taken (the docs example).
+    { from: 'media', element: 'img', native: true, slot: 'media', markupTree: true, attributes: { src: 'src', alt: 'alt' }, ignore: { position: ['top'] } },
     { from: 'buttons', element: 'button', slot: 'actions', after: true },
   ],
   'top-app-bar': [
@@ -179,8 +186,10 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'content', element: 'p', native: true, markup: true },
     { from: 'buttons', element: 'button', slot: 'actions', closes: 'closeDialog' },
   ],
-  'bottom-sheet': [{ from: 'content', element: 'p', native: true, markup: true }],
-  'side-sheet': [{ from: 'content', element: 'p', native: true, markup: true }],
+  // A named set's content is a native tree the sheet has no template of its own for;
+  // the default's single `<p>` parses to the same child the markup path wrote.
+  'bottom-sheet': [{ from: 'content', element: 'p', native: true, markupTree: true }],
+  'side-sheet': [{ from: 'content', element: 'p', native: true, markupTree: true }],
 };
 
 // The button the preview puts beside the element (`elementConfig` adds its config):

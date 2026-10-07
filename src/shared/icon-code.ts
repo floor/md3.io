@@ -25,8 +25,11 @@ export function createIconNamer(): IconNamer {
   const constants = new Map<string, string>();
   const used = new Set<string>();
   const unique = (base: string): string => {
-    let name = camel(`${base}-icon`);
-    for (let n = 2; used.has(name); n++) name = camel(`${base}-icon-${n}`);
+    // The suffix is appended, not hyphenated: a hyphen before a digit survives
+    // `camel` and is not a valid identifier (`contentIcon-2`).
+    const stem = camel(`${base}-icon`);
+    let name = stem;
+    for (let n = 2; used.has(name); n++) name = `${stem}${n}`;
     used.add(name);
     return name;
   };

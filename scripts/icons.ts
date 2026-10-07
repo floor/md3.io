@@ -86,6 +86,15 @@ const names = [
   'schedule',
   'timer',
   'videocam',
+  // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
+  'album',
+  'cloud',
+  'near_me',
+  'pause',
+  'person_search',
+  'playlist_add',
+  'playlist_play',
+  'skip_next',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

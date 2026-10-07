@@ -163,13 +163,15 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     state.linearDeterminate = state.linear && state.determinate;
   }
   if (slug === 'list') {
-    state.hasSupporting = state.lines !== '1';
-    state.threeLines = state.lines === '3';
-    state.selectable = state.selection !== 'none';
+    // A named list fixes its items: the layout and content controls are for the default's own.
+    state.listContentDefault = !state.listSet || state.listSet === 'default';
+    state.hasSupporting = state.lines !== '1' && state.listContentDefault;
+    state.threeLines = state.lines === '3' && state.listContentDefault;
+    state.selectable = state.selection !== 'none' && state.listContentDefault;
     state.extraSelectable = state.selectable && state.count === '5';
     let selected = false;
     ['first', 'second', 'third', 'fourth', 'fifth'].forEach((key, index) => {
-      const keep = !!state[key] && state.selection !== 'none' && index < Number(state.count) && (state.selection === 'multi' || !selected);
+      const keep = !!state[key] && !!state.listContentDefault && state.selection !== 'none' && index < Number(state.count) && (state.selection === 'multi' || !selected);
       selected ||= keep;
       state[key] = keep;
     });
@@ -206,7 +208,16 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';
   if (slug === 'menu') state.itemsDefault = !state.menuSet || state.menuSet === 'default';
+  // A named collection fixes the slides: the captions and the current-slide control are for the default's twenty-four.
+  if (slug === 'carousel') state.slidesDefault = !state.carouselSet || state.carouselSet === 'default';
   if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
+  // A named sheet fixes the content: the title and body controls are for the default's own.
+  if (slug === 'bottom-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
+  if (slug === 'side-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
+  // A named card fixes its words the same way: the title, subtitle and body controls are for the default's own.
+  if (slug === 'card') state.cardContentDefault = !state.cardSet || state.cardSet === 'default';
+  // So does a named dialog: its title, subtitle and body controls are for the default's own.
+  if (slug === 'dialog') state.dialogContentDefault = !state.dialogSet || state.dialogSet === 'default';
   if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
@@ -484,19 +495,29 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
   const shown = component.config(state) as Record<string, unknown>;
+  // Card media that is inline art: the library's media API takes an element, which the
+  // code builds from the shared markup before the card, so the same art shows everywhere.
+  const art = slug === 'card' && !!shown.media && typeof shown.media === 'object' && typeof (shown.media as { markup?: unknown }).markup === 'string'
+    ? (shown.media as { markup: string }).markup : undefined;
+  const elementRef = '"\\u0000media"';
+  const printable = art
+    ? { ...shown, media: { element: '\u0000media', aspectRatio: (shown.media as { aspectRatio?: string }).aspectRatio, position: (shown.media as { position?: string }).position } }
+    : shown;
   // The Vanilla snippet lists every slide the preview and the other tabs list.
-  const config = JSON.stringify(shown, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:');
+  const config = JSON.stringify(printable, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
+    .replace(elementRef, 'media');
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  const before = art ? `// The demo art is inline SVG, so this snippet needs no image files.\nconst media = document.createElement('div');\nmedia.setHTML(${JSON.stringify(art)});\n` : '';
   let setup = '';
   if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
   if (hasTrigger) setup = `const trigger = createButton({ text: 'Open ${component.name.toLowerCase()}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${slug === 'bottom-sheet' ? 'expand' : 'open'}());\ndocument.body.append(trigger.element);\n`;
   else {
     if (slug === 'divider') setup += `const container = document.createElement('div');\ncontainer.style.cssText = 'display:flex;align-items:center;width:100%;max-width:400px;flex-direction:${state.orientation === 'vertical' ? 'column' : 'row'};${state.orientation === 'vertical' ? 'height:200px;' : ''}';\ndivider.element.style.flex = '1';\ncontainer.append(divider.element);\ndocument.body.append(container);\n`;
-    if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n";
+    if (slug === 'carousel') setup += "// A carousel needs a container with a defined height.\ncarousel.element.style.height = '320px';\n" + (state.slidesDefault ? '' : "// Capped as the playground's preview caps it, so the same photos stay in view.\ncarousel.element.style.maxWidth = '560px';\n");
     if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
     if (slug === 'carousel') setup += "\n// Drive it from your own controls: carousel.next(), carousel.prev(), carousel.goTo(index).\n// 'change' reports every move: from the API, a swipe, the keyboard or a trackpad.\ncarousel.on('change', ({ value }) => console.log(`Slide ${value + 1} of ${carousel.slides.getCount()}`));\n";
   }
   return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `${slug === 'card' && state.media || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
+    `${before}${slug === 'card' && state.media && !art || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
 }
