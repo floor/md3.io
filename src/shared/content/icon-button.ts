@@ -4,25 +4,35 @@ import type { IconButtonConfig } from 'material/components/icon-button';
 import { type ComponentState, type Scenario, bool, choose, disabled, icon, iconMarkup, section, shape, size, square, string, text, toggle } from './types';
 
 /**
- * The icon button's scenarios, from m3.material.io (read 5 October 2026). Options name
- * playground controls only. The element takes `toggle` and `selected` as attributes, so
- * the toggle scenarios' snippets match the factory's.
+ * The icon button's scenarios, from m3.material.io (read 7 October 2026). Options name
+ * playground controls only. Each row is the button the figure draws; the screen around
+ * it is not. Accessible names are not drawn.
  */
 const iconButtonScenarios: readonly Scenario[] = [
   {
     id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A toggle button for a binary action, shown selected.',
-    options: { toggle: true, selected: true, icon: 'heart' },
+    description: 'An outlined heart, not selected. The figure shows a tooltip "Favorite" on hover, which this page does not draw.',
+    options: { variant: 'standard', icon: 'heart', toggle: false, selected: false, ariaLabel: 'Favorite' },
   },
   {
-    id: 'bookmark', name: 'Bookmark', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A toggle button shown unselected; the outlined icon fills when selected.',
-    options: { toggle: true, icon: 'bookmark', ariaLabel: 'Bookmark' },
+    id: 'reservation-date', name: 'Reservation date', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A tonal calendar for choosing a date.',
+    options: { variant: 'tonal', icon: 'calendarToday', toggle: false, selected: false, ariaLabel: 'Choose a date' },
   },
   {
-    id: 'download', name: 'Download', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A filled button for a high emphasis action, like downloading.',
-    options: { variant: 'filled', icon: 'download', ariaLabel: 'Download' },
+    id: 'browse-albums', name: 'Browse albums', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'An outlined chevron for the next albums.',
+    options: { variant: 'outlined', icon: 'chevronRight', toggle: false, selected: false, ariaLabel: 'More albums' },
+  },
+  {
+    id: 'raise-hand', name: 'Raise hand', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A tonal raised hand.',
+    options: { variant: 'tonal', icon: 'frontHand', toggle: false, selected: false, ariaLabel: 'Raise hand' },
+  },
+  {
+    id: 'stop-timer', name: 'Stop', source: 'https://m3.material.io/components/icon-buttons/guidelines',
+    description: 'A large filled button whose icon is a square, for stopping a timer.',
+    options: { variant: 'filled', size: 'l', icon: 'stop', toggle: false, selected: false, ariaLabel: 'Stop' },
   },
 ];
 export const iconButtonComponent = {
@@ -34,7 +44,7 @@ export const iconButtonComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['standard', 'filled', 'tonal', 'outlined'], 'standard', 'select'), size, square,
       choose('width', 'Width', ['narrow', 'default', 'wide'], 'default')]),
-    ...section('Content', [icon(['heart', 'bookmark', 'download', 'send', 'add', 'edit'], 'heart'), text('ariaLabel', 'Accessible label', 'Add to favorites')]),
+    ...section('Content', [icon(['heart', 'bookmark', 'download', 'send', 'add', 'edit', 'calendarToday', 'chevronRight', 'frontHand', 'stop'], 'heart'), text('ariaLabel', 'Accessible label', 'Add to favorites')]),
     ...section('Behavior', [toggle('toggle', 'Toggle button'), toggle('selected', 'Selected', false, 'toggle'), disabled]),
   ],
   config: (state: ComponentState): IconButtonConfig => ({

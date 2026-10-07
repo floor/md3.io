@@ -5,7 +5,7 @@ import { handleRequest } from '../server';
 import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
-import { symbolByFile } from '../src/shared/icons';
+import { symbolByFile, symbols } from '../src/shared/icons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
 
@@ -171,6 +171,33 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   const code = componentCode('datepicker', empty);
   expect(code).toContain("import 'material/styles/datepicker'");
   expect(code).not.toContain('MutationObserver');
+});
+
+describe('icon button scenarios', () => {
+  const rows = [
+    ['favorite', 'standard', 'heart', 'Favorite', false],
+    ['reservation-date', 'tonal', 'calendarToday', 'Choose a date', false],
+    ['browse-albums', 'outlined', 'chevronRight', 'More albums', false],
+    ['raise-hand', 'tonal', 'frontHand', 'Raise hand', false],
+    ['stop-timer', 'filled', 'stop', 'Stop', true],
+  ] as const;
+  test('each figure is one icon button, unselected, with its own glyph', () => {
+    expect(components['icon-button'].scenarios.map(item => item.id)).toEqual(rows.map(([id]) => id));
+    for (const [id, variant, icon, label, large] of rows) {
+      const scenario = components['icon-button'].scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing icon button scenario ${id}`);
+      const state = normalizeComponentState('icon-button', { ...initialComponentState('icon-button'), ...scenario.options });
+      const config = components['icon-button'].config(state);
+      expect(config.variant).toBe(variant);
+      expect(config.icon).toBe(symbols[icon]);
+      expect(config.ariaLabel).toBe(label);
+      expect(config.selected).toBe(false);
+      expect(config.toggle).toBe(false);
+      expect(config.size).toBe(large ? 'l' : 's');
+      expect(scenario.description).not.toContain('shown selected');
+    }
+    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toContain('tooltip "Favorite"');
+  });
 });
 
 describe('fab menu open', () => {
