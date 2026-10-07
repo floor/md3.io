@@ -2,7 +2,7 @@
 // src/shared/components.ts.
 import type { TooltipConfig } from 'material/components/tooltip';
 import { symbols } from '../icons';
-import { type ComponentState, bool, choose, range, section, string, text, toggle } from './types';
+import { type ComponentState, type Scenario, bool, choose, range, section, string, text, toggle } from './types';
 
 /** The control a tooltip describes. The default is today's heart icon button. */
 export interface TooltipTarget {
@@ -24,6 +24,32 @@ export function tooltipTarget(state: ComponentState): TooltipTarget {
   return { icon: symbols.heart, ariaLabel: 'Favorite', variant: 'tonal' };
 }
 
+/**
+ * The tooltip's scenarios, from m3.material.io (read 7 October 2026). Both are
+ * plain and sit above the control. A rich tooltip is not one of them: the
+ * element has a single `text`.
+ * Not yet exposed by the element: subhead.
+ * Not yet exposed by the element: supportingText.
+ * Not yet exposed by the element: action.
+ * The figures' words that have nowhere to go: "Add others", "Share this collection
+ * with friends and family. People you add to this album will also be able to add
+ * and delete media.", "Learn more"; and "New settings available", "Now you can
+ * adjust the uploaded image quality, and upgrade your available storage space.",
+ * "Learn more".
+ */
+const tooltipScenarios: readonly Scenario[] = [
+  {
+    id: 'upload', name: 'Upload', source: 'https://m3.material.io/components/tooltips/guidelines',
+    description: 'Upload, above a plus button.',
+    options: { target: 'upload', text: 'Upload', variant: 'plain', position: 'top', visible: true },
+  },
+  {
+    id: 'present-now', name: 'Present now', source: 'https://m3.material.io/components/tooltips/guidelines',
+    description: 'Present now, above a present-to-all icon button.',
+    options: { target: 'present', text: 'Present now', variant: 'plain', position: 'top', visible: true },
+  },
+];
+
 const targetControl = {
   ...choose('target', 'Target', ['heart', 'upload', 'present'], 'heart', 'select'),
   labels: { heart: 'Favorite', upload: 'Upload', present: 'Present now' },
@@ -37,7 +63,7 @@ export const tooltipComponent = {
   // component's list, not the scenario's, so the sheet is here rather than in
   // `styles` (those are what the default tabs import).
   previewStyles: ['fab'],
-  scenarios: [],
+  scenarios: tooltipScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['default', 'plain', 'rich'], 'default'), choose('position', 'Position', ['top', 'right', 'bottom', 'left', 'top-start', 'top-end', 'right-start', 'right-end', 'bottom-start', 'bottom-end', 'left-start', 'left-end'], 'bottom', 'select')]),
     ...section('Content', [targetControl, text('text', 'Text', 'Save to favorites')]),
