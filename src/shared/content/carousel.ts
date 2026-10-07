@@ -17,6 +17,7 @@ export const carouselComponent = {
   summary: 'Five ways to browse a visual collection.', styles: ['carousel'],
   // The preview's remote (icon buttons and a slider), which the copied code does not build.
   previewStyles: ['icon-button', 'slider'],
+  previewOnly: ['.carousel-remote'],
   scenarios: [],
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'], 'multi-browse', 'select'), { ...range('cornerRadius', 'Corner radius', '28'), max: 48 }]),
