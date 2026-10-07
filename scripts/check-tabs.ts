@@ -279,6 +279,15 @@ const hasVisibleMenu = () => {
   return visit(document.body);
 };
 
+const hasOpenDialog = () => {
+  const visit = (node: Element): boolean => {
+    if (node instanceof HTMLDialogElement && node.open) return true;
+    if (node.shadowRoot && [...node.shadowRoot.children].some(visit)) return true;
+    return [...node.children].some(visit);
+  };
+  return visit(document.body);
+};
+
 const hasMenuSurfaceThatCouldOpen = () => {
   const visit = (node: Element): boolean => {
     if (node.classList.contains('mtrl-menu')) {
@@ -517,12 +526,25 @@ try {
           continue;
         }
 
+        // A dialog popup is not a menu. Compare the dialog's own open state and
+        // leave its words to the text comparison below. Only a trigger that says
+        // its popup is a dialog: a side sheet's own dialog is not that trigger.
+        const dialogPopup = '[aria-haspopup="dialog"]';
+        if ((await previewFrame.locator(dialogPopup).count()) > 0 || (await page.locator(dialogPopup).count()) > 0) {
+          const previewDialogOpen = await previewFrame.evaluate(hasOpenDialog);
+          const tabDialogOpen = await page.evaluate(hasOpenDialog);
+          if (previewDialogOpen !== tabDialogOpen) {
+            differences.push(`${slug} ${scenarioId} ${tab}: dialog open state differs (preview ${previewDialogOpen ? 'open' : 'closed'}, tab ${tabDialogOpen ? 'open' : 'closed'})`);
+          }
+        }
+
         if (!previewMenuOnLoad) {
-          const previewMore = previewFrame.locator('button[aria-haspopup]');
+          const menuPopup = 'button[aria-haspopup="menu"], button[aria-haspopup="true"], button[aria-haspopup="listbox"]';
+          const previewMore = previewFrame.locator(menuPopup);
           if ((await previewMore.count()) > 0) {
             // An element tab's trigger is a host (m-button), not a button: the
             // element that says it opens a popup is the one a user would press.
-            const tabMore = page.locator('[aria-haspopup], [aria-label="More options"]');
+            const tabMore = page.locator('[aria-haspopup="menu"], [aria-haspopup="true"], [aria-haspopup="listbox"], [aria-label="More options"]');
             // The trigger is a toggle and the preview page is shared by the six
             // tabs: click it only while its menu is closed.
             if (!await previewFrame.evaluate(hasVisibleMenu)) await previewMore.first().click().catch(() => {});
