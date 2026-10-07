@@ -108,20 +108,12 @@ function create(state: ComponentState) {
         : createIconButton({ icon: described.icon, ariaLabel: described.ariaLabel, variant: described.variant ?? 'tonal' });
       // Positioning needs the target in the document before an initially visible tooltip is created.
       stage.append(target.element);
-      // The factory shows a visible tooltip before this observer exists, so that show
-      // never arrived here. Create it hidden and show it after the observer: the page's
-      // own show is the one the observer sees, and it is not a visitor's event.
-      const pageOpens = state.visible === true;
-      const control = createTooltip({ ...components.tooltip.config(state), ...(pageOpens ? { visible: false } : {}), target: target.element });
-      let pageShow = pageOpens;
+      const control = createTooltip({ ...components.tooltip.config(state), target: target.element });
       const observer = new MutationObserver(() => {
-        const shown = control.isVisible();
-        if (pageShow) { pageShow = false; if (shown) return; }
-        sync({ visible: shown });
-        message(shown ? 'Tooltip shown' : 'Tooltip hidden');
+        sync({ visible: control.isVisible() });
+        message(control.isVisible() ? 'Tooltip shown' : 'Tooltip hidden');
       });
       observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
-      if (pageOpens) control.show(true);
       target.on('click', () => message(`${described.ariaLabel} clicked`));
       return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
     }
