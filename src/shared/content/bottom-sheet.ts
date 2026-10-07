@@ -11,7 +11,7 @@ const icon = (svg: string, size: number): string =>
 const chip = (label: string, svg: string): string =>
   `<button type="button" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid; border-radius: 8px; background: none; font: inherit; cursor: pointer">${icon(svg, 18)}<span>${label}</span></button>`;
 
-/** A contact under their photo, or an app under a neutral glyph — the products' own logos are not ours to draw. */
+/** A contact under their photo — the products' own logos are not ours to draw. */
 const target = (label: string, inner: string): string =>
   `<figure style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0">${inner}<figcaption style="font-size: 12px">${label}</figcaption></figure>`;
 
@@ -19,24 +19,21 @@ const target = (label: string, inner: string): string =>
 const contact = (label: string, photo: number): string =>
   target(label, `<img src="https://picsum.photos/id/${photo}/96/96" alt="" style="width: 48px; height: 48px; border-radius: 50%" />`);
 
-/** An app's glyph on an outlined circle: the files, mail, video and cloud symbols stand in for its logo. */
-const app = (label: string, svg: string): string =>
-  target(label, `<span style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid; border-radius: 50%">${icon(svg, 20)}</span>`);
-
-/** Figure 1's share sheet: the chips, then the contacts, then the apps the figure captions name. */
+/** Figure 1's share sheet: the chips, then the contacts. The figure's second row of four
+ * product logos (Files, Gmail, Meet, Drive) is left out: the site draws no product logo. */
 const photoSharing = `<div style="display: flex; flex-direction: column; gap: 16px; padding: 4px 16px 24px">
   <div style="display: flex; gap: 8px">${chip('Copy', symbols.contentCopy)}${chip('Nearby', symbols.nearMe)}</div>
   <div style="display: flex; gap: 12px">${contact('Alejandro', 1005)}${contact('Ines', 1027)}${contact('Oli', 338)}${contact('Carmen', 823)}</div>
-  <div style="display: flex; gap: 12px">${app('Files', symbols.folder)}${app('Gmail', symbols.mail)}${app('Meet', symbols.videocam)}${app('Drive', symbols.cloud)}</div>
 </div>`;
 
 /** One of figure 5's action rows: an icon, then the action's words, the whole row its button. */
 const songRow = (label: string, svg: string): string =>
   `<button type="button" style="display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: none; background: none; font: inherit; text-align: left; cursor: pointer">${icon(svg, 24)}<span>${label}</span></button>`;
 
-/** Figure 5's track actions: the queue's header, then its five rows — no handle, the sheet is all list. */
+/** Figure 5's track actions: the queue's header with a divider under it, then its five rows — no handle, the sheet is all list. */
 const songOptions = `<div style="display: flex; flex-direction: column">
   <div style="display: flex; align-items: center; gap: 12px; padding: 16px 16px 8px"><img src="https://picsum.photos/id/429/112/112" alt="" style="width: 56px; height: 56px; border-radius: 4px" /><div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 500">Oli's Picks</span><span style="font-size: 14px">Various artists</span></div></div>
+  <hr style="border: none; border-top: 1px solid; margin: 0" />
   ${songRow('Add to Playlist...', symbols.playlistAdd)}
   ${songRow('Go to Album', symbols.album)}
   ${songRow('Go to Artist', symbols.personSearch)}
@@ -77,8 +74,8 @@ interface BottomSheetSet {
  * Named sheets from m3.material.io/components/bottom-sheets/guidelines (read 5
  * October 2026), figures 1, 5, 8 and 10. `default` is not here: today's plan-a-visit
  * sheet stays exactly as it was. The content is native HTML the sheet serves through
- * `content` — it has no list, chip or progress templates of its own, and the apps'
- * logos are not ours to draw: neutral Material glyphs stand in. See briefs/gaps.md.
+ * `content` — it has no list, chip or progress templates of its own, and the figure's
+ * row of product logos is left out: the site draws no product logo. See briefs/gaps.md.
  */
 const bottomSheetSets: Record<string, BottomSheetSet> = {
   'photo-sharing': { name: 'Photo sharing', title: '', content: photoSharing },
