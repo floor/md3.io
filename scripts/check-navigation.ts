@@ -47,6 +47,34 @@ try {
       await frame.locator('dialog[open]').waitFor();
       await reset();
       await frame.locator('dialog[open]').waitFor({ state: 'hidden' });
+    } else if (slug === 'navigation-bar') {
+      await frame.getByRole('button', { name: 'Favorites', exact: true }).click();
+      await selected('favorites');
+      const show = async (id: string) => { await page.locator('#scenario').selectOption(id); };
+      await show('unread-nav-bar');
+      await frame.getByRole('button', { name: 'Mail, 999+', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Chat, 10', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Rooms, New activity', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Meet, 3', exact: true }).waitFor();
+      let source = await page.locator('#generated-code').textContent() ?? '';
+      assert(source.includes('"999+"') && source.includes('badge: true'), 'Unread bar: the code lost a badge');
+      await frame.getByRole('button', { name: 'Chat, 10', exact: true }).click();
+      await selected('chat');
+      await show('new-in-music');
+      await frame.getByRole('button', { name: 'Home', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Music, New activity', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Explore', exact: true }).waitFor();
+      await selected('music');
+      await show('ten-in-music');
+      await frame.getByRole('button', { name: 'Home', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Music, 10', exact: true }).waitFor();
+      await selected('home');
+      source = await page.locator('#generated-code').textContent() ?? '';
+      assert(source.includes('"10"') && source.includes('activeIcon'), 'Ten in music: the count or the filled Home icon is not in the code');
+      await choose('itemLayout', 'horizontal');
+      source = await page.locator('#generated-code').textContent() ?? '';
+      assert(source.includes('horizontal'), 'Horizontal layout is not in the code');
+      assert(await page.locator('#configuration [name="hideOnScroll"]').count() === 0, 'Hide on scroll is a control');
     } else if (slug === 'drawer') {
       await frame.getByText('Favorites', { exact: true }).click();
       await selected('favorites');
