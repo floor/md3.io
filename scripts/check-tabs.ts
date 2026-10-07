@@ -422,7 +422,9 @@ const tabServer = Bun.serve({
     if (path === '/tab.css' && tabBundles[currentTabKey]?.css) {
       return new Response(tabBundles[currentTabKey].css!, { headers: { 'content-type': 'text/css' } });
     }
-    return new Response('Not found', { status: 404 });
+    // The tab page is this origin, so a snippet's `/assets/...` image asks here.
+    // The site server answers the files it has; a path that does not exist still 404s.
+    return handleRequest(req);
   },
 });
 
