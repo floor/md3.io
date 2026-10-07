@@ -79,15 +79,26 @@ export const currentCheckboxChildren = (state: ComponentState): readonly Checkbo
   return family ? family.children : checkboxChildren;
 };
 
-/** Whether a child starts checked: all when the parent is, or according to the family's mixed state. */
+/**
+ * Whether a child is checked. A checked or unchecked parent settles every child.
+ * Otherwise the page's stored mix (`checkedChildren`, a comma list, or `__none__`)
+ * wins; with no mix, the family's mixed child, or Tomato.
+ */
 export const checkboxChildChecked = (state: ComponentState, value: string): boolean => {
   if (state.state === 'checked') return true;
   if (state.state === 'unchecked') return false;
+  if (typeof state.checkedChildren === 'string' && state.checkedChildren !== '') {
+    return state.checkedChildren !== '__none__' && state.checkedChildren.split(',').includes(value);
+  }
   const children = currentCheckboxChildren(state);
   const child = children.find(c => c.value === value);
   if (child && 'checkedWhenMixed' in child) return !!child.checkedWhenMixed;
   return value === 'tomato';
 };
+
+/** State, the option set, and the family clear a stored mix. Checked and unchecked then write a new one. */
+export const checkboxEditClearsCheckedSet = (key: string): boolean =>
+  key === 'state' || key === 'family' || key === 'familySet';
 
 export const checkboxComponent = {
   group: 'Selection & input', name: 'Checkbox', factory: 'createCheckbox', variable: 'checkbox',

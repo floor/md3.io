@@ -436,7 +436,8 @@ function create(state: ComponentState) {
       // checking the parent checks every child, unchecking it unchecks them, and a mix
       // makes it indeterminate; checking an indeterminate parent checks them all.
       const { label, value: _value, checked: _checked, indeterminate: _indeterminate, name, ...common } = components.checkbox.config(state);
-      const children = currentCheckboxChildren(state).map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
+      const specs = currentCheckboxChildren(state);
+      const children = specs.map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
       const parentBox = createCheckbox({ ...common, label: label || 'Additions', checked: state.state === 'checked', indeterminate: state.state === 'indeterminate' });
       parentBox.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));
       const reflect = () => {
@@ -446,6 +447,9 @@ function create(state: ComponentState) {
         else if (on === 0) parentBox.uncheck();
         else { parentBox.uncheck(); parentBox.setIndeterminate(true); }
         const nextState = on === children.length ? 'checked' : on === 0 ? 'unchecked' : 'indeterminate';
+        const checkedChildren = children.flatMap((child, index) => child.isChecked() ? [specs[index]!.value] : []).join(',') || '__none__';
+        // The page applies md3:values with update(false), so this report does not rebuild the preview.
+        sync({ state: nextState, checkedChildren });
         report(nextState);
         message(on === 0 ? `No ${label ? label.toLowerCase() : 'additions'}` : `${on} of ${children.length} ${label ? label.toLowerCase() : 'additions'}`);
       };
