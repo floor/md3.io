@@ -399,8 +399,21 @@ function create(state: ComponentState) {
       // The first open is the scenario's own, like a named menu: it does not
       // replace "Ready to try". A later open, after a close, still reports.
       let announced = state.dateOpen !== true;
-      control.on('open', () => { if (!announced) { announced = true; return; } message('Calendar opened'); });
-      control.on('close', () => message('Calendar closed'));
+      const fieldTrigger = () => control.element.querySelector<HTMLButtonElement>('button[data-action="open"]');
+      // showModal covers the field. The library still leaves the trigger enabled
+      // (material/src/components/datepicker/datepicker.ts, setDisabled follows only
+      // disabled and readOnly; open() sets aria-expanded). It is not a control
+      // until the dialog closes. A docked calendar does not cover its trigger.
+      const modal = state.variant !== 'docked';
+      control.on('open', () => {
+        if (modal) { const trigger = fieldTrigger(); if (trigger) trigger.disabled = true; }
+        if (!announced) { announced = true; return; }
+        message('Calendar opened');
+      });
+      control.on('close', () => {
+        if (modal) { const trigger = fieldTrigger(); if (trigger) trigger.disabled = false; }
+        message('Calendar closed');
+      });
       // After render appends the field: a modal dialog opens only once it is connected.
       if (state.dateOpen === true) queueMicrotask(() => control.open());
       return control;
