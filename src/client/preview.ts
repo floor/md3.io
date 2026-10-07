@@ -508,7 +508,18 @@ function create(state: ComponentState) {
     }
     case 'fab-menu': {
       const control = createFabMenu(components['fab-menu'].config(state));
+      // An open the page performs at load is not a visitor's event. Same idea as
+      // the snackbar's openedByPage on the communication branch, written here;
+      // the two meet on main. It is not reported. The call waits until the FAB
+      // is in the stage: render appends the element after create returns.
+      let openedByPage = state.open === true;
+      control.on('open', () => {
+        if (openedByPage) { openedByPage = false; return; }
+        message('Menu opened');
+      });
+      control.on('close', () => message('Menu closed'));
       control.on('select', ({ id }) => message(`${id} chosen`));
+      if (state.open === true) setTimeout(() => control.open(), 0);
       return control;
     }
     case 'extended-fab': {

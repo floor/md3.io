@@ -314,6 +314,43 @@ describe('extended fab scenarios', () => {
   });
 });
 
+describe('fab menu scenarios', () => {
+  const apply = (id: string) => {
+    const scenario = components['fab-menu'].scenarios.find(item => item.id === id);
+    if (!scenario) throw new Error(`missing fab menu scenario ${id}`);
+    const state = normalizeComponentState('fab-menu', { ...initialComponentState('fab-menu'), ...scenario.options });
+    return { scenario, state, config: components['fab-menu'].config(state) };
+  };
+  test('the default is still Reply, Forward and Favorite, and it is closed', () => {
+    const state = initialComponentState('fab-menu');
+    const config = components['fab-menu'].config(state);
+    expect(config.items.map(item => item.text)).toEqual(['Reply', 'Forward', 'Favorite']);
+    expect(config.ariaLabel).toBe('Reply options');
+    expect(componentCode('fab-menu', state)).not.toContain('fabMenu.open()');
+    expect(elementConfig('fab-menu', state).open).toBe(false);
+  });
+  test('each menu is the figure’s items, open in every tab', () => {
+    const music = apply('new-music');
+    expect(music.config.color).toBe('tertiary');
+    expect(music.config.items.map(item => item.text)).toEqual(['New playlist', 'New collection', 'New station']);
+    expect(music.config.items.map(item => item.icon)).toEqual([symbols.musicNote, symbols.libraryMusic, symbols.radio]);
+    const photos = apply('photo-categories');
+    expect(photos.config.color).toBe('primary');
+    expect(photos.config.items.map(item => item.text)).toEqual(['Pets', 'Landscapes', 'Food', 'People', 'Nature']);
+    const share = apply('share');
+    expect(share.config.items.map(item => item.text)).toEqual(['Email', 'Message', 'Shared folder']);
+    for (const { state } of [music, photos, share]) {
+      expect(state.open).toBe(true);
+      expect(componentCode('fab-menu', state)).toContain('fabMenu.open()');
+      const html = frameworkCode('html', elementMeta('fab-menu')!, elementConfig('fab-menu', state), { theme: 'baseline', mode: 'light' });
+      expect(html).toContain('<m-fab-menu open');
+      expect(html).not.toContain('Not yet exposed');
+      const react = frameworkCode('react', elementMeta('fab-menu')!, elementConfig('fab-menu', state), { theme: 'baseline', mode: 'light' });
+      expect(react).toContain('<FabMenu open');
+    }
+  });
+});
+
 describe('fab menu open', () => {
   const code = (framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', open: boolean) => {
     const config = { ...elementConfig('fab-menu', initialComponentState('fab-menu')), open };
