@@ -921,10 +921,20 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
   }, '  ', '');
   const variable = hostVariable(meta);
   const event = logEvent(meta);
+  // A repeated selector (several suggestions, none with its own value) would set every
+  // icon on the first match. Those children are addressed in order instead.
+  const iconChildren = everyChild(p.children);
+  const iconBase = (child: Child) => {
+    const value = child.attrs.find(v => v.name === 'value')?.value;
+    return `${childName}${value === undefined ? '' : `[value="${String(value)}"]`}`;
+  };
+  const iconBases = iconChildren.map(iconBase);
+  const iconTallies = new Map<string, number>();
+  for (const base of iconBases) iconTallies.set(base, (iconTallies.get(base) ?? 0) + 1);
   const iconAttrs = p.attrs.filter(a => a.ref).map(a => `  ${variable}.setAttribute('${a.name}', ${a.ref});\n`).join('') +
-    everyChild(p.children).flatMap(c => c.attrs.filter(a => a.ref).map(a => {
-      const value = c.attrs.find(v => v.name === 'value')?.value;
-      const selector = `${childName}${value === undefined ? '' : `[value="${String(value)}"]`}`;
+    iconChildren.flatMap((c, index) => c.attrs.filter(a => a.ref).map(a => {
+      const base = iconBases[index]!;
+      const selector = (iconTallies.get(base) ?? 0) > 1 ? `${childName}:nth-of-type(${index + 1})` : base;
       return `  ${variable}.querySelector('${selector}').setAttribute('${a.name}', ${a.ref});\n`;
     })).join('') +
     p.slotted.flatMap(c => c.attrs.filter(a => a.ref).map(a => `  ${variable}.querySelector('${slottedSelector(c)}').setAttribute('${a.name}', ${a.ref});\n`)).join('');
