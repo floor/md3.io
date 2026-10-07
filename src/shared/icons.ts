@@ -61,6 +61,12 @@ import schedule from '../../icons/schedule.svg' with { type: 'text' };
 import share from '../../icons/share.svg' with { type: 'text' };
 import timer from '../../icons/timer.svg' with { type: 'text' };
 import videocam from '../../icons/videocam.svg' with { type: 'text' };
+import home from '../../icons/home.svg' with { type: 'text' };
+import homeFilled from '../../icons/home-fill.svg' with { type: 'text' };
+import chatBubble from '../../icons/chat_bubble.svg' with { type: 'text' };
+import groups from '../../icons/groups.svg' with { type: 'text' };
+import videoCameraFront from '../../icons/video_camera_front.svg' with { type: 'text' };
+import mailFilled from '../../icons/mail-fill.svg' with { type: 'text' };
 import visibility from '../../icons/visibility.svg' with { type: 'text' };
 import visibilityOff from '../../icons/visibility_off.svg' with { type: 'text' };
 import volumeOff from '../../icons/volume_off.svg' with { type: 'text' };
@@ -145,6 +151,13 @@ export const symbols = {
   share: trim(share),
   timer: trim(timer),
   videocam: trim(videocam),
+  // The navigation bar's figures (src/shared/content/navigation-bar.ts).
+  home: trim(home),
+  homeFilled: trim(homeFilled),
+  chatBubble: trim(chatBubble),
+  groups: trim(groups),
+  videoCameraFront: trim(videoCameraFront),
+  mailFilled: trim(mailFilled),
   // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
   album: trim(album),
   cloud: trim(cloud),
@@ -227,6 +240,13 @@ const files: Record<keyof typeof symbols, string> = {
   share: 'share',
   timer: 'timer',
   videocam: 'videocam',
+  // The navigation bar's figures (src/shared/content/navigation-bar.ts).
+  home: 'home',
+  homeFilled: 'home-fill',
+  chatBubble: 'chat_bubble',
+  groups: 'groups',
+  videoCameraFront: 'video_camera_front',
+  mailFilled: 'mail-fill',
   // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
   album: 'album',
   cloud: 'cloud',
