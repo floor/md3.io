@@ -49,7 +49,9 @@ try {
     if (slug === 'card') {
       await frame.getByRole('button', { name: 'Explore', exact: true }).click();
       await page.locator('#playground-status').filter({ hasText: 'Explore clicked' }).waitFor();
-      assert(await frame.locator('img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0), 'Card artwork failed to load');
+      // The artwork is inline markup (the copied code stands alone, no site assets): its
+      // host carries the accessible name; an image that loads is no longer the proof.
+      await frame.locator('[role="img"][aria-label="Illustrated mountain landscape"]').waitFor();
       await toggle('clickable');
       await frame.getByText('A little time outside').click();
       await page.locator('#playground-status').filter({ hasText: 'Card clicked' }).waitFor();
