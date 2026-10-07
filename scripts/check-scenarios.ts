@@ -82,18 +82,35 @@ try {
       for (const root of unstyledRoots) findings.push(`${root} is on the stage with a transparent background`);
       // Buttons only: a combobox input also carries aria-haspopup, but it raises a
       // listbox, never a menu, and clicking a readonly input is not what is being checked.
+      // A trigger that already says expanded is not clicked: the popup is the state the
+      // click would produce. A dialog popup is the dialog's own open state; a menu popup
+      // is a visible menu, then its background and elevation.
       const openers = frame.locator('button[aria-haspopup]');
       for (let index = 0; index < await openers.count(); index++) {
         const opener = openers.nth(index);
         if (!(await opener.isEnabled())) continue;
-        await opener.click();
+        const popup = await opener.getAttribute('aria-haspopup');
+        const expanded = (await opener.getAttribute('aria-expanded')) === 'true';
+        if (!expanded) await opener.click();
+        if (popup === 'dialog') {
+          const dialog = frame.locator('dialog[open]').first();
+          let shown = true;
+          try { await dialog.waitFor({ state: 'visible', timeout: 1000 }); }
+          catch { shown = false; }
+          if (!shown) findings.push('a dialog popup is not shown');
+          else await frame.locator('body').press('Escape');
+          continue;
+        }
         const menu = frame.locator('.mtrl-menu').first();
         let opened = true;
         try { await menu.waitFor({ state: 'visible', timeout: 1000 }); }
         catch { opened = false; }
         if (!opened) {
-          // An opener may raise a list, a listbox or nothing; menus are what is judged
-          // here. Whatever did open still has to go, so the next opener starts clean.
+          // Already expanded: the popup had to be showing, the same as after a click.
+          // A closed opener whose popup is a menu (`aria-haspopup="true"`, the menu
+          // surface this check judges) and does not show one fails. An opener that
+          // raises a list which is not that surface (the fab menu) is left as it was.
+          if (expanded || popup === 'true' || popup === 'listbox') findings.push('a menu popup is not shown');
           await frame.locator('body').press('Escape');
           continue;
         }
