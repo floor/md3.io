@@ -315,8 +315,9 @@ describe('drawer files scenario', () => {
     const config = components.drawer.config(state);
     expect(config.headline).toBe('Files');
     expect(state.active).toBe('photos');
-    const row = (id: string) => config.items.find(item => item.id === id);
-    expect(config.items.flatMap(item => item.label ? [item.label] : [])).toEqual(['Photos', 'Fonts', 'Documents', 'Delete']);
+    const items = config.items ?? [];
+    const row = (id: string) => items.find(item => item.id === id);
+    expect(items.flatMap(item => item.label ? [item.label] : [])).toEqual(['Photos', 'Fonts', 'Documents', 'Delete']);
     expect(row('photos')?.badge).toBe('999+');
     expect(row('photos')?.active).toBe(true);
     expect(row('photos')?.icon).toBe(symbols.image);
