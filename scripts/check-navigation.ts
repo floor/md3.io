@@ -47,6 +47,36 @@ try {
       await frame.locator('dialog[open]').waitFor();
       await reset();
       await frame.locator('dialog[open]').waitFor({ state: 'hidden' });
+      // The collapsed clock rail used to keep the extended FAB and clip "Add timer".
+      const compactFits = async (where: string) => {
+        await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="expanded"]')?.checked);
+        await page.waitForFunction(() => {
+          const rail = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-navigation-rail');
+          return !!rail && rail.getBoundingClientRect().width <= 120;
+        });
+        await frame.getByText('Add timer', { exact: true }).waitFor({ state: 'hidden' });
+        const fit = await frame.getByRole('button', { name: 'Add timer', exact: true }).evaluate(fab => {
+          const rail = fab.closest('.mtrl-navigation-rail');
+          if (!(rail instanceof HTMLElement)) return null;
+          const railBox = rail.getBoundingClientRect();
+          const fabBox = fab.getBoundingClientRect();
+          return {
+            compact: fab.classList.contains('mtrl-fab') && !fab.classList.contains('mtrl-extended-fab'),
+            inside: fabBox.width > 0 && fabBox.left >= railBox.left - 1 && fabBox.right <= railBox.right + 1 && fabBox.top >= railBox.top - 1 && fabBox.bottom <= railBox.bottom + 1,
+          };
+        });
+        assert(fit?.compact && fit.inside, `${where}: the header is the compact FAB inside the rail`);
+      };
+      await page.locator('#scenario').selectOption('expanded-clock');
+      await frame.getByText('Add timer', { exact: true }).waitFor();
+      await toggle('expanded');
+      await compactFits('expanded-clock, Expanded off');
+      await toggle('expanded');
+      await frame.getByText('Add timer', { exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
+      await compactFits('expanded-clock, menu button');
+      await frame.getByRole('button', { name: 'Expand navigation', exact: true }).click();
+      await frame.getByText('Add timer', { exact: true }).waitFor();
     } else if (slug === 'drawer') {
       await frame.getByText('Favorites', { exact: true }).click();
       await selected('favorites');

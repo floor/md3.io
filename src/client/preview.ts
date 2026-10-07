@@ -42,7 +42,7 @@ import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
 import { toolbarContent } from '../shared/content/toolbar';
 import { appBarContent } from '../shared/content/top-app-bar';
-import { railHeader } from '../shared/content/navigation-rail';
+import { railHeaderForm } from '../shared/content/navigation-rail';
 import { tabsAriaLabel } from '../shared/content/tabs';
 import { menuSelectedId } from '../shared/content/menu';
 import { artElement } from '../shared/content/types';
@@ -197,13 +197,25 @@ function create(state: ComponentState) {
     }
 
     case 'navigation-rail': {
-      const headerSpec = railHeader(state);
-      const header = headerSpec
-        ? headerSpec.text
-          ? createExtendedFab({ icon: headerSpec.icon, text: headerSpec.text, ariaLabel: headerSpec.ariaLabel })
-          : createFab({ icon: headerSpec.icon, ariaLabel: headerSpec.ariaLabel })
-        : null;
+      // `expanded` is an argument: a later configure with the same values rebinds the
+      // preview's state object and leaves this rail closed over the previous one.
+      const buildHeader = (expanded: boolean) => {
+        const form = railHeaderForm({ ...state, expanded });
+        return form
+          ? form.kind === 'extended'
+            ? createExtendedFab({ icon: form.icon, text: form.text, ariaLabel: form.ariaLabel })
+            : createFab({ icon: form.icon, ariaLabel: form.ariaLabel })
+          : null;
+      };
+      let header = buildHeader(state.expanded === true);
       const control = createNavigationRail({ ...components['navigation-rail'].config(state), ...(header ? { header: header.element } : {}) });
+      // The menu button keeps this rail. Swap only the FAB: a rebuild would throw away the switch it just started.
+      const swapHeader = (expanded: boolean) => {
+        const parent = header?.element.parentElement ?? null;
+        header?.destroy();
+        header = buildHeader(expanded);
+        if (header && parent) parent.append(header.element);
+      };
       const host = document.createElement('div');
       host.className = 'navigation-demo';
       host.append(control.element);
@@ -217,8 +229,8 @@ function create(state: ComponentState) {
         host.append(trigger.element);
       }
       control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
-      control.on('expand', () => { sync({ expanded: true }); if (trigger) trigger.element.hidden = true; message('Navigation expanded'); });
-      control.on('collapse', () => { sync({ expanded: false }); if (trigger) trigger.element.hidden = false; message('Navigation collapsed'); });
+      control.on('expand', () => { sync({ expanded: true }); swapHeader(true); if (trigger) trigger.element.hidden = true; message('Navigation expanded'); });
+      control.on('collapse', () => { sync({ expanded: false }); swapHeader(false); if (trigger) trigger.element.hidden = false; message('Navigation collapsed'); });
       return { element: host, destroy: () => { trigger?.destroy(); header?.destroy(); control.destroy(); } };
     }
     case 'drawer': {
