@@ -89,6 +89,11 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     'content.text': { text: true },
     // A clickable card is interactive.
     interactive: { same: 'clickable' },
+    // The element builds its actions row with no align class (elements/card.ts), and the
+    // stylesheet's flex row starts at the start unless `--end` is set. `start` is that
+    // row, so the element tabs do not repeat it. The factory's `buttons` path defaults
+    // to end, and the vanilla tab passes `actions.align` to override that.
+    'actions.align': { ignore: ['start'] },
   },
   carousel: { snap: { ignore: [true] } },
   // The trigger is the anchor.

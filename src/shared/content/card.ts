@@ -1,6 +1,7 @@
 // The card's playground content: its named content sets and its registry entry.
 import type { CardConfig } from 'material/components/card';
-import { type ArtRatio, type ComponentState, type Control, type Scenario, bool, choose, framedLandscape, landscape, pick, section, string, text, toggle } from './types';
+import { carouselPhoto, carouselPhotoUrl } from '../carousel-photos';
+import { type ComponentState, type Control, type Scenario, bool, choose, framedLandscape, landscape, pick, section, string, text, toggle } from './types';
 
 /**
  * The card's media as inline art: markup the preview resolves into the element the
@@ -45,6 +46,21 @@ const cardSets: Record<string, CardSet> = {
 
 const cardSet = (state: ComponentState): CardSet | undefined => cardSets[string(state, 'cardSet')];
 
+/**
+ * The concert figure is a photograph of a crowd at a show. The catalog photo the
+ * curated-lists scenario already loads (id 453, "Stage Light, Concert") is that
+ * picture; the other named cards keep the illustrated landscape.
+ */
+const namedMedia = (state: ComponentState): CardConfig['media'] | CardMediaArt => {
+  const ratio = pick(state, 'aspectRatio', ['16:9', '4:3', '1:1'] as const, '16:9');
+  const position = pick(state, 'mediaPosition', ['top', 'bottom'], 'top');
+  if (string(state, 'cardSet') === 'concert-tour') {
+    const photo = carouselPhoto(453);
+    return { src: carouselPhotoUrl('multi-browse', photo.id), alt: `${photo.title}, ${photo.location}`, aspectRatio: string(state, 'aspectRatio'), position };
+  }
+  return { markup: framedLandscape(0, ratio, 'Illustrated mountain landscape'), aspectRatio: string(state, 'aspectRatio'), position };
+};
+
 const cardSetControl: Control = {
   ...choose('cardSet', 'Card', ['default', 'concert-tour', 'showtime-tickets', 'podcast-episode'], 'default', 'select'),
   labels: { default: 'Default', ...Object.fromEntries(Object.entries(cardSets).map(([id, set]) => [id, set.name])) },
@@ -84,22 +100,22 @@ export const cardComponent = {
   ],
   config: (state: ComponentState): Omit<CardConfig, 'media'> & { media?: CardConfig['media'] | CardMediaArt } => {
     const named = cardSet(state);
-    // A named card carries the figure's own words as inline art; the default stays
-    // today's mountain card exactly, its title, subtitle and body controls driving it.
+    // A named card carries the figure's own words. The concert's picture is a catalog
+    // photo; the podcast keeps the inline landscape. The default stays today's
+    // mountain card, its title, subtitle and body controls driving it.
     if (named) {
       return {
         variant: pick(state, 'variant', ['elevated', 'filled', 'outlined'], 'elevated'),
         clickable: bool(state, 'clickable'),
         interactive: bool(state, 'clickable'),
         draggable: bool(state, 'draggable'),
-        ...(state.media ? { media: {
-          markup: framedLandscape(0, pick(state, 'aspectRatio', ['16:9', '4:3', '1:1'] as const, '16:9'), 'Illustrated mountain landscape'),
-          aspectRatio: string(state, 'aspectRatio'),
-          position: pick(state, 'mediaPosition', ['top', 'bottom'], 'top'),
-        } } : {}),
+        ...(state.media ? { media: namedMedia(state) } : {}),
         header: named.header,
         ...(named.body ? { content: { text: named.body } } : {}),
-        ...(state.actions && named.buttons ? { buttons: named.buttons } : {}),
+        // Buy tickets sits at the start of the figure's action row. The factory's
+        // buttons path aligns end unless `actions.align` says otherwise
+        // (material/src/components/card/config.ts). Showtime keeps that end default.
+        ...(state.actions && named.buttons ? { buttons: named.buttons, ...(string(state, 'cardSet') === 'concert-tour' ? { actions: { align: 'start' as const } } : {}) } : {}),
       };
     }
     return {
