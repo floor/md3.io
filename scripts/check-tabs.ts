@@ -202,8 +202,9 @@ function multisetDifference(left: string[], right: string[]): string[] {
   });
 }
 
-const collectVisibleText = () => {
+const collectVisibleText = (selectors: string[]) => {
   const normalise = (value: string) => value.replace(/\s+/g, ' ').trim();
+  const isPreviewOnly = (element: Element) => selectors.some(selector => element.matches(selector));
   const isVisible = (start: Element) => {
     let element: Element | null = start;
     while (element) {
@@ -232,7 +233,7 @@ const collectVisibleText = () => {
       if (value) text.push(value);
       return;
     }
-    if (!(node instanceof Element) || node.matches('script, style')) return;
+    if (!(node instanceof Element) || node.matches('script, style') || isPreviewOnly(node)) return;
     if ((node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) && isVisible(node)) {
       if (node instanceof HTMLInputElement) {
         const ariaLabel = normalise(node.getAttribute('aria-label') ?? '');
@@ -389,18 +390,21 @@ for (const slug of targetSlugs) {
 
 // --- Serve bundled tabs ---
 let currentTabKey = '';
-const harnessHtml = (key: string): string => {
+// `width` is the preview stage measured for this run. The tab mounts in a box
+// of that width, so a component is read at the same width on both sides.
+const harnessHtml = (key: string, width: number): string => {
   const info = tabBundles[key];
   if (!info) return '<!doctype html><html><body>Not found</body></html>';
+  const box = width > 0 ? `width:${width}px;max-width:${width}px;` : '';
   return `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   ${info.css ? '<link rel="stylesheet" href="/tab.css">' : ''}
 </head>
-<body style="margin:0">
+<body style="margin:0;${box}">
   ${info.markup ? `${info.markup}\n` : ''}
-  <div id="app" style="padding:16px"></div>
+  <div id="app" style="${width > 0 ? 'width:100%' : 'padding:16px'}"></div>
   <script type="module" src="/tab.js"></script>
 </body>
 </html>`;
@@ -414,7 +418,8 @@ const tabServer = Bun.serve({
     currentTabKey = url.searchParams.get('tab') ?? currentTabKey;
     const path = url.pathname.replace(/\/+$/, '') || '/';
     if (path === '/') {
-      return new Response(harnessHtml(currentTabKey), { headers: { 'content-type': 'text/html' } });
+      const width = Number(url.searchParams.get('width'));
+      return new Response(harnessHtml(currentTabKey, Number.isFinite(width) ? width : 0), { headers: { 'content-type': 'text/html' } });
     }
     if (path === '/tab.js' && tabBundles[currentTabKey]) {
       return new Response(tabBundles[currentTabKey].js, { headers: { 'content-type': 'text/javascript' } });
@@ -422,7 +427,9 @@ const tabServer = Bun.serve({
     if (path === '/tab.css' && tabBundles[currentTabKey]?.css) {
       return new Response(tabBundles[currentTabKey].css!, { headers: { 'content-type': 'text/css' } });
     }
-    return new Response('Not found', { status: 404 });
+    // The tab page is this origin, so a snippet's `/assets/...` image asks here.
+    // The site server answers the files it has; a path that does not exist still 404s.
+    return handleRequest(req);
   },
 });
 
@@ -458,6 +465,14 @@ try {
       await previewPage.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = previewPage.frames().find(f => f !== previewPage.mainFrame() && f.url().includes('preview')) ?? previewPage.frames()[1]!;
+      // The stage's width on this run, not a width written into the check.
+      // Every tab of this scenario mounts in a box that wide.
+      const stageWidth = Math.round(await previewFrame.evaluate(() => document.querySelector('#stage')?.getBoundingClientRect().width ?? 0));
+      if (!(stageWidth > 0)) {
+        differences.push(`${slug} ${scenarioId}: the preview stage has no width`);
+        continue;
+      }
+      await page.setViewportSize({ width: stageWidth, height: 900 });
       // This is deliberately read once: opening a menu for one tab must not
       // turn into evidence that it was open on load for later tabs.
       const previewMenuOnLoad = await settledMenuState(previewFrame);
@@ -470,7 +485,7 @@ try {
         pageErrors.length = 0;
 
         try {
-          await page.goto(`${tabServer.url}/?tab=${encodeURIComponent(key)}`);
+          await page.goto(`${tabServer.url}/?tab=${encodeURIComponent(key)}&width=${stageWidth}`);
           // Wait for element upgrade / mount
           await page.waitForFunction(() => {
             const visit = (node: Element): boolean => {
@@ -522,18 +537,23 @@ try {
         }
 
         // Collect preview contents after its menu state has been settled.
-        const previewClasses = await previewFrame.evaluate(() => {
+        // Declared preview-only chrome (a component's `previewOnly` selectors)
+        // is the playground's, not the copied code's, so its roots and text do not count.
+        const component = components[slug];
+        const previewOnly = 'previewOnly' in component && component.previewOnly ? [...component.previewOnly] : [];
+        const previewClasses = await previewFrame.evaluate((selectors: string[]) => {
           const found = new Set<string>();
           const visit = (node: Element) => {
+            if (selectors.some(selector => node.matches(selector))) return;
             for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
           visit(document.body);
           return [...found];
-        });
+        }, previewOnly);
         const previewRoots = previewClasses.filter(isRootClass);
-        const previewText = await previewFrame.evaluate(collectVisibleText);
+        const previewText = await previewFrame.evaluate(collectVisibleText, previewOnly);
 
         // Collect root classes from mounted tab
         const tabClasses = await page.evaluate(() => {
@@ -547,7 +567,7 @@ try {
           return [...found];
         });
         const tabRoots = tabClasses.filter(isRootClass);
-        const tabText = await page.evaluate(collectVisibleText);
+        const tabText = await page.evaluate(collectVisibleText, [] as string[]);
 
         let missing = previewRoots.filter(c => !tabRoots.includes(c));
         let extra = tabRoots.filter(c => !previewRoots.includes(c));

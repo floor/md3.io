@@ -495,20 +495,16 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const component = components[slug];
   const hasTrigger = ['dialog', 'bottom-sheet', 'side-sheet'].includes(slug);
   const shown = component.config(state) as Record<string, unknown>;
-  // Card media is inline art: the library's media API takes an element, which the code
-  // builds from the shared markup before the card, so the same art shows everywhere.
+  // Card media that is inline art: the library's media API takes an element, which the
+  // code builds from the shared markup before the card, so the same art shows everywhere.
   const art = slug === 'card' && !!shown.media && typeof shown.media === 'object' && typeof (shown.media as { markup?: unknown }).markup === 'string'
     ? (shown.media as { markup: string }).markup : undefined;
   const elementRef = '"\\u0000media"';
   const printable = art
     ? { ...shown, media: { element: '\u0000media', aspectRatio: (shown.media as { aspectRatio?: string }).aspectRatio, position: (shown.media as { position?: string }).position } }
     : shown;
-  // The default's twenty-four photos would bury the code: three show the shape, as on
-  // main. A named collection's slides are its scenario's content: every one is listed.
-  const slides = slug === 'carousel' ? (shown.slides as unknown[]) : [];
-  const truncateSlides = slides.length > 3 && state.slidesDefault;
-  const config = JSON.stringify(slug === 'carousel' ? { ...printable, slides: truncateSlides ? slides.slice(0, 3) : slides } : printable, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
-    .replace(/(\n  slides: \[)/, truncateSlides ? `\n  // The preview shows ${slides.length} photos; three are listed here.$1` : '$1')
+  // The Vanilla snippet lists every slide the preview and the other tabs list.
+  const config = JSON.stringify(printable, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(elementRef, 'media');
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   const before = art ? `// The demo art is inline SVG, so this snippet needs no image files.\nconst media = document.createElement('div');\nmedia.setHTML(${JSON.stringify(art)});\n` : '';
