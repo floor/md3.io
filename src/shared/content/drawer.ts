@@ -37,16 +37,15 @@ const drawerSets: Record<string, DrawerSet> = {
       { id: 'work', label: 'Work', icon: symbols.folder },
     ],
   },
-  // badge-m3-5. Fonts and Documents have no symbol in icons.ts, so those rows
-  // have no icon. Photos uses `image` (the landscape the figure draws; the file
-  // was already in icons/). Delete uses `delete`.
+  // badge-m3-5. Photos is `image`, Fonts is `font_download` (A in a square),
+  // Documents is `article` (a square of text lines), Delete is `delete`.
   files: {
     name: 'Files',
     active: 'photos',
     items: [
       { id: 'photos', label: 'Photos', icon: symbols.image, badge: '999+' },
-      { id: 'fonts', label: 'Fonts' },
-      { id: 'documents', label: 'Documents' },
+      { id: 'fonts', label: 'Fonts', icon: symbols.fontDownload },
+      { id: 'documents', label: 'Documents', icon: symbols.article },
       { id: 'delete', label: 'Delete', icon: symbols.delete },
     ],
   },

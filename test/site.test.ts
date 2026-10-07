@@ -308,7 +308,7 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
 });
 
 describe('drawer files scenario', () => {
-  test('Files selects Photos with 999+, and only the icons the set has', () => {
+  test('Files selects Photos with 999+, and every row has its icon', () => {
     const scenario = components.drawer.scenarios.find(item => item.id === 'files');
     if (!scenario) throw new Error('missing drawer scenario files');
     const state = normalizeComponentState('drawer', { ...initialComponentState('drawer'), ...scenario.options });
@@ -320,8 +320,8 @@ describe('drawer files scenario', () => {
     expect(row('photos')?.badge).toBe('999+');
     expect(row('photos')?.active).toBe(true);
     expect(row('photos')?.icon).toBe(symbols.image);
-    expect(row('fonts')?.icon).toBeUndefined();
-    expect(row('documents')?.icon).toBeUndefined();
+    expect(row('fonts')?.icon).toBe(symbols.fontDownload);
+    expect(row('documents')?.icon).toBe(symbols.article);
     expect(row('delete')?.icon).toBe(symbols.delete);
     expect(row('delete')?.active).toBe(false);
   });
