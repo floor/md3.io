@@ -228,7 +228,8 @@ const open: Record<string, OpenMeta> = {
   snackbar: { config: 'open', show: 'show', hide: 'hide' },
   drawer: { config: 'open' },
   'navigation-rail': { config: 'expanded', property: 'expanded', events: ['expand', 'collapse'], show: 'expand', hide: 'collapse' },
-  timepicker: { show: 'show', hide: 'close' },
+  // `open` on the factory config starts the dialog open (`material/src/components/timepicker/timepicker.ts`).
+  timepicker: { config: 'open', show: 'show', hide: 'close' },
 };
 
 // Other state bound beside `open`: the bottom sheet's full height, which a drag changes too.

@@ -236,6 +236,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     if (state.disableBanana && state.value === 'banana') state.value = 'apple';
   }
   if (slug === 'search') state.searchContentDefault = !state.searchSet || state.searchSet === 'default';
+  if (slug === 'timepicker') state.timeContentDefault = !state.timeSet || state.timeSet === 'default';
   state.theme = themes.find(theme => theme === raw.theme) ?? 'baseline';
   state.mode = raw.mode === 'dark' ? 'dark' : 'light';
   return state;
