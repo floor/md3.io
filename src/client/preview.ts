@@ -87,7 +87,15 @@ function create(state: ComponentState) {
       const control = createSnackbar(components.snackbar.config(state));
       const trigger = createButton({ text: 'Show snackbar', variant: 'tonal' });
       trigger.on('click', () => control.show());
-      control.on('open', () => { sync({ visible: true }); message('Snackbar opened'); });
+      // An open the page performs at load is not a visitor's event, the same way the
+      // menu's first open is not. It is not reported, and it does not write Visible
+      // back (that write would mark the scenario custom). A later open still reports.
+      let openedByPage = state.visible === true;
+      control.on('open', () => {
+        if (openedByPage) { openedByPage = false; return; }
+        sync({ visible: true });
+        message('Snackbar opened');
+      });
       control.on('close', event => { sync({ visible: false }); message(`Snackbar closed: ${event.reason}`); });
       if (state.visible) control.show();
       return { element: trigger.element, destroy: () => { control.hide(); control.destroy(); trigger.destroy(); } };
@@ -96,12 +104,20 @@ function create(state: ComponentState) {
       const target = createIconButton({ icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' });
       // Positioning needs the target in the document before an initially visible tooltip is created.
       stage.append(target.element);
-      const control = createTooltip({ ...components.tooltip.config(state), target: target.element });
+      // The factory shows a visible tooltip before this observer exists, so that show
+      // never arrived here. Create it hidden and show it after the observer: the page's
+      // own show is the one the observer sees, and it is not a visitor's event.
+      const pageOpens = state.visible === true;
+      const control = createTooltip({ ...components.tooltip.config(state), ...(pageOpens ? { visible: false } : {}), target: target.element });
+      let pageShow = pageOpens;
       const observer = new MutationObserver(() => {
-        sync({ visible: control.isVisible() });
-        message(control.isVisible() ? 'Tooltip shown' : 'Tooltip hidden');
+        const shown = control.isVisible();
+        if (pageShow) { pageShow = false; if (shown) return; }
+        sync({ visible: shown });
+        message(shown ? 'Tooltip shown' : 'Tooltip hidden');
       });
       observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
+      if (pageOpens) control.show(true);
       target.on('click', () => message('Favorite clicked'));
       return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
     }
