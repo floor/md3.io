@@ -153,6 +153,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     const allowed = drawerActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
   }
+  if (slug === 'button-group') state.groupDefault = !state.groupSet || state.groupSet === 'default';
   if (slug === 'tabs') {
     state.tabsDefault = !state.tabSet || state.tabSet === 'default';
     if (state.tabsDefault && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';

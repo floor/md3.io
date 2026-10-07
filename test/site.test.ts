@@ -200,6 +200,36 @@ describe('icon button scenarios', () => {
   });
 });
 
+describe('button group scenarios', () => {
+  test('the default items stay Bold, Italic and Underline', () => {
+    const config = components['button-group'].config(initialComponentState('button-group'));
+    expect(config.buttons).toEqual([
+      { value: 'bold', ariaLabel: 'Bold', text: 'Bold' },
+      { value: 'italic', ariaLabel: 'Italic', text: 'Italic' },
+      { value: 'underline', ariaLabel: 'Underline', text: 'Underline' },
+    ]);
+    expect(config.ariaLabel).toBe('Text formatting');
+  });
+  test('select size and price are the figure’s items, with the figure’s selection', () => {
+    const apply = (id: string) => {
+      const scenario = components['button-group'].scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing button group scenario ${id}`);
+      const state = normalizeComponentState('button-group', { ...initialComponentState('button-group'), ...scenario.options });
+      return { state, config: components['button-group'].config(state) };
+    };
+    const sizes = apply('select-size');
+    expect(sizes.config.kind).toBe('connected');
+    expect(sizes.config.selection).toBe('single');
+    expect(sizes.config.buttons?.map(item => [item.text, item.selected === true])).toEqual([['8oz', true], ['12oz', false], ['16oz', false]]);
+    const price = apply('price');
+    expect(price.config.selection).toBe('multi');
+    expect(price.config.buttons?.map(item => [item.text, item.selected === true])).toEqual([['$', true], ['$$', true], ['$$$', false], ['$$$$', false]]);
+    const html = frameworkCode('html', elementMeta('button-group')!, elementConfig('button-group', sizes.state), { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('<m-button-group-item value="8oz" aria-label="8oz" selected>');
+    expect(html).not.toContain('Not yet exposed');
+  });
+});
+
 describe('fab menu open', () => {
   const code = (framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', open: boolean) => {
     const config = { ...elementConfig('fab-menu', initialComponentState('fab-menu')), open };
