@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { components, componentCode, initialComponentState, normalizeComponentState } from '../src/shared/components';
-import { controlConcealed } from '../src/shared/content/types';
+import { controlConcealed, sectionConcealed } from '../src/shared/content/types';
 
 const page = (path: string) => handleRequest(new Request(`http://localhost${path}`)).then(response => response.text());
 
@@ -168,5 +168,36 @@ describe('a control a named set replaces', () => {
     const chips = await page('/components/chips/');
     expect(rowOpen(chips, 'avatar')).toContain(' data-replaced="chipSetDefault">');
     expect(rowOpen(chips, 'icons')).not.toContain('data-replaced');
+    expect(list).not.toContain('configuration-controls" hidden');
+  });
+
+  test('a section hides only when every one of its rows is hidden', () => {
+    expect(sectionConcealed([])).toBe(false);
+    expect(sectionConcealed([false])).toBe(false);
+    expect(sectionConcealed([true, false])).toBe(false);
+    expect(sectionConcealed([true, true])).toBe(true);
+
+    const emptied = (slug: keyof typeof components, options: Record<string, string>) => {
+      const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...options });
+      const groups = new Map<string, boolean[]>();
+      for (const control of components[slug].controls) {
+        const name = control.section ?? '';
+        const rows = groups.get(name) ?? [];
+        rows.push(controlConcealed(control, state));
+        groups.set(name, rows);
+      }
+      return [...groups.entries()].filter(([, rows]) => sectionConcealed(rows)).map(([name]) => name);
+    };
+
+    expect(emptied('list', {})).toEqual([]);
+    expect(emptied('list', { listSet: 'inbox-threads' })).toEqual(['Layout']);
+    expect(emptied('carousel', { carouselSet: 'featured-collection' })).toEqual([]);
+    expect(emptied('bottom-sheet', { sheetSet: 'photo-sharing' })).toEqual([]);
+    expect(emptied('side-sheet', { sheetSet: 'photo-info' })).toEqual([]);
+    expect(emptied('card', { cardSet: 'concert-tour' })).toEqual([]);
+    expect(emptied('dialog', { dialogSet: 'location-permission' })).toEqual([]);
+    expect(emptied('toolbar', { actions: 'video-call' })).toEqual([]);
+    expect(emptied('tabs', { tabSet: 'trip-planner' })).toEqual([]);
+    expect(emptied('chips', { chipSet: 'email-recipients' })).toEqual([]);
   });
 });

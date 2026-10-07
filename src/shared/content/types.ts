@@ -68,6 +68,9 @@ export const section = (title: NonNullable<Control['section']>, controls: Contro
 /** The row is hidden: `replaced` names a state key, and that key is not on. */
 export const controlConcealed = (control: Pick<Control, 'replaced'>, state: ComponentState): boolean =>
   !!control.replaced && state[control.replaced] !== true;
+/** A section hides, heading included, when it has rows and every one of them is hidden. */
+export const sectionConcealed = (rowsHidden: readonly boolean[]): boolean =>
+  rowsHidden.length > 0 && rowsHidden.every(hidden => hidden);
 export const choose = (key: string, label: string, options: readonly string[], initial: string, kind: 'choice' | 'select' | 'icons' = 'choice'): Control => ({ key, label, options, initial, kind });
 export const toggle = (key: string, label: string, initial = false, enabledWhen?: string): Control => ({ key, label, initial, kind: 'toggle', enabledWhen });
 export const text = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'text' });

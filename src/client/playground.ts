@@ -3,7 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
-import { controlConcealed } from '../shared/content/types';
+import { controlConcealed, sectionConcealed } from '../shared/content/types';
 import { drawerActiveOptions } from '../shared/content/drawer';
 import { railActiveOptions } from '../shared/content/navigation-rail';
 import { tabActiveOptions } from '../shared/content/tabs';
@@ -183,6 +183,13 @@ function update(send = true, reset = false) {
     const field = form.querySelector<HTMLElement>(`[name="${control.key}"]`);
     const row = field?.closest<HTMLElement>('[data-replaced]');
     if (row) row.hidden = controlConcealed(control, state);
+  }
+  // A heading over no row reads as something broken. The section leaves with
+  // its last row and comes back with the first one that shows. The server
+  // ships the default, where no section is empty.
+  for (const section of form.querySelectorAll<HTMLElement>('section.configuration-controls')) {
+    const rows = [...section.querySelectorAll<HTMLElement>(':scope > .ui-row')];
+    section.hidden = sectionConcealed(rows.map(row => row.hidden));
   }
   renderCode();
   if (send) frame.contentWindow?.postMessage({ type: 'md3:configure', state, reset }, location.origin);
