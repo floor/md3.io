@@ -5,7 +5,7 @@ import { handleRequest } from '../server';
 import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
-import { symbolByFile } from '../src/shared/icons';
+import { symbolByFile, symbols } from '../src/shared/icons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
 
@@ -305,6 +305,26 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   const map = JSON.parse(/<script type="importmap">(.*?)<\/script>/.exec(preview)![1]!) as { imports: Record<string, string> };
   expect(map.imports['/dist/preview.js']).toBe(manifest['/dist/preview.js']);
   expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
+});
+
+describe('drawer files scenario', () => {
+  test('Files selects Photos with 999+, and only the icons the set has', () => {
+    const scenario = components.drawer.scenarios.find(item => item.id === 'files');
+    if (!scenario) throw new Error('missing drawer scenario files');
+    const state = normalizeComponentState('drawer', { ...initialComponentState('drawer'), ...scenario.options });
+    const config = components.drawer.config(state);
+    expect(config.headline).toBe('Files');
+    expect(state.active).toBe('photos');
+    const row = (id: string) => config.items.find(item => item.id === id);
+    expect(config.items.flatMap(item => item.label ? [item.label] : [])).toEqual(['Photos', 'Fonts', 'Documents', 'Delete']);
+    expect(row('photos')?.badge).toBe('999+');
+    expect(row('photos')?.active).toBe(true);
+    expect(row('photos')?.icon).toBe(symbols.image);
+    expect(row('fonts')?.icon).toBeUndefined();
+    expect(row('documents')?.icon).toBeUndefined();
+    expect(row('delete')?.icon).toBe(symbols.delete);
+    expect(row('delete')?.active).toBe(false);
+  });
 });
 
 describe('snackbar scenarios', () => {

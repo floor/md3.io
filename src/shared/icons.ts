@@ -51,6 +51,7 @@ import flight from '../../icons/flight.svg' with { type: 'text' };
 import folder from '../../icons/folder.svg' with { type: 'text' };
 import folderOpen from '../../icons/folder_open.svg' with { type: 'text' };
 import hourglassBottom from '../../icons/hourglass_bottom.svg' with { type: 'text' };
+import image from '../../icons/image.svg' with { type: 'text' };
 import luggage from '../../icons/luggage.svg' with { type: 'text' };
 import musicNote from '../../icons/music_note.svg' with { type: 'text' };
 import openInNew from '../../icons/open_in_new.svg' with { type: 'text' };
@@ -136,6 +137,7 @@ export const symbols = {
   folder: trim(folder),
   folderOpen: trim(folderOpen),
   hourglassBottom: trim(hourglassBottom),
+  image: trim(image),
   luggage: trim(luggage),
   musicNote: trim(musicNote),
   openInNew: trim(openInNew),
@@ -219,6 +221,7 @@ const files: Record<keyof typeof symbols, string> = {
   folder: 'folder',
   folderOpen: 'folder_open',
   hourglassBottom: 'hourglass_bottom',
+  image: 'image',
   luggage: 'luggage',
   musicNote: 'music_note',
   openInNew: 'open_in_new',
