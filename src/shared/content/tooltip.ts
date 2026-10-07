@@ -26,8 +26,10 @@ export function tooltipTarget(state: ComponentState): TooltipTarget {
 
 /**
  * The tooltip's scenarios, from m3.material.io (read 7 October 2026). Both are
- * plain and sit above the control. A rich tooltip is not one of them: the
- * element has a single `text`.
+ * plain and sit above the control when it is hovered or focused. They leave
+ * `visible` off: the element cannot declare open, so the stage does not open
+ * them. A rich tooltip is not one of them: the element has a single `text`.
+ * Not yet exposed by the element: open.
  * Not yet exposed by the element: subhead.
  * Not yet exposed by the element: supportingText.
  * Not yet exposed by the element: action.
@@ -40,13 +42,13 @@ export function tooltipTarget(state: ComponentState): TooltipTarget {
 const tooltipScenarios: readonly Scenario[] = [
   {
     id: 'upload', name: 'Upload', source: 'https://m3.material.io/components/tooltips/guidelines',
-    description: 'Upload, above a plus button.',
-    options: { target: 'upload', text: 'Upload', variant: 'plain', position: 'top', visible: true },
+    description: 'Hover or focus the button: Upload.',
+    options: { target: 'upload', text: 'Upload', variant: 'plain', position: 'top' },
   },
   {
     id: 'present-now', name: 'Present now', source: 'https://m3.material.io/components/tooltips/guidelines',
-    description: 'Present now, above a present-to-all icon button.',
-    options: { target: 'present', text: 'Present now', variant: 'plain', position: 'top', visible: true },
+    description: 'Hover or focus the button: Present now.',
+    options: { target: 'present', text: 'Present now', variant: 'plain', position: 'top' },
   },
 ];
 

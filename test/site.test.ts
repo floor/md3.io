@@ -378,25 +378,27 @@ describe('tooltip target', () => {
     expect(vanilla).toContain("import 'material/styles/fab'");
     expect(vanilla).toContain('target: target.element');
   });
-  test('Upload and Present now are plain, above the control, and open', () => {
+  test('Upload and Present now are plain, above the control, and closed until hover or focus', () => {
     for (const [id, text, tag] of [
       ['upload', 'Upload', '<m-fab id="tooltip-target" aria-label="Upload"></m-fab>'],
       ['present-now', 'Present now', '<m-icon-button id="tooltip-target" aria-label="Present now" variant="standard"></m-icon-button>'],
     ] as const) {
       const scenario = components.tooltip.scenarios.find(item => item.id === id);
       if (!scenario) throw new Error(`missing tooltip scenario ${id}`);
+      expect(scenario.description.startsWith('Hover or focus the button:')).toBe(true);
       const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), ...scenario.options });
       const config = components.tooltip.config(state);
       expect(config.text).toBe(text);
       expect(config.variant).toBe('plain');
       expect(config.position).toBe('top');
-      expect(config.visible).toBe(true);
+      expect(config.visible).toBe(false);
       const html = frameworkCode('html', elementMeta('tooltip')!, elementConfig('tooltip', state), { theme: 'baseline', mode: 'light' });
       expect(html).toContain(tag);
       expect(html).toContain('for="tooltip-target"');
-      expect(html).toContain('tooltip.show()');
+      expect(html).not.toContain('tooltip.show()');
       const react = frameworkCode('react', elementMeta('tooltip')!, elementConfig('tooltip', state), { theme: 'baseline', mode: 'light' });
-      expect(react).toContain('Once mounted, call tooltip.show() on the element.');
+      expect(react).not.toContain('Once mounted, call tooltip.show()');
+      expect(react).not.toContain('Not yet exposed');
     }
   });
 });
