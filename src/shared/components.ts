@@ -329,7 +329,7 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     slug === 'radios' ? `radios.element.setAttribute('aria-label', '${radioAriaLabel(state)}');\n` :
     slug === 'text-field' && !string(state, 'label').trim() ? `textField.input.setAttribute('aria-label', 'Text field');\n` :
     slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
-    slug === 'timepicker' ? `const openButton = createButton({ text: 'Choose time', variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.element.append(openButton.element);\n` : '');
+    slug === 'timepicker' ? "const openButton = createButton({ text: `Choose time · ${timePicker.getValue()}`, variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.on('change', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.on('confirm', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.element.append(openButton.element);\n" : '');
   const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
   const styles = component.styles.includes('full') ? "import 'material/styles';\n" : ["base", ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
