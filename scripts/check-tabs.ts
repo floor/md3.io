@@ -13,7 +13,6 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
-import { currentCheckboxChildren } from '../src/shared/content/checkbox';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -165,30 +164,57 @@ function isRootClass(className: string): boolean {
 }
 
 function getStatedGaps(code: string): string[] {
-  const match = /Not yet exposed by the element:\s*([^.\n]+)/.exec(code);
+  const match = /Not yet exposed by the element:\s*([^\n]+)/.exec(code);
   if (!match) return [];
-  return match[1].split(',').map(s => s.trim().toLowerCase());
+  // Paths contain dots (`media.aspectRatio`). The sentence ends at the last period.
+  const body = match[1].replace(/\s*-->.*/, '').replace(/\.\s*$/, '').trim();
+  return body.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 }
 
 function matchesStatedGap(missingClass: string, statedGaps: string[]): boolean {
   const stripped = missingClass.replace(/^mtrl-/, '').replace(/-/g, '').toLowerCase();
   return statedGaps.some(gap => {
-    const norm = gap.replace(/-/g, '').toLowerCase();
-    return norm === stripped;
+    const names = new Set<string>([gap.replace(/-/g, '').toLowerCase()]);
+    // A dotted path used to be read only up to its first dot, which is what let
+    // `media.aspectRatio` excuse `mtrl-media`. Each segment keeps that.
+    for (const part of gap.split('.')) names.add(part.replace(/\[\]/g, '').replace(/-/g, '').toLowerCase());
+    return names.has(stripped);
   });
 }
 
-// Text carried by element options which framework tabs can explicitly say they do not expose.
-// `undefined` means that the option affects no visible text, and therefore excuses nothing.
-const STATED_GAP_TEXT: Record<string, (slug: string, state: Parameters<typeof currentCheckboxChildren>[0]) => string[] | undefined> = {
-  // A checkbox family renders one child label for every child option.
-  children: (slug, state) => slug === 'checkbox'
-    ? currentCheckboxChildren(state).map(child => child.label)
-    : undefined,
-};
+/** String leaves of a config value: the words a preview can show for that value. */
+function stringsIn(value: unknown): string[] {
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : [];
+  if (typeof value === 'number') return [String(value)];
+  if (Array.isArray(value)) return value.flatMap(stringsIn);
+  if (value && typeof value === 'object') return Object.values(value).flatMap(stringsIn);
+  return [];
+}
 
-function textAllowedByStatedGaps(slug: string, state: Parameters<typeof currentCheckboxChildren>[0], statedGaps: string[]): string[] {
-  return statedGaps.flatMap(gap => STATED_GAP_TEXT[gap]?.(slug, state) ?? []);
+/** Config strings at a stated path (`children`, `media.aspectRatio`, `suggestions[].supportingText`). */
+function stringsAtPath(config: unknown, path: string): string[] {
+  const segments = path.split('.').map(part => part.trim()).filter(Boolean);
+  const step = (value: unknown, index: number): string[] => {
+    if (index >= segments.length) return stringsIn(value);
+    const segment = segments[index]!;
+    const array = segment.endsWith('[]');
+    const key = (array ? segment.slice(0, -2) : segment).toLowerCase();
+    if (Array.isArray(value)) return value.flatMap(item => step(item, index));
+    if (!value || typeof value !== 'object') return [];
+    return Object.entries(value).flatMap(([name, child]) => {
+      if (name.toLowerCase() !== key) return [];
+      if (!array) return step(child, index + 1);
+      const items = Array.isArray(child) ? child : [child];
+      return items.flatMap(item => step(item, index + 1));
+    });
+  };
+  return step(config, 0);
+}
+
+// A tab's `Not yet exposed by the element: <path>.` excuses only the preview text
+// that comes from the config values at that path.
+function textAllowedByStatedGaps(config: unknown, statedGaps: string[]): string[] {
+  return statedGaps.flatMap(gap => stringsAtPath(config, gap));
 }
 
 function multisetDifference(left: string[], right: string[]): string[] {
@@ -391,7 +417,7 @@ for (const slug of targetSlugs) {
         js,
         css,
         statedGaps: getStatedGaps(code),
-        allowedMissingText: textAllowedByStatedGaps(slug, state, getStatedGaps(code)),
+        allowedMissingText: textAllowedByStatedGaps(config, getStatedGaps(code)),
       };
     }
   }
