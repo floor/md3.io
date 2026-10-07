@@ -28,8 +28,8 @@ const photoInfo = `<div style="display: flex; flex-direction: column; padding: 4
 </div>`;
 
 /**
- * Figure 2's filters: the label checkboxes, then the format choice. The row under
- * "Format" is cut below its one visible word in the figure; ours shows that word alone.
+ * Figure 2's filters: the label checkboxes. The figure's second group ("Format", its
+ * one visible row reading "All") is cut by the sheet's edge there and is left out.
  */
 const searchFilters = `<div style="display: flex; flex-direction: column; padding: 4px 24px 24px">
   ${subhead('Labels')}
@@ -38,15 +38,13 @@ const searchFilters = `<div style="display: flex; flex-direction: column; paddin
   ${filter('Projects', true)}
   ${filter('Reminders', true)}
   ${filter('Family')}
-  ${subhead('Format')}
-  <span style="font-size: 14px; padding: 10px 0">All</span>
 </div>`;
 
 /** Figure 12's display settings: the density group, Compact chosen. */
 const appearanceSettings = `<div style="display: flex; flex-direction: column; padding: 4px 24px 24px">
   ${subhead('Density')}
   ${density('Default')}
-  ${density('Comfort')}
+  ${density('Comfortable')}
   ${density('Compact', true)}
 </div>`;
 
