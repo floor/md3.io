@@ -356,7 +356,7 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     slug === 'radios' ? `radios.element.setAttribute('aria-label', '${radioAriaLabel(state)}');\n` :
     slug === 'text-field' && !string(state, 'label').trim() ? `textField.input.setAttribute('aria-label', 'Text field');\n` :
     slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
-    slug === 'timepicker' ? `const openButton = createButton({ text: 'Choose time', variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.element.append(openButton.element);\n` : '');
+    slug === 'timepicker' ? "const openButton = createButton({ text: `Choose time · ${timePicker.getValue()}`, variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.on('change', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.on('confirm', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.element.append(openButton.element);\n" : '');
   const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
   // After the picker is in the page: a modal's dialog opens only once it is connected.
   const openAfter = slug === 'datepicker' && state.dateOpen === true ? `${component.variable}.open();\n` : '';
