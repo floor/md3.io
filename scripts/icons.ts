@@ -86,6 +86,11 @@ const names = [
   'schedule',
   'timer',
   'videocam',
+  // The navigation bar's figures (src/shared/content/navigation-bar.ts).
+  'chat_bubble',
+  'groups',
+  'home',
+  'video_camera_front',
   // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
   'album',
   'cloud',
