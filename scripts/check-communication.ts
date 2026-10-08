@@ -104,10 +104,36 @@ try {
       await frame.getByRole('button', { name: 'Undo', exact: true }).press('Escape');
       await page.locator('#playground-status').filter({ hasText: 'Snackbar closed: escape' }).waitFor();
     } else if (slug === 'tooltip') {
+      // Hover and focus show the tooltip. They must not check Visible, leave
+      // the scenario, or rewrite the code. That failed on eb6b7ad, where the
+      // stage wrote `visible` back.
+      const hoverKeeps = async (id: string | null, name: string) => {
+        await page.goto(`${server.url}components/tooltip/${id ? `?scenario=${id}` : ''}`);
+        await frame.locator('#stage > *').first().waitFor();
+        const expected = id ?? 'default';
+        assert(await page.locator('#scenario').inputValue() === expected, `${name}: the scenario did not load`);
+        const code = await page.locator('#generated-code').innerText();
+        const button = frame.getByRole('button', { name, exact: true });
+        await button.hover();
+        await frame.getByRole('tooltip').waitFor();
+        await page.locator('#playground-status').filter({ hasText: 'Tooltip shown' }).waitFor();
+        await checked('visible', false);
+        assert(await page.locator('#scenario').inputValue() === expected, `${name}: hover changed the scenario`);
+        assert(await page.locator('#generated-code').innerText() === code, `${name}: hover changed the code`);
+        await button.focus();
+        await frame.getByRole('tooltip').waitFor();
+        assert(await page.locator('#scenario').inputValue() === expected, `${name}: focus changed the scenario`);
+        assert(await page.locator('#generated-code').innerText() === code, `${name}: focus changed the code`);
+      };
+      await hoverKeeps(null, 'Favorite');
+      await hoverKeeps('upload', 'Upload');
+      await hoverKeeps('present-now', 'Present now');
+      await page.goto(`${server.url}components/tooltip/`);
+      await frame.locator('#stage > *').first().waitFor();
       const target = frame.getByRole('button', { name: 'Favorite', exact: true });
       await target.hover();
       await frame.getByRole('tooltip').waitFor();
-      await checked('visible', true);
+      await checked('visible', false);
       await target.press('Escape');
       await frame.getByRole('tooltip').waitFor({ state: 'hidden' });
       await checked('visible', false);
@@ -140,7 +166,10 @@ try {
           await frame.getByRole('tooltip').waitFor();
           const bounds = await frame.getByRole('tooltip').boundingBox();
           assert(bounds && bounds.width > 0 && bounds.height > 0, 'Tooltip has no visible size');
+          // Escape hides the stage tooltip. It does not clear the Visible control.
           await frame.getByRole('button', { name: 'Favorite', exact: true }).press('Escape');
+          await checked('visible', true);
+          await toggle('visible');
           await checked('visible', false);
         }
         if (slug === 'snackbar') {

@@ -109,8 +109,10 @@ function create(state: ComponentState) {
       // Positioning needs the target in the document before an initially visible tooltip is created.
       stage.append(target.element);
       const control = createTooltip({ ...components.tooltip.config(state), target: target.element });
+      // Hover and focus show the tooltip. That is not a configuration change:
+      // writing it back would check Visible, mark the scenario Custom, and
+      // rewrite the code. The Visible control is the configuration.
       const observer = new MutationObserver(() => {
-        sync({ visible: control.isVisible() });
         message(control.isVisible() ? 'Tooltip shown' : 'Tooltip hidden');
       });
       observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
