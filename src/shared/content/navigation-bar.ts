@@ -25,7 +25,7 @@ interface BarSet {
 }
 
 /**
- * The three bars on m3.material.io/components/badges/guidelines (read 5 October 2026).
+ * The three bars on m3.material.io/components/badges/guidelines (read 8 October 2026).
  * `default` is not here: Inbox, Favorites and Sent stay the rail's.
  * Music's selected glyph is the same eighth note, so it has no `activeIcon`.
  */
@@ -93,7 +93,7 @@ const itemLayoutControl: Control = {
 };
 
 /**
- * The bar's scenarios. The figures are the badges guidelines page (read 5 October 2026).
+ * The bar's scenarios. The figures are the badges guidelines page (read 8 October 2026).
  * Each one shows the icon above the label, so the scenario sets vertical; the page's
  * own default stays auto. Options name playground controls only.
  */
