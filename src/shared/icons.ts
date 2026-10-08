@@ -8,8 +8,10 @@ import archive from '../../icons/archive.svg' with { type: 'text' };
 import arrowBack from '../../icons/arrow_back.svg' with { type: 'text' };
 import arrowForward from '../../icons/arrow_forward.svg' with { type: 'text' };
 import bookmark from '../../icons/bookmark.svg' with { type: 'text' };
+import brush from '../../icons/brush.svg' with { type: 'text' };
 import callEnd from '../../icons/call_end.svg' with { type: 'text' };
 import check from '../../icons/check.svg' with { type: 'text' };
+import checkBox from '../../icons/check_box.svg' with { type: 'text' };
 import chevronLeft from '../../icons/chevron_left.svg' with { type: 'text' };
 import chevronRight from '../../icons/chevron_right.svg' with { type: 'text' };
 import close from '../../icons/close.svg' with { type: 'text' };
@@ -84,7 +86,9 @@ export const symbols = {
   add: trim(add),
   bold: trim(formatBold),
   bookmark: trim(bookmark),
+  brush: trim(brush),
   check: trim(check),
+  checkBox: trim(checkBox),
   close: trim(close),
   download: trim(download),
   edit: trim(edit),
@@ -170,7 +174,9 @@ const files: Record<keyof typeof symbols, string> = {
   add: 'add',
   bold: 'format_bold',
   bookmark: 'bookmark',
+  brush: 'brush',
   check: 'check',
+  checkBox: 'check_box',
   close: 'close',
   download: 'download',
   edit: 'edit',
