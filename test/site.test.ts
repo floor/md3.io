@@ -5,6 +5,7 @@ import { handleRequest } from '../server';
 import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
+import { checkboxChildChecked, checkboxEditClearsCheckedSet } from '../src/shared/content/checkbox';
 import { symbolByFile, symbols } from '../src/shared/icons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
@@ -194,6 +195,32 @@ describe('search scenarios', () => {
   });
 });
 
+describe('navigation rail active icon', () => {
+  const withActiveIcon = (config: Record<string, unknown>): Record<string, unknown> => {
+    const items = config.items;
+    if (!Array.isArray(items)) return config;
+    return {
+      ...config,
+      items: items.map(item => item && typeof item === 'object' && 'id' in item && item.id === 'inbox' ? { ...item, activeIcon: 'filled-inbox' } : item),
+    };
+  };
+  test('the element tabs write selected-icon from activeIcon, and the default rail has none', () => {
+    const state = initialComponentState('navigation-rail');
+    const config = elementConfig('navigation-rail', state);
+    const html = frameworkCode('html', elementMeta('navigation-rail')!, config, { theme: 'baseline', mode: 'light' });
+    const react = frameworkCode('react', elementMeta('navigation-rail')!, config, { theme: 'baseline', mode: 'light' });
+    expect(html).not.toContain('selected-icon');
+    expect(react).not.toContain('selectedIcon');
+    expect(componentCode('navigation-rail', state)).not.toContain('activeIcon');
+    const shown = withActiveIcon(config);
+    const shownHtml = frameworkCode('html', elementMeta('navigation-rail')!, shown, { theme: 'baseline', mode: 'light' });
+    const shownReact = frameworkCode('react', elementMeta('navigation-rail')!, shown, { theme: 'baseline', mode: 'light' });
+    expect(shownHtml).toContain('selected-icon="filled-inbox"');
+    expect(shownHtml).not.toContain('items[].activeIcon');
+    expect(shownReact).toContain('selectedIcon="filled-inbox"');
+  });
+});
+
 test('date picker clearing and partial ranges stay reproducible in View code', () => {
   const empty = normalizeComponentState('datepicker', { ...initialComponentState('datepicker'), value: '', endDate: '' });
   expect(empty.value).toBe('');
@@ -221,6 +248,77 @@ test('a string attribute given true is present and empty', () => {
   expect(html).not.toContain('badge="true"');
   expect(html).toContain(' disabled>');
   expect(html).not.toContain('disabled="true"');
+});
+
+describe('checkbox checked children', () => {
+  const initial = () => initialComponentState('checkbox');
+  const html = (input: Record<string, unknown> = {}) => {
+    const state = normalizeComponentState('checkbox', { ...initial(), ...input });
+    return frameworkCode('html', elementMeta('checkbox')!, elementConfig('checkbox', state), { theme: 'baseline', mode: 'light' });
+  };
+  test('an absent set leaves the default and the named scenarios on their own mix', () => {
+    const state = initial();
+    expect(state.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(state, 'tomato')).toBe(true);
+    expect(checkboxChildChecked(state, 'pickles')).toBe(false);
+    const code = componentCode('checkbox', state);
+    expect(code).toContain("{ label: 'Tomato', value: 'tomato', checked: true }");
+    expect(code).toContain("{ label: 'Pickles', value: 'pickles' }");
+    expect(code).not.toContain("{ label: 'Pickles', value: 'pickles', checked: true }");
+    expect(html()).toContain('Not yet exposed by the element: children.');
+    const burger = normalizeComponentState('checkbox', { ...state, ...components.checkbox.scenarios.find(scenario => scenario.id === 'burger-additions')!.options });
+    const email = normalizeComponentState('checkbox', { ...state, ...components.checkbox.scenarios.find(scenario => scenario.id === 'email-frequency')!.options });
+    expect(burger.checkedChildren).toBeUndefined();
+    expect(email.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(burger, 'tomato')).toBe(true);
+    expect(checkboxChildChecked(burger, 'pickles')).toBe(false);
+    expect(checkboxChildChecked(email, 'weekly')).toBe(true);
+    expect(checkboxChildChecked(email, 'daily')).toBe(false);
+    expect(componentCode('checkbox', email)).toContain("{ label: 'Weekly', value: 'weekly', checked: true }");
+    expect(componentCode('checkbox', email)).not.toContain("{ label: 'Daily', value: 'daily', checked: true }");
+  });
+  test('a stored mix is what the code lists, and the element tabs still cannot write the children', () => {
+    const state = normalizeComponentState('checkbox', { ...initial(), checkedChildren: 'pickles,lettuce' });
+    expect(state.checkedChildren).toBe('pickles,lettuce');
+    expect(checkboxChildChecked(state, 'pickles')).toBe(true);
+    expect(checkboxChildChecked(state, 'lettuce')).toBe(true);
+    expect(checkboxChildChecked(state, 'tomato')).toBe(false);
+    const code = componentCode('checkbox', state);
+    expect(code).toContain("{ label: 'Pickles', value: 'pickles', checked: true }");
+    expect(code).toContain("{ label: 'Lettuce', value: 'lettuce', checked: true }");
+    expect(code).not.toContain("{ label: 'Tomato', value: 'tomato', checked: true }");
+    expect(html({ checkedChildren: 'pickles,lettuce' })).toContain('Not yet exposed by the element: children.');
+  });
+  test('checked and unchecked replace the stored set', () => {
+    const checked = normalizeComponentState('checkbox', { ...initial(), state: 'checked', checkedChildren: 'lettuce' });
+    expect(checked.checkedChildren).toBe('pickles,tomato,lettuce,cheese');
+    expect(checkboxChildChecked(checked, 'pickles')).toBe(true);
+    const unchecked = normalizeComponentState('checkbox', { ...initial(), state: 'unchecked', checkedChildren: 'lettuce' });
+    expect(unchecked.checkedChildren).toBe('__none__');
+    expect(checkboxChildChecked(unchecked, 'lettuce')).toBe(false);
+    // Back to mixed with the field cleared, as a State edit does: Tomato again, not the old mix.
+    expect(checkboxEditClearsCheckedSet('state')).toBe(true);
+    const mixed = normalizeComponentState('checkbox', { ...initial(), state: 'indeterminate' });
+    expect(mixed.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(mixed, 'tomato')).toBe(true);
+    expect(checkboxChildChecked(mixed, 'lettuce')).toBe(false);
+  });
+  test('a new option set or leaving the family drops the stored set', () => {
+    expect(checkboxEditClearsCheckedSet('familySet')).toBe(true);
+    expect(checkboxEditClearsCheckedSet('family')).toBe(true);
+    expect(checkboxEditClearsCheckedSet('label')).toBe(false);
+    const email = normalizeComponentState('checkbox', { ...initial(), familySet: 'email-frequency', checkedChildren: 'pickles,lettuce' });
+    expect(email.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(email, 'weekly')).toBe(true);
+    expect(checkboxChildChecked(email, 'pickles')).toBe(false);
+    const alone = normalizeComponentState('checkbox', { ...initial(), family: false, checkedChildren: 'lettuce' });
+    expect(alone.checkedChildren).toBeUndefined();
+    // A mix made on that option set still belongs to it.
+    const burger = normalizeComponentState('checkbox', { ...initial(), familySet: 'burger-additions', checkedChildren: 'pickles' });
+    expect(burger.checkedChildren).toBe('pickles');
+    expect(checkboxChildChecked(burger, 'pickles')).toBe(true);
+    expect(checkboxChildChecked(burger, 'tomato')).toBe(false);
+  });
 });
 
 describe('framework code for the overlay elements', () => {
@@ -395,6 +493,105 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   const map = JSON.parse(/<script type="importmap">(.*?)<\/script>/.exec(preview)![1]!) as { imports: Record<string, string> };
   expect(map.imports['/dist/preview.js']).toBe(manifest['/dist/preview.js']);
   expect(preview.indexOf('type="importmap"')).toBeLessThan(preview.indexOf('type="module"'));
+});
+
+describe('drawer files scenario', () => {
+  test('Files selects Photos with 999+, and every row has its icon', () => {
+    const scenario = components.drawer.scenarios.find(item => item.id === 'files');
+    if (!scenario) throw new Error('missing drawer scenario files');
+    const state = normalizeComponentState('drawer', { ...initialComponentState('drawer'), ...scenario.options });
+    const config = components.drawer.config(state);
+    expect(config.headline).toBe('Files');
+    expect(state.active).toBe('photos');
+    const items = config.items ?? [];
+    const row = (id: string) => items.find(item => item.id === id);
+    expect(items.flatMap(item => item.label ? [item.label] : [])).toEqual(['Photos', 'Fonts', 'Documents', 'Delete']);
+    expect(row('photos')?.badge).toBe('999+');
+    expect(row('photos')?.active).toBe(true);
+    expect(row('photos')?.icon).toBe(symbols.image);
+    expect(row('fonts')?.icon).toBe(symbols.fontDownload);
+    expect(row('documents')?.icon).toBe(symbols.article);
+    expect(row('delete')?.icon).toBe(symbols.delete);
+    expect(row('delete')?.active).toBe(false);
+  });
+});
+
+describe('snackbar scenarios', () => {
+  const rows = [
+    ['email-archived-undo', 'Email archived', 'Undo'],
+    ['saved-to-album', 'Saved in “Vacation” album', undefined],
+    ['all-changes-saved', 'All changes saved', undefined],
+    ['photo-added', 'Photo added to “Natural Light” album', 'Undo'],
+  ] as const;
+  test('each bar carries the figure’s words, open, with no close icon', () => {
+    for (const [id, message, action] of rows) {
+      const scenario = components.snackbar.scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing snackbar scenario ${id}`);
+      const state = normalizeComponentState('snackbar', { ...initialComponentState('snackbar'), ...scenario.options });
+      const config = components.snackbar.config(state);
+      expect(config.message).toBe(message);
+      expect(config.dismissible).toBe(false);
+      expect(config.action).toBe(action);
+      expect(state.visible).toBe(true);
+      expect(elementConfig('snackbar', state).open).toBe(true);
+      const vanilla = componentCode('snackbar', state);
+      expect(vanilla).toContain('snackbar.show()');
+      expect(vanilla).toContain(message);
+      const html = frameworkCode('html', elementMeta('snackbar')!, elementConfig('snackbar', state), { theme: 'baseline', mode: 'light' });
+      expect(html).toContain(message);
+      expect(html).toContain('snackbar.show()');
+      expect(html).not.toContain('dismissible');
+    }
+  });
+});
+
+describe('tooltip target', () => {
+  const html = (input: Record<string, unknown> = {}) => {
+    const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), ...input });
+    return frameworkCode('html', elementMeta('tooltip')!, elementConfig('tooltip', state), { theme: 'baseline', mode: 'light' });
+  };
+  test('the default stays the heart icon button in the tabs', () => {
+    expect(html()).toContain('<m-icon-button id="tooltip-target" aria-label="Favorite" variant="tonal"></m-icon-button>');
+    expect(html()).not.toContain('<m-fab');
+    const vanilla = componentCode('tooltip', initialComponentState('tooltip'));
+    expect(vanilla).toContain('createIconButton');
+    expect(vanilla).not.toContain('createFab');
+    expect(vanilla).not.toContain("material/styles/fab");
+  });
+  test('upload is the library FAB with the add icon, and the tooltip points at it', () => {
+    const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), target: 'upload' });
+    expect(html({ target: 'upload' })).toContain('<m-fab id="tooltip-target" aria-label="Upload"></m-fab>');
+    expect(html({ target: 'upload' })).toContain('for="tooltip-target"');
+    const vanilla = componentCode('tooltip', state);
+    expect(vanilla).toContain('createFab');
+    expect(vanilla).toContain("import 'material/styles/fab'");
+    expect(vanilla).toContain('target: target.element');
+  });
+  test('Upload and Present now are plain, above the control, and closed until hover or focus', () => {
+    for (const [id, text, tag] of [
+      ['upload', 'Upload', '<m-fab id="tooltip-target" aria-label="Upload"></m-fab>'],
+      ['present-now', 'Present now', '<m-icon-button id="tooltip-target" aria-label="Present now" variant="standard"></m-icon-button>'],
+    ] as const) {
+      const scenario = components.tooltip.scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing tooltip scenario ${id}`);
+      expect(scenario.description).toBe(id === 'upload'
+        ? 'The name of an add button, shown in a plain tooltip when someone hovers or focuses it.'
+        : 'The name of a present button, shown in a plain tooltip when someone hovers or focuses it.');
+      const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), ...scenario.options });
+      const config = components.tooltip.config(state);
+      expect(config.text).toBe(text);
+      expect(config.variant).toBe('plain');
+      expect(config.position).toBe('top');
+      expect(config.visible).toBe(false);
+      const html = frameworkCode('html', elementMeta('tooltip')!, elementConfig('tooltip', state), { theme: 'baseline', mode: 'light' });
+      expect(html).toContain(tag);
+      expect(html).toContain('for="tooltip-target"');
+      expect(html).not.toContain('tooltip.show()');
+      const react = frameworkCode('react', elementMeta('tooltip')!, elementConfig('tooltip', state), { theme: 'baseline', mode: 'light' });
+      expect(react).not.toContain('Once mounted, call tooltip.show()');
+      expect(react).not.toContain('Not yet exposed');
+    }
+  });
 });
 
 test('a content-hashed chunk is cached for a year, and a stable name is not', async () => {

@@ -37,6 +37,18 @@ const drawerSets: Record<string, DrawerSet> = {
       { id: 'work', label: 'Work', icon: symbols.folder },
     ],
   },
+  // badge-m3-5. Photos is `image`, Fonts is `font_download` (A in a square),
+  // Documents is `article` (a square of text lines), Delete is `delete`.
+  files: {
+    name: 'Files',
+    active: 'photos',
+    items: [
+      { id: 'photos', label: 'Photos', icon: symbols.image, badge: '999+' },
+      { id: 'fonts', label: 'Fonts', icon: symbols.fontDownload },
+      { id: 'documents', label: 'Documents', icon: symbols.article },
+      { id: 'delete', label: 'Delete', icon: symbols.delete },
+    ],
+  },
 };
 
 const drawerSet = (state: ComponentState): DrawerSet | undefined => drawerSets[string(state, 'destinations')];
@@ -75,11 +87,12 @@ export function drawerActiveOptions(state: ComponentState): { value: string; lab
 const selectable = [
   ...destinations.map(item => [item.id, item.label] as const),
   ['outbox', 'Outbox'], ['trash', 'Trash'], ['friends', 'Friends'], ['volunteering', 'Volunteering'], ['work', 'Work'],
+  ['photos', 'Photos'], ['fonts', 'Fonts'], ['documents', 'Documents'], ['delete', 'Delete'],
 ] as const;
 
 const destinationControl: Control = {
-  ...choose('destinations', 'Destinations', ['default', 'mailbox-folders'], 'default', 'select'),
-  labels: { default: 'Default', 'mailbox-folders': 'Mailbox folders' },
+  ...choose('destinations', 'Destinations', ['default', 'mailbox-folders', 'files'], 'default', 'select'),
+  labels: { default: 'Default', 'mailbox-folders': 'Mailbox folders', files: 'Files' },
 };
 
 const activeControl: Control = {
@@ -96,6 +109,11 @@ const drawerScenarios: readonly Scenario[] = [
     id: 'mailbox-folders', name: 'Mailbox folders', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
     description: 'A mail drawer: Inbox and Outbox with counts, Favorites and Trash, then personal folders.',
     options: { destinations: 'mailbox-folders', variant: 'standard', headline: 'Mail', active: 'inbox', icons: true, badges: true, sections: true, open: true },
+  },
+  {
+    id: 'files', name: 'Files', source: 'https://m3.material.io/components/badges/guidelines',
+    description: 'A files drawer with Photos selected and a count of what it holds, then Fonts, Documents, and Delete.',
+    options: { destinations: 'files', variant: 'standard', headline: 'Files', active: 'photos', icons: true, badges: true, sections: false, open: true },
   },
 ];
 

@@ -47,6 +47,7 @@ import { railHeaderForm } from '../shared/content/navigation-rail';
 import { tabsAriaLabel } from '../shared/content/tabs';
 import { menuSelectedId } from '../shared/content/menu';
 import { artElement } from '../shared/content/types';
+import { tooltipTarget } from '../shared/content/tooltip';
 import { symbols } from '../shared/icons';
 
 const componentSlug = document.documentElement.dataset.component!;
@@ -88,22 +89,39 @@ function create(state: ComponentState) {
       const control = createSnackbar(components.snackbar.config(state));
       const trigger = createButton({ text: 'Show snackbar', variant: 'tonal' });
       trigger.on('click', () => control.show());
-      control.on('open', () => { sync({ visible: true }); message('Snackbar opened'); });
+      // An open the page performs at load is not a visitor's event, the same way the
+      // menu's first open is not. It is not reported, and it does not write Visible
+      // back (that write would mark the scenario custom). A later open still reports.
+      let openedByPage = state.visible === true;
+      control.on('open', () => {
+        if (openedByPage) { openedByPage = false; return; }
+        sync({ visible: true });
+        message('Snackbar opened');
+      });
       control.on('close', event => { sync({ visible: false }); message(`Snackbar closed: ${event.reason}`); });
       if (state.visible) control.show();
       return { element: trigger.element, destroy: () => { control.hide(); control.destroy(); trigger.destroy(); } };
     }
     case 'tooltip': {
-      const target = createIconButton({ icon: componentIcons.heart, ariaLabel: 'Favorite', variant: 'tonal' });
+      const described = tooltipTarget(state);
+      const target = described.component === 'fab'
+        ? createFab({ icon: described.icon, ariaLabel: described.ariaLabel })
+        : createIconButton({ icon: described.icon, ariaLabel: described.ariaLabel, variant: described.variant ?? 'tonal' });
       // Positioning needs the target in the document before an initially visible tooltip is created.
       stage.append(target.element);
       const control = createTooltip({ ...components.tooltip.config(state), target: target.element });
+      // Hover and focus show the tooltip. That is not a configuration change:
+      // writing it back would check Visible, mark the scenario Custom, and
+      // rewrite the code. The Visible control is the configuration.
       const observer = new MutationObserver(() => {
-        sync({ visible: control.isVisible() });
         message(control.isVisible() ? 'Tooltip shown' : 'Tooltip hidden');
       });
       observer.observe(control.element, { attributes: true, attributeFilter: ['aria-hidden'] });
-      target.on('click', () => message('Favorite clicked'));
+      // `target` is a fab or an icon button. Each `on` is its own generic, so the
+      // union is not callable; the click is registered on the concrete control.
+      const clicked = () => message(`${described.ariaLabel} clicked`);
+      if (described.component === 'fab') (target as ReturnType<typeof createFab>).on('click', clicked);
+      else (target as ReturnType<typeof createIconButton>).on('click', clicked);
       return { element: target.element, destroy: () => { observer.disconnect(); control.destroy(); target.destroy(); } };
     }
     case 'card': {
@@ -462,7 +480,8 @@ function create(state: ComponentState) {
       // checking the parent checks every child, unchecking it unchecks them, and a mix
       // makes it indeterminate; checking an indeterminate parent checks them all.
       const { label, value: _value, checked: _checked, indeterminate: _indeterminate, name, ...common } = components.checkbox.config(state);
-      const children = currentCheckboxChildren(state).map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
+      const specs = currentCheckboxChildren(state);
+      const children = specs.map(child => createCheckbox({ ...common, name: name || 'additions', label: child.label, value: child.value, checked: checkboxChildChecked(state, child.value) }));
       const parentBox = createCheckbox({ ...common, label: label || 'Additions', checked: state.state === 'checked', indeterminate: state.state === 'indeterminate' });
       parentBox.input.setAttribute('aria-controls', children.map(child => child.input.id).join(' '));
       const reflect = () => {
@@ -472,6 +491,9 @@ function create(state: ComponentState) {
         else if (on === 0) parentBox.uncheck();
         else { parentBox.uncheck(); parentBox.setIndeterminate(true); }
         const nextState = on === children.length ? 'checked' : on === 0 ? 'unchecked' : 'indeterminate';
+        const checkedChildren = children.flatMap((child, index) => child.isChecked() ? [specs[index]!.value] : []).join(',') || '__none__';
+        // The page applies md3:values with update(false), so this report does not rebuild the preview.
+        sync({ state: nextState, checkedChildren });
         report(nextState);
         message(on === 0 ? `No ${label ? label.toLowerCase() : 'additions'}` : `${on} of ${children.length} ${label ? label.toLowerCase() : 'additions'}`);
       };

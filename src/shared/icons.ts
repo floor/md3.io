@@ -41,6 +41,7 @@ import tab from '../../icons/tab.svg' with { type: 'text' };
 import undo from '../../icons/undo.svg' with { type: 'text' };
 import videocamOff from '../../icons/videocam_off.svg' with { type: 'text' };
 import alarm from '../../icons/alarm.svg' with { type: 'text' };
+import article from '../../icons/article.svg' with { type: 'text' };
 import barChart from '../../icons/bar_chart.svg' with { type: 'text' };
 import bedtime from '../../icons/bedtime.svg' with { type: 'text' };
 import contentCopy from '../../icons/content_copy.svg' with { type: 'text' };
@@ -49,8 +50,10 @@ import contentPaste from '../../icons/content_paste.svg' with { type: 'text' };
 import explore from '../../icons/explore.svg' with { type: 'text' };
 import flight from '../../icons/flight.svg' with { type: 'text' };
 import folder from '../../icons/folder.svg' with { type: 'text' };
+import fontDownload from '../../icons/font_download.svg' with { type: 'text' };
 import folderOpen from '../../icons/folder_open.svg' with { type: 'text' };
 import hourglassBottom from '../../icons/hourglass_bottom.svg' with { type: 'text' };
+import image from '../../icons/image.svg' with { type: 'text' };
 import luggage from '../../icons/luggage.svg' with { type: 'text' };
 import musicNote from '../../icons/music_note.svg' with { type: 'text' };
 import openInNew from '../../icons/open_in_new.svg' with { type: 'text' };
@@ -75,6 +78,7 @@ import album from '../../icons/album.svg' with { type: 'text' };
 import cloud from '../../icons/cloud.svg' with { type: 'text' };
 import nearMe from '../../icons/near_me.svg' with { type: 'text' };
 import pause from '../../icons/pause.svg' with { type: 'text' };
+import presentToAll from '../../icons/present_to_all.svg' with { type: 'text' };
 import personSearch from '../../icons/person_search.svg' with { type: 'text' };
 import playlistAdd from '../../icons/playlist_add.svg' with { type: 'text' };
 import playlistPlay from '../../icons/playlist_play.svg' with { type: 'text' };
@@ -131,6 +135,7 @@ export const symbols = {
   videocamOff: trim(videocamOff),
   // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
   alarm: trim(alarm),
+  article: trim(article),
   barChart: trim(barChart),
   bedtime: trim(bedtime),
   contentCopy: trim(contentCopy),
@@ -140,7 +145,9 @@ export const symbols = {
   flight: trim(flight),
   folder: trim(folder),
   folderOpen: trim(folderOpen),
+  fontDownload: trim(fontDownload),
   hourglassBottom: trim(hourglassBottom),
+  image: trim(image),
   luggage: trim(luggage),
   musicNote: trim(musicNote),
   openInNew: trim(openInNew),
@@ -164,6 +171,7 @@ export const symbols = {
   nearMe: trim(nearMe),
   pause: trim(pause),
   personSearch: trim(personSearch),
+  presentToAll: trim(presentToAll),
   playlistAdd: trim(playlistAdd),
   playlistPlay: trim(playlistPlay),
   skipNext: trim(skipNext),
@@ -220,6 +228,7 @@ const files: Record<keyof typeof symbols, string> = {
   videocamOff: 'videocam_off',
   // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
   alarm: 'alarm',
+  article: 'article',
   barChart: 'bar_chart',
   bedtime: 'bedtime',
   contentCopy: 'content_copy',
@@ -229,7 +238,9 @@ const files: Record<keyof typeof symbols, string> = {
   flight: 'flight',
   folder: 'folder',
   folderOpen: 'folder_open',
+  fontDownload: 'font_download',
   hourglassBottom: 'hourglass_bottom',
+  image: 'image',
   luggage: 'luggage',
   musicNote: 'music_note',
   openInNew: 'open_in_new',
@@ -253,6 +264,7 @@ const files: Record<keyof typeof symbols, string> = {
   nearMe: 'near_me',
   pause: 'pause',
   personSearch: 'person_search',
+  presentToAll: 'present_to_all',
   playlistAdd: 'playlist_add',
   playlistPlay: 'playlist_play',
   skipNext: 'skip_next',

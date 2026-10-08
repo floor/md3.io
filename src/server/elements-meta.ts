@@ -29,7 +29,9 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
     selected: { key: 'selected', equals: true, value: 'value' },
   },
   'navigation-rail': {
-    name: 'navigation-rail-item', declaration: 'navigationRailItem', from: 'items', text: 'label', keys: { id: 'value' },
+    // The factory field is `activeIcon`. The item attribute is `selected-icon`
+    // (material dist/elements/navigation-rail.js, the declaration).
+    name: 'navigation-rail-item', declaration: 'navigationRailItem', from: 'items', text: 'label', keys: { id: 'value', activeIcon: 'selected-icon' },
     selected: { key: 'active', equals: true, value: 'id' },
   },
   'navigation-bar': {
