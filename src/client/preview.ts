@@ -408,8 +408,13 @@ function create(state: ComponentState) {
         sync(value ? Array.isArray(value) ? { value: dateValue(value[0]), endDate: dateValue(value[1]) } : { value: dateValue(value), ...(state.range ? { endDate: '' } : {}) } : { value: '', endDate: '' });
         message(value ? `Selected: ${control.getFormattedValue()}` : 'Selection cleared');
       });
-      control.on('open', () => message('Calendar opened'));
+      // The first open is the scenario's own, like a named menu: it does not
+      // replace "Ready to try". A later open, after a close, still reports.
+      let announced = state.dateOpen !== true;
+      control.on('open', () => { if (!announced) { announced = true; return; } message('Calendar opened'); });
       control.on('close', () => message('Calendar closed'));
+      // After render appends the field: a modal dialog opens only once it is connected.
+      if (state.dateOpen === true) queueMicrotask(() => control.open());
       return control;
     }
     case 'timepicker': {
