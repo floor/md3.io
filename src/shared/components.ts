@@ -218,13 +218,25 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   if (slug === 'card') state.cardContentDefault = !state.cardSet || state.cardSet === 'default';
   // So does a named dialog: its title, subtitle and body controls are for the default's own.
   if (slug === 'dialog') state.dialogContentDefault = !state.dialogSet || state.dialogSet === 'default';
-  if (slug === 'datepicker' && state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
+  if (slug === 'datepicker') {
+    // A named picker fixes its label and dates: those controls are for the default's own.
+    state.dateContentDefault = !state.dateSet || state.dateSet === 'default';
+    state.dateOpen = !state.dateContentDefault;
+    state.rangeEndEnabled = !!state.range && !!state.dateContentDefault;
+    if (state.value && state.endDate && String(state.endDate) < String(state.value)) state.endDate = state.value!;
+  }
   if (slug === 'radios') {
     state.isDelivery = !state.optionSet || state.optionSet === 'default' || state.optionSet === 'express-delivery' || state.optionSet === 'delivery';
     state.optionSetDefault = !state.optionSet || state.optionSet === 'default';
     if (state.disableExpress && state.value === 'express') state.value = 'standard';
   }
-  if (slug === 'select' && state.disableBanana && state.value === 'banana') state.value = 'apple';
+  if (slug === 'select') {
+    // A named field fixes its label, value and options: those controls are for the fruit field.
+    state.selectContentDefault = !state.selectSet || state.selectSet === 'default';
+    if (state.disableBanana && state.value === 'banana') state.value = 'apple';
+  }
+  if (slug === 'search') state.searchContentDefault = !state.searchSet || state.searchSet === 'default';
+  if (slug === 'timepicker') state.timeContentDefault = !state.timeSet || state.timeSet === 'default';
   state.theme = themes.find(theme => theme === raw.theme) ?? 'baseline';
   state.mode = raw.mode === 'dark' ? 'dark' : 'light';
   return state;
@@ -260,9 +272,24 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
         : { ...config, ...headerSlot };
     }
     case 'timepicker': return { ...config, ...trigger('Choose time') };
+    // The factory config has no `open`. The element attribute does
+    // (`material/src/elements/datepicker.ts`, `open`), written when the scenario's calendar is open.
+    case 'datepicker': return state.dateOpen === true ? { ...config, open: true } : config;
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: tooltipTarget(state) };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
+    // The factory takes `trailingItems`. The element takes `trailing-icon`
+    // (`material/src/elements/search.ts`, the attribute, mapped into `trailingItems` at create).
+    case 'search': {
+      const items = config.trailingItems;
+      if (!Array.isArray(items) || items.length === 0) return config;
+      const first = items[0];
+      if (!first || typeof first !== 'object' || !('content' in first)) return config;
+      const rest = { ...config };
+      delete rest.trailingItems;
+      const label = 'ariaLabel' in first && typeof first.ariaLabel === 'string' ? first.ariaLabel : undefined;
+      return { ...rest, trailingIcon: first.content, ...(label ? { trailingLabel: label } : {}) };
+    }
     // A parent over its children is not one element: m-checkbox's only slot is its
     // label (material/src/elements/checkbox.ts), so the element tabs render the
     // parent and carry the children as a stated gap (`Not yet exposed by the
@@ -331,10 +358,12 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
     slug === 'timepicker' ? "const openButton = createButton({ text: `Choose time · ${timePicker.getValue()}`, variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.on('change', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.on('confirm', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.element.append(openButton.element);\n" : '');
   const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
+  // After the picker is in the page: a modal's dialog opens only once it is connected.
+  const openAfter = slug === 'datepicker' && state.dateOpen === true ? `${component.variable}.open();\n` : '';
   const styles = component.styles.includes('full') ? "import 'material/styles';\n" : ["base", ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
+    `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n${openAfter}\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
 }
 
 function checkboxFamilyCode(state: ComponentState): string {
