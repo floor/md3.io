@@ -232,6 +232,24 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   expect(code).not.toContain('MutationObserver');
 });
 
+test('a string attribute given true is present and empty', () => {
+  const html = frameworkCode('html', elementMeta('navigation-rail')!, {
+    ariaLabel: 'Mail',
+    items: [
+      { id: 'inbox', label: 'Inbox', icon: 'inbox', badge: 8, active: true },
+      { id: 'sent', label: 'Sent', icon: 'send', badge: '999+' },
+      { id: 'rooms', label: 'Rooms', icon: 'groups', badge: true },
+      { id: 'favorites', label: 'Favorites', icon: 'heart', disabled: true },
+    ],
+  }, { theme: 'baseline', mode: 'light' });
+  expect(html).toContain('badge="8"');
+  expect(html).toContain('badge="999+"');
+  expect(html).toContain('badge=""');
+  expect(html).not.toContain('badge="true"');
+  expect(html).toContain(' disabled>');
+  expect(html).not.toContain('disabled="true"');
+});
+
 describe('icon button scenarios', () => {
   const rows = [
     ['favorite', 'standard', 'heart', 'Favorite', false],
@@ -790,6 +808,108 @@ test('a content-hashed chunk is cached for a year, and a stable name is not', as
     unlinkSync(chunk);
     unlinkSync(plain);
   }
+});
+
+describe('bottom app bar scenarios', () => {
+  const scenario = (id: string) => {
+    const found = components['bottom-app-bar'].scenarios.find(item => item.id === id);
+    if (!found) throw new Error(`missing bottom app bar scenario ${id}`);
+    return found;
+  };
+  const stateFor = (id: string) => normalizeComponentState('bottom-app-bar', { ...initialComponentState('bottom-app-bar'), ...scenario(id).options });
+  test('the default page still writes the two actions and the Compose FAB', () => {
+    const code = componentCode('bottom-app-bar', initialComponentState('bottom-app-bar'));
+    expect(code).toBe(`import { createBottomAppBar, createIconButton, createFab } from 'material';
+import 'material/styles/base';
+import 'material/styles/bottom-app-bar';
+import 'material/styles/icon-button';
+import 'material/styles/fab';
+
+// Material Symbols by Google, fonts.google.com/icons
+import favoriteIcon from './icons/favorite.svg?raw';
+import bookmarkIcon from './icons/bookmark.svg?raw';
+import addIcon from './icons/add.svg?raw';
+
+document.documentElement.dataset.theme = 'baseline';
+document.documentElement.dataset.themeMode = 'light';
+
+const bottomBar = createBottomAppBar({
+  hasFab: true,
+  fabPosition: "end",
+  autoHide: false
+});
+const actions = [
+  {
+    icon: favoriteIcon,
+    ariaLabel: "Favorite",
+    variant: "standard"
+  },
+  {
+    icon: bookmarkIcon,
+    ariaLabel: "Bookmark",
+    variant: "standard"
+  }
+].map(config => createIconButton(config));
+actions.forEach(button => bottomBar.addAction(button.element));
+const fab = createFab({
+  icon: addIcon,
+  ariaLabel: "Compose"
+});
+bottomBar.addFab(fab.element);
+
+document.body.append(bottomBar.element);
+
+// When the view is removed:
+// actions.forEach(button => button.destroy());
+// fab.destroy();
+// bottomBar.destroy();
+`);
+    expect(code).not.toContain('New list');
+    const counted = componentCode('bottom-app-bar', normalizeComponentState('bottom-app-bar', { ...initialComponentState('bottom-app-bar'), actions: '3' }));
+    expect(counted).toContain('ariaLabel: "Share"');
+  });
+  test('notes is a list, a drawing, a voice note and an image note, with a button to begin a note', () => {
+    const item = scenario('notes');
+    expect(item.description).toBe('A notes app\'s bar for starting a list, a drawing, a voice note or an image note, with a button at the end to begin a note.');
+    const state = stateFor('notes');
+    expect(state.actionSetDefault).toBe(false);
+    const content = elementConfig('bottom-app-bar', state) as { actions: unknown; fab: unknown };
+    expect(content.actions).toEqual([
+      { icon: symbols.checkBox, ariaLabel: 'New list' },
+      { icon: symbols.brush, ariaLabel: 'New drawing' },
+      { icon: symbols.mic, ariaLabel: 'New voice note' },
+      { icon: symbols.image, ariaLabel: 'New image note' },
+    ]);
+    expect(content.fab).toEqual({ icon: symbols.add, ariaLabel: 'New note' });
+    const vanilla = componentCode('bottom-app-bar', state);
+    for (const label of ['New list', 'New drawing', 'New voice note', 'New image note', 'New note']) expect(vanilla).toContain(label);
+    expect(vanilla).toContain('checkBoxIcon');
+    expect(vanilla).toContain('brushIcon');
+    const html = frameworkCode('html', elementMeta('bottom-app-bar')!, content, { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('aria-label="New list"');
+    expect(html).toContain('aria-label="New note"');
+    expect(html).not.toContain('<input');
+  });
+  test('document downloads, bookmarks and deletes, with a pencil to edit', () => {
+    const item = scenario('document');
+    expect(item.description).toBe('A document\'s bar for downloading a copy, bookmarking it or deleting it, with a pencil to edit it.');
+    const state = stateFor('document');
+    const content = elementConfig('bottom-app-bar', state) as { actions: unknown; fab: unknown };
+    expect(content.actions).toEqual([
+      { icon: symbols.download, ariaLabel: 'Download' },
+      { icon: symbols.bookmark, ariaLabel: 'Bookmark' },
+      { icon: symbols.delete, ariaLabel: 'Delete' },
+    ]);
+    expect(content.fab).toEqual({ icon: symbols.edit, ariaLabel: 'Edit' });
+    const vanilla = componentCode('bottom-app-bar', state);
+    for (const label of ['Download', 'Bookmark', 'Delete']) expect(vanilla).toContain(`ariaLabel: "${label}"`);
+    expect(vanilla).toContain('ariaLabel: "Edit"');
+    expect(vanilla).toContain('editIcon');
+    expect(vanilla).not.toContain('addIcon');
+    const html = frameworkCode('html', elementMeta('bottom-app-bar')!, content, { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('aria-label="Download"');
+    expect(html).toContain('aria-label="Edit"');
+  });
 });
 
 describe('sheet filters are Material controls', () => {
