@@ -577,6 +577,11 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
   const config = JSON.stringify(printable, null, 2).replace(/^(\s*)"([a-zA-Z]+)":/gm, '$1$2:')
     .replace(elementRef, 'media');
   const styles = ['base', ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
+  // A checkbox or a radio group in the markup upgrades only once its element is defined.
+  const needsCheckbox = config.includes('<m-checkbox');
+  const needsRadios = config.includes('<m-radios') || config.includes('<m-radio ');
+  const embedded = `${needsCheckbox ? `import 'material/elements/css/checkbox';\nimport { defineCheckbox } from 'material/elements';\n` : ''}${needsRadios ? `import 'material/elements/css/radios';\nimport { defineRadios } from 'material/elements';\n` : ''}`;
+  const define = `${needsCheckbox ? 'defineCheckbox();\n' : ''}${needsRadios ? 'defineRadios();\n' : ''}`;
   const before = art ? `// The demo art is inline SVG, so this snippet needs no image files.\nconst media = document.createElement('div');\nmedia.setHTML(${JSON.stringify(art)});\n` : '';
   let setup = '';
   if (slug === 'list' && state.trailing === 'control') setup += `const onListAction = (event) => {\n  const action = event.target.closest('[data-list-action]');\n  if (action) console.log('Saved:', action.dataset.listAction);\n};\nlist.element.addEventListener('click', onListAction);\n`;
@@ -587,7 +592,7 @@ function containmentCode(slug: ComponentSlug, state: ComponentState): string {
     if (slug !== 'divider') setup += `document.body.append(${component.variable}.element);\n`;
     if (slug === 'carousel') setup += "\n// Drive it from your own controls: carousel.next(), carousel.prev(), carousel.goTo(index).\n// 'change' reports every move: from the API, a swipe, the keyboard or a trackpad.\ncarousel.on('change', ({ value }) => console.log(`Slide ${value + 1} of ${carousel.slides.getCount()}`));\n";
   }
-  return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
+  return `import { ${component.factory}${hasTrigger ? ', createButton' : ''} } from 'material';\n${styles}${embedded}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
-    `${before}${slug === 'card' && state.media && !art || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
+    `${before}${define}${slug === 'card' && state.media && !art || slug === 'carousel' || slug === 'list' && ['image', 'video'].includes(String(state.leading)) ? '// Replace the demo image paths with your own images.\n' : ''}const ${component.variable} = ${component.factory}(${config});\n${setup}\n// When the view is removed:\n// ${component.variable}.destroy();\n${slug === 'list' && state.trailing === 'control' ? '// list.element.removeEventListener(\'click\', onListAction);\n' : hasTrigger ? '// trigger.destroy();\n' : slug === 'divider' ? '// container.remove();\n' : ''}`;
 }
