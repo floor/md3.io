@@ -3,6 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
+import { checkboxEditClearsCheckedSet } from '../shared/content/checkbox';
 import { controlConcealed, sectionConcealed } from '../shared/content/types';
 import { drawerActiveOptions } from '../shared/content/drawer';
 import { railActiveOptions } from '../shared/content/navigation-rail';
@@ -153,6 +154,8 @@ function syncControls(next: ComponentState) {
   for (const output of form.querySelectorAll<HTMLOutputElement>('[data-value-for]')) output.value = String(next[output.dataset.valueFor!]);
   const selectedChipsInput = form.querySelector<HTMLInputElement>('[name="selectedChips"]');
   if (selectedChipsInput) selectedChipsInput.value = next.selectedChips !== undefined ? String(next.selectedChips) : '';
+  const checkedChildrenInput = form.querySelector<HTMLInputElement>('[name="checkedChildren"]');
+  if (checkedChildrenInput) checkedChildrenInput.value = next.checkedChildren !== undefined ? String(next.checkedChildren) : '';
 }
 /** The Selected list names only the destinations on the stage. */
 function refreshActiveSelect(next: ComponentState) {
@@ -247,6 +250,12 @@ form.addEventListener('input', event => {
   if (target === scenarioSelect) return;
   if (slug === 'list' && state.selection === 'single' && target instanceof HTMLInputElement && target.checked && ['first', 'second', 'third', 'fourth', 'fifth'].includes(target.name)) {
     for (const input of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) if (input !== target && ['first', 'second', 'third', 'fourth', 'fifth'].includes(input.name)) input.checked = false;
+  }
+  // State replaces the stored mix on the way through normalize. The option set and the family drop it.
+  const edited = target instanceof HTMLInputElement || target instanceof HTMLSelectElement ? target.name : '';
+  if (slug === 'checkbox' && checkboxEditClearsCheckedSet(edited)) {
+    const stored = form.querySelector<HTMLInputElement>('[name="checkedChildren"]');
+    if (stored) stored.value = '';
   }
   update();
   markCustom();
