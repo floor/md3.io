@@ -14,7 +14,10 @@ interface SelectSet {
 }
 
 /**
- * Named selects from m3.material.io/components/menus (read 7 October 2026).
+ * Named selects from m3.material.io/components/menus (state read 7 October 2026;
+ * diet read 8 October 2026, the single-select half of figure mhkpbo8d-30, "Menus
+ * can be single- or multi-select"; its multi-select half needs more than one
+ * `value` id, which SelectConfig does not have).
  * The menu stays closed: `<m-select>` has no `open` attribute
  * (`material/src/elements/select.ts`, the attributes from `variant`) and
  * `SelectConfig` has no `open` field, only `open()` on the component. A
@@ -28,22 +31,33 @@ const selectSets: Record<string, SelectSet> = {
     value: 'AK',
     options: [{ id: 'AL', text: 'AL' }, { id: 'AK', text: 'AK' }, { id: 'AZ', text: 'AZ' }],
   },
+  diet: {
+    name: 'Diet',
+    label: 'Diet',
+    value: 'Nut-free',
+    options: [{ id: 'Gluten-free', text: 'Gluten-free' }, { id: 'Kosher', text: 'Kosher' }, { id: 'Nut-free', text: 'Nut-free' }, { id: 'Vegan', text: 'Vegan' }, { id: 'Vegetarian', text: 'Vegetarian' }],
+  },
 };
 
 const selectSet = (state: ComponentState): SelectSet | undefined => selectSets[string(state, 'selectSet')];
 
 const selectSetControl = {
-  ...choose('selectSet', 'Select', ['default', 'state'], 'default', 'select'),
-  labels: { default: 'Default', state: 'State' },
+  ...choose('selectSet', 'Select', ['default', 'state', 'diet'], 'default', 'select'),
+  labels: { default: 'Default', state: 'State', diet: 'Diet' },
 };
 
 const gated = { enabledWhen: 'selectContentDefault' } as const;
 
 const selectScenarios: readonly Scenario[] = [
   {
-    id: 'state', name: 'State', source: 'https://m3.material.io/components/menus/guidelines',
+    id: 'state', name: 'State', source: 'https://m3.material.io/components/menus/accessibility',
     description: 'A filled State field showing AK.',
     options: { selectSet: 'state', variant: 'filled' },
+  },
+  {
+    id: 'diet', name: 'Dietary options', source: 'https://m3.material.io/components/menus/guidelines',
+    description: 'An outlined Diet field showing Nut-free, for picking one dietary requirement.',
+    options: { selectSet: 'diet', variant: 'outlined' },
   },
 ];
 
