@@ -209,6 +209,26 @@ type NestedChild = { element: string; attrs: Attr[]; text: string; native?: bool
 /** A declaration child, with its own children (a submenu). */
 type Child = { attrs: Attr[]; text: string; children: Child[] };
 
+/** Checkbox and radio tags embedded in sheet markup, which a tab must define before it mounts. */
+function embeddedElements(p: Plan): { checkbox: boolean; radios: boolean } {
+  const tags = new Set<string>();
+  const walk = (node: { element: string; children?: { element: string; children?: NestedChild[] }[] }) => {
+    tags.add(node.element);
+    for (const child of node.children ?? []) walk(child);
+  };
+  for (const slot of p.slotted) if (slot.native) walk(slot);
+  return { checkbox: tags.has('m-checkbox'), radios: tags.has('m-radios') || tags.has('m-radio') };
+}
+
+/** Imports and calls that define those elements. The HTML tab's defineAll() already does. */
+function embeddedSetup(p: Plan): string {
+  const { checkbox, radios } = embeddedElements(p);
+  const lines: string[] = [];
+  if (checkbox) lines.push(`import 'material/elements/css/checkbox';`, `import { defineCheckbox } from 'material/elements';`, `defineCheckbox();`);
+  if (radios) lines.push(`import 'material/elements/css/radios';`, `import { defineRadios } from 'material/elements';`, `defineRadios();`);
+  return lines.length ? `${lines.join('\n')}\n` : '';
+}
+
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 const pascal = (name: string): string => camel(name).replace(/^./, c => c.toUpperCase());
 const escapeAttr = (value: string): string => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
@@ -1096,7 +1116,7 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const hook = solid ? 'createSignal' : 'useState';
   const syntax = reactOpen(solid);
   const stateful = p.model || p.open !== undefined || p.example?.states.length;
-  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from 'material/${lib}';\n${appImport(p)}${styleImports(context)}`;
+  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from 'material/${lib}';\n${appImport(p)}${styleImports(context)}${embeddedSetup(p)}`;
   // The model's event sets it; an example's handlers on that event run beside.
   const events = new Map<string, { payload: boolean; calls: string[] }>();
   const on = (name: string, payload: boolean, call: string) => {
@@ -1146,7 +1166,7 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
     ? `  ${element(p.trigger.native ? p.trigger.element : `M${pascal(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, triggerBody(meta, p, `{{ ${p.model?.name} }}`))}\n` : '';
   const state = p.model || p.open !== undefined || p.example?.states.length;
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state}.value = ${jsValue(step.value)}`), '', false)).join('');
-  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'material/vue';\n${appImport(p)}${styleImports(context)}` +
+  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'material/vue';\n${appImport(p)}${styleImports(context)}${embeddedSetup(p)}` +
     (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `const ${state.name} = ref(${state.value});\n`).join('') +
@@ -1181,7 +1201,8 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const state = p.model || p.open !== undefined || p.example?.states.length;
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state} = ${jsValue(step.value)}`), '  ', false)).join('');
   const styles = styleImports(context);
-  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'material/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
+  const defined = embeddedSetup(p);
+  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'material/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}${defined ? `  ${defined.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
     (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `  let ${state.name} = $state(${state.value});\n`).join('') +

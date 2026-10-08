@@ -6,13 +6,9 @@ import { type ComponentState, type Control, type Scenario, bool, choose, paragra
 const subhead = (label: string): string =>
   `<span style="font-size: 12px; font-weight: 500; padding: 12px 0 4px">${label}</span>`;
 
-/** A filter checkbox; its initial state written as the attribute HTML takes. */
+/** A filter checkbox: the library's checkbox, its label in the attribute the element reads. */
 const filter = (label: string, checked = false): string =>
-  `<label style="display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 14px"><input type="checkbox"${checked ? ' checked="true"' : ''} /><span>${label}</span></label>`;
-
-/** One of the density radios; the group's choice written as the attribute HTML takes. */
-const density = (label: string, checked = false): string =>
-  `<label style="display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 14px"><input type="radio" name="density"${checked ? ' checked="true"' : ''} /><span>${label}</span></label>`;
+  `<m-checkbox label="${label}"${checked ? ' checked="true"' : ''}></m-checkbox>`;
 
 /** One of figure 1's album rows: a rounded thumbnail spanning both of its lines. */
 const album = (name: string, details: string, photo: number): string =>
@@ -43,9 +39,7 @@ const searchFilters = `<div style="display: flex; flex-direction: column; paddin
 /** Figure 12's display settings: the density group, Compact chosen. */
 const appearanceSettings = `<div style="display: flex; flex-direction: column; padding: 4px 24px 24px">
   ${subhead('Density')}
-  ${density('Default')}
-  ${density('Comfortable')}
-  ${density('Compact', true)}
+  <m-radios value="Compact" aria-label="Density"><m-radio label="Default" value="Default"></m-radio><m-radio label="Comfortable" value="Comfortable"></m-radio><m-radio label="Compact" value="Compact"></m-radio></m-radios>
 </div>`;
 
 /** A named sheet: the headline its content needs, and the content whole. */
@@ -58,9 +52,9 @@ interface SideSheetSet {
 /**
  * Named sheets from m3.material.io/components/side-sheets/guidelines (read 5
  * October 2026), figures 1, 2 and 12. `default` is not here: today's details
- * sheet stays exactly as it was. The content is native HTML the sheet serves
- * through `content` — it has no list, checkbox or radio templates of its own.
- * See briefs/gaps.md.
+ * sheet stays exactly as it was. The content is markup the sheet serves through
+ * `content`. Search filters are `m-checkbox`; density is `m-radios`. The sheet
+ * has no list template of its own. See briefs/gaps.md.
  */
 const sideSheetSets: Record<string, SideSheetSet> = {
   'photo-info': { name: 'Photo info', title: 'Info', content: photoInfo },

@@ -29,6 +29,14 @@ import createDatePicker from 'material/components/datepicker';
 import createTimePicker from 'material/components/timepicker';
 import { createChips, type ChipComponent } from 'material/components/chips';
 import createCheckbox from 'material/components/checkbox';
+import 'material/elements/css/checkbox';
+import 'material/elements/css/radios';
+import { defineCheckbox, defineRadios } from 'material/elements';
+
+// Sheet content is markup. Defining the elements here lets a checkbox or a radio
+// group in that markup upgrade on the stage, the same tags the code tabs write.
+defineCheckbox();
+defineRadios();
 import createButton from 'material/components/button';
 import createIconButton from 'material/components/icon-button';
 import createButtonGroup from 'material/components/button-group';
