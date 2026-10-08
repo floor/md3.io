@@ -228,7 +228,7 @@ describe('icon button scenarios', () => {
       expect(config.size).toBe(large ? 'l' : 's');
       expect(scenario.description).not.toContain('shown selected');
     }
-    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toContain('tooltip "Favorite"');
+    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('An outlined heart for marking a favorite, left unselected until someone chooses it.');
   });
 });
 
@@ -280,8 +280,8 @@ describe('split button scenarios', () => {
     expect(speed.config.text).toBe('1.5x');
     expect(speed.config.icon).toBeUndefined();
     expect(speed.config.items?.map(item => 'text' in item ? item.text : '')).toEqual(['0.5x', '1x', '1.5x', '2x']);
-    expect(speed.scenario.description).toContain('Not yet exposed by the element: open.');
-    expect(speed.scenario.description).toContain('Not yet exposed by the element: items[].selected.');
+    expect(speed.scenario.description).toBe('A tonal 1.5x control, with slower and faster speeds in its menu.');
+    expect(speed.scenario.description).not.toContain('Not yet exposed');
     const show = apply('slideshow');
     expect(show.config.variant).toBe('filled');
     expect(show.config.text).toBe('Slideshow');

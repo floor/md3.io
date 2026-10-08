@@ -60,17 +60,17 @@ const defaultItems = (state: ComponentState): FabMenuItem[] =>
 const fabMenuScenarios: readonly Scenario[] = [
   {
     id: 'new-music', name: 'New music', source: 'https://m3.material.io/components/fab-menu/guidelines',
-    description: 'Open: New playlist, New collection, New station. Tertiary: the figure’s pink items and purple close are not one colour set.',
+    description: 'An open menu for starting a playlist, a collection, or a station.',
     options: { menuSet: 'new-music', color: 'tertiary', open: true },
   },
   {
     id: 'photo-categories', name: 'Photo categories', source: 'https://m3.material.io/components/fab-menu/guidelines',
-    description: 'Open: Pets, Landscapes, Food, People, Nature. Primary.',
+    description: 'An open menu of photo groups: Pets, Landscapes, Food, People, and Nature.',
     options: { menuSet: 'photo-categories', color: 'primary', open: true },
   },
   {
     id: 'share', name: 'Share', source: 'https://m3.material.io/components/fab-menu/guidelines',
-    description: 'Open: Email, Message, Shared folder. Primary.',
+    description: 'An open menu for sharing by email, a message, or a shared folder.',
     options: { menuSet: 'share', color: 'primary', open: true },
   },
 ];

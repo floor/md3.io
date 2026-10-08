@@ -10,7 +10,7 @@ import { type ComponentState, type Scenario, bool, choose, disabled, fabPosition
 const fabScenarios: readonly Scenario[] = [
   {
     id: 'compose', name: 'Compose', source: 'https://m3.material.io/components/floating-action-button/guidelines',
-    description: 'A pencil. The inbox and the navigation bar are not part of the button.',
+    description: 'A pencil button for starting a message.',
     options: { icon: 'edit', ariaLabel: 'Compose' },
   },
 ];

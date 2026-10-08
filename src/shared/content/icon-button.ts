@@ -11,27 +11,27 @@ import { type ComponentState, type Scenario, bool, choose, disabled, icon, iconM
 const iconButtonScenarios: readonly Scenario[] = [
   {
     id: 'favorite', name: 'Favorite', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'An outlined heart, not selected. The figure shows a tooltip "Favorite" on hover, which this page does not draw.',
+    description: 'An outlined heart for marking a favorite, left unselected until someone chooses it.',
     options: { variant: 'standard', icon: 'heart', toggle: false, selected: false, ariaLabel: 'Favorite' },
   },
   {
     id: 'reservation-date', name: 'Reservation date', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A tonal calendar for choosing a date.',
+    description: 'A tonal calendar button for choosing the date of a reservation.',
     options: { variant: 'tonal', icon: 'calendarToday', toggle: false, selected: false, ariaLabel: 'Choose a date' },
   },
   {
     id: 'browse-albums', name: 'Browse albums', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'An outlined chevron for the next albums.',
+    description: 'An outlined chevron for moving on to the next albums.',
     options: { variant: 'outlined', icon: 'chevronRight', toggle: false, selected: false, ariaLabel: 'More albums' },
   },
   {
     id: 'raise-hand', name: 'Raise hand', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A tonal raised hand.',
+    description: 'A tonal raised hand for asking to speak.',
     options: { variant: 'tonal', icon: 'frontHand', toggle: false, selected: false, ariaLabel: 'Raise hand' },
   },
   {
     id: 'stop-timer', name: 'Stop', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A large filled button whose icon is a square, for stopping a timer.',
+    description: 'A large filled square for stopping a timer.',
     options: { variant: 'filled', size: 'l', icon: 'stop', toggle: false, selected: false, ariaLabel: 'Stop' },
   },
 ];

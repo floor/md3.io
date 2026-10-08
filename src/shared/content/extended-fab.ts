@@ -10,32 +10,32 @@ import { type ComponentState, type Scenario, bool, choose, disabled, fabPosition
 const extendedFabScenarios: readonly Scenario[] = [
   {
     id: 'compose', name: 'Compose', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: 'A pencil and "Compose", on the tertiary container.',
+    description: 'A wide Compose button with a pencil, for starting a message.',
     options: { text: 'Compose', icon: 'edit', variant: 'tertiary-container' },
   },
   {
     id: 'check-out', name: 'Check out', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: 'A cart and "Check out", centred, on the tertiary container.',
+    description: 'A wide Check out button with a cart, centred, for paying for what is in the basket.',
     options: { text: 'Check out', icon: 'shoppingCart', variant: 'tertiary-container', position: 'center' },
   },
   {
     id: 'publish', name: 'Publish', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: 'An upward arrow and "Publish".',
+    description: 'A wide Publish button with an upward arrow, for sending work out.',
     options: { text: 'Publish', icon: 'arrowUpward' },
   },
   {
     id: 'new-task', name: 'New task', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: 'A plus and "New task".',
+    description: 'A wide New task button with a plus, for adding a task.',
     options: { text: 'New task', icon: 'add' },
   },
   {
     id: 'find-flights', name: 'Find flights', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: 'An airplane and "Find flights", centred, in the primary colour.',
+    description: 'A wide Find flights button with a plane, centred, for searching trips.',
     options: { text: 'Find flights', icon: 'flight', variant: 'primary', position: 'center' },
   },
   {
     id: 'save-draft', name: 'Save draft', source: 'https://m3.material.io/components/extended-fab/guidelines',
-    description: '"Save draft", with no icon.',
+    description: 'A wide Save draft label with no icon, for keeping work that is not finished.',
     options: { text: 'Save draft', icon: 'none' },
   },
 ];

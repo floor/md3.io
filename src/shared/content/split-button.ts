@@ -34,12 +34,12 @@ const menuSets: Record<string, MenuContent[]> = {
 const splitButtonScenarios: readonly Scenario[] = [
   {
     id: 'playback-speed', name: 'Playback speed', source: 'https://m3.material.io/components/split-button/overview',
-    description: 'Tonal, "1.5x", no icon. The trailing button opens the menu: 0.5x, 1x, 1.5x, 2x. Not yet exposed by the element: open. Not yet exposed by the element: items[].selected.',
+    description: 'A tonal 1.5x control, with slower and faster speeds in its menu.',
     options: { variant: 'tonal', text: '1.5x', icon: 'none', menu: 'playback-speed', trailingLabel: 'Playback speeds' },
   },
   {
     id: 'slideshow', name: 'Slideshow', source: 'https://m3.material.io/components/split-button/overview',
-    description: 'Filled, a play-in-circle and "Slideshow". The trailing button opens the menu: Open presenter view, Start from beginning, Start slideshow. Not yet exposed by the element: open.',
+    description: 'A filled Slideshow button, with presenter view and where to start in its menu.',
     options: { variant: 'filled', text: 'Slideshow', icon: 'playCircle', menu: 'slideshow', trailingLabel: 'Slideshow options' },
   },
 ];
@@ -52,7 +52,7 @@ export const splitButtonComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled', 'select'), size]),
     ...section('Content', [icon([...Object.keys(buttonIcons), 'playCircle'], 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
-      choose('menu', 'Menu options', ['save', 'share', 'playback-speed', 'slideshow'], 'save')]),
+      { ...choose('menu', 'Menu options', ['save', 'share', 'playback-speed', 'slideshow'], 'save', 'select'), labels: { save: 'Save', share: 'Share', 'playback-speed': 'Playback speed', slideshow: 'Slideshow' } }]),
     ...section('Behavior', [disabled]),
   ],
   config: (state: ComponentState): SplitButtonConfig => ({

@@ -40,12 +40,12 @@ const groupSet = (state: ComponentState): GroupSet | undefined => groupSets[stri
 const buttonGroupScenarios: readonly Scenario[] = [
   {
     id: 'select-size', name: 'Select size', source: 'https://m3.material.io/components/button-groups/guidelines',
-    description: 'A connected group: 8oz selected, 12oz, 16oz.',
+    description: 'A connected choice of cup size, with 8oz selected.',
     options: { groupSet: 'select-size', kind: 'connected', selection: 'single' },
   },
   {
     id: 'price', name: 'Price', source: 'https://m3.material.io/components/button-groups/guidelines',
-    description: 'A connected group: $ and $$ selected, $$$, $$$$.',
+    description: 'A connected choice of price, where $ and $$ can both be selected.',
     options: { groupSet: 'price', kind: 'connected', selection: 'multi' },
   },
 ];
