@@ -251,11 +251,11 @@ describe('icon button scenarios', () => {
       expect(config.icon).toBe(symbols[icon]);
       expect(config.ariaLabel).toBe(label);
       expect(config.selected).toBe(false);
-      expect(config.toggle).toBe(false);
+      expect(config.toggle).toBe(id === 'favorite');
       expect(config.size).toBe(large ? 'l' : 's');
       expect(scenario.description).not.toContain('shown selected');
     }
-    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('An outlined heart for marking a favorite, left unselected until someone chooses it.');
+    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('A heart for marking a restaurant a favorite: outlined until someone chooses it, and filled once they have.');
   });
 });
 

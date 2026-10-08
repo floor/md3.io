@@ -18,6 +18,7 @@ import download from '../../icons/download.svg' with { type: 'text' };
 import edit from '../../icons/edit.svg' with { type: 'text' };
 import error from '../../icons/error.svg' with { type: 'text' };
 import favorite from '../../icons/favorite.svg' with { type: 'text' };
+import favoriteFill from '../../icons/favorite-fill.svg' with { type: 'text' };
 import firstPage from '../../icons/first_page.svg' with { type: 'text' };
 import formatBold from '../../icons/format_bold.svg' with { type: 'text' };
 import formatColorFill from '../../icons/format_color_fill.svg' with { type: 'text' };
@@ -102,6 +103,7 @@ export const symbols = {
   download: trim(download),
   edit: trim(edit),
   heart: trim(favorite),
+  heartFill: trim(favoriteFill),
   inbox: trim(inbox),
   italic: trim(formatItalic),
   menu: trim(menu),
@@ -203,6 +205,7 @@ const files: Record<keyof typeof symbols, string> = {
   download: 'download',
   edit: 'edit',
   heart: 'favorite',
+  heartFill: 'favorite-fill',
   inbox: 'inbox',
   italic: 'format_italic',
   menu: 'menu',
