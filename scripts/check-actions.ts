@@ -81,10 +81,13 @@ try {
       assert(await frame.getByRole('button', { name: 'Underline', exact: true }).getAttribute('aria-pressed') === 'true', 'Single selection did not select Underline');
       await frame.getByRole('button', { name: 'Bold', exact: true }).click();
       assert(await frame.getByRole('button', { name: 'Underline', exact: true }).getAttribute('aria-pressed') === 'false', 'Single selection did not clear Underline');
+      // Changing the selection control rebuilds the group from its config, so Bold
+      // and Italic are selected again. Multi keeps both, and a further click adds.
       await choose('selection', 'multi');
       await frame.locator('[data-selection="multi"]').waitFor();
-      await frame.getByRole('button', { name: 'Underline', exact: true }).click();
       assert(await frame.locator('button[aria-pressed="true"]').count() === 2, 'Multi-selection failed');
+      await frame.getByRole('button', { name: 'Underline', exact: true }).click();
+      assert(await frame.locator('button[aria-pressed="true"]').count() === 3, 'Multi-selection did not keep the others');
       await choose('orientation', 'vertical');
       await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-button-group')?.getAttribute('data-orientation') === 'vertical');
       await choose('content', 'icons');
