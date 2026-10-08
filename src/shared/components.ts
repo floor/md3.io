@@ -52,7 +52,7 @@ import { sliderComponent } from './content/slider';
 import { switchComponent } from './content/switch';
 import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from './content/text-field';
 import { timePickerComponent } from './content/timepicker';
-import { bottomAppBarComponent } from './content/bottom-app-bar';
+import { bottomAppBarComponent, bottomAppBarSet } from './content/bottom-app-bar';
 import { drawerActiveOptions, drawerComponent } from './content/drawer';
 import { menuComponent, menuSelectedId } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeaderForm } from './content/navigation-rail';
@@ -238,6 +238,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   // A named collection fixes the slides: the captions and the current-slide control are for the default's twenty-four.
   if (slug === 'carousel') state.slidesDefault = !state.carouselSet || state.carouselSet === 'default';
   if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
+  // A named bottom-app-bar set fixes the icon buttons: the action count is for the default pair.
+  if (slug === 'bottom-app-bar') state.actionSetDefault = !state.actionSet || state.actionSet === 'default';
   // A named sheet fixes the content: the title and body controls are for the default's own.
   if (slug === 'bottom-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
   if (slug === 'side-sheet') state.sheetContentDefault = !state.sheetSet || state.sheetSet === 'default';
@@ -480,6 +482,17 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
       cleanup += '// action.destroy();\n';
     }
     after += `topBar.setScrollState(${state.scrolled});\n`;
+  } else if (slug === 'bottom-app-bar' && bottomAppBarSet(state)) {
+    const content = appBarContent('bottom-app-bar', state);
+    imports.push('createIconButton');
+    after = `const actions = ${literal(content.actions)}.map(config => createIconButton(config));\nactions.forEach(button => bottomBar.addAction(button.element));\n`;
+    cleanup = '// actions.forEach(button => button.destroy());\n';
+    if (content.fab) {
+      imports.push('createFab');
+      after += `const fab = createFab(${literal(content.fab)});\nbottomBar.addFab(fab.element);\n`;
+      cleanup += '// fab.destroy();\n';
+    }
+    if (!state.visible) after += 'bottomBar.hide();\n';
   } else if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
     after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
