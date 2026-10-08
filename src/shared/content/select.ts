@@ -39,8 +39,6 @@ const selectSets: Record<string, SelectSet> = {
   },
 };
 
-const selectSet = (state: ComponentState): SelectSet | undefined => selectSets[string(state, 'selectSet')];
-
 const selectSetControl = {
   ...choose('selectSet', 'Select', ['default', 'state', 'diet'], 'default', 'select'),
   labels: { default: 'Default', state: 'State', diet: 'Diet' },
@@ -72,14 +70,16 @@ export const selectComponent = {
     ...section('Behavior', [{ ...toggle('disableBanana', 'Disable banana'), ...gated }, toggle('error', 'Error'), toggle('required', 'Required'), disabled]),
   ],
   config: (state: ComponentState): SelectConfig => {
-    const named = selectSet(state);
-    // A named field carries the figure's own label, value and options. The
-    // default stays today's fruit list, its label and selected controls driving it.
+    const key = string(state, 'selectSet');
+    const named = selectSets[key];
+    // A named field carries the figure's own label, value and options, and its
+    // form name is the set's key. The default stays today's fruit list, its
+    // label and selected controls driving it.
     if (named) {
       return {
         variant: pick(state, 'variant', ['filled', 'outlined'], 'outlined'), density: string(state, 'density'),
         label: named.label, value: named.value, error: bool(state, 'error'), required: bool(state, 'required'),
-        disabled: bool(state, 'disabled'), name: 'state', options: named.options,
+        disabled: bool(state, 'disabled'), name: key, options: named.options,
       };
     }
     return { variant: string(state, 'variant'), density: string(state, 'density'), label: string(state, 'label'), value: string(state, 'value'),
