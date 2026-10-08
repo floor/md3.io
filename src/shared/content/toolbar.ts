@@ -185,7 +185,7 @@ export const toolbarComponent = {
     ...section('Appearance', [choose('variant', 'Variant', ['docked', 'floating'], 'floating'), choose('color', 'Color', ['standard', 'vibrant'], 'standard'), toggle('elevated', 'Elevated', true)]),
     ...section('Layout', [choose('orientation', 'Orientation', ['horizontal', 'vertical'], 'horizontal'), choose('arrangement', 'Docked items', ['spread', 'center'], 'spread')]),
     // The item count and the toggles configure the default sets; a named set fixes the whole list.
-    ...section('Content', [toolbarActions, { ...choose('items', 'Item count', ['2', '3', '4', '5'], '4'), enabledWhen: 'actionsDefault' }, { ...toggle('toggles', 'Formatting toggles', true), enabledWhen: 'actionsDefault' }]),
+    ...section('Content', [toolbarActions, { ...choose('items', 'Item count', ['2', '3', '4', '5'], '4'), enabledWhen: 'actionsDefault', replaced: 'actionsDefault' }, { ...toggle('toggles', 'Formatting toggles', true), enabledWhen: 'actionsDefault', replaced: 'actionsDefault' }]),
   ],
   config: (state: ComponentState): ToolbarConfig => {
     const set = toolbarSet(state);
