@@ -112,7 +112,7 @@ const drawerScenarios: readonly Scenario[] = [
   },
   {
     id: 'files', name: 'Files', source: 'https://m3.material.io/components/badges/guidelines',
-    description: 'A Files drawer. Photos is selected and shows 999+. Fonts, Documents and Delete follow.',
+    description: 'A files drawer with Photos selected and a count of what it holds, then Fonts, Documents, and Delete.',
     options: { destinations: 'files', variant: 'standard', headline: 'Files', active: 'photos', icons: true, badges: true, sections: false, open: true },
   },
 ];

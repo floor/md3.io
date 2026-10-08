@@ -42,12 +42,12 @@ export function tooltipTarget(state: ComponentState): TooltipTarget {
 const tooltipScenarios: readonly Scenario[] = [
   {
     id: 'upload', name: 'Upload', source: 'https://m3.material.io/components/tooltips/guidelines',
-    description: 'Hover or focus the button: Upload.',
+    description: 'The name of an add button, shown in a plain tooltip when someone hovers or focuses it.',
     options: { target: 'upload', text: 'Upload', variant: 'plain', position: 'top' },
   },
   {
     id: 'present-now', name: 'Present now', source: 'https://m3.material.io/components/tooltips/guidelines',
-    description: 'Hover or focus the button: Present now.',
+    description: 'The name of a present button, shown in a plain tooltip when someone hovers or focuses it.',
     options: { target: 'present', text: 'Present now', variant: 'plain', position: 'top' },
   },
 ];

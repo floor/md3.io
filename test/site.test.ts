@@ -458,7 +458,9 @@ describe('tooltip target', () => {
     ] as const) {
       const scenario = components.tooltip.scenarios.find(item => item.id === id);
       if (!scenario) throw new Error(`missing tooltip scenario ${id}`);
-      expect(scenario.description.startsWith('Hover or focus the button:')).toBe(true);
+      expect(scenario.description).toBe(id === 'upload'
+        ? 'The name of an add button, shown in a plain tooltip when someone hovers or focuses it.'
+        : 'The name of a present button, shown in a plain tooltip when someone hovers or focuses it.');
       const state = normalizeComponentState('tooltip', { ...initialComponentState('tooltip'), ...scenario.options });
       const config = components.tooltip.config(state);
       expect(config.text).toBe(text);

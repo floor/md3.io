@@ -11,22 +11,22 @@ import { type ComponentState, type Scenario, bool, choose, pick, section, string
 const snackbarScenarios: readonly Scenario[] = [
   {
     id: 'email-archived-undo', name: 'Email archived', source: 'https://m3.material.io/components/snackbar/guidelines',
-    description: 'A bar that says Email archived, with Undo, and no close icon.',
+    description: 'A brief confirmation that an email was archived, with Undo so it can be restored.',
     options: { message: 'Email archived', hasAction: true, action: 'Undo', dismissible: false, visible: true },
   },
   {
     id: 'saved-to-album', name: 'Saved to album', source: 'https://m3.material.io/components/snackbar/guidelines',
-    description: 'A bar that says Saved in “Vacation” album, with no action and no close icon.',
+    description: 'A quiet confirmation that a photo was saved in the Vacation album, with nothing further to do.',
     options: { message: 'Saved in “Vacation” album', hasAction: false, dismissible: false, visible: true },
   },
   {
     id: 'all-changes-saved', name: 'All changes saved', source: 'https://m3.material.io/components/snackbar/guidelines',
-    description: 'A bar that says All changes saved, with no action and no close icon. The figure pairs it with a Save button that turns to Saved, which this page does not draw.',
+    description: 'A confirmation that the work is already saved, so the bar offers no action.',
     options: { message: 'All changes saved', hasAction: false, dismissible: false, visible: true },
   },
   {
     id: 'photo-added', name: 'Photo added', source: 'https://m3.material.io/components/snackbar/guidelines',
-    description: 'A bar that says Photo added to “Natural Light” album, with Undo, and no close icon.',
+    description: 'A confirmation that a photo was added to the Natural Light album, with Undo if it was a mistake.',
     options: { message: 'Photo added to “Natural Light” album', hasAction: true, action: 'Undo', dismissible: false, visible: true },
   },
 ];
