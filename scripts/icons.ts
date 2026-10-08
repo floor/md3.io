@@ -95,6 +95,20 @@ const names = [
   'playlist_add',
   'playlist_play',
   'skip_next',
+  // The actions playground (icon button, split button, extended FAB, FAB menu).
+  'arrow_upward',
+  'calendar_today',
+  'chat',
+  'folder_shared',
+  'forest',
+  'landscape',
+  'library_music',
+  'person',
+  'pets',
+  'play_circle',
+  'radio',
+  'shopping_cart',
+  'stop',
   // The tooltip's present-now scenario (src/shared/content/tooltip.ts).
   'present_to_all',
   // The Files drawer (src/shared/content/drawer.ts): A in a square, and a page of lines.

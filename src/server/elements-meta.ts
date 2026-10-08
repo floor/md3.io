@@ -101,6 +101,10 @@ const keys: Record<string, Record<string, ConfigKey>> = {
   // The trigger is the anchor.
   menu: { opener: { ignore: ['#menu-trigger'] }, color: { ignore: ['standard'] }, closeOnSelect: { attribute: 'no-close-on-select', values: { false: true }, ignore: [true] } },
   'split-button': { text: { text: true } },
+  // The element reflects `open` and setup shows the menu when the attribute is
+  // present (material dist/elements/fab-menu.js). The attribute has no config
+  // key, so the spec's own loop never writes it. `false` is the closed default.
+  'fab-menu': { open: { attribute: 'open', values: { true: true }, ignore: [false] } },
   tooltip: {
     visible: { call: { method: 'show', when: true }, ignore: [false] },
     showOnHover: { attribute: 'no-show-on-hover', values: { false: true }, ignore: [true] },

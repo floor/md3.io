@@ -232,6 +232,205 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   expect(code).not.toContain('MutationObserver');
 });
 
+describe('icon button scenarios', () => {
+  const rows = [
+    ['favorite', 'standard', 'heart', 'Favorite', false],
+    ['reservation-date', 'tonal', 'calendarToday', 'Choose a date', false],
+    ['browse-albums', 'outlined', 'chevronRight', 'More albums', false],
+    ['raise-hand', 'tonal', 'frontHand', 'Raise hand', false],
+    ['stop-timer', 'filled', 'stop', 'Stop', true],
+  ] as const;
+  test('each figure is one icon button, unselected, with its own glyph', () => {
+    expect(components['icon-button'].scenarios.map(item => item.id)).toEqual(rows.map(([id]) => id));
+    for (const [id, variant, icon, label, large] of rows) {
+      const scenario = components['icon-button'].scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing icon button scenario ${id}`);
+      const state = normalizeComponentState('icon-button', { ...initialComponentState('icon-button'), ...scenario.options });
+      const config = components['icon-button'].config(state);
+      expect(config.variant).toBe(variant);
+      expect(config.icon).toBe(symbols[icon]);
+      expect(config.ariaLabel).toBe(label);
+      expect(config.selected).toBe(false);
+      expect(config.toggle).toBe(false);
+      expect(config.size).toBe(large ? 'l' : 's');
+      expect(scenario.description).not.toContain('shown selected');
+    }
+    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('An outlined heart for marking a favorite, left unselected until someone chooses it.');
+  });
+});
+
+describe('button group scenarios', () => {
+  test('the default items stay Bold, Italic and Underline', () => {
+    const config = components['button-group'].config(initialComponentState('button-group'));
+    expect(config.buttons).toEqual([
+      { value: 'bold', ariaLabel: 'Bold', text: 'Bold' },
+      { value: 'italic', ariaLabel: 'Italic', text: 'Italic' },
+      { value: 'underline', ariaLabel: 'Underline', text: 'Underline' },
+    ]);
+    expect(config.ariaLabel).toBe('Text formatting');
+  });
+  test('select size and price are the figure’s items, with the figure’s selection', () => {
+    const apply = (id: string) => {
+      const scenario = components['button-group'].scenarios.find(item => item.id === id);
+      if (!scenario) throw new Error(`missing button group scenario ${id}`);
+      const state = normalizeComponentState('button-group', { ...initialComponentState('button-group'), ...scenario.options });
+      return { state, config: components['button-group'].config(state) };
+    };
+    const sizes = apply('select-size');
+    expect(sizes.config.kind).toBe('connected');
+    expect(sizes.config.selection).toBe('single');
+    expect(sizes.config.buttons?.map(item => [item.text, item.selected === true])).toEqual([['8oz', true], ['12oz', false], ['16oz', false]]);
+    const price = apply('price');
+    expect(price.config.selection).toBe('multi');
+    expect(price.config.buttons?.map(item => [item.text, item.selected === true])).toEqual([['$', true], ['$$', true], ['$$$', false], ['$$$$', false]]);
+    const html = frameworkCode('html', elementMeta('button-group')!, elementConfig('button-group', sizes.state), { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('<m-button-group-item value="8oz" aria-label="8oz" selected>');
+    expect(html).not.toContain('Not yet exposed');
+  });
+});
+
+describe('split button scenarios', () => {
+  const apply = (id: string) => {
+    const scenario = components['split-button'].scenarios.find(item => item.id === id);
+    if (!scenario) throw new Error(`missing split button scenario ${id}`);
+    const state = normalizeComponentState('split-button', { ...initialComponentState('split-button'), ...scenario.options });
+    return { scenario, state, config: components['split-button'].config(state) };
+  };
+  test('the default menu is still Save as, Save a copy, Download', () => {
+    const config = components['split-button'].config(initialComponentState('split-button'));
+    expect(config.items?.map(item => 'text' in item ? item.text : item.type)).toEqual(['Save as…', 'Save a copy', 'Download']);
+  });
+  test('playback speed and slideshow stay closed, with the figure’s items', () => {
+    expect(components['split-button'].scenarios.map(item => item.id)).toEqual(['playback-speed', 'slideshow']);
+    const speed = apply('playback-speed');
+    expect(speed.config.variant).toBe('tonal');
+    expect(speed.config.text).toBe('1.5x');
+    expect(speed.config.icon).toBeUndefined();
+    expect(speed.config.items?.map(item => 'text' in item ? item.text : '')).toEqual(['0.5x', '1x', '1.5x', '2x']);
+    expect(speed.scenario.description).toBe('A tonal 1.5x control, with slower and faster speeds in its menu.');
+    expect(speed.scenario.description).not.toContain('Not yet exposed');
+    const show = apply('slideshow');
+    expect(show.config.variant).toBe('filled');
+    expect(show.config.text).toBe('Slideshow');
+    expect(show.config.icon).toBe(symbols.playCircle);
+    const last = show.config.items?.at(-1);
+    expect(last && 'text' in last && last.text).toBe('Start slideshow');
+    expect(last && 'icon' in last && last.icon).toBe(symbols.playCircle);
+    const vanilla = componentCode('split-button', show.state);
+    expect(vanilla).toContain('playCircleIcon');
+    expect(vanilla).not.toContain('.expand()');
+    const html = frameworkCode('html', elementMeta('split-button')!, elementConfig('split-button', speed.state), { theme: 'baseline', mode: 'light' });
+    expect(html).toContain('1.5x');
+    expect(html).toContain('0.5x');
+    expect(html).not.toContain('expand()');
+  });
+});
+
+describe('fab scenario', () => {
+  test('compose is a pencil, and the default stays the add icon', () => {
+    expect(components.fab.scenarios.map(item => item.id)).toEqual(['compose']);
+    const scenario = components.fab.scenarios[0]!;
+    const state = normalizeComponentState('fab', { ...initialComponentState('fab'), ...scenario.options });
+    expect(components.fab.config(initialComponentState('fab')).icon).toBe(symbols.add);
+    expect(components.fab.config(state).icon).toBe(symbols.edit);
+    expect(components.fab.config(state).ariaLabel).toBe('Compose');
+    expect(components.fab.config(state).position).toBeUndefined();
+  });
+});
+
+describe('extended fab scenarios', () => {
+  const apply = (id: string) => {
+    const scenario = components['extended-fab'].scenarios.find(item => item.id === id);
+    if (!scenario) throw new Error(`missing extended fab scenario ${id}`);
+    const state = normalizeComponentState('extended-fab', { ...initialComponentState('extended-fab'), ...scenario.options });
+    return components['extended-fab'].config(state);
+  };
+  test('the default pill still has its pencil and Compose', () => {
+    const config = components['extended-fab'].config(initialComponentState('extended-fab'));
+    expect(config.text).toBe('Compose');
+    expect(config.icon).toBe(symbols.edit);
+    expect(config.variant).toBe('primary-container');
+  });
+  test('each figure is the pill, and Save draft has no icon', () => {
+    expect(components['extended-fab'].scenarios.map(item => item.id)).toEqual(['compose', 'check-out', 'publish', 'new-task', 'find-flights', 'save-draft']);
+    expect(apply('compose').variant).toBe('tertiary-container');
+    expect(apply('compose').icon).toBe(symbols.edit);
+    expect(apply('check-out').text).toBe('Check out');
+    expect(apply('check-out').icon).toBe(symbols.shoppingCart);
+    expect(apply('check-out').variant).toBe('tertiary-container');
+    expect(apply('check-out').position).toBeUndefined();
+    expect(apply('publish').text).toBe('Publish');
+    expect(apply('publish').icon).toBe(symbols.arrowUpward);
+    expect(apply('new-task').text).toBe('New task');
+    expect(apply('new-task').icon).toBe(symbols.add);
+    expect(apply('find-flights').text).toBe('Find flights');
+    expect(apply('find-flights').icon).toBe(symbols.flight);
+    expect(apply('find-flights').variant).toBe('primary');
+    const draft = apply('save-draft');
+    expect(draft.text).toBe('Save draft');
+    expect(draft.icon).toBeUndefined();
+    expect(componentCode('extended-fab', normalizeComponentState('extended-fab', { ...initialComponentState('extended-fab'), icon: 'none', text: 'Save draft' }))).not.toContain('icon:');
+  });
+});
+
+describe('fab menu scenarios', () => {
+  const apply = (id: string) => {
+    const scenario = components['fab-menu'].scenarios.find(item => item.id === id);
+    if (!scenario) throw new Error(`missing fab menu scenario ${id}`);
+    const state = normalizeComponentState('fab-menu', { ...initialComponentState('fab-menu'), ...scenario.options });
+    return { scenario, state, config: components['fab-menu'].config(state) };
+  };
+  test('the default is still Reply, Forward and Favorite, and it is closed', () => {
+    const state = initialComponentState('fab-menu');
+    const config = components['fab-menu'].config(state);
+    expect(config.items.map(item => item.text)).toEqual(['Reply', 'Forward', 'Favorite']);
+    expect(config.ariaLabel).toBe('Reply options');
+    expect(componentCode('fab-menu', state)).not.toContain('fabMenu.open()');
+    expect(elementConfig('fab-menu', state).open).toBe(false);
+  });
+  test('each menu is the figure’s items, open in every tab', () => {
+    const music = apply('new-music');
+    expect(music.config.color).toBe('tertiary');
+    expect(music.config.items.map(item => item.text)).toEqual(['New playlist', 'New collection', 'New station']);
+    expect(music.config.items.map(item => item.icon)).toEqual([symbols.musicNote, symbols.libraryMusic, symbols.radio]);
+    const photos = apply('photo-categories');
+    expect(photos.config.color).toBe('primary');
+    expect(photos.config.items.map(item => item.text)).toEqual(['Pets', 'Landscapes', 'Food', 'People', 'Nature']);
+    const share = apply('share');
+    expect(share.config.items.map(item => item.text)).toEqual(['Email', 'Message', 'Shared folder']);
+    for (const { state } of [music, photos, share]) {
+      expect(state.open).toBe(true);
+      expect(componentCode('fab-menu', state)).toContain('fabMenu.open()');
+      const html = frameworkCode('html', elementMeta('fab-menu')!, elementConfig('fab-menu', state), { theme: 'baseline', mode: 'light' });
+      expect(html).toMatch(/\sopen[\s=>]/);
+      expect(html).not.toContain('Not yet exposed');
+      const react = frameworkCode('react', elementMeta('fab-menu')!, elementConfig('fab-menu', state), { theme: 'baseline', mode: 'light' });
+      expect(react).toMatch(/\sopen[\s=>]/);
+    }
+  });
+});
+
+describe('fab menu open', () => {
+  const code = (framework: 'html' | 'react' | 'vue' | 'svelte' | 'solid', open: boolean) => {
+    const config = { ...elementConfig('fab-menu', initialComponentState('fab-menu')), open };
+    return frameworkCode(framework, elementMeta('fab-menu')!, config, { theme: 'baseline', mode: 'light' });
+  };
+  test('a closed menu writes no open attribute and no gap', () => {
+    for (const framework of ['html', 'react', 'vue', 'svelte', 'solid'] as const) {
+      const source = code(framework, false);
+      expect(source).not.toContain('Not yet exposed');
+      expect(source).not.toMatch(/\sopen[\s=>]/);
+    }
+  });
+  test('every element tab declares the menu open from the config', () => {
+    for (const framework of ['html', 'react', 'vue', 'svelte', 'solid'] as const) {
+      const source = code(framework, true);
+      expect(source).toMatch(/\sopen[\s=>]/);
+      expect(source).not.toContain('Not yet exposed');
+    }
+  });
+});
+
 describe('checkbox checked children', () => {
   const initial = () => initialComponentState('checkbox');
   const html = (input: Record<string, unknown> = {}) => {
