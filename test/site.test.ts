@@ -195,6 +195,32 @@ describe('search scenarios', () => {
   });
 });
 
+describe('navigation rail active icon', () => {
+  const withActiveIcon = (config: Record<string, unknown>): Record<string, unknown> => {
+    const items = config.items;
+    if (!Array.isArray(items)) return config;
+    return {
+      ...config,
+      items: items.map(item => item && typeof item === 'object' && 'id' in item && item.id === 'inbox' ? { ...item, activeIcon: 'filled-inbox' } : item),
+    };
+  };
+  test('the element tabs write selected-icon from activeIcon, and the default rail has none', () => {
+    const state = initialComponentState('navigation-rail');
+    const config = elementConfig('navigation-rail', state);
+    const html = frameworkCode('html', elementMeta('navigation-rail')!, config, { theme: 'baseline', mode: 'light' });
+    const react = frameworkCode('react', elementMeta('navigation-rail')!, config, { theme: 'baseline', mode: 'light' });
+    expect(html).not.toContain('selected-icon');
+    expect(react).not.toContain('selectedIcon');
+    expect(componentCode('navigation-rail', state)).not.toContain('activeIcon');
+    const shown = withActiveIcon(config);
+    const shownHtml = frameworkCode('html', elementMeta('navigation-rail')!, shown, { theme: 'baseline', mode: 'light' });
+    const shownReact = frameworkCode('react', elementMeta('navigation-rail')!, shown, { theme: 'baseline', mode: 'light' });
+    expect(shownHtml).toContain('selected-icon="filled-inbox"');
+    expect(shownHtml).not.toContain('items[].activeIcon');
+    expect(shownReact).toContain('selectedIcon="filled-inbox"');
+  });
+});
+
 test('date picker clearing and partial ranges stay reproducible in View code', () => {
   const empty = normalizeComponentState('datepicker', { ...initialComponentState('datepicker'), value: '', endDate: '' });
   expect(empty.value).toBe('');

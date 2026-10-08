@@ -21,7 +21,7 @@ is a count or a short text, and `badgeLabel` says what it counts.
 navigation-rail:
   ariaLabel: Mail
   items:
-    - { id: inbox, label: Inbox, icon: inboxIcon, badge: 24, badgeLabel: 24 unread, active: true }
+    - { id: inbox, label: Inbox, icon: inboxIcon, activeIcon: heartFilledIcon, badge: 24, badgeLabel: 24 unread, active: true }
     - { id: outbox, label: Outbox, icon: outboxIcon }
     - { id: favorites, label: Favorites, icon: starIcon }
 ```
