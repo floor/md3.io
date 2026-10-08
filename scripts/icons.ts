@@ -86,6 +86,11 @@ const names = [
   'schedule',
   'timer',
   'videocam',
+  // The navigation bar's figures (src/shared/content/navigation-bar.ts).
+  'chat_bubble',
+  'groups',
+  'home',
+  'video_camera_front',
   // The bottom sheet playground's named sets (src/shared/content/bottom-sheet.ts).
   'album',
   'cloud',
@@ -114,6 +119,9 @@ const names = [
   // The Files drawer (src/shared/content/drawer.ts): A in a square, and a page of lines.
   'font_download',
   'article',
+  // The bottom app bar's notes figure (src/shared/content/bottom-app-bar.ts): a checkbox and a brush.
+  'check_box',
+  'brush',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),
