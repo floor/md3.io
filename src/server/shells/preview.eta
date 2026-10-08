@@ -21,4 +21,4 @@
   <% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" href="/dist/material/themes/<%= theme %>-contrast.css" /><% }); %>
   <link rel="stylesheet" href="/styles/preview.css" />
   <script type="module" src="/dist/preview.js"></script>
-</head><body><main id="stage" aria-label="Component preview"></main></body></html>
+</head><body><main id="stage" aria-label="Component preview"><% if (it.stageMarkup) { %><%~ it.stageMarkup %><% } %></main></body></html>

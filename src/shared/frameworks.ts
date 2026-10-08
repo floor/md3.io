@@ -1213,6 +1213,31 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
     `</script>\n\n${omittedNote(p, t => `<!-- ${t} -->`)}${callsNote(meta, p, t => `<!-- ${t} -->`)}${trigger}${element(pascal(meta.name), `${model}${handlers}${openProps(meta, p, svelteOpen)}${jsxAttrs(bindState(p.attrs, name => name))}${jsxProps(bindState(p.props, name => name))}`, body)}\n`;
 }
 
+/**
+ * The element the HTML tab is generated from: the same tag, attributes and
+ * properties, with icon markup left as markup. The stage mounts this when
+ * `?stage=elements` is set.
+ */
+export function plannedElement(meta: ElementMeta, config: Config): {
+  tag: string;
+  attributes: [string, string][];
+  properties: [string, string | number | boolean][];
+} {
+  const p = plan(meta, config);
+  const attributes: [string, string][] = [];
+  for (const attr of p.attrs) {
+    if (attr.unset) continue;
+    attributes.push([attr.name, attr.value === true ? '' : String(attr.value)]);
+  }
+  const model = p.model?.value;
+  if (p.model && model !== undefined && model !== false && model !== '') attributes.push([p.model.name, String(model)]);
+  return {
+    tag: `m-${meta.name}`,
+    attributes,
+    properties: p.props.map(prop => [prop.name, prop.value]),
+  };
+}
+
 /** The component's code in a framework other than vanilla. */
 export function frameworkCode(framework: Exclude<Framework, 'vanilla'>, meta: ElementMeta, config: Config, context: CodeContext): string {
   const p = plan(meta, config);

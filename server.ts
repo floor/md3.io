@@ -3,9 +3,10 @@ import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier } from './src/server/content';
 import { themes } from './src/shared/button';
-import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
+import { components, componentIcons, elementConfig, initialComponentState, isComponent, playgroundGroups } from './src/shared/components';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
+import { plannedElement } from './src/shared/frameworks';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -187,9 +188,21 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
     const component = components[slug];
+    const stageElements = url.searchParams.get('stage') === 'elements';
+    // The slider trial: the first HTML carries the element, so it can paint before
+    // the preview script. Other components, and a slider without the switch, stay empty.
+    let stageMarkup = '';
+    if (componentMatch[1] === 'preview' && stageElements && slug === 'slider') {
+      const meta = elementMeta('slider');
+      if (meta) {
+        const { renderElement } = await import('material/ssr');
+        const planned = plannedElement(meta, elementConfig('slider', initialComponentState('slider')));
+        stageMarkup = renderElement(planned.tag, Object.fromEntries(planned.attributes.map(([name, value]) => [name, value === '' ? true : value])));
+      }
+    }
     response = componentMatch[1] === 'preview'
-      ? internalHtml(eta.render('preview', { themes, slug, component }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug) });
+      ? internalHtml(eta.render('preview', { themes, slug, component, stageMarkup }))
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), stageElements });
   }
   else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
   else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {

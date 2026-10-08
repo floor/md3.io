@@ -32,7 +32,8 @@ import { createChips, type ChipComponent } from 'material/components/chips';
 import createCheckbox from 'material/components/checkbox';
 import 'material/elements/css/checkbox';
 import 'material/elements/css/radios';
-import { defineCheckbox, defineRadios } from 'material/elements';
+import 'material/elements/css/slider';
+import { defineCheckbox, defineRadios, defineSlider } from 'material/elements';
 import createButton from 'material/components/button';
 import createIconButton from 'material/components/icon-button';
 import createButtonGroup from 'material/components/button-group';
@@ -40,7 +41,9 @@ import createSplitButton from 'material/components/split-button';
 import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
-import { componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { componentIcons, components, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { elementMeta } from '../server/elements-meta';
+import { plannedElement } from '../shared/frameworks';
 import { checkboxChildChecked, checkboxChildren, currentCheckboxChildren } from '../shared/content/checkbox';
 import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
@@ -57,6 +60,11 @@ import { symbols } from '../shared/icons';
 // group in that markup upgrade on the stage, the same tags the code tabs write.
 defineCheckbox();
 defineRadios();
+defineSlider();
+
+// The stage draws `<m-*>` only when the playground was opened with `?stage=elements`.
+// Without it, every component keeps today's factory.
+const stageElements = new URLSearchParams(location.search).get('stage') === 'elements';
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -373,17 +381,31 @@ function create(state: ComponentState) {
       return control;
     }
     case 'slider': {
-      const control = createSlider(components.slider.config(state));
-      // A vertical slider takes its length from its height.
-      if (state.orientation === 'vertical') control.element.style.height = '240px';
-      control.on('input', () => {
-        const value = control.getValue();
-        const second = control.getSecondValue();
-        // The value control is 0-100; a centred slider is shifted onto -50..50.
-        const offset = state.variant === 'centered' ? 50 : 0;
+      // The value control is 0-100; a centred slider is shifted onto -50..50.
+      const offset = state.variant === 'centered' ? 50 : 0;
+      const reportSlider = (value: number, second: number | null) => {
         sync({ value: String(value + offset), ...(second !== null ? { secondValue: String(second) } : {}) });
         message(second === null ? `Value: ${value}` : `Range: ${value}–${second}`);
-      });
+      };
+      if (stageElements) {
+        const meta = elementMeta('slider');
+        if (!meta) throw new Error('slider has no element');
+        // Same description the HTML tab is generated from. The vertical length is the
+        // factory stage's own rule: a vertical slider takes its length from its height.
+        const host = document.createElement('m-slider');
+        const planned = plannedElement(meta, elementConfig('slider', state));
+        for (const [name, value] of planned.attributes) host.setAttribute(name, value);
+        for (const [name, value] of planned.properties) (host as unknown as Record<string, unknown>)[name] = value;
+        if (state.orientation === 'vertical') host.style.height = '240px';
+        host.addEventListener('input', event => {
+          const detail = (event as CustomEvent<{ value: number; secondValue?: number }>).detail;
+          reportSlider(detail.value, detail.secondValue ?? null);
+        });
+        return { element: host, destroy: () => undefined };
+      }
+      const control = createSlider(components.slider.config(state));
+      if (state.orientation === 'vertical') control.element.style.height = '240px';
+      control.on('input', () => reportSlider(control.getValue(), control.getSecondValue()));
       return control;
     }
     case 'text-field': {
