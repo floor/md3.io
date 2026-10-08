@@ -561,7 +561,12 @@ function plan(meta: ElementMeta, config: Config): Plan {
   let trigger: Plan['trigger'];
   if (meta.trigger && isRecord(triggerItem)) {
     used.add(meta.trigger.from);
-    trigger = { ...slottedChild(meta.trigger, triggerItem, meta.trigger.from, [{ name: 'id', value: meta.trigger.id }]), id: meta.trigger.id };
+    // The tooltip names the component it describes (`fab`). Every other trigger
+    // stays the element declared for that component. `component` is not an attribute.
+    const declared = typeof triggerItem.component === 'string' ? triggerItem.component : '';
+    const entry = declared ? { ...meta.trigger, element: declared } : meta.trigger;
+    const item = declared ? Object.fromEntries(Object.entries(triggerItem).filter(([key]) => key !== 'component')) : triggerItem;
+    trigger = { ...slottedChild(entry, item, meta.trigger.from, [{ name: 'id', value: meta.trigger.id }]), id: meta.trigger.id };
     if (meta.trigger.for) setAttr(meta.trigger.for, meta.trigger.id);
   }
   const omitted: string[] = [];

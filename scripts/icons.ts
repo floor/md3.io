@@ -109,6 +109,11 @@ const names = [
   'radio',
   'shopping_cart',
   'stop',
+  // The tooltip's present-now scenario (src/shared/content/tooltip.ts).
+  'present_to_all',
+  // The Files drawer (src/shared/content/drawer.ts): A in a square, and a page of lines.
+  'font_download',
+  'article',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),
