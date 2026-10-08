@@ -54,6 +54,6 @@ describe('split button follow-ups', () => {
     expect(code).toContain('addIcon');
     expect(code).toContain("from './icons/add.svg?raw'");
     expect(code).toContain('$7.49');
-    expect(code).toContain("size: 'l'");
+    expect(code).toContain('size: "l"');
   });
 });
