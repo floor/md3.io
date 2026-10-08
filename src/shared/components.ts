@@ -21,6 +21,14 @@ export const componentIcons: Record<string, string> = {
   error: symbols.error,
   visibility: symbols.visibility,
   visibilityOff: symbols.visibilityOff,
+  calendarToday: symbols.calendarToday,
+  chevronRight: symbols.chevronRight,
+  frontHand: symbols.frontHand,
+  stop: symbols.stop,
+  playCircle: symbols.playCircle,
+  shoppingCart: symbols.shoppingCart,
+  arrowUpward: symbols.arrowUpward,
+  flight: symbols.flight,
 };
 // The types and control helpers live in content/types.ts so the content modules can
 // import them without importing this registry; re-exported here for their consumers.
@@ -155,6 +163,8 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     const allowed = drawerActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
   }
+  if (slug === 'button-group') state.groupDefault = !state.groupSet || state.groupSet === 'default';
+  if (slug === 'fab-menu') state.menuSetDefault = !state.menuSet || state.menuSet === 'default';
   if (slug === 'tabs') {
     state.tabsDefault = !state.tabSet || state.tabSet === 'default';
     if (state.tabsDefault && state.count === '3' && ['drafts', 'archive', 'trash'].includes(String(state.active))) state.active = 'inbox';
@@ -295,6 +305,9 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
     case 'snackbar': return { ...config, open: state.visible === true, ...trigger('Show snackbar') };
     case 'tooltip': return { ...config, target: tooltipTarget(state) };
     case 'select': return String(state.label).trim() ? config : { ...config, ariaLabel: 'Select an option' };
+    // The factory opens with `open()`. The element tabs declare the same thing
+    // with the `open` attribute, which the generator writes from this key.
+    case 'fab-menu': return { ...config, open: state.open === true };
     // The factory takes `trailingItems`. The element takes `trailing-icon`
     // (`material/src/elements/search.ts`, the attribute, mapped into `trailingItems` at create).
     case 'search': {
@@ -374,7 +387,7 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
     slug === 'text-field' && !string(state, 'label').trim() ? `textField.input.setAttribute('aria-label', 'Text field');\n` :
     slug === 'select' && !string(state, 'label').trim() ? `select.textField.input.setAttribute('aria-label', 'Select an option');\n` :
     slug === 'timepicker' ? "const openButton = createButton({ text: `Choose time · ${timePicker.getValue()}`, variant: 'tonal' });\nopenButton.on('click', () => timePicker.open());\ntimePicker.on('change', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.on('confirm', () => openButton.setText(`Choose time · ${timePicker.getValue()}`));\ntimePicker.element.append(openButton.element);\n" : '');
-  const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}`;
+  const calls = `${state.collapsed === true ? `${component.variable}.collapse();\n` : ''}${state.lowered === true ? `${component.variable}.lower();\n` : ''}${slug === 'fab-menu' && state.open === true ? `${component.variable}.open();\n` : ''}`;
   // After the picker is in the page: a modal's dialog opens only once it is connected.
   const openAfter = slug === 'datepicker' && state.dateOpen === true ? `${component.variable}.open();\n` : '';
   const styles = component.styles.includes('full') ? "import 'material/styles';\n" : ["base", ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
