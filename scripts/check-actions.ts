@@ -76,14 +76,14 @@ try {
       await choose('kind', 'connected');
       await choose('selection', 'single');
       await frame.locator('[data-kind="connected"][data-selection="single"]').waitFor();
+      // Bold and Italic start selected. Underline is the one a click can turn on.
+      await frame.getByRole('button', { name: 'Underline', exact: true }).click();
+      assert(await frame.getByRole('button', { name: 'Underline', exact: true }).getAttribute('aria-pressed') === 'true', 'Single selection did not select Underline');
       await frame.getByRole('button', { name: 'Bold', exact: true }).click();
-      assert(await frame.getByRole('button', { name: 'Bold', exact: true }).getAttribute('aria-pressed') === 'true', 'Single selection did not select Bold');
-      await frame.getByRole('button', { name: 'Italic', exact: true }).click();
-      assert(await frame.getByRole('button', { name: 'Bold', exact: true }).getAttribute('aria-pressed') === 'false', 'Single selection did not clear Bold');
+      assert(await frame.getByRole('button', { name: 'Underline', exact: true }).getAttribute('aria-pressed') === 'false', 'Single selection did not clear Underline');
       await choose('selection', 'multi');
       await frame.locator('[data-selection="multi"]').waitFor();
-      await frame.getByRole('button', { name: 'Bold', exact: true }).click();
-      await frame.getByRole('button', { name: 'Italic', exact: true }).click();
+      await frame.getByRole('button', { name: 'Underline', exact: true }).click();
       assert(await frame.locator('button[aria-pressed="true"]').count() === 2, 'Multi-selection failed');
       await choose('orientation', 'vertical');
       await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-button-group')?.getAttribute('data-orientation') === 'vertical');
