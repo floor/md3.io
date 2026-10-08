@@ -20,6 +20,7 @@
 /components/list/
 /components/loading-indicator/
 /components/menu/
+/components/navigation-bar/
 /components/navigation-rail/
 /components/progress/
 /components/radios/
@@ -64,6 +65,7 @@
 /docs/components/list/
 /docs/components/loading-indicator/
 /docs/components/menu/
+/docs/components/navigation-bar/
 /docs/components/navigation-rail/
 /docs/components/progress/
 /docs/components/radios/

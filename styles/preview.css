@@ -16,6 +16,9 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 #stage > .mtrl-chips { width: fit-content; }
 
 html:is([data-component="navigation-rail"], [data-component="drawer"], [data-component="tabs"]) #stage { width: 100%; min-width: 0; height: 100%; }
+html[data-component="navigation-bar"] #stage { width: 100%; min-width: 0; height: 100%; align-items: flex-end; padding: 0; }
+.navigation-demo--bar { align-items: flex-end; }
+.navigation-demo--bar .mtrl-navigation-bar { width: 100%; }
 html:is([data-component="navigation-rail"], [data-component="drawer"]) #stage { padding: 0; }
 .navigation-demo { position: relative; display: flex; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
 .navigation-demo[data-position="end"] { justify-content: flex-end; }
