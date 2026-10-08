@@ -129,7 +129,7 @@ export const tabsComponent = {
   scenarios: tabsScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['primary', 'secondary'], 'primary'), toggle('showDivider', 'Divider', true)]),
-    ...section('Content', [tabSetControl, activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), { ...choose('count', 'Tab count', ['3', '6'], '3'), enabledWhen: 'tabsDefault' }]),
+    ...section('Content', [tabSetControl, activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges'), { ...choose('count', 'Tab count', ['3', '6'], '3'), enabledWhen: 'tabsDefault', replaced: 'tabsDefault' }]),
     ...section('Behavior', [toggle('scrollable', 'Scrollable'), toggle('autoActivate', 'Select on arrow keys')]),
   ],
   config: (state: ComponentState): TabsConfig => {
