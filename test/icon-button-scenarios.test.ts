@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { components, componentCode, initialComponentState, normalizeComponentState } from '../src/shared/components';
 import { symbols } from '../src/shared/icons';
 
@@ -42,5 +44,10 @@ describe('icon button follow-ups', () => {
     expect(code).toContain('toggle: false');
     expect(code).not.toContain('favorite-fill');
     expect(code).not.toContain('selectedIcon');
+  });
+  test('the ten-icon chooser wraps and keeps each glyph at least 32px wide', () => {
+    const css = readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8');
+    expect(css).toContain('.choice-group--icons { flex-wrap: wrap; }');
+    expect(css).toContain('.choice-group--icons .choice { flex: 1 0 32px; min-width: 32px; }');
   });
 });
