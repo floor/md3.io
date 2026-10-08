@@ -204,6 +204,17 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     // The Value control is for the one standalone box; a parent-and-children group's
     // boxes submit their own values, so it disables while the family is on.
     state.standalone = state.family !== true;
+    // The visitor's mix. Checked and unchecked replace it; a set from another option
+    // list, or a standalone box, is dropped. Absent, the family's own mix applies.
+    const stored = typeof raw.checkedChildren === 'string' ? raw.checkedChildren : '';
+    if (state.family === true && state.state === 'checked') state.checkedChildren = currentCheckboxChildren(state).map(child => child.value).join(',');
+    else if (state.family === true && state.state === 'unchecked') state.checkedChildren = '__none__';
+    else if (state.family === true && stored === '__none__') state.checkedChildren = '__none__';
+    else if (state.family === true && stored !== '') {
+      const allowed = new Set(currentCheckboxChildren(state).map(child => child.value));
+      const parts = stored.split(',').filter(Boolean);
+      if (parts.length > 0 && parts.every(part => allowed.has(part))) state.checkedChildren = parts.join(',');
+    }
   }
   // A named toolbar action set fixes the item list: the count and toggle controls are for the default sets.
   if (slug === 'toolbar') state.actionsDefault = state.actions === 'default';

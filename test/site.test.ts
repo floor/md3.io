@@ -5,6 +5,7 @@ import { handleRequest } from '../server';
 import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
+import { checkboxChildChecked, checkboxEditClearsCheckedSet } from '../src/shared/content/checkbox';
 import { symbolByFile, symbols } from '../src/shared/icons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
@@ -203,6 +204,77 @@ test('date picker clearing and partial ranges stay reproducible in View code', (
   const code = componentCode('datepicker', empty);
   expect(code).toContain("import 'material/styles/datepicker'");
   expect(code).not.toContain('MutationObserver');
+});
+
+describe('checkbox checked children', () => {
+  const initial = () => initialComponentState('checkbox');
+  const html = (input: Record<string, unknown> = {}) => {
+    const state = normalizeComponentState('checkbox', { ...initial(), ...input });
+    return frameworkCode('html', elementMeta('checkbox')!, elementConfig('checkbox', state), { theme: 'baseline', mode: 'light' });
+  };
+  test('an absent set leaves the default and the named scenarios on their own mix', () => {
+    const state = initial();
+    expect(state.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(state, 'tomato')).toBe(true);
+    expect(checkboxChildChecked(state, 'pickles')).toBe(false);
+    const code = componentCode('checkbox', state);
+    expect(code).toContain("{ label: 'Tomato', value: 'tomato', checked: true }");
+    expect(code).toContain("{ label: 'Pickles', value: 'pickles' }");
+    expect(code).not.toContain("{ label: 'Pickles', value: 'pickles', checked: true }");
+    expect(html()).toContain('Not yet exposed by the element: children.');
+    const burger = normalizeComponentState('checkbox', { ...state, ...components.checkbox.scenarios.find(scenario => scenario.id === 'burger-additions')!.options });
+    const email = normalizeComponentState('checkbox', { ...state, ...components.checkbox.scenarios.find(scenario => scenario.id === 'email-frequency')!.options });
+    expect(burger.checkedChildren).toBeUndefined();
+    expect(email.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(burger, 'tomato')).toBe(true);
+    expect(checkboxChildChecked(burger, 'pickles')).toBe(false);
+    expect(checkboxChildChecked(email, 'weekly')).toBe(true);
+    expect(checkboxChildChecked(email, 'daily')).toBe(false);
+    expect(componentCode('checkbox', email)).toContain("{ label: 'Weekly', value: 'weekly', checked: true }");
+    expect(componentCode('checkbox', email)).not.toContain("{ label: 'Daily', value: 'daily', checked: true }");
+  });
+  test('a stored mix is what the code lists, and the element tabs still cannot write the children', () => {
+    const state = normalizeComponentState('checkbox', { ...initial(), checkedChildren: 'pickles,lettuce' });
+    expect(state.checkedChildren).toBe('pickles,lettuce');
+    expect(checkboxChildChecked(state, 'pickles')).toBe(true);
+    expect(checkboxChildChecked(state, 'lettuce')).toBe(true);
+    expect(checkboxChildChecked(state, 'tomato')).toBe(false);
+    const code = componentCode('checkbox', state);
+    expect(code).toContain("{ label: 'Pickles', value: 'pickles', checked: true }");
+    expect(code).toContain("{ label: 'Lettuce', value: 'lettuce', checked: true }");
+    expect(code).not.toContain("{ label: 'Tomato', value: 'tomato', checked: true }");
+    expect(html({ checkedChildren: 'pickles,lettuce' })).toContain('Not yet exposed by the element: children.');
+  });
+  test('checked and unchecked replace the stored set', () => {
+    const checked = normalizeComponentState('checkbox', { ...initial(), state: 'checked', checkedChildren: 'lettuce' });
+    expect(checked.checkedChildren).toBe('pickles,tomato,lettuce,cheese');
+    expect(checkboxChildChecked(checked, 'pickles')).toBe(true);
+    const unchecked = normalizeComponentState('checkbox', { ...initial(), state: 'unchecked', checkedChildren: 'lettuce' });
+    expect(unchecked.checkedChildren).toBe('__none__');
+    expect(checkboxChildChecked(unchecked, 'lettuce')).toBe(false);
+    // Back to mixed with the field cleared, as a State edit does: Tomato again, not the old mix.
+    expect(checkboxEditClearsCheckedSet('state')).toBe(true);
+    const mixed = normalizeComponentState('checkbox', { ...initial(), state: 'indeterminate' });
+    expect(mixed.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(mixed, 'tomato')).toBe(true);
+    expect(checkboxChildChecked(mixed, 'lettuce')).toBe(false);
+  });
+  test('a new option set or leaving the family drops the stored set', () => {
+    expect(checkboxEditClearsCheckedSet('familySet')).toBe(true);
+    expect(checkboxEditClearsCheckedSet('family')).toBe(true);
+    expect(checkboxEditClearsCheckedSet('label')).toBe(false);
+    const email = normalizeComponentState('checkbox', { ...initial(), familySet: 'email-frequency', checkedChildren: 'pickles,lettuce' });
+    expect(email.checkedChildren).toBeUndefined();
+    expect(checkboxChildChecked(email, 'weekly')).toBe(true);
+    expect(checkboxChildChecked(email, 'pickles')).toBe(false);
+    const alone = normalizeComponentState('checkbox', { ...initial(), family: false, checkedChildren: 'lettuce' });
+    expect(alone.checkedChildren).toBeUndefined();
+    // A mix made on that option set still belongs to it.
+    const burger = normalizeComponentState('checkbox', { ...initial(), familySet: 'burger-additions', checkedChildren: 'pickles' });
+    expect(burger.checkedChildren).toBe('pickles');
+    expect(checkboxChildChecked(burger, 'pickles')).toBe(true);
+    expect(checkboxChildChecked(burger, 'tomato')).toBe(false);
+  });
 });
 
 describe('framework code for the overlay elements', () => {
