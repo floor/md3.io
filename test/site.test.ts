@@ -892,3 +892,52 @@ document.body.append(bottomBar.element);
     expect(html).toContain('aria-label="Edit"');
   });
 });
+
+describe('sheet filters are Material controls', () => {
+  const scenario = (slug: 'bottom-sheet' | 'side-sheet', id: string) => {
+    const found = components[slug].scenarios.find(item => item.id === id);
+    if (!found) throw new Error(`missing ${slug} scenario ${id}`);
+    return normalizeComponentState(slug, { ...initialComponentState(slug), ...found.options });
+  };
+  const tabs = (slug: 'bottom-sheet' | 'side-sheet', id: string) => {
+    const state = scenario(slug, id);
+    return [
+      componentCode(slug, state),
+      ...(['html', 'react', 'vue', 'svelte', 'solid'] as const).map(framework =>
+        frameworkCode(framework, elementMeta(slug)!, elementConfig(slug, state), { theme: 'baseline', mode: 'light' })),
+    ];
+  };
+  test('file filters and search filters are checkboxes, and density is a radio group', () => {
+    const files = String(components['bottom-sheet'].config(scenario('bottom-sheet', 'file-filters')).content);
+    expect(files).toContain('<m-checkbox label="Work files" checked="true">');
+    expect(files).toContain('<m-checkbox label="Personal">');
+    expect(files).not.toContain('<input');
+    const search = String(components['side-sheet'].config(scenario('side-sheet', 'search-filters')).content);
+    expect(search).toContain('<m-checkbox label="Projects" checked="true">');
+    expect(search).not.toContain('<input');
+    const density = String(components['side-sheet'].config(scenario('side-sheet', 'appearance-settings')).content);
+    expect(density).toContain('<m-radios value="Compact" aria-label="Density">');
+    expect(density).toContain('<m-radio label="Compact" value="Compact">');
+    expect(density).not.toContain('<input');
+    expect(density).not.toContain('type="radio"');
+  });
+  test('every tab defines the elements it mounts, and a default sheet does not', () => {
+    for (const source of tabs('bottom-sheet', 'file-filters')) {
+      expect(source).toContain('<m-checkbox');
+      expect(source).not.toContain('<input');
+      expect(source.includes('defineAll()') || source.includes('defineCheckbox()')).toBe(true);
+    }
+    for (const source of tabs('side-sheet', 'appearance-settings')) {
+      expect(source).toContain('<m-radios');
+      expect(source).toContain('<m-radio');
+      expect(source).not.toContain('type="radio"');
+      expect(source.includes('defineAll()') || source.includes('defineRadios()')).toBe(true);
+    }
+    const plain = componentCode('bottom-sheet', initialComponentState('bottom-sheet'));
+    expect(plain).not.toContain('defineCheckbox');
+    expect(plain).not.toContain('<m-checkbox');
+    const details = componentCode('side-sheet', initialComponentState('side-sheet'));
+    expect(details).not.toContain('defineRadios');
+    expect(details).not.toContain('<m-radio');
+  });
+});

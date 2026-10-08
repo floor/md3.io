@@ -53,9 +53,9 @@ const musicPlayer = `<div style="display: flex; align-items: center; gap: 12px; 
   ${playerButton('Skip to next track', symbols.skipNext)}
 </div>`;
 
-/** One of figure 10's filters; the checkbox's initial state written as the attribute HTML takes. */
+/** One of figure 10's filters: the library's checkbox, its label in the attribute the element reads. */
 const filter = (label: string, checked = false): string =>
-  `<label style="display: flex; align-items: center; gap: 12px; padding: 10px 0; font-size: 14px"><input type="checkbox"${checked ? ' checked="true"' : ''} /><span>${label}</span></label>`;
+  `<m-checkbox label="${label}"${checked ? ' checked="true"' : ''}></m-checkbox>`;
 
 /** Figure 10's filters: two columns of categories, the work files on. */
 const fileFilters = `<div style="display: flex; gap: 40px; padding: 8px 24px 24px">
@@ -73,9 +73,10 @@ interface BottomSheetSet {
 /**
  * Named sheets from m3.material.io/components/bottom-sheets/guidelines (read 5
  * October 2026), figures 1, 5, 8 and 10. `default` is not here: today's plan-a-visit
- * sheet stays exactly as it was. The content is native HTML the sheet serves through
- * `content` — it has no list, chip or progress templates of its own, and the figure's
- * row of product logos is left out: the site draws no product logo. See briefs/gaps.md.
+ * sheet stays exactly as it was. The content is markup the sheet serves through
+ * `content`. File filters are `m-checkbox`. The sheet has no list, chip or progress
+ * templates of its own, and the figure's row of product logos is left out: the site
+ * draws no product logo. See briefs/gaps.md.
  */
 const bottomSheetSets: Record<string, BottomSheetSet> = {
   'photo-sharing': { name: 'Photo sharing', title: '', content: photoSharing },
