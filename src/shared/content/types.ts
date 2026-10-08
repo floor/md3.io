@@ -14,6 +14,14 @@ export interface Control {
   options?: readonly string[];
   labels?: Record<string, string>;
   enabledWhen?: string;
+  /**
+   * The state key that is false once a named set has replaced what this control
+   * edits. The row hides while that key is not true — not shown, not in the
+   * accessibility tree, not focusable — and its value is kept, whatever
+   * `enabledWhen` says. On the default the key is true, so the row stays and
+   * `enabledWhen` greys it as before. Without this field the row never hides.
+   */
+  replaced?: string;
   min?: number;
   max?: number;
   step?: number;
@@ -57,6 +65,12 @@ export interface ComponentDefinition {
   config: (state: ComponentState) => unknown;
 }
 export const section = (title: NonNullable<Control['section']>, controls: Control[]): Control[] => controls.map(control => ({ ...control, section: title }));
+/** The row is hidden: `replaced` names a state key, and that key is not on. */
+export const controlConcealed = (control: Pick<Control, 'replaced'>, state: ComponentState): boolean =>
+  !!control.replaced && state[control.replaced] !== true;
+/** A section hides, heading included, when it has rows and every one of them is hidden. */
+export const sectionConcealed = (rowsHidden: readonly boolean[]): boolean =>
+  rowsHidden.length > 0 && rowsHidden.every(hidden => hidden);
 export const choose = (key: string, label: string, options: readonly string[], initial: string, kind: 'choice' | 'select' | 'icons' = 'choice'): Control => ({ key, label, options, initial, kind });
 export const toggle = (key: string, label: string, initial = false, enabledWhen?: string): Control => ({ key, label, initial, kind: 'toggle', enabledWhen });
 export const text = (key: string, label: string, initial: string): Control => ({ key, label, initial, kind: 'text' });
