@@ -1,6 +1,6 @@
 {
   "material": "3.0.4",
-  "measured": "2026-10-06",
+  "measured": "2026-10-08",
   "gzip": 9,
   "core": {
     "factory": 15526,
@@ -221,6 +221,18 @@
         "alone": 16338,
         "lazy": 0,
         "added": 5701
+      }
+    },
+    "navigation-bar": {
+      "factory": {
+        "alone": 10789,
+        "lazy": 0,
+        "added": 4117
+      },
+      "element": {
+        "alone": 16936,
+        "lazy": 0,
+        "added": 6346
       }
     },
     "drawer": {
