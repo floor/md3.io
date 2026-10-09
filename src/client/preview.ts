@@ -133,6 +133,7 @@ function mountElement(
     host = document.createElement(planned.tag);
     for (const [name, value] of planned.attributes) host.setAttribute(name, value);
     for (const [name, value] of planned.properties) (host as unknown as Record<string, unknown>)[name] = value;
+    if (planned.text) host.textContent = planned.text;
     if (spec.wrap === 'divider') {
       // The factory stage's frame: a divider alone has no length in the centred stage.
       element = document.createElement('div');

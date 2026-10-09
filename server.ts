@@ -206,7 +206,8 @@ export async function handleRequest(request: Request): Promise<Response> {
         const planned = plannedElement(meta, elementConfig(slug, state));
         const attributes = Object.fromEntries(planned.attributes.map(([name, value]) => [name, value === '' ? true : value]));
         if (slug === 'divider') attributes.style = 'flex:1';
-        const markup = renderElement(planned.tag, attributes);
+        const text = planned.text?.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;') ?? '';
+        const markup = renderElement(planned.tag, attributes, text);
         stageMarkup = slug === 'divider' ? `<div style="${dividerFrame(state.orientation)}">${markup}</div>` : markup;
       }
     }

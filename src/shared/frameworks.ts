@@ -1222,6 +1222,8 @@ export function plannedElement(meta: ElementMeta, config: Config): {
   tag: string;
   attributes: [string, string][];
   properties: [string, string | number | boolean][];
+  /** The slotted label the HTML tab writes as the element's text. */
+  text?: string;
 } {
   const p = plan(meta, config);
   const attributes: [string, string][] = [];
@@ -1235,6 +1237,8 @@ export function plannedElement(meta: ElementMeta, config: Config): {
     tag: `m-${meta.name}`,
     attributes,
     properties: p.props.map(prop => [prop.name, prop.value]),
+    // The HTML tab writes a slotted label as text, not as an attribute.
+    ...(p.text ? { text: p.text } : {}),
   };
 }
 

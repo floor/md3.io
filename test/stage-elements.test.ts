@@ -82,7 +82,7 @@ describe('tier 1 stage elements', () => {
     expect(page).toContain('src="/preview/button/?stage=elements&scenario=save"');
     const preview = await (await get('/preview/button/?stage=elements&scenario=save')).text();
     expect(preview).toContain('<m-button');
-    expect(preview).toContain('label="Save"');
+    expect(preview).toContain('>Save<');
     expect(preview).toContain('shadowrootmode');
     const fab = await (await get('/preview/fab/?stage=elements')).text();
     expect(fab).toContain('<m-fab');
