@@ -1,6 +1,6 @@
 {
-  "material": "3.0.4",
-  "measured": "2026-10-08",
+  "material": "3.0.5",
+  "measured": "2026-10-09",
   "gzip": 9,
   "core": {
     "factory": 15526,
@@ -9,9 +9,9 @@
   "components": {
     "button": {
       "factory": {
-        "alone": 12656,
+        "alone": 12657,
         "lazy": 6873,
-        "added": 5122
+        "added": 5123
       },
       "element": {
         "alone": 17263,
@@ -33,9 +33,9 @@
     },
     "button-group": {
       "factory": {
-        "alone": 18221,
+        "alone": 18222,
         "lazy": 6877,
-        "added": 10685
+        "added": 10686
       },
       "element": {
         "alone": 24551,
@@ -69,9 +69,9 @@
     },
     "fab-menu": {
       "factory": {
-        "alone": 15463,
+        "alone": 15464,
         "lazy": 11590,
-        "added": 7909
+        "added": 7910
       },
       "element": {
         "alone": 19508,
@@ -81,9 +81,9 @@
     },
     "extended-fab": {
       "factory": {
-        "alone": 10266,
+        "alone": 10267,
         "lazy": 0,
-        "added": 2428
+        "added": 2429
       },
       "element": {
         "alone": 14543,
@@ -105,9 +105,9 @@
     },
     "switch": {
       "factory": {
-        "alone": 10807,
+        "alone": 10808,
         "lazy": 0,
-        "added": 2951
+        "added": 2952
       },
       "element": {
         "alone": 14668,
@@ -141,14 +141,14 @@
     },
     "slider": {
       "factory": {
-        "alone": 17791,
+        "alone": 17772,
         "lazy": 0,
-        "added": 10493
+        "added": 10470
       },
       "element": {
-        "alone": 22604,
+        "alone": 22584,
         "lazy": 0,
-        "added": 11481
+        "added": 11460
       }
     },
     "text-field": {
@@ -201,9 +201,9 @@
     },
     "timepicker": {
       "factory": {
-        "alone": 16478,
+        "alone": 16479,
         "lazy": 0,
-        "added": 9581
+        "added": 9582
       },
       "element": {
         "alone": 21265,
@@ -285,9 +285,9 @@
     },
     "bottom-app-bar": {
       "factory": {
-        "alone": 7603,
+        "alone": 7604,
         "lazy": 0,
-        "added": 1152
+        "added": 1153
       },
       "element": {
         "alone": 11660,
@@ -297,26 +297,26 @@
     },
     "toolbar": {
       "factory": {
-        "alone": 17684,
+        "alone": 17697,
         "lazy": 6874,
-        "added": 9605
+        "added": 9606
       },
       "element": {
-        "alone": 23177,
+        "alone": 23185,
         "lazy": 6946,
-        "added": 12421
+        "added": 12430
       }
     },
     "card": {
       "factory": {
-        "alone": 13161,
+        "alone": 13170,
         "lazy": 10290,
-        "added": 6322
+        "added": 6331
       },
       "element": {
-        "alone": 17946,
-        "lazy": 10285,
-        "added": 7113
+        "alone": 17953,
+        "lazy": 10283,
+        "added": 7121
       }
     },
     "list": {
@@ -333,9 +333,9 @@
     },
     "carousel": {
       "factory": {
-        "alone": 14796,
+        "alone": 14797,
         "lazy": 0,
-        "added": 8081
+        "added": 8082
       },
       "element": {
         "alone": 19408,
@@ -357,9 +357,9 @@
     },
     "dialog": {
       "factory": {
-        "alone": 19865,
+        "alone": 19866,
         "lazy": 6872,
-        "added": 11855
+        "added": 11856
       },
       "element": {
         "alone": 25422,
@@ -369,9 +369,9 @@
     },
     "bottom-sheet": {
       "factory": {
-        "alone": 11480,
+        "alone": 11482,
         "lazy": 0,
-        "added": 4251
+        "added": 4253
       },
       "element": {
         "alone": 16129,
@@ -381,9 +381,9 @@
     },
     "side-sheet": {
       "factory": {
-        "alone": 10980,
+        "alone": 10981,
         "lazy": 0,
-        "added": 3735
+        "added": 3736
       },
       "element": {
         "alone": 15401,
@@ -441,14 +441,14 @@
     },
     "tooltip": {
       "factory": {
-        "alone": 9637,
+        "alone": 9598,
         "lazy": 0,
-        "added": 2741
+        "added": 2701
       },
       "element": {
-        "alone": 14191,
+        "alone": 14144,
         "lazy": 0,
-        "added": 3438
+        "added": 3383
       }
     }
   }
