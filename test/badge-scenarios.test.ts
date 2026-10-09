@@ -36,7 +36,8 @@ describe('badge scenarios', () => {
     const config = components.badge.config(stateFor('ten-unread'));
     expect(config.variant).toBe('large');
     expect(config.label).toBe('10');
-    expect(config.max).toBe(999);
+    expect(scenario('ten-unread').options.max).toBeUndefined();
+    expect(config.max).toBe(99);
     expect(config.color).toBe('error');
     expect(config.visible).toBe(true);
   });

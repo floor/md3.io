@@ -10,7 +10,8 @@ import { type ComponentState, type Scenario, bool, choose, section, string, text
  * e18a73ff-b00d-46e7-af20-ab9dd24bf579). Color stays error and position stays
  * top-right: that page says to keep the default color and the upper trailing
  * corner. A number past Maximum is shown as that maximum plus a +, so 1250 at
- * 999 reads 999+. The same badges are already in place on the drawer's Files
+ * 999 reads 999+. Ten unread leaves Maximum at 99, the page default, because
+ * 10 reads the same there. The same badges are already in place on the drawer's Files
  * row and on the navigation bar's rows. Options name playground controls only.
  */
 const badgeScenarios: readonly Scenario[] = [
@@ -22,7 +23,7 @@ const badgeScenarios: readonly Scenario[] = [
   {
     id: 'ten-unread', name: 'Ten unread', source: 'https://m3.material.io/components/badges/guidelines',
     description: 'Ten new messages, a count the badge can still show. The same count is on Music and on Chat in the navigation bar.',
-    options: { variant: 'large', label: '10', max: '999' },
+    options: { variant: 'large', label: '10' },
   },
   {
     id: 'new-mail', name: 'New mail', source: 'https://m3.material.io/components/badges/guidelines',
