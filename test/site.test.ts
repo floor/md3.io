@@ -252,15 +252,15 @@ test('a string attribute given true is present and empty', () => {
 
 describe('icon button scenarios', () => {
   const rows = [
-    ['favorite', 'standard', 'heart', 'Favorite', false],
-    ['reservation-date', 'tonal', 'calendarToday', 'Choose a date', false],
-    ['browse-albums', 'outlined', 'chevronRight', 'More albums', false],
-    ['raise-hand', 'tonal', 'frontHand', 'Raise hand', false],
-    ['stop-timer', 'filled', 'stop', 'Stop', true],
+    ['favorite', 'standard', 'heart', 'Favorite', 's'],
+    ['reservation-date', 'tonal', 'calendarToday', 'Choose a date', 's'],
+    ['browse-albums', 'outlined', 'chevronRight', 'More albums', 's'],
+    ['raise-hand', 'tonal', 'frontHand', 'Raise hand', 'm'],
+    ['stop-timer', 'filled', 'stop', 'Stop', 'xl'],
   ] as const;
   test('each figure is one icon button, unselected, with its own glyph', () => {
     expect(components['icon-button'].scenarios.map(item => item.id)).toEqual(rows.map(([id]) => id));
-    for (const [id, variant, icon, label, large] of rows) {
+    for (const [id, variant, icon, label, size] of rows) {
       const scenario = components['icon-button'].scenarios.find(item => item.id === id);
       if (!scenario) throw new Error(`missing icon button scenario ${id}`);
       const state = normalizeComponentState('icon-button', { ...initialComponentState('icon-button'), ...scenario.options });
@@ -269,11 +269,11 @@ describe('icon button scenarios', () => {
       expect(config.icon).toBe(symbols[icon]);
       expect(config.ariaLabel).toBe(label);
       expect(config.selected).toBe(false);
-      expect(config.toggle).toBe(false);
-      expect(config.size).toBe(large ? 'l' : 's');
+      expect(config.toggle).toBe(id === 'favorite');
+      expect(config.size).toBe(size);
       expect(scenario.description).not.toContain('shown selected');
     }
-    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('An outlined heart for marking a favorite, left unselected until someone chooses it.');
+    expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('A heart for marking a restaurant a favorite: outlined until someone chooses it, and filled once they have.');
   });
 });
 
@@ -320,16 +320,17 @@ describe('split button scenarios', () => {
     expect(config.items?.map(item => 'text' in item ? item.text : item.type)).toEqual(['Save as…', 'Save a copy', 'Download']);
   });
   test('playback speed and slideshow stay closed, with the figure’s items', () => {
-    expect(components['split-button'].scenarios.map(item => item.id)).toEqual(['playback-speed', 'slideshow']);
+    expect(components['split-button'].scenarios.map(item => item.id)).toEqual(['playback-speed', 'slideshow', 'enamel-mugs']);
     const speed = apply('playback-speed');
     expect(speed.config.variant).toBe('tonal');
     expect(speed.config.text).toBe('1.5x');
     expect(speed.config.icon).toBeUndefined();
     expect(speed.config.items?.map(item => 'text' in item ? item.text : '')).toEqual(['0.5x', '1x', '1.5x', '2x']);
-    expect(speed.scenario.description).toBe('A tonal 1.5x control, with slower and faster speeds in its menu.');
+    expect(speed.scenario.description).toBe('Someone watching a video sets playback to 1.5x, or opens the menu for a slower or faster speed.');
     expect(speed.scenario.description).not.toContain('Not yet exposed');
     const show = apply('slideshow');
     expect(show.config.variant).toBe('filled');
+    expect(show.scenario.description).toBe('Someone presenting starts the slideshow, or opens the menu for presenter view and where to begin.');
     expect(show.config.text).toBe('Slideshow');
     expect(show.config.icon).toBe(symbols.playCircle);
     const last = show.config.items?.at(-1);
