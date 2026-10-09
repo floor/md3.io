@@ -1,5 +1,10 @@
 // The drawer's playground content: its named destination sets and its registry entry.
-// The default destinations come from the navigation rail, the set the rail and the tabs share.
+// The default is a photos app, from the page's accessibility figures (read 8 October
+// 2026): Photos, Albums, Recents, Trash — "A navigation drawer item's label text and
+// accessibility label both read “photos.” The role is “tab.”" and "While the visible
+// label text reads Recents, the accessibility label for this destination clarifies its
+// function: Recent images". The mail drawer the default used to be is the mailbox set
+// below, built from the destinations the rail and the tabs share.
 import type { DrawerConfig, DrawerItemConfig } from 'material/components/drawer';
 import { symbols } from '../icons';
 import { destinations } from './navigation-rail';
@@ -15,13 +20,33 @@ interface DrawerSet {
   items: readonly DrawerRow[];
 }
 
+/** The default drawer's destinations: the photos app of the page's accessibility figures. */
+const defaultDestinations = [
+  { id: 'photos', label: 'Photos', icon: symbols.image },
+  { id: 'albums', label: 'Albums', icon: symbols.album },
+  { id: 'recents', label: 'Recents', icon: symbols.schedule },
+  { id: 'trash', label: 'Trash', icon: symbols.delete },
+] as const;
+
 /**
  * Named destination sets from m3.material.io/components/navigation-drawer/guidelines
- * (read 6 October 2026). `default` is not here: today's mailbox stays exactly as it
- * was. The set follows the desktop figure: Mail, Inbox 24, Outbox 100+, Favorites,
- * Trash, then Personal Folders.
+ * (read 8 October 2026). `default` is not here: today's photos app stays exactly as it
+ * was. mailbox is the mail drawer the default used to be (the rail's Inbox, Favorites,
+ * Sent under "Your mailbox", eight unread on Inbox). mailbox-folders follows the
+ * desktop figure: Mail, Inbox 24, Outbox 100+, Favorites, Trash, then Personal Folders.
  */
 const drawerSets: Record<string, DrawerSet> = {
+  mailbox: {
+    name: 'Mailbox',
+    active: 'inbox',
+    items: [
+      { type: 'section', sectionLabel: 'Your mailbox' },
+      ...destinations.map(item => ({
+        id: item.id, label: item.label, icon: item.icon, disabled: false,
+        ...(item.id === 'inbox' ? { badge: '8' } : {}),
+      })),
+    ],
+  },
   'mailbox-folders': {
     name: 'Mailbox folders',
     active: 'inbox',
@@ -53,17 +78,13 @@ const drawerSets: Record<string, DrawerSet> = {
 
 const drawerSet = (state: ComponentState): DrawerSet | undefined => drawerSets[string(state, 'destinations')];
 
-/** The rows on the stage: today's mailbox, or the named set with the toggles applied. */
+/** The rows on the stage: the photos app, or the named set with the toggles applied. */
 function drawerItems(state: ComponentState): DrawerItemConfig[] {
   const set = drawerSet(state);
   if (!set) {
-    return [
-      ...(state.sections ? [{ type: 'section' as const, sectionLabel: 'Your mailbox' }] : []),
-      ...destinations.map(item => ({
-        id: item.id, label: item.label, ...(state.icons ? { icon: item.icon } : {}), active: state.active === item.id, disabled: false,
-        ...(state.badges && item.id === 'inbox' ? { badge: '8' } : {}),
-      })),
-    ];
+    return defaultDestinations.map(item => ({
+      id: item.id, label: item.label, ...(state.icons ? { icon: item.icon } : {}), active: state.active === item.id, disabled: false,
+    }));
   }
   const active = set.items.some(item => item.id === state.active) ? state.active : set.active;
   return set.items.flatMap(item => {
@@ -87,24 +108,30 @@ export function drawerActiveOptions(state: ComponentState): { value: string; lab
 const selectable = [
   ...destinations.map(item => [item.id, item.label] as const),
   ['outbox', 'Outbox'], ['trash', 'Trash'], ['friends', 'Friends'], ['volunteering', 'Volunteering'], ['work', 'Work'],
-  ['photos', 'Photos'], ['fonts', 'Fonts'], ['documents', 'Documents'], ['delete', 'Delete'],
+  ['photos', 'Photos'], ['albums', 'Albums'], ['recents', 'Recents'], ['fonts', 'Fonts'], ['documents', 'Documents'], ['delete', 'Delete'],
 ] as const;
 
 const destinationControl: Control = {
-  ...choose('destinations', 'Destinations', ['default', 'mailbox-folders', 'files'], 'default', 'select'),
-  labels: { default: 'Default', 'mailbox-folders': 'Mailbox folders', files: 'Files' },
+  ...choose('destinations', 'Destinations', ['default', 'mailbox', 'mailbox-folders', 'files'], 'default', 'select'),
+  labels: { default: 'Default', mailbox: 'Mailbox', 'mailbox-folders': 'Mailbox folders', files: 'Files' },
 };
 
 const activeControl: Control = {
-  ...choose('active', 'Selected', [...new Set(selectable.map(([id]) => id))], 'inbox', 'select'),
+  ...choose('active', 'Selected', [...new Set(selectable.map(([id]) => id))], 'photos', 'select'),
   labels: Object.fromEntries(selectable),
 };
 
 /**
- * The drawer's scenario, from m3.material.io (read 6 October 2026). Options name
- * playground controls only. Mailbox folders is the desktop drawer's mail list.
+ * The drawer's scenarios, from m3.material.io (read 8 October 2026). Options name
+ * playground controls only. Mailbox is the mail drawer the default used to be;
+ * mailbox folders is the desktop drawer's mail list.
  */
 const drawerScenarios: readonly Scenario[] = [
+  {
+    id: 'mailbox', name: 'Mailbox', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
+    description: 'A mail app\'s drawer: Inbox with eight unread, Favorites, and Sent under a "Your mailbox" label.',
+    options: { destinations: 'mailbox', variant: 'standard', headline: 'Mail', active: 'inbox', icons: true, badges: true, sections: true, open: true },
+  },
   {
     id: 'mailbox-folders', name: 'Mailbox folders', source: 'https://m3.material.io/components/navigation-drawer/guidelines',
     description: 'A mail drawer: Inbox and Outbox with counts, Favorites and Trash, then personal folders.',
@@ -125,7 +152,9 @@ export const drawerComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'standard'), toggle('dense', 'Dense')]),
     ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'start'), { ...range('width', 'Width', '280'), min: 220, max: 360, step: 20 }]),
-    ...section('Content', [destinationControl, text('headline', 'Headline', 'Mail'), activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true), toggle('sections', 'Section labels', true)]),
+    // The photos default has no badge and no section, so those toggles do nothing there.
+    // They stay, greyed, until Destinations is a named set (the panel's enabledWhen).
+    ...section('Content', [destinationControl, text('headline', 'Headline', 'Photos'), activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true, 'namedDestinations'), toggle('sections', 'Section labels', true, 'namedDestinations')]),
     ...section('Behavior', [toggle('open', 'Open', true), toggle('dismissible', 'Dismissible', true)]),
   ],
   config: (state: ComponentState): DrawerConfig => ({ variant: string(state, 'variant'), position: string(state, 'position'), width: Number(state.width), dense: bool(state, 'dense'), headline: string(state, 'headline'), open: bool(state, 'open'), dismissible: bool(state, 'dismissible'),

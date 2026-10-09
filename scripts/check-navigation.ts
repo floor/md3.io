@@ -106,8 +106,8 @@ try {
       assert(source.includes('horizontal'), 'Horizontal layout is not in the code');
       assert(await page.locator('#configuration [name="hideOnScroll"]').count() === 0, 'Hide on scroll is a control');
     } else if (slug === 'drawer') {
-      await frame.getByText('Favorites', { exact: true }).click();
-      await selected('favorites');
+      await frame.getByText('Albums', { exact: true }).click();
+      await selected('albums');
       await choose('variant', 'modal');
       await frame.locator('.mtrl-drawer--modal.mtrl-drawer--open').waitFor();
       // Born open, the drawer marks itself open immediately, then takes the page
@@ -117,8 +117,8 @@ try {
         const active = drawer?.ownerDocument.activeElement;
         return !!drawer && drawer.getAttribute('aria-hidden') === 'false' && !!active && (drawer === active || drawer.contains(active));
       });
-      await frame.getByText('Favorites', { exact: true }).focus();
-      await frame.getByText('Favorites', { exact: true }).press('Escape');
+      await frame.getByText('Albums', { exact: true }).focus();
+      await frame.getByText('Albums', { exact: true }).press('Escape');
       await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
       await frame.getByRole('button', { name: 'Open drawer' }).click();
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
