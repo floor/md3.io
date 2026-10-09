@@ -53,9 +53,11 @@ import { chromium } from 'playwright';
 import { exampleCode, parseExample, type ExampleBlock, type ExampleCode } from '../src/server/example-block';
 import { FRAMEWORKS } from '../src/shared/frameworks';
 import { compileFramework, errorLine } from './check-docs/compile';
+import { checkDocsPages } from './check-docs-pages';
 import { svelteToTs, vueToTs, type Generated } from './check-docs/templates';
 
 const root = resolve(import.meta.dir, '..');
+const checkDocsPageCount = checkDocsPages(process.env.CHECK_DOCS_PAGES);
 const docsDir = resolve(root, 'docs/components');
 const preludePath = resolve(import.meta.dir, 'check-docs/prelude.ts');
 const templatesPath = resolve(import.meta.dir, 'check-docs/templates.d.ts');
@@ -573,6 +575,7 @@ window.__ready = true;
 </script></body></html>`;
 
 async function checkBehaviour() {
+  console.log(`behaviour: ${checkDocsPageCount} pages at once`);
   const modules = new Map<string, { unit: Unit; code: string; listens: Listen[] }>();
   for (const unit of units) {
     try {
@@ -692,7 +695,7 @@ async function checkBehaviour() {
     const missing = await page.evaluate(names => names.filter(name => !(name in window)), declared);
     for (const name of missing) fail('(prelude)', 0, 'behaviour', `${name} is declared but has no value`);
     await page.close();
-    await Promise.all(Array.from({ length: 6 }, worker));
+    await Promise.all(Array.from({ length: checkDocsPageCount }, worker));
     // The web component renderings: every handler's event fires, with its fields in the detail
     const elementQueue = [...elementModules];
     const elementWorker = async () => {
@@ -731,7 +734,7 @@ async function checkBehaviour() {
         await page.close();
       }
     };
-    await Promise.all(Array.from({ length: 6 }, elementWorker));
+    await Promise.all(Array.from({ length: checkDocsPageCount }, elementWorker));
   } finally {
     await browser.close();
     server.stop(true);

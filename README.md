@@ -25,7 +25,7 @@ bun run test:browser
 
 The browser check uses Playwright Chromium and writes screenshots to `analysis/browser/`. It runs `scripts/check-tabs-batches.ts`, which starts one `check-tabs` process per `CHECK_TABS_BATCH` components (a whole number from 1, otherwise 6) and waits for that process to exit before the next; `CHECK_TABS_ONLY_BATCH` runs a single batch by its index, counting from 1. Install its browser once with `bunx playwright install chromium` if needed. To serve a built site, run `bun start`.
 
-`bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against material, and against material-addons (a devDependency) for form and colorpicker: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app.
+`bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against material, and against material-addons (a devDependency) for form and colorpicker: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app. `CHECK_DOCS_PAGES` is how many Chromium pages that behaviour check opens at once: a whole number from 1 to 6, otherwise 2.
 
 ## Structure
 
