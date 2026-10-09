@@ -11,6 +11,14 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 /* The same for the other inline hosts. The factory root is the control; the element host is inline until named. */
 #stage > m-button { display: inline-flex; max-width: 100%; vertical-align: middle; }
 #stage > :is(m-icon-button, m-fab, m-extended-fab, m-loading-indicator) { display: inline-flex; vertical-align: middle; }
+/* A corner class is position:fixed on the inner control, so the host has no box. The stage gives the host that same box. */
+#stage > m-fab[position="top-left"] { position: fixed; top: 16px; left: 16px; }
+#stage > m-fab[position="top-right"] { position: fixed; top: 16px; right: 16px; }
+#stage > m-fab[position="bottom-left"] { position: fixed; bottom: 16px; left: 16px; }
+#stage > m-fab[position="bottom-right"] { position: fixed; bottom: 16px; right: 16px; }
+#stage > m-fab[position][size="default"] { width: 56px; height: 56px; }
+#stage > m-fab[position][size="medium"] { width: 80px; height: 80px; }
+#stage > m-fab[position][size="large"] { width: 96px; height: 96px; }
 #stage > m-switch { display: inline-flex; width: min(100%, 360px); min-width: 0; }
 #stage > m-progress:not([variant="circular"]) { display: block; width: min(100%, 360px); }
 #stage > :is(.mtrl-chips, .mtrl-radios) { max-width: 100%; }
