@@ -12,7 +12,8 @@ describe('radios scenarios', () => {
     expect(config.direction).toBe('vertical');
     expect(config.value).toBe('allow');
     expect(config.name).toBe('notifications');
-    expect(config.options.map(option => option.label)).toEqual(['Allow notifications', 'Turn off notifications']);
-    expect(config.options.map(option => option.value)).toEqual(['allow', 'off']);
+    const options = config.options ?? [];
+    expect(options.map(option => option.label)).toEqual(['Allow notifications', 'Turn off notifications']);
+    expect(options.map(option => option.value)).toEqual(['allow', 'off']);
   });
 });
