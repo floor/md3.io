@@ -280,9 +280,10 @@ describe('icon button scenarios', () => {
 describe('button group scenarios', () => {
   test('the default items stay Bold, Italic and Underline', () => {
     const config = components['button-group'].config(initialComponentState('button-group'));
+    expect(config.selection).toBe('multi');
     expect(config.buttons).toEqual([
-      { value: 'bold', ariaLabel: 'Bold', text: 'Bold' },
-      { value: 'italic', ariaLabel: 'Italic', text: 'Italic' },
+      { value: 'bold', ariaLabel: 'Bold', text: 'Bold', selected: true },
+      { value: 'italic', ariaLabel: 'Italic', text: 'Italic', selected: true },
       { value: 'underline', ariaLabel: 'Underline', text: 'Underline' },
     ]);
     expect(config.ariaLabel).toBe('Text formatting');
