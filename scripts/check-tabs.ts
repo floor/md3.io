@@ -498,6 +498,8 @@ interface TabInfo {
 }
 
 const tabBundles: Record<string, TabInfo> = {};
+const startedAt = performance.now();
+const secondsSinceStart = () => ((performance.now() - startedAt) / 1000).toFixed(1);
 
 for (const slug of targetSlugs) {
   const meta = elementMeta(slug);
@@ -561,6 +563,8 @@ for (const slug of targetSlugs) {
     }
   }
 }
+
+console.log(`builds: ${Object.keys(tabBundles).length} in ${secondsSinceStart()}s`);
 
 // --- Serve bundled tabs ---
 let currentTabKey = '';
@@ -629,9 +633,12 @@ let totalScenarios = 0;
 try {
   for (const slug of targetSlugs) {
     const scenarios = [null, ...components[slug].scenarios];
+    let componentScenarios = 0;
+    let componentMounts = 0;
     for (const scenario of scenarios) {
       const scenarioId = scenario?.id ?? 'default';
       totalScenarios++;
+      componentScenarios++;
 
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
@@ -656,6 +663,7 @@ try {
         const key = `${slug}/${scenarioId}/${tab}`;
         const tabInfo = tabBundles[key];
         totalMounts++;
+        componentMounts++;
         pageErrors.length = 0;
 
         try {
@@ -838,6 +846,7 @@ try {
         }
       }
     }
+    console.log(`pace: ${slug} scenarios ${componentScenarios} mounts ${componentMounts} at ${secondsSinceStart()}s`);
   }
 } finally {
   await browser.close();
