@@ -13,9 +13,10 @@ import { compile } from 'svelte/compiler';
 import { parse, compileScript, compileTemplate } from 'vue/compiler-sfc';
 import { chromium } from 'playwright';
 import { handleRequest } from '../server';
-import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
+import { components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
+import { eligibleTabComponents } from './check-tabs-eligible';
 import { checkTabsRecycle, checkTabsSlugs } from './check-tabs-options';
 
 const root = resolve(import.meta.dir, '..');
@@ -478,7 +479,7 @@ const popupShownAfterClick = (opener: import('playwright').Locator): Promise<boo
   })).catch(() => false);
 
 // --- Generate and bundle every tab ---
-const eligibleSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
+const eligibleSlugs = eligibleTabComponents();
 const selected = checkTabsSlugs(process.env.CHECK_TABS, eligibleSlugs);
 if (!selected.ok) {
   console.error(selected.error);
