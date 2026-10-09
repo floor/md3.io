@@ -24,23 +24,45 @@ const menuSets: Record<string, MenuContent[]> = {
     { id: 'beginning', text: 'Start from beginning' },
     { id: 'slideshow', text: 'Start slideshow', icon: symbols.playCircle },
   ],
+  // The enamel-mug figure leaves this menu closed. The items are the colors the
+  // product line prints beside the button: "Comes in navy, black, white, forest, cherry."
+  enamel: [
+    { id: 'navy', text: 'Navy' },
+    { id: 'black', text: 'Black' },
+    { id: 'white', text: 'White' },
+    { id: 'forest', text: 'Forest' },
+    { id: 'cherry', text: 'Cherry' },
+  ],
 };
 
 /**
- * The split button's scenarios, from m3.material.io (read 7 October 2026). Options name
- * playground controls only. The figures show the menus open; the element cannot declare
- * that, so the stage leaves them closed.
+ * The split button's scenarios, from m3.material.io (read 8 October 2026,
+ * page JSON 1341051a-3131-40d4-abbf-69e37b307651). Playback speed and slideshow are
+ * the figures whose menus are drawn open. The enamel-mug figure is the large hero
+ * purchase ("Using large split buttons on small screens can add extra emphasis for
+ * hero moments"); its menu is closed in the figure. The speed figure is the smaller
+ * secondary control beside a large play button ("The most prominent controls can be
+ * larger while secondary controls in a split button can be smaller") and stays the
+ * default small, with no leading icon. Elevated and outlined are listed as color
+ * styles, and no sentence names a job for either, so they are not scenarios.
+ * Options name playground controls only. The element cannot declare an open menu,
+ * so the stage leaves every menu closed.
  */
 const splitButtonScenarios: readonly Scenario[] = [
   {
-    id: 'playback-speed', name: 'Playback speed', source: 'https://m3.material.io/components/split-button/overview',
-    description: 'A tonal 1.5x control, with slower and faster speeds in its menu.',
+    id: 'playback-speed', name: 'Playback speed', source: 'https://m3.material.io/components/split-button/guidelines',
+    description: 'Someone watching a video sets playback to 1.5x, or opens the menu for a slower or faster speed.',
     options: { variant: 'tonal', text: '1.5x', icon: 'none', menu: 'playback-speed', trailingLabel: 'Playback speeds' },
   },
   {
-    id: 'slideshow', name: 'Slideshow', source: 'https://m3.material.io/components/split-button/overview',
-    description: 'A filled Slideshow button, with presenter view and where to start in its menu.',
+    id: 'slideshow', name: 'Slideshow', source: 'https://m3.material.io/components/split-button/guidelines',
+    description: 'Someone presenting starts the slideshow, or opens the menu for presenter view and where to begin.',
     options: { variant: 'filled', text: 'Slideshow', icon: 'playCircle', menu: 'slideshow', trailingLabel: 'Slideshow options' },
+  },
+  {
+    id: 'enamel-mugs', name: 'Enamel mugs', source: 'https://m3.material.io/components/split-button/guidelines',
+    description: 'Someone buying an enamel mug on a small screen uses the large button for the $7.49 purchase, and the menu offers the colors the product line names.',
+    options: { variant: 'filled', size: 'l', text: '$7.49', icon: 'add', menu: 'enamel', trailingLabel: 'Choose a color' },
   },
 ];
 export const splitButtonComponent = {
@@ -51,8 +73,8 @@ export const splitButtonComponent = {
   scenarios: splitButtonScenarios,
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['filled', 'tonal', 'outlined', 'elevated'], 'filled', 'select'), size]),
-    ...section('Content', [icon([...Object.keys(buttonIcons), 'playCircle'], 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
-      { ...choose('menu', 'Menu options', ['save', 'share', 'playback-speed', 'slideshow'], 'save', 'select'), labels: { save: 'Save', share: 'Share', 'playback-speed': 'Playback speed', slideshow: 'Slideshow' } }]),
+    ...section('Content', [icon([...Object.keys(buttonIcons), 'playCircle', 'add'], 'none'), text('text', 'Text', 'Save'), text('trailingLabel', 'Menu label', 'More save options'),
+      { ...choose('menu', 'Menu options', ['save', 'share', 'playback-speed', 'slideshow', 'enamel'], 'save', 'select'), labels: { save: 'Save', share: 'Share', 'playback-speed': 'Playback speed', slideshow: 'Slideshow', enamel: 'Mug colors' } }]),
     ...section('Behavior', [disabled]),
   ],
   config: (state: ComponentState): SplitButtonConfig => ({

@@ -320,16 +320,17 @@ describe('split button scenarios', () => {
     expect(config.items?.map(item => 'text' in item ? item.text : item.type)).toEqual(['Save as…', 'Save a copy', 'Download']);
   });
   test('playback speed and slideshow stay closed, with the figure’s items', () => {
-    expect(components['split-button'].scenarios.map(item => item.id)).toEqual(['playback-speed', 'slideshow']);
+    expect(components['split-button'].scenarios.map(item => item.id)).toEqual(['playback-speed', 'slideshow', 'enamel-mugs']);
     const speed = apply('playback-speed');
     expect(speed.config.variant).toBe('tonal');
     expect(speed.config.text).toBe('1.5x');
     expect(speed.config.icon).toBeUndefined();
     expect(speed.config.items?.map(item => 'text' in item ? item.text : '')).toEqual(['0.5x', '1x', '1.5x', '2x']);
-    expect(speed.scenario.description).toBe('A tonal 1.5x control, with slower and faster speeds in its menu.');
+    expect(speed.scenario.description).toBe('Someone watching a video sets playback to 1.5x, or opens the menu for a slower or faster speed.');
     expect(speed.scenario.description).not.toContain('Not yet exposed');
     const show = apply('slideshow');
     expect(show.config.variant).toBe('filled');
+    expect(show.scenario.description).toBe('Someone presenting starts the slideshow, or opens the menu for presenter view and where to begin.');
     expect(show.config.text).toBe('Slideshow');
     expect(show.config.icon).toBe(symbols.playCircle);
     const last = show.config.items?.at(-1);
