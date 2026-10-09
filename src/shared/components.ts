@@ -162,6 +162,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   if (slug === 'drawer') {
     const allowed = drawerActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
+    state.namedDestinations = state.destinations !== 'default';
   }
   if (slug === 'button-group') state.groupDefault = !state.groupSet || state.groupSet === 'default';
   if (slug === 'fab-menu') state.menuSetDefault = !state.menuSet || state.menuSet === 'default';
