@@ -4,8 +4,9 @@ import type { ExtendedFabConfig } from 'material/components/extended-fab';
 import { type ComponentState, type Scenario, bool, choose, disabled, fabPosition, icon, iconMarkup, pick, position, section, string, text, toneControl, toggle } from './types';
 
 /**
- * The extended FAB's scenarios, from m3.material.io (read 7 October 2026). Options name
- * playground controls only. The screen around the pill is not part of it.
+ * The extended FAB's scenarios. The first six were read 7 October 2026. Add to
+ * basket was read 9 October 2026. Options name playground controls only. The
+ * screen around the pill is not part of it.
  */
 const extendedFabScenarios: readonly Scenario[] = [
   {
@@ -37,6 +38,14 @@ const extendedFabScenarios: readonly Scenario[] = [
     id: 'save-draft', name: 'Save draft', source: 'https://m3.material.io/components/extended-fab/guidelines',
     description: 'A wide Save draft label with no icon, for keeping work that is not finished.',
     options: { text: 'Save draft', icon: 'none' },
+  },
+  {
+    // Size stays small: this product pill is the small one. The large Reply needs
+    // a reply icon this control does not offer. Width stays fixed. The cart stays
+    // on the left. The centred twin of this product is the same job.
+    id: 'add-to-basket', name: 'Add to basket', source: 'https://m3.material.io/components/extended-fab/guidelines',
+    description: 'A record is ready to buy. Add to basket sits on the trailing corner, in the darker primary colour, with a cart.',
+    options: { text: 'Add to basket', icon: 'shoppingCart', variant: 'primary', position: 'bottom-right' },
   },
 ];
 export const extendedFabComponent = {
