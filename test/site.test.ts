@@ -348,13 +348,13 @@ describe('split button scenarios', () => {
 
 describe('fab scenario', () => {
   test('compose is a pencil, and the default stays the add icon', () => {
-    expect(components.fab.scenarios.map(item => item.id)).toEqual(['compose']);
+    expect(components.fab.scenarios.map(item => item.id)).toEqual(['compose', 'create', 'add']);
     const scenario = components.fab.scenarios[0]!;
     const state = normalizeComponentState('fab', { ...initialComponentState('fab'), ...scenario.options });
     expect(components.fab.config(initialComponentState('fab')).icon).toBe(symbols.add);
     expect(components.fab.config(state).icon).toBe(symbols.edit);
     expect(components.fab.config(state).ariaLabel).toBe('Compose');
-    expect(components.fab.config(state).position).toBeUndefined();
+    expect(components.fab.config(state).position).toBe('bottom-right');
   });
 });
 
