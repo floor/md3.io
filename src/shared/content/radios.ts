@@ -64,6 +64,18 @@ export const radioOptionSets: Record<string, RadioOptionSet> = {
       { value: 'es', label: 'Spanish' },
     ],
   },
+  // The settings figure in the guidelines (read 8 October 2026): two radios for
+  // "Allow notifications" / "Turn off notifications" beside multi-select checkboxes.
+  'notifications': {
+    name: 'Notifications',
+    groupName: 'notifications',
+    ariaLabel: 'Notifications',
+    defaultValue: 'allow',
+    options: [
+      { value: 'allow', label: 'Allow notifications' },
+      { value: 'off', label: 'Turn off notifications' },
+    ],
+  },
 };
 radioOptionSets['delivery'] = radioOptionSets['express-delivery'];
 
@@ -73,13 +85,14 @@ export const radioAriaLabel = (state: ComponentState): string => {
 };
 
 const optionSetControl: Control = {
-  ...choose('optionSet', 'Options', ['default', 'express-delivery', 'catalog-sort', 'phone-ringtone', 'app-language'], 'default', 'select'),
+  ...choose('optionSet', 'Options', ['default', 'express-delivery', 'catalog-sort', 'phone-ringtone', 'app-language', 'notifications'], 'default', 'select'),
   labels: {
     default: 'Default',
     'express-delivery': 'Express delivery',
     'catalog-sort': 'Catalog sort',
     'phone-ringtone': 'Phone ringtone',
     'app-language': 'App language',
+    'notifications': 'Notifications',
   },
 };
 
@@ -88,6 +101,7 @@ const allRadioValues = [
   'relevance', 'lowest-price', 'highest-rating', 'most-reviewed',
   'none', 'callisto', 'ganymede', 'luna',
   'en', 'zh', 'es',
+  'allow', 'off',
 ] as const;
 
 const radioValueControl: Control = {
@@ -97,14 +111,21 @@ const radioValueControl: Control = {
     relevance: 'Relevance', 'lowest-price': 'Lowest price', 'highest-rating': 'Highest rating', 'most-reviewed': 'Most reviewed',
     none: 'None', callisto: 'Callisto', ganymede: 'Ganymede', luna: 'Luna',
     en: 'English', zh: 'Chinese (Mandarin)', es: 'Spanish',
+    allow: 'Allow notifications', off: 'Turn off notifications',
   },
 };
 
 /**
- * The radio buttons' scenarios, from m3.material.io (read 5 October 2026). Options name
+ * The radio buttons' scenarios, from m3.material.io (read 8 October 2026). Options name
  * playground controls only. Radio buttons allow selecting a single option from a set of
  * five or fewer options. One option is always pre-selected across shipping methods,
- * catalog sorting, ringtone selection, and language settings.
+ * catalog sorting, ringtone selection, language settings, and notification settings.
+ * The guidelines' settings figure shows two radios for "Allow notifications" /
+ * "Turn off notifications" beside multi-select checkboxes (caption: "Radio buttons are
+ * single-select, unlike checkboxes which are multi-select"), and the page directs
+ * "Radio buttons should be vertically listed and have one option always selected"
+ * (caution figure: "Avoid using horizontal radio button lists") — so the notifications
+ * group is vertical.
  */
 const radiosScenarios: readonly Scenario[] = [
   {
@@ -126,6 +147,11 @@ const radiosScenarios: readonly Scenario[] = [
     id: 'app-language', name: 'App language', source: 'https://m3.material.io/components/radio-button/guidelines',
     description: 'Choosing interface display language from supported system locales.',
     options: { optionSet: 'app-language', value: 'en', name: 'language' },
+  },
+  {
+    id: 'notifications', name: 'Notifications', source: 'https://m3.material.io/components/radio-button/guidelines',
+    description: 'Turning app notifications on or off in settings; the two choices read as full phrases, so the group is listed vertically with Allow notifications pre-selected.',
+    options: { optionSet: 'notifications', value: 'allow', name: 'notifications', direction: 'vertical' },
   },
 ];
 

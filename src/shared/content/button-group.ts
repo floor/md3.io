@@ -3,7 +3,14 @@ import type { ButtonGroupConfig } from 'material/components/button-group';
 import { sizes, variants } from '../button';
 import { type ComponentState, type Scenario, bool, choose, disabled, iconByName, pick, section, shape, size, square, string, toggle } from './types';
 
-const groupItems = [{ value: 'bold', text: 'Bold' }, { value: 'italic', text: 'Italic' }, { value: 'underline', text: 'Underline' }];
+// Bold and Italic start selected. The guidelines (read 8 October 2026): "Connected
+// button groups should be used for single or multi-select patterns that use toggle
+// buttons. Avoid using a connected group when none of the buttons can be toggled."
+const groupItems = [
+  { value: 'bold', text: 'Bold', selected: true },
+  { value: 'italic', text: 'Italic', selected: true },
+  { value: 'underline', text: 'Underline' },
+];
 
 interface GroupSet {
   name: string;
@@ -68,7 +75,7 @@ export const buttonGroupComponent = {
     ...section('Content', [itemsControl,
       { ...choose('content', 'Content', ['text', 'icons', 'both'], 'text'), enabledWhen: 'groupDefault' },
       { ...choose('labels', 'Labels', ['always', 'selected'], 'always'), enabledWhen: 'groupDefault' }]),
-    ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'none'), toggle('required', 'Require a selection'), disabled]),
+    ...section('Behavior', [choose('selection', 'Selection', ['none', 'single', 'multi'], 'multi'), toggle('required', 'Require a selection'), disabled]),
   ],
   config: (state: ComponentState): ButtonGroupConfig => {
     const set = groupSet(state);
@@ -82,6 +89,7 @@ export const buttonGroupComponent = {
         ? set.items.map(item => ({ value: item.value, text: item.text, ariaLabel: item.text, ...(item.selected ? { selected: true } : {}) }))
         : groupItems.map(item => ({ value: item.value, ariaLabel: item.text,
           ...(state.content !== 'icons' ? { text: item.text } : {}), ...(state.content !== 'text' ? { icon: iconByName(item.value) } : {}),
+          ...(item.selected ? { selected: true } : {}),
         })),
     };
   },
