@@ -24,7 +24,7 @@
       </div>
       <div class="playground-space">
         <button class="ui-btn preview-copy" id="copy-code" type="button" hidden><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg> Copy code</button>
-        <div id="live-panel" class="playground-view" role="tabpanel" aria-labelledby="live-tab"><iframe id="preview" title="Interactive <%= it.component.name.toLowerCase() %> preview, from the material library" src="/preview/<%= it.slug %>/<% if (it.stageElements) { %>?stage=elements<% } %>"></iframe></div>
+        <div id="live-panel" class="playground-view" role="tabpanel" aria-labelledby="live-tab"><iframe id="preview" title="Interactive <%= it.component.name.toLowerCase() %> preview, from the material library" src="/preview/<%= it.slug %>/<% if (it.stageElements) { %>?stage=elements<% if (it.stageScenario) { %>&scenario=<%= it.stageScenario %><% } %><% } %>"></iframe></div>
         <div id="code-panel" class="playground-view code-panel" role="tabpanel" aria-labelledby="code-tab" tabindex="0" hidden>
           <% if (!it.element) { %><p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the <%= it.component.name.toLowerCase() %> web component; the vanilla factory works in any of them today.</p><% } %>
           <pre><code id="generated-code" class="hljs language-javascript"></code></pre>

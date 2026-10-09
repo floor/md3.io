@@ -62,3 +62,32 @@ describe('slider stage elements', () => {
     expect(switched).toContain('shadowrootmode');
   });
 });
+
+const tier = ['button', 'icon-button', 'switch', 'fab', 'extended-fab', 'progress', 'loading-indicator', 'divider'] as const;
+
+describe('tier 1 stage elements', () => {
+  test('without the switch the iframe and the stage stay empty of elements', async () => {
+    for (const slug of tier) {
+      const page = await (await get(`/components/${slug}/?scenario=save`)).text();
+      expect(page).toContain(`src="/preview/${slug}/"`);
+      expect(page).not.toContain('stage=elements');
+      const preview = await (await get(`/preview/${slug}/`)).text();
+      expect(preview).toContain('<main id="stage" aria-label="Component preview"></main>');
+      expect(preview).not.toContain('<m-');
+    }
+  });
+
+  test('the switch points the iframe at the element stage, and a scenario is on that request', async () => {
+    const page = await (await get('/components/button/?stage=elements&scenario=save')).text();
+    expect(page).toContain('src="/preview/button/?stage=elements&scenario=save"');
+    const preview = await (await get('/preview/button/?stage=elements&scenario=save')).text();
+    expect(preview).toContain('<m-button');
+    expect(preview).toContain('label="Save"');
+    expect(preview).toContain('shadowrootmode');
+    const fab = await (await get('/preview/fab/?stage=elements')).text();
+    expect(fab).toContain('<m-fab');
+    const divider = await (await get('/preview/divider/?stage=elements')).text();
+    expect(divider).toContain('<m-divider');
+    expect(divider).toContain('flex:1');
+  });
+});

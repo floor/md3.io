@@ -8,6 +8,11 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 #stage > :is(.mtrl-switch, .mtrl-slider, .mtrl-text-field, .mtrl-select, .mtrl-search) { width: min(100%, 360px); min-width: 0; }
 /* m-slider is inline until displayed as a block, so the width above never reaches it. The factory root is the .mtrl-slider this rule already sizes. */
 #stage > m-slider { display: block; width: min(100%, 360px); min-width: 0; }
+/* The same for the other inline hosts. The factory root is the control; the element host is inline until named. */
+#stage > m-button { display: inline-flex; max-width: 100%; vertical-align: middle; }
+#stage > :is(m-icon-button, m-fab, m-extended-fab, m-loading-indicator) { display: inline-flex; vertical-align: middle; }
+#stage > m-switch { display: inline-flex; width: min(100%, 360px); min-width: 0; }
+#stage > m-progress:not([variant="circular"]) { display: block; width: min(100%, 360px); }
 #stage > :is(.mtrl-chips, .mtrl-radios) { max-width: 100%; }
 .mtrl-time-picker__dialog { min-width: 0; min-height: 0; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow: auto; }
 /* The docked calendar expands inside the isolated preview, including short frames. */
