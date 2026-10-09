@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { checkTabsSlugs } from '../scripts/check-tabs-options';
+import { checkTabsRecycle, checkTabsSlugs } from '../scripts/check-tabs-options';
 
 const known = ['button', 'icon-button', 'tabs'] as const;
 
@@ -26,5 +26,31 @@ describe('CHECK_TABS', () => {
 
   test('a list that names nothing is an error', () => {
     expect(checkTabsSlugs(',', known)).toEqual({ ok: false, error: 'CHECK_TABS names no component' });
+  });
+});
+
+describe('CHECK_TABS_RECYCLE', () => {
+  test('unset gives 6', () => {
+    expect(checkTabsRecycle(undefined)).toBe(6);
+  });
+
+  test('an empty value gives 6', () => {
+    expect(checkTabsRecycle('')).toBe(6);
+  });
+
+  test('"1" gives 1', () => {
+    expect(checkTabsRecycle('1')).toBe(1);
+  });
+
+  test('"6" gives 6', () => {
+    expect(checkTabsRecycle('6')).toBe(6);
+  });
+
+  test('"12" gives 12', () => {
+    expect(checkTabsRecycle('12')).toBe(12);
+  });
+
+  test.each(['0', '06', '6.0', 'x', '-1'])('%s gives 6', value => {
+    expect(checkTabsRecycle(value)).toBe(6);
   });
 });

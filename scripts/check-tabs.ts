@@ -2,6 +2,8 @@
 // (vanilla, html/web-components, react, vue, svelte, solid) is generated, bundled, mounted in
 // a headless page, and checked against the preview frame's mtrl-* root classes and visible text.
 // CHECK_TABS unset runs every such component. A comma list runs those slugs.
+// CHECK_TABS_RECYCLE is how many components share the tab page and the preview page:
+// a whole number from 1, otherwise 6.
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -14,7 +16,7 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
-import { checkTabsSlugs } from './check-tabs-options';
+import { checkTabsRecycle, checkTabsSlugs } from './check-tabs-options';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -615,23 +617,31 @@ const siteServer = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequ
 
 // --- Browser check ---
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-const previewPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-page.setDefaultTimeout(10000);
-previewPage.setDefaultTimeout(10000);
-
 const pageErrors: string[] = [];
-page.on('pageerror', err => pageErrors.push(err.message));
-page.on('console', msg => {
-  if (msg.type() === 'error') pageErrors.push(msg.text());
-});
+const recycleEvery = checkTabsRecycle(process.env.CHECK_TABS_RECYCLE);
+
+const openPages = async () => {
+  const tab = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const preview = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  tab.setDefaultTimeout(10000);
+  preview.setDefaultTimeout(10000);
+  tab.on('pageerror', err => pageErrors.push(err.message));
+  tab.on('console', msg => {
+    if (msg.type() === 'error') pageErrors.push(msg.text());
+  });
+  return { page: tab, previewPage: preview };
+};
+
+let { page, previewPage } = await openPages();
 
 const differences: string[] = [];
 let totalMounts = 0;
 let totalScenarios = 0;
+let componentIndex = 0;
 
 try {
   for (const slug of targetSlugs) {
+    componentIndex++;
     const scenarios = [null, ...components[slug].scenarios];
     let componentScenarios = 0;
     let componentMounts = 0;
@@ -846,7 +856,15 @@ try {
         }
       }
     }
-    console.log(`pace: ${slug} scenarios ${componentScenarios} mounts ${componentMounts} at ${secondsSinceStart()}s`);
+    // Closing the context releases that renderer's documents. The next component
+    // reads the stage width on the new preview page.
+    const recycled = componentIndex % recycleEvery === 0 && componentIndex < targetSlugs.length;
+    if (recycled) {
+      await page.context().close();
+      await previewPage.context().close();
+      ({ page, previewPage } = await openPages());
+    }
+    console.log(`pace: ${slug} scenarios ${componentScenarios} mounts ${componentMounts} at ${secondsSinceStart()}s${recycled ? ', pages recycled' : ''}`);
   }
 } finally {
   await browser.close();

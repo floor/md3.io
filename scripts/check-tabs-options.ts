@@ -20,3 +20,10 @@ export function checkTabsSlugs<T extends string>(value: string | undefined, know
   if (slugs.length === 0) return { ok: false, error: 'CHECK_TABS names no component' };
   return { ok: true, slugs };
 }
+
+/** How many components share a tab page and a preview page.
+ * A whole number from 1. Unset, empty, or anything else is 6. */
+export function checkTabsRecycle(value: string | undefined): number {
+  if (value !== undefined && /^[1-9]\d*$/.test(value)) return Number(value);
+  return 6;
+}
