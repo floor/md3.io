@@ -152,7 +152,9 @@ export const drawerComponent = {
   controls: [
     ...section('Appearance', [choose('variant', 'Variant', ['standard', 'modal'], 'standard'), toggle('dense', 'Dense')]),
     ...section('Layout', [choose('position', 'Position', ['start', 'end'], 'start'), { ...range('width', 'Width', '280'), min: 220, max: 360, step: 20 }]),
-    ...section('Content', [destinationControl, text('headline', 'Headline', 'Photos'), activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true), toggle('sections', 'Section labels', true)]),
+    // The photos default has no badge and no section, so those toggles do nothing there.
+    // They stay, greyed, until Destinations is a named set (the panel's enabledWhen).
+    ...section('Content', [destinationControl, text('headline', 'Headline', 'Photos'), activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true, 'namedDestinations'), toggle('sections', 'Section labels', true, 'namedDestinations')]),
     ...section('Behavior', [toggle('open', 'Open', true), toggle('dismissible', 'Dismissible', true)]),
   ],
   config: (state: ComponentState): DrawerConfig => ({ variant: string(state, 'variant'), position: string(state, 'position'), width: Number(state.width), dense: bool(state, 'dense'), headline: string(state, 'headline'), open: bool(state, 'open'), dismissible: bool(state, 'dismissible'),
