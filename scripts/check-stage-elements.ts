@@ -70,6 +70,7 @@ try {
         (window as unknown as { __stageReplaced: number }).__stageReplaced = 0;
         new MutationObserver(() => { (window as unknown as { __stageReplaced: number }).__stageReplaced++; }).observe(stage, { childList: true });
       };
+      watch();
       new MutationObserver(watch).observe(document, { childList: true, subtree: true });
     }, JSON.stringify({ theme: 'baseline', mode }));
     const factory = await context.newPage();
@@ -100,8 +101,17 @@ try {
         if (mode === 'light' && (listen.includes('click') || listen.includes('checked'))) {
           if (scenario === 'default' && (slug === 'button' || slug === 'switch')) {
             const key = slug === 'switch' ? 'Space' : 'Enter';
-            await left.root.press(key);
-            await right.root.press(key);
+            // The factory switch toggles from its input. Focusing the host does not.
+            const press = async (page: Page, root: typeof left.root) => {
+              if (slug === 'switch') {
+                const input = root.locator('input');
+                if (await input.count()) await input.first().focus();
+                else await root.focus();
+                await page.keyboard.press(key);
+              } else await root.press(key);
+            };
+            await press(factory, left.root);
+            await press(element, right.root);
             await factory.waitForTimeout(150);
             const factoryKey = await factory.locator('#playground-status').innerText();
             const elementKey = await element.locator('#playground-status').innerText();

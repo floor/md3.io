@@ -171,10 +171,15 @@ function listenToElement(
   if (token === 'selected') host.addEventListener('change', event => {
     if (!gate.live) return;
     const selected = Boolean((event as CustomEvent<{ selected?: boolean }>).detail?.selected);
-    if (current) current.selected = selected;
-    post({ type: 'md3:selected', selected });
-    const label = selectedLabel ?? 'Button';
-    message(selected ? `${label} selected` : `${label} deselected`);
+    // The factory's click listener runs, then its change listener replaces the
+    // status with the selection. Reporting here on a microtask keeps that order.
+    queueMicrotask(() => {
+      if (!gate.live) return;
+      if (current) current.selected = selected;
+      post({ type: 'md3:selected', selected });
+      const label = selectedLabel ?? 'Button';
+      message(selected ? `${label} selected` : `${label} deselected`);
+    });
   });
   if (token === 'checked') host.addEventListener('change', event => {
     if (!gate.live) return;
