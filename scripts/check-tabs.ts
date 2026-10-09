@@ -1,6 +1,9 @@
 // Every component with scenarios: for each scenario (including default), every framework tab
 // (vanilla, html/web-components, react, vue, svelte, solid) is generated, bundled, mounted in
 // a headless page, and checked against the preview frame's mtrl-* root classes and visible text.
+// CHECK_TABS unset runs every such component. A comma list runs those slugs.
+// CHECK_TABS_RECYCLE is how many components share the tab page and the preview page:
+// a whole number from 1, otherwise 6.
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,6 +16,7 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
+import { checkTabsRecycle, checkTabsSlugs } from './check-tabs-options';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -474,7 +478,14 @@ const popupShownAfterClick = (opener: import('playwright').Locator): Promise<boo
   })).catch(() => false);
 
 // --- Generate and bundle every tab ---
-const targetSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
+const eligibleSlugs = componentSlugs.filter(slug => components[slug].scenarios && components[slug].scenarios.length > 0);
+const selected = checkTabsSlugs(process.env.CHECK_TABS, eligibleSlugs);
+if (!selected.ok) {
+  console.error(selected.error);
+  await rm(scratch, { recursive: true, force: true });
+  process.exit(1);
+}
+const targetSlugs = selected.slugs;
 
 interface TabInfo {
   slug: string;
@@ -489,6 +500,8 @@ interface TabInfo {
 }
 
 const tabBundles: Record<string, TabInfo> = {};
+const startedAt = performance.now();
+const secondsSinceStart = () => ((performance.now() - startedAt) / 1000).toFixed(1);
 
 for (const slug of targetSlugs) {
   const meta = elementMeta(slug);
@@ -553,6 +566,8 @@ for (const slug of targetSlugs) {
   }
 }
 
+console.log(`builds: ${Object.keys(tabBundles).length} in ${secondsSinceStart()}s`);
+
 // --- Serve bundled tabs ---
 let currentTabKey = '';
 // `width` is the preview stage measured for this run. The tab mounts in a box
@@ -602,27 +617,38 @@ const siteServer = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequ
 
 // --- Browser check ---
 const browser = await chromium.launch({ headless: true });
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-const previewPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-page.setDefaultTimeout(10000);
-previewPage.setDefaultTimeout(10000);
-
 const pageErrors: string[] = [];
-page.on('pageerror', err => pageErrors.push(err.message));
-page.on('console', msg => {
-  if (msg.type() === 'error') pageErrors.push(msg.text());
-});
+const recycleEvery = checkTabsRecycle(process.env.CHECK_TABS_RECYCLE);
+
+const openPages = async () => {
+  const tab = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const preview = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  tab.setDefaultTimeout(10000);
+  preview.setDefaultTimeout(10000);
+  tab.on('pageerror', err => pageErrors.push(err.message));
+  tab.on('console', msg => {
+    if (msg.type() === 'error') pageErrors.push(msg.text());
+  });
+  return { page: tab, previewPage: preview };
+};
+
+let { page, previewPage } = await openPages();
 
 const differences: string[] = [];
 let totalMounts = 0;
 let totalScenarios = 0;
+let componentIndex = 0;
 
 try {
   for (const slug of targetSlugs) {
+    componentIndex++;
     const scenarios = [null, ...components[slug].scenarios];
+    let componentScenarios = 0;
+    let componentMounts = 0;
     for (const scenario of scenarios) {
       const scenarioId = scenario?.id ?? 'default';
       totalScenarios++;
+      componentScenarios++;
 
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
@@ -647,6 +673,7 @@ try {
         const key = `${slug}/${scenarioId}/${tab}`;
         const tabInfo = tabBundles[key];
         totalMounts++;
+        componentMounts++;
         pageErrors.length = 0;
 
         try {
@@ -829,6 +856,15 @@ try {
         }
       }
     }
+    // Closing the context releases that renderer's documents. The next component
+    // reads the stage width on the new preview page.
+    const recycled = componentIndex % recycleEvery === 0 && componentIndex < targetSlugs.length;
+    if (recycled) {
+      await page.context().close();
+      await previewPage.context().close();
+      ({ page, previewPage } = await openPages());
+    }
+    console.log(`pace: ${slug} scenarios ${componentScenarios} mounts ${componentMounts} at ${secondsSinceStart()}s${recycled ? ', pages recycled' : ''}`);
   }
 } finally {
   await browser.close();
@@ -844,4 +880,4 @@ if (differences.length > 0) {
   process.exit(1);
 }
 
-console.log(`Tab checks passed: ${totalMounts} mounts over ${totalScenarios} scenarios, roots and text.`);
+console.log(`Tab checks passed: ${totalMounts} mounts over ${totalScenarios} scenarios, ${targetSlugs.length} of ${eligibleSlugs.length} components, roots and text.`);
