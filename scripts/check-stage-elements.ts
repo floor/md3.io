@@ -63,15 +63,6 @@ try {
     const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
     await context.addInitScript(appearance => {
       localStorage.setItem('md3-preview-appearance', appearance);
-      const watch = () => {
-        const stage = document.querySelector('#stage');
-        if (!stage || stage.hasAttribute('data-watched')) return;
-        stage.setAttribute('data-watched', '');
-        (window as unknown as { __stageReplaced: number }).__stageReplaced = 0;
-        new MutationObserver(() => { (window as unknown as { __stageReplaced: number }).__stageReplaced++; }).observe(stage, { childList: true });
-      };
-      watch();
-      new MutationObserver(watch).observe(document, { childList: true, subtree: true });
     }, JSON.stringify({ theme: 'baseline', mode }));
     const factory = await context.newPage();
     const element = await context.newPage();
