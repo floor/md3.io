@@ -32,7 +32,16 @@ import { createChips, type ChipComponent } from 'material/components/chips';
 import createCheckbox from 'material/components/checkbox';
 import 'material/elements/css/checkbox';
 import 'material/elements/css/radios';
-import { defineCheckbox, defineRadios } from 'material/elements';
+import 'material/elements/css/slider';
+import 'material/elements/css/button';
+import 'material/elements/css/icon-button';
+import 'material/elements/css/switch';
+import 'material/elements/css/fab';
+import 'material/elements/css/extended-fab';
+import 'material/elements/css/progress';
+import 'material/elements/css/loading-indicator';
+import 'material/elements/css/divider';
+import { defineCheckbox, defineDivider, defineExtendedFab, defineFab, defineIconButton, defineLoadingIndicator, defineProgress, defineRadios, defineSlider, defineSwitch, defineButton } from 'material/elements';
 import createButton from 'material/components/button';
 import createIconButton from 'material/components/icon-button';
 import createButtonGroup from 'material/components/button-group';
@@ -40,7 +49,10 @@ import createSplitButton from 'material/components/split-button';
 import createFab from 'material/components/fab';
 import createFabMenu from 'material/components/fab-menu';
 import createExtendedFab from 'material/components/extended-fab';
-import { componentIcons, components, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { componentIcons, components, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState } from '../shared/components';
+import { elementMeta } from '../server/elements-meta';
+import { plannedElement } from '../shared/frameworks';
+import { dividerFrame, elementStage, isElementStage, stageRequestState, type ElementStage, type ElementStageSlug, type StageListen } from '../shared/stage-elements';
 import { checkboxChildChecked, checkboxChildren, currentCheckboxChildren } from '../shared/content/checkbox';
 import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
@@ -53,15 +65,31 @@ import { artElement } from '../shared/content/types';
 import { tooltipTarget } from '../shared/content/tooltip';
 import { symbols } from '../shared/icons';
 
+// The stage draws `<m-*>` only when the playground was opened with `?stage=elements`.
+// Without it, every component keeps today's factory.
+const stageElements = new URLSearchParams(location.search).get('stage') === 'elements';
+
 // Sheet content is markup. Defining the elements here lets a checkbox or a radio
 // group in that markup upgrade on the stage, the same tags the code tabs write.
 defineCheckbox();
 defineRadios();
+defineSlider();
+// Tier 1 hosts upgrade the server's markup. A factory page never mounts them.
+if (stageElements) {
+  defineButton();
+  defineIconButton();
+  defineSwitch();
+  defineFab();
+  defineExtendedFab();
+  defineProgress();
+  defineLoadingIndicator();
+  defineDivider();
+}
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
 const slug = componentSlug;
-let component: { element: HTMLElement; destroy: () => void } | undefined;
+let component: { element: HTMLElement; destroy: () => void; ready?: () => void } | undefined;
 let current: ComponentState | undefined;
 let clicks = 0;
 let disposing = false;
@@ -78,10 +106,105 @@ const syncValues = (values: ComponentState) => {
   post({ type: 'md3:values', values });
 };
 const dateValue = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-function create(state: ComponentState) {
+
+/** The element from the HTML tab's plan, with the factory stage's events. One path for every row of `elementStage`. */
+function mountElement(
+  stageSlug: ElementStageSlug,
+  state: ComponentState,
+  sync: (values: ComponentState) => void,
+  message: (value: string) => void,
+  adopt: boolean,
+): { element: HTMLElement; destroy: () => void; ready: () => void } {
+  const spec: ElementStage = elementStage[stageSlug];
+  const meta = elementMeta(stageSlug);
+  if (!meta) throw new Error(`${stageSlug} has no element`);
+  const planned = plannedElement(meta, elementConfig(stageSlug, state));
+  const gate = { live: false };
+  let element: HTMLElement;
+  let host: HTMLElement;
+  if (adopt) {
+    const child = stage.firstElementChild;
+    if (!child) throw new Error(`${stageSlug} has no server markup to adopt`);
+    element = child as HTMLElement;
+    const inner = spec.wrap === 'divider' ? element.querySelector('m-divider') : element;
+    if (!inner) throw new Error(`${stageSlug} server markup has no element`);
+    host = inner as HTMLElement;
+  } else {
+    host = document.createElement(planned.tag);
+    for (const [name, value] of planned.attributes) host.setAttribute(name, value);
+    for (const [name, value] of planned.properties) (host as unknown as Record<string, unknown>)[name] = value;
+    if (planned.text) host.textContent = planned.text;
+    if (spec.wrap === 'divider') {
+      // The factory stage's frame: a divider alone has no length in the centred stage.
+      element = document.createElement('div');
+      element.style.cssText = dividerFrame(state.orientation);
+      host.style.flex = '1';
+      element.append(host);
+    } else element = host;
+  }
+  // The vertical length is the factory stage's own rule. It is not in the plan.
+  if (spec.vertical && state.orientation === 'vertical') host.style.height = '240px';
+  for (const token of spec.listen) listenToElement(host, token, spec.selectedLabel, state, sync, message, gate);
+  return {
+    element,
+    destroy: () => undefined,
+    ready: () => {
+      // lower() and collapse() are methods. Calling them before the element is
+      // connected does nothing, so this runs after the host is in the stage.
+      const target = host as unknown as Record<string, () => void>;
+      for (const call of spec.calls ?? []) if (state[call.when] === true) target[call.method]?.();
+      gate.live = true;
+    },
+  };
+}
+
+function listenToElement(
+  host: HTMLElement,
+  token: StageListen,
+  selectedLabel: 'Button' | 'Icon button' | undefined,
+  state: ComponentState,
+  sync: (values: ComponentState) => void,
+  message: (value: string) => void,
+  gate: { live: boolean },
+) {
+  if (token === 'click') host.addEventListener('click', () => { if (gate.live) clicked(); });
+  if (token === 'selected') host.addEventListener('change', event => {
+    if (!gate.live) return;
+    const selected = Boolean((event as CustomEvent<{ selected?: boolean }>).detail?.selected);
+    // A toggle's change can fire on pointerup, before the click. The status
+    // the factory shows is the selection, so this waits out the click.
+    setTimeout(() => {
+      if (!gate.live) return;
+      if (current) current.selected = selected;
+      post({ type: 'md3:selected', selected });
+      const label = selectedLabel ?? 'Button';
+      message(selected ? `${label} selected` : `${label} deselected`);
+    }, 0);
+  });
+  if (token === 'checked') host.addEventListener('change', event => {
+    if (!gate.live) return;
+    const checked = Boolean((event as CustomEvent<{ checked?: boolean }>).detail?.checked);
+    sync({ checked });
+    message(checked ? 'Switch on' : 'Switch off');
+  });
+  if (token === 'slider') {
+    // The value control is 0-100; a centred slider is shifted onto -50..50.
+    const offset = state.variant === 'centered' ? 50 : 0;
+    host.addEventListener('input', event => {
+      if (!gate.live) return;
+      const detail = (event as CustomEvent<{ value: number; secondValue?: number }>).detail;
+      const second = detail.secondValue ?? null;
+      sync({ value: String(detail.value + offset), ...(second !== null ? { secondValue: String(second) } : {}) });
+      message(second === null ? `Value: ${detail.value}` : `Range: ${detail.value}–${second}`);
+    });
+  }
+}
+
+function create(state: ComponentState, adopt = false) {
   const instance = generation;
   const message = (value: string) => { if (instance === generation) report(value); };
   const sync = (values: ComponentState) => { if (instance === generation) syncValues(values); };
+  if (stageElements && isElementStage(slug)) return mountElement(slug, state, sync, message, adopt);
   switch (slug) {
     case 'badge': {
       const host = document.createElement('div');
@@ -373,17 +496,15 @@ function create(state: ComponentState) {
       return control;
     }
     case 'slider': {
-      const control = createSlider(components.slider.config(state));
-      // A vertical slider takes its length from its height.
-      if (state.orientation === 'vertical') control.element.style.height = '240px';
-      control.on('input', () => {
-        const value = control.getValue();
-        const second = control.getSecondValue();
-        // The value control is 0-100; a centred slider is shifted onto -50..50.
-        const offset = state.variant === 'centered' ? 50 : 0;
+      // The value control is 0-100; a centred slider is shifted onto -50..50.
+      const offset = state.variant === 'centered' ? 50 : 0;
+      const reportSlider = (value: number, second: number | null) => {
         sync({ value: String(value + offset), ...(second !== null ? { secondValue: String(second) } : {}) });
         message(second === null ? `Value: ${value}` : `Range: ${value}–${second}`);
-      });
+      };
+      const control = createSlider(components.slider.config(state));
+      if (state.orientation === 'vertical') control.element.style.height = '240px';
+      control.on('input', () => reportSlider(control.getValue(), control.getSecondValue()));
       return control;
     }
     case 'text-field': {
@@ -593,12 +714,38 @@ function render(state: ComponentState, reset = false) {
   document.documentElement.dataset.themeMode = String(state.mode);
   document.documentElement.style.colorScheme = String(state.mode);
   if (!reset && current && fingerprint(current) === fingerprint(state)) { current = state; return; }
+  // The server's markup stays when it is already this state. Replacing it is the
+  // flash: the same element is destroyed and built again before the first paint settles.
+  const adopt = !reset && !current && canAdopt(state);
   generation++;
   disposing = true;
   try { component?.destroy(); } finally { disposing = false; }
-  component = create(state);
-  stage.replaceChildren(component.element);
+  component = create(state, adopt);
+  const counter = window as unknown as { __stageReplaced?: number };
+  if (counter.__stageReplaced === undefined) counter.__stageReplaced = 0;
+  if (!adopt) {
+    stage.replaceChildren(component.element);
+    counter.__stageReplaced++;
+  }
+  component.ready?.();
   current = state;
+}
+/** The first HTML's state: the scenario on this preview's own URL, or the default. */
+function requestedStageState(): ComponentState {
+  const id = stageElements ? new URLSearchParams(location.search).get('scenario') : null;
+  const scenario = id ? components[slug].scenarios.find(item => item.id === id) : undefined;
+  return normalizeComponentState(slug, {
+    ...stageRequestState(initialComponentState(slug), scenario),
+    theme: document.documentElement.dataset.theme,
+    mode: document.documentElement.dataset.themeMode,
+  });
+}
+function canAdopt(state: ComponentState): boolean {
+  if (!stageElements || !isElementStage(slug)) return false;
+  const child = stage.firstElementChild;
+  if (!child || fingerprint(state) !== fingerprint(requestedStageState())) return false;
+  if ((elementStage[slug] as ElementStage).wrap === 'divider') return child.tagName === 'DIV' && !!child.querySelector('m-divider');
+  return child.tagName.toLowerCase() === `m-${elementMeta(slug)?.name ?? ''}`;
 }
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== parent || event.data?.type !== 'md3:configure') return;
@@ -610,9 +757,6 @@ window.addEventListener('message', event => {
 });
 window.addEventListener('pagehide', () => component?.destroy());
 // Preserve the appearance applied before paint instead of briefly rendering the light defaults.
-render(normalizeComponentState(slug, {
-  ...initialComponentState(slug),
-  theme: document.documentElement.dataset.theme,
-  mode: document.documentElement.dataset.themeMode,
-}));
+// Behind the switch, this is the state the server already painted, scenario included.
+render(requestedStageState());
 post({ type: 'md3:ready' });

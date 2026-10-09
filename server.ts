@@ -3,9 +3,11 @@ import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier } from './src/server/content';
 import { themes } from './src/shared/button';
-import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
+import { components, componentIcons, elementConfig, initialComponentState, isComponent, normalizeComponentState, playgroundGroups } from './src/shared/components';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
+import { plannedElement } from './src/shared/frameworks';
+import { dividerFrame, isElementStage, stageRequestState } from './src/shared/stage-elements';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -187,9 +189,31 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (componentMatch && isComponent(componentMatch[2]!)) {
     const slug = componentMatch[2]!;
     const component = components[slug];
+    const stageElements = url.searchParams.get('stage') === 'elements';
+    const requestedScenario = component.scenarios.find(item => item.id === url.searchParams.get('scenario'));
+    // The scenario rides on the preview request only behind the switch, so the
+    // first HTML is that scenario. Without the switch the iframe src is unchanged.
+    const stageScenario = stageElements && requestedScenario ? requestedScenario.id : '';
+    // The first HTML carries the element for a tier-1 page (and the slider), so it
+    // can paint before the preview script. Anything else, and a page without the
+    // switch, stays an empty stage.
+    let stageMarkup = '';
+    if (componentMatch[1] === 'preview' && stageElements && isElementStage(slug)) {
+      const meta = elementMeta(slug);
+      if (meta) {
+        const { renderElement } = await import('material/ssr');
+        const state = normalizeComponentState(slug, stageRequestState(initialComponentState(slug), requestedScenario));
+        const planned = plannedElement(meta, elementConfig(slug, state));
+        const attributes = Object.fromEntries(planned.attributes.map(([name, value]) => [name, value === '' ? true : value]));
+        if (slug === 'divider') attributes.style = 'flex:1';
+        const text = planned.text?.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;') ?? '';
+        const markup = renderElement(planned.tag, attributes, text);
+        stageMarkup = slug === 'divider' ? `<div style="${dividerFrame(state.orientation)}">${markup}</div>` : markup;
+      }
+    }
     response = componentMatch[1] === 'preview'
-      ? internalHtml(eta.render('preview', { themes, slug, component }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug) });
+      ? internalHtml(eta.render('preview', { themes, slug, component, stageMarkup }))
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), stageElements, stageScenario });
   }
   else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
   else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
