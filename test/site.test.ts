@@ -252,15 +252,15 @@ test('a string attribute given true is present and empty', () => {
 
 describe('icon button scenarios', () => {
   const rows = [
-    ['favorite', 'standard', 'heart', 'Favorite', false],
-    ['reservation-date', 'tonal', 'calendarToday', 'Choose a date', false],
-    ['browse-albums', 'outlined', 'chevronRight', 'More albums', false],
-    ['raise-hand', 'tonal', 'frontHand', 'Raise hand', false],
-    ['stop-timer', 'filled', 'stop', 'Stop', true],
+    ['favorite', 'standard', 'heart', 'Favorite', 's'],
+    ['reservation-date', 'tonal', 'calendarToday', 'Choose a date', 's'],
+    ['browse-albums', 'outlined', 'chevronRight', 'More albums', 's'],
+    ['raise-hand', 'tonal', 'frontHand', 'Raise hand', 'm'],
+    ['stop-timer', 'filled', 'stop', 'Stop', 'xl'],
   ] as const;
   test('each figure is one icon button, unselected, with its own glyph', () => {
     expect(components['icon-button'].scenarios.map(item => item.id)).toEqual(rows.map(([id]) => id));
-    for (const [id, variant, icon, label, large] of rows) {
+    for (const [id, variant, icon, label, size] of rows) {
       const scenario = components['icon-button'].scenarios.find(item => item.id === id);
       if (!scenario) throw new Error(`missing icon button scenario ${id}`);
       const state = normalizeComponentState('icon-button', { ...initialComponentState('icon-button'), ...scenario.options });
@@ -270,7 +270,7 @@ describe('icon button scenarios', () => {
       expect(config.ariaLabel).toBe(label);
       expect(config.selected).toBe(false);
       expect(config.toggle).toBe(id === 'favorite');
-      expect(config.size).toBe(large ? 'l' : 's');
+      expect(config.size).toBe(size);
       expect(scenario.description).not.toContain('shown selected');
     }
     expect(components['icon-button'].scenarios.find(item => item.id === 'favorite')?.description).toBe('A heart for marking a restaurant a favorite: outlined until someone chooses it, and filled once they have.');

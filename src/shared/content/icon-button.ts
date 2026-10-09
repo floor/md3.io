@@ -10,16 +10,18 @@ import { type ComponentState, type Scenario, bool, choose, disabled, icon, iconM
  * only. Each row is the button the figure draws; the screen around it is not.
  *
  * Sizes are the figures' own scale, re-read the same day. The restaurant hearts,
- * the reservation calendar, the album chevrons and the raised hand are the default
- * small size. Only the timer's stop is large. The guidelines name that use:
+ * the reservation calendar and the album chevrons are the default small size.
+ * The raised hand sits among a call's main controls, the same height as the call
+ * button, so it is medium. The timer's stop is the screen's one large action, so
+ * it is extra large. The guidelines name that use:
  * "Use different button colors and sizes to provide visual hierarchy and emphasize
- * primary actions."
+ * primary actions"
  *
  * Favorite is the page's toggle, shown unselected as the restaurant figure draws it.
  * "Toggle icon buttons allow a single choice to be selected or deselected, such as
  * adding or removing something from favorites." Selecting it fills the heart:
  * "When making a selection, such as bookmarking or saving a video, the icon
- * transitions from outlined (unselected) to filled (selected)."
+ * transitions from outlined (unselected) to filled (selected)"
  */
 const iconButtonScenarios: readonly Scenario[] = [
   {
@@ -39,13 +41,13 @@ const iconButtonScenarios: readonly Scenario[] = [
   },
   {
     id: 'raise-hand', name: 'Raise hand', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A tonal raised hand for asking to speak.',
-    options: { variant: 'tonal', icon: 'frontHand', toggle: false, selected: false, ariaLabel: 'Raise hand' },
+    description: 'A tonal raised hand for asking to speak, sized with the call\'s main controls.',
+    options: { variant: 'tonal', size: 'm', icon: 'frontHand', toggle: false, selected: false, ariaLabel: 'Raise hand' },
   },
   {
     id: 'stop-timer', name: 'Stop', source: 'https://m3.material.io/components/icon-buttons/guidelines',
-    description: 'A large filled square for stopping a timer.',
-    options: { variant: 'filled', size: 'l', icon: 'stop', toggle: false, selected: false, ariaLabel: 'Stop' },
+    description: 'A filled stop for ending a timer, the one large action on that screen.',
+    options: { variant: 'filled', size: 'xl', icon: 'stop', toggle: false, selected: false, ariaLabel: 'Stop' },
   },
 ];
 export const iconButtonComponent = {

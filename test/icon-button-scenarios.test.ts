@@ -30,12 +30,14 @@ describe('icon button follow-ups', () => {
     expect(code).toContain('favoriteFillIcon');
     expect(code).toContain("from './icons/favorite-fill.svg?raw'");
   });
-  test('the other four stay the size their figures draw, and only the timer stop is large', () => {
+  test('the other four stay the size their figures draw: the hand is medium, the stop is extra large', () => {
+    expect(scenario('raise-hand').description).toBe('A tonal raised hand for asking to speak, sized with the call\'s main controls.');
+    expect(scenario('stop-timer').description).toBe('A filled stop for ending a timer, the one large action on that screen.');
     expect(components['icon-button'].config(stateFor('reservation-date')).size).toBe('s');
     expect(components['icon-button'].config(stateFor('browse-albums')).size).toBe('s');
-    expect(components['icon-button'].config(stateFor('raise-hand')).size).toBe('s');
+    expect(components['icon-button'].config(stateFor('raise-hand')).size).toBe('m');
     const stop = components['icon-button'].config(stateFor('stop-timer'));
-    expect(stop.size).toBe('l');
+    expect(stop.size).toBe('xl');
     expect(stop.toggle).toBe(false);
     expect(stop.selectedIcon).toBeUndefined();
   });
