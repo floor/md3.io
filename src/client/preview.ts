@@ -171,15 +171,15 @@ function listenToElement(
   if (token === 'selected') host.addEventListener('change', event => {
     if (!gate.live) return;
     const selected = Boolean((event as CustomEvent<{ selected?: boolean }>).detail?.selected);
-    // The factory's click listener runs, then its change listener replaces the
-    // status with the selection. Reporting here on a microtask keeps that order.
-    queueMicrotask(() => {
+    // A toggle's change can fire on pointerup, before the click. The status
+    // the factory shows is the selection, so this waits out the click.
+    setTimeout(() => {
       if (!gate.live) return;
       if (current) current.selected = selected;
       post({ type: 'md3:selected', selected });
       const label = selectedLabel ?? 'Button';
       message(selected ? `${label} selected` : `${label} deselected`);
-    });
+    }, 0);
   });
   if (token === 'checked') host.addEventListener('change', event => {
     if (!gate.live) return;
@@ -721,7 +721,12 @@ function render(state: ComponentState, reset = false) {
   disposing = true;
   try { component?.destroy(); } finally { disposing = false; }
   component = create(state, adopt);
-  if (!adopt) stage.replaceChildren(component.element);
+  const counter = window as unknown as { __stageReplaced?: number };
+  if (counter.__stageReplaced === undefined) counter.__stageReplaced = 0;
+  if (!adopt) {
+    stage.replaceChildren(component.element);
+    counter.__stageReplaced++;
+  }
   component.ready?.();
   current = state;
 }
