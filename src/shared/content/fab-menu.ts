@@ -44,6 +44,15 @@ const menuSets: Record<string, MenuSet> = {
       { id: 'folder', text: 'Shared folder', icon: symbols.folderShared },
     ],
   },
+  'add-to-the-trip': {
+    name: 'Add to the trip',
+    ariaLabel: 'Add to the trip',
+    items: [
+      { id: 'album', text: 'Album', icon: symbols.photoLibrary },
+      { id: 'photo', text: 'Photo', icon: symbols.image },
+      { id: 'video', text: 'Video', icon: symbols.videocam },
+    ],
+  },
 };
 
 const menuSet = (state: ComponentState): MenuSet | undefined => menuSets[string(state, 'menuSet')];
@@ -54,7 +63,8 @@ const defaultItems = (state: ComponentState): FabMenuItem[] =>
     .map(([id, text, icon]) => ({ id: id!, text: text!, ...(state.itemIcons ? { icon: iconByName(icon!) } : {}) }));
 
 /**
- * The FAB menu's scenarios, from m3.material.io (read 7 October 2026). Options name
+ * The FAB menu's scenarios. New music, Photo categories, and Share were read
+ * 7 October 2026. Add to the trip was read 9 October 2026. Options name
  * playground controls only. Each menu is open: every tab declares it.
  */
 const fabMenuScenarios: readonly Scenario[] = [
@@ -73,11 +83,19 @@ const fabMenuScenarios: readonly Scenario[] = [
     description: 'An open menu for sharing by email, a message, or a shared folder.',
     options: { menuSet: 'share', color: 'primary', open: true },
   },
+  {
+    // Size stays default: the note's button is the square one. Medium and large
+    // are the measurement diagrams, and the page uses one menu size for every FAB.
+    // Presentation stays the list. Item icons stay on: the page says not to remove them.
+    id: 'add-to-the-trip', name: 'Add to the trip', source: 'https://m3.material.io/components/fab-menu/guidelines',
+    description: 'A trip note offers an album, a photo, or a video. The menu uses the secondary colour, and it sits on the trailing corner.',
+    options: { menuSet: 'add-to-the-trip', color: 'secondary', placement: 'bottom-end', open: true },
+  },
 ];
 
 const itemsControl = {
-  ...choose('menuSet', 'Items', ['default', 'new-music', 'photo-categories', 'share'], 'default', 'select'),
-  labels: { default: 'Default', 'new-music': 'New music', 'photo-categories': 'Photo categories', share: 'Share' },
+  ...choose('menuSet', 'Items', ['default', 'new-music', 'photo-categories', 'share', 'add-to-the-trip'], 'default', 'select'),
+  labels: { default: 'Default', 'new-music': 'New music', 'photo-categories': 'Photo categories', share: 'Share', 'add-to-the-trip': 'Add to the trip' },
 };
 
 export const fabMenuComponent = {
