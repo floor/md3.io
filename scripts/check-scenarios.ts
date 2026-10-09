@@ -190,23 +190,29 @@ try {
   assert(await clear.isVisible(), 'text-field/search: the clear button did not come back with a value');
   // (c) `?scenario=` on a page with no Scenario section is ignored quietly: the load reports
   // ready with the plain status line, the address keeps the parameter, and the controls are
-  // the Default ones, with no console error.
-  // Divider is used because it has nothing to vary and stays without scenarios by design.
-  errors.length = 0;
-  await page.goto(`${base}components/divider/?scenario=x`);
-  // Wait for the ready round-trip without matching a status text: a scenario message would
-  // pass a "not loading" wait and must fail the assertion below, not the wait.
-  await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
-  const dividerStatus = await page.locator('#playground-status').textContent();
-  assert(dividerStatus === 'Ready to try', `divider/?scenario=x: the status reads ${JSON.stringify(dividerStatus)}`);
-  assert(new URL(page.url()).searchParams.get('scenario') === 'x', 'divider/?scenario=x: the load rewrote the address');
-  const dividerInitial = initialComponentState('divider');
-  const dividerShown = await readShown(components.divider.controls.map(control => control.key));
-  for (const control of components.divider.controls) {
-    const expected = control.kind === 'toggle' ? dividerInitial[control.key] === true : String(dividerInitial[control.key]);
-    assert(dividerShown[control.key] === expected, `divider/?scenario=x: ${control.key} shows ${JSON.stringify(dividerShown[control.key])}, expected ${JSON.stringify(expected)}`);
+  // the Default ones, with no console error. The page is the first component whose scenarios
+  // array is empty; when every component has scenarios there is no such page, so the block
+  // prints one line and goes on.
+  const noScenario = componentSlugs.find(slug => !components[slug].scenarios?.length);
+  if (noScenario) {
+    errors.length = 0;
+    await page.goto(`${base}components/${noScenario}/?scenario=x`);
+    // Wait for the ready round-trip without matching a status text: a scenario message would
+    // pass a "not loading" wait and must fail the assertion below, not the wait.
+    await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
+    const status = await page.locator('#playground-status').textContent();
+    assert(status === 'Ready to try', `${noScenario}/?scenario=x: the status reads ${JSON.stringify(status)}`);
+    assert(new URL(page.url()).searchParams.get('scenario') === 'x', `${noScenario}/?scenario=x: the load rewrote the address`);
+    const initial = initialComponentState(noScenario);
+    const shown = await readShown(components[noScenario].controls.map(control => control.key));
+    for (const control of components[noScenario].controls) {
+      const expected = control.kind === 'toggle' ? initial[control.key] === true : String(initial[control.key]);
+      assert(shown[control.key] === expected, `${noScenario}/?scenario=x: ${control.key} shows ${JSON.stringify(shown[control.key])}, expected ${JSON.stringify(expected)}`);
+    }
+    assert(errors.length === 0, `${noScenario}/?scenario=x: ${errors.join('\n')}`);
+  } else {
+    console.log('check-scenarios: no page without scenarios; block (c) skipped');
   }
-  assert(errors.length === 0, `divider/?scenario=x: ${errors.join('\n')}`);
   // The button's toggle controls: the selected state reaches the preview, the vanilla
   // panel, and the element panel. The element has no toggle attribute, so that panel
   // names toggle and selected as not yet exposed.
