@@ -9,8 +9,10 @@ await mkdir(outdir, { recursive: true });
 const options = { outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external' } as const;
 // The components overview is built on its own: each card's module is a chunk, and the
 // chunks the cards share are split by which cards use them, not also by which of the
-// other pages do.
-for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app'], ['catalog']]) {
+// other pages do. The Button pilot's glue builds alone for the same reason: joining
+// the shared group would move every page's site.js chunk hash, and the pages that
+// are not part of the pilot must stay byte for byte what they were.
+for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app'], ['playground-material'], ['catalog']]) {
   const result = await Bun.build({ ...options, entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)) });
   if (!result.success) {
     for (const log of result.logs) console.error(log);
