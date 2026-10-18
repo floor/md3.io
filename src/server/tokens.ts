@@ -2,7 +2,8 @@
 // Styles pages show what mtrl ships, never a copy kept by hand.
 //
 //   - Colour: `--mtrl-sys-color-<role>` per theme and mode. The baseline is
-//     dist/styles/base.css (`:root` light, `.dark-theme` dark); each theme is
+//     dist/styles/base.css (`:root` light, `.dark-theme` dark — wrapped in
+//     `:where(…)` since material 3.2); each theme is
 //     dist/themes/<theme>.css (`[data-theme=x]`, `[data-theme=x][data-theme-mode=dark]`).
 //     A role a theme leaves out is inherited, as the cascade does, and marked so.
 //   - Typescale: `--mtrl-sys-typescale-<role>-<property>`, with `var(--mtrl-ref-*)` resolved.
@@ -85,8 +86,10 @@ function normalizeColor(value: string): string {
   if (hex) return `#${[...hex[1]!].map(c => c + c).join('')}`.toLowerCase();
   return /^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(value) ? value.toLowerCase() : value;
 }
+/** A selector as written, or the same wrapped in `:where(…)`, as material 3.2 writes the baseline blocks. */
+const selectorIs = (written: string, selector: string) => written === selector || written === `:where(${selector})`;
 const findBlock = (blocks: CssBlock[], selector: string, inMedia = false) => blocks.find(block =>
-  block.path.at(-1) === selector && block.path.some(part => part.startsWith('@media')) === inMedia
+  selectorIs(block.path.at(-1)!, selector) && block.path.some(part => part.startsWith('@media')) === inMedia
   && [...block.declarations.keys()].some(name => name.startsWith(COLOR_PREFIX)));
 
 export type Mode = 'light' | 'dark';
@@ -251,8 +254,8 @@ export function scopedTokens(scope: string, darkScope: string, css: string = bas
     `${selector}{color-scheme:${scheme};${[...declarations].map(([name, value]) => `${name}:${value}`).join(';')}}`;
   const blocks = parseCss(css);
   return [
-    rule(scope, 'light', custom(blocks.filter(block => block.path.at(-1) === ':root' && !inMedia(block)))),
-    rule(darkScope, 'dark', custom(blocks.filter(block => block.path.at(-1) === '.dark-theme'))),
+    rule(scope, 'light', custom(blocks.filter(block => selectorIs(block.path.at(-1)!, ':root') && !inMedia(block)))),
+    rule(darkScope, 'dark', custom(blocks.filter(block => selectorIs(block.path.at(-1)!, '.dark-theme')))),
   ].join('\n');
 }
 

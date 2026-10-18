@@ -73,4 +73,9 @@ describe('scoped tokens', () => {
     expect(dark).toStartWith('.dark .scope{color-scheme:dark;');
     expect(dark?.toLowerCase()).toContain(`--mtrl-sys-color-primary:${baseline.dark.get('primary')}`);
   });
+  test('material 3.2’s :where-wrapped blocks give the same scoped css', () => {
+    const asWritten = '@layer mtrl.base{:root{--mtrl-sys-color-primary:#6750a4}.dark-theme{--mtrl-sys-color-primary:#d0bcff}}';
+    const asWrapped = '@layer mtrl.base{:where(:root){--mtrl-sys-color-primary:#6750a4}:where(.dark-theme){--mtrl-sys-color-primary:#d0bcff}}';
+    expect(scopedTokens('.scope', '.dark .scope', asWrapped)).toBe(scopedTokens('.scope', '.dark .scope', asWritten));
+  });
 });
