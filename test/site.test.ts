@@ -676,9 +676,12 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   const page = await (await get('/components/button/')).text();
   const assets = [...page.matchAll(/(?:src|href)="(\/(?:dist|styles)\/[^"]+\.(?:js|css)[^"]*)"/g)].map(match => match[1]!);
   // One sheet for the page, plus the scripts it loads. Both names carry the content hash.
-  expect([...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/page.css']]);
+  // The Button playground pilot swaps the page's sheet for the material-panel bundle —
+  // the page styles with Roboto and the panel's own rules appended, still one request.
+  expect([...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/material-panel.css']]);
   expect(assets).toContain(manifest['/dist/site.js']);
   expect(assets).toContain(manifest['/dist/playground.js']);
+  expect(assets).toContain(manifest['/dist/playground-material.js']);
   for (const asset of assets) expect(Object.values(manifest)).toContain(asset);
   const home = await (await get('/')).text();
   expect([...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/home.css']]);

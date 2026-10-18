@@ -1,0 +1,44 @@
+/* styles/playground-material.css — the Button playground pilot's panel layout.
+   The material elements themselves are not restyled here: they render with
+   material's own shadow-DOM styles and baseline tokens (scoped to
+   .playground--material in the page head), at compact density with the groups
+   at the xs size. This sheet only lays out the rows around them — the same
+   rows, label on the left and control on the right, the native panel uses. */
+
+/* The same fill-the-column rule the native panel gives its selects: material's
+   hosts are inline-level and would otherwise keep their intrinsic width. */
+.playground--material .control-row m-select,
+.playground--material .control-row m-text-field { width: 100%; min-width: 0; }
+
+/* Switch rows: the host fills the site's row, so the switch's own
+   space-between container places its slotted label left and its track at the
+   row's right end — the only layout this row needs from the site. */
+.playground--material .ui-row > m-switch { flex: 1 1 auto; min-width: 0; }
+
+/* The slotted label span sits inside the switch's own label element and
+   inherits its font; the site's typeface is restored on the site's own node
+   (the span), not on the element. */
+.playground--material m-switch .control-label { font-family: var(--font-sans); letter-spacing: normal; }
+
+/* Group rows: material's connected xs group keeps a 48px minimum per button
+   of its own (density only lowers height), so the row's right column widens
+   to the group's real width instead of clipping it. */
+.playground--material .control-row:has(m-button-group) { grid-template-columns: minmax(0, 1fr) auto; }
+.playground--material .control-row m-button-group { justify-self: end; }
+
+/* The heading's tabs without the scroll row: material's element has no
+   attribute for the component's scrollable/showDivider config (it is
+   creation-only, and the element maps only variant and value), so the parts
+   the element exports carry the change — the divider hidden, and the scroll
+   container's overflow and its scroll-row edge padding (52px, M3's
+   ScrollableTabRowEdgeStartPadding) off, which seats the tabs where the
+   native preview-tabs sat. */
+.playground--material m-tabs::part(divider) { display: none; }
+.playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
+
+/* The mode group and the theme select share the heading row with the tabs. */
+.playground--material .preview-appearance m-select { width: 168px; min-width: 0; }
+
+@media (max-width: 720px) {
+    .playground--material .preview-appearance m-select { width: auto; flex: 1; }
+}

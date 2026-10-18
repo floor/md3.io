@@ -31,7 +31,7 @@
   <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
-  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %>
+  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% if (it.panelTokens) { %><style><%~ it.panelTokens %></style><% } %>
   <% if (it.section === 'Examples') { %><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>
