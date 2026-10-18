@@ -99,15 +99,18 @@ export interface ColorValue {
 export type ColorScheme = Record<string, ColorValue>;
 export interface ThemeColors { light: ColorScheme; dark: ColorScheme }
 
-const baseBlocks = parseCss(read('dist/styles/base.css'));
+const baseCss = read('dist/styles/base.css');
+const baseBlocks = parseCss(baseCss);
 /** Type roles, role utilities and font-weight utilities left base.css (material 3). */
 const typographyBlocks = parseCss(read('dist/styles/typography.css'));
 const typeBlocks = [...baseBlocks, ...typographyBlocks];
+/** Baseline light (`:root`) and dark (`.dark-theme`) from a stylesheet's blocks. */
+export function baselineFrom(css: string): Record<Mode, Map<string, string>> {
+  const blocks = parseCss(css);
+  return { light: colorRoles(findBlock(blocks, ':root')), dark: colorRoles(findBlock(blocks, '.dark-theme')) };
+}
 /** Baseline light (`:root`) and dark (`.dark-theme`) from base.css. */
-export const baseline: Record<Mode, Map<string, string>> = {
-  light: colorRoles(findBlock(baseBlocks, ':root')),
-  dark: colorRoles(findBlock(baseBlocks, '.dark-theme')),
-};
+export const baseline: Record<Mode, Map<string, string>> = baselineFrom(baseCss);
 
 function themeColors(theme: string): ThemeColors {
   const file = `dist/themes/${theme}.css`;
@@ -241,14 +244,15 @@ export const roleUsage: Record<string, string[]> = (() => {
  * properties inherit into shadow roots, so mtrl's elements inside the scope take
  * them, while the page around it, which does not load base.css, keeps its own.
  */
-export function scopedTokens(scope: string, darkScope: string): string {
+export function scopedTokens(scope: string, darkScope: string, css: string = baseCss): string {
   const inMedia = (block: CssBlock) => block.path.some(part => part.startsWith('@media'));
   const custom = (blocks: CssBlock[]) => new Map(blocks.flatMap(block => [...block.declarations].filter(([name]) => name.startsWith('--mtrl-'))));
   const rule = (selector: string, scheme: Mode, declarations: Map<string, string>) =>
     `${selector}{color-scheme:${scheme};${[...declarations].map(([name, value]) => `${name}:${value}`).join(';')}}`;
+  const blocks = parseCss(css);
   return [
-    rule(scope, 'light', custom(baseBlocks.filter(block => block.path.at(-1) === ':root' && !inMedia(block)))),
-    rule(darkScope, 'dark', custom(baseBlocks.filter(block => block.path.at(-1) === '.dark-theme'))),
+    rule(scope, 'light', custom(blocks.filter(block => block.path.at(-1) === ':root' && !inMedia(block)))),
+    rule(darkScope, 'dark', custom(blocks.filter(block => block.path.at(-1) === '.dark-theme'))),
   ].join('\n');
 }
 
