@@ -259,6 +259,18 @@ export function scopedTokens(scope: string, darkScope: string, css: string = bas
   ].join('\n');
 }
 
+/**
+ * scopedTokens under the site's own mode convention (tokens.css): the site is
+ * dark by default, and light only once the inline script sets
+ * [data-theme-mode=light] on <html> — with JavaScript off the page is dark.
+ * mtrl's tokens on the panel follow the same rule, so the default scope gets
+ * the dark roles and the light ones arrive with the attribute; otherwise the
+ * panel renders light-tokened controls on a dark page when no script runs.
+ */
+export function scopedTokensSiteDefault(scope: string, css: string = baseCss): string {
+  return scopedTokens(`:root[data-theme-mode=light] ${scope}`, scope, css);
+}
+
 /** mtrl's font-weight utility classes (`.mtrl-font-<name>`), lightest first. */
 export const fontWeights: { name: string; weight: string }[] = typeBlocks
   .flatMap(block => {

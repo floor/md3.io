@@ -15,12 +15,13 @@
 import { renderElement } from 'material/ssr';
 import { componentIcons } from '../shared/components';
 import type { ComponentDefinition, Control } from '../shared/content/types';
-import { scopedTokens } from './tokens';
+import { scopedTokensSiteDefault } from './tokens';
 
 /** The playground section's extra class, where the panel's mtrl tokens are set. */
 export const PANEL_SCOPE = 'playground--material';
-/** mtrl's baseline tokens on the panel: light, and dark when the site is. */
-export const panelTokens = scopedTokens(`.${PANEL_SCOPE}`, `:root[data-theme-mode=dark] .${PANEL_SCOPE}`);
+/** mtrl's baseline tokens on the panel: dark by default like the site's own
+ *  tokens, light when the site's inline script sets data-theme-mode=light. */
+export const panelTokens = scopedTokensSiteDefault(`.${PANEL_SCOPE}`);
 
 /** The pages this pilot covers. */
 export const isMaterialPanel = (slug: string): boolean => slug === 'button';
