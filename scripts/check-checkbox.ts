@@ -21,8 +21,11 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   await page.goto(`${server.url}components/button/`);
-  await page.selectOption('#preview-theme', 'forest');
-  await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
+  // The Button playground's panel is material's elements (the pilot): the theme
+  // select opens a listbox, and the mode group's buttons live in its shadow root.
+  await page.locator('#preview-theme').click();
+  await page.getByRole('option', { name: 'Forest' }).click();
+  await page.locator('m-button-group[data-group-for="mode"]').getByRole('button', { name: 'Dark', exact: true }).click();
   await page.locator('#sidebar').getByRole('link', { name: 'Checkbox', exact: true }).click();
   const frame = page.frameLocator('#preview');
   const boxes = frame.getByRole('checkbox');

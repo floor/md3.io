@@ -25,9 +25,13 @@ try {
   /** What every named control shows on the page, read the way a person sees it. */
   function readShown(keys: readonly string[]) {
     return page.evaluate(names => Object.fromEntries(names.map(key => {
-      const elements = [...document.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[name="${key}"]`)];
+      const elements = [...document.querySelectorAll<Element>(`[name="${key}"]`)];
       const checkboxes = elements.filter((element): element is HTMLInputElement => element instanceof HTMLInputElement && element.type === 'checkbox');
       if (checkboxes.length) return [key, checkboxes[0]!.checked];
+      // The pilot's Button page renders its toggles as m-switch hosts, whose
+      // checked state is a property of the host element.
+      const mswitch = elements.find((element): element is HTMLElement & { checked: boolean } => element instanceof HTMLElement && element.tagName === 'M-SWITCH');
+      if (mswitch) return [key, mswitch.checked];
       const radio = elements.find(element => element instanceof HTMLInputElement && element.type === 'radio' && element.checked);
       if (radio) return [key, (radio as HTMLInputElement).value];
       const first = elements[0];
@@ -45,7 +49,7 @@ try {
       const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...(scenario?.options ?? {}) });
       if (components[slug].scenarios.length) {
         // (a) A component with scenarios has the section: select and description from it.
-        const selected = await page.locator('#scenario').inputValue();
+        const selected = await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? ''));
         assert(selected === (scenario?.id ?? 'default'), `${where}: the Scenario select shows "${selected}"`);
         const description = await page.locator('#scenario-description').textContent();
         assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
@@ -233,17 +237,20 @@ try {
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await favorite.click();
   await page.waitForFunction(() => {
-    const selected = document.querySelector<HTMLInputElement>('input[name="selected"]');
-    return selected?.checked === false && document.querySelector<HTMLSelectElement>('#scenario')?.value === 'custom';
+    const selected = document.querySelector<HTMLElement & { checked?: boolean }>('m-switch[name="selected"]');
+    return selected?.checked === false && document.querySelector<HTMLElement & { value?: string }>('#scenario')?.value === 'custom';
   });
-  assert(await page.locator('input[name="selected"]').isChecked() === false, 'button/favorite: the Selected control stayed checked after a click');
-  assert(await page.locator('#scenario').inputValue() === 'custom', 'button/favorite: the scenario stayed on Favorite after a click');
+  assert(await page.locator('m-switch[name="selected"]').evaluate(el => (el as HTMLElement & { checked?: boolean }).checked === false), 'button/favorite: the Selected control stayed checked after a click');
+  assert(await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? '')) === 'custom', 'button/favorite: the scenario stayed on Favorite after a click');
   const afterClick = await page.locator('#generated-code').textContent();
   assert(afterClick?.includes('selected: true') !== true, 'button/favorite: the code still says selected: true after a click');
   assert(await favorite.getAttribute('aria-pressed') === 'false', 'button/favorite: the preview stayed pressed after a click');
-  await page.locator('select[name="variant"]').selectOption('text');
+  await page.locator('#control-variant').click();
+  // The option label is the value itself, lowercase, as the native panel's
+  // select wrote it.
+  await page.getByRole('option', { name: 'text', exact: true }).click();
   await page.waitForFunction(() => {
-    const toggle = document.querySelector<HTMLInputElement>('input[name="toggle"]');
+    const toggle = document.querySelector<HTMLElement & { disabled?: boolean; checked?: boolean }>('m-switch[name="toggle"]');
     const button = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage button');
     return toggle?.disabled === true && toggle.checked === false && !!button && !button.hasAttribute('aria-pressed');
   });

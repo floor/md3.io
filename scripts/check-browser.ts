@@ -35,38 +35,46 @@ try {
   assert(await page.locator('.playground-space > #copy-code').isVisible(), 'Code view did not show Copy code over the code');
   assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
   assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
-  await page.getByRole('tab', { name: 'View code', exact: true }).press('ArrowLeft');
+  await page.getByRole('tab', { name: 'Live preview' }).focus();
+  await page.keyboard.press('Enter');
   assert(await page.getByRole('tab', { name: 'Live preview' }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
   assert(!await page.locator('#copy-code').isVisible(), 'Live preview still shows Copy code');
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
-  await page.getByRole('tab', { name: 'Live preview' }).press('End');
-  await page.getByLabel('Text', { exact: true }).fill('Code view update');
+  await page.getByRole('tab', { name: 'View code' }).focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('textbox', { name: 'Text', exact: true }).fill('Code view update');
   assert((await page.locator('#generated-code').textContent())?.includes('Code view update'), 'Code view does not update with the configuration');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-desktop.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await preview.getByRole('button', { name: 'Code view update', exact: true }).waitFor();
-  await page.getByLabel('Text', { exact: true }).fill('<img src=x onerror=alert(1)>');
+  await page.getByRole('textbox', { name: 'Text', exact: true }).fill('<img src=x onerror=alert(1)>');
   assert((await page.locator('#generated-code').textContent())?.includes('<img src=x onerror=alert(1)>'), 'Highlighting changed literal code content');
   assert(await page.locator('#generated-code img').count() === 0, 'Highlighting interpreted component text as HTML');
   assert((await page.locator('#generated-code .hljs-string').allTextContents()).some(text => text.includes('<img')), 'Edited values lost syntax highlighting');
-  await page.getByLabel('Text', { exact: true }).fill('Button');
+  await page.getByRole('textbox', { name: 'Text', exact: true }).fill('Button');
 
   for (const variant of ['filled', 'tonal', 'outlined', 'elevated', 'text']) {
-    await page.getByLabel('Variant', { exact: true }).selectOption(variant);
+    await page.locator('#control-variant').click();
+    // The option labels are the values themselves, lowercase, as the native
+    // panel's select wrote them.
+    await page.getByRole('option', { name: variant, exact: true }).click();
     await page.waitForFunction(value => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('button')?.classList.contains(`mtrl-button--${value}`), variant);
   }
   for (const size of ['xs', 's', 'm', 'l', 'xl']) {
-    await page.locator(`label.choice:has(input[name="size"][value="${size}"])`).click();
+    await page.locator('m-button-group[data-group-for="size"]').getByRole('button', { name: size.toUpperCase(), exact: true }).click();
     await page.waitForFunction(value => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('button')?.classList.contains(`mtrl-button--${value}`), size);
   }
-  await page.getByLabel('Text', { exact: true }).fill('Save changes');
-  await page.locator('label.choice:has(input[name="icon"][value="heart"])').click();
-  await page.getByText('Square shape', { exact: true }).click();
-  await page.getByText('Disabled', { exact: true }).click();
+  await page.getByRole('textbox', { name: 'Text', exact: true }).fill('Save changes');
+  await page.locator('m-button-group[data-group-for="icon"]').getByRole('button', { name: 'heart' }).click();
+  // The switch's label is slotted inside it, and its input covers the whole
+  // host: click the switch itself, by its accessible name.
+  await page.getByRole('switch', { name: 'Square shape', exact: true }).click();
+  await page.getByRole('switch', { name: 'Disabled', exact: true }).click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLButtonElement>('button')?.disabled);
   assert(await page.locator('.preview-heading #preview-theme').count() === 1, 'Appearance controls are missing from the playground heading');
-  await page.selectOption('#preview-theme', 'ocean');
-  await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
+  await page.locator('#preview-theme').click();
+  await page.getByRole('option', { name: 'Ocean' }).click();
+  await page.locator('m-button-group[data-group-for="mode"]').getByRole('button', { name: 'Dark', exact: true }).click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'dark', 'Preview changed site mode');
   await page.locator('#theme-toggle').click();
@@ -85,7 +93,7 @@ try {
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
-  assert(await page.locator('#button-text').inputValue() === 'Button', 'Reset did not restore text');
+  assert(await page.locator('#button-text').evaluate(el => String((el as HTMLElement & { value?: string }).value)) === 'Button', 'Reset did not restore text');
   await button.waitFor();
   assert(await button.isEnabled(), 'Reset did not enable the button');
   const assertAppearance = async (theme: string, mode: string) => {
@@ -93,7 +101,12 @@ try {
       const root = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement;
       return root?.dataset.theme === theme && root?.dataset.themeMode === mode;
     }, { theme, mode });
-    assert(await page.locator('#preview-theme').inputValue() === theme && await page.locator(`input[name="mode"][value="${mode}"]`).isChecked(), 'Appearance controls lost the saved preference');
+    // The pilot's Button page renders these as material elements (value on the
+    // host, a hidden input for the group); every other page keeps the native
+    // select and radio.
+    const themeNow = await page.locator('#preview-theme').evaluate(el => String((el as HTMLElement & { value?: string }).value));
+    const modeNow = await page.locator(`input[name="mode"][value="${mode}"]`).evaluate((el, mode) => (el as HTMLInputElement).type === 'radio' ? (el as HTMLInputElement).checked : (el as HTMLInputElement).value === mode, mode);
+    assert(themeNow === theme && modeNow, 'Appearance controls lost the saved preference');
     const code = await page.locator('#generated-code').textContent();
     assert(code?.includes(`dataset.theme = '${theme}'`) && code.includes(`dataset.themeMode = '${mode}'`), 'Generated code lost the saved appearance');
   };
