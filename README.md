@@ -4,17 +4,14 @@ The presentation site for mtrl. Uses the vlist.io stack and shared styles: Bun, 
 
 ## Development
 
-Keep `material` alongside this repository, update it to main including PR #185 or newer, and build it first:
+Install dependencies (including `material` from npm via `package.json` and `bun.lock`) and start the development server:
 
 ```sh
-cd ../material
-bun run build
-cd ../md3.io
 bun install
 bun run dev
 ```
 
-Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in the local material checkout's `src` rebuilds material, then this site, then restarts the server; a change in `src/client`, `src/shared` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server. Reload the page to see the result.
+Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in `src/client`, `src/shared` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server (and if a local `../material` checkout is present alongside this repository, a change in its `src` rebuilds `material` and this site). Reload the page to see the result.
 
 ```sh
 bun run typecheck
@@ -39,11 +36,11 @@ The browser check uses Playwright Chromium and writes screenshots to `analysis/b
 
 The site includes a compact landing page, a component catalog, all six Actions playgrounds (Button, Icon button, Button group, Split button, FAB, and Extended FAB), all ten Selection & input playgrounds (Checkbox, Switch, Radio buttons, Chips, Slider, Text field, Select, Search, Date picker, and Time picker), all six Navigation playgrounds (Navigation rail, Drawer, Tabs, Menu, Top app bar, and Bottom app bar), all seven Containment playgrounds (Card, List, Carousel, Divider, Dialog, Bottom sheet, and Side sheet), all five Communication playgrounds (Badge, Progress, Loading indicator, Snackbar, and Tooltip), and all supplied component documentation. Each playground shares a configuration panel, independent Material theme controls, and preview/code tabs with contextual copying. View code uses a locally bundled highlight.js JavaScript grammar and the vlist.io syntax colors, following the site’s light/dark mode. No benchmark infrastructure is included. The docs include additional/legacy references such as form and colorpicker; their examples are checked by `bun run docs:check`.
 
-The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build requires the local material dependency (`file:../material`, a checkout beside this one).
+The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build installs `material` from npm as pinned in `package.json` and `bun.lock`.
 
 ## Deploy
 
-md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.config.cjs`, port 4300). Push `main`, then run `scripts/deploy.sh`. If `/home/floor/material` is missing, the script clones `https://github.com/floor/material.git` there. A checkout whose origin is not `floor/material` is refused before the site is touched. The library is then fetched and checked out detached at `LIBRARY_REF` (default `origin/main`; a tag such as `v3.0.0-next.0`, a commit or a branch), and built. A branch name means that branch on origin, so `main` is `origin/main`, not the server's local branch. While the library's `main` is ahead of npm, deploy with `LIBRARY_REF=<tag>`. Only then is this site reset to `origin/main` and built. pm2 reloads only when both builds succeed. `DRY_RUN=1 scripts/deploy.sh` prints those steps and does not open ssh.
+md3.io runs on the floor.io server behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to a pm2 process (`ecosystem.production.config.cjs`, port 4300). Push `main`, then run `scripts/deploy.sh`. On the server (`DEPLOY_HOST`, default `floor.io`, under `DEPLOY_DIR`, default `/home/floor`), the script resets `/home/floor/md3.io` to `origin/main`, moves aside any legacy symlinked `node_modules/material`, and runs `bun install --frozen-lockfile` (resolving `material` from npm) and `bun run build`. pm2 reloads only when both the install and the build succeed; if either fails, the running process keeps serving the previous build from memory. `DRY_RUN=1 scripts/deploy.sh` prints the remote script and does not open ssh.
 
 The Date picker playground requires mtrl PR #182 or newer. It uses the selective Date picker stylesheet and the native calendar/input modes, with configurable date limits and modal confirmation by default. The preview and copied example use the component API directly.
 
