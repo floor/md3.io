@@ -14,7 +14,7 @@ describe('mtrl tokens', () => {
     expect(parseCss('@layer a,b;@layer a{:root{--x: #fff}}')).toEqual([{ path: ['@layer a', ':root'], declarations: new Map([['--x', '#fff']]) }]);
   });
   test('baseline light primary is the value in base.css', () => {
-    const rootBlock = /:root\{([^}]*--mtrl-sys-color-primary:[^}]*)\}/.exec(baseCss)![1]!;
+    const rootBlock = /:root\)?\{([^}]*--mtrl-sys-color-primary:[^}]*)\}/.exec(baseCss)![1]!;
     const primary = /--mtrl-sys-color-primary:\s*([^;]+);/.exec(rootBlock)![1]!.trim().toLowerCase();
     expect(baseline.light.get('primary')).toBe(primary);
     expect(themeTokens.baseline!.light.primary!.value).toBe(primary);

@@ -1,6 +1,6 @@
 ---
 created: 2026-10-07
-updated: 2026-10-07
+updated: 2026-11-05
 status: published
 ---
 
@@ -10,7 +10,7 @@ A navigation bar holds destinations in a row along the bottom of the window. Eac
 
 ## Usage
 
-Each destination has an `id`, a `label` and an `icon`. `active` marks the current one. A badge is a count, a short text, or `true` for a dot with no text. `badgeLabel` names the badge; a dot with none is announced as "New activity".
+Each destination has an `id`, a `label` and an `icon`. `active` marks the current one. A badge is a count, a short text, or `true` for a dot with no text. `badgeLabel` names the badge; a dot with none is announced as "New notification", as described in the [M3 badge accessibility guidance](https://m3.material.io/components/badges/accessibility).
 
 ```example
 navigation-bar:
