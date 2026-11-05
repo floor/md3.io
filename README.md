@@ -11,7 +11,7 @@ bun install
 bun run dev
 ```
 
-Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in `src/client`, `src/shared` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server (and if a local `../material` checkout is present alongside this repository, a change in its `src` rebuilds `material` and this site). Reload the page to see the result.
+Open http://localhost:4300, or run it under pm2 with `pm2 start ecosystem.config.cjs`. `PORT` and `HOST` override the defaults. `bun run dev` rebuilds on its own: a change in `src/client`, `src/shared`, `styles` or `icons` rebuilds the site; a change in `server.ts` or `src/server` restarts the server. Reload the page to see the result.
 
 ```sh
 bun run typecheck
