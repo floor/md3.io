@@ -97,7 +97,7 @@ function onDataReady(summaryText: string) {
 
 #### Expandable Card (`createCard` + `createIconButton`)
 
-Pass a standard `createIconButton` (without `toggle: true`, following the [WAI-ARIA APG Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) so `aria-pressed` is not set alongside `aria-expanded`) as the `action` of `createCardHeader`, and wire `aria-expanded`, `aria-controls`, `setIcon()`, and the collapsible section's `hidden` property in its `click` listener:
+Pass a standard `createIconButton` (without `toggle: true`, following the [WAI-ARIA APG Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) with a constant accessible name so `aria-expanded` conveys the collapsed/expanded state and `aria-pressed` is not set) as the `action` of `createCardHeader`, and wire `aria-expanded`, `aria-controls`, `setIcon()`, and the collapsible section's `hidden` property in its `click` listener:
 
 ```typescript
 import {
@@ -120,7 +120,7 @@ details.hidden = true;
 
 const expandButton = createIconButton({
   icon: expandMore,
-  ariaLabel: 'Show trip details',
+  ariaLabel: 'Trip details',
 });
 expandButton.element.setAttribute('aria-expanded', 'false');
 expandButton.element.setAttribute('aria-controls', details.id);
@@ -130,7 +130,6 @@ expandButton.on('click', () => {
   details.hidden = !expanded;
   expandButton.element.setAttribute('aria-expanded', String(expanded));
   expandButton.setIcon(expanded ? expandLess : expandMore);
-  expandButton.setAriaLabel(expanded ? 'Hide trip details' : 'Show trip details');
 });
 
 const expandableCard = createCard({
