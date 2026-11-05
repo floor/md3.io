@@ -66,8 +66,9 @@ pickers are additional references for `material-addons`, outside this count.
 
 Google's [toolbar overview](https://m3.material.io/components/toolbars/overview) recommends the
 docked toolbar in place of the bottom app bar. **Floating-toolbar collapse is not done yet:**
-docked toolbars collapse; floating toolbars exit on scroll instead of collapsing into a smaller
-control. Choose the behavior that exists today rather than depending on a future update.
+toolbars can hide on scroll (`scrollBehavior: exit`), rather than collapsing a floating toolbar
+into a smaller control or FAB on scroll. Choose the behavior that exists today rather than
+depending on a future update.
 
 ### Containment
 
