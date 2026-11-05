@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-29
+updated: 2026-11-05
 status: published
 ---
 
@@ -218,7 +218,7 @@ classes are the factory's, inside the web component's shadow root.
 .mtrl-slider__label, .mtrl-slider__icon, .mtrl-slider__container, .mtrl-slider__track { }
 .mtrl-slider__segment, .mtrl-slider__segment--active, .mtrl-slider__ticks, .mtrl-slider__dot { }
 .mtrl-slider__handle, .mtrl-slider__handle--focused, .mtrl-slider__value, .mtrl-slider__inset-icon { }
-.mtrl-slider--range, .mtrl-slider--vertical, .mtrl-slider--discrete, .mtrl-slider--disabled { }
+.mtrl-slider--range, .mtrl-slider--vertical, .mtrl-slider--disabled { }
 .mtrl-slider--dragging, .mtrl-slider--settling { }
 ```
 
