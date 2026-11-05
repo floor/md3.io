@@ -16,14 +16,14 @@ export interface ThemeData {
   /** Colours in `roles` order, per mode. */
   light: string[];
   dark: string[];
-  /** How mtrl generates it ("seed #6750a4, Tonal Spot"), or null for a hand-set theme. */
+  /** How mtrl generates it ("seed #6750a4, Tonal Spot"), "unknown" when unavailable, or null for a hand-set theme. */
   origin: string | null;
   palettes: Record<string, string[]> | null;
-  /** What mtrl generates it from, or null for a hand-set theme. */
+  /** What mtrl generates it from, or null when provenance is unavailable. */
   spec: { seed: string; variant: string; contrast: number; secondary?: string } | null;
   /** A theme made from an image: its seed, which the address carries. */
   seed?: string;
-  /** A hand-made theme's seed for generated variants: its light primary. */
+  /** A hand-made or unknown-origin theme's seed for generated variants: its light primary. */
   handSeed?: string | null;
 }
 

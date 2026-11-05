@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-11-05
 status: published
 ---
 
@@ -10,6 +10,8 @@ status: published
 components work as plain JavaScript factories, as web components, and as React, Vue, Svelte and
 SolidJS components. This page takes you from install to a first component; the switch at the
 top shows every example in the way you use it.
+
+For coverage, measured sizes, browser support and the current limits, see [Why material](why-material.md).
 
 ## Install
 

@@ -3,19 +3,63 @@
 // and dark, and mtrl's schemeToTokens names them. If mtrl changes how it builds a
 // scheme, this fails until the page follows.
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { ThemeSpec } from '../node_modules/material/scripts/generate-themes';
+import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec, type VariantName } from '../src/shared/theme-engine';
+
+interface ThemeSpec {
+  name: string;
+  description: string;
+  seed: string;
+  variant: VariantName;
+  contrast?: number;
+  secondary?: string;
+  tertiary?: string;
+  standalone?: boolean;
+}
+interface ThemeGenerator {
+  BASELINE_SEED: string;
+  THEMES: ThemeSpec[];
+  rolesOf: (scheme: unknown) => Record<string, string>;
+  schemeFor: (spec: ThemeSpec, isDark: boolean) => unknown;
+}
 
 // mtrl's script, copied to a temp directory and run from there, has to resolve its
 // imports from md3.io, not from mtrl's checkout (file:../material): that checkout may
 // not have its devDependencies installed, and a temp directory has no package tree
 // at all. Three of its four imports need pointing elsewhere: the two bare packages,
 // material-color-utilities (the same pinned 0.4.0) and sass, at md3.io's own
-// installed copies, and the relative ../src/core/theme at mtrl's source. The
+// installed copies, and the relative ../src/core/theme at mtrl's source or dist. The
 // fourth, node:fs, is a builtin and resolves as it is.
 const mtrl = resolve(import.meta.dir, '../node_modules/material');
+const installedVersion = (JSON.parse(readFileSync(join(mtrl, 'package.json'), 'utf8')) as { version: string }).version;
+const loadGenerateThemesScript = (): string => {
+  const inPackage = join(mtrl, 'scripts/generate-themes.ts');
+  if (existsSync(inPackage)) return readFileSync(inPackage, 'utf8');
+  const candidates = [
+    resolve(import.meta.dir, '../../material'),
+    resolve(import.meta.dir, '../../../material'),
+    resolve(import.meta.dir, '../../../../material'),
+  ];
+  for (const repo of candidates) {
+    const pkgPath = join(repo, 'package.json');
+    const scriptPath = join(repo, 'scripts/generate-themes.ts');
+    if (existsSync(pkgPath) && existsSync(scriptPath)) {
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: string };
+      if (pkg.version === installedVersion) return readFileSync(scriptPath, 'utf8');
+    }
+    if (existsSync(join(repo, '.git'))) {
+      const tagPkg = spawnSync('git', ['-C', repo, 'show', `v${installedVersion}:package.json`], { encoding: 'utf8' });
+      if (tagPkg.status === 0 && (JSON.parse(tagPkg.stdout) as { version?: string }).version === installedVersion) {
+        const tagScript = spawnSync('git', ['-C', repo, 'show', `v${installedVersion}:scripts/generate-themes.ts`], { encoding: 'utf8' });
+        if (tagScript.status === 0) return tagScript.stdout;
+      }
+    }
+  }
+  throw new Error(`No scripts/generate-themes.ts found for material@${installedVersion}`);
+};
 const rewrite = (source: string, specifier: string, target: string): string => {
   const from = `from ${JSON.stringify(specifier)}`;
   // If mtrl respells an import, the rewrite would miss and the copy would run
@@ -23,10 +67,13 @@ const rewrite = (source: string, specifier: string, target: string): string => {
   if (!source.includes(from)) throw new Error(`generate-themes.ts no longer has ${from}: update the copy's import rewrites`);
   return source.replace(from, `from ${JSON.stringify(target)}`);
 };
-let script = await Bun.file(join(mtrl, 'scripts/generate-themes.ts')).text();
+let script = loadGenerateThemesScript();
 script = rewrite(script, '@material/material-color-utilities', Bun.resolveSync('@material/material-color-utilities', import.meta.dir));
 script = rewrite(script, 'sass', Bun.resolveSync('sass', import.meta.dir));
-script = rewrite(script, '../src/core/theme', join(mtrl, 'src/core/theme/index.ts'));
+const coreThemeTarget = existsSync(join(mtrl, 'src/core/theme/index.ts'))
+  ? join(mtrl, 'src/core/theme/index.ts')
+  : join(mtrl, 'dist/core/theme/index.js');
+script = rewrite(script, '../src/core/theme', coreThemeTarget);
 // The script reads files cwd-relative too: importing it lists src/styles/themes
 // (HAND_THEMES), and standardTokens compiles from src/styles/themes and reads its
 // _baseline.scss. Point that literal, with its opening quote, at mtrl's tree, as
@@ -37,9 +84,8 @@ if (!script.includes(themes)) throw new Error(`generate-themes.ts no longer has 
 script = script.replaceAll(themes, JSON.stringify(join(mtrl, 'src/styles/themes')).slice(0, -1));
 const copy = join(mkdtempSync(join(tmpdir(), 'md3-themes-')), 'generate-themes.ts');
 writeFileSync(copy, script);
-const generator = await import(copy) as typeof import('../node_modules/material/scripts/generate-themes');
+const generator = await import(copy) as ThemeGenerator;
 const { BASELINE_SEED, THEMES, rolesOf: mtrlRolesOf, schemeFor: mtrlSchemeFor } = generator;
-import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec } from '../src/shared/theme-engine';
 
 const specOf = (theme: ThemeSpec): ColorSpec => ({ source: theme.seed, variant: theme.variant, contrast: theme.contrast ?? 0, ...(theme.secondary ? { core: { secondary: theme.secondary } } : {}) });
 

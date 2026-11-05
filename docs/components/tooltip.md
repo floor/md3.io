@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-05
 status: published
 ---
 
@@ -111,7 +111,7 @@ A tooltip has no events.
 ```css
 .mtrl-tooltip, .mtrl-tooltip--visible { }
 .mtrl-tooltip--default, .mtrl-tooltip--plain, .mtrl-tooltip--rich { }
-.mtrl-tooltip--top, .mtrl-tooltip--right, .mtrl-tooltip--bottom, .mtrl-tooltip--left { }
+.mtrl-tooltip--top, .mtrl-tooltip--bottom { }
 .mtrl-tooltip__arrow { }
 ```
 
