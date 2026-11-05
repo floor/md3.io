@@ -102,6 +102,7 @@
 /docs/vanilla/
 /docs/vue/
 /docs/web-components/
+/docs/why-material/
 /examples/
 /examples/settings/
 /privacy/
