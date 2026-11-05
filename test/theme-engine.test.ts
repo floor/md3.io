@@ -3,10 +3,27 @@
 // and dark, and mtrl's schemeToTokens names them. If mtrl changes how it builds a
 // scheme, this fails until the page follows.
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { ThemeSpec } from '../node_modules/material/scripts/generate-themes';
+import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec, type VariantName } from '../src/shared/theme-engine';
+
+interface ThemeSpec {
+  name: string;
+  description: string;
+  seed: string;
+  variant: VariantName;
+  contrast?: number;
+  secondary?: string;
+  tertiary?: string;
+  standalone?: boolean;
+}
+interface ThemeGenerator {
+  BASELINE_SEED: string;
+  THEMES: ThemeSpec[];
+  rolesOf: (scheme: unknown) => Record<string, string>;
+  schemeFor: (spec: ThemeSpec, isDark: boolean) => unknown;
+}
 
 // mtrl's script, copied to a temp directory and run from there, has to resolve its
 // imports from md3.io, not from mtrl's checkout (file:../material): that checkout may
@@ -16,6 +33,12 @@ import type { ThemeSpec } from '../node_modules/material/scripts/generate-themes
 // installed copies, and the relative ../src/core/theme at mtrl's source. The
 // fourth, node:fs, is a builtin and resolves as it is.
 const mtrl = resolve(import.meta.dir, '../node_modules/material');
+const mtrlSource = [
+  mtrl,
+  resolve(import.meta.dir, '../../material'),
+  resolve(import.meta.dir, '../../../material'),
+  resolve(import.meta.dir, '../../../../material'),
+].find(dir => existsSync(join(dir, 'scripts/generate-themes.ts'))) ?? mtrl;
 const rewrite = (source: string, specifier: string, target: string): string => {
   const from = `from ${JSON.stringify(specifier)}`;
   // If mtrl respells an import, the rewrite would miss and the copy would run
@@ -23,10 +46,10 @@ const rewrite = (source: string, specifier: string, target: string): string => {
   if (!source.includes(from)) throw new Error(`generate-themes.ts no longer has ${from}: update the copy's import rewrites`);
   return source.replace(from, `from ${JSON.stringify(target)}`);
 };
-let script = await Bun.file(join(mtrl, 'scripts/generate-themes.ts')).text();
+let script = await Bun.file(join(mtrlSource, 'scripts/generate-themes.ts')).text();
 script = rewrite(script, '@material/material-color-utilities', Bun.resolveSync('@material/material-color-utilities', import.meta.dir));
 script = rewrite(script, 'sass', Bun.resolveSync('sass', import.meta.dir));
-script = rewrite(script, '../src/core/theme', join(mtrl, 'src/core/theme/index.ts'));
+script = rewrite(script, '../src/core/theme', join(mtrlSource, 'src/core/theme/index.ts'));
 // The script reads files cwd-relative too: importing it lists src/styles/themes
 // (HAND_THEMES), and standardTokens compiles from src/styles/themes and reads its
 // _baseline.scss. Point that literal, with its opening quote, at mtrl's tree, as
@@ -37,9 +60,8 @@ if (!script.includes(themes)) throw new Error(`generate-themes.ts no longer has 
 script = script.replaceAll(themes, JSON.stringify(join(mtrl, 'src/styles/themes')).slice(0, -1));
 const copy = join(mkdtempSync(join(tmpdir(), 'md3-themes-')), 'generate-themes.ts');
 writeFileSync(copy, script);
-const generator = await import(copy) as typeof import('../node_modules/material/scripts/generate-themes');
+const generator = await import(copy) as ThemeGenerator;
 const { BASELINE_SEED, THEMES, rolesOf: mtrlRolesOf, schemeFor: mtrlSchemeFor } = generator;
-import { CONTRAST_LEVELS, PALETTE_TONES, THEME_ROLES, VARIANTS, argbFromRgba, rolesOf, schemeFor, seedsFromPixels, themeColors, toneOf, type ColorSpec } from '../src/shared/theme-engine';
 
 const specOf = (theme: ThemeSpec): ColorSpec => ({ source: theme.seed, variant: theme.variant, contrast: theme.contrast ?? 0, ...(theme.secondary ? { core: { secondary: theme.secondary } } : {}) });
 
