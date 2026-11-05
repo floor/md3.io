@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-05
 status: published
 ---
 
@@ -57,6 +57,95 @@ M3 specs describe. The `--small`, `--medium` and `--large` classes fix it at 344
 `createCardMedia()` and `createCardActions()`, build sections for `setHeader()`,
 `addContent()`, `addMedia()` and `setActions()`. The web component takes its sections in
 slots: `media`, `avatar`, `headline`, `subhead`, `header-action`, the content, and `actions`.
+
+### Composing Loading and Expandable Cards
+
+`createCard` is a pure layout and surface container — it does not ship built-in loading spinners or accordion state. Compose those states with `createProgress` and `createIconButton`:
+
+#### Loading Card (`createCard` + `createProgress`)
+
+Place an indeterminate `createProgress` inside a `createCardContent` section and mark the card root with `aria-busy="true"` until the content settles:
+
+```typescript
+import {
+  createCard,
+  createCardContent,
+  createCardHeader,
+  createProgress,
+} from 'material';
+
+const loadingCard = createCard({ variant: 'outlined' });
+loadingCard.element.setAttribute('aria-busy', 'true');
+loadingCard.setHeader(createCardHeader({ title: 'Market summary' }));
+
+const body = createCardContent();
+const spinner = createProgress({
+  variant: 'circular',
+  indeterminate: true,
+  ariaLabel: 'Loading market summary',
+});
+body.append(spinner.element);
+loadingCard.addContent(body);
+
+// When data arrives, tear down the progress indicator and clear aria-busy:
+function onDataReady(summaryText: string) {
+  spinner.destroy();
+  body.textContent = summaryText;
+  loadingCard.element.removeAttribute('aria-busy');
+}
+```
+
+#### Expandable Card (`createCard` + `createIconButton`)
+
+Pass a standard `createIconButton` (without `toggle: true`, following the [WAI-ARIA APG Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) so `aria-pressed` is not set alongside `aria-expanded`) as the `action` of `createCardHeader`, and wire `aria-expanded`, `aria-controls`, `setIcon()`, and the collapsible section's `hidden` property in its `click` listener:
+
+```typescript
+import {
+  createCard,
+  createCardContent,
+  createCardHeader,
+  createIconButton,
+} from 'material';
+
+const expandMore =
+  '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+const expandLess =
+  '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>';
+
+const details = createCardContent({
+  text: 'Full itinerary, check-in instructions, and local transit passes.',
+});
+details.id = 'trip-card-details';
+details.hidden = true;
+
+const expandButton = createIconButton({
+  icon: expandMore,
+  ariaLabel: 'Show trip details',
+});
+expandButton.element.setAttribute('aria-expanded', 'false');
+expandButton.element.setAttribute('aria-controls', details.id);
+
+expandButton.on('click', () => {
+  const expanded = details.hidden;
+  details.hidden = !expanded;
+  expandButton.element.setAttribute('aria-expanded', String(expanded));
+  expandButton.setIcon(expanded ? expandLess : expandMore);
+  expandButton.setAriaLabel(expanded ? 'Hide trip details' : 'Show trip details');
+});
+
+const expandableCard = createCard({
+  variant: 'elevated',
+  content: { text: '3 nights in Lisbon · Flight + Hotel' },
+});
+expandableCard.setHeader(
+  createCardHeader({
+    title: 'Trip summary',
+    subtitle: 'May 15–17',
+    action: expandButton.element,
+  }),
+);
+expandableCard.addContent(details);
+```
 
 ## API
 
