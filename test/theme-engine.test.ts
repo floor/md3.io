@@ -74,6 +74,16 @@ const coreThemeTarget = existsSync(join(mtrl, 'src/core/theme/index.ts'))
   ? join(mtrl, 'src/core/theme/index.ts')
   : join(mtrl, 'dist/core/theme/index.js');
 script = rewrite(script, '../src/core/theme', coreThemeTarget);
+const themeTarget = existsSync(join(mtrl, 'src/theme/index.ts'))
+  ? join(mtrl, 'src/theme/index.ts')
+  : join(mtrl, 'dist/theme/index.js');
+const sideEffectImport = 'import "../src/theme";';
+if (!script.includes(sideEffectImport)) throw new Error(`generate-themes.ts no longer has ${sideEffectImport}: update the copy's import rewrites`);
+script = script.replace(sideEffectImport, `import ${JSON.stringify(themeTarget)};`);
+const dynamicColorsTarget = existsSync(join(mtrl, 'src/theme/vendor/dynamiccolor/material_dynamic_colors.js'))
+  ? join(mtrl, 'src/theme/vendor/dynamiccolor/material_dynamic_colors.js')
+  : join(mtrl, 'dist/theme/vendor/dynamiccolor/material_dynamic_colors.js');
+script = rewrite(script, '../src/theme/vendor/dynamiccolor/material_dynamic_colors', dynamicColorsTarget);
 // The script reads files cwd-relative too: importing it lists src/styles/themes
 // (HAND_THEMES), and standardTokens compiles from src/styles/themes and reads its
 // _baseline.scss. Point that literal, with its opening quote, at mtrl's tree, as
@@ -103,7 +113,10 @@ describe('theme engine', () => {
   test('every theme mtrl generates from a seed is rebuilt identically', () => {
     expect(THEMES.length).toBeGreaterThan(10);
     for (const theme of THEMES) for (const isDark of [false, true]) {
-      expect({ theme: theme.name, isDark, roles: rolesOf(schemeFor(specOf(theme), isDark)) }).toEqual({ theme: theme.name, isDark, roles: mtrlRolesOf(mtrlSchemeFor(theme, isDark)) });
+      const ours = rolesOf(schemeFor(specOf(theme), isDark));
+      const theirs = mtrlRolesOf(mtrlSchemeFor(theme, isDark));
+      const theirThemeRoles = Object.fromEntries(THEME_ROLES.map(role => [role, theirs[role]]));
+      expect({ theme: theme.name, isDark, roles: ours }).toEqual({ theme: theme.name, isDark, roles: theirThemeRoles });
     }
   });
 
