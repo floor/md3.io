@@ -74,6 +74,10 @@ const coreThemeTarget = existsSync(join(mtrl, 'src/core/theme/index.ts'))
   ? join(mtrl, 'src/core/theme/index.ts')
   : join(mtrl, 'dist/core/theme/index.js');
 script = rewrite(script, '../src/core/theme', coreThemeTarget);
+const themeRolesTarget = existsSync(join(mtrl, 'src/theme/roles.ts'))
+  ? join(mtrl, 'src/theme/roles.ts')
+  : join(mtrl, 'dist/theme/roles.js');
+script = rewrite(script, '../src/theme/roles', themeRolesTarget);
 // The script reads files cwd-relative too: importing it lists src/styles/themes
 // (HAND_THEMES), and standardTokens compiles from src/styles/themes and reads its
 // _baseline.scss. Point that literal, with its opening quote, at mtrl's tree, as
@@ -103,7 +107,10 @@ describe('theme engine', () => {
   test('every theme mtrl generates from a seed is rebuilt identically', () => {
     expect(THEMES.length).toBeGreaterThan(10);
     for (const theme of THEMES) for (const isDark of [false, true]) {
-      expect({ theme: theme.name, isDark, roles: rolesOf(schemeFor(specOf(theme), isDark)) }).toEqual({ theme: theme.name, isDark, roles: mtrlRolesOf(mtrlSchemeFor(theme, isDark)) });
+      const ours = rolesOf(schemeFor(specOf(theme), isDark));
+      const theirs = mtrlRolesOf(mtrlSchemeFor(theme, isDark));
+      const theirThemeRoles = Object.fromEntries(THEME_ROLES.map(role => [role, theirs[role]]));
+      expect({ theme: theme.name, isDark, roles: ours }).toEqual({ theme: theme.name, isDark, roles: theirThemeRoles });
     }
   });
 
