@@ -197,8 +197,16 @@ dispatches `action` with `{ value, index }`.
 
 ## Styling
 
-The component writes its measurements as custom properties **inline** on the container, so
-only a declaration with `!important`, or one on the element itself, overrides them.
+The component sets `--mtrl-button-group-height`, `--mtrl-button-group-icon`,
+`--mtrl-button-group-gap`, `--mtrl-button-group-inner-corner` and
+`--mtrl-button-group-pressed-corner` **inline** on `.mtrl-button-group`. It also sets
+`--mtrl-density` inline for `density: 'comfortable'` or `'compact'`. Overriding these from a
+stylesheet takes `!important`, or set them on the element itself.
+
+The stylesheet derives `--mtrl-button-group-height-scale` from the density-scaled height,
+floored at 32dp, and `--mtrl-button-group-radius` as
+`calc(var(--mtrl-button-group-height-scale) / 2)` on `.mtrl-button-group`. These are not inline;
+a stylesheet rule can override the radius without `!important`.
 
 ```css
 .mtrl-button-group { }
@@ -218,7 +226,7 @@ only a declaration with `!important`, or one on the element itself, overrides th
   --mtrl-button-group-gap: 12px !important;
   --mtrl-button-group-inner-corner: 8px !important;
   --mtrl-button-group-pressed-corner: 4px !important;
-  --mtrl-button-group-radius: 20px !important;
+  --mtrl-button-group-radius: 20px;
 }
 ```
 
