@@ -102,7 +102,7 @@ const list = withSingleSelectListbox(
 ```
 
 - **Accessibility (`role="listbox"` / `role="option"`):** Sets `role="listbox"` on the list, `role="option"` with `aria-selected="true" | "false"` on each selectable row, and a single roving `tabindex="0"` stop on the selected (or first enabled) option.
-- **Selection follows focus:** `ArrowDown`, `ArrowUp`, `Home`, `End`, and printable-character typeahead move focus and selection together; `Space`, `Enter`, or pointer click selects the focused or clicked option.
+- **Manual activation:** `ArrowDown`, `ArrowRight`, `ArrowUp`, `ArrowLeft`, `Home`, `End`, and printable-character typeahead move focus across enabled options and update the roving `tabindex="0"` while focus is inside the listbox (on `focusout`, `tabindex="0"` syncs back to the selected option); `Space`, `Enter`, or a pointer click activates and selects the option (setting `aria-selected="true"` and firing `select`).
 - **Constraints:** Refuses `multiSelect: true`, rows with interactive secondary actions, and link rows (`href`). Pages that do not import `withSingleSelectListbox` pay `0 B`.
 
 ## API
