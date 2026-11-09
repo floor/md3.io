@@ -89,7 +89,7 @@ const responsiveTabs = createTabs({
 
 Below the small breakpoint (600px by default), tabs built with an icon and a label take
 `smallScreen.layout` (`'icon-only'` by default), and the group carries the
-`responsive-small` class while it does. The layout applies while the group is created, so a
+`mtrl-tabs--responsive-small` class while it does. The layout applies while the group is created, so a
 narrow page never paints the built layout first. `setupResponsiveBehavior(tabs, config)` still
 works and is deprecated in favour of the option; it is removed in 4.0.
 

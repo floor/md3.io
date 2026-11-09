@@ -119,12 +119,12 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `layer` | `'top'` | `undefined` | The menu stays beside its opener and shows in the top layer, as a popover; `container` is then not used |
 | `manualOpen` | `boolean` | `false` | The opener only places the menu; the app calls `open()` |
 | `listbox` | `boolean` | `false` | The listbox popup of a select-only combobox: `option` items, focus kept by the combobox |
-| `dense` | `boolean` | `false` | Deprecated in 3.11.0 (removed in 4.0): compact items and tighter spacing, for toolbars |
+| `dense` | `boolean` | `false` | Deprecated in 3.10.0 (removed in 4.0): compact items and tighter spacing, for toolbars |
 | `on` | `{ open, close, select }` | `undefined` | Event handlers registered at creation |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
-> **Density.** The `dense` option and `dense` attribute are deprecated as of 3.11.0. The library is moving to one density scale, `--mtrl-density`; menus are not part of it, because Material advises against increasing density in focused tasks such as selecting from a menu. `dense` keeps its current behavior and is removed in 4.0.
+> **Density.** The `dense` option and `dense` attribute are deprecated as of 3.10.0. The library uses one density scale, `--mtrl-density`; menus are not part of it, because Material advises against increasing density in focused tasks such as selecting from a menu. `dense` keeps its current behavior and is removed in 4.0.
 
 #### Items
 
