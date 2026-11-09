@@ -18,6 +18,8 @@ export const stylesheetBundles = {
   examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'device-frame'],
   // Styles pages add Roboto, then their own sheet.
   styles: [...shell, 'site', 'search', 'roboto', 'styles-pages'],
+  // Colour Lab's real components, with colour scoped to its preview stage.
+  'colour-lab': [...shell, 'site', 'search', 'roboto', 'mtrl-tokens', 'mtrl:button', 'mtrl:icon-button', 'mtrl:fab', 'mtrl:card', 'mtrl:text-field', 'mtrl:checkbox', 'mtrl:radios', 'mtrl:switch', 'mtrl:slider', 'mtrl:chips', 'mtrl:badge', 'colour-lab'],
   // The Themes app: the Styles sheet, mtrl's type and shape tokens and ripple, the mtrl
   // components it is built from, then its own sheet.
   themes: [...shell, 'site', 'search', 'roboto', 'styles-pages', 'mtrl-tokens', 'mtrl:text-field', 'mtrl:menu', 'mtrl:select', 'mtrl:top-app-bar', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'mtrl:snackbar', 'mtrl:tooltip', 'theme-app'],
@@ -29,14 +31,14 @@ export type StylesheetBundle = keyof typeof stylesheetBundles;
  * mtrl's system tokens other than colour (type scale, shape), its ripple, and its
  * button and list resets, from base.css: without base.css itself, whose page resets and
  * body styles are for an mtrl app, not a page of this site. The resets stay in mtrl's
- * base layer, scoped to the Themes app and the popups it puts on <body>. Colour comes
+ * base layer, scoped to the embedded apps and the popups they put on <body>. Colour comes
  * from the theme the app shows.
  */
 export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/material/dist/styles/base.css'), 'utf8')): string {
   const start = css.indexOf(':root{--mtrl-ref-typeface');
   const ripple = css.indexOf('.mtrl-ripple{');
   const rippleEnd = css.indexOf('}}', css.indexOf('@keyframes mtrl-ripple-expand')) + 2;
-  const resets = [...css.matchAll(/(?<=[}])(button|ul,ol)(\{[^}]*\})/g)].map(([, selector, body]) => `:where(.theme-app,.mtrl-menu,.mtrl-snackbar) :is(${selector})${body}`);
+  const resets = [...css.matchAll(/(?<=[}])(button|ul,ol)(\{[^}]*\})/g)].map(([, selector, body]) => `:where(.theme-app,.colour-lab-stage,.mtrl-menu,.mtrl-snackbar) :is(${selector})${body}`);
   if (start < 0 || ripple < 0 || rippleEnd < 2 || resets.length !== 2) throw new Error('mtrl base.css: tokens, ripple or resets not found');
   return `${css.slice(start, css.indexOf('}', start) + 1)}\n${css.slice(ripple, rippleEnd)}\n@layer mtrl.base{${resets.join('')}}`;
 }

@@ -108,6 +108,7 @@
 /privacy/
 /styles/
 /styles/color/
+/styles/color-lab/
 /styles/shape/
 /styles/themes/
 /styles/typography/
