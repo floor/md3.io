@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-10-02
+updated: 2026-11-09
 status: published
 ---
 
@@ -152,7 +152,9 @@ How the levels are derived:
 - Hand-authored themes derive them with Tonal Spot from their documented seed, falling back
   to their light primary, and keep their light secondary and tertiary hues and chroma.
 - Neutral palettes come from the seed, while standard colours stay unchanged.
-- Success, warning and info keep their status colours.
+- Success, warning and info are harmonised to the theme's primary, with M3 custom-colour
+  contrast curves; their text pairs reach at least 4.5:1 at standard and medium contrast and
+  7:1 at high contrast. See [Status colours](#status-colours) for the fixed baseline-light override.
 - The `highcontrast` theme is a theme in its own right and supports all three settings.
 
 Import `material/styles/contrast` after `material/styles/base`, as with the typography
@@ -161,9 +163,130 @@ The contrast colours do not depend on it. An explicit level is a more specific s
 the standard rule, and `prefers-contrast: more` is guarded by `:not([data-theme-contrast])`,
 so either load order resolves the same colours.
 
+### Status colours
+
+The shipped themes and runtime schemes harmonise `success`, `warning` and `info` toward the
+theme's primary colour. They resolve each status and its `on-*` colour with M3
+[custom-colour](https://m3.material.io/styles/color/advanced/define-new-colors) contrast curves. These text pairs reach at least **4.5:1** at standard and medium contrast,
+and at least **7:1** at high contrast, in both light and dark modes.
+
+For an app fixed to the `baseline` light scheme, these overrides after the theme styles keep
+the previous un-harmonised status values:
+
+```css
+:root {
+  --mtrl-sys-color-success: rgb(0, 108, 78);
+  --mtrl-sys-color-warning: rgb(151, 72, 0);
+  --mtrl-sys-color-info: rgb(0, 97, 164);
+}
+```
+
+## Runtime colour
+
+For colour chosen while the app is running, use `material/theme`. It generates a scheme from a
+seed and writes the same colour-role custom properties as the theme stylesheets. This is the
+runtime counterpart to the [Material colour system](https://m3.material.io/styles/color/system/overview).
+It needs no additional colour-library dependency.
+
+```typescript
+import { createScheme, applyScheme } from 'material/theme';
+
+const runtimeScheme = createScheme('#006a6a');
+applyScheme(runtimeScheme);
+```
+
+`createScheme(seed, options)` accepts a hex string, an ARGB integer or an `Hct` instance. The
+options are:
+
+| Option | Values | Default |
+|--------|--------|---------|
+| `variant` | A scheme factory from the table below | `tonalSpot` |
+| `mode` | `'light'` or `'dark'` | `'light'` |
+| `contrast` | A continuous number from `-1` (reduced) to `1` (high); `0` is standard and `0.5` is medium | `0` |
+
+`applyScheme(scheme, target, { prefix })` writes the generated roles, including the harmonised
+status colours, inline on `target`. It defaults to `document.documentElement` and the `mtrl`
+prefix. Pass a section or another container as `target` to scope the scheme to its subtree;
+custom properties reach the web components' shadow roots too. For a custom Sass prefix, pass
+the same value as `{ prefix: 'your-prefix' }`.
+
+### Variant factories and names
+
+The seven factories are individual exports from `material/theme`, so unused factories can be
+tree-shaken. Pass one as `variant`, for example `createScheme('#984061', { variant: expressive })`
+after importing `expressive` from that entry.
+
+| Factory | String name |
+|---------|-------------|
+| `tonalSpot` | `'tonal-spot'` |
+| `vibrant` | `'vibrant'` |
+| `expressive` | `'expressive'` |
+| `fidelity` | `'fidelity'` |
+| `content` | `'content'` |
+| `neutral` | `'neutral'` |
+| `monochrome` | `'monochrome'` |
+
+When a control supplies a name instead of a factory, `material/theme/variants` provides
+`createSchemeByName` with the same seed, mode and contrast options:
+
+```typescript
+import { createSchemeByName } from 'material/theme/variants';
+
+const namedScheme = createSchemeByName('#6750a4', {
+  variant: 'vibrant',
+  mode: 'dark',
+  contrast: 0.5,
+});
+applyScheme(namedScheme);
+```
+
+### Colour from an image
+
+`sourceColorFromImage` is a separate import from `material/theme/image`. It returns
+`Promise<Hct>` after quantising and scoring the image's colours. Pass it an image that has
+loaded or finished `decode()`, with pixels the browser can read through a canvas:
+
+```typescript
+import { sourceColorFromImage } from 'material/theme/image';
+
+async function applyImageTheme(image: HTMLImageElement, target: Element) {
+  const imageSeed = await sourceColorFromImage(image);
+  applyScheme(createScheme(imageSeed), target);
+}
+```
+
+The image-processing code is only loaded when the app imports that entry.
+
+### Opt into the 2025 colour specification
+
+`material/theme` keeps the 2021 colour specification. For the 2025 implementation, import
+`material/theme/2025` and pass `spec: '2025'` to its `createScheme`:
+
+```typescript
+import * as theme2025 from 'material/theme/2025';
+
+const updatedScheme = theme2025.createScheme('#6750a4', {
+  variant: theme2025.expressive,
+  mode: 'dark',
+  spec: '2025',
+});
+theme2025.applyScheme(updatedScheme);
+```
+
+The entry accepts `spec: '2021' | '2025'` on both `createScheme` and `createSchemeByName`.
+Omitting `spec`, or passing `'2021'`, retains 2021 colours; the import alone changes no colours.
+Four variants support 2025: `tonalSpot`, `vibrant`, `expressive` and `neutral`. `fidelity`,
+`content` and `monochrome` fall back to 2021, even when `'2025'` is requested.
+
+The 2025 implementation stays behind its separate entry: it adds **0 B** to an app that imports
+only `material/theme`.
+
 ## Your own theme
 
 ### From a seed colour
+
+For browser-time colour generation, use [Runtime colour](#runtime-colour) above. The lower-level
+route here is useful when generating a named theme stylesheet at build time.
 
 M3 builds a whole scheme from one colour. Google's
 [material-color-utilities](https://github.com/material-foundation/material-color-utilities) does
@@ -188,9 +311,9 @@ function installTheme(name: string, light: SchemeRoles, dark: SchemeRoles) {
 }
 ```
 
-The schemes come from the colour library, which is your app's dependency, not `material`'s
-(`npm install @material/material-color-utilities`). This block is marked as a sketch because the
-docs check doesn't install that library; it type-checks against its 0.4 release:
+This build-time sketch uses `@material/material-color-utilities` as your app's own dependency
+(`npm install @material/material-color-utilities`). The runtime `material/theme` API above needs
+no additional package:
 
 ```typescript fragment
 import { argbFromHex, hexFromArgb, Hct, SchemeTonalSpot, type DynamicScheme } from '@material/material-color-utilities';
@@ -289,3 +412,26 @@ component there: factories and web components alike.
 Sizes, weights and state-layer opacities stay M3's in the components, and a few components still
 draw their own corners (a dialog, a tooltip, a menu). [Styles › Typography](/styles/typography/)
 shows the whole type scale.
+
+## Density
+
+`--mtrl-density` is an inherited integer custom property. Set it on a container, from `0`
+(the default) down to `-5`, to compact the components inside it, including web components:
+
+```css
+.dense-panel {
+  --mtrl-density: -2;
+}
+```
+
+The classes `.mtrl-density--1` through `.mtrl-density--5` are shortcuts for those negative
+values. For example, `class="mtrl-density--2"` sets `--mtrl-density: -2` on the element.
+
+Each negative step reduces participating container heights by **4px**, until the component's
+own floor. Buttons, icon buttons, button groups, lists, drawers, text fields and selects follow
+the scale. Type and icon sizes stay unchanged, and touch targets keep their **48px** floor even
+when the visible container is smaller.
+
+Fixed surfaces pin `--mtrl-density: 0` on their own root: menus, dialogs, snackbars, date and time
+pickers, and bottom and side sheets. A page-wide density therefore does not shrink the controls
+inside them. Cards, tooltips and FABs do not read the density property.
