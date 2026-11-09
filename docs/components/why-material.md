@@ -1,6 +1,6 @@
 ---
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-09
 status: published
 description: Material 3 and Expressive coverage, measured bundle sizes, browser and server support, release history, and alternatives for the web.
 ---
@@ -61,14 +61,14 @@ pickers are additional references for `material-addons`, outside this count.
 | [Tabs](tabs.md) | Primary and secondary tabs with keyboard navigation. |
 | [Menu](menu.md) | Baseline and Expressive vertical menus. |
 | [Top app bar](top-app-bar.md) | Small, centre-aligned, medium and large bars; medium and large compress on scroll. |
-| [Bottom app bar](bottom-app-bar.md) | The baseline bar remains available for existing designs. |
+| [Bottom app bar](bottom-app-bar.md) | Deprecated in 3.x for the docked [Toolbar](toolbar.md); remains available for existing designs (removal parked until Material Design v4). |
 | [Toolbar](toolbar.md) | Expressive docked and floating toolbars, horizontal or vertical layouts, colour variants and scroll behavior. |
 
 Google's [toolbar overview](https://m3.material.io/components/toolbars/overview) recommends the
-docked toolbar in place of the bottom app bar. **Floating-toolbar collapse is not done yet:**
-toolbars can hide on scroll (`scrollBehavior: exit`), rather than collapsing a floating toolbar
-into a smaller control or FAB on scroll. Choose the behavior that exists today rather than
-depending on a future update.
+docked toolbar in place of the bottom app bar. Docked toolbars now support scroll collapse with
+`scrollBehavior: 'collapse'`. **Floating-toolbar collapse is not done yet:** floating toolbars
+can hide on scroll with `scrollBehavior: 'exit'`, but `'collapse'` has no effect on them; it does
+not turn a floating toolbar into a smaller control or FAB.
 
 ### Containment
 
