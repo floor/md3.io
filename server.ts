@@ -9,6 +9,7 @@ import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
+import { LAB_SEEDS, LAB_VARIANTS, LAB_SAMPLES, LAB_ROLE_GROUPS } from './src/shared/colour-lab';
 import { comingStyles, stylePages } from './src/server/styles';
 import { builtInThemes } from './src/server/themes';
 import { THEME_ROLES } from 'material/core/theme';
@@ -58,17 +59,17 @@ function page(path: string, title: string, description: string, template: string
   // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
-  const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' ? pagerHtml(chain, path, chain === readingOrder) : '';
+  const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
   // Where the title already names the section, the compact header can drop the breadcrumb.
   // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
   const sectionNamed = section !== '' && title.toLowerCase().includes(section.toLowerCase());
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
-  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'styles-themes' ? 'themes' : isStyles ? 'styles' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, noSidebar: isPrivacy, isCatalog: template === 'catalog', catalogTokens, section, sectionNamed, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : undefined,
+    path, title, description, isHome, noSidebar: isPrivacy, isCatalog: template === 'catalog', catalogTokens, section, sectionNamed, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -211,6 +212,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     response = page(path, 'Themes — material', styleDescription('/styles/themes/'), 'styles-themes', { themes: builtInThemes, roles: THEME_ROLES, selected: linked && themes.includes(linked as never) ? linked : 'baseline', mtrlVersion, themeBase });
   }
   else if (path === '/styles/color/') response = page(path, 'Color — material', styleDescription('/styles/color/'), 'styles-color', { themes, themeTokens, colorGroups, missingGroups, mtrlVersion, pairFor, contrastRatio, AA_TEXT, themeBase });
+  else if (path === '/styles/color-lab/') response = page(path, 'Colour Lab — material', styleDescription('/styles/color-lab/'), 'styles-color-lab', { seeds: LAB_SEEDS, variants: LAB_VARIANTS, samples: LAB_SAMPLES, roleGroups: LAB_ROLE_GROUPS });
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');

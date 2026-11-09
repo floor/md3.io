@@ -212,3 +212,7 @@
 @container (max-width: 480px) {
   .shape-strip, .shape-strip--extras { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 }
+
+.styles-lab-link { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; padding: 24px; margin-top: 28px; background: var(--accent-glow); }
+.styles-lab-link h2 { margin: 6px 0 8px; }
+.styles-lab-link p { max-width: 48ch; color: var(--text-muted); line-height: 1.6; }
