@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -62,15 +62,48 @@ list:
     - { id: jp, headline: Japan }
 ```
 
-A choice emits `select` with `{ item, element, originalEvent }` before the selection moves;
+A choice emits `select` with `{ item, value, element, action, originalEvent, component, preventDefault, defaultPrevented }` before the selection moves;
 `preventDefault()` leaves it where it was. Choosing the selected row again deselects it. The
 web component dispatches `activate` with `{ value }`, then `change` with `{ value, values }`
-when the selection moved. A trailing `control` or `custom` slot holds the app's own control,
-which a click on does not select the row. A trailing control is sized by its content; a
+when the selection moved. A trailing `control` or `custom` slot holds the app's own control; a
+component instance — anything with an `element`, such as `createSwitch({})` — contributes its
+element. A control with no accessible name of its own takes the row's headline as its name and
+the supporting text as its description; a name the app gave always wins. With `trackSelection`,
+a checkable control is the row's action too: a click on the row reaches it, and the row's
+selected state follows the control's. A non-checkable trailing control stays independent, and a
+click on it does not select the row. A trailing control is sized by its content; a
 control that fills its container, such as a slider, is not a list-row control and goes
 outside the row. `renderItem(item, index)` renders a row the app's
 way. The list renders every item; for long or remote data, use
 [vlist](https://vlist.io).
+
+### Single-select listbox (`withSingleSelectListbox`)
+
+For a list where the user picks one option with the WAI-ARIA single-select `listbox` pattern
+(rather than action rows or multi-select checkboxes), wrap a `trackSelection: true, multiSelect: false`
+list with `withSingleSelectListbox` from `material/components/list`:
+
+```typescript
+import { createList, withSingleSelectListbox } from 'material/components/list';
+
+const list = withSingleSelectListbox(
+  createList({
+    ariaLabel: 'Billing cycle',
+    trackSelection: true,
+    multiSelect: false,
+    initialSelection: ['annual'],
+    items: [
+      { id: 'monthly', headline: 'Monthly', supportingText: '$12 / month' },
+      { id: 'annual', headline: 'Annual', supportingText: '$10 / month, billed yearly' },
+    ],
+  }),
+  { indicator: 'leading' }, // 'leading' (default) | 'trailing' — places an inert radio indicator
+);
+```
+
+- **Accessibility (`role="listbox"` / `role="option"`):** Sets `role="listbox"` on the list, `role="option"` with `aria-selected="true" | "false"` on each selectable row, and a single roving `tabindex="0"` stop on the selected (or first enabled) option.
+- **Selection follows focus:** `ArrowDown`, `ArrowUp`, `Home`, `End`, and printable-character typeahead move focus and selection together; `Space`, `Enter`, or pointer click selects the focused or clicked option.
+- **Constraints:** Refuses `multiSelect: true`, rows with interactive secondary actions, and link rows (`href`). Pages that do not import `withSingleSelectListbox` pay `0 B`.
 
 ## API
 
@@ -101,8 +134,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `headline` | `string` | The row's text; `text`, `title` or `name` stand in for it |
 | `overline` / `supportingText` | `string` | The line above and the lines below the headline |
 | `lines` | `1 \| 2 \| 3` | The row's height; inferred from the text without it |
-| `leading` | `ListSlot` | `{ type: 'icon' \| 'avatar' \| 'image' \| 'video' \| 'text' \| 'control' \| 'custom', content }` |
-| `trailing` | `ListSlot` | The same, at the end |
+| `leading` | `ListSlot` | `{ type: 'icon' \| 'avatar' \| 'image' \| 'video' \| 'text' \| 'control' \| 'custom', content }`. A component instance — anything with an `element`, such as `createSwitch({})` — contributes its element |
+| `trailing` | `ListSlot` | The same, at the end. A control with no accessible name of its own takes the row's headline as its name and the supporting text as its description; a name the app gave always wins. With `trackSelection`, a checkable control is the row's action too: a click on the row reaches it, and the row's selected state follows the control's |
 | `selected` / `disabled` | `boolean` | Selected at creation; not selectable |
 | `inset` | `boolean` | A divider lined up with the text |
 
@@ -126,20 +159,26 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `select` | `{ item, value, element, originalEvent, component, preventDefault, defaultPrevented }` | A row was chosen, before the selection moves |
+| `select` | `{ item, value, element, action, originalEvent, component, preventDefault, defaultPrevented }` | A row was chosen, before the selection moves |
 | `load` | `{ items, loading, hasNext, hasPrev, component }` | The items were rendered, at creation and on `refresh()` |
 | `scroll` | `{ event, element, originalEvent }` | The list scrolled |
+
+`element` is always the row; `action` is the row's primary button, the node that carried the
+activation.
 
 ## Accessibility
 
 - The list is a `list` named by `ariaLabel`, each row a `listitem`, a divider a `separator`.
 - A selectable row holds a button named by the headline and described by the supporting text,
   with `aria-pressed` for its selection. With `trackSelection`, each row's action is a button
-  with `aria-pressed`: that is this option's contract and it stays. A listbox of options would
-  be a separate opt-in mode. `Up`, `Down`, `Home` and `End` move between
+  with `aria-pressed`: that is this option's contract and it stays. For a single-select listbox
+  of options (`role="listbox"` and `role="option"` with `aria-selected`), wrap the list with
+  `withSingleSelectListbox`. `Up`, `Down`, `Home` and `End` move between
   the enabled rows; `Enter` or `Space` selects.
 - A disabled row is `aria-disabled` and its button disabled. Leading icons are hidden from
-  assistive tech; a trailing control is the app's to name.
+  assistive tech. A trailing control without a name of its own is named by the row's headline
+  and described by its supporting text; a name the app gives — `ariaLabel`, a label, an
+  `aria-labelledby` — wins.
 
 ## Styling
 

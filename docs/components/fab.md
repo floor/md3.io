@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -43,7 +43,8 @@ fab:
 ### In a corner
 
 `position` fixes the FAB to a corner of the viewport, 16dp from both edges. Leave it unset to
-place the FAB yourself, as in a card, a sheet or a
+place the FAB yourself, as in a card, a sheet, a
+[docked toolbar](/docs/components/toolbar/) or a
 [bottom app bar](/docs/components/bottom-app-bar/).
 
 ```example

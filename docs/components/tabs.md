@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -65,9 +65,33 @@ factory's options, or the id is allocated. Keep a pinned group id to `[A-Za-z0-9
 ```
 
 The factory's row scrolls by default; `scrollable: false` divides it evenly between the tabs
-(fixed tabs). `setupResponsiveBehavior(tabs, { smallScreen: { layout: 'icon-only' } })`, from
-`material/components/tabs`, shows tabs with an icon and a label as icons only below 600px, the
-label kept as their name. The web component takes the tabs, `variant` and the selection.
+(fixed tabs). The web component takes the tabs, `variant` and the selection.
+
+Set the `responsive` option on `createTabs` to switch a tab group's layout on narrow screens.
+The behaviour is a plugin: import `tabsResponsive` from `material/components/tabs/responsive`
+and pass the result as the option.
+
+```typescript
+import { createTabs } from 'material/components/tabs';
+import { tabsResponsive } from 'material/components/tabs/responsive';
+
+const responsiveTabs = createTabs({
+  tabs: [
+    { text: 'Video', value: 'video', icon: videoIcon, state: 'active' },
+    { text: 'Photos', value: 'photos', icon: photoIcon },
+  ],
+  responsive: tabsResponsive({
+    smallScreen: { layout: 'icon-only' },
+    breakpoints: { small: 600 },
+  }),
+});
+```
+
+Below the small breakpoint (600px by default), tabs built with an icon and a label take
+`smallScreen.layout` (`'icon-only'` by default), and the group carries the
+`responsive-small` class while it does. The layout applies while the group is created, so a
+narrow page never paints the built layout first. `setupResponsiveBehavior(tabs, config)` still
+works and is deprecated in favour of the option; it is removed in 4.0.
 
 ## API
 
@@ -83,6 +107,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `scrollable` | `boolean` | `true` | A horizontally scrolling row, 52dp in from both edges. `false` divides the row evenly between the tabs (fixed tabs) |
 | `showDivider` | `boolean` | `true` | The 1dp divider along the bottom of the row |
 | `autoActivate` | `boolean` | `false` | Whether an arrow key also selects the tab it moves to. By default it only moves focus, and Space or Enter selects |
+| `responsive` | `(tabs: TabsComponent) => void` | `undefined` | Responsive layout plugin from `tabsResponsive(config)` in `material/components/tabs/responsive` |
 | `indicator` | `IndicatorConfig` | `{}` | The active indicator (below) |
 | `groupId` | `string` | allocated | The id every tab's id is built from, `tab-<groupId>-<value>`. Pin it when ids must survive a re-render |
 | `on` | `{ change }` | `undefined` | Event handlers registered at creation, as with `on()` |

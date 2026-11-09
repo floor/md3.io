@@ -1,15 +1,15 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
 # Menu
 
 A menu shows a list of choices on a temporary surface, opened from a button or another
-control: an overflow menu, a context menu, the choices behind an icon button. M3 has the
-**baseline** menu and the M3 Expressive **vertical** menu, recommended for new designs. See
-the [M3 menu guidelines](https://m3.material.io/components/menus/overview).
+control: an overflow menu, a context menu, the choices behind an icon button. M3 has the M3
+Expressive **vertical** menu (the default) and the **baseline** menu (`variant: 'baseline'`).
+See the [M3 menu guidelines](https://m3.material.io/components/menus/overview).
 
 ## Usage
 
@@ -46,10 +46,7 @@ menu:
 
 ### The vertical menu
 
-`variant: 'vertical'` is the expressive menu: items sit apart in a rounded container and
-change shape as they are hovered, focused, pressed or selected. `color: 'vibrant'` is
-tertiary-based and more prominent, for sparing use. `supportingText` adds a second line, and
-`{ type: 'gap' }` splits the menu into separate surfaces.
+`variant: 'vertical'` is the default across `createMenu`, `<m-menu>`, nested submenus, and every component that opens a menu (`createSelect`, `createSplitButton`, `createFabMenu({ presentation: 'menu' })`, and the `createToolbar` overflow menu): items sit apart in a `16dp` rounded container (`44dp` item height) and round to `12dp` as they are hovered, focused, pressed, or selected (`tertiary-container` fill without a trailing check mark). `color: 'vibrant'` is tertiary-based and more prominent, for sparing use. `supportingText` adds a second line, and `{ type: 'gap' }` splits the menu into separate surfaces.
 
 ```example
 menu:
@@ -61,6 +58,14 @@ menu:
     - { id: copy, text: Copy link, icon: copyIcon }
     - { type: gap }
     - { id: delete, text: Delete }
+```
+
+Pass `variant: 'baseline'` on a single menu for the `48dp` baseline menu (`4dp` container corners and a trailing check mark on the selected item), or opt out once for the whole app at startup (once at boot on a server, never inside a request handler):
+
+```typescript
+import { setComponentDefaults } from 'material';
+
+setComponentDefaults('menu', { variant: 'baseline' });
 ```
 
 ### A submenu
@@ -98,7 +103,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `opener` | `HTMLElement \| string \| { element }` | required | The element that opens the menu, and that it is placed against |
 | `positionTarget` | `HTMLElement` | the opener | The element the menu is placed against, when it is not the opener |
 | `items` | `MenuContent[]` | `[]` | Items, dividers and gaps |
-| `variant` | `'baseline' \| 'vertical'` | `'baseline'` | `'vertical'` is the M3 Expressive menu |
+| `variant` | `'baseline' \| 'vertical'` | `'vertical'` | `'vertical'` is the M3 Expressive menu (default); `'baseline'` is the 48dp baseline menu (or set globally at boot with `setComponentDefaults('menu', { variant: 'baseline' })`) |
 | `color` | `'standard' \| 'vibrant'` | `'standard'` | The vertical menu's color mapping |
 | `position` | `MenuPosition` | `'bottom-start'` | `top`, `bottom`, `left` or `right` of the opener, alone or with `-start` or `-end` |
 | `offset` | `number` | `0` | Distance from the opener, in pixels |
@@ -114,10 +119,12 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `layer` | `'top'` | `undefined` | The menu stays beside its opener and shows in the top layer, as a popover; `container` is then not used |
 | `manualOpen` | `boolean` | `false` | The opener only places the menu; the app calls `open()` |
 | `listbox` | `boolean` | `false` | The listbox popup of a select-only combobox: `option` items, focus kept by the combobox |
-| `dense` | `boolean` | `false` | Compact items and tighter spacing, for toolbars |
+| `dense` | `boolean` | `false` | Deprecated in 3.11.0 (removed in 4.0): compact items and tighter spacing, for toolbars |
 | `on` | `{ open, close, select }` | `undefined` | Event handlers registered at creation |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
+
+> **Density.** The `dense` option and `dense` attribute are deprecated as of 3.11.0. The library is moving to one density scale, `--mtrl-density`; menus are not part of it, because Material advises against increasing density in focused tasks such as selecting from a menu. `dense` keeps its current behavior and is removed in 4.0.
 
 #### Items
 
@@ -168,6 +175,8 @@ Opening a menu closes any other root menu that is open, whatever opened it; that
   typing a letter moves to the next item starting with it. `Enter` or `Space` chooses.
 - `Right` opens a submenu and `Left` closes it. `Escape` closes the menu and returns focus to
   the opener; `Tab` closes it and moves on.
+- Keyboard focus draws a 3dp inward `secondary` focus ring on the focused item (or on the menu
+  surface when it opens empty); a pointer shows no ring.
 - Disabled items are `aria-disabled`; the selected one is `aria-selected`.
 
 ## Styling

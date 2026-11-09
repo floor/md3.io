@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -109,7 +109,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `expandedRatio` | `number` | `0.15` | Standard groups: the share of its width a pressed button gains; `0` turns the motion off |
 | `variant` | `'filled' \| 'tonal' \| 'outlined' \| 'elevated' \| 'text'` | `'outlined'` | Applied to every button |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Row or column |
-| `density` | `'default' \| 'comfortable' \| 'compact'` | `'default'` | Lowers the height by 4dp per step |
+| `density` | `'default' \| 'comfortable' \| 'compact'` | `'default'` | Lowers the height by 4dp per step (`comfortable` is step `-1` and `compact` is step `-2` on the `--mtrl-density` scale, floored at 32dp with a 48dp hit target; the outer round radius stays half the scaled height) |
 | `disabled` | `boolean` | `false` | Disables the whole group |
 | `equalWidth` | `boolean` | `false` | Gives every button the same width |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
