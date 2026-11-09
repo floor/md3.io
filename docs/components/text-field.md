@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -90,7 +90,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|------|---------|-------------|
 | `type` | `'text' \| 'password' \| 'email' \| 'number' \| 'tel' \| 'url' \| 'search' \| 'multiline'` | `'text'` | Input type; `multiline` renders a `<textarea>` |
 | `variant` | `'filled' \| 'outlined'` | `'filled'` | Container style |
-| `density` | `'default' \| 'compact'` | `'default'` | Field height: 56dp, or 40dp when compact |
+| `density` | `'default' \| 'compact'` | `'default'` | Field height: 56dp, or 40dp when compact (step `-4` on the `--mtrl-density` scale; type and 24dp icons stay unchanged) |
 | `label` | `string` | `undefined` | The floating label |
 | `name` | `string` | `undefined` | The input's `name`, for forms |
 | `value` | `string` | `''` | Initial value |
@@ -101,6 +101,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `maxLength` | `number` | `undefined` | The input's `maxlength`, and a character counter |
 | `pattern` | `string` | `undefined` | The input's validation `pattern` |
 | `autocomplete` | `string` | `undefined` | The input's `autocomplete` token |
+| `inputMode` | `'none' \| 'text' \| 'decimal' \| 'numeric' \| 'tel' \| 'search' \| 'email' \| 'url'` | `undefined` | The input's `inputmode` virtual-keyboard hint (`<m-text-field inputmode>`) |
+| `enterKeyHint` | `'enter' \| 'done' \| 'go' \| 'next' \| 'previous' \| 'search' \| 'send'` | `undefined` | The input's `enterkeyhint` key label (`<m-text-field enterkeyhint>`) |
 | `leadingIcon` | `string` | `undefined` | HTML, usually an SVG, before the input |
 | `trailingIcon` | `string` | `undefined` | HTML after the input |
 | `trailingIconLabel` | `string` | `undefined` | Makes the trailing icon a button with this accessible name, emitting `trailing` when activated; without it the icon is decorative |
@@ -182,8 +184,9 @@ Autofill fires no keystrokes: it is detected and emitted as `input` with
   focuses the input.
 - `aria-describedby` names the supporting text and the counter while they are shown, merged
   with ids you set yourself; `aria-invalid="true"` marks the error state.
-- `name`, `required`, `readonly`, `maxlength`, `pattern` and `autocomplete` reach the native
-  input, so native validation and password managers work.
+- `name`, `required`, `readonly`, `maxlength`, `pattern`, `autocomplete`, `inputmode` and
+  `enterkeyhint` reach the native input, so native validation, password managers and
+  virtual-keyboard hints work.
 - The default placeholder, a single space, is invisible and is not a label; a placeholder you
   pass shows while the field is focused or has no label.
 - Icon HTML is inserted as it is: a clickable reveal or clear icon needs its own
@@ -229,6 +232,24 @@ label and opened by `__outline--notched`. The icon inset is in the stylesheet. A
 width is measured into `--mtrl-text-field-prefix-width` and `--mtrl-text-field-suffix-width`,
 which is why `updatePositions()` exists.
 
+Density (`--mtrl-density` or `density: 'compact'`, the scale's fourth step) changes a
+container's height, never its type or its icons. The text field's `compact` option therefore
+keeps Body Large and 24dp icons. A page that wants the old smaller compact text can apply it in
+CSS:
+
+```css
+.mtrl-text-field--density-compact .mtrl-text-field__input,
+.mtrl-text-field--density-compact .mtrl-text-field__label,
+.mtrl-text-field--density-compact .mtrl-text-field__prefix,
+.mtrl-text-field--density-compact .mtrl-text-field__suffix {
+  font-family: var(--mtrl-sys-typescale-body-medium-font);
+  font-size: var(--mtrl-sys-typescale-body-medium-font-size);
+  line-height: var(--mtrl-sys-typescale-body-medium-line-height);
+  letter-spacing: var(--mtrl-sys-typescale-body-medium-letter-spacing);
+  font-weight: var(--mtrl-sys-typescale-body-medium-font-weight);
+}
+```
+
 ## Measurements
 
 From `_text-field.scss` in material, which names no M3 token for them.
@@ -236,18 +257,17 @@ From `_text-field.scss` in material, which names no M3 token for them.
 | Attribute | Value | Source |
 |-----------|-------|--------|
 | Field height | 56dp | `.mtrl-text-field__input { height }` |
-| Field height, compact | 40dp | `--density-compact` input rule |
+| Field height, compact | 40dp | `--density-compact` (`--mtrl-density: -4`) |
 | Container corner | 4dp | `f.get-shape('extra-small')` |
 | Filled corner | 4dp, top only | the filled variant's `border-radius` |
 | Input padding | 13dp 16dp | `.mtrl-text-field__input { padding }` |
 | Filled input padding | 24dp 16dp 7dp | the filled variant's input rule |
 | Icon | 24dp | the leading and trailing icon rules |
-| Icon, compact | 20dp, 16dp inside it | the `--density-compact` icon rules |
 | Input padding beside an icon | 52dp | the `--with-leading-icon` and `--with-trailing-icon` input rules |
 | Input padding beside an affix | 16dp, plus the affix width and 2dp (the width is 32dp until measured) | `--with-prefix` and `--with-suffix`, `beside-affix` |
 | Active indicator | 1dp at rest, 2dp focused | the filled input's `border-bottom` and `.mtrl-text-field__field::before` |
 | Input type | Body Large | `m.typography('body-large')` |
 | Supporting text type | Body Small | `m.typography('body-small')` |
 | Supporting text row | 4dp above, 16dp each side | `TextFieldDefaults.supportingTextPadding` |
-| Multiline minimum height | 100dp | the `--multiline` input rule |
+| Multiline minimum height | 100dp (84dp floor when compact) | the `--multiline` input rule |
 | Width, unsized | 280dp | Compose `TextFieldDefaults.MinWidth` |

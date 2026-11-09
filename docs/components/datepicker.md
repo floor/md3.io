@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -55,6 +55,11 @@ datepicker:
   dateFormat: DD/MM/YYYY
 ```
 
+`locale` (`<m-datepicker locale>`, default `'en-US'`) sets the BCP 47 locale tag for month and
+weekday names, the first day of the week, `Home`/`End` row navigation, and the default field
+format when `dateFormat` is omitted (editable fields use Gregorian dates and Latin digits so
+displayed values round-trip through input parsing).
+
 ### Read-only
 
 A read-only field keeps its value readable and focusable, as a native `readonly` input does,
@@ -90,7 +95,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `value` | `Date \| string \| [start, end] \| { start, end }` | `undefined` | The initial value; in range mode a pair, and a lone date the one-day range `[d, d]` |
 | `label` | `string` | `'Select date'` | The field's label, and the dialog's title |
 | `minDate` / `maxDate` | `Date \| string` | `undefined` | The first and last selectable dates |
-| `dateFormat` | `string` | `'MM/DD/YYYY'` | How the field shows and reads dates (`YYYY`, `MM`, `M`, `DD`, `D`, `MMM`, `MMMM`) |
+| `locale` | `string` | `'en-US'` | BCP 47 locale tag driving month and weekday names, the first day of the week, and the default `dateFormat` when omitted (`<m-datepicker locale>`) |
+| `dateFormat` | `string` | `'MM/DD/YYYY'` (or from `locale`) | How the field shows and reads dates (`YYYY`, `MM`, `M`, `DD`, `D`, `MMM`, `MMMM`) |
 | `placeholder` | `string` | the format | The field's placeholder |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` | The view the calendar opens on (not in full screen) |
 | `closeOnSelect` | `boolean` | `false` | Commit and close on a selection, without OK |
