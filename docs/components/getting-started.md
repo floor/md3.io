@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-11-05
+updated: 2026-11-10
 status: published
 ---
 
@@ -44,13 +44,26 @@ factories. See [Web Components](../web-components/#many-instances).
 
 ## Add the styles
 
-Every app imports the base stylesheet once: the colour, shape and state tokens, and the
-ripple. The type scale is a second import, `material/styles/typography`.
+Every app loads one base stylesheet. For factories, use the full base; add
+`material/styles/typography` for the type scale:
 
 ```typescript
 import 'material/styles/base';
 import 'material/styles/typography';
 ```
+
+For element and framework applications, choose the base that fits the page:
+
+| Entry | Includes |
+|-------|----------|
+| `material/styles/base` | Theme, tokens, reset, system contrast and global ripple rules; needed for factories and page-level `data-ripple` |
+| `material/styles/base-elements` | Baseline light/dark theme, colour/shape/typeface tokens, reset, cascade order and system contrast (`prefers-contrast: more`); no global ripple rules |
+| `material/styles/base-lite` | Theme, tokens, body theme and reduced-motion switch; no reset, ripple or contrast modes |
+
+Elements carry ripple CSS in their shadow roots, so bundled `base-elements` CSS saves 293 B gzip (970 B raw)
+against `base`. Explicit `data-theme-contrast` still needs `material/styles/contrast`.
+The typography JavaScript entry brings in the full base; [Theming](../theming/#the-baseline)
+explains loading typography CSS separately when keeping the smaller base.
 
 With the **Vanilla** factories, also import each component's stylesheet:
 
@@ -59,7 +72,7 @@ import 'material/styles/button';
 ```
 
 The **web components** and the **framework components** carry their own styles in their
-shadow roots, so the base stylesheet is all they need. With web components, register them once:
+shadow roots, so no page-level component stylesheets are needed. With web components, register them once:
 
 ```typescript
 import 'material/elements/css';

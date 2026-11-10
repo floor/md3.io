@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-09
+updated: 2026-11-10
 status: published
 ---
 
@@ -90,6 +90,41 @@ element than its opener, as the select does with its field; the opener still ope
 gets focus back. With `manualOpen`, the opener only places the menu and the app calls
 `open()`: a context menu at the pointer uses a zero-sized opener it moves there. Recipes such
 as a context menu or a menu inside a dialog are planned for [Examples](/examples/).
+
+### Deferred delivery
+
+Opt in with `createDeferredMenu` from `material/components/menu/deferred` to load the menu
+implementation on demand when code splitting is enabled. Keep `material/styles/menu` loaded normally:
+
+```typescript
+import { createDeferredMenu } from 'material/components/menu/deferred';
+import 'material/styles/menu';
+
+const menuOpener = document.createElement('button');
+menuOpener.textContent = 'Actions';
+document.body.append(menuOpener);
+const deferredMenu = createDeferredMenu({
+  opener: menuOpener, items: [{ id: 'save', text: 'Save' }],
+});
+void deferredMenu.preload().catch(console.error); // optional warm-up; never opens or focuses
+```
+
+The returned `DeferredMenuComponent` accepts open/close requests, queues `setItems`, `setOpener`,
+`setPosition` and `setSelected`, and accepts `open`, `close`, `select` and `loaderror` subscriptions
+before readiness. `element` is `null` until ready; `isReady()` reports readiness, and `preload()`
+returns a `Promise<void>`. During a cold open, `isOpen()` is already `true` while `aria-expanded`
+stays `false`. Closing cancels presentation even if loading finishes later.
+
+Load failures emit `loaderror` with `{ menu, error }` and reject `preload()`; register an error
+handler before opening and catch an awaited preload. Later explicit requests can retry, although
+a browser-cached module failure may need a reload. `destroy()` is terminal: outstanding and future
+preloads reject with `AbortError`.
+
+For elements, `material/elements/menu` exports `defineMenu` and registers nothing on import.
+Applications can defer it together with `material/elements/css/menu`, keeping
+`material/elements/preupgrade/menu.css` loaded before upgrade. Call `defineMenu()` after both
+deferred imports resolve, and await registration before calling element methods. Initially open
+menus use eager registration and ready styles. See [Web Components](../../web-components/).
 
 ## API
 

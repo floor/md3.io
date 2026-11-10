@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-10
 status: published
 description: How the material library is built in layers, from features and component factories to web components and the React, Vue, Svelte and SolidJS components.
 ---
@@ -84,9 +84,15 @@ Styles are plain CSS, written in Sass and compiled. Classes follow BEM, prefixed
 token, a CSS custom property: colour roles (`--mtrl-sys-color-primary`), the type scale
 (`--mtrl-sys-typescale-body-large-font-size`), shapes and state layers.
 
-- `material/styles/base` holds the colour, shape and state tokens and the ripple; every app imports it once.
+- `material/styles/base` is the base for factories and page-level `data-ripple`, including global ripple rules.
+- `material/styles/base-elements` keeps the baseline light/dark theme, colour/shape/typeface tokens,
+  reset, cascade order and system contrast (`prefers-contrast: more`) for element and framework
+  apps. It omits global ripple CSS already carried in each element's shadow root: bundled CSS
+  is 293 B gzip (970 B raw) less than `base`.
+- `material/styles/base-lite` is for element pages omitting the reset and contrast modes;
+  it keeps the theme, tokens, body theme and reduced-motion switch. Choose one base entry.
 - `material/styles/typography` holds the type scale.
-- `material/styles/contrast` and `material/themes/<name>-contrast` are the explicit high-contrast sheets (`data-theme-contrast`). The base and each theme already follow `prefers-contrast`.
+- `material/styles/contrast` and `material/themes/<name>-contrast` supply explicit `data-theme-contrast` attributes. Both `base` and `base-elements`, and each theme, already follow `prefers-contrast`.
 - `material/styles/<component>` is one component's stylesheet, for the factories.
 - `material/themes/<name>` sets the colour roles for another theme, applied with `data-theme` and
   `data-theme-mode` on any element. Most themes are generated from a seed colour with Google's
@@ -94,6 +100,8 @@ token, a CSS custom property: colour roles (`--mtrl-sys-color-primary`), the typ
 
 The rules sit in CSS cascade layers (`mtrl.base`, `mtrl.button` …), so an app's own styles win
 without fighting specificity. [Styles](/styles/) shows every token as `material` ships it.
+The typography JavaScript entry imports the full base; see [Theming](../theming/#the-baseline)
+for keeping the smaller base while loading typography CSS separately.
 
 ## Web components
 
