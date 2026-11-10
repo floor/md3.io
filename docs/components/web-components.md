@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-11-10
 status: published
 ---
 
@@ -35,6 +35,23 @@ defineAll({ prefix: 'md' });
 ```
 
 The page then uses `<md-switch>`, `<md-tabs>`, and so on.
+
+### Deferred menu registration
+
+`material/elements/menu` is a dedicated entry exporting `defineMenu`; importing it registers
+nothing. The eager registration is:
+
+```typescript
+import 'material/elements/css/menu';
+import { defineMenu } from 'material/elements/menu';
+
+defineMenu();
+```
+
+To defer a closed menu, load `material/elements/preupgrade/menu.css` before upgrade, then defer
+both `material/elements/menu` and `material/elements/css/menu`. Call `defineMenu()` when both
+imports resolve; callers must await registration before using element methods. Initially open
+menus need eager registration and ready styles. See [Menu](../components/menu/#deferred-delivery).
 
 ## Attributes and properties
 
@@ -140,7 +157,16 @@ form-associated, as native controls are.
 
 ## Styling from outside
 
-The shadow root keeps the page's CSS out, except what inherits. The base stylesheet and themes
+Use `material/styles/base-elements` for element and framework pages keeping the baseline
+light/dark theme, colour/shape/typeface tokens, reset, cascade order and system contrast
+(`prefers-contrast: more`). Its bundled CSS saves 293 B gzip (970 B raw) against `material/styles/base` by
+omitting global light-DOM ripple rules already carried by each element's shadow root.
+Use `base` for factories or page-level `data-ripple`, or `material/styles/base-lite` for element
+pages omitting the reset and contrast modes. Explicit `data-theme-contrast` still needs
+`material/styles/contrast`. Choose one base; the typography JavaScript entry imports the full
+base, so see [Theming](../theming/#the-baseline) for loading typography CSS separately.
+
+The shadow root keeps the page's CSS out, except what inherits. The chosen base and themes
 stay in the page: the `--mtrl-sys-*` colour, type and shape tokens are custom properties, which
 inherit, so a `data-theme` on an ancestor themes every element in it. A component's own custom
 properties work the same way:

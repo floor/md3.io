@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-05
+updated: 2026-11-10
 status: published
 ---
 
@@ -41,7 +41,11 @@ card:
 ### Clickable
 
 `clickable` makes the whole card a button: it is in the tab order, `Enter` and `Space` click
-it, and a press shows the ripple. Keep other controls out of a clickable card.
+it, and a press shows the ripple. By default, keep other controls out of a clickable card.
+Opt in with `promoteChildActions: true` (`promote-child-actions` on `<m-card>`) to let a clickable
+card containing child actions become an `article` container. The card leaves the tab order;
+its child controls remain keyboard reachable, activating a child does not activate the card,
+and the development warning stays off. The option defaults to `false`.
 
 ```example
 card:
@@ -49,6 +53,15 @@ card:
   clickable: true
   header: { title: Unsaved changes }
   content: { text: Your edits have not been published yet. }
+```
+
+```typescript
+import { createCard } from 'material';
+
+const childActionCard = createCard({
+  clickable: true, promoteChildActions: true, buttons: [{ text: 'Read more' }],
+});
+document.body.append(childActionCard.element);
 ```
 
 A card has no width of its own: it fills the column, grid cell or flex track it is in, as the
@@ -157,6 +170,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|------|---------|-------------|
 | `variant` | `'elevated' \| 'filled' \| 'outlined'` | `'elevated'` | Card variant |
 | `clickable` | `boolean` | `false` | A button: ripple, `Enter` and `Space`, and the `click` event |
+| `promoteChildActions` | `boolean` | `false` | Opt in so a clickable card with child actions becomes an article container (`promote-child-actions` on `<m-card>`) |
 | `interactive` | `boolean` | `false` | Hover and press states only: no role, no tab stop, no key handling |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `draggable` | `boolean` | `false` | HTML drag, with elevation while dragged and `dragstart` / `dragend` |
@@ -202,14 +216,17 @@ The web component's activation is the native `click`.
 
 ## Accessibility
 
-- The card is an `article`, or a `button` with a tab stop that answers `Enter` and `Space`
-  when it is clickable. `interactive` alone changes only the hover and press states: the card
-  keeps the `article` role and takes no focus.
+- A card is an `article`, or a `button` with a tab stop for `Enter` and `Space` when clickable
+  without promoted child actions. `interactive` alone changes hover and press states; the card
+  remains an `article` and takes no focus.
 - The headline is an `h3` and names the article; `aria.label` or `aria.labelledby` overrides it.
   The subtitle is a paragraph, and the header and content carry no role of their own.
 - `makeDraggable()` keeps `aria-grabbed` in step during a drag; `draggable: true` does not set
   it.
-- A clickable card is one control: buttons inside it are not reachable as their own.
+- A clickable card is one control by default. With `promoteChildActions: true` (or
+  `promote-child-actions` on `<m-card>`), child actions make it an `article` with no card tab stop:
+  Tab reaches the children, child activation does not activate the card, and no development
+  warning is emitted.
 
 ## Styling
 

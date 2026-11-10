@@ -1,6 +1,6 @@
 {
-  "material": "3.10.1",
-  "measured": "2026-11-09",
+  "material": "3.11.0",
+  "measured": "2026-11-10",
   "gzip": 9,
   "core": {
     "factory": 15788,
@@ -93,9 +93,9 @@
     },
     "checkbox": {
       "factory": {
-        "alone": 10124,
+        "alone": 10123,
         "lazy": 0,
-        "added": 2220
+        "added": 2219
       },
       "element": {
         "alone": 14719,
@@ -309,14 +309,14 @@
     },
     "card": {
       "factory": {
-        "alone": 13592,
-        "lazy": 10384,
-        "added": 6443
+        "alone": 13679,
+        "lazy": 10386,
+        "added": 6515
       },
       "element": {
-        "alone": 18850,
-        "lazy": 10372,
-        "added": 7667
+        "alone": 18956,
+        "lazy": 10371,
+        "added": 7777
       }
     },
     "list": {

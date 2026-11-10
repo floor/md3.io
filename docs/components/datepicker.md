@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-09
+updated: 2026-11-10
 status: published
 ---
 
@@ -80,6 +80,25 @@ factory's `specialDates` marks dates, or makes them unselectable, each with an o
 Months swipe horizontally, by touch, trackpad or mouse wheel, and the arrows slide the same
 way. Tapping the year opens every year from `minDate` to `maxDate` (1900 to 2100 without
 limits). Full screen, the months are one vertical list that grows as it scrolls.
+
+### Deferred calendar
+
+`createDeferredDatePicker` from `material/components/datepicker/deferred` is an opt-in entry
+with the same `DatePickerConfig` and `DatePickerComponent` contract:
+
+```typescript
+import { createDeferredDatePicker } from 'material/components/datepicker/deferred';
+import 'material/styles/datepicker';
+
+const deferredPicker = createDeferredDatePicker({ label: 'Departure', variant: 'modal' });
+document.body.append(deferredPicker.element);
+```
+
+The field and trigger are built immediately. With code splitting enabled, the calendar chunk
+loads on the first open, or earlier on `pointerenter` or `focus` on the trigger. `isOpen()` and
+the open/close state and events remain synchronous. Until the calendar arrives, `aria-expanded`
+stays `false` and a modal dialog takes its name from `label` through `aria-label`; focus enters
+the calendar only when ready. A `close()` while loading keeps it closed when the chunk lands.
 
 ## API
 
@@ -184,6 +203,6 @@ From the M3 date picker specs and their tokens:
 | Full screen | The viewport, no corners or elevation, a 128dp header with close (x) and Save, subheads Title Small |
 | Weekdays and days | 48dp cells, Body Large; a 40dp round selection |
 | Selected | `primary` with `on-primary` text; today has a 1dp `primary` outline |
-| Range | A 40dp `secondary-container` band |
+| Range | A 40dp `secondary-container` band, continuous across visible adjacent-month days including endpoints; outside-month text stays muted |
 | Years | 3 columns, 72 × 36dp items |
 | Motion | The months slide; the dialog fades in |

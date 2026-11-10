@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-11-09
+updated: 2026-11-10
 status: published
 ---
 
@@ -18,7 +18,7 @@ palette. [Styles › Color](/styles/color/) shows them all, in every shipped the
 
 ## The baseline
 
-The base stylesheet, which every app imports once, holds M3's baseline theme (primary
+The base stylesheet, loaded once per page, holds M3's baseline theme (primary
 `#6750A4`) on `:root`, with the shape and state tokens. The type scale is
 `material/styles/typography`:
 
@@ -28,6 +28,20 @@ import 'material/styles/typography';
 ```
 
 With nothing else, the whole page uses the baseline, light or dark as the system prefers.
+
+Choose one base entry for the application:
+
+| Entry | Use when |
+|-------|----------|
+| `material/styles/base` | Using factories or page-level `data-ripple`; includes the global light-DOM ripple rules |
+| `material/styles/base-elements` | Using elements or framework adapters, keeping the reset and system contrast response without global ripple rules |
+| `material/styles/base-lite` | Using element pages that omit the reset and contrast modes |
+
+`base-elements` keeps the baseline light/dark theme, colour, shape and typeface tokens, reset,
+cascade layer order and `prefers-contrast: more` response. Each custom element already carries
+its ripple rules inside its shadow root. In a Bun-minified bundle (gzip level 9), its CSS is
+293 B gzip (970 B raw) smaller than `base`. Explicit `data-theme-contrast` attributes still need `material/styles/contrast`.
+`base-lite` keeps the theme, tokens, body theme and reduced-motion switch, but no contrast modes.
 
 The base holds only the three body-medium tokens the page's text reads
 (`--mtrl-sys-typescale-body-medium-font`, `-font-size` and `-line-height`). Import the
@@ -41,6 +55,10 @@ later one wins. The import takes care of it, because the module imports the base
 your bundler splits the two into different chunks, make sure the base's CSS loads first: an
 import order is not a CSS order in every bundler. With `<link>` tags, put
 `dist/styles/typography.css` after `dist/styles/base.css`.
+
+The `material/styles/typography` JavaScript entry imports the full base, so it removes the
+`base-elements` saving. To retain the smaller base with typography, serve the standalone
+`dist/styles/typography.css` after your chosen base CSS instead.
 
 ## Another theme
 
