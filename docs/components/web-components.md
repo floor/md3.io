@@ -181,6 +181,55 @@ The host is the box you lay out: `inline-block` unless the component is a block,
 card. A text field fills the width you give it. Selectors can't reach inside, and the elements
 expose no `::part` yet: the custom properties are the styling surface.
 
+### Application-compiled element styles
+
+To opt custom elements into the Sass typography role-fallback profile (`$typescale-tokens: true`),
+or configure `$tag-prefix` and `$contrast-emit` once through `material/src/styles/config` (see
+[Theming](../theming/#typography-role-fallbacks)):
+
+1. Compile matching pre-upgrade CSS through `material/src/styles/preupgrade` (which includes the
+   `mtrl.preupgrade` layer and linked-SSR rollback; add `$tag-prefix: "md"` when registering
+   elements under `{ prefix: 'md' }`):
+
+   ```scss
+   @use "material/src/styles/config" with ($typescale-tokens: true);
+   @use "material/src/styles/preupgrade";
+   ```
+
+2. Compile each required shadow style key through the experimental `material/src/styles/element-styles`
+   entry:
+
+   ```scss
+   @use "material/src/styles/config" with ($typescale-tokens: true);
+   @use "material/src/styles/element-styles" with ($name: "button");
+   ```
+
+3. Load `material/styles/base-elements` and register every required key (`ripple`, `progress` and
+   `button` for a button; other elements require their own complete key set) with `registerStyles`
+   before calling `defineButton()`:
+
+   ```typescript fragment
+   import 'material/styles/base-elements';
+   import { defineButton, registerStyles } from 'material/elements';
+
+   const names = ['ripple', 'progress', 'button'];
+   const sheets = await Promise.all(names.map(async name => {
+     const response = await fetch(`/app-css/${name}.css`);
+     if (!response.ok) throw new Error(`Cannot load ${name} styles`);
+     return [name, await response.text()];
+   }));
+   registerStyles(Object.fromEntries(sheets));
+   defineButton();
+   ```
+
+Role properties (`--mtrl-sys-typescale-<role>-*`) inherit through element hosts into shadow roots.
+Applications own the compiled files, their loading and the additional CSS cost. Register styles
+before defining or creating elements — later `registerStyles` calls do not replace sheets already
+adopted by existing shadow roots. Normal framework adapter entries keep their default CSS imports.
+For linked SSR (`styles: 'link'`), point `cssBase` at the app-compiled shadow CSS directory while
+supplying component dependencies and unchanged host sheets from `dist/elements/css` (default inline
+SSR retains its default CSS).
+
 ## Server-rendered HTML
 
 Until its script defines it, an element is the markup the server sent, unstyled. The pre-upgrade
@@ -194,7 +243,8 @@ them in the `<head>` so they apply from the first paint:
 ```
 
 The file is `material/elements/preupgrade.css`: serve a copy, or import it where your bundler handles
-CSS. It is built for `m-`; for another prefix, build the rules on the server and inline them:
+CSS. It is built for `m-`; for another prefix, build the rules on the server and inline them, or
+compile `material/src/styles/preupgrade` with `material/src/styles/config` in Sass:
 
 ```typescript
 import { preupgradeStyles } from 'material/elements/preupgrade';

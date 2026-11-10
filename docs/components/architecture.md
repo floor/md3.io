@@ -103,6 +103,12 @@ without fighting specificity. [Styles](/styles/) shows every token as `material`
 The typography JavaScript entry imports the full base; see [Theming](../theming/#the-baseline)
 for keeping the smaller base while loading typography CSS separately.
 
+For token provenance and Sass builds, `material/core/theme` exports frozen `THEME_ORIGINS` records
+and `BASELINE_SEED` for all 20 built-in themes, `material/src/styles/config` provides a
+configure-once Sass gateway (including opt-in `$typescale-tokens: true` role fallbacks), and
+`material/tokens/catalogue.json` (`material/tokens/catalogue.schema.json`) ships a build-tool
+token catalogue with verification states and reason codes; see [Theming](../theming/).
+
 ## Web components
 
 Each web component is declared by a spec that maps its attributes and properties to the
