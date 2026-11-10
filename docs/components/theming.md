@@ -127,6 +127,36 @@ The full stylesheet, `material/styles`, already contains the baseline, `material
 high contrast, so with it only the scheme variants need an import. Explicit contrast is still
 the separate `contrast` and `<name>-contrast` stylesheets.
 
+### Theme origins
+
+`material/core/theme` exports `BASELINE_SEED` (`'#6750a4'`), `THEME_ORIGINS`, `BuiltInThemeName`
+and the readonly origin types (`ThemeOrigin`, `GeneratedThemeOrigin`, `BaselineThemeOrigin`,
+`AuthoredThemeOrigin`, `ThemeOriginVariant`) describing how the standard palette of each of the 20
+built-in themes came to be:
+
+```typescript
+import { BASELINE_SEED, THEME_ORIGINS, type BuiltInThemeName } from 'material/core/theme';
+
+const origin = THEME_ORIGINS['desert' as BuiltInThemeName];
+// { kind: 'generated', seed: '#9a7a3e', variant: 'tonal-spot', contrast: 0, secondary: '#4a87c4' }
+```
+
+Each record uses one of three shapes:
+
+- **`generated`:** carries `seed`, `variant`, the generator's nominal `contrast` input (`0` for
+  standard, `1` for `highcontrast`), and any extra `secondary` or `tertiary` seed.
+- **`baseline`:** `{ kind: 'baseline', seed: '#6750a4', variant: 'tonal-spot', contrast: 0 }` —
+  records its documented seed association while its standard palette is maintained as published
+  tokens.
+- **`authored`:** carries its documented source `seed` where recorded (`forest`, `ocean`, `spring`,
+  `sunset`) and `null` where none is recorded (`autumn`), with `variant: null` and `contrast: null`
+  rather than inventing an unverified recipe.
+
+Existing palette values and theme selection are unchanged, and user contrast preferences do not
+mutate these records. This is provenance data, not an active-theme detector or a promise that every
+palette can be regenerated from its record. The constants live on `material/core/theme` (not root or
+`material/core`), and `THEME_ORIGINS` and its records are frozen and tree-shakeable when unused.
+
 ## Contrast
 
 Every theme supports three contrast levels. `data-theme-contrast="standard"`, `"medium"` or
@@ -427,9 +457,131 @@ component there: factories and web components alike.
 }
 ```
 
-Sizes, weights and state-layer opacities stay M3's in the components, and a few components still
-draw their own corners (a dialog, a tooltip, a menu). [Styles › Typography](/styles/typography/)
-shows the whole type scale.
+In the prebuilt stylesheets, component type sizes, weights and state-layer opacities stay fixed to
+M3's values, and a few components still draw their own corners (a dialog, a tooltip, a menu).
+[Styles › Typography](/styles/typography/) shows the whole type scale.
+
+### Typography role fallbacks
+
+An application that compiles `material`'s Sass sources can opt into `$typescale-tokens: true` so
+component text consumes the `--mtrl-sys-typescale-<role>-*` custom properties for `font`,
+`font-size`, `line-height`, `letter-spacing` and `font-weight`. Each property retains its existing
+value as fallback, and role fonts fall back through `--mtrl-ref-typeface-brand` or
+`--mtrl-ref-typeface-plain` to the compiled family:
+
+```scss
+@use "material/src/styles/config" with ($typescale-tokens: true);
+@use "material/src/styles/main";
+```
+
+Compile the application stylesheet with Dart Sass and `node_modules` on the load path:
+
+```sh
+sass --load-path=node_modules app.scss app.css
+```
+
+Override only the role properties the application wants to customize:
+
+```css
+.application {
+  --mtrl-sys-typescale-label-large-font-size: 18px;
+  --mtrl-sys-typescale-label-large-font-weight: 600;
+}
+```
+
+- **Default profile preserved:** `$typescale-tokens` defaults to `false`; omitting it or passing
+  `false` preserves the existing CSS, and there is no duplicate prebuilt stylesheet family.
+  Prebuilt styles, normal framework adapter entries and default inline server rendering keep their
+  current profile.
+- **Partial overrides and CSS cascade:** no complete token sheet is required. Missing properties use
+  their fallbacks, while values of the wrong CSS type follow normal CSS invalid-value behavior. A
+  role font inherited after resolving on an ancestor keeps that ancestor's value — set the role
+  font on the intended scope when changing its reference face.
+- **Component details:** badge text consumes its size, line-height and weight properties while
+  hidden text and dots keep zero font size; button-group pre-upgrade items use the same size role
+  as their upgraded buttons.
+- **Custom elements:** compile matching pre-upgrade CSS (`material/src/styles/preupgrade`) and
+  shadow style keys (experimental `material/src/styles/element-styles`); see
+  [Web Components](../web-components/#application-compiled-element-styles).
+
+## Sass configuration
+
+`material/src/styles/config` is a shared configuration gateway that emits zero CSS. Configure it
+once before any Material Sass import in a compilation (`themes/*`, `main`, `elements`,
+`preupgrade`, `element-styles`, or selective sheets); subsequent entries inherit the choices via
+plain `@use` without another `with (...)` clause:
+
+```scss
+@use "material/src/styles/config" with (
+  $contrast-emit: preference,
+  $tag-prefix: "app",
+  $direction-arms: true
+);
+@use "material/src/styles/themes/ocean";
+@use "material/src/styles/main";
+@use "material/src/styles/elements";
+```
+
+| Switch | Default | Documented behavior |
+|--------|---------|---------------------|
+| `$contrast-emit` | `all` | Selects `all`, `explicit`, `preference` or `none` contrast-rule emission. |
+| `$tag-prefix` | `"m"` | Sets the tag prefix for undefined custom-element rules. |
+| `$direction-arms` | `false` | When truthy, emits physical direction arms for a bundler's CSS pipeline. |
+| `$typescale-tokens` | `false` | Enables the application typography profile above. |
+| `$spring-tokens` | `false` | Stores a boolean configuration value only; spring emission is not delivered by the gateway itself. |
+
+Omitting configuration preserves existing output, and loading the gateway alone adds no CSS. Both
+token flags are boolean; token maps are not a supported public configuration surface (use CSS
+custom properties for token values). Configuring after a dependency has loaded, or configuring both
+the gateway and a later entry with `with (...)`, produces Sass's standard already-loaded error.
+Standalone direct contrast (`material/src/styles/themes` or `material/src/styles/main`) and
+tag-prefix (`material/src/styles/elements`) configuration remains supported when used
+independently.
+
+## Token catalogue
+
+`material/tokens/catalogue.json` and `material/tokens/catalogue.schema.json` (packed at
+`dist/tokens/catalogue.json` and `dist/tokens/catalogue.schema.json`) provide optional static JSON
+describing the installed build's custom-property mappings and verification state. Resolve the
+public package entries in build tooling rather than deep-importing `dist`:
+
+```typescript fragment
+import { readFileSync } from 'node:fs';
+
+const path = Bun.resolveSync('material/tokens/catalogue.json', process.cwd());
+const catalogue = JSON.parse(readFileSync(path, 'utf8'));
+const verified = catalogue.tokens.filter((row: { verification: string }) => row.verification === 'verified');
+```
+
+The packed document uses schema version **2** (`schemaVersion: 2`) and records `catalogueRevision`,
+`packageVersion`, `sourceCommit`, `inputsDigest`, `emissionsDigest`, the root `reasons` legend, the
+retained `sources` ledger, `tokens` rows and `gaps`. Each token row carries its `cssName`,
+Material's `m3Id` where evidenced, `family`, `group`, `verification` state, `reason` code and
+`source` reference:
+
+```json
+{
+  "cssName": "--mtrl-sys-shape-corner-large",
+  "m3Id": null,
+  "family": "system",
+  "group": "shape",
+  "verification": "verified",
+  "reason": "shape-step-dp",
+  "source": "m3-shape-scale"
+}
+```
+
+- **Build-tool data only:** no runtime code or stylesheet imports the catalogue, so it adds `0 B`
+  to any JavaScript or CSS import unless an application explicitly bundles it.
+- **Verification states:** `verified` requires retained Material source evidence, matching emitted
+  CSS across every emission context, and passing browser assertions; `unverified` retains its
+  reason code resolved through the root `reasons` legend; `not-applicable` identifies
+  library-internal properties; `gaps` list candidates deliberately not emitted. None of these
+  states is a blanket component-conformance certificate, and exact colour values are not
+  universally verified merely because semantic role context is recorded.
+- **Lean public projection:** detailed emission contexts, complete consumer attribution and
+  assertion citations are generated as CI review artifacts and not shipped in the public package.
+  Prefer reading counts from the document over hardcoding integration counts.
 
 ## Density
 

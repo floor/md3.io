@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-05
+updated: 2026-11-10
 status: published
 ---
 
@@ -52,7 +52,9 @@ tooltip:
 
 `setTarget()` moves a tooltip to another element, so one tooltip can serve a list. `layer:
 'top'` shows it in the browser's top layer, above any clipping or stacking; the web component
-always is.
+always is. When a tooltip's target opens a menu, pressing the target or pressing `Enter` or `Space`
+hides the tooltip at once; it stays hidden while the target's menu is open and returns only on a
+hover or focus after the menu closes.
 
 ## API
 
