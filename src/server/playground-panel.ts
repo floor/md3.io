@@ -97,7 +97,7 @@ function frameworkLogo(id: string): string {
  * framework's logo, Factory for the vanilla entry (its id stays 'vanilla', so a choice
  * saved anywhere still applies). Six choices are past the five a segmented button takes,
  * and M3 points to chips beyond that (segmented-buttons guidelines, read 2026-11-18).
- * Shared by the component playgrounds and the Examples pages; `available` says which
+ * Shared by the component playgrounds and the Showcase pages; `available` says which
  * frameworks a page offers (the others are disabled).
  */
 export function frameworkChips(available: (id: string) => boolean): string {

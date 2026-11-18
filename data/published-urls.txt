@@ -106,9 +106,9 @@
 /docs/why-material/
 /examples/
 /examples/settings/
+/privacy/
 /showcase/
 /showcase/settings/
-/privacy/
 /styles/
 /styles/color/
 /styles/color-lab/

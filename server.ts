@@ -93,7 +93,7 @@ function page(path: string, title: string, description: string, template: string
   const isPrivacy = template === 'privacy';
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isPrivacy ? [] : componentGroups;
   // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
-  // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
+  // component docs lead to Styles, Styles to the Showcase. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
@@ -130,7 +130,7 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
 const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
-/** The reading order across sections, a cycle: the documentation, Styles, Examples, and back. */
+/** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
