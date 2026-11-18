@@ -2,10 +2,13 @@
 // choice persists and the URL carries the framework; the frame follows the site's
 // appearance (the header).
 import { applyTheme } from './theme-sheets';
+import 'material/elements/css/chips';
+import { defineChips } from 'material/elements';
 import { onAppearance } from './appearance';
 import { copyText } from './site';
 import { mountDeviceFrame } from './device-frame';
 
+defineChips();
 const page = document.querySelector<HTMLElement>('.example-page');
 if (page) {
   const slug = page.dataset.example!;
@@ -13,44 +16,45 @@ if (page) {
   const status = document.querySelector<HTMLElement>('#example-status')!;
   // Mobile, Tablet or Desktop: the frame at that device's size (src/client/device-frame.ts).
   mountDeviceFrame(frame, { label: 'Example device' });
-  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
+  // The framework chips (material's filter chip set, server-rendered; the same picker as
+  // the component playgrounds): a chip's change switches the frame and its source.
+  const chips = document.querySelector<HTMLElement & { value: unknown }>('m-chips.framework-chips');
+  const chipFor = (id: string) => chips?.querySelector<HTMLElement>(`m-chip[value="${CSS.escape(id)}"]`);
+  const offered = (id: string | null) => !!id && !!chipFor(id) && !chipFor(id)!.hasAttribute('disabled');
+  const first = chips?.querySelector<HTMLElement>('m-chip:not([disabled])')?.getAttribute('value') ?? 'vanilla';
   const FRAMEWORK = 'md3-example-framework';
+  let current = '';
 
-  const select = (id: string, focus = false): void => {
-    const tab = tabs.find(t => t.dataset.framework === id) ?? tabs[0]!;
-    for (const t of tabs) {
-      const on = t === tab;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
+  const select = (id: string): void => {
+    const framework = offered(id) ? id : first;
+    if (framework === current) return;
+    current = framework;
+    if (chips) {
+      if (chips.matches(':defined')) { if (String(chips.value) !== framework) chips.value = framework; }
+      else chips.setAttribute('value', framework);
     }
-    if (focus) tab.focus();
-    const framework = tab.dataset.framework!;
+    const label = chipFor(framework)?.textContent?.trim() ?? framework;
     const src = `/examples/${slug}/frame/${framework}/`;
     if (!frame.src.endsWith(src)) frame.src = src;
-    frame.title = `${page.querySelector('h1')?.textContent} — ${tab.textContent}`;
+    frame.title = `${page.querySelector('h1')?.textContent} — ${label}`;
     for (const source of document.querySelectorAll<HTMLElement>('.example-source')) source.hidden = source.dataset.framework !== framework;
     for (const size of document.querySelectorAll<HTMLElement>('.example-sizes > div')) size.classList.toggle('is-current', size.dataset.framework === framework);
-    status.textContent = `Running the ${tab.textContent} version`;
+    status.textContent = `Running the ${label} version`;
     const url = new URL(location.href);
     url.searchParams.set('framework', framework);
     history.replaceState(null, '', url);
     try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ }
   };
 
-  tabs.forEach((tab, i) => {
-    tab.addEventListener('click', () => select(tab.dataset.framework!));
-    tab.addEventListener('keydown', event => {
-      const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-      const target = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : step ? (i + step + tabs.length) % tabs.length : -1;
-      if (target < 0) return;
-      event.preventDefault();
-      select(tabs[target]!.dataset.framework!, true);
-    });
+  chips?.addEventListener('change', event => {
+    const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? chips.value;
+    const id = String(Array.isArray(value) ? value[0] ?? '' : value ?? '');
+    if (id) select(id);
   });
 
   let initial = new URLSearchParams(location.search).get('framework');
   try { initial ??= localStorage.getItem(FRAMEWORK); } catch { /* Storage may be unavailable. */ }
-  select(initial ?? tabs[0]!.dataset.framework!);
+  select(initial ?? first);
 
   // File tabs and copy, per framework.
   for (const source of document.querySelectorAll<HTMLElement>('.example-source')) {

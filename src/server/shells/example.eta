@@ -1,10 +1,5 @@
 <div class="page-wrap example-page" data-example="<%= it.example.slug %>">
-  <nav class="framework-tabs" role="tablist" aria-label="Framework">
-  <% it.variants.forEach((variant, i) => { %>
-    <button type="button" class="framework-tab" role="tab" id="tab-<%= variant.id %>" data-framework="<%= variant.id %>"
-      aria-selected="<%= i === 0 ? 'true' : 'false' %>" aria-controls="example-frame" <%= i === 0 ? '' : 'tabindex="-1"' %>><%= variant.label %></button>
-  <% }); %>
-  </nav>
+  <%/* The framework chips, as on the component pages; the row carries the material scope. */%><div class="framework-chips-row playground--material"><%~ it.frameworks %></div>
   <header class="page-heading"><h1><%= it.example.title %></h1><p><%= it.example.description %></p></header>
   <div class="example-layout">
     <div class="example-main">

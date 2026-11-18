@@ -7,7 +7,7 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, linkedStylesheets, materialPanel, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -240,7 +240,7 @@ export async function handleRequest(request: Request): Promise<Response> {
         ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes });
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)) });
   }
   else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, themeSheets, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
   else if (path === '/styles/') response = page(path, 'Styles — material', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });

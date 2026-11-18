@@ -92,6 +92,20 @@ function frameworkLogo(id: string): string {
   return svg;
 }
 
+/**
+ * The framework picker: material's single-select filter chip set, each chip with its
+ * framework's logo, Factory for the vanilla entry (its id stays 'vanilla', so a choice
+ * saved anywhere still applies). Six choices are past the five a segmented button takes,
+ * and M3 points to chips beyond that (segmented-buttons guidelines, read 2026-11-18).
+ * Shared by the component playgrounds and the Examples pages; `available` says which
+ * frameworks a page offers (the others are disabled).
+ */
+export function frameworkChips(available: (id: string) => boolean): string {
+  const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
+  return renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
+    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}" icon="${escape(frameworkLogo(id))}"${available(id) ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
+}
+
 /** An icon's name as a select option reads it: calendarToday → calendar today, none → none. */
 const iconName = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
@@ -210,12 +224,7 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // The vanilla entry reads Factory here: what it gives is the library's
   // factories (createButton()), the size readout's own word for it. Its id stays
   // 'vanilla', so a choice saved on another page still applies.
-  const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
-  // Each chip leads with its framework's logo (icons/brands/, sources in SOURCES.md):
-  // M3's chips "can contain a logo, icon, or circular image" (chips guidelines, read
-  // 2026-11-18).
-  const frameworks = renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
-    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}" icon="${escape(frameworkLogo(id))}"${hasElement || id === 'vanilla' ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
+  const frameworks = frameworkChips(id => hasElement || id === 'vanilla');
   // Live preview / View code.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), renderStyles);

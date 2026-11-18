@@ -189,3 +189,9 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .framework-tab:disabled { opacity: .45; cursor: not-allowed; }
 .framework-tab:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .framework-note { margin: 12px 18px 0; color: var(--text-dim); font-size: var(--fs-sm); }
+
+/* The framework chips (component playgrounds and Examples pages): the row above the
+   page heading, and the logos' near-black ink lightened on a dark page
+   (playground-panel.ts frameworkChips / frameworkLogo). */
+.framework-chips-row { margin-bottom: 18px; min-width: 0; }
+:root[data-theme-mode="dark"] .framework-chips-row { --brand-ink: #e6e1e5; }

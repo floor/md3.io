@@ -34,11 +34,6 @@
    labels included, so the rows read as one column. */
 .playground--material .control-label { font-size: var(--fs-md); font-weight: var(--fw-normal); }
 
-/* The framework chips take the native tabs' place and spacing above the page
-   heading (site.css .framework-tabs). The set scrolls sideways when the row is
-   narrower than its six chips, as M3's chip sets do, instead of wrapping. */
-.framework-chips-row { margin-bottom: 18px; min-width: 0; }
-
 /* Slider rows: material's slider takes the space beside the numeric read-out, as
    the native range input did (site.css .control-range is a flex row; a block host
    without a basis collapses to nothing in it). */
@@ -54,10 +49,6 @@
 .playground--material m-datepicker[data-panel-picker]::part(anchor),
 .playground--material m-datepicker[data-panel-picker]::part(help),
 .playground--material m-datepicker[data-panel-picker]::part(error) { display: none; }
-
-/* The framework logos' near-black ink (the Web Components logo's C) turns light on a
-   dark page, where black on the dark chip would vanish (playground-panel.ts frameworkLogo). */
-:root[data-theme-mode="dark"] .framework-chips-row { --brand-ink: #e6e1e5; }
 
 /* The panel on material's surface roles, from the chosen theme (its scope carries the
    theme): surface-container-low, M3's role for a pane beside the content, with the
