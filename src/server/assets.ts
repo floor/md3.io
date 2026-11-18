@@ -25,9 +25,11 @@ export const CHUNK_HASH = /(?:^|\/)chunk-[0-9a-z]+\.js$/;
  * `/dist/mtrl/…` is the old tree (see server.ts): it always takes the short cache,
  * even when the file it aliases has a hash in its name.
  */
+/** material's element stylesheets, copied into a folder named for their content (scripts/build.ts). */
+export const ELEMENT_CSS = /^\/dist\/element-css\/[a-f0-9]{10}\//;
 export function isImmutableAsset(urlPath: string): boolean {
   if (urlPath.startsWith('/dist/mtrl/')) return false;
-  return urlPath.startsWith('/fonts/') || CONTENT_HASH.test(urlPath) || CHUNK_HASH.test(urlPath);
+  return urlPath.startsWith('/fonts/') || CONTENT_HASH.test(urlPath) || CHUNK_HASH.test(urlPath) || ELEMENT_CSS.test(urlPath);
 }
 
 export function loadAssetManifest(): Record<string, string> {
