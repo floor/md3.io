@@ -14,6 +14,7 @@
 // is still the site's own (styles/playground-material.css).
 import { renderElement } from 'material/ssr';
 import { componentIcons } from '../shared/components';
+import { FRAMEWORKS } from '../shared/frameworks';
 import type { ComponentDefinition, Control } from '../shared/content/types';
 import { scopedTokensSiteDefault } from './tokens';
 
@@ -94,7 +95,24 @@ function materialControl(control: Control, slug: string): string {
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[]): { tabs: string; appearance: string; scenario: string | null; sections: string } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string | null; sections: string } {
+  // The framework picker above the heading: a single-select filter chip set.
+  // Six choices are past the five a segmented button (now the connected button
+  // group) takes, and M3 points to chips beyond that; single choice is a filter
+  // chip's job since choice chips folded into filter chips. Read 2026-11-18:
+  // https://m3.material.io/components/segmented-buttons/guidelines ("Don't use
+  // more than five segments … consider using another component, such as chips")
+  // https://m3.material.io/components/chips/overview ("Choice chips are now a
+  // subset of filter chips"). No chip is selected on the server, as no native
+  // tab was: the client selects the saved framework (Vanilla by default), so a
+  // remembered choice never flashes Vanilla first. Without the component's web
+  // component only the factory is available, as on the native tabs.
+  // The vanilla entry reads Factory here: what it gives is the library's
+  // factories (createButton()), the size readout's own word for it. Its id stays
+  // 'vanilla', so a choice saved on another page still applies.
+  const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
+  const frameworks = renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
+    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}"${hasElement || id === 'vanilla' ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), { styles: 'inline' });
   // Live preview / View code. The framework tabs above stay native in the pilot.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), { styles: 'inline' });
@@ -119,5 +137,5 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // No Reset button: the Scenario select is the way back. Choosing Default applies
   // the playground's starting options, which is all Reset restored (the theme and
   // mode were already kept), so the panel opens on the scenario row.
-  return { tabs, appearance, scenario, sections };
+  return { frameworks, tabs, appearance, scenario, sections };
 }

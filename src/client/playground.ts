@@ -52,6 +52,18 @@ let state: ComponentState = initialComponentState(slug);
 const elementMetaScript = document.querySelector<HTMLScriptElement>('#element-meta');
 const element: ElementMeta | null = elementMetaScript ? JSON.parse(elementMetaScript.textContent || 'null') : null;
 const frameworkTabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
+// The pilot's framework picker: material's single-select filter chip set in
+// place of the tabs (playground-panel.ts). Picking a chip does what a tab click
+// did: show that framework's code, and remember it.
+type ChipsHost = HTMLElement & { value: string | string[] | null };
+const frameworkChips = document.querySelector<ChipsHost>('m-chips.framework-chips');
+frameworkChips?.addEventListener('change', event => {
+  const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? frameworkChips.value;
+  const next = String(Array.isArray(value) ? value[0] ?? '' : value ?? '');
+  if (!FRAMEWORKS.some(f => f.id === next) || next === framework) return;
+  selectFramework(next as Framework, false, true);
+  switchView('code', true);
+});
 const FRAMEWORK_KEY = 'md3-example-framework';
 let framework: Framework = 'vanilla';
 try {
@@ -69,6 +81,19 @@ function currentCode(): { text: string; language: string } {
 // without forgetting the framework picked elsewhere.
 function selectFramework(next: Framework, focus = false, save = false) {
   framework = element || next === 'vanilla' ? next : 'vanilla';
+  // The pilot's chip set: its value is the framework (setting it to the same
+  // value is a no-op, so the chips' own change does not loop back here).
+  // Before the element is defined the property would shadow its setter: the
+  // attribute carries the value until the upgrade reads it.
+  if (frameworkChips && !frameworkChips.matches(':defined')) frameworkChips.setAttribute('value', framework);
+  else if (frameworkChips && String(frameworkChips.value) !== framework) {
+    frameworkChips.value = framework;
+    // material's chip set keeps its tab stop on the first chip until focus
+    // moves (features/controller.js syncTabStop); the native tabs kept it on
+    // the selected one. A value set from here (the saved framework on load)
+    // moves the tab stop to the selected chip, so Tab lands on the choice.
+    for (const cell of frameworkChips.shadowRoot?.querySelectorAll<HTMLElement>('[role="gridcell"]') ?? []) cell.tabIndex = cell.getAttribute('aria-selected') === 'true' ? 0 : -1;
+  }
   for (const tab of frameworkTabs) {
     const on = tab.dataset.framework === framework;
     tab.setAttribute('aria-selected', String(on));

@@ -20,7 +20,8 @@ import 'material/elements/css/text-field';
 import 'material/elements/css/tabs';
 import 'material/elements/css/button-group';
 import 'material/elements/css/button';
-import { defineButton, defineButtonGroup, defineSelect, defineSwitch, defineTabs, defineTextField } from 'material/elements';
+import 'material/elements/css/chips';
+import { defineButton, defineButtonGroup, defineChips, defineSelect, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 
 defineSelect();
 defineSwitch();
@@ -28,6 +29,7 @@ defineTextField();
 defineTabs();
 defineButtonGroup();
 defineButton();
+defineChips();
 
 type GroupHost = HTMLElement & { value: string | string[] | null };
 type GroupButton = HTMLButtonElement;

@@ -32,6 +32,11 @@
    labels included, so the rows read as one column. */
 .playground--material .control-label { font-size: var(--fs-md); font-weight: var(--fw-normal); }
 
+/* The framework chips take the native tabs' place and spacing above the page
+   heading (site.css .framework-tabs). The set scrolls sideways when the row is
+   narrower than its six chips, as M3's chip sets do, instead of wrapping. */
+.framework-chips-row { margin-bottom: 18px; min-width: 0; }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */
