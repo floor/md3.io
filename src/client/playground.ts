@@ -209,7 +209,9 @@ function readForm(): ComponentState {
   for (const control of form.querySelectorAll<HTMLElement>('[data-enabled-when]:disabled')) {
     const input = control as HTMLInputElement;
     if (input instanceof HTMLInputElement && input.type === 'radio' && !input.checked) continue;
-    values[input.name] = input instanceof HTMLInputElement && input.type === 'checkbox' ? (input.checked ? 'on' : '')
+    // The name attribute: material's hosts (m-text-field, m-switch, m-select) have no
+    // `name` property, and values[undefined] dropped a disabled field back to its default.
+    values[control.getAttribute('name') ?? ''] = input instanceof HTMLInputElement && input.type === 'checkbox' ? (input.checked ? 'on' : '')
       : input.tagName === 'M-SWITCH' ? ((input as SwitchHost).checked ? 'on' : '')
       : input.value;
   }
@@ -250,16 +252,36 @@ function syncControls(next: ComponentState) {
 function refreshActiveSelect(next: ComponentState) {
   const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'navigation-bar' ? barActiveOptions(next) : slug === 'drawer' ? drawerActiveOptions(next) : slug === 'tabs' ? tabActiveOptions(next) : null;
   if (!options) return;
-  const select = form.querySelector<HTMLSelectElement>('[name="active"]');
+  const select = form.querySelector<HTMLElement>('[name="active"]');
   if (!select) return;
-  const same = select.options.length === options.length && options.every((option, index) => select.options[index]?.value === option.value && select.options[index]?.textContent === option.label);
+  // The material panel's select declares its options as <m-select-option> children,
+  // which the element observes; a native select has <option>s.
+  const tag = select.tagName === 'M-SELECT' ? 'm-select-option' : 'option';
+  const current = [...select.querySelectorAll(`:scope > ${tag}`)];
+  const same = current.length === options.length && options.every((option, index) => current[index]?.getAttribute('value') === option.value && current[index]?.textContent === option.label);
   if (same) return;
   select.replaceChildren(...options.map(option => {
-    const element = document.createElement('option');
-    element.value = option.value;
+    const element = document.createElement(tag);
+    element.setAttribute('value', option.value);
     element.textContent = option.label;
     return element;
   }));
+  // material's select applies new options in its MutationObserver, a microtask,
+  // keeping its value only if the new options carry it, so a value set now (by
+  // syncControls) is lost and the select reads null. Once it has applied them, set
+  // the wanted value (or the first option, a native select's fallback) and update
+  // again if the state moved. This microtask is queued after the observer's.
+  if (tag === 'm-select-option') {
+    const wanted = String(next.active ?? '');
+    queueMicrotask(() => {
+      const host = select as HTMLElement & { value?: unknown };
+      const target = options.some(option => option.value === wanted) ? wanted : options[0]?.value;
+      if (target !== undefined && String(host.value ?? '') !== target) {
+        host.value = target;
+        update();
+      }
+    });
+  }
 }
 function update(send = true, reset = false) {
   state = readForm();
@@ -343,14 +365,19 @@ scenarioSelect?.addEventListener('change', () => {
   if (scenario) applyScenario(scenario); else applyOptions('default', {});
 });
 // The pilot's elements report with `change` (the text field with both); the same
-// handler serves both events, and an element's `change` is dropped when an
-// `input` just carried the same value — one edit, one update, as before.
-const handled = new WeakMap<object, string>();
+// handler serves both events, and an element's `change` is dropped when the
+// state already holds its value — one edit, one update, as before.
 const signature = (target: EventTarget | null): string => {
   const element = target as (HTMLElement & { value?: unknown; checked?: unknown }) | null;
   if (!element || (element.tagName.startsWith('M-') && !element.matches(':defined'))) return '';
   const value = 'checked' in element ? String(element.checked) : String(element.value ?? '');
   return `${element.tagName}:${value}`;
+};
+/** Whether the playground's state already holds what the control shows. */
+const stateHolds = (element: HTMLElement & { value?: unknown; checked?: unknown }): boolean => {
+  const name = element.getAttribute('name');
+  if (!name || !(name in state)) return true;
+  return 'checked' in element ? (state[name] === true) === (element.checked === true) : String(state[name]) === String(element.value ?? '');
 };
 const onEdit = (event: Event) => {
   const target = event.target;
@@ -364,14 +391,27 @@ const onEdit = (event: Event) => {
     // The text field reports live through `input`; its `change` adds nothing.
     if (target instanceof HTMLElement && target.tagName === 'M-TEXT-FIELD') return;
     const seen = signature(target);
-    if (seen !== '' && handled.get(target!) === seen) return;
-    handled.set(target!, seen);
+    // A change the state already holds is no edit: the `input` that came first
+    // carried it, or the person re-picked the option the control already showed
+    // (which must not turn the scenario to Custom). The preview can write a control
+    // between two edits (a click in the checkbox preview sets State to checked); a
+    // pick back to an earlier value then differs from the state and goes through.
+    if (seen !== '' && stateHolds(target as HTMLElement)) return;
   }
-  if (slug === 'list' && state.selection === 'single' && target instanceof HTMLInputElement && target.checked && ['first', 'second', 'third', 'fourth', 'fifth'].includes(target.name)) {
-    for (const input of form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) if (input !== target && ['first', 'second', 'third', 'fourth', 'fifth'].includes(input.name)) input.checked = false;
+  // The edited control's name: a native input's or select's, or a material element's
+  // name attribute (m-select, m-switch, m-text-field), which the panel now renders on
+  // every page. Reading only native targets left both rules below dead there.
+  const edited = target instanceof HTMLElement ? target.getAttribute('name') ?? '' : '';
+  const rows = ['first', 'second', 'third', 'fourth', 'fifth'];
+  const isOn = (element: Element) => element instanceof HTMLInputElement ? element.checked : (element as SwitchHost).checked === true;
+  if (slug === 'list' && state.selection === 'single' && target instanceof HTMLElement && rows.includes(edited) && isOn(target)) {
+    for (const other of form.querySelectorAll<HTMLElement>('input[type="checkbox"], m-switch')) {
+      if (other === target || !rows.includes(other.getAttribute('name') ?? '')) continue;
+      if (other instanceof HTMLInputElement) other.checked = false;
+      else (other as SwitchHost).checked = false;
+    }
   }
   // State replaces the stored mix on the way through normalize. The option set and the family drop it.
-  const edited = target instanceof HTMLInputElement || target instanceof HTMLSelectElement ? target.name : '';
   if (slug === 'checkbox' && checkboxEditClearsCheckedSet(edited)) {
     const stored = form.querySelector<HTMLInputElement>('[name="checkedChildren"]');
     if (stored) stored.value = '';
