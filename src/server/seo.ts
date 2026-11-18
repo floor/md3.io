@@ -89,8 +89,10 @@ export function structuredData(path: string, name: string, description: string, 
     },
   ];
   const sectionPath = SECTIONS[section];
-  if (!sectionPath) return [];
-  const trail = [{ name: 'Home', path: '/' }, { name: section, path: sectionPath }, ...path === sectionPath ? [] : [{ name, path }]];
+  // A page outside the sections (Privacy) is one step from home: Home, then the page.
+  const trail = sectionPath
+    ? [{ name: 'Home', path: '/' }, { name: section, path: sectionPath }, ...path === sectionPath ? [] : [{ name, path }]]
+    : [{ name: 'Home', path: '/' }, { name, path }];
   return [{
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: trail.map((item, index) => ({ '@type': 'ListItem', position: index + 1, name: item.name, item: SITE + item.path })),
