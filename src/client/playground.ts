@@ -205,9 +205,14 @@ function syncControls(next: ComponentState) {
     }
   }
   // The pilot's groups show a value their hidden input carries into the form; the
-  // glue moves them when the input changes, and this moves them with a sync.
+  // glue moves them when the input changes, and this moves them with a sync. Only
+  // the component's own controls: the heading's mode group is the viewer's
+  // appearance, which a scenario (Default included) leaves as it is.
+  const controlKeys = new Set(components[slug].controls.map(control => control.key));
   if (material) for (const group of document.querySelectorAll<GroupHost>('m-button-group[data-group-for]')) {
-    const value = next[group.getAttribute('data-group-for')!];
+    const key = group.getAttribute('data-group-for')!;
+    if (!controlKeys.has(key)) continue;
+    const value = next[key];
     if (typeof value === 'string' && defined(group)) group.value = value;
   }
   for (const output of form.querySelectorAll<HTMLOutputElement>('[data-value-for]')) output.value = String(next[output.dataset.valueFor!]);
