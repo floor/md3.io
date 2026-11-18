@@ -65,6 +65,33 @@ const pickerIcons = {
   time: readFileSync(resolve(root, 'icons/schedule.svg'), 'utf8'),
 };
 
+/**
+ * A framework's logo for its chip, from icons/brands/. All six chips render in one shadow
+ * root, so every internal id (gradients: the Web Components logo's a…d, SolidJS's sheen)
+ * is prefixed with the framework, and so is every url(#…) and href="#…" pointing at it.
+ * Hidden from assistive technology: the chip's label names the framework.
+ */
+const LOGO_FILES: Record<string, string> = { vanilla: 'javascript', html: 'webcomponent', react: 'react', vue: 'vue', svelte: 'svelte', solid: 'solidjs' };
+const logoCache = new Map<string, string>();
+function frameworkLogo(id: string): string {
+  let svg = logoCache.get(id);
+  if (svg === undefined) {
+    const file = LOGO_FILES[id];
+    const raw = file ? readFileSync(resolve(root, 'icons/brands', `${file}.svg`), 'utf8').trim() : '';
+    const prefix = `fw-${id}-`;
+    svg = raw
+      .replace(/ id="([^"]+)"/g, (_, name: string) => ` id="${prefix}${name}"`)
+      .replace(/url\(#([^)]+)\)/g, (_, name: string) => `url(#${prefix}${name})`)
+      .replace(/href="#([^"]+)"/g, (_, name: string) => `href="#${prefix}${name}"`)
+      // A logo's near-black ink (the Web Components logo's C) reads a variable, so a dark
+      // page can lighten it (playground-material.css); its own black stays the default.
+      .replace(/fill="#010101"/gi, 'fill="var(--brand-ink, #010101)"')
+      .replace(/^<svg /, '<svg aria-hidden="true" focusable="false" ');
+    logoCache.set(id, svg);
+  }
+  return svg;
+}
+
 /** An icon's name as a select option reads it: calendarToday → calendar today, none → none. */
 const iconName = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
@@ -179,8 +206,11 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // factories (createButton()), the size readout's own word for it. Its id stays
   // 'vanilla', so a choice saved on another page still applies.
   const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
+  // Each chip leads with its framework's logo (icons/brands/, sources in SOURCES.md):
+  // M3's chips "can contain a logo, icon, or circular image" (chips guidelines, read
+  // 2026-11-18).
   const frameworks = renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
-    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}"${hasElement || id === 'vanilla' ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
+    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}" icon="${escape(frameworkLogo(id))}"${hasElement || id === 'vanilla' ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
   // Live preview / View code.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), renderStyles);

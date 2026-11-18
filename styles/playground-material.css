@@ -55,6 +55,10 @@
 .playground--material m-datepicker[data-panel-picker]::part(help),
 .playground--material m-datepicker[data-panel-picker]::part(error) { display: none; }
 
+/* The framework logos' near-black ink (the Web Components logo's C) turns light on a
+   dark page, where black on the dark chip would vanish (playground-panel.ts frameworkLogo). */
+:root[data-theme-mode="dark"] .framework-chips-row { --brand-ink: #e6e1e5; }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */
