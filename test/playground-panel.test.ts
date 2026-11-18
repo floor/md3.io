@@ -70,21 +70,21 @@ describe('the material playground panel', () => {
       // Switches, selects, groups and text fields are elements on every page; a
       // native checkbox, or a radio outside an icon row past five, would mean a
       // kind slipped past the material panel.
-      expect(html, slug).not.toMatch(/<input type="checkbox" name=/);
-      const radios = new Set([...html.matchAll(/<input type="radio" name="([^"]+)"/g)].map(match => match[1]));
-      const nativeIconRows = components[slug].controls.filter(control => control.kind === 'icons' && (control.options?.length ?? 0) > 5).map(control => control.key);
-      expect([...radios].filter(name => !nativeIconRows.includes(name!)), slug).toEqual([]);
-      // Dates, times and icon rows past five keep the native inputs until
+      expect(html, slug).not.toMatch(/<input type="(?:checkbox|radio)" name=/);
+      // Dates and times keep the native inputs until
       // their batch (briefs/plan-playground-material-rollout.md).
       for (const control of components[slug].controls) {
-        const native = control.kind === 'date' || control.kind === 'time' || (control.kind === 'icons' && (control.options?.length ?? 0) > 5);
+        const pastFive = control.kind === 'icons' && (control.options?.length ?? 0) > 5;
         // A range is material's slider, beside the numeric read-out.
         if (control.kind === 'range') {
           expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-slider [^>]*name="${control.key}"`));
           expect(html, `${slug}.${control.key}`).toContain(`data-value-for="${control.key}"`);
         }
         if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toContain(`<input class="ui-input control-input" type="${control.kind}"`);
-        if (control.kind === 'icons') expect(html.includes(`data-group-for="${control.key}"`), `${slug}.${control.key}`).toBe(!native);
+        // An icon row up to five options is a connected group; past five, a select
+        // whose options carry their icon.
+        if (control.kind === 'icons') expect(html.includes(`data-group-for="${control.key}"`), `${slug}.${control.key}`).toBe(!pastFive);
+        if (pastFive) expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-select [^>]*name="${control.key}"[\\s\\S]*?<m-select-option value="${control.options![1]}" icon="`));
       }
     }
   });

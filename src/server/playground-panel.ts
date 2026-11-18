@@ -61,6 +61,9 @@ const optionLabel = (control: Control, value: string) => control.labels?.[value]
 const choiceLabel = (control: Control, value: string) =>
   control.labels?.[value] || (control.key === 'size' && value.length <= 2 ? value.toUpperCase() : value === 'none' && control.kind === 'icons' ? 'None' : value);
 
+/** An icon's name as a select option reads it: calendarToday → calendar today, none → none. */
+const iconName = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+
 /** One `<m-select-option>` (or tab, or group item): its value and its label. */
 const declaration = (tag: string, value: string, label: string) =>
   `<m-${tag} value="${escape(value)}">${escape(label)}</m-${tag}>`;
@@ -84,13 +87,11 @@ const ariaName = (label: string) => ({ 'aria-label': label });
 /**
  * One control, as material's own element. The row and label around it stay the site's.
  * A kind the panel does not render as an element yet comes back as the control itself,
- * for the template's native partial (control-native.eta): dates, times, and
- * icon rows past five options, each until its own batch of the rollout
+ * for the template's native partial (control-native.eta): dates and times, until their batch of the rollout
  * (briefs/plan-playground-material-rollout.md).
  */
 export function materialControl(control: Control, slug: string, initial: Record<string, unknown> = {}): string | Control {
   if (control.kind === 'date' || control.kind === 'time') return control;
-  if (control.kind === 'icons' && (control.options?.length ?? 0) > 5) return control;
   const enabledWhen = control.enabledWhen ? { 'data-enabled-when': control.enabledWhen } : {};
   if (control.kind === 'toggle') {
     // The switch's label is slotted into it: material's switch takes its name
@@ -100,6 +101,17 @@ export function materialControl(control: Control, slug: string, initial: Record<
     // switch's own space-between container carries it left with the track at
     // the row's end once the host fills the row (playground-material.css).
     return row(control, renderElement('m-switch', { ...enabledWhen, name: control.key, ...(control.initial === true ? { checked: true } : {}) }, `<span class="control-label">${escape(control.label)}</span>`, renderStyles));
+  }
+  if (control.kind === 'icons' && (control.options?.length ?? 0) > 5) {
+    // An icon row past five options (icon button, extended FAB, split button, text
+    // field): a connected group stops at five (M3, segmented-buttons guidelines, read
+    // 2026-11-18: "Don't use more than five segments"), and chips need a word per
+    // option, so the row is material's select, each option with its icon and name.
+    const options = control.options!.map(value => `<m-select-option value="${escape(value)}"${value !== 'none' && componentIcons[value] ? ` icon="${escape(componentIcons[value]!)}"` : ''}>${escape(iconName(value))}</m-select-option>`).join('');
+    return row(control,
+      rowLabel(`control-${control.key}`, control.label)
+      + renderElement('m-select', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', name: control.key, id: `control-${control.key}`, value: String(control.initial) }, options, renderStyles),
+      ' control-row');
   }
   if (control.kind === 'select') {
     const options = control.options?.map(value => declaration('select-option', value, optionLabel(control, value))).join('') ?? '';
