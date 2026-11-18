@@ -38,7 +38,7 @@ export default function Booking() {
         <p>{summary(s)}</p>
       </Dialog>
       <div className="booking__intro">
-        <h2 className="booking__title mtrl-headline-small">Book a stay</h2>
+        <h1 className="booking__title mtrl-headline-small">Book a stay</h1>
         <p className="booking__lede mtrl-body-medium">Choose dates, guests and a room. The total updates as you go.</p>
       </div>
       <div className="booking__grid">

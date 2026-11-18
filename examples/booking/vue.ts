@@ -42,7 +42,7 @@ export default defineComponent({
         </template>
       </MDialog>
       <div class="booking__intro">
-        <h2 class="booking__title mtrl-headline-small">Book a stay</h2>
+        <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
         <p class="booking__lede mtrl-body-medium">Choose dates, guests and a room. The total updates as you go.</p>
       </div>
       <div class="booking__grid">

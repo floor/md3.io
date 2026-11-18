@@ -18,7 +18,7 @@ const div = (className: string): HTMLDivElement => Object.assign(document.create
 const text = (className: string, value: string, tag = "p"): HTMLElement => Object.assign(document.createElement(tag), { className, textContent: value });
 
 const intro = div("booking__intro");
-intro.append(text("booking__title mtrl-headline-small", "Book a stay", "h2"), text("booking__lede mtrl-body-medium", "Choose dates, guests and a room. The total updates as you go."));
+intro.append(text("booking__title mtrl-headline-small", "Book a stay", "h1"), text("booking__lede mtrl-body-medium", "Choose dates, guests and a room. The total updates as you go."));
 const grid = div("booking__grid");
 const status = Object.assign(document.createElement("output"), { className: "booking__total mtrl-body-medium" });
 status.setAttribute("role", "status");
@@ -69,7 +69,12 @@ const dialog = createDialog({
     { text: "Confirm booking", variant: "text", onClick: () => { section.append(snackbar.element); snackbar.show(); } },
   ],
 });
-dialog.getContentElement()?.append(summaryEl);
+const contentEl = dialog.getContentElement();
+if (contentEl) {
+  contentEl.id = "booking-summary";
+  contentEl.append(summaryEl);
+  dialog.element.setAttribute("aria-describedby", "booking-summary");
+}
 
 const render = (): void => {
   status.textContent = totalText(s);

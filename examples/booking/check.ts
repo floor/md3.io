@@ -3,7 +3,7 @@
 // the behaviour itself, so breaking one variant's rule fails this check even
 // before the snapshots are compared.
 import assert from "node:assert/strict";
-import type { Page } from "playwright";
+import type { Locator, Page } from "playwright";
 
 export default async function steps(page: Page): Promise<void> {
   const exact = { exact: true } as const;
@@ -98,12 +98,28 @@ export default async function steps(page: Page): Promise<void> {
   await includes("Estimated total $505 for 2 nights");
 
   // Cancel leaves no snackbar; Book again and Confirm shows it, with the dialog gone first.
+  const isFocused = (locator: Locator) =>
+    locator.evaluate((el) => (el.getRootNode() as ShadowRoot).activeElement === el || document.activeElement === el);
   await book.click();
   const dialog = page.getByRole("alertdialog", { name: "Confirm booking", ...exact });
   await dialog.waitFor();
-  await includes("Suite, 2 nights · Check-in 2027-04-20, check-out 2027-04-22 · Arrival 17:30 · 3 adults, 1 child · Breakfast, Parking, Late checkout · Estimated total $505 for 2 nights");
+  const summaryText = "Suite, 2 nights · Check-in 2027-04-20, check-out 2027-04-22 · Arrival 17:30 · 3 adults, 1 child · Breakfast, Parking, Late checkout · Estimated total $505 for 2 nights";
+  await includes(summaryText);
+  // The dialog's accessible description is that summary, in every variant.
+  const description = await dialog.evaluate((el) => {
+    const id = el.getAttribute("aria-describedby");
+    if (!id) return "";
+    const target = (el.getRootNode() as Document | ShadowRoot).querySelector(`#${CSS.escape(id)}`);
+    if (!target) return "";
+    const text = target.textContent?.trim() ?? "";
+    if (text) return text;
+    return [...target.querySelectorAll("slot")].flatMap((slot) => slot.assignedNodes()).map((node) => node.textContent ?? "").join("").trim();
+  });
+  assert.equal(description, summaryText, "dialog description is the summary");
+  assert.ok(await isFocused(page.getByRole("button", { name: "Cancel", ...exact })), "focus enters the dialog");
   await page.getByRole("button", { name: "Cancel", ...exact }).click();
   await dialog.waitFor({ state: "hidden" });
+  assert.ok(await isFocused(book), "focus returns to Book");
   await excludes("Booking confirmed");
   await book.click();
   await page.getByRole("button", { name: "Confirm booking", ...exact }).click();
