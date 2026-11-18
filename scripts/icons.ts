@@ -126,6 +126,11 @@ const names = [
   'palette',
   'light_mode',
   'dark_mode',
+  // The site's links to a related page (component heading, doc toolbar, Colour Lab): ↗ as an icon.
+  'arrow_outward',
+  // The search dialog's key hints (src/server/shells/search.eta): ↓ and ↵ as icons.
+  'arrow_downward',
+  'keyboard_return',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

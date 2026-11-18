@@ -1,7 +1,7 @@
 <div class="colour-lab" id="colour-lab">
   <header class="lab-heading">
     <div><span class="eyebrow">STYLES / RUNTIME COLOUR</span><h1>Colour Lab</h1><p>Start with a colour. Watch every component respond.</p></div>
-    <a class="lab-api-link" href="/docs/theming/">Theming guide ↗</a>
+    <a class="lab-api-link" href="/docs/theming/">Theming guide <%~ it.icon('arrow_outward') %></a>
   </header>
   <div class="lab-controls" aria-label="Colour Lab settings">
     <section class="lab-source" aria-labelledby="lab-source-title">
@@ -35,7 +35,7 @@
       <div class="lab-range-labels" id="lab-contrast-hint"><span>−1.0 Reduced</span><span>+1.0 High</span></div>
     </section>
   </div>
-  <div class="lab-preview-heading"><div><span class="lab-live-dot" aria-hidden="true"></span><h2>Live preview</h2><span id="lab-preview-caption">Tonal spot · Light</span></div><button type="button" class="lab-text-button" id="lab-get-code" aria-controls="lab-code" aria-expanded="false">Get the code <span aria-hidden="true">↗</span></button></div>
+  <div class="lab-preview-heading"><div><span class="lab-live-dot" aria-hidden="true"></span><h2>Live preview</h2><span id="lab-preview-caption">Tonal spot · Light</span></div><button type="button" class="lab-text-button" id="lab-get-code" aria-controls="lab-code" aria-expanded="false">Get the code <%~ it.icon('arrow_outward') %></button></div>
   <section class="colour-lab-stage" id="colour-lab-stage" aria-label="Live component preview" data-mode="light">
     <div class="lab-preview-grid"><div id="lab-showcase"></div><div id="lab-form"></div></div>
     <div class="lab-feedback" aria-labelledby="lab-status-title"><div class="lab-feedback-head"><h3 id="lab-status-title">A colour for every message</h3><p>Live normal-text contrast</p></div><div class="lab-status-grid" id="lab-status-grid"></div></div>

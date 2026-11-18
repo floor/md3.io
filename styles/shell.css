@@ -942,3 +942,12 @@ select:focus-visible,
         scroll-behavior: auto !important;
     }
 }
+
+/* ─── Inline icons ─────────────────────────────────────────────── */
+
+/* Material Symbols and brand marks inline in text (server.ts icon()): the size of the
+   text they sit in, on its baseline, in its colour. */
+.inline-icon { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; }
+/* The header's GitHub link is the mark alone, at the nav's icon size. */
+.header__github { display: inline-flex; align-items: center; }
+.header__github .inline-icon { width: 20px; height: 20px; vertical-align: middle; }

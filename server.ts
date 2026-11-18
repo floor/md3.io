@@ -29,6 +29,21 @@ const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 
 // Logical path → content-hashed path. Written by scripts/write-asset-manifest.ts.
 // Empty until the first build; the templates' own names are served then.
 const assetManifest = loadAssetManifest();
+// The site's small icons, inline SVG instead of text glyphs (↗, ←): a Material Symbol from
+// icons/ or a brand mark from icons/brands/, sized by .inline-icon and hidden from
+// assistive technology (the link text, or the link's aria-label, carries the meaning).
+const iconCache = new Map<string, string>();
+const icon = (name: string): string => {
+  let svg = iconCache.get(name);
+  if (!svg) {
+    svg = readFileSync(resolve(root, 'icons', `${name}.svg`), 'utf8').trim()
+      .replace(/^<svg /, '<svg class="inline-icon" focusable="false" ')
+      .replace(/ width="24" height="24"/, '');
+    if (!svg.includes('aria-hidden')) svg = svg.replace('<svg ', '<svg aria-hidden="true" ');
+    iconCache.set(name, svg);
+  }
+  return svg;
+};
 // Every theme's two sheets as theme → [main hash, contrast hash] (theme-sheets-template.eta):
 // about a tenth of the size of the 38 <link>s it replaces in each page. '' before a build.
 const sheetHash = (path: string) => assetManifest[path]?.match(/\.([a-f0-9]{10})\.css$/)?.[1] ?? '';
@@ -82,7 +97,7 @@ function page(path: string, title: string, description: string, template: string
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
-  const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
+  const content = eta.render(template, { ...data, icon, docGroups, guideGroup, components, playgroundGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
   // Where the title already names the section, the compact header can drop the breadcrumb.
   // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
@@ -90,6 +105,7 @@ function page(path: string, title: string, description: string, template: string
   const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'component' && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
+    icon,
     path, title, description, isHome, noSidebar: isPrivacy, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog: template === 'catalog', catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
@@ -110,7 +126,7 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
   // Crossing into another section names it: "Styles: Overview".
   const title = (item: PagerItem) => item.section && item.section !== current.section ? `${item.section}: ${item.name}` : item.name;
   const link = (item: PagerItem, rel: 'prev' | 'next') =>
-    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? '← Previous' : 'Next →'}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
+    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? `${icon('arrow_back')} Previous` : `Next ${icon('arrow_forward')}`}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
