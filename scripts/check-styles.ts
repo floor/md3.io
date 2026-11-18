@@ -81,7 +81,7 @@ try {
   assert(await hex() === oceanDark, 'The saved theme and mode come back on reload');
   // The playground reads the same key.
   await page.goto(`${base}/components/button/`);
-  assert(await page.locator('#preview-theme').inputValue() === 'ocean', 'The playground opens with the theme chosen on the Color page');
+  assert(await page.locator('#preview-theme').evaluate(el => String((el as HTMLElement & { value?: string }).value)) === 'ocean', 'The playground opens with the theme chosen on the Color page');
   await page.goto(`${base}/styles/color/`);
   await page.getByLabel('Theme', { exact: true }).selectOption('baseline');
   assert(await page.locator('.color-group:has(.swatch[data-role="success"])').isVisible(), 'Baseline shows the status roles (mtrl#291)');

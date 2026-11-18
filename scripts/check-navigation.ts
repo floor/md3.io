@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { components, componentSlugs } from '../src/shared/components';
+import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -17,18 +18,12 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   const frame = page.frameLocator('#preview');
-  const choose = async (key: string, value: string) => {
-    const select = page.locator(`#configuration select[name="${key}"]`);
-    if (await select.count()) await select.selectOption(value);
-    else await page.locator(`#configuration label.choice:has(input[name="${key}"][value="${value}"])`).click();
-  };
-  const toggle = (key: string) => page.locator(`#configuration label:has(input[type="checkbox"][name="${key}"])`).click();
-  const reset = async () => {
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    try { await page.locator('#playground-status').filter({ hasText: 'Configuration reset' }).waitFor(); }
-    catch (error) { console.log('Reset status:', await page.locator('#playground-status').textContent(), errors); throw error; }
-  };
-  const selected = (value: string) => page.waitForFunction(value => document.querySelector<HTMLSelectElement>('#configuration [name="active"]')?.value === value, value);
+  // The panel's controls, by name (scripts/panel-driver.ts). The material panel has no
+  // Reset: the Scenario select's Default is the way back.
+  const choose = (key: string, value: string) => panel.choose(page, key, value);
+  const toggle = (key: string) => panel.toggle(page, key);
+  const reset = () => panel.backToDefault(page);
+  const selected = (value: string) => panel.waitForValue(page, 'active', value);
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Navigation' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
     await page.goto(`${server.url}components/${slug}/`);
@@ -67,7 +62,7 @@ try {
         });
         assert(fit?.compact && fit.inside, `${where}: the header is the compact FAB inside the rail`);
       };
-      await page.locator('#scenario').selectOption('expanded-clock');
+      await panel.chooseScenario(page, 'expanded-clock');
       await frame.getByText('Add timer', { exact: true }).waitFor();
       await toggle('expanded');
       await compactFits('expanded-clock, Expanded off');
@@ -80,7 +75,7 @@ try {
     } else if (slug === 'navigation-bar') {
       await frame.getByRole('button', { name: 'Favorites', exact: true }).click();
       await selected('favorites');
-      const show = async (id: string) => { await page.locator('#scenario').selectOption(id); };
+      const show = (id: string) => panel.chooseScenario(page, id);
       await show('unread-nav-bar');
       await frame.getByRole('button', { name: 'Mail, 999+', exact: true }).waitFor();
       await frame.getByRole('button', { name: 'Chat, 10', exact: true }).waitFor();
@@ -162,10 +157,21 @@ try {
     }
     await reset();
     if (slug === 'menu') {
+      // An open menu does not outlive a reconfiguration: the preview rebuilds and the
+      // stale menu goes. On the material panel the way back is the Scenario select's
+      // Default, which applies options (re-picking Default when nothing changed is no
+      // edit, as Reset's forced rebuild was), so the step changes an option while the
+      // menu is open, then goes back to Default.
+      // Default is then picked with the menu closed: with it open, the first click on
+      // the Scenario select closes the preview's menu, which hands focus back to its
+      // button in the frame and so closes the select's list again (a second click
+      // opens it) — noted for the material menu, not this check's subject.
       await frame.getByRole('button', { name: 'Open menu' }).click();
       await frame.locator('.mtrl-menu').first().waitFor();
-      await reset();
+      await toggle('dense');
       await frame.locator('.mtrl-menu').waitFor({ state: 'detached' });
+      await reset();
+      assert(!await panel.isOn(page, 'dense'), 'menu: Default did not restore Dense');
     }
     if (components[slug].controls.some(control => control.key === 'disableSent')) {
       await choose('active', 'sent');

@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { components, componentCode, componentSlugs, initialComponentState } from '../src/shared/components';
+import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -16,12 +17,9 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   const frame = page.frameLocator('#preview');
-  const checkbox = (name: string) => page.locator(`label:has(input[type="checkbox"][name="${name}"])`);
-  const choose = async (name: string, value: string) => {
-    const select = page.locator(`select[name="${name}"]`);
-    if (await select.count()) await select.selectOption(value);
-    else await page.locator(`label.choice:has(input[name="${name}"][value="${value}"])`).click();
-  };
+  // The panel's controls, by name, material or native (scripts/panel-driver.ts).
+  const choose = (name: string, value: string) => panel.choose(page, name, value);
+  const toggle = (name: string) => panel.toggle(page, name);
   // The FAB menu is checked on its own below: it has no variant or disabled control.
   for (const slug of componentSlugs.filter(value => value !== 'button' && value !== 'fab-menu' && components[value].group === 'Actions')) {
     await page.goto(`${server.url}components/${slug}/`);
@@ -47,7 +45,7 @@ try {
         }, { slug, key, value });
       }
     }
-    await checkbox('disabled').click();
+    await toggle('disabled');
     await page.waitForFunction(() => {
       const buttons = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll<HTMLButtonElement>('#stage button');
       return buttons?.length && [...buttons].every(button => button.disabled);
@@ -57,17 +55,16 @@ try {
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source.includes('disabled: true'), `${slug}: copied code does not reflect controls`);
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
     await page.getByRole('tab', { name: 'Live preview' }).click();
+    await panel.backToDefault(page);
     await root.waitFor();
 
     if (slug === 'icon-button') {
-      await checkbox('toggle').click();
+      await toggle('toggle');
       await frame.locator('button[aria-pressed]').waitFor();
       await frame.getByRole('button', { name: 'Add to favorites' }).click();
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('input[name="selected"]')?.checked);
-      assert(await page.locator('input[name="selected"]').isChecked(), 'Icon selection did not synchronize');
+      await page.waitForFunction(() => document.querySelector<HTMLElement & { checked?: boolean }>('#configuration m-switch[name="selected"]')?.checked === true);
+      assert(await panel.isOn(page, 'selected'), 'Icon selection did not synchronize');
       await page.getByRole('tab', { name: 'View code', exact: true }).click();
       assert((await page.locator('#generated-code').textContent())?.includes('selected: true'), 'Code lost icon toggle state');
       await page.getByRole('tab', { name: 'Live preview' }).click();
@@ -99,23 +96,22 @@ try {
       await frame.getByRole('menuitem', { name: 'Save a copy' }).click();
       await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('[aria-haspopup="menu"]')?.getAttribute('aria-expanded') === 'false');
       await frame.getByRole('button', { name: 'More save options' }).click();
-      await page.getByLabel('Text', { exact: true }).fill('Publish');
+      await panel.fill(page, 'text', 'Publish');
       await frame.getByRole('button', { name: 'Publish', exact: true }).waitFor();
       assert(await frame.locator('[role="menu"]:visible').count() === 0, 'Reconfiguration left an old menu open');
     } else {
       await choose('position', 'bottom-right');
       await page.waitForFunction(slug => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector(`#stage > .mtrl-${slug}`)?.classList.contains(`mtrl-${slug}--bottom-right`), slug);
       assert(await root.evaluate(element => getComputedStyle(element).position) === 'fixed', 'FAB is not floating inside preview');
-      await checkbox('lowered').click();
+      await toggle('lowered');
       await page.waitForFunction(slug => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector(`#stage > .mtrl-${slug}`)?.classList.contains(`mtrl-${slug}--lowered`), slug);
       if (slug === 'extended-fab') {
-        await checkbox('collapsed').click();
+        await toggle('collapsed');
         await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-extended-fab')?.classList.contains('mtrl-extended-fab--collapsed'));
       }
     }
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
+    await panel.backToDefault(page);
     await page.screenshot({ animations: 'disabled', path: `${output}/${slug}-mobile.png`, fullPage: true });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows`);
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -159,11 +155,11 @@ try {
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage > .mtrl-fab-menu')?.classList.contains('mtrl-fab-menu--bottom-end'));
   const codeText = async () => page.locator('#generated-code').innerText();
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
-  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  await panel.chooseFramework(page, 'vanilla');
   assert((await codeText()).includes('placement: "bottom-end"'), 'fab-menu: the code panel omits placement: "bottom-end"');
-  await page.locator('.framework-tab[data-framework="html"]').click();
+  await panel.chooseFramework(page, 'html');
   assert((await codeText()).includes('placement="bottom-end"'), 'fab-menu: the element code omits placement="bottom-end"');
-  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  await panel.chooseFramework(page, 'vanilla');
   await choose('placement', 'none');
   await page.waitForFunction(() => {
     const element = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage > .mtrl-fab-menu');

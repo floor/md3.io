@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
+import { ELEMENT_CSS } from '../src/server/assets';
 import { docGroups, installSpecifier, PACKAGE_MANAGERS, renderDocument } from '../src/server/content';
 import { buttonConfig, defaults, normalizeState } from '../src/shared/button';
 import { components, componentSlugs, componentCode, elementConfig, initialComponentState, normalizeComponentState } from '../src/shared/components';
@@ -676,10 +677,19 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   const page = await (await get('/components/button/')).text();
   const assets = [...page.matchAll(/(?:src|href)="(\/(?:dist|styles)\/[^"]+\.(?:js|css)[^"]*)"/g)].map(match => match[1]!);
   // One sheet for the page, plus the scripts it loads. Both names carry the content hash.
-  expect([...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/page.css']]);
+  // The Button playground pilot swaps the page's sheet for the material-panel bundle —
+  // the page styles with Roboto and the panel's own rules appended, still one request.
+  // The panel's elements link material's stylesheets from their shadow roots
+  // (link mode), from a folder named for its content; the page's own sheet is
+  // still the one bundle.
+  const elementSheets = (href: string) => ELEMENT_CSS.test(href);
+  const sheets = [...page.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1]!);
+  expect(sheets.filter(href => !elementSheets(href))).toEqual([manifest['/dist/css/material-panel.css']]);
+  expect(sheets.filter(elementSheets).length).toBeGreaterThan(0);
   expect(assets).toContain(manifest['/dist/site.js']);
   expect(assets).toContain(manifest['/dist/playground.js']);
-  for (const asset of assets) expect(Object.values(manifest)).toContain(asset);
+  expect(assets).toContain(manifest['/dist/playground-material.js']);
+  for (const asset of assets.filter(asset => !elementSheets(asset))) expect(Object.values(manifest)).toContain(asset);
   const home = await (await get('/')).text();
   expect([...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/home.css']]);
   expect(home).toContain('aria-label="Search (⌘K)"');

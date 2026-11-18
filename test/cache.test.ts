@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
-import { IMMUTABLE_CACHE, SHORT_CACHE } from '../src/server/assets';
+import { ELEMENT_CSS, IMMUTABLE_CACHE, SHORT_CACHE } from '../src/server/assets';
 
 const root = resolve(import.meta.dir, '..');
 const manifest = JSON.parse(readFileSync(resolve(root, 'dist/asset-manifest.json'), 'utf8')) as Record<string, string>;
@@ -23,9 +23,12 @@ describe('content-hashed assets', () => {
       const assets = [...html.matchAll(/<(?:script|link)\b[^>]*?(?:src|href)="([^"]+\.(?:js|css))"/g)].map(match => match[1]!);
       expect(assets.length, path).toBeGreaterThan(0);
       for (const asset of assets) {
+        referenced.add(asset);
+        // material's element stylesheets, linked from the panel's shadow roots: the
+        // folder carries the content hash (scripts/build.ts), not the file name.
+        if (ELEMENT_CSS.test(asset)) continue;
         expect(asset, path).toMatch(/\.[a-f0-9]{10}\.(?:js|css)$/);
         expect(Object.values(manifest), `${path} ${asset}`).toContain(asset);
-        referenced.add(asset);
       }
     }
     for (const asset of referenced) {

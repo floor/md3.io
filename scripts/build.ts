@@ -1,4 +1,5 @@
-import { mkdir, cp, writeFile } from 'node:fs/promises';
+import { mkdir, cp, writeFile, readdir, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { bundleCss, stylesheetBundles } from '../src/server/css';
@@ -9,8 +10,10 @@ await mkdir(outdir, { recursive: true });
 const options = { outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external' } as const;
 // The components overview is built on its own: each card's module is a chunk, and the
 // chunks the cards share are split by which cards use them, not also by which of the
-// other pages do.
-for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab'], ['catalog']]) {
+// other pages do. The Button pilot's glue builds alone for the same reason: joining
+// the shared group would move every page's site.js chunk hash, and the pages that
+// are not part of the pilot must stay byte for byte what they were.
+for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab'], ['playground-material'], ['catalog']]) {
   const result = await Bun.build({ ...options, entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)) });
   if (!result.success) {
     for (const log of result.logs) console.error(log);
@@ -24,6 +27,19 @@ await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'material/styles'), { recu
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'material/themes'), { recursive: true });
 // The elements' pre-upgrade rules, for the components overview's cards.
 await cp(resolve(mtrlDist, 'elements/preupgrade.css'), resolve(outdir, 'material/elements/preupgrade.css'));
+// The elements' shadow-root stylesheets, for material/ssr's link mode: one shared,
+// cacheable copy instead of every server-rendered element carrying its own
+// (src/server/playground-panel.ts). The folder is named for its content, so its
+// URLs are cached for a year (isImmutableAsset), and base.json tells the server
+// where it is. Kept out of dist/material and dist/css: the manifest does not
+// re-hash these files one by one.
+const elementCss = resolve(mtrlDist, 'elements/css');
+const elementCssFiles = (await readdir(elementCss, { recursive: true })).filter(name => name.endsWith('.css')).sort();
+const elementCssHash = createHash('sha256');
+for (const name of elementCssFiles) elementCssHash.update(name).update(await readFile(resolve(elementCss, name)));
+const elementCssDir = `element-css/${elementCssHash.digest('hex').slice(0, 10)}`;
+await cp(elementCss, resolve(outdir, elementCssDir), { recursive: true, filter: source => !/\.(js|ts)$/.test(source) });
+await writeFile(resolve(outdir, 'element-css/base.json'), JSON.stringify({ base: `/dist/${elementCssDir}/` }));
 // One minified stylesheet per page type (dist/css/<page>.css), in the link order
 // the pages used to request. See stylesheetBundles.
 const cssDir = resolve(outdir, 'css');

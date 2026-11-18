@@ -25,6 +25,12 @@ export interface Control {
   min?: number;
   max?: number;
   step?: number;
+  /**
+   * A range whose step is another control's value (the Slider page's Value and Range
+   * end move by its Step option): the panel's slider steps with it, so an arrow key
+   * lands on a value the state keeps instead of one normalize snaps back.
+   */
+  stepFrom?: string;
 }
 export interface Scenario {
   /** `?scenario=` value. Lower case, unique for this component, stable. */

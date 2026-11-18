@@ -25,13 +25,18 @@ try {
   /** What every named control shows on the page, read the way a person sees it. */
   function readShown(keys: readonly string[]) {
     return page.evaluate(names => Object.fromEntries(names.map(key => {
-      const elements = [...document.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[name="${key}"]`)];
+      const elements = [...document.querySelectorAll<Element>(`[name="${key}"]`)];
       const checkboxes = elements.filter((element): element is HTMLInputElement => element instanceof HTMLInputElement && element.type === 'checkbox');
       if (checkboxes.length) return [key, checkboxes[0]!.checked];
+      // The pilot's Button page renders its toggles as m-switch hosts, whose
+      // checked state is a property of the host element.
+      const mswitch = elements.find((element): element is HTMLElement & { checked: boolean } => element instanceof HTMLElement && element.tagName === 'M-SWITCH');
+      if (mswitch) return [key, mswitch.checked];
       const radio = elements.find(element => element instanceof HTMLInputElement && element.type === 'radio' && element.checked);
       if (radio) return [key, (radio as HTMLInputElement).value];
       const first = elements[0];
-      return [key, first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? ''];
+      // A material host's value can be a number (the slider's); the form reads text.
+      return [key, String(first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? '')];
     })), [...keys]);
   }
   for (const slug of componentSlugs) {
@@ -45,14 +50,24 @@ try {
       const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...(scenario?.options ?? {}) });
       if (components[slug].scenarios.length) {
         // (a) A component with scenarios has the section: select and description from it.
-        const selected = await page.locator('#scenario').inputValue();
+        const selected = await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? ''));
         assert(selected === (scenario?.id ?? 'default'), `${where}: the Scenario select shows "${selected}"`);
-        const description = await page.locator('#scenario-description').textContent();
-        assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
+        // The pilot's material panel shows the select alone; the native panels keep
+        // the description line under it.
+        if (await page.locator('.playground--material').count()) {
+          assert((await page.locator('#scenario-description').count()) === 0, `${where}: the material panel shows a scenario description`);
+        } else {
+          const description = await page.locator('#scenario-description').textContent();
+          assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
+        }
       } else {
-        // (b) A component without scenarios has no Scenario section in the DOM at all.
-        assert((await page.locator('.scenario-setup').count()) === 0, `${where}: a component without scenarios shows the Scenario section`);
-        assert((await page.locator('#scenario').count()) === 0, `${where}: a component without scenarios shows a scenario select`);
+        // (b) A component without named scenarios still has the Scenario row, with Default
+        // and Custom only: with no Reset, Default is the way back on every page.
+        assert((await page.locator('.scenario-setup').count()) === 1, `${where}: a component without scenarios has no Scenario section`);
+        const offered = await page.locator('m-select#scenario m-select-option').evaluateAll(options => options.map(option => option.getAttribute('value')));
+        assert(JSON.stringify(offered) === JSON.stringify(['default', 'custom']), `${where}: the scenario select offers ${JSON.stringify(offered)}, expected Default and Custom`);
+        const selected = await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? ''));
+        assert(selected === 'default', `${where}: the Scenario select shows "${selected}"`);
       }
       const shown = await readShown([...components[slug].controls.map(control => control.key), 'theme', 'mode']);
       for (const control of components[slug].controls) {
@@ -188,11 +203,11 @@ try {
   assert((await clear.boundingBox()) === null, 'text-field/search: the clear button still takes space on an empty field');
   await field.fill('Trail');
   assert(await clear.isVisible(), 'text-field/search: the clear button did not come back with a value');
-  // (c) `?scenario=` on a page with no Scenario section is ignored quietly: the load reports
-  // ready with the plain status line, the address keeps the parameter, and the controls are
-  // the Default ones, with no console error. The page is the first component whose scenarios
-  // array is empty; when every component has scenarios there is no such page, so the block
-  // prints one line and goes on.
+  // (c) `?scenario=` with an unknown id on a page without named scenarios: its Scenario
+  // row (Default and Custom) reports it like any page — the unknown-scenario status, the
+  // parameter dropped from the address — and the controls are the Default ones, with no
+  // console error. The page is the first component whose scenarios array is empty; when
+  // every component has scenarios there is no such page, so the block prints one line.
   const noScenario = componentSlugs.find(slug => !components[slug].scenarios?.length);
   if (noScenario) {
     errors.length = 0;
@@ -200,9 +215,11 @@ try {
     // Wait for the ready round-trip without matching a status text: a scenario message would
     // pass a "not loading" wait and must fail the assertion below, not the wait.
     await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
+    // Every page has the Scenario row now (Default and Custom at least), so an unknown
+    // id is reported and dropped from the address as on the pages with named scenarios.
     const status = await page.locator('#playground-status').textContent();
-    assert(status === 'Ready to try', `${noScenario}/?scenario=x: the status reads ${JSON.stringify(status)}`);
-    assert(new URL(page.url()).searchParams.get('scenario') === 'x', `${noScenario}/?scenario=x: the load rewrote the address`);
+    assert(status === 'Unknown scenario. Showing Default.', `${noScenario}/?scenario=x: the status reads ${JSON.stringify(status)}`);
+    assert(new URL(page.url()).searchParams.get('scenario') === null, `${noScenario}/?scenario=x: the address kept the unknown scenario`);
     const initial = initialComponentState(noScenario);
     const shown = await readShown(components[noScenario].controls.map(control => control.key));
     for (const control of components[noScenario].controls) {
@@ -223,26 +240,31 @@ try {
   assert((await favorite.getAttribute('class'))?.includes('mtrl-button--selected') === true, 'button/favorite: the preview is not selected');
   const vanilla = await page.locator('#generated-code').textContent();
   assert(vanilla?.includes('toggle: true') === true && vanilla.includes('selected: true'), 'button/favorite: the vanilla panel does not show the selected toggle');
-  await page.locator('.framework-tab[data-framework="html"]').click();
+  // The Button page's framework picker is material's chip set (Factory is the vanilla entry).
+  const frameworkChip = (name: string) => page.locator('m-chips.framework-chips').getByRole('gridcell', { name, exact: true });
+  await frameworkChip('Web Components').click();
   const html = await page.locator('#generated-code').textContent();
   assert(html?.includes('<m-button selected variant="filled" size="s" shape="round" toggle>Favorite</m-button>') === true, `button/favorite: the element panel reads ${JSON.stringify(html)}`);
   // The framework tab opens the code view. The click is on the live preview, and the
   // code it checks is the vanilla panel.
-  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  await frameworkChip('Factory').click();
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await favorite.click();
   await page.waitForFunction(() => {
-    const selected = document.querySelector<HTMLInputElement>('input[name="selected"]');
-    return selected?.checked === false && document.querySelector<HTMLSelectElement>('#scenario')?.value === 'custom';
+    const selected = document.querySelector<HTMLElement & { checked?: boolean }>('m-switch[name="selected"]');
+    return selected?.checked === false && document.querySelector<HTMLElement & { value?: string }>('#scenario')?.value === 'custom';
   });
-  assert(await page.locator('input[name="selected"]').isChecked() === false, 'button/favorite: the Selected control stayed checked after a click');
-  assert(await page.locator('#scenario').inputValue() === 'custom', 'button/favorite: the scenario stayed on Favorite after a click');
+  assert(await page.locator('m-switch[name="selected"]').evaluate(el => (el as HTMLElement & { checked?: boolean }).checked === false), 'button/favorite: the Selected control stayed checked after a click');
+  assert(await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? '')) === 'custom', 'button/favorite: the scenario stayed on Favorite after a click');
   const afterClick = await page.locator('#generated-code').textContent();
   assert(afterClick?.includes('selected: true') !== true, 'button/favorite: the code still says selected: true after a click');
   assert(await favorite.getAttribute('aria-pressed') === 'false', 'button/favorite: the preview stayed pressed after a click');
-  await page.locator('select[name="variant"]').selectOption('text');
+  await page.locator('#control-variant').click();
+  // The option label is the value itself, lowercase, as the native panel's
+  // select wrote it.
+  await page.getByRole('option', { name: 'text', exact: true }).click();
   await page.waitForFunction(() => {
-    const toggle = document.querySelector<HTMLInputElement>('input[name="toggle"]');
+    const toggle = document.querySelector<HTMLElement & { disabled?: boolean; checked?: boolean }>('m-switch[name="toggle"]');
     const button = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage button');
     return toggle?.disabled === true && toggle.checked === false && !!button && !button.hasAttribute('aria-pressed');
   });

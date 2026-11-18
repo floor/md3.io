@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { components, componentSlugs } from '../src/shared/components';
+import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -18,20 +19,13 @@ try {
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   const frame = page.frameLocator('#preview');
-  const choose = async (key: string, value: string) => {
-    const select = page.locator(`#configuration select[name="${key}"]`);
-    if (await select.count()) await select.selectOption(value);
-    else await page.locator(`#configuration label.choice:has(input[name="${key}"][value="${value}"])`).click();
-  };
-  const toggle = (key: string) => page.locator(`#configuration label:has(input[type="checkbox"][name="${key}"])`).click();
-  const range = async (key: string, value: string) => {
-    await page.locator(`#configuration input[name="${key}"]`).fill(value);
-  };
-  const checked = (key: string, expected: boolean) => page.waitForFunction(({ key, expected }) => document.querySelector<HTMLInputElement>(`#configuration [name="${key}"]`)?.checked === expected, { key, expected });
-  const reset = async () => {
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.locator('#playground-status').filter({ hasText: 'Configuration reset' }).waitFor();
-  };
+  // The panel's controls, by name (scripts/panel-driver.ts). The material panel has no
+  // Reset: the Scenario select's Default is the way back.
+  const choose = (key: string, value: string) => panel.choose(page, key, value);
+  const toggle = (key: string) => panel.toggle(page, key);
+  const range = (key: string, value: string) => panel.slide(page, key, value);
+  const checked = (key: string, expected: boolean) => panel.waitForSwitch(page, key, expected);
+  const reset = () => panel.backToDefault(page);
   const canvasPainted = async () => {
     await page.waitForFunction(() => {
       const canvas = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('canvas');
@@ -44,12 +38,12 @@ try {
     await frame.locator('#stage > *').first().waitFor();
     if (slug === 'badge') {
       await frame.getByRole('status').filter({ hasText: '8' }).waitFor();
-      await page.locator('#configuration [name="label"]').fill('125');
+      await panel.fill(page, 'label', '125');
       await frame.getByRole('status').filter({ hasText: '99+' }).waitFor();
       await choose('variant', 'small');
       await frame.locator('.mtrl-badge--small').waitFor();
       assert(await frame.locator('.mtrl-badge').textContent() === '', 'Small badge must be a dot');
-      assert(await page.locator('#configuration [name="max"]').first().isDisabled(), 'Dot badge count controls should be inactive');
+      assert(await panel.isDisabled(page, 'max'), 'Dot badge count controls should be inactive');
       await choose('variant', 'large');
       await frame.getByRole('status').filter({ hasText: '99+' }).waitFor();
       await toggle('visible');
@@ -65,7 +59,7 @@ try {
       await frame.getByText('80%', { exact: true }).waitFor();
       await toggle('indeterminate');
       await frame.locator('[role="progressbar"]:not([aria-valuenow])').waitFor();
-      assert(await page.locator('#configuration [name="value"]').isDisabled(), 'Indeterminate value should be inactive');
+      assert(await panel.isDisabled(page, 'value'), 'Indeterminate value should be inactive');
       await toggle('disabled');
       await frame.locator('[role="progressbar"][aria-disabled="true"]').waitFor();
       await reset();
@@ -81,7 +75,7 @@ try {
       await canvasPainted();
       await reset();
     } else if (slug === 'snackbar') {
-      await page.locator('#configuration [name="message"]').fill('');
+      await panel.fill(page, 'message', '');
       await frame.getByRole('button', { name: 'Show snackbar' }).click();
       await frame.getByText('Your changes have been saved.', { exact: true }).waitFor();
       await checked('visible', true);
@@ -111,18 +105,18 @@ try {
         await page.goto(`${server.url}components/tooltip/${id ? `?scenario=${id}` : ''}`);
         await frame.locator('#stage > *').first().waitFor();
         const expected = id ?? 'default';
-        assert(await page.locator('#scenario').inputValue() === expected, `${name}: the scenario did not load`);
+        assert(await panel.scenarioValue(page) === expected, `${name}: the scenario did not load`);
         const code = await page.locator('#generated-code').innerText();
         const button = frame.getByRole('button', { name, exact: true });
         await button.hover();
         await frame.getByRole('tooltip').waitFor();
         await page.locator('#playground-status').filter({ hasText: 'Tooltip shown' }).waitFor();
         await checked('visible', false);
-        assert(await page.locator('#scenario').inputValue() === expected, `${name}: hover changed the scenario`);
+        assert(await panel.scenarioValue(page) === expected, `${name}: hover changed the scenario`);
         assert(await page.locator('#generated-code').innerText() === code, `${name}: hover changed the code`);
         await button.focus();
         await frame.getByRole('tooltip').waitFor();
-        assert(await page.locator('#scenario').inputValue() === expected, `${name}: focus changed the scenario`);
+        assert(await panel.scenarioValue(page) === expected, `${name}: focus changed the scenario`);
         assert(await page.locator('#generated-code').innerText() === code, `${name}: focus changed the code`);
       };
       await hoverKeeps(null, 'Favorite');
@@ -138,7 +132,9 @@ try {
       await frame.getByRole('tooltip').waitFor({ state: 'hidden' });
       await checked('visible', false);
       await page.getByRole('heading', { name: 'Tooltip', exact: true }).hover();
-      await page.getByRole('button', { name: 'Reset', exact: true }).focus();
+      // Focus leaves the preview for a parent page control first (the panel has no
+      // Reset now; the heading's Documentation link stands in).
+      await page.locator('.page-heading a.text-link').focus();
       await target.focus();
       await frame.getByRole('tooltip').waitFor();
       assert(await target.getAttribute('aria-describedby') === await frame.getByRole('tooltip').getAttribute('id'), 'Tooltip is not associated with its target');
@@ -187,8 +183,8 @@ try {
     if (slug === 'progress' || slug === 'loading-indicator') await canvasPainted();
     // Appearance changes should repaint the current component without replacing it.
     await frame.locator('#stage > *').first().evaluate(element => element.setAttribute('data-appearance-check', 'retained'));
-    await page.selectOption('#preview-theme', 'ocean');
-    await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
+    await panel.chooseTheme(page, 'Ocean');
+    await panel.chooseMode(page, 'dark');
     await frame.locator('html[data-theme="ocean"][data-theme-mode="dark"]').waitFor();
     assert(await frame.locator('#stage > [data-appearance-check="retained"]').count() === 1, `${slug}: appearance recreated the component`);
     if (slug === 'progress' || slug === 'loading-indicator') await canvasPainted();
@@ -207,7 +203,7 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
     await reset();
-    assert(await page.locator('#preview-theme').inputValue() === 'ocean', 'Reset discarded the selected theme');
+    assert(await page.locator('#preview-theme').evaluate(host => String((host as HTMLElement & { value?: unknown }).value)) === 'ocean', 'Reset discarded the selected theme');
     await page.setViewportSize({ width: 1440, height: 900 });
     assert(errors.length === 0, errors.join('\n'));
   }

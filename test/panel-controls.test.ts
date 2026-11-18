@@ -9,7 +9,9 @@ const page = (path: string) => handleRequest(new Request(`http://localhost${path
 function rowOpen(html: string, name: string): string {
   const at = html.indexOf(`name="${name}"`);
   if (at < 0) throw new Error(`missing control ${name}`);
-  const open = Math.max(html.lastIndexOf('<label class="ui-row', at), html.lastIndexOf('<div class="ui-row control-row"', at));
+  // A native row (a switch's <label>, or a field's <div>) or the material panel's row,
+  // whose switch rows are a plain <div class="ui-row">.
+  const open = Math.max(html.lastIndexOf('<label class="ui-row', at), html.lastIndexOf('<div class="ui-row', at));
   if (open < 0) throw new Error(`missing row for ${name}`);
   return html.slice(open, html.indexOf('>', open) + 1);
 }
@@ -136,12 +138,16 @@ describe('a control a named set replaces', () => {
     for (const key of ['variant', 'selection']) {
       expect(rowOpen(list, key)).not.toContain('data-replaced');
     }
-    expect(list).toContain('name="lines" value="2" data-enabled-when="listContentDefault" checked');
-    expect(list).toContain('name="count" value="3" data-enabled-when="listContentDefault" checked');
-    expect(list).toContain('id="list-ariaLabel" name="ariaLabel" value="Ideas for today"');
+    // Material's panel: a group's value sits on the group and its hidden input, the
+    // replaced rows' enabledWhen on the element.
+    for (const [key, value] of [['lines', '2'], ['count', '3']] as const) {
+      expect(list).toContain(`<input type="hidden" name="${key}" value="${value}" data-input-for="${key}">`);
+      expect(list).toMatch(new RegExp(`<m-button-group data-group-for="${key}" value="${value}"[^>]*data-enabled-when="listContentDefault"`));
+    }
+    expect(list).toMatch(/<m-text-field [^>]*value="Ideas for today" id="list-ariaLabel" name="ariaLabel"[^>]*data-enabled-when="listContentDefault"/);
     expect(list).toContain('>Text lines<');
     expect(list).toContain('>Item count<');
-    expect(list).toContain('>Vanilla<');
+    expect(list).toContain('>Factory<');
     expect(list).toContain('>Web Components<');
     expect(list).toContain('>React<');
     expect(list).toContain('>Vue<');
@@ -153,17 +159,16 @@ describe('a control a named set replaces', () => {
     const carousel = await page('/components/carousel/');
     expect(rowOpen(carousel, 'captions')).toContain(' data-replaced="slidesDefault">');
     expect(rowOpen(carousel, 'initialSlide')).not.toContain('data-replaced');
-    expect(carousel).toContain('name="initialSlide" data-enabled-when="slidesDefault"');
-    expect(carousel).toContain('value="0" selected');
+    expect(carousel).toMatch(/<m-select value="0" id="control-initialSlide" name="initialSlide"[^>]*data-enabled-when="slidesDefault"/);
 
     const slider = await page('/components/slider/');
     expect(rowOpen(slider, 'secondValue')).not.toContain('data-replaced');
-    expect(slider).toContain('name="secondValue" value="80"');
-    expect(slider).toContain('data-enabled-when="range"');
+    // Material's slider; Value and Range end step by the page's Step option (10 by default).
+    expect(slider).toMatch(/<m-slider value="80" step="10" [^>]*name="secondValue"[^>]*data-enabled-when="range"/);
 
     const checkbox = await page('/components/checkbox/');
     expect(rowOpen(checkbox, 'value')).not.toContain('data-replaced');
-    expect(checkbox).toContain('name="value" value="on"');
+    expect(checkbox).toMatch(/<m-text-field [^>]*value="on" id="checkbox-value" name="value"/);
 
     const chips = await page('/components/chips/');
     expect(rowOpen(chips, 'avatar')).toContain(' data-replaced="chipSetDefault">');

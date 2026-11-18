@@ -1,0 +1,97 @@
+/* styles/playground-material.css — the Button playground pilot's panel layout.
+   The material elements themselves are not restyled here: they render with
+   material's own shadow-DOM styles and baseline tokens (scoped to
+   .playground--material in the page head), at compact density with the groups
+   at the xs size. This sheet only lays out the rows around them — the same
+   rows, label on the left and control on the right, the native panel uses. */
+
+/* The same fill-the-column rule the native panel gives its selects: material's
+   hosts are inline-level and would otherwise keep their intrinsic width. */
+.playground--material .control-row m-select,
+.playground--material .control-row m-text-field { width: 100%; min-width: 0; }
+
+/* The fields' resting outline in the same quiet tone as the button groups'
+   borders: material's outlined text field (and the select built on it) draws
+   its outline with --mtrl-sys-color-outline, its outlined buttons with
+   --mtrl-sys-color-outline-variant. The token is narrowed on the field hosts
+   only; hover (on-surface), focus (primary) and error keep their own colours. */
+.playground--material m-select,
+.playground--material m-text-field { --mtrl-sys-color-outline: var(--mtrl-sys-color-outline-variant); }
+
+/* A wider side panel than the native one's 340px (site.css): room for the
+   material fields and the five-button groups. From 1200px (M3's large
+   breakpoint) only: between 1001 and 1199px the 40px came out of the preview
+   column, and at 1024px the heading's Light/Dark group ran 12px past it
+   (check-selection). At 1000px and below the panel stacks under the preview. */
+@media (min-width: 1200px) {
+    .playground.playground--material { grid-template-columns: minmax(0, 1fr) 380px; }
+}
+
+/* With the wider panel the row labels take material's own switch label size,
+   16px (body large, .mtrl-switch__label in material's switch.css) — the site's
+   --fs-md — instead of the native panel's 13px (--fs-sm, site.css), and its
+   regular weight instead of the native panel's bold. Every row label, switch
+   labels included, so the rows read as one column. */
+.playground--material .control-label { font-size: var(--fs-md); font-weight: var(--fw-normal); }
+
+/* The framework chips take the native tabs' place and spacing above the page
+   heading (site.css .framework-tabs). The set scrolls sideways when the row is
+   narrower than its six chips, as M3's chip sets do, instead of wrapping. */
+.framework-chips-row { margin-bottom: 18px; min-width: 0; }
+
+/* Slider rows: material's slider takes the space beside the numeric read-out, as
+   the native range input did (site.css .control-range is a flex row; a block host
+   without a basis collapses to nothing in it). */
+.playground--material .control-range m-slider { flex: 1 1 auto; min-width: 0; }
+/* The read-out beside it at 14px (--fs-ui), with the 16px row labels, instead of
+   the native panel's 12px (site.css .control-range output). */
+.playground--material .control-range output { font-size: var(--fs-ui); }
+
+/* The panel's shared date picker shows only its dialog: the row's own text field
+   is the field, so the picker's label, field and help text stay hidden
+   (playground-material.ts opens it from the field's calendar icon). */
+.playground--material m-datepicker[data-panel-picker]::part(label),
+.playground--material m-datepicker[data-panel-picker]::part(anchor),
+.playground--material m-datepicker[data-panel-picker]::part(help),
+.playground--material m-datepicker[data-panel-picker]::part(error) { display: none; }
+
+/* Switch rows: the host fills the site's row, so the switch's own
+   space-between container places its slotted label left and its track at the
+   row's right end — the only layout this row needs from the site. */
+.playground--material .ui-row > m-switch { flex: 1 1 auto; min-width: 0; }
+
+/* The slotted label span sits inside the switch's own label element and
+   inherits its font; the site's typeface is restored on the site's own node
+   (the span), not on the element. */
+.playground--material m-switch .control-label { font-family: var(--font-sans); letter-spacing: normal; }
+
+/* Group rows: material's connected xs group keeps a 48px minimum per button
+   of its own (density only lowers height), so the row's right column widens
+   to the group's real width instead of clipping it. */
+.playground--material .control-row:has(m-button-group) { grid-template-columns: minmax(0, 1fr) auto; }
+.playground--material .control-row m-button-group { justify-self: end; }
+
+/* The heading's tabs without the scroll row: material's element has no
+   attribute for the component's scrollable/showDivider config (it is
+   creation-only, and the element maps only variant and value), so the parts
+   the element exports carry the change — the divider hidden, and the scroll
+   container's overflow and its scroll-row edge padding (52px, M3's
+   ScrollableTabRowEdgeStartPadding) off, which seats the tabs where the
+   native preview-tabs sat. */
+.playground--material m-tabs::part(divider) { display: none; }
+.playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
+
+/* The mode group and the theme select share the heading row with the tabs. */
+.playground--material .preview-appearance m-select { width: 168px; min-width: 0; }
+
+@media (max-width: 720px) {
+    .playground--material .preview-appearance m-select { width: auto; flex: 1; }
+}
+
+/* The material heading (tabs, the 168px theme select, the Light/Dark group)
+   needs more room than the native one: between 1151px, where ui.css stops
+   wrapping it, and 1299px its row ran past the heading (measured 1160–1290px).
+   The same wrap ui.css gives narrower windows, up to 1299px. */
+@media (max-width: 1299px) {
+    .playground--material .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; }
+}
