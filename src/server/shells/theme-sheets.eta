@@ -1,11 +1,10 @@
 <%/* material's theme sheets for a frame that shows one theme at a time (the playground
-     preview, the example frames, the Styles frame). Every theme's two sheets sit inert
-     in a template, whose links are never fetched (the server still rewrites their hrefs
-     to the hashed files); only the active theme's are written into the head, around
+     preview, the example frames, the Styles frame). Every theme's two sheets are named in
+     a compact map (theme-sheets-template.eta); only the active theme's are written into the head, around
      contrast.css as the static links were, and src/client/theme-sheets.ts adds another
      theme's on first use. document.write keeps them parser-inserted, so they block the
      first paint: the frame never shows baseline before the saved theme. */%>
-  <%~ include('theme-sheets-template', { themes: it.themes }) %>
-  <script>(() => { const link = document.querySelector('#theme-sheets').content.querySelector(`[data-theme-sheet="${document.documentElement.dataset.theme}"][data-part="theme"]`); if (link) document.write(link.outerHTML); })();</script>
+  <%~ include('theme-sheets-template', { themeSheets: it.themeSheets }) %>
+  <script>(() => { const t = document.documentElement.dataset.theme; const h = (JSON.parse(document.getElementById('theme-sheets').textContent) || {})[t]; if (h) { const url = ['/dist/material/themes/', t, '', h[0] ? '.' + h[0] : '', '.css'].join(''); document.write('<link rel="stylesheet" data-theme-sheet="' + t + '" data-part="theme" href="' + url + '">'); } })();</script>
   <link rel="stylesheet" id="contrast-sheet" href="/dist/material/styles/contrast.css" />
-  <script>(() => { const link = document.querySelector('#theme-sheets').content.querySelector(`[data-theme-sheet="${document.documentElement.dataset.theme}"][data-part="contrast"]`); if (link) document.write(link.outerHTML); })();</script>
+  <script>(() => { const t = document.documentElement.dataset.theme; const h = (JSON.parse(document.getElementById('theme-sheets').textContent) || {})[t]; if (h) { const url = ['/dist/material/themes/', t, '-contrast', h[1] ? '.' + h[1] : '', '.css'].join(''); document.write('<link rel="stylesheet" data-theme-sheet="' + t + '" data-part="contrast" href="' + url + '">'); } })();</script>

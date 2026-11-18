@@ -2,6 +2,7 @@
 // shells/base.eta: a page gets exactly the files it used to request, in that order.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { materialTokens } from './playground-panel';
 
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
@@ -149,6 +150,10 @@ export function minifyCss(css: string): string {
 }
 
 export function bundleCss(name: StylesheetBundle): string {
-  const css = stylesheetBundles[name].map(file => file === 'mtrl-tokens' ? mtrlTokens() : readFileSync(fileFor(file), 'utf8')).join('\n');
+  const css = stylesheetBundles[name].map(file => file === 'mtrl-tokens' ? mtrlTokens() : readFileSync(fileFor(file), 'utf8')).join('\n')
+    // material's scoped baseline tokens for the header's buttons and a component page's
+    // panel: every page has the header, so every bundle carries them, cached with the
+    // sheet instead of inline in each page's HTML.
+    + '\n' + materialTokens;
   return minifyCss(css);
 }

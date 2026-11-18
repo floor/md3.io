@@ -31,7 +31,7 @@
   <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
-  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><style><%~ it.materialTokens %></style><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
+  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
   <% if (it.section === 'Examples') { %><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>
@@ -58,8 +58,8 @@
        site theme: its main sheet is written here so their first paint is themed
        (parser-inserted, render-blocking); its contrast variant follows from theme-sheets.ts.
        No contrast.css on a site page. */%>
-  <%~ include('theme-sheets-template', { themes: it.themes }) %>
-  <script>(() => { const link = document.querySelector('#theme-sheets').content.querySelector(`[data-theme-sheet="${document.documentElement.dataset.siteTheme}"][data-part="theme"]`); if (link) document.write(link.outerHTML); })();</script>
+  <%~ include('theme-sheets-template', { themeSheets: it.themeSheets }) %>
+  <script>(() => { const t = document.documentElement.dataset.siteTheme; const h = (JSON.parse(document.getElementById('theme-sheets').textContent) || {})[t]; if (h) { const url = ['/dist/material/themes/', t, '', h[0] ? '.' + h[0] : '', '.css'].join(''); document.write('<link rel="stylesheet" data-theme-sheet="' + t + '" data-part="theme" href="' + url + '">'); } })();</script>
   <script>
     (() => { let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {} if (['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'].includes(framework)) document.documentElement.dataset.framework = framework; })();
     (() => { let manager; try { manager = localStorage.getItem('md3-package-manager'); } catch {} if (['npm', 'pnpm', 'yarn', 'bun'].includes(manager)) document.documentElement.dataset.packageManager = manager; })();

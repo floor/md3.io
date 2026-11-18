@@ -1,6 +1,6 @@
 // Switches a frame's material theme without loading every theme up front. The frame's
 // head holds only the active theme's two sheets (src/server/shells/theme-sheets.eta);
-// another theme's come from the inert #theme-sheets template on first use, the theme
+// another theme's are named in the #theme-sheets map and load on first use, the theme
 // before contrast.css and its contrast variant after it, as the static links were.
 // data-theme switches once both have loaded, so the old theme stays on screen until
 // then. Works on the frame's own document or, from the parent page, on a frame's.
@@ -13,13 +13,22 @@ function loadTheme(doc: Document, theme: string): Promise<void> {
   loads.set(doc, started);
   let loading = started.get(theme);
   if (!loading) {
-    const template = doc.querySelector<HTMLTemplateElement>('#theme-sheets');
     const contrast = doc.getElementById('contrast-sheet');
+    let hashes: [string, string] | undefined;
+    try { hashes = JSON.parse(doc.getElementById('theme-sheets')?.textContent || '{}')[theme]; } catch { hashes = undefined; }
     // Only the parts not already in the head (a page or frame writes the active
     // theme's main sheet before its first paint).
-    const sheets = [...template?.content.querySelectorAll<HTMLLinkElement>(`[data-theme-sheet="${theme}"]`) ?? []]
-      .filter(link => !doc.querySelector(`head > link[data-theme-sheet="${theme}"][data-part="${link.dataset.part}"]`))
-      .map(link => doc.importNode(link, true) as HTMLLinkElement);
+    const sheets = (hashes ? (['theme', 'contrast'] as const) : [])
+      .filter(part => !doc.querySelector(`head > link[data-theme-sheet="${theme}"][data-part="${part}"]`))
+      .map(part => {
+        const hash = hashes![part === 'theme' ? 0 : 1];
+        const link = doc.createElement('link');
+        link.rel = 'stylesheet';
+        link.dataset.themeSheet = theme;
+        link.dataset.part = part;
+        link.href = `/dist/material/themes/${theme}${part === 'contrast' ? '-contrast' : ''}${hash ? `.${hash}` : ''}.css`;
+        return link;
+      });
     loading = Promise.all(sheets.map(link => new Promise<void>(resolve => {
       link.addEventListener('load', () => resolve(), { once: true });
       link.addEventListener('error', () => resolve(), { once: true });

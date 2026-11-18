@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="/dist/material/styles/base.css" />
   <link rel="stylesheet" href="/dist/material/styles/typography.css" />
   <% [...it.component.styles, ...(it.component.previewStyles || [])].forEach(style => { %><link rel="stylesheet" href="/dist/material/styles/<%= style %>.css" /><% }); %>
-  <%~ include('theme-sheets', { themes: it.themes }) %>
+  <%~ include('theme-sheets', { themeSheets: it.themeSheets }) %>
   <link rel="stylesheet" href="/styles/preview.css" />
   <script type="module" src="/dist/preview.js"></script>
 </head><body><main id="stage" aria-label="Component preview"></main></body></html>

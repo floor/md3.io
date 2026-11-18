@@ -3,6 +3,7 @@
 // DOM, on every component page.
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
+import { bundleCss } from '../src/server/css';
 import { components, componentSlugs } from '../src/shared/components';
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
@@ -61,14 +62,16 @@ describe('the material playground panel', () => {
     // rule (tokens.css): dark by default, light once [data-theme-mode=light] is set.
     // Both at specificity 0 (:where) so the site's chosen theme on the scope wins,
     // the dark default first and the light roles after it.
-    expect(html).toMatch(/<style>[^<]*\.playground--material/);
-    const dark = html.indexOf(':where(.playground--material, .site-material){color-scheme:dark');
-    const light = html.indexOf(':where(:root[data-theme-mode=light] .playground--material, :root[data-theme-mode=light] .site-material){color-scheme:light');
+    // They ship in the page's stylesheet bundle (cached), not inline in the HTML.
+    expect(html).not.toMatch(/<style>[^<]*\.playground--material/);
+    const sheet = bundleCss('material-panel');
+    const dark = sheet.indexOf(':where(.playground--material,.site-material){color-scheme:dark');
+    const light = sheet.indexOf(':where(:root[data-theme-mode=light] .playground--material, :root[data-theme-mode=light] .site-material){color-scheme:light');
     expect(dark).toBeGreaterThan(-1);
     expect(light).toBeGreaterThan(dark);
-    // The theme's sheets are inert on the page; the chosen theme's main sheet is
-    // written into the head for the panel's first paint, and no contrast.css.
-    expect(html).toContain('<template id="theme-sheets">');
+    // Every theme's sheets are named in a compact map; the chosen theme's main sheet
+    // is written into the head for the panel's first paint, and no contrast.css.
+    expect(html).toMatch(/<script type="application\/json" id="theme-sheets">\{"neutral":\["[a-f0-9]{10}","[a-f0-9]{10}"\]/);
     expect(html).not.toContain('id="contrast-sheet"');
     // The glue module loads, and only this page maps it.
     expect(html).toContain('"/dist/playground-material.js":');
