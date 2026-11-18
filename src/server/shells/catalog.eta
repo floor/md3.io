@@ -10,5 +10,5 @@
     <% }); %></div>
   </section>
   <% }); %>
-  <p class="catalog-note"><a href="/docs/">Browse the complete component reference →</a></p>
+  <p class="catalog-note"><a href="/docs/">Browse the complete component reference <%~ it.icon('arrow_forward') %></a></p>
 </div>

@@ -22,9 +22,10 @@ import 'material/elements/css/button-group';
 import 'material/elements/css/button';
 import 'material/elements/css/chips';
 import 'material/elements/css/slider';
+import 'material/elements/css/snackbar';
 import 'material/elements/css/datepicker';
 import 'material/elements/css/timepicker';
-import { defineButton, defineButtonGroup, defineChips, defineDatepicker, defineSelect, defineSlider, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
+import { defineButton, defineButtonGroup, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 
 defineSelect();
 defineSwitch();
@@ -34,6 +35,7 @@ defineButtonGroup();
 defineButton();
 defineChips();
 defineSlider();
+defineSnackbar();
 defineDatepicker();
 defineTimepicker();
 

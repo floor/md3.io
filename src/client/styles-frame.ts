@@ -3,6 +3,7 @@
 // grouped under the corner step each one reads. The page sends the base theme, the
 // mode and the overridden custom properties; they go on the root, so everything
 // inside follows, the dialog in the top layer included, without re-creating a component.
+import { applyTheme } from './theme-sheets';
 import createTopAppBar from 'material/components/top-app-bar';
 import createIconButton from 'material/components/icon-button';
 import { createChips } from 'material/components/chips';
@@ -120,14 +121,17 @@ if (gallery) buildGallery(); else buildScreen();
 
 let applied: string[] = [];
 function apply(data: { base?: unknown; mode?: unknown; tokens?: unknown }) {
-  if (typeof data.base === 'string') root.dataset.theme = data.base;
+  const base = typeof data.base === 'string' ? data.base : null;
+  const themed = base ? applyTheme(document, base) : Promise.resolve();
   root.dataset.themeMode = root.style.colorScheme = data.mode === 'dark' ? 'dark' : 'light';
   const tokens = data.tokens && typeof data.tokens === 'object' ? data.tokens as Record<string, unknown> : {};
   for (const name of applied) if (!(name in tokens)) root.style.removeProperty(name);
   applied = Object.keys(tokens).filter(name => name.startsWith('--mtrl-') && typeof tokens[name] === 'string');
   for (const name of applied) root.style.setProperty(name, tokens[name] as string);
-  // Shown once the first theme is in, so it never paints mtrl's defaults first.
-  screen.hidden = false;
+  // Shown once the requested theme is on the root (its sheets loaded), so the frame
+  // never paints another theme first — the one its head wrote from storage, or mtrl's
+  // defaults (review of #92: ?theme=ocean with forest stored showed forest first).
+  void themed.then(() => { if (!base || root.dataset.theme === base) screen.hidden = false; });
   // The gallery names each step's value as the tokens now have it.
   for (const row of screen.querySelectorAll<HTMLElement>('.gallery__step')) row.querySelector('output')!.value = getComputedStyle(root).getPropertyValue(`--mtrl-sys-shape-corner-${row.dataset.step}`).trim();
 }

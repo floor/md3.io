@@ -145,7 +145,7 @@ try {
     }
     await page.getByRole('tab', { name: 'View code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
-    await page.locator('#playground-status').filter({ hasText: 'Code copied' }).waitFor();
+    await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: code copy is stale`);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
@@ -180,8 +180,9 @@ try {
   const headingFits = async (where: string) => {
     const heading = await page.locator('.preview-heading').boundingBox();
     assert(heading, `${where}: the playground heading is not visible`);
-    // The view tabs are material's tab set (one host), the mode is its button group.
-    for (const selector of ['m-tabs', '.preview-dot', 'label[for="preview-theme"]', '#preview-theme', 'm-button-group[data-group-for="mode"]']) {
+    // The view tabs are material's tab set (one host); the theme and mode moved to the
+    // site header, so the heading holds the tabs and the status dot.
+    for (const selector of ['m-tabs', '.preview-dot']) {
       const box = await page.locator(`.preview-heading ${selector}`).boundingBox();
       assert(box && box.x >= heading.x - 0.5 && box.y >= heading.y - 0.5 && box.x + box.width <= heading.x + heading.width + 0.5 && box.y + box.height <= heading.y + heading.height + 0.5,
         `${where}: the toolbar control ${selector} at ${JSON.stringify(box)} is not inside the heading ${JSON.stringify(heading)}`);

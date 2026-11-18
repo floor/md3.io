@@ -1,8 +1,14 @@
 // The example page: framework tabs switch the running frame and its source; the
-// choice and the frame's appearance persist, and the URL carries the framework.
+// choice persists and the URL carries the framework; the frame follows the site's
+// appearance (the header).
+import { applyTheme } from './theme-sheets';
+import 'material/elements/css/chips';
+import { defineChips } from 'material/elements';
+import { onAppearance } from './appearance';
 import { copyText } from './site';
 import { mountDeviceFrame } from './device-frame';
 
+defineChips();
 const page = document.querySelector<HTMLElement>('.example-page');
 if (page) {
   const slug = page.dataset.example!;
@@ -10,45 +16,50 @@ if (page) {
   const status = document.querySelector<HTMLElement>('#example-status')!;
   // Mobile, Tablet or Desktop: the frame at that device's size (src/client/device-frame.ts).
   mountDeviceFrame(frame, { label: 'Example device' });
-  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
-  const APPEARANCE = 'md3-preview-appearance';
+  // The framework chips (material's filter chip set, server-rendered; the same picker as
+  // the component playgrounds): a chip's change switches the frame and its source.
+  const chips = document.querySelector<HTMLElement & { value: unknown }>('m-chips.framework-chips');
+  const chipFor = (id: string) => chips?.querySelector<HTMLElement>(`m-chip[value="${CSS.escape(id)}"]`);
+  const offered = (id: string | null) => !!id && !!chipFor(id) && !chipFor(id)!.hasAttribute('disabled');
+  const first = chips?.querySelector<HTMLElement>('m-chip:not([disabled])')?.getAttribute('value') ?? 'vanilla';
   const FRAMEWORK = 'md3-example-framework';
+  let current = '';
 
-  const select = (id: string, focus = false): void => {
-    const tab = tabs.find(t => t.dataset.framework === id) ?? tabs[0]!;
-    for (const t of tabs) {
-      const on = t === tab;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
+  // `remember`: write the shared choice (read by the playgrounds and the docs switch) only
+  // for a framework this page offers, picked on a chip or named by the address; a fallback
+  // stays on this page.
+  const select = (id: string, remember = false): void => {
+    const framework = offered(id) ? id : first;
+    const keep = remember && offered(id);
+    if (framework === current) return;
+    current = framework;
+    if (chips) {
+      if (chips.matches(':defined')) { if (String(chips.value) !== framework) chips.value = framework; }
+      else chips.setAttribute('value', framework);
     }
-    if (focus) tab.focus();
-    const framework = tab.dataset.framework!;
+    const label = chipFor(framework)?.textContent?.trim() ?? framework;
     const src = `/examples/${slug}/frame/${framework}/`;
     if (!frame.src.endsWith(src)) frame.src = src;
-    frame.title = `${page.querySelector('h1')?.textContent} — ${tab.textContent}`;
+    frame.title = `${page.querySelector('h1')?.textContent} — ${label}`;
     for (const source of document.querySelectorAll<HTMLElement>('.example-source')) source.hidden = source.dataset.framework !== framework;
     for (const size of document.querySelectorAll<HTMLElement>('.example-sizes > div')) size.classList.toggle('is-current', size.dataset.framework === framework);
-    status.textContent = `Running the ${tab.textContent} version`;
+    status.textContent = `Running the ${label} version`;
     const url = new URL(location.href);
     url.searchParams.set('framework', framework);
     history.replaceState(null, '', url);
-    try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ }
+    if (keep) { try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ } }
   };
 
-  tabs.forEach((tab, i) => {
-    tab.addEventListener('click', () => select(tab.dataset.framework!));
-    tab.addEventListener('keydown', event => {
-      const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-      const target = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : step ? (i + step + tabs.length) % tabs.length : -1;
-      if (target < 0) return;
-      event.preventDefault();
-      select(tabs[target]!.dataset.framework!, true);
-    });
+  chips?.addEventListener('change', event => {
+    const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? chips.value;
+    const id = String(Array.isArray(value) ? value[0] ?? '' : value ?? '');
+    if (id) select(id, true);
   });
 
-  let initial = new URLSearchParams(location.search).get('framework');
-  try { initial ??= localStorage.getItem(FRAMEWORK); } catch { /* Storage may be unavailable. */ }
-  select(initial ?? tabs[0]!.dataset.framework!);
+  const asked = new URLSearchParams(location.search).get('framework');
+  let saved: string | null = null;
+  try { saved = localStorage.getItem(FRAMEWORK); } catch { /* Storage may be unavailable. */ }
+  if (asked) select(asked, true); else select(saved ?? first);
 
   // File tabs and copy, per framework.
   for (const source of document.querySelectorAll<HTMLElement>('.example-source')) {
@@ -66,20 +77,17 @@ if (page) {
     });
   }
 
-  // Theme and mode: the frame reads them on load, as the playground's preview does.
-  const theme = document.querySelector<HTMLSelectElement>('#example-theme')!;
-  const modes = [...document.querySelectorAll<HTMLInputElement>('input[name="example-mode"]')];
-  try {
-    const saved = JSON.parse(localStorage.getItem(APPEARANCE) || '{}') as { theme?: string; mode?: string };
-    if (saved.theme && [...theme.options].some(o => o.value === saved.theme)) theme.value = saved.theme;
-    for (const m of modes) m.checked = m.value === (saved.mode === 'dark' ? 'dark' : 'light');
-  } catch { /* Storage may be unavailable. */ }
-  const applyAppearance = (): void => {
-    const mode = modes.find(m => m.checked)?.value ?? 'light';
-    try { localStorage.setItem(APPEARANCE, JSON.stringify({ theme: theme.value, mode })); } catch { /* Storage may be unavailable. */ }
+  // Theme and mode come from the site header (appearance.ts): a frame reads them on load,
+  // as the playground's preview does, and the open frame follows every change live.
+  // The chips row (a material scope) follows too, as on the component pages.
+  const scopes = [...document.querySelectorAll<HTMLElement>('.playground--material')];
+  onAppearance(({ theme, mode }) => {
+    for (const scope of scopes) scope.dataset.themeMode = mode;
+    void applyTheme(document, theme, scopes);
     const root = frame.contentDocument?.documentElement;
-    if (root) { root.dataset.theme = theme.value; root.dataset.themeMode = mode; root.style.colorScheme = mode; }
-  };
-  theme.addEventListener('change', applyAppearance);
-  for (const m of modes) m.addEventListener('change', applyAppearance);
+    if (!root) return;
+    void applyTheme(root.ownerDocument, theme);
+    root.dataset.themeMode = mode;
+    root.style.colorScheme = mode;
+  });
 }

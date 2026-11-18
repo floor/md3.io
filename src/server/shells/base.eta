@@ -31,19 +31,35 @@
   <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
-  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% if (it.panelTokens) { %><style><%~ it.panelTokens %></style><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
+  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
   <% if (it.section === 'Examples') { %><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
   </script>
   <script>
+    // One appearance for the whole site: the header's Themes menu picks the material
+    // theme, the moon the mode, and both reach the playground's preview and panel.
+    // The theme is kept in md3-preview-appearance (the frames read it there); its mode
+    // is the site mode, rewritten here so a frame loading below starts in step.
     (() => {
-      let mode = 'light';
-      try { mode = JSON.parse(localStorage.getItem('md3-preview-appearance') || '{}')?.mode; } catch {}
-      document.documentElement.dataset.previewMode = mode === 'dark' ? 'dark' : 'light';
+      const root = document.documentElement;
+      const themes = <%~ JSON.stringify(it.themes || ['baseline']) %>;
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem('md3-preview-appearance') || '{}') || {}; } catch {}
+      root.dataset.siteTheme = themes.includes(saved.theme) ? saved.theme : 'baseline';
+      root.dataset.previewMode = root.dataset.themeMode;
+      if (saved.mode !== root.dataset.themeMode) {
+        try { localStorage.setItem('md3-preview-appearance', JSON.stringify({ ...saved, theme: root.dataset.siteTheme, mode: root.dataset.themeMode })); } catch {}
+      }
     })();
   </script>
+  <%/* The material scopes (the header's Themes control, a component page's panel) take the
+       site theme: its main sheet is written here so their first paint is themed
+       (parser-inserted, render-blocking); its contrast variant follows from theme-sheets.ts.
+       No contrast.css on a site page. */%>
+  <%~ include('theme-sheets-template', { themeSheets: it.themeSheets }) %>
+  <script>(() => { const t = document.documentElement.dataset.siteTheme; const h = (JSON.parse(document.getElementById('theme-sheets').textContent) || {})[t]; if (h) { const url = ['/dist/material/themes/', t, '', h[0] ? '.' + h[0] : '', '.css'].join(''); document.write('<link rel="stylesheet" data-theme-sheet="' + t + '" data-part="theme" href="' + url + '">'); } })();</script>
   <script>
     (() => { let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {} if (['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'].includes(framework)) document.documentElement.dataset.framework = framework; })();
     (() => { let manager; try { manager = localStorage.getItem('md3-package-manager'); } catch {} if (['npm', 'pnpm', 'yarn', 'bun'].includes(manager)) document.documentElement.dataset.packageManager = manager; })();
@@ -52,30 +68,26 @@
 </head>
 <body class="<%= it.isHome ? 'home' : it.noSidebar ? 'no-sidebar' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
-  <header class="header<%= it.section && !it.sectionNamed ? ' header--section-only' : '' %>"><div class="header__inner">
-    <a class="header__logo" href="/"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material<span class="brand-dot">.</span></a>
-    <% if (it.section) { %><span class="header__sep" aria-hidden="true">/</span><span class="header__section"><%= it.section %></span><% } %>
+  <header class="header"><div class="header__inner">
+    <a class="header__logo" href="/" aria-label="material, home"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material</a>
     <nav class="header__nav" aria-label="Main navigation">
       <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
       <a href="/styles/" class="<%= it.section === 'Styles' ? 'active' : '' %>">Styles</a>
       <a href="/examples/" class="<%= it.section === 'Examples' ? 'active' : '' %>">Examples</a>
       <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
-      <a href="https://github.com/floor/material" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      <a class="header__github" href="https://github.com/floor/material" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in a new tab)" title="GitHub"><%~ it.icon('brands/github') %></a>
     </nav>
     <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
       <svg class="header__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
     </button>
-    <button type="button" class="header__theme" id="theme-toggle" aria-label="Toggle site theme">
-      <svg class="header__theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
-      <svg class="header__theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 13A9 9 0 0 1 11 3a9 9 0 1 0 10 10Z"/></svg>
-    </button>
+    <div class="header__themes <%= it.headerScope %>"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.themeButton %><%~ it.themeMenu %><%~ it.modeButton %></div>
     <button type="button" class="header__hamburger" id="hamburger" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
   </div></header>
   <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
   <div class="layout">
     <nav class="sidebar <%= it.isHome ? 'sidebar--home' : '' %>" id="sidebar" aria-label="<%= it.section || 'Site' %> navigation">
-      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/styles/">Styles</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/material">GitHub ↗</a></div>
+      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/styles/">Styles</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/material">GitHub <%~ it.icon('open_in_new') %></a></div>
       <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
       <% }); %></div><% }); %>
@@ -83,6 +95,6 @@
     </nav>
     <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
   </div>
-  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub ↗</a><a href="/privacy/">Privacy</a></span></footer>
-  <%~ include('search') %>
+  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub <%~ it.icon('open_in_new') %></a><a href="/privacy/">Privacy</a></span></footer>
+  <%~ include('search', { icon: it.icon }) %>
 </body></html>

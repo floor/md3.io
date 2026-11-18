@@ -267,8 +267,15 @@ export function scopedTokens(scope: string, darkScope: string, css: string = bas
  * the dark roles and the light ones arrive with the attribute; otherwise the
  * panel renders light-tokened controls on a dark page when no script runs.
  */
-export function scopedTokensSiteDefault(scope: string, css: string = baseCss): string {
-  return scopedTokens(`:root[data-theme-mode=light] ${scope}`, scope, css);
+export function scopedTokensSiteDefault(scopes: readonly string[], css: string = baseCss): string {
+  // Specificity 0 (:where): a material theme on a scope (data-theme, the site's chosen
+  // theme, from the theme's own sheet) wins over these baseline roles. At equal
+  // specificity the later rule wins, so the dark default comes first and the light
+  // roles, under [data-theme-mode=light], after it.
+  const light = `:where(${scopes.map(scope => `:root[data-theme-mode=light] ${scope}`).join(', ')})`;
+  const dark = `:where(${scopes.join(', ')})`;
+  const [lightRule, darkRule] = scopedTokens(light, dark, css).split('\n');
+  return [darkRule, lightRule].join('\n');
 }
 
 /** mtrl's font-weight utility classes (`.mtrl-font-<name>`), lightest first. */

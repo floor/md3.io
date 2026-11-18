@@ -7,8 +7,8 @@
     </div>
     <div class="search-dialog__results" id="search-results"></div>
     <div class="search-dialog__footer" aria-hidden="true">
-      <span class="search-dialog__footer-hint"><span class="search-dialog__footer-key">↑</span><span class="search-dialog__footer-key">↓</span>navigate</span>
-      <span class="search-dialog__footer-hint"><span class="search-dialog__footer-key">↵</span>open</span>
+      <span class="search-dialog__footer-hint"><span class="search-dialog__footer-key"><%~ it.icon('arrow_upward') %></span><span class="search-dialog__footer-key"><%~ it.icon('arrow_downward') %></span>navigate</span>
+      <span class="search-dialog__footer-hint"><span class="search-dialog__footer-key"><%~ it.icon('keyboard_return') %></span>open</span>
       <span class="search-dialog__footer-hint"><span class="search-dialog__footer-key">esc</span>close</span>
     </div>
   </div>

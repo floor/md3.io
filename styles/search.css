@@ -379,10 +379,6 @@
     .header .header__search {
         margin-left: auto;
     }
-
-    .header .header__search + .header__theme {
-        margin-left: 0;
-    }
 }
 
 @media (max-width: 640px) {

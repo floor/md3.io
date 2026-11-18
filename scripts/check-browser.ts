@@ -29,17 +29,20 @@ try {
 
   const originalButton = await button.elementHandle();
   const previewHeight = (await page.locator('.preview-panel').boundingBox())!.height;
+  assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Live preview did not show Copy code in the preview heading');
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.getByRole('tabpanel', { name: 'View code' }).isVisible(), 'Code did not open in the playground');
   assert(await page.locator('#generated-code .hljs-keyword').count() > 0 && await page.locator('#generated-code .hljs-string').count() > 0, 'JavaScript syntax highlighting is missing');
   const darkKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
-  assert(await page.locator('.playground-space > #copy-code').isVisible(), 'Code view did not show Copy code over the code');
+  // Copy code sits in the preview heading, material's xs button, in both views.
+  assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Code view did not show Copy code in the preview heading');
   assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
   assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
   await page.getByRole('tab', { name: 'Live preview' }).focus();
   await page.keyboard.press('Enter');
   assert(await page.getByRole('tab', { name: 'Live preview' }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
-  assert(!await page.locator('#copy-code').isVisible(), 'Live preview still shows Copy code');
+  // Copy code stays in the heading in Live preview too: copying needs no view switch.
+  assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Live preview lost Copy code from the heading');
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
   await page.getByRole('tab', { name: 'View code' }).focus();
   await page.keyboard.press('Enter');
@@ -72,24 +75,35 @@ try {
   await page.getByRole('switch', { name: 'Square shape', exact: true }).click();
   await page.getByRole('switch', { name: 'Disabled', exact: true }).click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLButtonElement>('button')?.disabled);
-  assert(await page.locator('.preview-heading #preview-theme').count() === 1, 'Appearance controls are missing from the playground heading');
-  await page.locator('#preview-theme').click();
-  await page.getByRole('option', { name: 'Ocean' }).click();
-  await page.locator('m-button-group[data-group-for="mode"]').getByRole('button', { name: 'Dark', exact: true }).click();
+  // One appearance for the whole site: the theme and mode live in the site header,
+  // not the playground heading, and reach the preview and the panel together.
+  assert(await page.locator('.preview-heading #preview-theme').count() === 0, 'The playground heading still has its own theme select');
+  assert(await page.locator('header #theme-picker').isVisible(), 'The site header has no Themes button');
+  await panel.chooseTheme(page, 'Ocean');
+  await panel.chooseMode(page, 'dark');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
-  assert(await page.locator('html').getAttribute('data-theme-mode') === 'dark', 'Preview changed site mode');
+  assert(await page.locator('html').getAttribute('data-theme-mode') === 'dark', 'The site is not in the dark mode it chose');
   await page.locator('#theme-toggle').click();
   const lightKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
   assert(lightKeywordColor !== darkKeywordColor, 'Syntax colors did not follow the site theme');
-  assert(await preview.locator('html').getAttribute('data-theme-mode') === 'dark', 'Site theme changed preview mode');
+  await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.themeMode === 'light');
+  assert(await preview.locator('html').getAttribute('data-theme-mode') === 'light', "The site's mode did not reach the preview");
+  await page.locator('#theme-toggle').click();
+  await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.themeMode === 'dark');
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   await page.getByRole('button', { name: 'Copy code', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   assert(copied === await page.locator('#generated-code').textContent(), 'Copied code differs from the highlighted source');
   assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('material/themes/ocean'), 'Copied code is stale');
-  const parentHasMaterial = await page.evaluate(() => [...document.styleSheets].some(sheet => sheet.href?.includes('/dist/material/')));
-  assert(!parentHasMaterial, 'Material CSS leaked into the site');
+  // Material's component CSS stays in the frame and the elements' shadow roots. The
+  // page may load the chosen theme's sheet (one appearance for the whole site): it only
+  // sets roles under [data-theme], which only the material scopes carry.
+  const leak = await page.evaluate(() => ({
+    sheets: [...document.styleSheets].map(sheet => sheet.href ?? '').filter(href => href.includes('/dist/material/') && !href.includes('/dist/material/themes/')),
+    themed: [...document.querySelectorAll('[data-theme]')].filter(element => !element.matches('.playground--material, .site-material')).map(element => element.tagName),
+  }));
+  assert(leak.sheets.length === 0 && leak.themed.length === 0, `Material CSS leaked into the site: ${JSON.stringify(leak)}`);
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
   // The pilot has no Reset: the Scenario select's Default is the way back.
@@ -105,11 +119,12 @@ try {
       const root = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement;
       return root?.dataset.theme === theme && root?.dataset.themeMode === mode;
     }, { theme, mode });
-    // Material elements on every component page: the theme's value on the host,
-    // the mode group's on its hidden input.
-    const themeNow = await page.locator('#preview-theme').evaluate(el => String((el as HTMLElement & { value?: string }).value));
-    const modeNow = await page.locator(`input[name="mode"][value="${mode}"]`).evaluate((el, mode) => (el as HTMLInputElement).type === 'radio' ? (el as HTMLInputElement).checked : (el as HTMLInputElement).value === mode, mode);
-    assert(themeNow === theme && modeNow, 'Appearance controls lost the saved preference');
+    // The site's appearance (header), and the form's copy of it in the heading.
+    const now = await page.evaluate(() => ({
+      site: `${document.documentElement.dataset.siteTheme}/${document.documentElement.dataset.themeMode}`,
+      form: `${document.querySelector<HTMLInputElement>('input[data-appearance="theme"]')?.value}/${document.querySelector<HTMLInputElement>('input[data-appearance="mode"]')?.value}`,
+    }));
+    assert(now.site === `${theme}/${mode}` && now.form === `${theme}/${mode}`, `Appearance lost the saved preference: ${JSON.stringify(now)}`);
     const code = await page.locator('#generated-code').textContent();
     assert(code?.includes(`dataset.theme = '${theme}'`) && code.includes(`dataset.themeMode = '${mode}'`), 'Generated code lost the saved appearance');
   };
@@ -162,7 +177,7 @@ try {
   await panel.chooseMode(page, 'light');
   await page.locator('#sidebar').getByRole('link', { name: 'Button group', exact: true }).click();
   await assertAppearance('forest', 'light');
-  assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'Saved preview appearance changed site mode');
+  assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'The site mode and the preview mode moved apart');
   await page.evaluate(() => localStorage.setItem('md3-preview-appearance', '{invalid json'));
   await page.reload();
   await assertAppearance('baseline', 'light');
@@ -172,21 +187,12 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-desktop.png`, fullPage: false });
   const tocHref = await page.locator('.doc-toc a').first().getAttribute('href');
   assert(tocHref && await page.locator(tocHref).count() === 1, 'TOC target is missing');
-  // Under 600px the breadcrumb is not displayed. The header and the document do not overflow at 360 or 599; at 600px the breadcrumb is displayed.
+  // The header (logo, navigation, search, Themes and mode buttons; no section crumb any
+  // more) and the document do not overflow at 360, 599 or 600 px.
   const breadcrumb = () => page.evaluate(() => {
-    const displayed = (selector: string) => {
-      const el = document.querySelector(selector) as HTMLElement | null;
-      if (!el) return false;
-      const style = getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden') return false;
-      const rect = el.getBoundingClientRect();
-      return rect.width > 1 && rect.height > 1;
-    };
     const header = document.querySelector('.header') as HTMLElement;
     const root = document.documentElement;
     return {
-      sep: displayed('.header__sep'),
-      section: displayed('.header__section'),
       headerFits: header.scrollWidth === header.clientWidth,
       documentFits: root.scrollWidth === root.clientWidth,
     };
@@ -196,12 +202,9 @@ try {
   await page.setViewportSize({ width: 360, height: 844 });
   fits(360, await breadcrumb());
   await page.setViewportSize({ width: 599, height: 844 });
-  const at599 = await breadcrumb();
-  assert(!at599.sep && !at599.section, `At 599 px the docs breadcrumb is displayed (separator ${at599.sep}, section ${at599.section})`);
-  fits(599, at599);
+  fits(599, await breadcrumb());
   await page.setViewportSize({ width: 600, height: 844 });
-  const at600 = await breadcrumb();
-  assert(at600.sep && at600.section, 'At 600 px the docs breadcrumb is not displayed');
+  fits(600, await breadcrumb());
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}components/button/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();

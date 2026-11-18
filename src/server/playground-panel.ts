@@ -21,9 +21,12 @@ import { resolve } from 'node:path';
 
 /** The playground section's extra class, where the panel's mtrl tokens are set. */
 export const PANEL_SCOPE = 'playground--material';
-/** mtrl's baseline tokens on the panel: dark by default like the site's own
- *  tokens, light when the site's inline script sets data-theme-mode=light. */
-export const panelTokens = scopedTokensSiteDefault(`.${PANEL_SCOPE}`);
+/** The site header's material scope (the Themes button and menu, base.eta). */
+export const HEADER_SCOPE = 'site-material';
+/** mtrl's baseline tokens on the material scopes (the playground panel, the header),
+ *  on every page: dark by default like the site's own tokens, light when the site's
+ *  inline script sets data-theme-mode=light; the chosen theme on a scope wins. */
+export const materialTokens = scopedTokensSiteDefault([`.${PANEL_SCOPE}`, `.${HEADER_SCOPE}`]);
 
 /**
  * How the elements get their shadow-root styles. Link mode (material/ssr) points
@@ -36,11 +39,11 @@ const elementCssBase: string | null = (() => {
   try { return JSON.parse(readFileSync(resolve(root, 'dist/element-css/base.json'), 'utf8')).base; }
   catch { return null; }
 })();
-const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementCssBase } as const : { styles: 'inline' } as const;
+export const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementCssBase } as const : { styles: 'inline' } as const;
 
 /** Every piece of a panel's element markup, for linkedStylesheets. */
 export const panelMarkup = (panel: ReturnType<typeof materialPanel>): string =>
-  [panel.frameworks, panel.tabs, panel.appearance, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
+  [panel.frameworks, panel.tabs, panel.appearance, panel.copy, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
 
 /** The stylesheets a rendered panel links from its shadow roots, for the page to preload. */
 export const linkedStylesheets = (html: string): string[] =>
@@ -61,6 +64,47 @@ const pickerIcons = {
   date: readFileSync(resolve(root, 'icons/calendar_today.svg'), 'utf8'),
   time: readFileSync(resolve(root, 'icons/schedule.svg'), 'utf8'),
 };
+
+/**
+ * A framework's logo for its chip, from icons/brands/. All six chips render in one shadow
+ * root, so every internal id (gradients: the Web Components logo's a…d, SolidJS's sheen)
+ * is prefixed with the framework, and so is every url(#…) and href="#…" pointing at it.
+ * Hidden from assistive technology: the chip's label names the framework.
+ */
+const LOGO_FILES: Record<string, string> = { vanilla: 'javascript', html: 'webcomponent', react: 'react', vue: 'vue', svelte: 'svelte', solid: 'solidjs' };
+const logoCache = new Map<string, string>();
+function frameworkLogo(id: string): string {
+  let svg = logoCache.get(id);
+  if (svg === undefined) {
+    const file = LOGO_FILES[id];
+    const raw = file ? readFileSync(resolve(root, 'icons/brands', `${file}.svg`), 'utf8').trim() : '';
+    const prefix = `fw-${id}-`;
+    svg = raw
+      .replace(/ id="([^"]+)"/g, (_, name: string) => ` id="${prefix}${name}"`)
+      .replace(/url\(#([^)]+)\)/g, (_, name: string) => `url(#${prefix}${name})`)
+      .replace(/href="#([^"]+)"/g, (_, name: string) => `href="#${prefix}${name}"`)
+      // A logo's near-black ink (the Web Components logo's C) reads a variable, so a dark
+      // page can lighten it (playground-material.css); its own black stays the default.
+      .replace(/fill="#010101"/gi, 'fill="var(--brand-ink, #010101)"')
+      .replace(/^<svg /, '<svg aria-hidden="true" focusable="false" ');
+    logoCache.set(id, svg);
+  }
+  return svg;
+}
+
+/**
+ * The framework picker: material's single-select filter chip set, each chip with its
+ * framework's logo, Factory for the vanilla entry (its id stays 'vanilla', so a choice
+ * saved anywhere still applies). Six choices are past the five a segmented button takes,
+ * and M3 points to chips beyond that (segmented-buttons guidelines, read 2026-11-18).
+ * Shared by the component playgrounds and the Examples pages; `available` says which
+ * frameworks a page offers (the others are disabled).
+ */
+export function frameworkChips(available: (id: string) => boolean): string {
+  const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
+  return renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
+    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}" icon="${escape(frameworkLogo(id))}"${available(id) ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
+}
 
 /** An icon's name as a select option reads it: calendarToday → calendar today, none → none. */
 const iconName = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
@@ -155,12 +199,17 @@ export function materialControl(control: Control, slug: string, initial: Record<
     + groupInput(control.key, String(control.initial))
     // required: a click on the selected segment keeps it, as the radio it replaced did
     // (material's single-selection group clears on that click otherwise).
-    + renderElement('m-button-group', { ...enabledWhen, selection: 'single', required: true, kind: 'connected', size: 'xs', value: String(control.initial), 'data-group-for': control.key }, items, renderStyles),
+    // filled: the selected segment takes the theme's primary (owner, 2026-11-18); material's
+    // default outlined style selects with inverse-surface, near-black in light, so the
+    // chosen theme barely showed. M3: "Button groups have no color properties. They can use
+    // the default button or toggle button color styles, like filled, tonal, and outlined."
+    // (button-groups specs, local copy dated 2026-09-23).
+    + renderElement('m-button-group', { ...enabledWhen, selection: 'single', required: true, kind: 'connected', size: 'xs', variant: 'filled', value: String(control.initial), 'data-group-for': control.key }, items, renderStyles),
     ' control-row', `label-${control.key}`);
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[] } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string } {
   // The framework picker above the heading: a single-select filter chip set.
   // Six choices are past the five a segmented button (now the connected button
   // group) takes, and M3 points to chips beyond that; single choice is a filter
@@ -175,21 +224,15 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // The vanilla entry reads Factory here: what it gives is the library's
   // factories (createButton()), the size readout's own word for it. Its id stays
   // 'vanilla', so a choice saved on another page still applies.
-  const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
-  const frameworks = renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
-    FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}"${hasElement || id === 'vanilla' ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
+  const frameworks = frameworkChips(id => hasElement || id === 'vanilla');
   // Live preview / View code.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), renderStyles);
-  // Theme and mode, the native heading's own row: label, compact select, xs
-  // group. The mode group is not form-associated: its hidden input carries the
-  // name (associated to the configuration form from outside it).
-  const appearance = `<label for="preview-theme">Theme</label>`
-    + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Theme', id: 'preview-theme', name: 'theme', form: 'configuration', value: themes[0] },
-      themes.map(theme => declaration('select-option', theme, (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' '))).join(''), renderStyles)
-    + renderElement('m-button-group', { selection: 'single', required: true, kind: 'connected', size: 'xs', value: 'light', 'aria-label': 'Preview mode', 'data-group-for': 'mode' },
-      declaration('button-group-item', 'light', 'Light') + declaration('button-group-item', 'dark', 'Dark'), renderStyles)
-    + groupInput('mode', 'light', true);
+  // Theme and mode come from the site header (one appearance for the whole site,
+  // site.ts): the heading keeps only the form's copy of them, for the state and the
+  // generated code. playground.ts sets them from the site and on md3:appearance.
+  const appearance = '<input type="hidden" name="theme" value="baseline" form="configuration" data-appearance="theme">'
+    + '<input type="hidden" name="mode" value="light" form="configuration" data-appearance="mode">';
   // Every page has the Scenario row, Default and Custom at least: with no Reset, its
   // Default is the way back to the starting options, also on the pages that have no
   // named scenarios (divider, badge, progress, loading indicator).
@@ -205,5 +248,9 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // No Reset button: the Scenario select is the way back. Choosing Default applies
   // the playground's starting options, which is all Reset restored (the theme and
   // mode were already kept), so the panel opens on the scenario row.
-  return { frameworks, tabs, appearance, scenario, sections };
+  // Copy code, at the right end of the preview heading: material's xs tonal button with
+  // the content_copy symbol, in both views; a copy confirms with material's snackbar
+  // (playground.ts), M3's brief message about something the app just did.
+  const copy = renderElement('m-button', { variant: 'tonal', size: 'xs', icon: readFileSync(resolve(root, 'icons/content_copy.svg'), 'utf8').trim(), id: 'copy-code', class: 'preview-copy' }, 'Copy code', renderStyles);
+  return { frameworks, tabs, appearance, scenario, sections, copy };
 }

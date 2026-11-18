@@ -9,6 +9,7 @@ import { drawerActiveOptions } from '../shared/content/drawer';
 import { barActiveOptions } from '../shared/content/navigation-bar';
 import { railActiveOptions } from '../shared/content/navigation-rail';
 import { tabActiveOptions } from '../shared/content/tabs';
+import { applyTheme } from './theme-sheets';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 
 hljs.registerLanguage('javascript', javascript);
@@ -41,7 +42,7 @@ let unknownScenario = false;
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
 // The view switcher: <m-tabs>, whose value is the showing panel.
 const viewTabs = document.querySelector<TabsHost>('m-tabs[aria-label="Playground view"]');
-const copyButton = document.querySelector<HTMLButtonElement>('#copy-code')!;
+const copyButton = document.querySelector<HTMLElement>('#copy-code')!;
 const previewDot = document.querySelector<HTMLElement>('.preview-dot')!;
 let state: ComponentState = initialComponentState(slug);
 
@@ -102,31 +103,26 @@ function renderCode() {
   code.className = `hljs language-${language}`;
   code.innerHTML = hljs.highlight(text, { language }).value;
 }
-const appearanceKey = 'md3-preview-appearance';
-const themeSelect = document.querySelector<FieldHost>('#preview-theme')!;
-const modeInputs = [...document.querySelectorAll<HTMLInputElement>('.preview-appearance input[name="mode"]')];
-// The mode control: the group shows it, the hidden input carries it.
-const modeGroup = document.querySelector<GroupHost>('m-button-group[data-group-for="mode"]');
-
-function applyAppearance(appearance: ComponentState) {
-  document.documentElement.dataset.previewMode = String(appearance.mode);
-  // The attribute carries the value until the element is defined; the property shows it.
-  themeSelect.setAttribute('value', String(appearance.theme));
-  if (defined(themeSelect)) themeSelect.value = String(appearance.theme);
-  for (const input of modeInputs) { input.defaultValue = String(appearance.mode); input.value = String(appearance.mode); }
-  modeGroup?.setAttribute('value', String(appearance.mode));
-  if (defined(modeGroup)) modeGroup.value = String(appearance.mode);
+// Theme and mode are the site's (the header's Themes menu and moon, site.ts): the
+// heading's hidden inputs carry them into the form, the preview follows through
+// update(), and the panel's scopes take them so its material elements are themed.
+const themeInput = document.querySelector<HTMLInputElement>('input[data-appearance="theme"]')!;
+const modeInput = document.querySelector<HTMLInputElement>('input[data-appearance="mode"]')!;
+const panelScopes = [...document.querySelectorAll<HTMLElement>('.playground--material')];
+function applyAppearance(theme: string, mode: string) {
+  themeInput.value = theme;
+  modeInput.value = mode;
+  document.documentElement.dataset.previewMode = mode;
+  for (const scope of panelScopes) scope.dataset.themeMode = mode;
+  applyTheme(document, theme, panelScopes);
 }
-try {
-  applyAppearance(normalizeComponentState(slug, JSON.parse(localStorage.getItem(appearanceKey) || '{}')));
-} catch { /* Keep the default appearance when storage is unavailable or invalid. */ }
+applyAppearance(document.documentElement.dataset.siteTheme ?? 'baseline', document.documentElement.dataset.themeMode === 'dark' ? 'dark' : 'light');
 
 const VIEW_KEY = 'md3-playground-view';
 /** The panels and the controls that belong to the showing view. */
 function showPanel(showingCode: boolean) {
   document.getElementById('live-panel')!.hidden = showingCode;
   document.getElementById('code-panel')!.hidden = !showingCode;
-  copyButton.hidden = !showingCode;
   previewDot.hidden = showingCode;
 }
 function selectTab(selected: HTMLButtonElement, save = false) {
@@ -137,7 +133,6 @@ function selectTab(selected: HTMLButtonElement, save = false) {
     document.getElementById(tab.getAttribute('aria-controls')!)!.hidden = !active;
   }
   const showingCode = selected.id === 'code-tab';
-  copyButton.hidden = !showingCode;
   previewDot.hidden = showingCode;
   if (save) {
     try { localStorage.setItem(VIEW_KEY, showingCode ? 'code' : 'preview'); } catch { /* Storage may be unavailable. */ }
@@ -391,17 +386,12 @@ const onEdit = (event: Event) => {
 };
 form.addEventListener('input', onEdit);
 form.addEventListener('change', onEdit);
-// Form-associated footer controls participate in FormData/reset, but events bubble through the footer.
-const onAppearanceEdit = () => {
+// The site stored the choice already (site.ts); the page applies it and the preview follows.
+window.addEventListener('md3:appearance', event => {
+  const { theme, mode } = (event as CustomEvent<{ theme: string; mode: string }>).detail;
+  applyAppearance(theme, mode);
   update();
-  applyAppearance(state);
-  try { localStorage.setItem(appearanceKey, JSON.stringify({ theme: state.theme, mode: state.mode })); }
-  catch { /* The controls still work when storage is unavailable. */ }
-};
-document.querySelector('.preview-appearance')!.addEventListener('input', onAppearanceEdit);
-// The theme select reports with `change` and the group's glue fires both from its
-// hidden input; either way the edit bubbles through this footer.
-document.querySelector('.preview-appearance')!.addEventListener('change', onAppearanceEdit);
+});
 form.addEventListener('submit', event => event.preventDefault());
 frame.addEventListener('load', () => update());
 window.addEventListener('message', event => {
@@ -435,8 +425,22 @@ window.addEventListener('message', event => {
   }
   if (event.data?.type === 'md3:error') status.textContent = 'Preview could not load. Please reload the page.';
 });
+/** One material snackbar, made on first use inside the panel's scope (it takes the theme). */
+type SnackbarHost = HTMLElement & { show(): void };
+let snackbar: SnackbarHost | null = null;
+function showSnackbar(message: string) {
+  if (!snackbar) {
+    snackbar = document.createElement('m-snackbar') as SnackbarHost;
+    snackbar.setAttribute('duration', 'short');
+    document.querySelector('.playground.playground--material')?.append(snackbar);
+  }
+  snackbar.setAttribute('message', message);
+  snackbar.show();
+}
 copyButton.addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(currentCode().text); status.textContent = 'Code copied'; }
+  // The snackbar is the confirmation and its own live region (role="status"), so the
+  // footer's status stays quiet on success: one announcement, not two.
+  try { await navigator.clipboard.writeText(currentCode().text); showSnackbar('Code copied'); }
   catch {
     switchView('code');
     const range = document.createRange(); range.selectNodeContents(code);

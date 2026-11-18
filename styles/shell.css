@@ -126,25 +126,8 @@ samp {
     opacity: 0.85;
 }
 
-.header__sep {
-    color: var(--text-dim);
-    font-weight: var(--fw-normal);
-    font-size: var(--fs-md);
-    user-select: none;
-}
 
-.header__section {
-    font-size: var(--fs-lg);
-    color: var(--text-muted);
-    text-decoration: none;
-    font-weight: var(--fw-bold);
-    padding: 3px 12px;
-    border-radius: 6px;
-}
 
-.header__section:hover {
-    color: var(--text);
-}
 
 .header__nav {
     margin-left: auto;
@@ -598,54 +581,29 @@ samp {
     opacity: 0.5;
 }
 
-/* ─── Responsive ─────────────────────────────────────────────────── */
+/* ─── Themes and mode controls ───────────────────────────────────── */
+/* The header's Themes and mode buttons: material's icon buttons, the menu on the first
+   click (site.ts). The slot is a material scope (tokens and the chosen theme). The
+   mode button carries both icons; these variables, inherited into its shadow root,
+   show the one for the current mode before any script runs. */
+:root {
+    --site-mode-icon-dark: block;
+    --site-mode-icon-light: none;
+}
 
-.header__theme {
+:root[data-theme-mode="light"] {
+    --site-mode-icon-dark: none;
+    --site-mode-icon-light: block;
+}
+
+.header__themes {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid transparent;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    transition:
-        color 0.2s,
-        background 0.2s,
-        border-color 0.2s;
-    padding: 0;
     flex-shrink: 0;
 }
 
-.header__theme:hover {
-    color: var(--text-muted);
-    background: var(--sidebar-hover);
-    border-color: var(--border);
-}
+/* ─── Responsive ─────────────────────────────────────────────────── */
 
-.header__theme-sun,
-.header__theme-moon {
-    width: 18px;
-    height: 18px;
-}
-
-/* Dark mode: show moon, hide sun */
-.header__theme-sun {
-    display: none;
-}
-.header__theme-moon {
-    display: block;
-}
-
-/* Light mode: show sun, hide moon */
-[data-theme-mode="light"] .header__theme-sun {
-    display: block;
-}
-[data-theme-mode="light"] .header__theme-moon {
-    display: none;
-}
 
 /* ─── Theme Transition ───────────────────────────────────────────── */
 
@@ -779,25 +737,13 @@ body.no-sidebar .header__nav {
         display: none;
     }
 
-    .header__theme {
-        margin-left: auto;
-    }
-
     .header__logo {
         display: block;
         font-size: 20px;
         margin-bottom: 4px;
     }
 
-    .header__sep {
-        font-size: 20px;
-        margin-bottom: 4px;
-    }
 
-    .header__section {
-        font-size: 20px;
-        margin-bottom: 4px;
-    }
 
     .sidebar__label {
         font-size: 11px;
@@ -996,3 +942,12 @@ select:focus-visible,
         scroll-behavior: auto !important;
     }
 }
+
+/* ─── Inline icons ─────────────────────────────────────────────── */
+
+/* Material Symbols and brand marks inline in text (server.ts icon()): the size of the
+   text they sit in, on its baseline, in its colour. */
+.inline-icon { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; }
+/* The header's GitHub link is the mark alone, at the nav's icon size. */
+.header__github { display: inline-flex; align-items: center; }
+.header__github .inline-icon { width: 20px; height: 20px; vertical-align: middle; }

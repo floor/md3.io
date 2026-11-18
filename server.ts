@@ -7,7 +7,8 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { linkedStylesheets, materialPanel, panelMarkup, panelTokens } from './src/server/playground-panel';
+import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { LAB_SEEDS, LAB_VARIANTS, LAB_SAMPLES, LAB_ROLE_GROUPS } from './src/shared/colour-lab';
@@ -28,6 +29,41 @@ const commonHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 
 // Logical path → content-hashed path. Written by scripts/write-asset-manifest.ts.
 // Empty until the first build; the templates' own names are served then.
 const assetManifest = loadAssetManifest();
+// The site's small icons, inline SVG instead of text glyphs (↗, ←): a Material Symbol from
+// icons/ or a brand mark from icons/brands/, sized by .inline-icon and hidden from
+// assistive technology (the link text, or the link's aria-label, carries the meaning).
+const iconCache = new Map<string, string>();
+const icon = (name: string): string => {
+  let svg = iconCache.get(name);
+  if (!svg) {
+    svg = readFileSync(resolve(root, 'icons', `${name}.svg`), 'utf8').trim()
+      .replace(/^<svg /, '<svg class="inline-icon" focusable="false" ')
+      .replace(/ width="24" height="24"/, '');
+    if (!svg.includes('aria-hidden')) svg = svg.replace('<svg ', '<svg aria-hidden="true" ');
+    iconCache.set(name, svg);
+  }
+  return svg;
+};
+// Every theme's two sheets as theme → [main hash, contrast hash] (theme-sheets-template.eta):
+// about a tenth of the size of the 38 <link>s it replaces in each page. '' before a build.
+const sheetHash = (path: string) => assetManifest[path]?.match(/\.([a-f0-9]{10})\.css$/)?.[1] ?? '';
+const themeSheets = JSON.stringify(Object.fromEntries(themes.filter(theme => theme !== 'baseline')
+  .map(theme => [theme, [sheetHash(`/dist/material/themes/${theme}.css`), sheetHash(`/dist/material/themes/${theme}-contrast.css`)]])))
+  .replaceAll('<', '\\u003c');
+// The header's Themes control, material's own: an icon button server-rendered on every
+// page (styled before any script, from the shared element sheets it links), and the
+// menu's items inert in a template until the first click loads the menu (site.ts).
+const themeLabel = (theme: string) => (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' ');
+const themeButton = renderElement('m-icon-button', { id: 'theme-picker', 'aria-label': 'Theme', 'aria-haspopup': 'menu', 'aria-expanded': 'false', icon: readFileSync(resolve(import.meta.dir, 'icons/palette.svg'), 'utf8') }, '', renderStyles);
+const checkIcon = readFileSync(resolve(import.meta.dir, 'icons/check.svg'), 'utf8').trim().replaceAll('"', '&quot;');
+const themeMenu = `<template id="theme-menu-template" data-check="${checkIcon}"><m-menu anchor="theme-picker" position="bottom-end" aria-label="Theme">${themes.map(theme => `<m-menu-item value="${theme}">${themeLabel(theme)}</m-menu-item>`).join('')}</m-menu></template>`;
+// The mode button, material's icon button too: both Material Symbols in its icon slot,
+// each shown by a root variable the mode sets (shell.css), so it is right at first
+// paint; site.ts keeps its label ("Switch site to … mode") in step.
+const modeIcon = (name: 'dark_mode' | 'light_mode', mode: 'dark' | 'light') =>
+  readFileSync(resolve(import.meta.dir, `icons/${name}.svg`), 'utf8').trim().replace('<svg ', `<svg style="display: var(--site-mode-icon-${mode})" `);
+const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-label': 'Switch site mode', icon: modeIcon('dark_mode', 'dark') + modeIcon('light_mode', 'light') }, '', renderStyles);
+const headerStylesheets = linkedStylesheets(themeButton + modeButton);
 // Lazy chunks import their entry back by its plain name (`./preview.js`). The HTML
 // loads the hashed name, so the import map sends the plain name to that same file,
 // or the entry would run twice. Only the entries this page links, as before.
@@ -61,16 +97,16 @@ function page(path: string, title: string, description: string, template: string
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
-  const content = eta.render(template, { ...data, docGroups, guideGroup, components, playgroundGroups, pager });
+  const content = eta.render(template, { ...data, icon, docGroups, guideGroup, components, playgroundGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
   // Where the title already names the section, the compact header can drop the breadcrumb.
   // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
-  const sectionNamed = section !== '' && title.toLowerCase().includes(section.toLowerCase());
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'component' && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
-    path, title, description, isHome, noSidebar: isPrivacy, isCatalog: template === 'catalog', catalogTokens, panelTokens: data.panel ? panelTokens : undefined, panelStylesheets: data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [], section, sectionNamed, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    icon,
+    path, title, description, isHome, noSidebar: isPrivacy, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog: template === 'catalog', catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -90,7 +126,7 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
   // Crossing into another section names it: "Styles: Overview".
   const title = (item: PagerItem) => item.section && item.section !== current.section ? `${item.section}: ${item.name}` : item.name;
   const link = (item: PagerItem, rel: 'prev' | 'next') =>
-    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? '← Previous' : 'Next →'}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
+    `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? `${icon('arrow_back')} Previous` : `Next ${icon('arrow_forward')}`}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
@@ -190,7 +226,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const slug = componentMatch[2]!;
     const component = components[slug];
     response = componentMatch[1] === 'preview'
-      ? internalHtml(eta.render('preview', { themes, slug, component }))
+      ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component }))
       : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
@@ -201,12 +237,15 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     else if (framework) {
       response = variants.some(v => v.id === framework)
-        ? internalHtml(eta.render('example-frame', { example, framework, themes, styles: styleClosure(example.components) }))
+        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes });
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)),
+      // The address's framework when the example has it, so the first paint (frame and source)
+      // is the one the address names; otherwise its first variant. The client keeps it in step.
+      framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
   }
-  else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
+  else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, themeSheets, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
   else if (path === '/styles/') response = page(path, 'Styles — material', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
   else if (path === '/styles/themes/') {
     const linked = url.searchParams.get('theme');

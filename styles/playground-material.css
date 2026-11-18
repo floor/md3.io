@@ -34,11 +34,6 @@
    labels included, so the rows read as one column. */
 .playground--material .control-label { font-size: var(--fs-md); font-weight: var(--fw-normal); }
 
-/* The framework chips take the native tabs' place and spacing above the page
-   heading (site.css .framework-tabs). The set scrolls sideways when the row is
-   narrower than its six chips, as M3's chip sets do, instead of wrapping. */
-.framework-chips-row { margin-bottom: 18px; min-width: 0; }
-
 /* Slider rows: material's slider takes the space beside the numeric read-out, as
    the native range input did (site.css .control-range is a flex row; a block host
    without a basis collapses to nothing in it). */
@@ -54,6 +49,23 @@
 .playground--material m-datepicker[data-panel-picker]::part(anchor),
 .playground--material m-datepicker[data-panel-picker]::part(help),
 .playground--material m-datepicker[data-panel-picker]::part(error) { display: none; }
+
+/* The panel on material's surface roles, from the chosen theme (its scope carries the
+   theme): surface-container-low, M3's role for a pane beside the content, with the
+   theme's outline-variant for the border and the section dividers, and its text roles.
+   The site's own card grey knew nothing of the theme, and the filled groups' unselected
+   surface-container segments sat on it as faint blobs. */
+.playground--material .configuration.split-panel {
+    background: var(--mtrl-sys-color-surface-container-low);
+    border-color: var(--mtrl-sys-color-outline-variant);
+    color: var(--mtrl-sys-color-on-surface);
+}
+.playground--material .configuration .ui-section + .ui-section { border-top-color: var(--mtrl-sys-color-outline-variant); }
+.playground--material .configuration .control-label { color: var(--mtrl-sys-color-on-surface); }
+.playground--material .configuration .ui-title { color: var(--mtrl-sys-color-on-surface-variant); }
+
+/* Copy code at the right end of the preview heading (the status dot stays beside the tabs). */
+.playground--material .preview-heading .preview-copy { margin-left: auto; }
 
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
@@ -81,11 +93,6 @@
 .playground--material m-tabs::part(divider) { display: none; }
 .playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
 
-/* The mode group and the theme select share the heading row with the tabs. */
-.playground--material .preview-appearance m-select { width: 168px; min-width: 0; }
-
-@media (max-width: 720px) {
-    .playground--material .preview-appearance m-select { width: auto; flex: 1; }
 }
 
 /* The material heading (tabs, the 168px theme select, the Light/Dark group)

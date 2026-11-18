@@ -191,7 +191,7 @@ try {
     await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
     await page.getByRole('tab', { name: 'View code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
-    await page.locator('#playground-status').filter({ hasText: 'Code copied' }).waitFor();
+    await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
     new Bun.Transpiler({ loader: 'js' }).transformSync(source);
@@ -203,7 +203,7 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
     await reset();
-    assert(await page.locator('#preview-theme').evaluate(host => String((host as HTMLElement & { value?: unknown }).value)) === 'ocean', 'Reset discarded the selected theme');
+    assert(await page.evaluate(() => document.documentElement.dataset.siteTheme) === 'ocean', 'Reset discarded the selected theme');
     await page.setViewportSize({ width: 1440, height: 900 });
     assert(errors.length === 0, errors.join('\n'));
   }

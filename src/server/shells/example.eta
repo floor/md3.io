@@ -1,30 +1,17 @@
 <div class="page-wrap example-page" data-example="<%= it.example.slug %>">
-  <nav class="framework-tabs" role="tablist" aria-label="Framework">
-  <% it.variants.forEach((variant, i) => { %>
-    <button type="button" class="framework-tab" role="tab" id="tab-<%= variant.id %>" data-framework="<%= variant.id %>"
-      aria-selected="<%= i === 0 ? 'true' : 'false' %>" aria-controls="example-frame" <%= i === 0 ? '' : 'tabindex="-1"' %>><%= variant.label %></button>
-  <% }); %>
-  </nav>
+  <%/* The framework chips, as on the component pages; the row carries the material scope. */%><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.frameworks %></div>
   <header class="page-heading"><h1><%= it.example.title %></h1><p><%= it.example.description %></p></header>
   <div class="example-layout">
     <div class="example-main">
       <section class="preview-panel example-preview" aria-label="Running example">
-        <iframe id="example-frame" title="<%= it.example.title %> example" src="/examples/<%= it.example.slug %>/frame/<%= it.variants[0].id %>/"></iframe>
+        <iframe id="example-frame" title="<%= it.example.title %> example" src="/examples/<%= it.example.slug %>/frame/<%= it.framework %>/"></iframe>
         <div class="preview-footer">
           <span id="example-status" role="status" aria-live="polite"></span>
-          <div class="preview-appearance" role="group" aria-label="Example appearance">
-            <label for="example-theme">Theme</label>
-            <select id="example-theme" class="ui-select"><% it.themes.forEach(theme => { %><option value="<%= theme %>"><%= (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' ') %></option><% }); %></select>
-            <div class="ui-segmented choice-group choice-group--mode" role="group" aria-label="Example mode">
-              <label class="choice"><input name="example-mode" type="radio" value="light" checked /><span class="ui-segmented__btn">Light</span></label>
-              <label class="choice"><input name="example-mode" type="radio" value="dark" /><span class="ui-segmented__btn">Dark</span></label>
-            </div>
-          </div>
         </div>
       </section>
       <section class="preview-panel example-code" aria-label="Source">
       <% it.variants.forEach((variant, i) => { %>
-        <div class="example-source" data-framework="<%= variant.id %>" <%= i === 0 ? '' : 'hidden' %>>
+        <div class="example-source" data-framework="<%= variant.id %>" <%= variant.id === it.framework ? '' : 'hidden' %>>
           <div class="panel-heading">
             <div class="preview-tabs" role="tablist" aria-label="<%= variant.label %> files">
             <% variant.files.forEach((file, j) => { %>

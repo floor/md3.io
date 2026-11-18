@@ -266,7 +266,7 @@ try {
   await assertFamilyCode('indeterminate');
   assert(await panel.isOn(page, 'family'), 'Reset did not turn the family back on');
   assert(await parentBox.isEnabled() && await frame.locator('.mtrl-checkbox--label-start').count() === 0, 'Reset did not restore the defaults');
-  assert(await page.locator('#preview-theme').evaluate(host => String((host as HTMLElement & { value?: unknown }).value)) === 'ocean', 'Reset cleared preview preference');
+  assert(await page.evaluate(() => document.documentElement.dataset.siteTheme) === 'ocean', 'Reset cleared preview preference');
   assert(await frame.locator('html').getAttribute('data-theme-mode') === 'dark', 'Reset cleared preview mode');
 
   for (const viewport of [{ width: 1366, height: 768 }, { width: 1280, height: 640 }]) {
