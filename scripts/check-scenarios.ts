@@ -60,9 +60,13 @@ try {
           assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
         }
       } else {
-        // (b) A component without scenarios has no Scenario section in the DOM at all.
-        assert((await page.locator('.scenario-setup').count()) === 0, `${where}: a component without scenarios shows the Scenario section`);
-        assert((await page.locator('#scenario').count()) === 0, `${where}: a component without scenarios shows a scenario select`);
+        // (b) A component without named scenarios still has the Scenario row, with Default
+        // and Custom only: with no Reset, Default is the way back on every page.
+        assert((await page.locator('.scenario-setup').count()) === 1, `${where}: a component without scenarios has no Scenario section`);
+        const offered = await page.locator('m-select#scenario m-select-option').evaluateAll(options => options.map(option => option.getAttribute('value')));
+        assert(JSON.stringify(offered) === JSON.stringify(['default', 'custom']), `${where}: the scenario select offers ${JSON.stringify(offered)}, expected Default and Custom`);
+        const selected = await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? ''));
+        assert(selected === 'default', `${where}: the Scenario select shows "${selected}"`);
       }
       const shown = await readShown([...components[slug].controls.map(control => control.key), 'theme', 'mode']);
       for (const control of components[slug].controls) {
@@ -198,11 +202,11 @@ try {
   assert((await clear.boundingBox()) === null, 'text-field/search: the clear button still takes space on an empty field');
   await field.fill('Trail');
   assert(await clear.isVisible(), 'text-field/search: the clear button did not come back with a value');
-  // (c) `?scenario=` on a page with no Scenario section is ignored quietly: the load reports
-  // ready with the plain status line, the address keeps the parameter, and the controls are
-  // the Default ones, with no console error. The page is the first component whose scenarios
-  // array is empty; when every component has scenarios there is no such page, so the block
-  // prints one line and goes on.
+  // (c) `?scenario=` with an unknown id on a page without named scenarios: its Scenario
+  // row (Default and Custom) reports it like any page — the unknown-scenario status, the
+  // parameter dropped from the address — and the controls are the Default ones, with no
+  // console error. The page is the first component whose scenarios array is empty; when
+  // every component has scenarios there is no such page, so the block prints one line.
   const noScenario = componentSlugs.find(slug => !components[slug].scenarios?.length);
   if (noScenario) {
     errors.length = 0;
@@ -210,9 +214,11 @@ try {
     // Wait for the ready round-trip without matching a status text: a scenario message would
     // pass a "not loading" wait and must fail the assertion below, not the wait.
     await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
+    // Every page has the Scenario row now (Default and Custom at least), so an unknown
+    // id is reported and dropped from the address as on the pages with named scenarios.
     const status = await page.locator('#playground-status').textContent();
-    assert(status === 'Ready to try', `${noScenario}/?scenario=x: the status reads ${JSON.stringify(status)}`);
-    assert(new URL(page.url()).searchParams.get('scenario') === 'x', `${noScenario}/?scenario=x: the load rewrote the address`);
+    assert(status === 'Unknown scenario. Showing Default.', `${noScenario}/?scenario=x: the status reads ${JSON.stringify(status)}`);
+    assert(new URL(page.url()).searchParams.get('scenario') === null, `${noScenario}/?scenario=x: the address kept the unknown scenario`);
     const initial = initialComponentState(noScenario);
     const shown = await readShown(components[noScenario].controls.map(control => control.key));
     for (const control of components[noScenario].controls) {

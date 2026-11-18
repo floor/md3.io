@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { checkboxChildren } from '../src/shared/content/checkbox';
+import * as panel from './panel-driver';
 
 // The checkbox playground: by default a parent ("Additions") over M3's four
 // children, mixed with Tomato alone checked. `family` off gives a single checkbox.
@@ -21,19 +22,19 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   await page.goto(`${server.url}components/button/`);
-  // The Button playground's panel is material's elements (the pilot): the theme
-  // select opens a listbox, and the mode group's buttons live in its shadow root.
-  await page.locator('#preview-theme').click();
-  await page.getByRole('option', { name: 'Forest' }).click();
-  await page.locator('m-button-group[data-group-for="mode"]').getByRole('button', { name: 'Dark', exact: true }).click();
+  // The panel is material's elements: the theme select opens a listbox, and the
+  // mode group's buttons live in its shadow root (scripts/panel-driver.ts).
+  await panel.chooseTheme(page, 'Forest');
+  await panel.chooseMode(page, 'dark');
   await page.locator('#sidebar').getByRole('link', { name: 'Checkbox', exact: true }).click();
   const frame = page.frameLocator('#preview');
   const boxes = frame.getByRole('checkbox');
   const parentBox = frame.getByRole('checkbox', { name: 'Additions', exact: true });
   const child = (name: string) => frame.getByRole('checkbox', { name, exact: true });
-  const stateControl = page.getByLabel('State', { exact: true });
-  const toggle = (name: string) => page.locator(`#configuration label:has(input[type="checkbox"][name="${name}"])`);
-  const choose = (name: string, value: string) => page.locator(`#configuration label.choice:has(input[name="${name}"][value="${value}"])`).click();
+  // The panel's controls, by name (scripts/panel-driver.ts).
+  const chooseState = (state: string) => panel.choose(page, 'state', state);
+  const toggle = (name: string) => panel.toggle(page, name);
+  const choose = (name: string, value: string) => panel.choose(page, name, value);
   const code = () => page.locator('#generated-code').textContent().then(text => text ?? '');
 
   // Every checkbox in the preview, in document order, as `state:mixedClass`. The mixed
@@ -46,7 +47,7 @@ try {
         const styled = input.closest('.mtrl-checkbox')?.classList.contains('mtrl-checkbox--indeterminate') === input.indeterminate;
         return `${state}${styled ? '' : ':stale-class'}`;
       }),
-      select: document.querySelector<HTMLSelectElement>('select[name="state"]')?.value,
+      select: String((document.querySelector('#configuration m-select[name="state"]') as HTMLElement & { value?: unknown } | null)?.value ?? ''),
     };
   });
   const waitForPreview = async (expected: string[], select: State, what: string) => {
@@ -59,7 +60,7 @@ try {
           const styled = input.closest('.mtrl-checkbox')?.classList.contains('mtrl-checkbox--indeterminate') === input.indeterminate;
           return `${state}${styled ? '' : ':stale-class'}`;
         });
-        return JSON.stringify({ boxes, select: document.querySelector<HTMLSelectElement>('select[name="state"]')?.value }) === want;
+        return JSON.stringify({ boxes, select: String((document.querySelector('#configuration m-select[name="state"]') as HTMLElement & { value?: unknown } | null)?.value ?? '') }) === want;
       }, want, { timeout: 5000 });
     } catch {
       throw new Error(`${what}: expected ${want}, got ${JSON.stringify(await readPreview())}`);
@@ -118,7 +119,7 @@ try {
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.locator('#generated-code .hljs-keyword').count() > 0, 'Checkbox code is not highlighted');
   await page.getByRole('tab', { name: 'Live preview' }).click();
-  await page.selectOption('#preview-theme', 'ocean');
+  await panel.chooseTheme(page, 'Ocean');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
   assert(await originalParent!.evaluate(element => element.isConnected), 'Theme or tab change recreated the checkboxes');
   await assertFamily('indeterminate', ['Tomato'], 'After a theme change');
@@ -162,19 +163,22 @@ try {
   await parentBox.press('Space');
   await assertFamily('checked', names, 'Space on a parent mixed by its children');
 
-  // The state select drives the parent and the children with it.
-  for (const state of ['indeterminate', 'unchecked', 'checked', 'indeterminate'] as const) {
-    await stateControl.selectOption(state);
+  // The state select drives the parent and the children with it. The select still
+  // reads indeterminate after the preview's own edits above, and re-picking the value
+  // a select shows is no change (the playground drops it, as a native select fires
+  // none), so the loop starts on another state: each pick is a real change.
+  for (const state of ['unchecked', 'checked', 'indeterminate'] as const) {
+    await chooseState(state);
     await assertFamily(state, state === 'checked' ? names : state === 'indeterminate' ? ['Tomato'] : [], `Selecting ${state}`);
     await assertFamilyCode(state);
   }
   await page.screenshot({ path: `${output}/checkbox-mixed.png`, fullPage: true, animations: 'disabled' });
 
   // Content and appearance reach every box of the family.
-  await page.getByLabel('Label', { exact: true }).fill('Toppings');
+  await panel.fill(page, 'label', 'Toppings');
   await frame.getByRole('checkbox', { name: 'Toppings', exact: true }).waitFor();
   assert(await boxes.count() === 5, 'Renaming the parent changed the family');
-  await page.getByLabel('Name', { exact: true }).fill('toppings');
+  await panel.fill(page, 'name', 'toppings');
   await page.waitForFunction(() => {
     const inputs = [...document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? []];
     return inputs.length === 5 && inputs.slice(1).every(input => input.name === 'toppings');
@@ -184,20 +188,20 @@ try {
   assert(source.includes("label: 'Toppings'") && source.includes("name: 'toppings'"), 'Generated family code does not follow label and name');
   await choose('labelPosition', 'start');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll('.mtrl-checkbox--label-start').length === 5);
-  await toggle('disabled').click();
+  await toggle('disabled');
   await page.waitForFunction(() => [...document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]') ?? []].every(input => input.disabled));
   source = await code();
   assert(source.includes("labelPosition: 'start'") && source.includes('disabled: true'), 'Generated family code does not follow label position and disabled');
   const familyCopy = await copyCode();
   assert(familyCopy.includes('parent.on(') && familyCopy.includes("'material/styles/checkbox'") && familyCopy.includes("import 'material/themes/ocean'"), 'Copied family code is incomplete');
-  await toggle('disabled').click();
+  await toggle('disabled');
   await choose('labelPosition', 'end');
-  await page.getByLabel('Label', { exact: true }).fill('Additions');
-  await page.getByLabel('Name', { exact: true }).fill('additions');
+  await panel.fill(page, 'label', 'Additions');
+  await panel.fill(page, 'name', 'additions');
   await assertFamily('indeterminate', ['Tomato'], 'After restoring the family content');
 
   // `family` off: a single checkbox, which the state select, click and Space drive.
-  await toggle('family').click();
+  await toggle('family');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll('input[type="checkbox"]').length === 1);
   const input = frame.getByRole('checkbox');
   assert(await input.getAttribute('name') === 'additions' && await input.inputValue() === 'on', 'The single checkbox did not take name and value');
@@ -205,12 +209,12 @@ try {
   await assertSingle('indeterminate', 'A single mixed checkbox');
   assert(!(await code()).includes('const parent'), 'Single checkbox code still describes the family');
   for (const state of ['unchecked', 'checked', 'indeterminate'] as const) {
-    await stateControl.selectOption(state);
+    await chooseState(state);
     await assertSingle(state, `Selecting ${state} on a single checkbox`);
   }
   await input.click();
   await assertSingle('checked', 'Clicking a mixed checkbox');
-  await stateControl.selectOption('indeterminate');
+  await chooseState('indeterminate');
   await assertSingle('indeterminate', 'Selecting indeterminate again');
   await input.press('Space');
   await assertSingle('checked', 'Space on a mixed checkbox');
@@ -223,28 +227,28 @@ try {
   const labelBox = await frame.locator('.mtrl-checkbox__label').boundingBox();
   const iconBox = await frame.locator('.mtrl-checkbox__icon').boundingBox();
   assert(labelBox && iconBox && labelBox.x < iconBox.x, 'Start label is not before the checkbox');
-  await page.getByLabel('Label', { exact: true }).fill('Receive updates');
+  await panel.fill(page, 'label', 'Receive updates');
   await frame.getByRole('checkbox', { name: 'Receive updates' }).waitFor();
-  await page.getByLabel('Name', { exact: true }).fill('updates');
-  await page.getByLabel('Value', { exact: true }).fill('yes');
+  await panel.fill(page, 'name', 'updates');
+  await panel.fill(page, 'value', 'yes');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLInputElement>('input')?.value === 'yes');
   assert(await input.getAttribute('name') === 'updates', 'Form name was not applied');
-  await toggle('required').click();
+  await toggle('required');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLInputElement>('input')?.required);
   assert(await input.evaluate((element: HTMLInputElement) => element.validity.valueMissing), 'Required unchecked input should be invalid');
-  await toggle('required').click();
+  await toggle('required');
   await page.waitForFunction(() => !document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLInputElement>('input')?.required);
-  await toggle('error').click();
+  await toggle('error');
   await frame.locator('.mtrl-checkbox--error').waitFor();
   assert(await input.getAttribute('aria-invalid') === 'true', 'Error is not exposed as aria-invalid');
-  await toggle('error').click();
+  await toggle('error');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll('.mtrl-checkbox--error').length === 0);
   assert(await input.getAttribute('aria-invalid') === null, 'Clearing the error left aria-invalid');
-  await toggle('disabled').click();
+  await toggle('disabled');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLInputElement>('input')?.disabled);
   await input.evaluate((element: HTMLInputElement) => element.click());
   await assertSingle('unchecked', 'Clicking a disabled checkbox');
-  await page.getByLabel('Label', { exact: true }).fill('');
+  await panel.fill(page, 'label', '');
   await frame.getByRole('checkbox', { name: 'Checkbox', exact: true }).waitFor();
 
   const copied = await copyCode();
@@ -254,15 +258,15 @@ try {
 
   // Reset: back to the parent and children, in the viewer's preview appearance.
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
+  // The material panel's way back is the Scenario select's Default (it has no Reset).
+  await panel.backToDefault(page);
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await parentBox.waitFor();
   await assertFamily('indeterminate', ['Tomato'], 'Reset');
   await assertFamilyCode('indeterminate');
-  assert(await page.locator('#configuration input[name="family"]').isChecked(), 'Reset did not turn the family back on');
+  assert(await panel.isOn(page, 'family'), 'Reset did not turn the family back on');
   assert(await parentBox.isEnabled() && await frame.locator('.mtrl-checkbox--label-start').count() === 0, 'Reset did not restore the defaults');
-  assert(await page.locator('#preview-theme').inputValue() === 'ocean', 'Reset cleared preview preference');
+  assert(await page.locator('#preview-theme').evaluate(host => String((host as HTMLElement & { value?: unknown }).value)) === 'ocean', 'Reset cleared preview preference');
   assert(await frame.locator('html').getAttribute('data-theme-mode') === 'dark', 'Reset cleared preview mode');
 
   for (const viewport of [{ width: 1366, height: 768 }, { width: 1280, height: 640 }]) {

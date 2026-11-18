@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { components, componentSlugs } from '../src/shared/components';
+import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -18,17 +19,12 @@ try {
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   const frame = page.frameLocator('#preview');
-  const choose = async (key: string, value: string) => {
-    const select = page.locator(`#configuration select[name="${key}"]`);
-    if (await select.count()) await select.selectOption(value);
-    else await page.locator(`#configuration label.choice:has(input[name="${key}"][value="${value}"])`).click();
-  };
-  const toggle = (key: string) => page.locator(`#configuration label:has(input[type="checkbox"][name="${key}"])`).click();
-  const reset = async () => {
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.locator('#playground-status').filter({ hasText: 'Configuration reset' }).waitFor();
-  };
-  const valueIs = (key: string, expected: string) => page.waitForFunction(({ key, expected }) => (document.querySelector(`#configuration [name="${key}"]:checked, #configuration [name="${key}"]:not([type="radio"]):not([type="checkbox"])`) as HTMLInputElement)?.value === expected, { key, expected });
+  // The panel's controls, by name (scripts/panel-driver.ts). The material panel has no
+  // Reset: the Scenario select's Default is the way back.
+  const choose = (key: string, value: string) => panel.choose(page, key, value);
+  const toggle = (key: string) => panel.toggle(page, key);
+  const reset = () => panel.backToDefault(page);
+  const valueIs = (key: string, expected: string) => panel.waitForValue(page, key, expected);
   // A change re-renders the stage: the element a read lands on may be the new one, a frame
   // before it is laid out. Polls, bounded, until the box has a width and a height; the
   // caller asserts, so one that never gets a box fails with its own message.
@@ -61,7 +57,13 @@ try {
       }
       for (const leading of ['none', 'icon', 'avatar', 'image', 'video']) {
         await choose('leading', leading);
-        if (leading === 'none') await frame.locator('.mtrl-list__leading').waitFor({ state: 'hidden' });
+        // The material select's change lands a beat after the pick: wait on the first
+        // leading slot (waitFor refuses a locator that still matches several), then
+        // check none is left.
+        if (leading === 'none') {
+          await frame.locator('.mtrl-list__leading').first().waitFor({ state: 'hidden' });
+          assert(await frame.locator('.mtrl-list__leading:visible').count() === 0, 'A leading slot is still shown with Leading none');
+        }
         else await frame.locator(`.mtrl-list__leading--${leading}`).first().waitFor();
       }
       await choose('leading', 'avatar');
@@ -76,7 +78,7 @@ try {
       await page.locator('#playground-status').filter({ hasText: 'Saved: Morning walk' }).waitFor();
       assert(await frame.getByRole('button', { name: 'Morning walk', exact: true }).getAttribute('aria-pressed') === 'true', 'Save changed selection');
       await toggle('third');
-      assert(await page.locator('#configuration [name="overline"]').isChecked() && await page.locator('#configuration [name="subheader"]').isChecked(), 'Selecting a row cleared anatomy toggles');
+      assert(await panel.isOn(page, 'overline') && await panel.isOn(page, 'subheader'), 'Selecting a row cleared anatomy toggles');
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="third"]')?.checked && !document.querySelector<HTMLInputElement>('#configuration [name="first"]')?.checked);
       await frame.locator('.mtrl-list__item--selected[data-id="3"]').waitFor();
       await frame.getByRole('button', { name: 'Read a chapter', exact: true }).click();
@@ -93,7 +95,7 @@ try {
       await frame.locator('[data-id="3"] .mtrl-list__action:disabled').waitFor();
       await page.locator('.configuration-body').evaluate(el => { el.scrollTop = 0; });
       await page.screenshot({ path: `${output}/list-anatomy-desktop.png`, fullPage: true, animations: 'disabled' });
-      await page.locator('.preview-appearance label:has(input[name="mode"][value="dark"])').click();
+      await panel.chooseMode(page, 'dark');
       await frame.locator('html[data-theme-mode="dark"]').waitFor({ state: 'attached' });
       await page.screenshot({ path: `${output}/list-anatomy-dark.png`, fullPage: true, animations: 'disabled' });
       await page.getByRole('tab', { name: 'View code', exact: true }).click();
@@ -102,26 +104,26 @@ try {
       await page.getByRole('tab', { name: 'Live preview' }).click();
       // The Variant control: two values, standard by default; segmented reaches the config,
       // the rendered class and both code panels, while standard keeps it out of the code.
-      const variantInput = (value: string) => page.locator(`#configuration input[name="variant"][value="${value}"]`);
-      assert(await page.locator('#configuration input[name="variant"]').count() === 2, 'The list Variant control does not offer two values');
-      assert(await variantInput('standard').isChecked(), 'The list does not start at the standard variant');
+      // The Variant row is material's button group: its items are the values it offers.
+      assert(await page.locator('#configuration m-button-group[data-group-for="variant"] m-button-group-item').count() === 2, 'The list Variant control does not offer two values');
+      assert(await panel.valueOf(page, 'variant') === 'standard', 'The list does not start at the standard variant');
       await choose('variant', 'segmented');
       await frame.locator('.mtrl-list--segmented').waitFor();
       await page.getByRole('tab', { name: 'View code', exact: true }).click();
       assert((await page.locator('#generated-code').textContent())?.includes('variant: "segmented"') === true, 'The list code misses variant: "segmented"');
-      await page.getByRole('tab', { name: 'Web Components', exact: true }).click();
+      await panel.chooseFramework(page, 'html');
       assert((await page.locator('#generated-code').textContent())?.includes('variant="segmented"') === true, 'The list element snippet misses variant="segmented"');
-      await page.getByRole('tab', { name: 'Vanilla', exact: true }).click();
+      await panel.chooseFramework(page, 'vanilla');
       await page.getByRole('tab', { name: 'Live preview' }).click();
       await choose('variant', 'standard');
       await frame.locator('.mtrl-list--standard').waitFor();
       await page.getByRole('tab', { name: 'View code', exact: true }).click();
       const standardCode = await page.locator('#generated-code').textContent();
       assert(standardCode !== null && !standardCode.includes('variant:'), 'The standard list code carries a variant');
-      await page.getByRole('tab', { name: 'Web Components', exact: true }).click();
+      await panel.chooseFramework(page, 'html');
       const standardElement = await page.locator('#generated-code').textContent();
       assert(standardElement !== null && !standardElement.includes('variant='), 'The standard list element snippet carries a variant');
-      await page.getByRole('tab', { name: 'Vanilla', exact: true }).click();
+      await panel.chooseFramework(page, 'vanilla');
       await page.getByRole('tab', { name: 'Live preview' }).click();
     } else if (slug === 'carousel') {
       // The keyboard drives the carousel (the docs: Left and Right, Up and Down full
@@ -141,9 +143,10 @@ try {
       // A variant change recreates the carousel: one stage, no stale carousel left.
       assert(await frame.locator('.mtrl-carousel').count() === 1, 'A stale carousel survived a variant change');
       await choose('variant', 'multi-browse');
-      await frame.locator('.mtrl-carousel__item').nth(2).waitFor();
+      // The new carousel, not the full-screen one it replaces (whose items also match).
+      await frame.locator('.mtrl-carousel--multi-browse .mtrl-carousel__item').nth(2).waitFor();
       // The new carousel starts where the last one stood, its focal item third.
-      await frame.locator('.mtrl-carousel__item').nth(2).press('ArrowRight');
+      await frame.locator('.mtrl-carousel--multi-browse .mtrl-carousel__item').nth(2).press('ArrowRight');
       await valueIs('initialSlide', '3');
     } else if (slug === 'divider') {
       await choose('orientation', 'vertical');

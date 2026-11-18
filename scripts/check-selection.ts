@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { components, componentSlugs } from '../src/shared/components';
+import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const output = resolve(import.meta.dir, '../analysis/browser');
@@ -21,17 +22,12 @@ try {
     const bounds = element.getBoundingClientRect();
     return bounds.top >= 0 && bounds.bottom <= innerHeight && bounds.left >= 0 && bounds.right <= innerWidth;
   });
-  const choose = async (key: string, value: string) => {
-    const select = page.locator(`#configuration select[name="${key}"]`);
-    if (await select.count()) await select.selectOption(value);
-    else await page.locator(`#configuration label.choice:has(input[name="${key}"][value="${value}"])`).click();
-  };
-  const toggle = (key: string) => page.locator(`#configuration label:has(input[type="checkbox"][name="${key}"])`).click();
-  const reset = async () => {
-    await page.getByRole('button', { name: 'Reset', exact: true }).click();
-    await page.locator('#playground-status').filter({ hasText: 'Configuration reset' }).waitFor();
-  };
-  const valueIs = (key: string, expected: string) => page.waitForFunction(({ key, expected }) => (document.querySelector(`#configuration [name="${key}"]:checked, #configuration [name="${key}"]:not([type="radio"]):not([type="checkbox"])`) as HTMLInputElement)?.value === expected, { key, expected });
+  // The panel's controls, by name (scripts/panel-driver.ts). The material panel has no
+  // Reset: the Scenario select's Default is the way back.
+  const choose = (key: string, value: string) => panel.choose(page, key, value);
+  const toggle = (key: string) => panel.toggle(page, key);
+  const reset = () => panel.backToDefault(page);
+  const valueIs = (key: string, expected: string) => panel.waitForValue(page, key, expected);
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Selection & input' && slug !== 'checkbox' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
     await page.goto(`${server.url}components/${slug}/`);
@@ -41,9 +37,9 @@ try {
 
     if (slug === 'switch') {
       await frame.getByRole('switch').click();
-      await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration input[name="checked"]')?.checked);
+      await panel.waitForSwitch(page, 'checked', false);
       await frame.getByRole('switch').press('Space');
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration input[name="checked"]')?.checked);
+      await panel.waitForSwitch(page, 'checked', true);
     } else if (slug === 'radios') {
       await frame.getByText('Express', { exact: true }).click();
       await valueIs('value', 'express');
@@ -68,7 +64,7 @@ try {
       await frame.getByRole('textbox').fill('Ada Lovelace');
       await valueIs('value', 'Ada Lovelace');
       const input = await frame.getByRole('textbox').elementHandle();
-      await page.selectOption('#preview-theme', 'ocean');
+      await panel.chooseTheme(page, 'Ocean');
       assert(await input!.evaluate(element => element.isConnected), 'Changing the theme recreated the text input');
       await toggle('readonly');
       await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLInputElement>('input')?.readOnly);
@@ -183,7 +179,8 @@ try {
   const headingFits = async (where: string) => {
     const heading = await page.locator('.preview-heading').boundingBox();
     assert(heading, `${where}: the playground heading is not visible`);
-    for (const selector of ['#live-tab', '#code-tab', '.preview-dot', 'label[for="preview-theme"]', '#preview-theme', '.choice-group--mode']) {
+    // The view tabs are material's tab set (one host), the mode is its button group.
+    for (const selector of ['m-tabs', '.preview-dot', 'label[for="preview-theme"]', '#preview-theme', 'm-button-group[data-group-for="mode"]']) {
       const box = await page.locator(`.preview-heading ${selector}`).boundingBox();
       assert(box && box.x >= heading.x - 0.5 && box.y >= heading.y - 0.5 && box.x + box.width <= heading.x + heading.width + 0.5 && box.y + box.height <= heading.y + heading.height + 0.5,
         `${where}: the toolbar control ${selector} at ${JSON.stringify(box)} is not inside the heading ${JSON.stringify(heading)}`);
@@ -193,7 +190,7 @@ try {
   await page.goto(`${server.url}components/text-field/`);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   await headingFits('text-field/1024');
-  await page.locator('label.choice:has(input[name="mode"][value="dark"])').click();
+  await panel.chooseMode(page, 'dark');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.themeMode === 'dark');
   assert(await page.evaluate(() => document.querySelector<HTMLElement>('.preview-panel')!.scrollLeft) === 0, 'text-field/1024: choosing Dark scrolled the preview panel sideways');
   await page.setViewportSize({ width: 390, height: 844 });

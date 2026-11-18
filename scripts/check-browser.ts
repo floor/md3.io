@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
+import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const base = server.url.toString();
@@ -104,9 +105,8 @@ try {
       const root = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement;
       return root?.dataset.theme === theme && root?.dataset.themeMode === mode;
     }, { theme, mode });
-    // The pilot's Button page renders these as material elements (value on the
-    // host, a hidden input for the group); every other page keeps the native
-    // select and radio.
+    // Material elements on every component page: the theme's value on the host,
+    // the mode group's on its hidden input.
     const themeNow = await page.locator('#preview-theme').evaluate(el => String((el as HTMLElement & { value?: string }).value));
     const modeNow = await page.locator(`input[name="mode"][value="${mode}"]`).evaluate((el, mode) => (el as HTMLInputElement).type === 'radio' ? (el as HTMLInputElement).checked : (el as HTMLInputElement).value === mode, mode);
     assert(themeNow === theme && modeNow, 'Appearance controls lost the saved preference');
@@ -158,8 +158,8 @@ try {
   await page.reload();
   await assertAppearance('ocean', 'dark');
   // A subsequent choice must replace the previous preference on the next component.
-  await page.selectOption('#preview-theme', 'forest');
-  await page.locator('label.choice:has(input[name="mode"][value="light"])').click();
+  await panel.chooseTheme(page, 'Forest');
+  await panel.chooseMode(page, 'light');
   await page.locator('#sidebar').getByRole('link', { name: 'Button group', exact: true }).click();
   await assertAppearance('forest', 'light');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'Saved preview appearance changed site mode');
