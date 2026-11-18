@@ -1,5 +1,6 @@
 // The example page: framework tabs switch the running frame and its source; the
 // choice and the frame's appearance persist, and the URL carries the framework.
+import { applyTheme } from './theme-sheets';
 import { copyText } from './site';
 import { mountDeviceFrame } from './device-frame';
 
@@ -78,7 +79,7 @@ if (page) {
     const mode = modes.find(m => m.checked)?.value ?? 'light';
     try { localStorage.setItem(APPEARANCE, JSON.stringify({ theme: theme.value, mode })); } catch { /* Storage may be unavailable. */ }
     const root = frame.contentDocument?.documentElement;
-    if (root) { root.dataset.theme = theme.value; root.dataset.themeMode = mode; root.style.colorScheme = mode; }
+    if (root) { applyTheme(root.ownerDocument, theme.value); root.dataset.themeMode = mode; root.style.colorScheme = mode; }
   };
   theme.addEventListener('change', applyAppearance);
   for (const m of modes) m.addEventListener('change', applyAppearance);

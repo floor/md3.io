@@ -1,3 +1,4 @@
+import { applyTheme } from './theme-sheets';
 import createBadge from 'material/components/badge';
 import createProgress from 'material/components/progress';
 import createLoadingIndicator from 'material/components/loading-indicator';
@@ -589,7 +590,8 @@ function create(state: ComponentState) {
 }
 const fingerprint = ({ theme, mode, ...state }: ComponentState) => JSON.stringify(state);
 function render(state: ComponentState, reset = false) {
-  document.documentElement.dataset.theme = String(state.theme);
+  // The theme's sheets load on first use (theme-sheets.ts); the mode applies at once.
+  applyTheme(document, String(state.theme));
   document.documentElement.dataset.themeMode = String(state.mode);
   document.documentElement.style.colorScheme = String(state.mode);
   if (!reset && current && fingerprint(current) === fingerprint(state)) { current = state; return; }

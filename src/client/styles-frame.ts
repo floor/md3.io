@@ -3,6 +3,7 @@
 // grouped under the corner step each one reads. The page sends the base theme, the
 // mode and the overridden custom properties; they go on the root, so everything
 // inside follows, the dialog in the top layer included, without re-creating a component.
+import { applyTheme } from './theme-sheets';
 import createTopAppBar from 'material/components/top-app-bar';
 import createIconButton from 'material/components/icon-button';
 import { createChips } from 'material/components/chips';
@@ -120,7 +121,7 @@ if (gallery) buildGallery(); else buildScreen();
 
 let applied: string[] = [];
 function apply(data: { base?: unknown; mode?: unknown; tokens?: unknown }) {
-  if (typeof data.base === 'string') root.dataset.theme = data.base;
+  if (typeof data.base === 'string') applyTheme(document, data.base);
   root.dataset.themeMode = root.style.colorScheme = data.mode === 'dark' ? 'dark' : 'light';
   const tokens = data.tokens && typeof data.tokens === 'object' ? data.tokens as Record<string, unknown> : {};
   for (const name of applied) if (!(name in tokens)) root.style.removeProperty(name);

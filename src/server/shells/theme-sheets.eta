@@ -1,0 +1,11 @@
+<%/* material's theme sheets for a frame that shows one theme at a time (the playground
+     preview, the example frames, the Styles frame). Every theme's two sheets sit inert
+     in a template, whose links are never fetched (the server still rewrites their hrefs
+     to the hashed files); only the active theme's are written into the head, around
+     contrast.css as the static links were, and src/client/theme-sheets.ts adds another
+     theme's on first use. document.write keeps them parser-inserted, so they block the
+     first paint: the frame never shows baseline before the saved theme. */%>
+  <template id="theme-sheets"><% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" data-theme-sheet="<%= theme %>" data-part="theme" href="/dist/material/themes/<%= theme %>.css" /><link rel="stylesheet" data-theme-sheet="<%= theme %>" data-part="contrast" href="/dist/material/themes/<%= theme %>-contrast.css" /><% }); %></template>
+  <script>(() => { const link = document.querySelector('#theme-sheets').content.querySelector(`[data-theme-sheet="${document.documentElement.dataset.theme}"][data-part="theme"]`); if (link) document.write(link.outerHTML); })();</script>
+  <link rel="stylesheet" id="contrast-sheet" href="/dist/material/styles/contrast.css" />
+  <script>(() => { const link = document.querySelector('#theme-sheets').content.querySelector(`[data-theme-sheet="${document.documentElement.dataset.theme}"][data-part="contrast"]`); if (link) document.write(link.outerHTML); })();</script>
