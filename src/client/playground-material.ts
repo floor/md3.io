@@ -93,13 +93,14 @@ for (const group of document.querySelectorAll<GroupHost>('m-button-group[data-gr
     if (button.value !== current()) button.click();
   };
   group.addEventListener('keydown', event => {
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
+    // Up and Down move the selection too, as they did in the native radio group.
+    if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
     const list = buttons();
     if (!list.length) return;
     const index = list.findIndex(button => button.value === current());
     const target = event.key === 'Home' ? list[0]!
       : event.key === 'End' ? list.at(-1)!
-      : list[(index + (event.key === 'ArrowRight' ? 1 : -1) + list.length) % list.length]!;
+      : list[(index + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length]!;
     event.preventDefault();
     select(target);
   });
@@ -135,6 +136,12 @@ document.querySelector('#configuration')?.addEventListener('trailing', event => 
   picker.value = String(field.value ?? '');
   picker.show();
 });
+// The pickers' own `input` (the time dial and fields report their draft) is not
+// the form's either: it never reaches the panel, so a draft the person cancels
+// does not turn the scenario to Custom. Only a confirmed pick writes the field.
+document.querySelector('#configuration')?.addEventListener('input', event => {
+  if (event.target instanceof HTMLElement && event.target.hasAttribute('data-panel-picker')) event.stopPropagation();
+}, true);
 for (const kind of ['date', 'time'] as const) {
   document.querySelector('#configuration')?.addEventListener('change', event => {
     const picker = pickers.get(kind);
@@ -143,6 +150,9 @@ for (const kind of ['date', 'time'] as const) {
     event.stopPropagation();
     const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? picker.value;
     if (typeof value !== 'string' || !value) return;
+    // The date picker commits on every day click, the one already shown too:
+    // re-picking the field's own value is no edit.
+    if (String(pickingFor.value ?? '') === value) return;
     pickingFor.value = value;
     pickingFor.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
   }, true);
