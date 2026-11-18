@@ -91,8 +91,17 @@ const ariaName = (label: string) => ({ 'aria-label': label });
  * (briefs/plan-playground-material-rollout.md).
  */
 export function materialControl(control: Control, slug: string, initial: Record<string, unknown> = {}): string | Control {
-  if (control.kind === 'date' || control.kind === 'time') return control;
   const enabledWhen = control.enabledWhen ? { 'data-enabled-when': control.enabledWhen } : {};
+  if (control.kind === 'date' || control.kind === 'time') {
+    // material's text field with the input's own date or time type: the panel's
+    // compact outlined field, the browser's picker inside. material's date picker
+    // (docked) brings a second label and a 56px field to a panel row, and its time
+    // picker is a dialog with no field to sit in one.
+    return row(control,
+      rowLabel(`${slug}-${control.key}`, control.label)
+      + renderElement('m-text-field', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', type: control.kind, name: control.key, id: `${slug}-${control.key}`, value: String(control.initial), autocomplete: 'off' }, '', renderStyles),
+      ' control-row');
+  }
   if (control.kind === 'toggle') {
     // The switch's label is slotted into it: material's switch takes its name
     // only from slotted children (an outside label or aria-label on the host

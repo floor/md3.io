@@ -118,7 +118,8 @@ try {
       await frame.getByRole('spinbutton', { name: 'Hour', exact: true }).fill('14');
       await frame.getByRole('spinbutton', { name: 'Hour', exact: true }).press('Tab');
       await frame.getByRole('button', { name: 'OK', exact: true }).click();
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration input[name="value"]')?.value.startsWith('14:'));
+      // The panel's Time is material's text field (type time); its host carries the value.
+      await page.waitForFunction(() => String((document.querySelector('#configuration [name="value"]') as HTMLElement & { value?: unknown } | null)?.value ?? '').startsWith('14:'));
       await frame.getByRole('button', { name: /Choose time/ }).click();
       await reset();
       assert(await frame.locator('.mtrl-time-picker__modal:visible').count() === 0, 'Reconfiguring time picker left a dialog open');

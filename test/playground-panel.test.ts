@@ -71,8 +71,7 @@ describe('the material playground panel', () => {
       // native checkbox, or a radio outside an icon row past five, would mean a
       // kind slipped past the material panel.
       expect(html, slug).not.toMatch(/<input type="(?:checkbox|radio)" name=/);
-      // Dates and times keep the native inputs until
-      // their batch (briefs/plan-playground-material-rollout.md).
+      // Every control kind renders as one of material's elements.
       for (const control of components[slug].controls) {
         const pastFive = control.kind === 'icons' && (control.options?.length ?? 0) > 5;
         // A range is material's slider, beside the numeric read-out.
@@ -80,7 +79,8 @@ describe('the material playground panel', () => {
           expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-slider [^>]*name="${control.key}"`));
           expect(html, `${slug}.${control.key}`).toContain(`data-value-for="${control.key}"`);
         }
-        if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toContain(`<input class="ui-input control-input" type="${control.kind}"`);
+        // A date or time is material's text field with the input's own type.
+        if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-text-field [^>]*type="${control.kind}"[^>]*name="${control.key}"|<m-text-field [^>]*name="${control.key}"[^>]*type="${control.kind}"`));
         // An icon row up to five options is a connected group; past five, a select
         // whose options carry their icon.
         if (control.kind === 'icons') expect(html.includes(`data-group-for="${control.key}"`), `${slug}.${control.key}`).toBe(!pastFive);
