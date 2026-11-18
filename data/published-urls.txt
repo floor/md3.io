@@ -93,6 +93,7 @@
 /docs/components/vue/
 /docs/components/web-components/
 /docs/events-and-overlays/
+/docs/frameworks/
 /docs/getting-started/
 /docs/react/
 /docs/server-rendering/

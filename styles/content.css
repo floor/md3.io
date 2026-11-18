@@ -460,16 +460,18 @@
     }
 }
 
-/* The framework switch at the top of a documentation page: the tabs of the component
-   pages. The reader's framework is on :root[data-framework] before paint (base.eta);
-   Vanilla without it. */
-.framework-switch__option[data-framework="vanilla"],
-:root[data-framework="html"] .framework-switch__option[data-framework="html"],
-:root[data-framework="react"] .framework-switch__option[data-framework="react"],
-:root[data-framework="vue"] .framework-switch__option[data-framework="vue"],
-:root[data-framework="svelte"] .framework-switch__option[data-framework="svelte"],
-:root[data-framework="solid"] .framework-switch__option[data-framework="solid"] { background: var(--accent); color: var(--text); }
-:root[data-framework]:not([data-framework="vanilla"]) .framework-switch__option[data-framework="vanilla"] { background: transparent; color: var(--text-dim); }
+/* A documentation block for one framework (the Frameworks page's guides and their tables
+   of contents, Getting started's per-framework steps): only the reader's framework shows.
+   The framework is on :root[data-framework] before paint (base.eta), Vanilla (Factory)
+   without it, so the right block is there from the first frame, before any script. */
+[data-for-framework] { display: none; }
+[data-for-framework="vanilla"],
+:root[data-framework="html"] [data-for-framework="html"],
+:root[data-framework="react"] [data-for-framework="react"],
+:root[data-framework="vue"] [data-for-framework="vue"],
+:root[data-framework="svelte"] [data-for-framework="svelte"],
+:root[data-framework="solid"] [data-for-framework="solid"] { display: block; }
+:root[data-framework]:not([data-framework="vanilla"]) [data-for-framework="vanilla"] { display: none; }
 
 /* An `install` block: one code block, the package managers in its header and the reader's
    command below, on :root[data-package-manager] before paint (base.eta); bun without it. */
@@ -511,3 +513,7 @@ pre.doc-install__command[data-package-manager="bun"],
 
 /* Documentation pages use the whole column between the sidebar and the table of contents. */
 .document-layout .md { max-width: none; margin: 0; padding: 32px 48px 80px; }
+
+/* The Frameworks page merges the six framework guides: each guide's own Published /
+   Updated line gives way to the page's, so the page shows one. */
+.framework-guide .meta { display: none; }

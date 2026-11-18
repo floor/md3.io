@@ -1,3 +1,4 @@
+import { handleRequest } from '../server';
 import { describe, expect, test } from 'bun:test';
 import { resolve } from 'node:path';
 import ts from 'typescript';
@@ -45,15 +46,22 @@ describe('the example fence', () => {
     expect(rendered.vanilla).toBe("import { createForm } from 'material-addons';\n\nconst form = createForm({ class: 'signup' });\ndocument.body.append(form.element);\n");
     expect(code('colorpicker:\n  value: red\n', 'vanilla')).toContain("import { createColorPicker } from 'material-addons';\n\nconst picker = createColorPicker({ value: 'red' });");
   });
-  test('renders six highlighted panels, and one switch at the top of a page with examples', () => {
+  test('renders six highlighted panels, and the framework chips at the top of a page with examples', async () => {
     const html = renderExample(withEvent);
     expect(html.match(/class="doc-example__panel"/g)).toHaveLength(6);
     expect(html).toContain('data-framework="solid"><span class="doc-example__label">SolidJS</span><pre><code class="hljs language-typescript">');
     const document = renderDocument('slider')!;
-    expect(document.html).not.toContain('framework-switch');
-    expect(document.frameworkSwitch.match(/class="framework-tab framework-switch__option"/g)).toHaveLength(6);
-    expect(renderDocument('architecture')!.frameworkSwitch).toBe('');
+    // A page whose content follows the framework gets the chips (server.ts renders them in
+    // document.eta); a framework-agnostic page gets none.
+    expect(document.frameworks).toBe(true);
+    expect(renderDocument('architecture')!.frameworks).toBe(false);
     expect(document.html).not.toContain('doc-example__error');
+    const page = await (await handleRequest(new Request('http://localhost/docs/components/slider/'))).text();
+    expect(page.match(/<m-chip value="(?:vanilla|html|react|vue|svelte|solid)"/g)).toHaveLength(6);
+    expect(page).toContain('class="framework-chips-row playground--material docs-frameworks"');
+    expect(page).not.toContain('framework-switch');
+    const architecture = await (await handleRequest(new Request('http://localhost/docs/architecture/'))).text();
+    expect(architecture).not.toContain('docs-frameworks');
   });
 });
 
