@@ -185,7 +185,12 @@ export function materialControl(control: Control, slug: string, initial: Record<
     + groupInput(control.key, String(control.initial))
     // required: a click on the selected segment keeps it, as the radio it replaced did
     // (material's single-selection group clears on that click otherwise).
-    + renderElement('m-button-group', { ...enabledWhen, selection: 'single', required: true, kind: 'connected', size: 'xs', value: String(control.initial), 'data-group-for': control.key }, items, renderStyles),
+    // filled: the selected segment takes the theme's primary (owner, 2026-11-18); material's
+    // default outlined style selects with inverse-surface, near-black in light, so the
+    // chosen theme barely showed. M3: "Button groups have no color properties. They can use
+    // the default button or toggle button color styles, like filled, tonal, and outlined."
+    // (button-groups specs, local copy dated 2026-09-23).
+    + renderElement('m-button-group', { ...enabledWhen, selection: 'single', required: true, kind: 'connected', size: 'xs', variant: 'filled', value: String(control.initial), 'data-group-for': control.key }, items, renderStyles),
     ' control-row', `label-${control.key}`);
 }
 
