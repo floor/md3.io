@@ -4,7 +4,7 @@
   <div class="example-layout">
     <div class="example-main">
       <section class="preview-panel example-preview" aria-label="Running example">
-        <iframe id="example-frame" title="<%= it.example.title %> example" src="/examples/<%= it.example.slug %>/frame/<%= it.framework %>/"></iframe>
+        <iframe id="example-frame" title="<%= it.example.title %> example" src="/showcase/<%= it.example.slug %>/frame/<%= it.framework %>/"></iframe>
         <div class="preview-footer">
           <span id="example-status" role="status" aria-live="polite"></span>
         </div>
@@ -18,7 +18,7 @@
               <button type="button" class="preview-tab" role="tab" data-file="<%= j %>" aria-selected="<%= j === 0 ? 'true' : 'false' %>" <%= j === 0 ? '' : 'tabindex="-1"' %>><%= file.name %></button>
             <% }); %>
             </div>
-            <button class="ui-btn preview-copy" type="button" data-copy>Copy code</button>
+            <%~ it.copyButton %>
           </div>
           <% variant.files.forEach((file, j) => { %>
             <pre class="example-file" data-file="<%= j %>" <%= j === 0 ? '' : 'hidden' %>><code class="hljs"><%~ file.html %></code></pre>

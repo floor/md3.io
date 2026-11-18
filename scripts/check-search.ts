@@ -25,7 +25,7 @@ try {
     await page.locator('.search-dialog__result').first().filter({ hasText: first }).waitFor();
   };
 
-  for (const path of ['/components/dialog/', '/docs/components/dialog/', '/examples/settings/']) {
+  for (const path of ['/components/dialog/', '/docs/components/dialog/', '/showcase/settings/']) {
     console.log(`Checking ${path}`);
     await page.goto(`${base}${path}`);
     await page.waitForLoadState('networkidle');

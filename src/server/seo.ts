@@ -55,8 +55,8 @@ export function sitemapPages(): SitemapPage[] {
   // Guides first, then the component references; docHref gives each its one URL.
   for (const slug of [...docSlugs].sort((a, b) => Number(isGuide(b)) - Number(isGuide(a)))) add(docHref(slug), isGuide(slug) ? '0.8' : '0.7', `docs/components/${slug}.md`);
   for (const { href } of stylePages) add(href, href === '/styles/' ? '0.8' : '0.7', shell(STYLE_SHELLS[href] ?? 'styles-overview'), 'src/server/tokens.ts');
-  add('/examples/', '0.8', shell('examples'), 'examples/index.ts');
-  for (const { slug } of examples) add(`/examples/${slug}/`, '0.6', `examples/${slug}/`);
+  add('/showcase/', '0.8', shell('examples'), 'examples/index.ts');
+  for (const { slug } of examples) add(`/showcase/${slug}/`, '0.6', `examples/${slug}/`);
   add('/privacy/', '0.3', shell('privacy'));
   return pages;
 }
@@ -69,7 +69,7 @@ export function sitemapXml(): string {
 export const robotsTxt = (): string =>
   `User-agent: *\nAllow: /\n${INTERNAL_PREFIXES.map(prefix => `Disallow: ${prefix}\n`).join('')}\nSitemap: ${SITE}/sitemap.xml\n`;
 
-const SECTIONS: Record<string, string> = { Components: '/components/', Documentation: '/docs/', Styles: '/styles/', Examples: '/examples/' };
+const SECTIONS: Record<string, string> = { Components: '/components/', Documentation: '/docs/', Styles: '/styles/', Showcase: '/showcase/' };
 const author = { '@type': 'Organization', name: 'Floor IO', url: 'https://floor.io' };
 /**
  * A page's structured data: on the home page mtrl itself and the site, with the search

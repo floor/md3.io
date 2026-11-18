@@ -30,7 +30,7 @@ try {
       const problems: string[] = [];
       page.on("pageerror", (error) => problems.push(error.message));
       page.on("console", (message) => { if (message.type() === "error" || message.type() === "warning") problems.push(message.text()); });
-      await page.goto(`${server.url}examples/${example.slug}/frame/${id}/`);
+      await page.goto(`${server.url}showcase/${example.slug}/frame/${id}/`);
       const app = page.locator("#app");
       await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
       await page.waitForTimeout(100); // elements upgrade and adapters mount

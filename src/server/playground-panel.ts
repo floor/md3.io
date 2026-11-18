@@ -106,6 +106,17 @@ export function frameworkChips(available: (id: string) => boolean): string {
     FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}" icon="${escape(frameworkLogo(id))}"${available(id) ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
 }
 
+/**
+ * The Showcase source panels' Copy code: material's xs tonal button with the content_copy
+ * symbol, as in the playground's heading, in a small material scope of its own (the
+ * panel is not one) that takes the site theme as it is parsed and follows it after
+ * (examples.ts). A copy confirms with material's snackbar.
+ */
+export const showcaseCopyButton = (): string =>
+  `<span class="playground--material showcase-copy"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script>`
+  + renderElement('m-button', { variant: 'tonal', size: 'xs', icon: readFileSync(resolve(root, 'icons/content_copy.svg'), 'utf8').trim(), class: 'preview-copy', 'data-copy': '' }, 'Copy code', renderStyles)
+  + '</span>';
+
 /** An icon's name as a select option reads it: calendarToday → calendar today, none → none. */
 const iconName = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
