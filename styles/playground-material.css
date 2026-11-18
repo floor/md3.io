@@ -10,6 +10,14 @@
 .playground--material .control-row m-select,
 .playground--material .control-row m-text-field { width: 100%; min-width: 0; }
 
+/* The fields' resting outline in the same quiet tone as the button groups'
+   borders: material's outlined text field (and the select built on it) draws
+   its outline with --mtrl-sys-color-outline, its outlined buttons with
+   --mtrl-sys-color-outline-variant. The token is narrowed on the field hosts
+   only; hover (on-surface), focus (primary) and error keep their own colours. */
+.playground--material m-select,
+.playground--material m-text-field { --mtrl-sys-color-outline: var(--mtrl-sys-color-outline-variant); }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */
