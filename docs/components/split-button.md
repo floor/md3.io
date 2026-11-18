@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -117,7 +117,8 @@ The web component's `select` carries `{ value }`; its `click` is the leading but
 - The trailing button has `aria-haspopup` and `aria-expanded`. Its label should say how its
   choices relate to the action: "More watch options" beside "Watch later".
 - `Tab` moves from the leading button to the trailing one; `Space` and `Enter` activate the
-  focused half.
+  focused half. When the trailing button opens `items`, `Enter`, `Space` or `Down` focuses the
+  first item and `Up` focuses the last.
 - At `xs` and `s`, each half still offers a 48dp target. The component mirrors in right-to-left
   layouts.
 

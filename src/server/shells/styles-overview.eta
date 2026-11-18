@@ -23,6 +23,10 @@
       </a>
     </div>
   </section>
+  <section class="styles-lab-link ui-card" aria-labelledby="styles-lab-title">
+    <div><span class="eyebrow">RUNTIME COLOUR</span><h2 id="styles-lab-title">Colour Lab</h2><p>Start with a seed or an image. Explore seven variants on real components, then take the tokens into your app.</p></div>
+    <a class="ui-btn" href="/styles/color-lab/">Open Colour Lab →</a>
+  </section>
   <section aria-labelledby="styles-coming"><h2 class="catalog-label" id="styles-coming">Coming</h2>
     <ul class="styles-cards styles-cards--coming">
       <% it.comingStyles.forEach(style => { %>

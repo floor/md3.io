@@ -18,7 +18,7 @@ export const withReactionWiring = () => (app: App) => {
     const seed = variant.seedOf(theme);
     ui.variant.textField.setSupportingText(!theme.handSeed ? `Seed ${seed}`
       : current === 'original' && contrast ? `Tonal Spot from ${seed}: Original is standard contrast only`
-      : current === 'original' ? `Set by hand; variants generated from ${seed}` : `Generated from ${seed}`);
+      : current === 'original' ? `${theme.origin === 'unknown' ? 'Origin unknown' : 'Set by hand'}; variants generated from ${seed}` : `Generated from ${seed}`);
     if (!ui.contrast.isSelected(String(contrast))) ui.contrast.select(String(contrast));
   };
   const render = () => variant.update(() => {

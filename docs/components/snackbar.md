@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -85,12 +85,13 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `action` | `string` | `undefined` | The action's label |
 | `dismissible` | `boolean` | `false` | A close button |
 | `closeLabel` | `string` | `'Dismiss'` | The close button's accessible name |
+| `focusShortcut` | `string \| false` | `'F8'` | One non-character `KeyboardEvent.key` name (such as `'F6'`, `'F8'` or `'F9'`, with no modifiers held) that moves focus to the action button while on screen; `false`, `'off'`, `''` or a single-character string disables it (`<m-snackbar focus-shortcut>`) |
 | `duration` | `'short' \| 'long' \| 'indefinite' \| number` | `'indefinite'` with an action, else `'short'` | How long it stays: 4s, 10s, until closed, or milliseconds (`0` is indefinite) |
 | `position` | `'center' \| 'start' \| 'end'` | `'center'` | Where along the bottom edge |
 | `queueBehavior` | `'queue' \| 'replace'` | `'queue'` | Whether it waits its turn or replaces the queue |
 | `layer` | `'top'` | `undefined` | Shows it in the top layer, inside the topmost modal dialog while one is open |
-| `onAction` / `onOpen` / `onClose` | `(event: SnackbarEvent) => void` | `undefined` | Handlers for `action`, `open` and `close` |
-| `on` | `{ open?, close?, action?, dismiss? }` | `undefined` | Event handlers registered at creation |
+| `onAction` / `onOpen` / `onClose` / `onFocus` | `(event: SnackbarEvent) => void` | `undefined` | Handlers for `action`, `open`, `close` and `focus` |
+| `on` | `{ open?, close?, action?, dismiss?, focus? }` | `undefined` | Event handlers registered at creation |
 | `class` | `string` | `undefined` | Additional CSS classes |
 | `prefix` | `string` | `'mtrl'` | Prefix for CSS class names |
 
@@ -121,15 +122,22 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |-------|-------------|------|
 | `open` | It is on screen | `{ snackbar, originalEvent }` |
 | `action` | The action was used | `{ snackbar, originalEvent }` |
+| `focus` | The shortcut moved focus to the action button | `{ snackbar, originalEvent }` |
 | `close` / `dismiss` | It closed | `{ snackbar, reason, originalEvent }` |
 
 `reason` is `timeout`, `action`, `close-button`, `escape`, `api` or `queue` (replaced or
-cleared). The web component dispatches `open`, `action` and `close`; its `close` carries
-`{ reason }`, and its `open` property is true from `show()` on, while it waits too.
+cleared). The web component takes `focus-shortcut` (`focus-shortcut="F6"`,
+`focus-shortcut="false"`) and dispatches `open`, `action`, `focus` and `close`; its `close`
+carries `{ reason }`, and its `open` property is true from `show()` on, while it waits too.
 
 ## Accessibility
 
 - A `status` live region: its message is announced politely, and focus is not moved to it.
+- Pressing `focusShortcut` (`F8` by default, with no modifiers held; stamped on the action
+  button as `aria-keyshortcuts`) moves focus to an actionable snackbar's action button, pauses
+  the auto-dismiss timer while focus stays inside (`focusin` / `focusout`), and restores focus
+  on `close()` to the element that had focus when the key was pressed. On macOS the platform
+  may require the Fn key: press `Fn+F8` unless function keys are set as standard keys.
 - `Escape` closes it while focus is inside it. If focus was inside when it closed, it goes back
   where it came from.
 - Its countdown pauses while the pointer is over it or focus is inside it. With an action, it

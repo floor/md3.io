@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -163,7 +163,8 @@ The web component's `change` carries `{ selected, value }`.
 - A toggle has `aria-pressed`, kept in step with the selected state; don't set it yourself.
 - Mark the icon's own SVG `aria-hidden="true"`, so the name is announced once.
 - `Tab` focuses it; `Enter` and `Space` activate it. Disabled, it leaves the tab order.
-- The `xs` and `s` sizes keep a 48dp touch target beyond their container.
+- The `xs` and `s` sizes, and any size brought below 48dp by `--mtrl-density`, keep a 48dp
+  touch target beyond their container.
 
 ## Styling
 

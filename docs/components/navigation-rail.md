@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-05
 status: published
 ---
 
@@ -126,7 +126,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 - A `nav` landmark (a `dialog` in the modal layout) named by `ariaLabel`; the active
   destination has `aria-current="page"`.
 - A badge is in its destination's name: the label, then `badgeLabel`, the badge's text, or
-  "New activity" for a dot.
+  "New notification" for a dot (see the [M3 badge accessibility guidance](https://m3.material.io/components/badges/accessibility)).
 - `Tab` reaches the destinations; `Up`, `Down`, `Home` and `End` move between the enabled ones.
 - The menu button has `aria-expanded`, and is named by `expandLabel` or `collapseLabel`. The
   modal rail keeps focus inside while it is open.

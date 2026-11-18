@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-11-10
 status: published
 ---
 
@@ -35,6 +35,23 @@ defineAll({ prefix: 'md' });
 ```
 
 The page then uses `<md-switch>`, `<md-tabs>`, and so on.
+
+### Deferred menu registration
+
+`material/elements/menu` is a dedicated entry exporting `defineMenu`; importing it registers
+nothing. The eager registration is:
+
+```typescript
+import 'material/elements/css/menu';
+import { defineMenu } from 'material/elements/menu';
+
+defineMenu();
+```
+
+To defer a closed menu, load `material/elements/preupgrade/menu.css` before upgrade, then defer
+both `material/elements/menu` and `material/elements/css/menu`. Call `defineMenu()` when both
+imports resolve; callers must await registration before using element methods. Initially open
+menus need eager registration and ready styles. See [Menu](../components/menu/#deferred-delivery).
 
 ## Attributes and properties
 
@@ -140,7 +157,16 @@ form-associated, as native controls are.
 
 ## Styling from outside
 
-The shadow root keeps the page's CSS out, except what inherits. The base stylesheet and themes
+Use `material/styles/base-elements` for element and framework pages keeping the baseline
+light/dark theme, colour/shape/typeface tokens, reset, cascade order and system contrast
+(`prefers-contrast: more`). Its bundled CSS saves 293 B gzip (970 B raw) against `material/styles/base` by
+omitting global light-DOM ripple rules already carried by each element's shadow root.
+Use `base` for factories or page-level `data-ripple`, or `material/styles/base-lite` for element
+pages omitting the reset and contrast modes. Explicit `data-theme-contrast` still needs
+`material/styles/contrast`. Choose one base; the typography JavaScript entry imports the full
+base, so see [Theming](../theming/#the-baseline) for loading typography CSS separately.
+
+The shadow root keeps the page's CSS out, except what inherits. The chosen base and themes
 stay in the page: the `--mtrl-sys-*` colour, type and shape tokens are custom properties, which
 inherit, so a `data-theme` on an ancestor themes every element in it. A component's own custom
 properties work the same way:
@@ -155,6 +181,55 @@ The host is the box you lay out: `inline-block` unless the component is a block,
 card. A text field fills the width you give it. Selectors can't reach inside, and the elements
 expose no `::part` yet: the custom properties are the styling surface.
 
+### Application-compiled element styles
+
+To opt custom elements into the Sass typography role-fallback profile (`$typescale-tokens: true`),
+or configure `$tag-prefix` and `$contrast-emit` once through `material/src/styles/config` (see
+[Theming](../theming/#typography-role-fallbacks)):
+
+1. Compile matching pre-upgrade CSS through `material/src/styles/preupgrade` (which includes the
+   `mtrl.preupgrade` layer and linked-SSR rollback; add `$tag-prefix: "md"` when registering
+   elements under `{ prefix: 'md' }`):
+
+   ```scss
+   @use "material/src/styles/config" with ($typescale-tokens: true);
+   @use "material/src/styles/preupgrade";
+   ```
+
+2. Compile each required shadow style key through the experimental `material/src/styles/element-styles`
+   entry:
+
+   ```scss
+   @use "material/src/styles/config" with ($typescale-tokens: true);
+   @use "material/src/styles/element-styles" with ($name: "button");
+   ```
+
+3. Load `material/styles/base-elements` and register every required key (`ripple`, `progress` and
+   `button` for a button; other elements require their own complete key set) with `registerStyles`
+   before calling `defineButton()`:
+
+   ```typescript fragment
+   import 'material/styles/base-elements';
+   import { defineButton, registerStyles } from 'material/elements';
+
+   const names = ['ripple', 'progress', 'button'];
+   const sheets = await Promise.all(names.map(async name => {
+     const response = await fetch(`/app-css/${name}.css`);
+     if (!response.ok) throw new Error(`Cannot load ${name} styles`);
+     return [name, await response.text()];
+   }));
+   registerStyles(Object.fromEntries(sheets));
+   defineButton();
+   ```
+
+Role properties (`--mtrl-sys-typescale-<role>-*`) inherit through element hosts into shadow roots.
+Applications own the compiled files, their loading and the additional CSS cost. Register styles
+before defining or creating elements — later `registerStyles` calls do not replace sheets already
+adopted by existing shadow roots. Normal framework adapter entries keep their default CSS imports.
+For linked SSR (`styles: 'link'`), point `cssBase` at the app-compiled shadow CSS directory while
+supplying component dependencies and unchanged host sheets from `dist/elements/css` (default inline
+SSR retains its default CSS).
+
 ## Server-rendered HTML
 
 Until its script defines it, an element is the markup the server sent, unstyled. The pre-upgrade
@@ -168,7 +243,8 @@ them in the `<head>` so they apply from the first paint:
 ```
 
 The file is `material/elements/preupgrade.css`: serve a copy, or import it where your bundler handles
-CSS. It is built for `m-`; for another prefix, build the rules on the server and inline them:
+CSS. It is built for `m-`; for another prefix, build the rules on the server and inline them, or
+compile `material/src/styles/preupgrade` with `material/src/styles/config` in Sass:
 
 ```typescript
 import { preupgradeStyles } from 'material/elements/preupgrade';

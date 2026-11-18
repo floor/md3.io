@@ -55,5 +55,11 @@ describe('theme download', () => {
     expect(css.text).toContain('generated from seed #9a7a3e, Tonal Spot, standard contrast');
     const hand: ThemeData = { ...desert, spec: null, origin: null };
     expect(themeFile('css', hand, ROLES, 'custom').text).toContain('colours as the material library ships them, set by hand');
+    const unknown: ThemeData = { ...desert, spec: null, origin: 'unknown' };
+    for (const format of ['css', 'json'] as const) {
+      const file = themeFile(format, unknown, ROLES, 'custom').text;
+      expect(file).toContain('origin unknown');
+      expect(file).not.toContain('set by hand');
+    }
   });
 });

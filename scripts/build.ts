@@ -12,7 +12,7 @@ const options = { outdir, target: 'browser', splitting: true, minify: true, sour
 // other pages do. The Button pilot's glue builds alone for the same reason: joining
 // the shared group would move every page's site.js chunk hash, and the pages that
 // are not part of the pilot must stay byte for byte what they were.
-for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app'], ['playground-material'], ['catalog']]) {
+for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab'], ['playground-material'], ['catalog']]) {
   const result = await Bun.build({ ...options, entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)) });
   if (!result.success) {
     for (const log of result.logs) console.error(log);

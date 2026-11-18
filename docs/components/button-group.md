@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -109,7 +109,7 @@ these tables are hand-written: keep them in line with the code, and add no prose
 | `expandedRatio` | `number` | `0.15` | Standard groups: the share of its width a pressed button gains; `0` turns the motion off |
 | `variant` | `'filled' \| 'tonal' \| 'outlined' \| 'elevated' \| 'text'` | `'outlined'` | Applied to every button |
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Row or column |
-| `density` | `'default' \| 'comfortable' \| 'compact'` | `'default'` | Lowers the height by 4dp per step |
+| `density` | `'default' \| 'comfortable' \| 'compact'` | `'default'` | Lowers the height by 4dp per step (`comfortable` is step `-1` and `compact` is step `-2` on the `--mtrl-density` scale, floored at 32dp with a 48dp hit target; the outer round radius stays half the scaled height) |
 | `disabled` | `boolean` | `false` | Disables the whole group |
 | `equalWidth` | `boolean` | `false` | Gives every button the same width |
 | `ripple` | `boolean` | `true` | Whether a press shows the ripple |
@@ -197,8 +197,16 @@ dispatches `action` with `{ value, index }`.
 
 ## Styling
 
-The component writes its measurements as custom properties **inline** on the container, so
-only a declaration with `!important`, or one on the element itself, overrides them.
+The component sets `--mtrl-button-group-height`, `--mtrl-button-group-icon`,
+`--mtrl-button-group-gap`, `--mtrl-button-group-inner-corner` and
+`--mtrl-button-group-pressed-corner` **inline** on `.mtrl-button-group`. It also sets
+`--mtrl-density` inline for `density: 'comfortable'` or `'compact'`. Overriding these from a
+stylesheet takes `!important`, or set them on the element itself.
+
+The stylesheet derives `--mtrl-button-group-height-scale` from the density-scaled height,
+floored at 32dp, and `--mtrl-button-group-radius` as
+`calc(var(--mtrl-button-group-height-scale) / 2)` on `.mtrl-button-group`. These are not inline;
+a stylesheet rule can override the radius without `!important`.
 
 ```css
 .mtrl-button-group { }
@@ -218,7 +226,7 @@ only a declaration with `!important`, or one on the element itself, overrides th
   --mtrl-button-group-gap: 12px !important;
   --mtrl-button-group-inner-corner: 8px !important;
   --mtrl-button-group-pressed-corner: 4px !important;
-  --mtrl-button-group-radius: 20px !important;
+  --mtrl-button-group-radius: 20px;
 }
 ```
 

@@ -1,43 +1,35 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { createDeployFixture, FLOOR_MATERIAL, placeMaterial, revision, runRemote, trashFixture } from './deploy-harness';
+import { createDeployFixture, readStubLog, revision, runRemote, trashFixture } from './deploy-harness';
 
 describe('deploy script', () => {
   // Local bare repositories, under a busy suite. The default five seconds is tight.
   const slow = (name: string, fn: () => void) => test(name, fn, 20_000);
 
-  slow('a dry run prints the steps in order and the refusal, and does not open ssh', () => {
+  slow('a dry run prints the steps in order and does not open ssh', () => {
     const bin = mkdtempSync(join(tmpdir(), 'md3-deploy-dry-'));
-    writeFileSync(join(bin, 'ssh'), '#!/bin/sh\necho SSH_INVOKED\nexit 97\n');
-    chmodSync(join(bin, 'ssh'), 0o755);
+    writeFileSync(join(bin, 'ssh'), '#!/bin/sh\necho SSH_INVOKED\nexit 97\n', { mode: 0o755 });
     const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', PATH: `${bin}:${process.env.PATH ?? ''}` };
-    delete env.LIBRARY_REF;
-    delete env.LIBRARY_URL;
     delete env.DEPLOY_HOST;
     delete env.DEPLOY_DIR;
-    const result = spawnSync('./scripts/deploy.sh', [], { encoding: 'utf8', env, timeout: 15000 });
+    const result = spawnSync('bash', ['./scripts/deploy.sh'], { encoding: 'utf8', env, timeout: 15000 });
     spawnSync('trash', [bin]);
     const out = result.stdout ?? '';
     expect(result.status).toBe(0);
     expect(out).not.toContain('SSH_INVOKED');
     expect(out).toContain('host: floor.io');
     expect(out).toContain('directory: /home/floor');
-    expect(out).toContain('library: https://github.com/floor/material.git');
-    expect(out).toContain('library ref: origin/main');
+    expect(out).not.toContain('/home/floor/material');
     const steps = [
-      "git clone -q 'https://github.com/floor/material.git'",
-      'config --get remote.origin.url',
-      'Refusing to deploy: /home/floor/material origin is $origin, not floor/material.',
-      'git fetch -q origin --tags',
-      'refs/remotes/origin/$ref',
-      'git checkout -q --detach',
-      'bun install --frozen-lockfile',
-      'bun run build',
+      "cd '/home/floor/md3.io'",
       'git fetch -q origin main',
       'git reset -q --hard origin/main',
+      'git log --oneline -1',
+      'if [ -L node_modules/material ] || [ -L node_modules/material/package.json ]; then',
+      'mv node_modules/material "/tmp/md3io-material-link-$$"',
       'bun install --frozen-lockfile',
       'bun run build',
       'md3.io is at origin/main but the build did not succeed; the running process is unchanged.',
@@ -53,151 +45,69 @@ describe('deploy script', () => {
     }
   });
 
-  slow('LIBRARY_REF=main checks out origin/main when the local branch is behind', () => {
-    const fixture = createDeployFixture();
-    try {
-      const material = placeMaterial(fixture, FLOOR_MATERIAL);
-      const result = runRemote(fixture, { ref: 'main' });
-      expect(revision(material)).toBe(fixture.materialOrigin);
-      expect(result.status).toBe(0);
-      expect(result.stdout).toContain(`remote branch refs/remotes/origin/main ${fixture.materialOrigin}`);
-    } finally {
-      trashFixture(fixture);
-    }
-  });
-
-  slow('an existing library checkout with no origin is refused before the site is touched', () => {
-    const fixture = createDeployFixture();
-    try {
-      const material = placeMaterial(fixture, null);
-      const result = runRemote(fixture, { ref: 'main' });
-      expect(result.stderr).toContain('no origin');
-      expect(result.status).toBe(1);
-      expect(revision(fixture.site)).toBe(fixture.siteLocal);
-      expect(revision(material)).toBe(fixture.materialLocal);
-    } finally {
-      trashFixture(fixture);
-    }
-  });
-
-  slow('a library ref containing a semicolon or a space is refused and nothing is generated', () => {
-    for (const ref of ['main;id', 'main id']) {
-      const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', LIBRARY_REF: ref };
-      const result = spawnSync('./scripts/deploy.sh', [], { encoding: 'utf8', env, timeout: 15000 });
+  slow('a directory that is relative, has a .. segment, or has a line break is refused and nothing is generated', () => {
+    for (const dir of ['home/floor', '/home/../floor', '/home/floor\nx']) {
+      const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', DEPLOY_DIR: dir };
+      const result = spawnSync('bash', ['./scripts/deploy.sh'], { encoding: 'utf8', env, timeout: 15000 });
       expect(result.status).toBe(1);
       expect(result.stdout ?? '').not.toContain('set -euo pipefail');
-      expect(result.stdout ?? '').not.toContain('git clone');
-      expect(result.stderr ?? '').toContain('Refusing to deploy');
+      expect(result.stderr ?? '').toContain(
+        'Refusing to deploy: directory must be an absolute path of [A-Za-z0-9._/-] with no .. segment.',
+      );
     }
   });
 
-  // The first line of each value matches. The check has to see the whole value.
-  const refuseBrokenLine = (name: string, extra: Record<string, string>, sentence: string) => {
-    slow(`a ${name} with a line break is refused and nothing is generated`, () => {
-      const env: Record<string, string | undefined> = { ...process.env, DRY_RUN: '1', ...extra };
-      const result = spawnSync('./scripts/deploy.sh', [], { encoding: 'utf8', env, timeout: 15000 });
-      expect(result.status).toBe(1);
-      expect(result.stdout ?? '').not.toContain('set -euo pipefail');
-      expect(result.stdout ?? '').not.toContain('git clone');
-      expect(result.stderr ?? '').toContain(sentence);
-    });
-  };
-  refuseBrokenLine(
-    'library ref',
-    { LIBRARY_REF: 'origin/main\nx' },
-    'Refusing to deploy: library ref must match [A-Za-z0-9._/-]+ and must not start with -.',
-  );
-  refuseBrokenLine(
-    'library URL',
-    { LIBRARY_URL: 'https://github.com/floor/material.git\nx' },
-    'Refusing to deploy: library URL must be https://, git@host:path, ssh://, file://, or an absolute path, with no .. segment.',
-  );
-  refuseBrokenLine(
-    'directory',
-    { DEPLOY_DIR: '/home/floor\nx' },
-    'Refusing to deploy: directory must be an absolute path of [A-Za-z0-9._/-] with no .. segment.',
-  );
-
-  slow('a dirty library checkout is refused, listing the files, before anything changes', () => {
+  slow('fetches and resets md3.io to origin/main, installs from bun.lock, builds, and reloads or starts pm2', () => {
     const fixture = createDeployFixture();
     try {
-      const material = placeMaterial(fixture, FLOOR_MATERIAL);
-      writeFileSync(join(material, 'shared.txt'), 'local edit\n');
-      const result = runRemote(fixture, { ref: 'main' });
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain('shared.txt');
-      expect(revision(material)).toBe(fixture.materialLocal);
       expect(revision(fixture.site)).toBe(fixture.siteLocal);
-      expect(readFileSync(join(material, 'shared.txt'), 'utf8')).toBe('local edit\n');
-    } finally {
-      trashFixture(fixture);
-    }
-  });
-
-  slow('a missing library checkout is cloned', () => {
-    const fixture = createDeployFixture();
-    try {
-      const result = runRemote(fixture, { ref: 'main', url: fixture.materialBare });
+      const result = runRemote(fixture, { pm2Pid: 4242 });
       expect(result.status).toBe(0);
-      expect(revision(join(fixture.dir, 'material'))).toBe(fixture.materialOrigin);
       expect(revision(fixture.site)).toBe(fixture.siteOrigin);
+      expect(result.stdout).toContain('md3.io answers 200.');
+      const log = readStubLog(fixture);
+      expect(log).toContain('bun install --frozen-lockfile\n');
+      expect(log).toContain('bun run build\n');
+      expect(log).toContain('pm2 reload md3.io\n');
     } finally {
       trashFixture(fixture);
     }
   });
 
-  slow('a library checkout whose origin is not floor/material is refused and the site is untouched', () => {
+  slow('moves a legacy symlinked node_modules/material/package.json aside before bun install --frozen-lockfile', () => {
     const fixture = createDeployFixture();
     try {
-      const material = placeMaterial(fixture, 'https://github.com/floor/mtrl.git');
-      const result = runRemote(fixture, { ref: 'main' });
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain('https://github.com/floor/mtrl.git');
-      expect(result.stderr).toContain('not floor/material');
-      expect(revision(material)).toBe(fixture.materialLocal);
-      expect(revision(fixture.site)).toBe(fixture.siteLocal);
-    } finally {
-      trashFixture(fixture);
-    }
-  });
+      const mtrlDir = join(fixture.site, 'node_modules', 'material');
+      mkdirSync(mtrlDir, { recursive: true });
+      const targetPkg = join(fixture.root, 'legacy-material-package.json');
+      writeFileSync(targetPkg, '{"name":"material","version":"3.2.6"}\n');
+      symlinkSync(targetPkg, join(mtrlDir, 'package.json'));
 
-  slow('a tag that is not main is checked out', () => {
-    const fixture = createDeployFixture();
-    try {
-      const material = placeMaterial(fixture, FLOOR_MATERIAL);
-      const result = runRemote(fixture, { ref: 'v1' });
-      expect(fixture.materialTag).not.toBe(fixture.materialOrigin);
+      const result = runRemote(fixture);
       expect(result.status).toBe(0);
-      expect(revision(material)).toBe(fixture.materialTag);
-      expect(result.stdout).toContain(`tag refs/tags/v1 ${fixture.materialTag}`);
+      expect(existsSync(mtrlDir)).toBe(false);
+      expect(readStubLog(fixture)).toContain('bun install --frozen-lockfile\n');
     } finally {
+      for (const entry of readdirSync('/tmp')) {
+        if (entry.startsWith('md3io-material-link-')) spawnSync('trash', [join('/tmp', entry)]);
+      }
       trashFixture(fixture);
     }
   });
 
-  slow('an unknown library ref is refused before the site is touched', () => {
+  slow('exits 1 with the unchanged-process message and does not reload or start pm2 when bun run build fails', () => {
     const fixture = createDeployFixture();
     try {
-      const material = placeMaterial(fixture, FLOOR_MATERIAL);
-      const result = runRemote(fixture, { ref: 'no-such-ref' });
+      const result = runRemote(fixture, { failBuild: true, pm2Pid: 4242 });
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain('no-such-ref');
-      expect(revision(material)).toBe(fixture.materialLocal);
-      expect(revision(fixture.site)).toBe(fixture.siteLocal);
-    } finally {
-      trashFixture(fixture);
-    }
-  });
-
-  slow('a ref beginning with refs/heads/ is refused', () => {
-    const fixture = createDeployFixture();
-    try {
-      const material = placeMaterial(fixture, FLOOR_MATERIAL);
-      const result = runRemote(fixture, { ref: 'refs/heads/main' });
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain('refs/heads/');
-      expect(revision(material)).toBe(fixture.materialLocal);
-      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+      expect(revision(fixture.site)).toBe(fixture.siteOrigin);
+      expect(result.stderr).toContain(
+        'md3.io is at origin/main but the build did not succeed; the running process is unchanged.',
+      );
+      const log = readStubLog(fixture);
+      expect(log).toContain('bun install --frozen-lockfile\n');
+      expect(log).toContain('bun run build\n');
+      expect(log).not.toContain('pm2 ');
     } finally {
       trashFixture(fixture);
     }

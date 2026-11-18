@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -17,7 +17,8 @@ actions, a [menu](menu.md). See the
 
 `items` are destinations, dividers (`type: 'divider'`) and section labels
 (`type: 'section'`); `active` marks the current destination, and a `badge` is trailing text
-such as an unread count.
+such as an unread count. `activeIcon` is the icon shown while that destination is selected. The
+web component takes it as `selected-icon`.
 
 ```example
 drawer:
@@ -54,8 +55,10 @@ component's `modal` drawer is always in the top layer.
 
 ### Dense, at the end
 
-`dense` makes the items shorter; `position: 'end'` anchors the drawer to the end edge, which
-is the left in right-to-left layouts. `width` is pixels as a number, or any CSS length.
+`dense` is the fifth step (`-5`, 36dp item height with a 48dp touch target, keeping typography,
+24dp icons, badges, dividers and the `12px 0` sheet padding unchanged) on the `--mtrl-density`
+scale; `position: 'end'` anchors the drawer to the end edge, which is the left in
+right-to-left layouts. `width` is pixels as a number, or any CSS length.
 
 ```example
 drawer:
@@ -93,7 +96,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `ariaLabel` | `string` | the headline, or `'Navigation'` | The drawer's accessible name |
 | `items` | `DrawerItemConfig[]` | `[]` | Destinations, dividers and section labels |
 | `width` | `string \| number` | `360` | Width; a number is pixels. Set as `--mtrl-drawer-width` on the root |
-| `dense` | `boolean` | `false` | Smaller items and tighter spacing |
+| `dense` | `boolean` | `false` | Step `-5` on the `--mtrl-density` scale (36dp item height with a 48dp hit target; type and 24dp icons stay unchanged) |
 | `ripple` | `boolean` | `true` | Press ripple on items, clipped to the item shape |
 | `class` | `string` | `undefined` | Extra CSS classes |
 | `prefix` | `string` | `'mtrl'` | Class-name prefix |
@@ -109,6 +112,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `id` | `string` | `undefined` | Identifier, used by `setActive`, `setBadge` and the select event |
 | `label` | `string` | `undefined` | Destination text, and the text of a `section` |
 | `icon` | `string` | `undefined` | Leading icon, as an HTML string |
+| `activeIcon` | `string` | `undefined` | Icon shown while this destination is selected, as an HTML string. The element takes it as `selected-icon` |
 | `badge` | `string` | `undefined` | Trailing text, such as an unread count |
 | `active` | `boolean` | `false` | Whether this destination starts selected |
 | `disabled` | `boolean` | `false` | Cannot be clicked or reached by the arrow keys, and carries `aria-disabled` |
@@ -135,6 +139,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |-------|---------|-------------|
 | `select` | `{ id, value, label, index, originalEvent }` | A destination was chosen |
 | `open` / `close` | none | The drawer opened or closed |
+
+`<m-drawer-item>` takes `value`, `icon`, `selected-icon`, `badge`, `label` and `disabled`, or
+`type` for a section or divider.
 
 ## Accessibility
 

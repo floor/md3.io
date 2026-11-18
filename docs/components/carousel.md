@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -67,6 +67,12 @@ and scrolls vertically. The layouts follow Compose's keylines: each item's size 
 come from the scroll offset. In the factory, a slide's `content` (an element or markup)
 replaces the image and text, and `next()`, `prev()` and `goTo(index)` move the carousel.
 
+A slide's `image` may state the intrinsic size of the file with `width` and `height`, in
+pixels. The browser reserves a box of that ratio before the image arrives, so the carousel does
+not jump as files load. `loading` chooses when the file is fetched: the slide that opens the
+carousel is `"eager"`, every later one `"lazy"`, and a slide can override either. `decoding`
+passes the hint of the same name to the image. All four are optional.
+
 ## API
 
 <!-- API: generated from mtrl's types and <m-carousel>'s spec in a later step. Until then these
@@ -95,6 +101,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |-------|------|-------------|
 | `image` | `string` | Image URL |
 | `alt` | `string` | The image's alt text; `title` without it, and `''` for a decorative image |
+| `width` / `height` | `number` | The image's intrinsic size in pixels |
+| `loading` | `'eager' \| 'lazy'` | `'eager'` for the first slide, `'lazy'` for every other |
+| `decoding` | `'sync' \| 'async' \| 'auto'` | Passed to the `<img>` |
 | `title` / `description` | `string` | Text over the image |
 | `buttonText` / `buttonUrl` | `string` | A call-to-action link |
 | `content` | `HTMLElement \| string` | The app's own content, instead of the image and text |

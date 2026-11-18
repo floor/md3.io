@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-10-02
+updated: 2026-11-10
 status: published
 ---
 
@@ -74,6 +74,12 @@ import { preupgradeStyles } from 'material/elements/preupgrade';
 
 const head = `<style>${preupgradeStyles('md')}</style>`;
 ```
+
+Applications that compile Sass can also build layered pre-upgrade rules (including the
+`[data-mtrl-ssr]` rollback) with `material/src/styles/preupgrade` configured through
+`material/src/styles/config` — for example to set a custom `$tag-prefix` or enable
+`$typescale-tokens: true` (see
+[Web Components](../web-components/#application-compiled-element-styles)).
 
 ### What it does
 
@@ -198,7 +204,11 @@ renderElement(tag, attributes, children, { styles: 'link', cssBase: '/css' });
 The same pages are 15 to 40 KB of HTML, and the stylesheets are fetched once and cached. Its
 caveat: WebKit paints the roots unstyled until the stylesheets arrive (about 470 ms with each
 stylesheet 300 ms away; a preload in the head does not help), where Chromium and Firefox wait
-for them before painting.
+for them before painting. When an application compiles its own element shadow CSS (for example with
+`$typescale-tokens: true` via `material/src/styles/element-styles`), point `cssBase` at the
+app-compiled shadow CSS directory while serving component dependencies and unchanged host sheets
+from `dist/elements/css`, and register the same app-built sheets on the client; default inline SSR
+retains the default prebuilt CSS profile.
 
 Measured on Playwright's engines (Chromium 153, Firefox 155, WebKit 26.6); sizes are of the
 HTML `renderElement` returns, gzip at level 9, brotli at its default.

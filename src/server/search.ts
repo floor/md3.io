@@ -157,6 +157,10 @@ function styleDocuments(): IndexDocument[] {
       api: colorGroups.flatMap(group => group.roles.map(role => `--mtrl-sys-color-${role}`)).join(' '),
       body: `Color roles, themes, light and dark, WCAG contrast. ${colorGroups.map(group => `${group.label}: ${group.roles.map(roleWords).join(', ')}.`).join(' ')}`,
     },
+    '/styles/color-lab/': {
+      api: 'material/theme material/theme/variants material/theme/image createScheme createSchemeByName applyScheme sourceColorFromImage',
+      body: 'Colour lab color lab runtime dynamic colour seed image HCT tonal spot vibrant expressive fidelity content neutral monochrome contrast tokens copy CSS JavaScript.',
+    },
     '/styles/typography/': {
       api: typescale.flatMap(style => [`mtrl-${style.role}`, `--mtrl-sys-typescale-${style.role}-font-size`]).join(' '),
       body: `Typography, type scale, typescale, font, font size, line height, weight, tracking. ${typescale.map(style => roleWords(style.role)).join(', ')}.`,

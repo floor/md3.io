@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-10
 status: published
 ---
 
@@ -55,6 +55,11 @@ datepicker:
   dateFormat: DD/MM/YYYY
 ```
 
+`locale` (`<m-datepicker locale>`, default `'en-US'`) sets the BCP 47 locale tag for month and
+weekday names, the first day of the week, `Home`/`End` row navigation, and the default field
+format when `dateFormat` is omitted (editable fields use Gregorian dates and Latin digits so
+displayed values round-trip through input parsing).
+
 ### Read-only
 
 A read-only field keeps its value readable and focusable, as a native `readonly` input does,
@@ -76,6 +81,25 @@ Months swipe horizontally, by touch, trackpad or mouse wheel, and the arrows sli
 way. Tapping the year opens every year from `minDate` to `maxDate` (1900 to 2100 without
 limits). Full screen, the months are one vertical list that grows as it scrolls.
 
+### Deferred calendar
+
+`createDeferredDatePicker` from `material/components/datepicker/deferred` is an opt-in entry
+with the same `DatePickerConfig` and `DatePickerComponent` contract:
+
+```typescript
+import { createDeferredDatePicker } from 'material/components/datepicker/deferred';
+import 'material/styles/datepicker';
+
+const deferredPicker = createDeferredDatePicker({ label: 'Departure', variant: 'modal' });
+document.body.append(deferredPicker.element);
+```
+
+The field and trigger are built immediately. With code splitting enabled, the calendar chunk
+loads on the first open, or earlier on `pointerenter` or `focus` on the trigger. `isOpen()` and
+the open/close state and events remain synchronous. Until the calendar arrives, `aria-expanded`
+stays `false` and a modal dialog takes its name from `label` through `aria-label`; focus enters
+the calendar only when ready. A `close()` while loading keeps it closed when the chunk lands.
+
 ## API
 
 <!-- API: generated from mtrl's types and <m-datepicker>'s spec in a later step. Until then these
@@ -90,7 +114,8 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `value` | `Date \| string \| [start, end] \| { start, end }` | `undefined` | The initial value; in range mode a pair, and a lone date the one-day range `[d, d]` |
 | `label` | `string` | `'Select date'` | The field's label, and the dialog's title |
 | `minDate` / `maxDate` | `Date \| string` | `undefined` | The first and last selectable dates |
-| `dateFormat` | `string` | `'MM/DD/YYYY'` | How the field shows and reads dates (`YYYY`, `MM`, `M`, `DD`, `D`, `MMM`, `MMMM`) |
+| `locale` | `string` | `'en-US'` | BCP 47 locale tag driving month and weekday names, the first day of the week, and the default `dateFormat` when omitted (`<m-datepicker locale>`) |
+| `dateFormat` | `string` | `'MM/DD/YYYY'` (or from `locale`) | How the field shows and reads dates (`YYYY`, `MM`, `M`, `DD`, `D`, `MMM`, `MMMM`) |
 | `placeholder` | `string` | the format | The field's placeholder |
 | `initialView` | `'day' \| 'month' \| 'year'` | `'day'` | The view the calendar opens on (not in full screen) |
 | `closeOnSelect` | `boolean` | `false` | Commit and close on a selection, without OK |
@@ -178,6 +203,6 @@ From the M3 date picker specs and their tokens:
 | Full screen | The viewport, no corners or elevation, a 128dp header with close (x) and Save, subheads Title Small |
 | Weekdays and days | 48dp cells, Body Large; a 40dp round selection |
 | Selected | `primary` with `on-primary` text; today has a 1dp `primary` outline |
-| Range | A 40dp `secondary-container` band |
+| Range | A 40dp `secondary-container` band, continuous across visible adjacent-month days including endpoints; outside-month text stays muted |
 | Years | 3 columns, 72 × 36dp items |
 | Motion | The months slide; the dialog fades in |

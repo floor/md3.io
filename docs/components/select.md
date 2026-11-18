@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -95,7 +95,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `supportingText` | `string` | `undefined` | Helper text under the field |
 | `error` | `boolean` | `false` | The error state |
 | `placement` | `string` | `'bottom-start'` | The menu's placement against the field |
-| `menu` | `{ container?, maxHeight?, autoFlip?, variant?, color? }` | `undefined` | Where the menu is mounted, its maximum height, whether it flips above the field, and its variant and colors |
+| `menu` | `{ container?, maxHeight?, autoFlip?, variant?, color? }` | `undefined` | Where the menu is mounted, its maximum height, whether it flips above the field, and its variant (`'vertical'` by default, or `'baseline'`) and colors |
 | `layer` | `'top'` | `undefined` | Renders the menu beside the field and shows it in the top layer; `menu.container` is then not used |
 | `on` | `{ change?, open?, close? }` | `undefined` | Event handlers registered at creation |
 | `class` | `string` | `undefined` | Additional CSS classes |
@@ -148,6 +148,7 @@ The web component's `change` carries `{ value }`.
 - With flat options, the input is a select-only combobox (`role="combobox"`, `aria-haspopup`,
   `aria-expanded`, `aria-controls`) over a `listbox` of options. Focus stays on the input, which
   names the active option with `aria-activedescendant`.
+- When a key moves `aria-activedescendant`, the active option (`mtrl-menu__item--keyboard-active`) draws a 3dp inward `secondary` focus ring; opening or hovering with a pointer shows no ring.
 - The label names the input, as on a text field.
 
 | Keys | Action |

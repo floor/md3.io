@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -10,6 +10,8 @@ A bottom app bar puts a screen's frequent actions within thumb reach on a phone:
 buttons and, often, a [FAB](fab.md). M3 Expressive replaces it with the docked toolbar; this
 page describes the bar as `material` ships it today. See the
 [M3 bottom app bar guidelines](https://m3.material.io/components/bottom-app-bar/overview).
+
+> **Deprecated in 3.x:** Material Design 3 Expressive replaces the bottom app bar with the docked [toolbar](toolbar.md) (`createToolbar({ variant: 'docked', placement: 'bottom' })` or `<m-toolbar variant="docked" placement="bottom">`). `createBottomAppBar`, `<m-bottom-app-bar>`, and their React, Vue, Solid, and Svelte adapters remain available and unchanged throughout `3.x`; removal is parked until Material Design v4. See [Migrating from the bottom app bar](toolbar.md#migrating-from-the-bottom-app-bar) for recipes and the feature parity table.
 
 ## Usage
 

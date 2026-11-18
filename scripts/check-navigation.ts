@@ -84,7 +84,7 @@ try {
       await show('unread-nav-bar');
       await frame.getByRole('button', { name: 'Mail, 999+', exact: true }).waitFor();
       await frame.getByRole('button', { name: 'Chat, 10', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Rooms, New activity', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Rooms, New notification', exact: true }).waitFor();
       await frame.getByRole('button', { name: 'Meet, 3', exact: true }).waitFor();
       let source = await page.locator('#generated-code').textContent() ?? '';
       assert(source.includes('"999+"') && source.includes('badge: true'), 'Unread bar: the code lost a badge');
@@ -92,7 +92,7 @@ try {
       await selected('chat');
       await show('new-in-music');
       await frame.getByRole('button', { name: 'Home', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Music, New activity', exact: true }).waitFor();
+      await frame.getByRole('button', { name: 'Music, New notification', exact: true }).waitFor();
       await frame.getByRole('button', { name: 'Explore', exact: true }).waitFor();
       await selected('music');
       await show('ten-in-music');

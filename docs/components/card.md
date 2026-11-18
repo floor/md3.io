@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-10
 status: published
 ---
 
@@ -41,7 +41,11 @@ card:
 ### Clickable
 
 `clickable` makes the whole card a button: it is in the tab order, `Enter` and `Space` click
-it, and a press shows the ripple. Keep other controls out of a clickable card.
+it, and a press shows the ripple. By default, keep other controls out of a clickable card.
+Opt in with `promoteChildActions: true` (`promote-child-actions` on `<m-card>`) to let a clickable
+card containing child actions become an `article` container. The card leaves the tab order;
+its child controls remain keyboard reachable, activating a child does not activate the card,
+and the development warning stays off. The option defaults to `false`.
 
 ```example
 card:
@@ -51,12 +55,109 @@ card:
   content: { text: Your edits have not been published yet. }
 ```
 
+```typescript
+import { createCard } from 'material';
+
+const childActionCard = createCard({
+  clickable: true, promoteChildActions: true, buttons: [{ text: 'Read more' }],
+});
+document.body.append(childActionCard.element);
+```
+
 A card has no width of its own: it fills the column, grid cell or flex track it is in, as the
 M3 specs describe. The `--small`, `--medium` and `--large` classes fix it at 344, 480 and
 624dp. The factory's content helpers, `createCardHeader()`, `createCardContent()`,
 `createCardMedia()` and `createCardActions()`, build sections for `setHeader()`,
 `addContent()`, `addMedia()` and `setActions()`. The web component takes its sections in
 slots: `media`, `avatar`, `headline`, `subhead`, `header-action`, the content, and `actions`.
+
+### Composing Loading and Expandable Cards
+
+`createCard` is a pure layout and surface container — it does not ship built-in loading spinners or accordion state. Compose those states with `createProgress` and `createIconButton`:
+
+#### Loading Card (`createCard` + `createProgress`)
+
+Place an indeterminate `createProgress` inside a `createCardContent` section and mark the card root with `aria-busy="true"` until the content settles:
+
+```typescript
+import {
+  createCard,
+  createCardContent,
+  createCardHeader,
+  createProgress,
+} from 'material';
+
+const loadingCard = createCard({ variant: 'outlined' });
+loadingCard.element.setAttribute('aria-busy', 'true');
+loadingCard.setHeader(createCardHeader({ title: 'Market summary' }));
+
+const body = createCardContent();
+const spinner = createProgress({
+  variant: 'circular',
+  indeterminate: true,
+  ariaLabel: 'Loading market summary',
+});
+body.append(spinner.element);
+loadingCard.addContent(body);
+
+// When data arrives, tear down the progress indicator and clear aria-busy:
+function onDataReady(summaryText: string) {
+  spinner.destroy();
+  body.textContent = summaryText;
+  loadingCard.element.removeAttribute('aria-busy');
+}
+```
+
+#### Expandable Card (`createCard` + `createIconButton`)
+
+Pass a standard `createIconButton` (without `toggle: true`, following the [WAI-ARIA APG Disclosure pattern](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) with a constant accessible name so `aria-expanded` conveys the collapsed/expanded state and `aria-pressed` is not set) as the `action` of `createCardHeader`, and wire `aria-expanded`, `aria-controls`, `setIcon()`, and the collapsible section's `hidden` property in its `click` listener:
+
+```typescript
+import {
+  createCard,
+  createCardContent,
+  createCardHeader,
+  createIconButton,
+} from 'material';
+
+const expandMore =
+  '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>';
+const expandLess =
+  '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7.41 15.41 12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>';
+
+const details = createCardContent({
+  text: 'Full itinerary, check-in instructions, and local transit passes.',
+});
+details.id = 'trip-card-details';
+details.hidden = true;
+
+const expandButton = createIconButton({
+  icon: expandMore,
+  ariaLabel: 'Trip details',
+});
+expandButton.element.setAttribute('aria-expanded', 'false');
+expandButton.element.setAttribute('aria-controls', details.id);
+
+expandButton.on('click', () => {
+  const expanded = details.hidden;
+  details.hidden = !expanded;
+  expandButton.element.setAttribute('aria-expanded', String(expanded));
+  expandButton.setIcon(expanded ? expandLess : expandMore);
+});
+
+const expandableCard = createCard({
+  variant: 'elevated',
+  content: { text: '3 nights in Lisbon · Flight + Hotel' },
+});
+expandableCard.setHeader(
+  createCardHeader({
+    title: 'Trip summary',
+    subtitle: 'May 15–17',
+    action: expandButton.element,
+  }),
+);
+expandableCard.addContent(details);
+```
 
 ## API
 
@@ -69,6 +170,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |--------|------|---------|-------------|
 | `variant` | `'elevated' \| 'filled' \| 'outlined'` | `'elevated'` | Card variant |
 | `clickable` | `boolean` | `false` | A button: ripple, `Enter` and `Space`, and the `click` event |
+| `promoteChildActions` | `boolean` | `false` | Opt in so a clickable card with child actions becomes an article container (`promote-child-actions` on `<m-card>`) |
 | `interactive` | `boolean` | `false` | Hover and press states only: no role, no tab stop, no key handling |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `draggable` | `boolean` | `false` | HTML drag, with elevation while dragged and `dragstart` / `dragend` |
@@ -114,14 +216,17 @@ The web component's activation is the native `click`.
 
 ## Accessibility
 
-- The card is an `article`, or a `button` with a tab stop that answers `Enter` and `Space`
-  when it is clickable. `interactive` alone changes only the hover and press states: the card
-  keeps the `article` role and takes no focus.
+- A card is an `article`, or a `button` with a tab stop for `Enter` and `Space` when clickable
+  without promoted child actions. `interactive` alone changes hover and press states; the card
+  remains an `article` and takes no focus.
 - The headline is an `h3` and names the article; `aria.label` or `aria.labelledby` overrides it.
   The subtitle is a paragraph, and the header and content carry no role of their own.
 - `makeDraggable()` keeps `aria-grabbed` in step during a drag; `draggable: true` does not set
   it.
-- A clickable card is one control: buttons inside it are not reachable as their own.
+- A clickable card is one control by default. With `promoteChildActions: true` (or
+  `promote-child-actions` on `<m-card>`), child actions make it an `article` with no card tab stop:
+  Tab reaches the children, child activation does not activate the card, and no development
+  warning is emitted.
 
 ## Styling
 

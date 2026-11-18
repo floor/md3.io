@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-10-01
+updated: 2026-11-09
 status: draft
 ---
 
@@ -12,7 +12,7 @@ large FAB. Don't pair it with a floating toolbar or a navigation rail. See the
 [M3 FAB menu guidelines](https://m3.material.io/components/fab-menu/overview).
 
 M3 shows it two ways. In a compact window the FAB turns into a close button and the actions
-rise above it as a list. On the web and in larger windows the FAB opens the baseline
+rise above it as a list. On the web and in larger windows the FAB opens the
 [menu](menu.md). `presentation: 'auto'`, the default, takes the list below 600px and the menu
 from 600px; `'list'` and `'menu'` fix one.
 
@@ -33,11 +33,12 @@ fab-menu:
 
 ## Examples
 
-### The baseline menu
+### The menu presentation
 
-`presentation: 'menu'` opens the baseline menu from the FAB, 4dp above it at its trailing
-edge. The menu is loaded the first time it is needed, and ahead of that in a wide window or
-when the FAB is first pointed at or focused, so a page that never opens it never loads it.
+`presentation: 'menu'` opens a [menu](menu.md) from the FAB, 4dp above it at its trailing
+edge (the expressive vertical menu by default, or a custom menu via the `menu` option). The
+menu is loaded the first time it is needed, and ahead of that in a wide window or when the
+FAB is first pointed at or focused, so a page that never opens it never loads it.
 
 ```example
 fab-menu:
@@ -144,7 +145,7 @@ setting it opens it; `show()`, `hide()` and `toggle()` do the same. `select`'s d
   to the ends.
 - Escape, Tab out of the list, or choosing an item closes it and returns focus to the FAB. A
   press outside closes it.
-- The menu presentation is the baseline menu, with its own keyboard: a key that opens it lands
+- The menu presentation is a [menu](menu.md), with its own keyboard: a key that opens it lands
   on its first item.
 
 ## Styling

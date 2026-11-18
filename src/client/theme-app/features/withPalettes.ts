@@ -9,7 +9,9 @@ export const withPalettes = () => (app: App) => ({
       const theme = app.variant.shown();
       const { variant, contrast } = app.variant.effective();
       app.ui.paletteNote.textContent = theme.handSeed && variant === 'original' && contrast === 0
-        ? `Original colours set by hand; variants generated from ${theme.handSeed}. These palettes are Tonal Spot's from it.`
+        ? theme.origin === 'unknown'
+          ? `Origin unknown; variants generated from ${theme.handSeed}. These palettes are Tonal Spot's from it.`
+          : `Original colours set by hand; variants generated from ${theme.handSeed}. These palettes are Tonal Spot's from it.`
         : `Generated from ${theme.origin}.`;
       for (const [key] of PALETTES) app.ui[`palette-${key}`].set(theme.palettes[key]);
     },

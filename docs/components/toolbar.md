@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-09-30
+updated: 2026-11-09
 status: draft
 ---
 
@@ -83,7 +83,12 @@ toolbar:
 horizontal floating toolbar 16dp above the bottom edge, a vertical one 24dp from the side. A
 FAB passed as `fab` sits beside the toolbar, 8dp away. With `scrollBehavior: 'exit'`, the
 toolbar leaves the screen after 40px of scrolling down and comes back after 40px up, or at the
-top; `scrollTarget` names the element that scrolls, the window by default.
+top; `scrollTarget` names the element that scrolls, the window by default. With
+`scrollBehavior: 'collapse'` on a **docked** toolbar, scrolling down 40px shrinks the bar from
+64dp to 48dp and visually hides an icon+label button's text label while keeping every item on
+screen, focusable, and named; scrolling back up 40px (or returning to the top) expands it again.
+A **floating** toolbar is unaffected by `'collapse'` (on `variant: 'floating'`,
+`scrollBehavior: 'collapse'` resolves to `'none'`).
 
 ```javascript
 import { createToolbar, createFab } from 'material';
@@ -136,6 +141,62 @@ As an element, the menu goes in `slot="overflow"`, and `<m-toolbar>` anchors it 
 </m-toolbar>
 ```
 
+### Migrating from the bottom app bar
+
+`createBottomAppBar` and `<m-bottom-app-bar>` are deprecated in `3.x` in favour of a docked toolbar (`variant: 'docked'`, `placement: 'bottom'`).
+
+**Factory recipe:**
+```javascript
+import { createToolbar, createFab } from 'material';
+
+const bar = createToolbar({
+  variant: 'docked',
+  placement: 'bottom',
+  scrollBehavior: 'exit',
+  scrollThreshold: 10,
+  ariaLabel: 'Bottom app bar',
+  items: [
+    { icon: searchIcon, ariaLabel: 'Search' },
+    { icon: inboxIcon, ariaLabel: 'Archive' },
+  ],
+  fab: createFab({ icon: addIcon, ariaLabel: 'Create' }),
+  fabPosition: 'end',
+});
+```
+
+**Web component recipe:**
+```html
+<m-toolbar
+  variant="docked"
+  placement="bottom"
+  scroll-behavior="exit"
+  scroll-threshold="10"
+  aria-label="Bottom app bar"
+>
+  <m-icon-button aria-label="Search"></m-icon-button>
+  <m-icon-button aria-label="Archive"></m-icon-button>
+  <m-fab slot="fab" aria-label="Create"></m-fab>
+</m-toolbar>
+```
+
+**Parity with `bottom-app-bar` (13 rows):**
+
+| Feature | Bottom app bar (`3.x`) | Docked toolbar | Status |
+| --- | --- | --- | --- |
+| Embedded FAB | `hasFab`, `fabPosition`: `'center'` or `'end'`, `addFab()` | `fab` config, `fabPosition`: `'start'` or `'end'`, `slot="fab"` | End and start match. **A centred FAB (`'center'`) is not yet available on the docked toolbar.** |
+| Actions | `addAction(button)` appends to the actions container; `getActionsContainer()` | `items` at creation, `add(item)` at runtime, `getItems()`, `remove(item)`; `toolbar.bar` is the element with the toolbar role | Match: `addAction` becomes `add`, `getActionsContainer` becomes `bar` / `getItems`. |
+| Add a FAB after creation | `addFab(fab)` replaces the FAB and adds `--with-fab` | `fab` is read at creation only; `ToolbarComponent` has no `addFab` | **`addFab()` after creation is not yet available on the docked toolbar.** |
+| Hide on scroll | `autoHide`; hides past a `10px` scroll delta; no `inert`; inline `300ms` transition | `scrollBehavior: 'exit'`; `scrollThreshold` (default `40`, so set `scrollThreshold: 10` to match); a hidden toolbar is also `inert` | Equivalent with `scrollBehavior: 'exit', scrollThreshold: 10`. Differences: default threshold is `40`, and the hidden toolbar leaves the focus order. |
+| Elevation | Level 2, always | Level 0 on a docked toolbar; `elevated` applies to floating only | No option. Recreate the shadow with `box-shadow` on `::part(toolbar)` if the page needs it. |
+| Custom `transitionDuration` | Inline `transform <n>ms ease-in-out` | Motion tokens (`spring-fast-spatial`); no duration option | **A custom transition duration is not yet available on the docked toolbar.** |
+| Custom `tag` | `tag: 'footer'` and similar | The factory renders a `div`; the element is `<m-toolbar>` | **A custom tag is not yet available on the docked toolbar.** |
+| Density | No density option | No density option | Parity: neither component exposes one, so nothing to map. |
+| SSR and pre-upgrade reservation | SSR through the shared element renderer; before upgrade it is `position: absolute; bottom: 0; left: 0; right: 0` and reserves `80px` (`72px` after upgrade when a FAB is present) | SSR through the shared element renderer; before upgrade it is in flow and reserves `64px` (`min-height`) | Both render on the server and upgrade in place. The reservation differs: `80px` absolute at the bottom versus `64px` in flow. Position the container and set the height in CSS where the old reservation mattered. |
+| Element attributes | `fab-position`, `auto-hide`, `transition-duration`, `aria-label` | `variant`, `placement`, `scroll-behavior`, `scroll-threshold`, `fab-position`, `color`, `arrangement`, `flat`, `orientation`, `overflow-label`, `aria-label` | `fab-position` and `aria-label` keep their names. `auto-hide` becomes `scroll-behavior="exit"` (plus `scroll-threshold="10"` to match); `transition-duration` has no equivalent. |
+| Shadow parts | `bottom-app-bar`, `actions`, `fab-container` | `toolbar`, `bar`, `fab`, `overflow` | Renamed, with no aliases: `bottom-app-bar` -> `toolbar`, `actions` -> `bar`, `fab-container` -> `fab`; `overflow` is new. |
+| Root role and tab order | `role="toolbar"` on the component element; actions stay in the normal `Tab` order | `role="toolbar"` on the inner `bar`; one tab stop with `ArrowLeft`/`ArrowRight`/`Home`/`End` (roving tabindex) | The accessible role is the same. The toolbar moves focus as a single tab stop, which is a keyboard-behaviour change for anyone who tabbed through every action. |
+| Visibility callback | `onVisibilityChange(visible)` | `show` and `hide` events via `toolbar.on('show', handler)` / `.on('hide', handler)`, and `isVisible()` | Match: the callback becomes an event listener. |
+
 ## API
 
 <!-- API: hand-written, like the other pages until they are generated. Keep them in line with
@@ -157,9 +218,9 @@ the code, and add no prose restating them. -->
 | `overflow` | `(opener: HTMLElement) => unknown` | — | Builds the menu the "more" button opens |
 | `overflowIcon` | `string` | more vertical | The overflow button's icon |
 | `overflowLabel` | `string` | `'More options'` | The overflow button's name |
-| `scrollBehavior` | `'none' \| 'exit'` | `'none'` | Leave the screen while scrolling forward |
-| `scrollTarget` | `HTMLElement \| Window` | `window` | What scrolls |
-| `scrollThreshold` | `number` | `40` | Pixels of scrolling that hide or show it |
+| `scrollBehavior` | `'none' \| 'exit' \| 'collapse'` | `'none'` | `'exit'` leaves the screen while scrolling forward; `'collapse'` (docked only; floating is unaffected and resolves to `'none'`) shrinks the bar to 48dp and visually hides an icon+label button's label |
+| `scrollTarget` | `HTMLElement \| Window` | `window` | What scrolls, for `'exit'` or `'collapse'` |
+| `scrollThreshold` | `number` | `40` | Pixels of scrolling that trigger `'exit'` or `'collapse'` |
 | `ariaLabel` | `string` | `'Toolbar'` | The toolbar's accessible name |
 | `class` | `string` | — | Extra classes on the element |
 
@@ -184,15 +245,18 @@ the code, and add no prose restating them. -->
 
 | Event | Payload | Description |
 |-------|---------|-------------|
-| `show` | — | It came back on screen |
-| `hide` | — | It left the screen |
+| `show` | — | It came back on screen (`scrollBehavior: 'exit'` or `show()`) |
+| `hide` | — | It left the screen (`scrollBehavior: 'exit'` or `hide()`) |
+| `collapse` | — | A docked toolbar shrank on forward scroll (`scrollBehavior: 'collapse'`) |
+| `expand` | — | A docked toolbar restored its height on reverse scroll (`scrollBehavior: 'collapse'`) |
 
 ### Element
 
 `<m-toolbar>` takes the options as attributes (`fab-position`, `scroll-behavior`,
 `scroll-threshold`, `overflow-label`), with `flat` for `elevated: false`. Its children are the
 items; `slot="fab"` takes a FAB and `slot="overflow"` an `<m-menu>`. `show()` and `hide()`
-dispatch `show` and `hide`.
+dispatch `show` and `hide`; with `scroll-behavior="collapse"`, a docked `<m-toolbar>` dispatches
+`collapse` and `expand`.
 
 ## Accessibility
 
@@ -203,6 +267,7 @@ dispatch `show` and `hide`.
   skipped. Tab leaves it, and coming back lands on the item focused last.
 - In a text field inside the toolbar, the arrow keys, Home and End stay with the caret.
 - Off screen (`hide()`, or `scrollBehavior: 'exit'`), the toolbar and its FAB are `inert`.
+- Collapsed (`scrollBehavior: 'collapse'`, docked only), the toolbar stays on screen and is **not** `inert`: items keep their focus order and 48dp target areas, and an icon+label button's label is visually hidden rather than removed so its accessible name is preserved.
 
 ## Styling
 
@@ -214,6 +279,7 @@ dispatch `show` and `hide`.
 | `.mtrl-toolbar--docked`, `--floating` | The variant |
 | `.mtrl-toolbar--vibrant` | The vibrant colour |
 | `.mtrl-toolbar--hidden` | Off screen |
+| `.mtrl-toolbar--collapsed` | Collapsed docked bar (48dp `min-height`, icon+label button labels visually hidden) |
 
 `--mtrl-toolbar-shape` overrides the container's corner: M3 allows a rounded docked toolbar on
 the web and large screens.
@@ -222,7 +288,7 @@ the web and large screens.
 
 | Attribute | Value | Token |
 |-----------|-------|-------|
-| Height | 64dp | `DockedToolbarTokens.ContainerHeight`, `FloatingToolbarTokens.ContainerHeight` |
+| Height | 64dp (48dp collapsed when docked; 56dp floor with a 56dp FAB or text field) | `DockedToolbarTokens.ContainerHeight`, `FloatingToolbarTokens.ContainerHeight`; m3.material.io toolbars guidelines (48dp minimum target area) |
 | Docked padding | 16dp at each end | `DockedToolbarTokens.ContainerLeadingSpace`, `ContainerTrailingSpace` |
 | Docked spacing, centred | 32dp | `DockedToolbarTokens.ContainerMaxSpacing` |
 | Docked corner | none | `DockedToolbarTokens.ContainerShape` (CornerNone) |

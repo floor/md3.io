@@ -82,7 +82,7 @@ const itemsControl = {
 
 export const fabMenuComponent = {
   group: 'Actions', name: 'FAB menu', factory: 'createFabMenu', variable: 'fabMenu',
-  description: 'Offer a few related actions from one FAB. Try the expressive list, the baseline menu the web uses, and the colour sets.',
+  description: 'Offer a few related actions from one FAB. Try the expressive list, the menu the web uses, and the colour sets.',
   summary: 'Two to six related actions, opened from a FAB.', styles: ['fab', 'menu', 'fab-menu'],
   scenarios: fabMenuScenarios,
   controls: [

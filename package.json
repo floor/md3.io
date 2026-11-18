@@ -14,7 +14,7 @@
     "test": "bun test test/",
     "docs:check": "bun scripts/check-docs.ts",
     "seo:check": "bun scripts/check-seo.ts",
-    "test:browser": "bun scripts/check-browser.ts && bun scripts/check-catalog.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-search.ts && bun scripts/check-devices.ts && bun scripts/check-styles.ts && bun scripts/check-examples.ts && bun scripts/check-docs.ts && bun scripts/check-scenarios.ts && bun scripts/check-tabs-batches.ts"
+    "test:browser": "bun scripts/check-colour-lab.ts && bun scripts/check-browser.ts && bun scripts/check-catalog.ts && bun scripts/check-actions.ts && bun scripts/check-checkbox.ts && bun scripts/check-selection.ts && bun scripts/check-navigation.ts && bun scripts/check-containment.ts && bun scripts/check-communication.ts && bun scripts/check-search.ts && bun scripts/check-devices.ts && bun scripts/check-styles.ts && bun scripts/check-examples.ts && bun scripts/check-docs.ts && bun scripts/check-scenarios.ts && bun scripts/check-tabs-batches.ts"
   },
   "dependencies": {
     "@material/material-color-utilities": "0.4.0",
@@ -22,7 +22,7 @@
     "highlight.js": "11.11.1",
     "marked": "17.0.2",
     "minisearch": "^7.2.0",
-    "material": "file:../material"
+    "material": "3.12.0"
   },
   "devDependencies": {
     "@babel/core": "^7",

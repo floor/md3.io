@@ -1,0 +1,61 @@
+<div class="colour-lab" id="colour-lab">
+  <header class="lab-heading">
+    <div><span class="eyebrow">STYLES / RUNTIME COLOUR</span><h1>Colour Lab</h1><p>Start with a colour. Watch every component respond.</p></div>
+    <a class="lab-api-link" href="/docs/theming/">Theming guide ↗</a>
+  </header>
+  <div class="lab-controls" aria-label="Colour Lab settings">
+    <section class="lab-source" aria-labelledby="lab-source-title">
+      <h2 id="lab-source-title"><span class="lab-step">01</span> Choose your source</h2>
+      <div class="lab-seed-row">
+        <label class="lab-picker" for="lab-picker"><span class="sr-only">Seed colour picker</span><input id="lab-picker" type="color" value="#6750a4" /></label>
+        <div class="lab-hex-field"><label for="lab-hex">Seed colour</label><input id="lab-hex" type="text" value="#6750A4" spellcheck="false" autocomplete="off" maxlength="7" aria-describedby="lab-hex-help" /></div>
+        <div class="lab-seeds" aria-label="Curated seed colours">
+          <% it.seeds.forEach(([hex, name]) => { %><button class="lab-seed" type="button" data-seed="<%= hex %>" style="--seed: <%= hex %>" aria-label="<%= name %>, <%= hex %>" aria-pressed="<%= hex === '#6750A4' %>" title="<%= name %>"><span aria-hidden="true">✓</span></button><% }); %>
+        </div>
+      </div>
+      <p class="lab-help" id="lab-hex-help">Pick a colour, or try one of our favourites.</p>
+      <div class="lab-image-source" id="lab-dropzone">
+        <label class="lab-upload" for="lab-image"><span aria-hidden="true">↥</span><span><strong>Bring an image</strong><small>Drop here or browse · PNG, JPEG, WebP</small></span></label>
+        <input class="sr-only" type="file" id="lab-image" accept="image/png,image/jpeg,image/webp" />
+        <div class="lab-samples" aria-label="Sample images">
+          <% it.samples.forEach(sample => { %><button type="button" class="lab-sample" data-sample="<%= sample.src %>" aria-label="Use <%= sample.name %> image" aria-pressed="false"><img src="<%= sample.src %>" alt="" width="64" height="48" /><span><%= sample.name %></span></button><% }); %>
+        </div>
+      </div>
+      <div class="lab-source-meta"><img id="lab-source-image" alt="Image used for the seed colour" width="32" height="24" hidden /><output id="lab-hct">H 299 · C 48 · T 40</output><span id="lab-image-note">Images stay in your browser.</span></div>
+    </section>
+    <section class="lab-appearance" aria-labelledby="lab-appearance-title">
+      <h2 id="lab-appearance-title"><span class="lab-step">02</span> Set the mood</h2>
+      <div class="lab-appearance-row">
+        <div class="lab-variant"><label for="lab-variant">Variant</label><select id="lab-variant"><% it.variants.forEach(([value, name]) => { %><option value="<%= value %>"><%= name %></option><% }); %></select></div>
+        <fieldset class="lab-segment lab-mode"><legend class="sr-only">Preview mode</legend><label><input type="radio" name="lab-mode" aria-label="Light" value="light" checked /><span>☀ <span>Light</span></span></label><label><input type="radio" name="lab-mode" aria-label="Dark" value="dark" /><span>☾ <span>Dark</span></span></label></fieldset>
+      </div>
+      <div class="lab-contrast-head"><label for="lab-contrast">Contrast</label><output id="lab-contrast-value" for="lab-contrast">Standard · 0.00</output></div>
+      <fieldset class="lab-segment lab-contrast-presets"><legend class="sr-only">Contrast presets</legend><% [[0, 'Standard'], [0.5, 'Medium'], [1, 'High']].forEach(([value, name]) => { %><label><input type="radio" name="lab-contrast-preset" value="<%= value %>" <%= value === 0 ? 'checked' : '' %> /><span><%= name %> <small><%= Number(value).toFixed(1) %></small></span></label><% }); %></fieldset>
+      <input id="lab-contrast" type="range" min="-1" max="1" step="0.05" value="0" aria-label="Continuous contrast" aria-describedby="lab-contrast-hint" />
+      <div class="lab-range-labels" id="lab-contrast-hint"><span>−1.0 Reduced</span><span>+1.0 High</span></div>
+    </section>
+  </div>
+  <div class="lab-preview-heading"><div><span class="lab-live-dot" aria-hidden="true"></span><h2>Live preview</h2><span id="lab-preview-caption">Tonal spot · Light</span></div><button type="button" class="lab-text-button" id="lab-get-code" aria-controls="lab-code" aria-expanded="false">Get the code <span aria-hidden="true">↗</span></button></div>
+  <section class="colour-lab-stage" id="colour-lab-stage" aria-label="Live component preview" data-mode="light">
+    <div class="lab-preview-grid"><div id="lab-showcase"></div><div id="lab-form"></div></div>
+    <div class="lab-feedback" aria-labelledby="lab-status-title"><div class="lab-feedback-head"><h3 id="lab-status-title">A colour for every message</h3><p>Live normal-text contrast</p></div><div class="lab-status-grid" id="lab-status-grid"></div></div>
+  </section>
+  <noscript><p class="lab-notice">Enable JavaScript to generate colours and interact with the preview.</p></noscript>
+  <p class="lab-scope-note">Your experiments affect this preview. <a href="https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html">Contrast labels</a> describe each status text/background pair.</p>
+  <details class="lab-drawer lab-inspector" id="lab-inspector">
+    <summary><span><strong>Role inspector</strong><small>Every colour, down to the token</small></span><span class="lab-count">40 roles <span aria-hidden="true">⌄</span></span></summary>
+    <div class="lab-drawer-body">
+      <fieldset class="lab-segment lab-copy-mode"><legend>Copy swatches as</legend><label><input type="radio" name="lab-copy-mode" value="variable" checked /><span>CSS variable</span></label><label><input type="radio" name="lab-copy-mode" value="hex" /><span>Hex value</span></label></fieldset>
+      <% it.roleGroups.forEach(group => { %><section class="lab-role-group"><h3><%= group.name %></h3><div class="lab-role-grid"><% group.roles.forEach(role => { %><button type="button" class="lab-token" data-role-copy="<%= role %>"><span class="lab-token-colour" aria-hidden="true"></span><span class="lab-token-info"><span><%= role %></span><code data-role-hex="<%= role %>">—</code></span><span class="lab-token-copy" aria-hidden="true">⧉</span></button><% }); %></div></section><% }); %>
+    </div>
+  </details>
+  <details class="lab-drawer" id="lab-code">
+    <summary><span><strong>Take it into your app</strong><small>Copy the current scheme as JavaScript or CSS</small></span><span aria-hidden="true">⌄</span></summary>
+    <div class="lab-drawer-body">
+      <div class="lab-code-toolbar"><div class="lab-code-tabs" role="tablist" aria-label="Code format"><button id="lab-js-tab" role="tab" type="button" aria-selected="true" aria-controls="lab-code-panel" data-code-tab="js">JavaScript</button><button id="lab-css-tab" role="tab" type="button" aria-selected="false" aria-controls="lab-code-panel" tabindex="-1" data-code-tab="css">CSS</button></div><button type="button" id="lab-copy-code" class="ui-btn">Copy JavaScript</button></div>
+      <div id="lab-code-panel" role="tabpanel" tabindex="0" aria-labelledby="lab-js-tab"><pre><code id="lab-code-content"></code></pre></div>
+      <p class="lab-code-note">These snippets apply the scheme to your app’s root. Pass a container to <code>applyScheme</code> to scope it, as this preview does.</p>
+    </div>
+  </details>
+  <p class="lab-announcement" id="lab-announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+</div>

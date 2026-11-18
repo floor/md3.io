@@ -102,11 +102,13 @@
 /docs/vanilla/
 /docs/vue/
 /docs/web-components/
+/docs/why-material/
 /examples/
 /examples/settings/
 /privacy/
 /styles/
 /styles/color/
+/styles/color-lab/
 /styles/shape/
 /styles/themes/
 /styles/typography/

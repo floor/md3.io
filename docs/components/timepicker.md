@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-09
 status: published
 ---
 
@@ -139,9 +139,25 @@ the same `{ value }`; its value is `''` until a time is set or confirmed, and th
 
 ## Styling
 
-The dial is drawn in CSS from the theme's colors. Its hand, handle and the number under the
-handle move together on `--mtrl-time-picker-angle` and `--mtrl-time-picker-radius`, which
-spring the short way round; reduced motion turns the spring off.
+The dial is drawn in CSS from the theme's colors. On dial picks, initial dial setup and
+`setValue()`, its hand, handle and the number under the handle spring together on
+`--mtrl-time-picker-angle` and `--mtrl-time-picker-radius` along the shortest arc. Mid-flight
+selections retarget from the currently rendered `--mtrl-time-picker-angle`. Typing in the hour,
+minute or second field updates the dial immediately with `transition: none`. Pointer movement
+within 4px during a click keeps the spring; larger movement enters
+`.mtrl-time-picker__dial-face--dragging`. Auto-advance from hour to minute waits for the dial's
+computed `transitionDuration`.
+
+Switching hour, minute or second faces adds `.mtrl-time-picker__dial-face--swap`. The outgoing
+`.mtrl-time-picker__dial-numbers` is cloned as an inert
+`.mtrl-time-picker__dial-numbers--leaving` layer. Both rings scale with `spring-fast-spatial`
+and fade with `spring-fast-effects`: advancing to minutes or seconds scales outgoing digits
+`1 → 1.2` and incoming digits `0.8 → 1`, using `--mtrl-time-picker-digits-out` and
+`--mtrl-time-picker-digits-in`. Returning to hours (`[aria-label="Hour"]`) reverses the direction:
+outgoing `1 → 0.8`, incoming `1.2 → 1`.
+
+Under `prefers-reduced-motion: reduce`, the dialog appear animation, hand spring and digit-ring
+swap are disabled, and no `--leaving` clone is created.
 
 ```css
 .mtrl-time-picker { }                              /* the component's element */
@@ -155,8 +171,22 @@ spring the short way round; reduced motion turns the spring off.
 .mtrl-time-picker__separator, .mtrl-time-picker__input-label { }
 .mtrl-time-picker__period, .mtrl-time-picker__period-am, .mtrl-time-picker__period-pm, .mtrl-time-picker__period--selected { }
 .mtrl-time-picker__dial, .mtrl-time-picker__dial-face, .mtrl-time-picker__dial-number { }
+.mtrl-time-picker__dial-face--dragging, .mtrl-time-picker__dial-face--swap { }
+.mtrl-time-picker__dial-numbers, .mtrl-time-picker__dial-numbers--selected,
+.mtrl-time-picker__dial-numbers--leaving { }
 .mtrl-time-picker__dial-track, .mtrl-time-picker__dial-centre, .mtrl-time-picker__dial-handle { }
 .mtrl-time-picker__actions, .mtrl-time-picker__toggle-type, .mtrl-time-picker__cancel, .mtrl-time-picker__confirm { }
+
+.mtrl-time-picker__dial-face {
+  --mtrl-time-picker-angle: 90deg;       /* hand angle; selections update this */
+  --mtrl-time-picker-radius: 101px;      /* hand radius; 69px on the inner ring */
+  --mtrl-time-picker-digits-in: 0.8;     /* incoming scale, ending at 1 */
+  --mtrl-time-picker-digits-out: 1.2;    /* outgoing scale, starting at 1 */
+}
+.mtrl-time-picker__dial-face--swap[aria-label="Hour"] {
+  --mtrl-time-picker-digits-in: 1.2;
+  --mtrl-time-picker-digits-out: 0.8;
+}
 ```
 
 ## Measurements
@@ -176,4 +206,4 @@ From the M3 time picker specs and their tokens:
 | AM/PM | 52 × 80dp beside the time (52 × 72 in keyboard entry, 216 × 38 in the horizontal layout), 12dp away; a 1dp `outline` with a divider; selected `tertiary-container` and `on-tertiary-container`, unselected transparent and `on-surface-variant` |
 | Disabled | Dial numbers and AM/PM at 38% |
 | Focus | A 3dp `secondary` ring |
-| Motion | The dial springs to each value; the dialog fades in |
+| Motion | Hand springs along the shortest arc on dial picks, initial setup and `setValue()`, retargeting from the rendered angle; field edits update immediately. Face changes scale and fade digit rings directionally. The dialog fades in; reduced motion disables all three |
