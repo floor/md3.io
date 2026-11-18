@@ -105,6 +105,7 @@
 /docs/web-components/
 /docs/why-material/
 /examples/
+/examples/booking/
 /examples/settings/
 /privacy/
 /styles/
