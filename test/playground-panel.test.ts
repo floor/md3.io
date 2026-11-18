@@ -79,8 +79,9 @@ describe('the material playground panel', () => {
           expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-slider [^>]*name="${control.key}"`));
           expect(html, `${slug}.${control.key}`).toContain(`data-value-for="${control.key}"`);
         }
-        // A date or time is material's text field with the input's own type.
-        if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-text-field [^>]*type="${control.kind}"[^>]*name="${control.key}"|<m-text-field [^>]*name="${control.key}"[^>]*type="${control.kind}"`));
+        // A date or time is material's text field whose trailing icon opens material's
+        // date picker or time picker (data-picker names which).
+        if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-text-field [^>]*name="${control.key}"[^>]*data-picker="${control.kind}"|<m-text-field [^>]*data-picker="${control.kind}"[^>]*name="${control.key}"`));
         // An icon row up to five options is a connected group; past five, a select
         // whose options carry their icon.
         if (control.kind === 'icons') expect(html.includes(`data-group-for="${control.key}"`), `${slug}.${control.key}`).toBe(!pastFive);

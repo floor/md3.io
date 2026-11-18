@@ -47,6 +47,14 @@
    the native panel's 12px (site.css .control-range output). */
 .playground--material .control-range output { font-size: var(--fs-ui); }
 
+/* The panel's shared date picker shows only its dialog: the row's own text field
+   is the field, so the picker's label, field and help text stay hidden
+   (playground-material.ts opens it from the field's calendar icon). */
+.playground--material m-datepicker[data-panel-picker]::part(label),
+.playground--material m-datepicker[data-panel-picker]::part(anchor),
+.playground--material m-datepicker[data-panel-picker]::part(help),
+.playground--material m-datepicker[data-panel-picker]::part(error) { display: none; }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */

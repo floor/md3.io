@@ -61,6 +61,12 @@ const optionLabel = (control: Control, value: string) => control.labels?.[value]
 const choiceLabel = (control: Control, value: string) =>
   control.labels?.[value] || (control.key === 'size' && value.length <= 2 ? value.toUpperCase() : value === 'none' && control.kind === 'icons' ? 'None' : value);
 
+/** The trailing icons of the date and time rows: Material Symbols from icons/. */
+const pickerIcons = {
+  date: readFileSync(resolve(root, 'icons/calendar_today.svg'), 'utf8'),
+  time: readFileSync(resolve(root, 'icons/schedule.svg'), 'utf8'),
+};
+
 /** An icon's name as a select option reads it: calendarToday → calendar today, none → none. */
 const iconName = (value: string) => value.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
@@ -93,13 +99,15 @@ const ariaName = (label: string) => ({ 'aria-label': label });
 export function materialControl(control: Control, slug: string, initial: Record<string, unknown> = {}): string | Control {
   const enabledWhen = control.enabledWhen ? { 'data-enabled-when': control.enabledWhen } : {};
   if (control.kind === 'date' || control.kind === 'time') {
-    // material's text field with the input's own date or time type: the panel's
-    // compact outlined field, the browser's picker inside. material's date picker
-    // (docked) brings a second label and a 56px field to a panel row, and its time
-    // picker is a dialog with no field to sit in one.
+    // material's text field holding the ISO value, with a trailing calendar or
+    // clock icon that opens material's own date picker (modal) or time picker
+    // dialog (playground-material.ts): the pages about those components pick with
+    // them, not with the browser's picker. A text input, not type=date/time, so the
+    // browser adds no second icon; typing the value stays a direct path.
+    const date = control.kind === 'date';
     return row(control,
       rowLabel(`${slug}-${control.key}`, control.label)
-      + renderElement('m-text-field', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', type: control.kind, name: control.key, id: `${slug}-${control.key}`, value: String(control.initial), autocomplete: 'off' }, '', renderStyles),
+      + renderElement('m-text-field', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', name: control.key, id: `${slug}-${control.key}`, value: String(control.initial), autocomplete: 'off', placeholder: date ? 'YYYY-MM-DD' : 'HH:MM', 'trailing-icon': date ? pickerIcons.date : pickerIcons.time, 'trailing-icon-label': date ? 'Choose date' : 'Choose time', 'data-picker': control.kind }, '', renderStyles),
       ' control-row');
   }
   if (control.kind === 'toggle') {

@@ -22,7 +22,9 @@ import 'material/elements/css/button-group';
 import 'material/elements/css/button';
 import 'material/elements/css/chips';
 import 'material/elements/css/slider';
-import { defineButton, defineButtonGroup, defineChips, defineSelect, defineSlider, defineSwitch, defineTabs, defineTextField } from 'material/elements';
+import 'material/elements/css/datepicker';
+import 'material/elements/css/timepicker';
+import { defineButton, defineButtonGroup, defineChips, defineDatepicker, defineSelect, defineSlider, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 
 defineSelect();
 defineSwitch();
@@ -32,6 +34,8 @@ defineButtonGroup();
 defineButton();
 defineChips();
 defineSlider();
+defineDatepicker();
+defineTimepicker();
 
 type GroupHost = HTMLElement & { value: string | string[] | null };
 type GroupButton = HTMLButtonElement;
@@ -118,4 +122,47 @@ for (const group of document.querySelectorAll<GroupHost>('m-button-group[data-gr
     event.preventDefault();
     select(target);
   });
+}
+
+// The date and time rows: a text field whose trailing icon opens material's date
+// picker (modal) or time picker. One picker of each kind, made on first use inside
+// the panel's scope so the dialog takes the panel's tokens; a pick writes the
+// field and reports it as the edit typing would.
+type PickerHost = HTMLElement & { value: unknown; show(): void };
+const pickers = new Map<string, PickerHost>();
+const pickerFor = (kind: 'date' | 'time'): PickerHost => {
+  let picker = pickers.get(kind);
+  if (!picker) {
+    picker = document.createElement(kind === 'date' ? 'm-datepicker' : 'm-timepicker') as PickerHost;
+    picker.setAttribute('data-panel-picker', '');
+    if (kind === 'date') { picker.setAttribute('variant', 'modal'); picker.setAttribute('close-on-select', ''); }
+    else picker.setAttribute('format', '24h');
+    picker.hidden = false;
+    document.querySelector('#configuration')!.append(picker);
+    pickers.set(kind, picker);
+  }
+  return picker;
+};
+let pickingFor: (HTMLElement & { value: unknown }) | null = null;
+document.querySelector('#configuration')?.addEventListener('trailing', event => {
+  const field = event.target as HTMLElement & { value: unknown };
+  const kind = field.getAttribute('data-picker');
+  if (kind !== 'date' && kind !== 'time') return;
+  const picker = pickerFor(kind);
+  pickingFor = field;
+  picker.setAttribute('aria-label', field.getAttribute('aria-label') ?? '');
+  picker.value = String(field.value ?? '');
+  picker.show();
+});
+for (const kind of ['date', 'time'] as const) {
+  document.querySelector('#configuration')?.addEventListener('change', event => {
+    const picker = pickers.get(kind);
+    if (!picker || event.target !== picker || !pickingFor) return;
+    // The picker's change is not the form's: it stops here, and the field reports.
+    event.stopPropagation();
+    const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? picker.value;
+    if (typeof value !== 'string' || !value) return;
+    pickingFor.value = value;
+    pickingFor.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+  }, true);
 }
