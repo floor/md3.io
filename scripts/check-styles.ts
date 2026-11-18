@@ -553,6 +553,7 @@ try {
   const comparePreview = stylesPreview.getByRole('checkbox', { name: 'Compare', exact: true });
   const frames = stylesPreview.locator('.styles-preview__frames');
   const mainFrame = stylesPreview.locator('[data-frame="theme"] iframe');
+  const baseFrame = stylesPreview.locator('[data-frame="base"] iframe');
   const assertPreviewLayout = async (docked: boolean) => {
     await until(() => stylesPreview.evaluate(node => node.classList.contains('styles-preview--docked')), docked, 'Preview docked state');
     const layout = await stylesPreview.evaluate(node => {
@@ -572,6 +573,29 @@ try {
     assert(docked ? layout.bottom === '0px' && !layout.besidePage : layout.top !== 'auto' && layout.besidePage,
       `Preview is in the wrong pane: ${JSON.stringify(layout)}`);
   };
+  const assertSampleFits = async (frame: typeof mainFrame, label: string) => {
+    const title = frame.contentFrame().getByText('Weekend trips', { exact: true });
+    await title.waitFor({ state: 'visible' });
+    const geometry = await title.evaluate(async titleNode => {
+      await document.fonts.ready;
+      const node = titleNode.closest('#screen')!;
+      const bounds = (selector: string) => node.querySelector(selector)!.getBoundingClientRect();
+      const body = bounds('.screen__body');
+      const fab = bounds('.mtrl-fab');
+      const text = document.createRange();
+      text.selectNodeContents(node.querySelector('.mtrl-card__content')!);
+      const cardLines = Array.from(text.getClientRects());
+      return {
+        title: titleNode.textContent,
+        titleFits: titleNode.scrollWidth <= titleNode.clientWidth && titleNode.getBoundingClientRect().right <= bounds('[aria-label="Favorites"]').left + 1,
+        sampleFits: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        cardFits: cardLines.length > 0 && cardLines.every(line => line.left >= body.left && line.right <= body.right && line.bottom <= body.bottom),
+        fabFits: fab.top >= body.bottom && fab.right <= innerWidth && fab.bottom <= innerHeight,
+      };
+    });
+    assert(geometry.title === 'Weekend trips' && geometry.titleFits && geometry.sampleFits
+      && geometry.cardFits && geometry.fabFits, `${label}: sample geometry ${JSON.stringify(geometry)}`);
+  };
   await page.setViewportSize({ width: 600, height: 900 });
   await page.goto(`${base}/styles/`);
   await previewToggle.click();
@@ -580,6 +604,8 @@ try {
   await page.setViewportSize({ width: 839, height: 900 });
   await previewToggle.focus();
   await assertPreviewLayout(true);
+  assert(!await mainFrame.isVisible(), 'The dock shows one comparison sample');
+  await assertSampleFits(baseFrame, '839px dock');
   await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-839.png` });
 
   await page.setViewportSize({ width: 840, height: 900 });
@@ -588,6 +614,8 @@ try {
   await page.waitForFunction(() => document.activeElement === document.getElementById('styles-compare'));
   assert(await comparePreview.isChecked() && await frames.getAttribute('data-show') === 'base', 'The side pane retains the comparison');
   assert(await stylesPreview.getByRole('radiogroup', { name: 'Show' }).isVisible(), 'A narrow side preview keeps the comparison switch');
+  assert(!await mainFrame.isVisible(), 'The expanded side pane shows one comparison sample');
+  await assertSampleFits(baseFrame, '840px side preview');
   const cardLefts = await page.locator('.styles-cards:not(.styles-cards--coming) > .styles-card')
     .evaluateAll(cards => cards.map(card => card.getBoundingClientRect().left));
   assert(cardLefts.length > 1 && new Set(cardLefts).size === 1, 'Foundation cards stack beside the preview at 840px');

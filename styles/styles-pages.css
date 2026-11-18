@@ -89,7 +89,7 @@
 /* Compact and medium use a docked preview. The Shape preview also docks
    while closed at wider breakpoints (styles-panel.ts). */
 .styles-layout > .styles-page { container-type: inline-size; }
-.styles-layout { --styles-preview-width: clamp(280px, 38%, 400px); display: flex; flex-direction: column; min-width: 0; }
+.styles-layout { --styles-preview-width: 400px; display: flex; flex-direction: column; min-width: 0; }
 .styles-preview { position: sticky; bottom: 0; z-index: 20; display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; background: var(--bg-card); box-shadow: 0 -6px 24px var(--shadow-sidebar); min-width: 0; }
 .styles-preview__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
 .styles-preview__heading { display: none; font-weight: var(--fw-bold); font-size: var(--fs-sm); margin-right: auto; }
@@ -104,18 +104,18 @@
 .styles-preview__appearance .ui-select { flex: 1 1 auto; min-width: 0; }
 .styles-preview__appearance .choice-group--mode { flex: 0 0 140px; }
 .styles-preview__frames { display: flex; gap: 10px; flex: 1; min-height: 0; }
+.styles-preview--docked .styles-preview__frames { width: min(100%, 400px); margin-inline: auto; }
 .styles-preview__frame { display: flex; flex-direction: column; gap: 4px; flex: 1 1 0; min-width: 0; margin: 0; }
 .styles-preview__frame figcaption { color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: 0.4px; }
 .styles-preview__frame iframe { flex: 1; width: 100%; min-height: 0; border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); background: var(--bg); }
-/* Captions only matter when there are two frames. */
+/* Captions identify the displayed theme in comparison mode. */
 .styles-preview:not(.styles-preview--compare) figcaption { display: none; }
 .styles-preview__switch { display: none; }
-/* A comparison needs the switch only when the pane cannot fit both frames. */
-@container styles-preview (width < 640px) {
-  .styles-preview--compare .styles-preview__switch { display: flex; }
-  .styles-preview__frames[data-show="theme"] [data-frame="base"],
-  .styles-preview__frames[data-show="base"] [data-frame="theme"] { display: none; }
-}
+/* Start with one sample. Two need enough room for the complete app bar in
+   each frame, including the iframe borders and the gap between the frames. */
+.styles-preview--compare .styles-preview__switch { display: flex; }
+.styles-preview__frames[data-show="theme"] [data-frame="base"],
+.styles-preview__frames[data-show="base"] [data-frame="theme"] { display: none; }
 
 @media (min-width: 840px) {
   .styles-layout:has(.styles-preview:not([data-collapsible][data-open="false"])) { display: grid; grid-template-columns: minmax(0, 1fr) var(--styles-preview-width); align-items: start; }
@@ -123,12 +123,21 @@
   .styles-preview:not([data-collapsible]) .styles-preview__heading { display: block; }
   .styles-preview:not([data-collapsible]) .styles-preview__toggle { display: none; }
   .styles-preview:not([data-collapsible][data-open="false"]) .styles-preview__body { display: flex; height: auto; flex: 1; }
+  @container styles-preview (min-width: 720px) {
+    .styles-preview--compare .styles-preview__switch { display: none; }
+    .styles-preview--compare .styles-preview__frames[data-show] > .styles-preview__frame { display: flex; }
+  }
+}
+@media (840px <= width < 1200px) {
+  /* Leave room for both the Styles prose and the full sample at expanded. */
+  .layout:has(.styles-layout) { --sidebar-width: 176px; }
 }
 @media (min-width: 1600px) {
-  .styles-layout:has(.styles-preview--compare) { --styles-preview-width: 740px; }
+  .styles-layout:has(.styles-preview--compare) { --styles-preview-width: 780px; }
 }
 @container (width < 480px) {
   .type-grid:not(.type-grid--weights) { grid-template-columns: minmax(0, 1fr); }
+  .styles-head { flex-wrap: wrap; }
 }
 
 /* ─── Export ─────────────────────────────────────────────────────── */
