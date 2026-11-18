@@ -1,8 +1,8 @@
-// The Button playground pilot's client half. The server renders the panel's
-// controls as material's elements with declarative shadow DOM
+// The playground panel's client half. The server renders the panel's controls
+// as material's elements with declarative shadow DOM
 // (src/server/playground-panel.ts), styled at first paint; this module, loaded
-// only on the pilot's pages and before playground.js, defines those elements
-// and wires the button groups into the configuration form.
+// on every component page before playground.js, defines those elements and
+// wires the button groups and the date and time pickers into the form.
 //
 // The button group is not form-associated: each group carries a hidden input
 // with the control's name, kept in sync with the group's selection, which
@@ -11,7 +11,7 @@
 //
 // A group of buttons is not a radio group: material's group leaves every
 // button a tab stop and gives arrows no meaning. The native radio group the
-// pilot replaced had one tab stop and arrow-key selection, so the glue restores
+// panel replaced had one tab stop and arrow-key selection, so the glue restores
 // that — roving tabindex, and arrows, Home and End moving the selection with
 // the focus.
 import 'material/elements/css/select';
@@ -44,19 +44,8 @@ for (const group of document.querySelectorAll<GroupHost>('m-button-group[data-gr
   const name = group.getAttribute('data-group-for')!;
   const input = document.querySelector<HTMLInputElement>(`input[data-input-for="${name}"]`);
   if (!input) continue;
-  // A hidden input's value IS its attribute: a commit's `.value =` rewrites
-  // the reset default with it. The glue owns the input, so the default lives
-  // here instead: what the server rendered, rebased only by an explicit
-  // `defaultValue =` write (playground.js's applyAppearance makes one, as it
-  // loads after this module, for a remembered appearance).
   const buttons = (): GroupButton[] => [...group.shadowRoot?.querySelectorAll<GroupButton>('button') ?? []];
   const current = (): string | null => typeof group.value === 'string' ? group.value : null;
-  let initial = input.getAttribute('value') ?? '';
-  const defaultDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'defaultValue')!;
-  Object.defineProperty(input, 'defaultValue', {
-    get: defaultDescriptor.get,
-    set(reset) { initial = String(reset); defaultDescriptor.set!.call(input, reset); },
-  });
 
   // The hidden input is the form's control: every selection writes it, and a
   // person's selection fires the events the native radio group fired. A
@@ -78,14 +67,6 @@ for (const group of document.querySelectorAll<GroupHost>('m-button-group[data-gr
     get: descriptor.get,
     set(value: string | string[] | null) { descriptor.set!.call(group, value); commit(false); },
   });
-
-  // A form reset restores the elements from their attributes; the input's
-  // attribute was whatever the last commit wrote, so the glue restores the
-  // default itself, before the panel's own reset handler reads the form (this
-  // listener is registered first, so its timeout runs first).
-  input.form?.addEventListener('reset', () => setTimeout(() => {
-    group.value = initial;
-  }, 0));
 
   // The group's own buttons keep their state in aria-pressed; the roving tab
   // stop follows the selection, wherever it came from.

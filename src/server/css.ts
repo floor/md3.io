@@ -12,7 +12,7 @@ export const stylesheetBundles = {
   home: [...shell, 'homepage', 'site', 'search'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
-  // The Button playground pilot adds Roboto — mtrl's typeface, which its elements name.
+  // A component page adds Roboto (mtrl's typeface, which its elements name) and the panel's sheet.
   'material-panel': [...shell, 'site', 'search', 'roboto', 'playground-material'],
   // The components overview adds Roboto, the elements' pre-upgrade rules, then the catalog.
   catalog: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog'],

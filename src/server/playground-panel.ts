@@ -1,13 +1,11 @@
-// The Button playground pilot: the configuration panel's controls as material's
-// own elements, rendered on the server with material/ssr (`renderElement`,
-// declarative shadow DOM) so the panel is styled at first paint, without
-// JavaScript. Only /components/button/ renders it (the rollout to the other
-// pages comes later); every other page keeps the native controls the
-// component.eta template builds.
+// The playground's configuration panel on every component page: its controls as
+// material's own elements, rendered on the server with material/ssr
+// (`renderElement`, declarative shadow DOM, link mode) so the panel is styled
+// at first paint, without JavaScript.
 //
 // The look is material out of the box: the baseline theme, light or dark with
 // the site's mode, tokens scoped to the panel the way the catalog cards get
-// theirs (`scopedTokens`), and no restyling of the elements from this site.
+// theirs (`scopedTokens`), and little restyling of the elements from this site.
 // The elements run at compact density and the groups at the xs size, close to
 // the native controls' own heights. What the panel lays out around them — the
 // row a control sits in, its label on the left and the control on the right —
@@ -42,17 +40,14 @@ const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementCssBase 
 
 /** Every piece of a panel's element markup, for linkedStylesheets. */
 export const panelMarkup = (panel: ReturnType<typeof materialPanel>): string =>
-  [panel.frameworks, panel.tabs, panel.appearance, panel.scenario, ...panel.sections.flatMap(section => section.items.filter((item): item is string => typeof item === 'string'))].join('');
+  [panel.frameworks, panel.tabs, panel.appearance, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
 
 /** The stylesheets a rendered panel links from its shadow roots, for the page to preload. */
 export const linkedStylesheets = (html: string): string[] =>
   elementCssBase ? [...new Set([...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(([, href]) => href!).filter(href => href.startsWith(elementCssBase)))] : [];
 
-/** A configuration section: its controls as element markup, or as controls for the native partial. */
-export interface PanelSection { id: string; title: string; items: (string | Control)[] }
-
-/** The pages whose panel is material's elements: every component page. */
-export const isMaterialPanel = (_slug: string): boolean => true;
+/** A configuration section: its controls' element markup. */
+export interface PanelSection { id: string; title: string; items: string[] }
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** An option's label, as the native panel's template wrote it. */
@@ -90,13 +85,8 @@ const rowLabel = (id: string, label: string) =>
 /** The element's own copy of that name, for the input inside it. */
 const ariaName = (label: string) => ({ 'aria-label': label });
 
-/**
- * One control, as material's own element. The row and label around it stay the site's.
- * A kind the panel does not render as an element yet comes back as the control itself,
- * for the template's native partial (control-native.eta): dates and times, until their batch of the rollout
- * (briefs/plan-playground-material-rollout.md).
- */
-export function materialControl(control: Control, slug: string, initial: Record<string, unknown> = {}): string | Control {
+/** One control, as material's own element. The row and label around it stay the site's. */
+export function materialControl(control: Control, slug: string, initial: Record<string, unknown> = {}): string {
   const enabledWhen = control.enabledWhen ? { 'data-enabled-when': control.enabledWhen } : {};
   if (control.kind === 'date' || control.kind === 'time') {
     // material's text field holding the ISO value, with a trailing calendar or
@@ -186,7 +176,7 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   const chipLabel = (id: string, label: string) => id === 'vanilla' ? 'Factory' : label;
   const frameworks = renderElement('m-chips', { selection: 'single', 'selection-required': true, scrollable: true, 'aria-label': 'Framework', class: 'framework-chips' },
     FRAMEWORKS.map(({ id, label }) => `<m-chip value="${escape(id)}"${hasElement || id === 'vanilla' ? '' : ' disabled'}>${escape(chipLabel(id, label))}</m-chip>`).join(''), renderStyles);
-  // Live preview / View code. The framework tabs above stay native in the pilot.
+  // Live preview / View code.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), renderStyles);
   // Theme and mode, the native heading's own row: label, compact select, xs

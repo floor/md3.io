@@ -7,7 +7,7 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { isMaterialPanel, linkedStylesheets, materialPanel, panelMarkup, panelTokens } from './src/server/playground-panel';
+import { linkedStylesheets, materialPanel, panelMarkup, panelTokens } from './src/server/playground-panel';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
 import { LAB_SEEDS, LAB_VARIANTS, LAB_SAMPLES, LAB_ROLE_GROUPS } from './src/shared/colour-lab';
@@ -191,7 +191,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, slug, component }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: isMaterialPanel(slug) ? materialPanel(component, slug, themes, !!elementMeta(slug)) : undefined });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
   else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
