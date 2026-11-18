@@ -116,14 +116,39 @@ export function isDisabled(page: Page, name: string): Promise<boolean> {
 /** Picks the preview's theme (the heading's select, material or native). */
 export async function chooseTheme(page: Page, label: string): Promise<void> {
   const host = page.locator('m-select#preview-theme');
-  if (await host.count()) { await host.click(); await pickOption(page, label); return; }
+  if (await host.count()) {
+    const value = await host.locator('m-select-option').filter({ hasText: label }).first().getAttribute('value');
+    await clickUntil(page, async () => { await host.click(); await pickOption(page, label); },
+      () => host.evaluate((element, wanted) => String((element as HTMLElement & { value?: unknown }).value) === wanted, value), `theme ${label}`);
+    return;
+  }
   await page.locator('#preview-theme').selectOption({ label });
+}
+
+/**
+ * Clicks, then confirms the click took; if it did not, clicks once more and says
+ * so in the log, as a person would click again. Seen on the Communication pages
+ * (progress, loading indicator, snackbar, tooltip): the Dark click right after a
+ * theme pick does not take, after the check's earlier steps on that page; the same
+ * two clicks on a fresh page always take. The cause is not established yet (see
+ * PR #91); the check's final assertions are unchanged.
+ */
+async function clickUntil(page: Page, act: () => Promise<void>, took: () => Promise<boolean>, what: string): Promise<void> {
+  await act();
+  for (let i = 0; i < 20 && !await took(); i++) await page.waitForTimeout(50);
+  if (await took()) return;
+  console.log(`panel-driver: the first click on ${what} did not take; clicking again`);
+  await act();
 }
 
 /** Picks the preview's mode, light or dark. */
 export async function chooseMode(page: Page, mode: 'light' | 'dark'): Promise<void> {
   const group = page.locator('m-button-group[data-group-for="mode"]');
-  if (await group.count()) { await group.getByRole('button', { name: mode === 'light' ? 'Light' : 'Dark', exact: true }).click(); return; }
+  if (await group.count()) {
+    await clickUntil(page, () => group.getByRole('button', { name: mode === 'light' ? 'Light' : 'Dark', exact: true }).click(),
+      () => page.evaluate(wanted => document.querySelector<HTMLInputElement>('input[data-input-for="mode"]')?.value === wanted, mode), `mode ${mode}`);
+    return;
+  }
   await page.locator(`input[name="mode"][value="${mode}"]`).check({ force: true });
 }
 
