@@ -1,9 +1,9 @@
 // The Button playground pilot: /components/button/ renders its configuration
 // panel as material's own elements, server-rendered with declarative shadow
-// DOM, and every other component page keeps the native panel it had.
+// DOM, on every component page.
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
-import { componentSlugs } from '../src/shared/components';
+import { components, componentSlugs } from '../src/shared/components';
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
 
@@ -61,14 +61,27 @@ describe('the material playground panel', () => {
     expect(html).toMatch(/<script type="module" src="\/dist\/playground-material\.[a-f0-9]+\.js"><\/script>/);
   });
 
-  test('every other component page keeps the native panel', async () => {
-    for (const slug of componentSlugs.filter(slug => slug !== 'button')) {
+  test('every component page renders the material panel, native rows only where no element is used yet', async () => {
+    for (const slug of componentSlugs) {
       const html = await (await get(`/components/${slug}/`)).text();
-      expect(html).not.toContain('playground--material');
-      expect(html).not.toContain('data-mtrl-ssr');
-      expect(html).not.toContain('<m-switch');
-      expect(html).not.toContain('playground-material');
-      expect(html).toContain('id="configuration"');
+      expect(html, slug).toContain('playground--material');
+      expect(html, slug).toContain('id="configuration"');
+      expect(html, slug).toContain('"/dist/playground-material.js":');
+      // Switches, selects, groups and text fields are elements on every page; a
+      // native checkbox, or a radio outside an icon row past five, would mean a
+      // kind slipped past the material panel.
+      expect(html, slug).not.toMatch(/<input type="checkbox" name=/);
+      const radios = new Set([...html.matchAll(/<input type="radio" name="([^"]+)"/g)].map(match => match[1]));
+      const nativeIconRows = components[slug].controls.filter(control => control.kind === 'icons' && (control.options?.length ?? 0) > 5).map(control => control.key);
+      expect([...radios].filter(name => !nativeIconRows.includes(name!)), slug).toEqual([]);
+      // Sliders, dates, times and icon rows past five keep the native inputs until
+      // their batch (briefs/plan-playground-material-rollout.md).
+      for (const control of components[slug].controls) {
+        const native = control.kind === 'range' || control.kind === 'date' || control.kind === 'time' || (control.kind === 'icons' && (control.options?.length ?? 0) > 5);
+        if (control.kind === 'range') expect(html, `${slug}.${control.key}`).toContain(`<input class="ui-slider" type="range" id="control-${control.key}" name="${control.key}"`);
+        if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toContain(`<input class="ui-input control-input" type="${control.kind}"`);
+        if (control.kind === 'icons') expect(html.includes(`data-group-for="${control.key}"`), `${slug}.${control.key}`).toBe(!native);
+      }
     }
   });
 });

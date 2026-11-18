@@ -40,12 +40,19 @@ const elementCssBase: string | null = (() => {
 })();
 const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementCssBase } as const : { styles: 'inline' } as const;
 
+/** Every piece of a panel's element markup, for linkedStylesheets. */
+export const panelMarkup = (panel: ReturnType<typeof materialPanel>): string =>
+  [panel.frameworks, panel.tabs, panel.appearance, panel.scenario, ...panel.sections.flatMap(section => section.items.filter((item): item is string => typeof item === 'string'))].join('');
+
 /** The stylesheets a rendered panel links from its shadow roots, for the page to preload. */
 export const linkedStylesheets = (html: string): string[] =>
   elementCssBase ? [...new Set([...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map(([, href]) => href!).filter(href => href.startsWith(elementCssBase)))] : [];
 
-/** The pages this pilot covers. */
-export const isMaterialPanel = (slug: string): boolean => slug === 'button';
+/** A configuration section: its controls as element markup, or as controls for the native partial. */
+export interface PanelSection { id: string; title: string; items: (string | Control)[] }
+
+/** The pages whose panel is material's elements: every component page. */
+export const isMaterialPanel = (_slug: string): boolean => true;
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** An option's label, as the native panel's template wrote it. */
@@ -74,8 +81,16 @@ const rowLabel = (id: string, label: string) =>
 /** The element's own copy of that name, for the input inside it. */
 const ariaName = (label: string) => ({ 'aria-label': label });
 
-/** One control, as material's own element. The row and label around it stay the site's. */
-function materialControl(control: Control, slug: string): string {
+/**
+ * One control, as material's own element. The row and label around it stay the site's.
+ * A kind the panel does not render as an element yet comes back as the control itself,
+ * for the template's native partial (control-native.eta): sliders, dates, times, and
+ * icon rows past five options, each until its own batch of the rollout
+ * (briefs/plan-playground-material-rollout.md).
+ */
+export function materialControl(control: Control, slug: string): string | Control {
+  if (control.kind === 'range' || control.kind === 'date' || control.kind === 'time') return control;
+  if (control.kind === 'icons' && (control.options?.length ?? 0) > 5) return control;
   const enabledWhen = control.enabledWhen ? { 'data-enabled-when': control.enabledWhen } : {};
   if (control.kind === 'toggle') {
     // The switch's label is slotted into it: material's switch takes its name
@@ -93,9 +108,7 @@ function materialControl(control: Control, slug: string): string {
       + renderElement('m-select', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', name: control.key, id: `control-${control.key}`, value: String(control.initial) }, options, renderStyles),
       ' control-row');
   }
-  if (control.kind === 'text' || control.kind === 'date' || control.kind === 'time') {
-    // Date and time fields are not part of the pilot (no Button page control uses them);
-    // they keep the native input until the rollout gives them an element.
+  if (control.kind === 'text') {
     return row(control,
       rowLabel(`${slug}-${control.key}`, control.label)
       + renderElement('m-text-field', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', name: control.key, id: `${slug}-${control.key}`, value: String(control.initial), maxlength: 80, autocomplete: 'off' }, '', renderStyles),
@@ -115,7 +128,7 @@ function materialControl(control: Control, slug: string): string {
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string | null; sections: string } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[] } {
   // The framework picker above the heading: a single-select filter chip set.
   // Six choices are past the five a segmented button (now the connected button
   // group) takes, and M3 points to chips beyond that; single choice is a filter
@@ -145,15 +158,18 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
     + renderElement('m-button-group', { selection: 'single', kind: 'connected', size: 'xs', value: 'light', 'aria-label': 'Preview mode', 'data-group-for': 'mode' },
       declaration('button-group-item', 'light', 'Light') + declaration('button-group-item', 'dark', 'Dark'), renderStyles)
     + groupInput('mode', 'light', true);
-  const scenario = component.scenarios.length
-    ? rowLabel('scenario', 'Scenario')
-      + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Scenario', id: 'scenario', value: 'default' },
-        declaration('select-option', 'default', 'Default') + component.scenarios.map(scenario => declaration('select-option', scenario.id, scenario.name)).join('') + declaration('select-option', 'custom', 'Custom'), renderStyles)
-    : null;
-  const sections = [...new Set(component.controls.map(control => control.section))].map(section =>
-    `<section class="ui-section configuration-controls" aria-labelledby="section-${section!.toLowerCase()}"><h3 class="ui-title" id="section-${section!.toLowerCase()}">${escape(section!)}</h3>`
-    + component.controls.filter(control => control.section === section).map(control => materialControl(control, slug)).join('')
-    + '</section>').join('');
+  // Every page has the Scenario row, Default and Custom at least: with no Reset, its
+  // Default is the way back to the starting options, also on the pages that have no
+  // named scenarios (divider, badge, progress, loading indicator).
+  const scenario = rowLabel('scenario', 'Scenario')
+    + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Scenario', id: 'scenario', value: 'default' },
+      declaration('select-option', 'default', 'Default') + component.scenarios.map(scenario => declaration('select-option', scenario.id, scenario.name)).join('') + declaration('select-option', 'custom', 'Custom'), renderStyles);
+  // Each section's controls: an element's markup, or the control for the native partial.
+  const sections = [...new Set(component.controls.map(control => control.section))].map(section => ({
+    id: section!.toLowerCase(),
+    title: section!,
+    items: component.controls.filter(control => control.section === section).map(control => materialControl(control, slug)),
+  }));
   // No Reset button: the Scenario select is the way back. Choosing Default applies
   // the playground's starting options, which is all Reset restored (the theme and
   // mode were already kept), so the panel opens on the scenario row.
