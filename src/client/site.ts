@@ -101,6 +101,38 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
 });
 
+const componentList = document.querySelector<HTMLElement>('.component-list');
+if (componentList) {
+  const detail = componentList.closest('.component-list-layout--detail');
+  const expanded = matchMedia('(min-width: 840px)');
+  let focusedLink: HTMLAnchorElement | null = null;
+  document.addEventListener('focusin', event => {
+    focusedLink = event.target instanceof HTMLAnchorElement ? event.target : null;
+  });
+  const keepCurrentComponentInView = () => {
+    if (!detail || !expanded.matches) return;
+    const current = componentList.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!current) return;
+    const pane = componentList.getBoundingClientRect();
+    const row = current.getBoundingClientRect();
+    if (row.top < pane.top || row.bottom > pane.bottom) {
+      componentList.scrollTop += row.top - pane.top - (pane.height - row.height) / 2;
+    }
+  };
+  expanded.addEventListener('change', () => {
+    if (expanded.matches) {
+      keepCurrentComponentInView();
+      return;
+    }
+    if (detail && focusedLink && componentList.contains(focusedLink)) {
+      detail.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
+    } else if (focusedLink?.matches('.component-card')) {
+      componentList.querySelector<HTMLElement>(`a[href="${CSS.escape(focusedLink.pathname)}"]`)?.focus();
+    }
+  });
+  keepCurrentComponentInView();
+}
+
 // The documentation's framework chips (document.eta): their code loads only on a page that
 // has them (src/client/docs-frameworks.ts).
 if (document.querySelector('.docs-frameworks')) void import('./docs-frameworks');

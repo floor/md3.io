@@ -94,7 +94,7 @@
   </div></header>
   <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
   <div class="layout">
-    <nav class="sidebar <%= it.isHome ? 'sidebar--home' : '' %>" id="sidebar" aria-label="<%= it.section || 'Site' %> navigation">
+    <nav class="sidebar<%= it.sidebarGroups.length ? '' : ' sidebar--site-only' %>" id="sidebar" aria-label="<%= it.section && it.sidebarGroups.length ? it.section : 'Site' %> navigation">
       <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/styles/">Styles</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/material">GitHub <%~ it.icon('open_in_new') %></a></div>
       <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
         <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
