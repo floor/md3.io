@@ -59,6 +59,20 @@
    dark page, where black on the dark chip would vanish (playground-panel.ts frameworkLogo). */
 :root[data-theme-mode="dark"] .framework-chips-row { --brand-ink: #e6e1e5; }
 
+/* The panel on material's surface roles, from the chosen theme (its scope carries the
+   theme): surface-container-low, M3's role for a pane beside the content, with the
+   theme's outline-variant for the border and the section dividers, and its text roles.
+   The site's own card grey knew nothing of the theme, and the filled groups' unselected
+   surface-container segments sat on it as faint blobs. */
+.playground--material .configuration.split-panel {
+    background: var(--mtrl-sys-color-surface-container-low);
+    border-color: var(--mtrl-sys-color-outline-variant);
+    color: var(--mtrl-sys-color-on-surface);
+}
+.playground--material .configuration .ui-section + .ui-section { border-top-color: var(--mtrl-sys-color-outline-variant); }
+.playground--material .configuration .control-label { color: var(--mtrl-sys-color-on-surface); }
+.playground--material .configuration .ui-title { color: var(--mtrl-sys-color-on-surface-variant); }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */
