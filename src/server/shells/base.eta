@@ -61,7 +61,15 @@
   <%~ include('theme-sheets-template', { themeSheets: it.themeSheets }) %>
   <script>(() => { const t = document.documentElement.dataset.siteTheme; const h = (JSON.parse(document.getElementById('theme-sheets').textContent) || {})[t]; if (h) { const url = ['/dist/material/themes/', t, '', h[0] ? '.' + h[0] : '', '.css'].join(''); document.write('<link rel="stylesheet" data-theme-sheet="' + t + '" data-part="theme" href="' + url + '">'); } })();</script>
   <script>
-    (() => { let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {} if (['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'].includes(framework)) document.documentElement.dataset.framework = framework; })();
+    (() => {
+      const ids = ['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'];
+      let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {}
+      // A documentation page's ?framework= chooses the framework before paint, and keeps it
+      // (the old guide URLs redirect to /docs/frameworks/?framework=<id>).
+      const asked = location.pathname.startsWith('/docs/') ? new URLSearchParams(location.search).get('framework') : null;
+      if (ids.includes(asked)) { framework = asked; try { localStorage.setItem('md3-example-framework', asked); } catch {} }
+      if (ids.includes(framework)) document.documentElement.dataset.framework = framework;
+    })();
     (() => { let manager; try { manager = localStorage.getItem('md3-package-manager'); } catch {} if (['npm', 'pnpm', 'yarn', 'bun'].includes(manager)) document.documentElement.dataset.packageManager = manager; })();
   </script>
   <script type="module" src="/dist/site.js"></script>

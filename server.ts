@@ -1,7 +1,7 @@
 import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
-import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier } from './src/server/content';
+import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
@@ -260,10 +260,15 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
   else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });
+  // The six framework guides are one Frameworks page: their URLs, and the guides' older
+  // /docs/components/<slug>/ ones, answer 301 to it with that framework chosen.
+  else if (/^\/docs\/(?:components\/)?[a-z-]+\/$/.test(path) && path.split('/').at(-2)! in FRAMEWORK_GUIDES) {
+    response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: frameworkHref(FRAMEWORK_GUIDES[path.split('/').at(-2)!]!) } });
+  }
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
-    response = page(path, `${document.title} — material`, document.description, 'document', { ...document, playground: null });
+    response = page(path, `${document.title} — material`, document.description, 'document', { ...document, frameworkChips: document.frameworks ? frameworkChips(() => true) : '', playground: null });
   }
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
@@ -271,7 +276,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (match && isGuide(match[1]!)) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/${match[1]}/` } });
     const document = match ? renderDocument(match[1]!) : null;
     response = document
-      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...document, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
+      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...document, frameworkChips: document.frameworks ? frameworkChips(() => true) : '', playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
       : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;

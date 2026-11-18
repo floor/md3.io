@@ -1,6 +1,6 @@
 <div class="document-layout"><article class="md">
-  <%~ it.frameworkSwitch %>
+  <% if (it.frameworkChips) { %><%/* The framework chips, as on the playgrounds and Examples: the row carries the material scope and the site theme from the first frame; site.ts keeps the choice. */%><div class="framework-chips-row playground--material docs-frameworks"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.frameworkChips %></div><% } %>
   <div class="doc-toolbar"><a href="/docs/"><%~ it.icon('arrow_back') %> Documentation</a><% if (it.playground) { %><a href="<%= it.playground %>">Open playground <%~ it.icon('arrow_outward') %></a><% } %></div>
   <%~ it.html %>
   <%~ it.pager %>
-</article><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></aside></div>
+</article><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %><% (it.tocs || []).forEach(guide => { %><div class="doc-toc__framework" data-for-framework="<%= guide.framework %>"><% guide.items.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></div><% }); %></aside></div>

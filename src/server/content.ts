@@ -15,14 +15,23 @@ const groups: Record<string, string[]> = {
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
   'Additional references': ['form', 'colorpicker'],
 };
-/** The guides, before the components: how to start, how mtrl is built, and one page per way of using it. */
-export const GUIDES = ['why-material', 'getting-started', 'architecture', 'vanilla', 'web-components', 'react', 'vue', 'svelte', 'solid', 'theming', 'server-rendering', 'events-and-overlays'];
-const names: Record<string, string> = { 'why-material': 'Why material', 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', 'events-and-overlays': 'Events and overlays', fab: 'FAB', 'extended-fab': 'Extended FAB', 'text-field': 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
+/** The guides, before the components: how to start, how mtrl is built, and how to use it in each framework (one Frameworks page). */
+export const GUIDES = ['why-material', 'getting-started', 'architecture', 'frameworks', 'theming', 'server-rendering', 'events-and-overlays'];
+/**
+ * The six framework guides, now one Frameworks page (/docs/frameworks/) that shows the
+ * reader's framework: each guide's source stays in docs/components/<slug>.md (docs:check
+ * still checks its code), and its old URLs answer 301 to the page with that framework.
+ * Guide slug → framework id (the chips' value, :root[data-framework]).
+ */
+export const FRAMEWORK_GUIDES: Record<string, string> = { vanilla: 'vanilla', 'web-components': 'html', react: 'react', vue: 'vue', svelte: 'svelte', solid: 'solid' };
+/** The Frameworks page with one framework chosen, and an anchor in its guide. */
+export const frameworkHref = (id: string, anchor = '') => `/docs/frameworks/?framework=${id}${anchor ? `#${id}-${anchor}` : ''}`;
+const names: Record<string, string> = { frameworks: 'Frameworks', 'why-material': 'Why material', 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', 'events-and-overlays': 'Events and overlays', fab: 'FAB', 'extended-fab': 'Extended FAB', 'text-field': 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
 export const isGuide = (slug: string) => GUIDES.includes(slug);
 /** A document's URL: a guide at /docs/<slug>/, a component under /docs/components/. */
 export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/components/${slug}/`;
 export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
-const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)));
+const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)).filter(slug => !(slug in FRAMEWORK_GUIDES)));
 export const docSlugs = [...slugs];
 /** The package managers of an `install` block, in switch order, with their add commands. */
 export const PACKAGE_MANAGERS = [
@@ -119,14 +128,19 @@ function metaHtml(meta: Record<string, string>): string {
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) parts.push(`<span class="meta__item">${meta.updated ? 'Updated' : 'Created'} <time datetime="${date}">${formatDate(date)}</time></span>`);
   return parts.length ? `<div class="meta">${parts.join('')}</div>` : '';
 }
-export function renderDocument(slug: string) {
-  if (!slugs.has(slug)) return null;
-  const source = documentSource(slug);
+/**
+ * Markdown to the page's HTML: the `example` and `install` fences, highlighted code, heading
+ * ids and the h2 table of contents, and the documentation's own links. `idPrefix` namespaces
+ * every heading id and in-page anchor (the Frameworks page holds six guides in one
+ * document). A link to one of the six framework guides lands on the Frameworks page with
+ * that framework chosen.
+ */
+function renderMarkdown(source: string, idPrefix = '') {
   const toc: { title: string; id: string }[] = [];
   const headingId = headingIds();
   const parser = new Marked();
-  // The page's `example` blocks follow the reader's framework, which a switch at the top
-  // of the page picks (document.eta): the same choice as the playgrounds and the Examples.
+  // The page's `example` blocks follow the reader's framework, which the chips at the top
+  // of the page pick (document.eta): the same choice as the playgrounds and the Examples.
   let examples = false;
   parser.use({ renderer: {
     code(token: Tokens.Code) {
@@ -142,38 +156,63 @@ export function renderDocument(slug: string) {
       return `<pre><code class="hljs${language ? ` language-${language}` : ''}">${body}</code></pre>\n`;
     },
     heading(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Heading) {
-      const { title, id } = headingId(token.text);
+      const { title, id: bare } = headingId(token.text);
+      const id = `${idPrefix}${bare}`;
       if (token.depth === 2) toc.push({ title, id });
       return `<h${token.depth} id="${id}">${this.parser.parseInline(token.tokens)}</h${token.depth}>\n`;
     },
     link(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Link) {
       let href = token.href;
-      const local = /^(?:\.\/)?([a-z0-9-]+)\.md(#[\w-]+)?$/.exec(href);
+      const local = /^(?:\.\/)?([a-z0-9-]+)\.md(?:#([\w-]+))?$/.exec(href) ?? /^\.\.\/([a-z0-9-]+)\/(?:#([\w-]+))?$/.exec(href);
       if (local) {
         // The old sheet API was replaced by bottom-sheet and side-sheet.
         const target = local[1] === 'sheet' ? 'bottom-sheet' : local[1]!;
-        href = `${docHref(target)}${local[2] ?? ''}`;
+        const framework = FRAMEWORK_GUIDES[target];
+        if (framework) href = frameworkHref(framework, local[2] ?? '');
+        else if (href.endsWith('.md') || href.includes('.md#')) href = `${docHref(target)}${local[2] ? `#${local[2]}` : ''}`;
       }
+      // An anchor in this document follows its ids.
+      else if (idPrefix && href.startsWith('#')) href = `#${idPrefix}${href.slice(1)}`;
       if (/^\s*(javascript|data|vbscript):/i.test(href)) return this.parser.parseInline(token.tokens);
       return `<a href="${escapeHTML(href)}"${token.title ? ` title="${escapeHTML(token.title)}"` : ''}>${this.parser.parseInline(token.tokens)}</a>`;
     },
   } });
   const html = parser.parse(source) as string;
+  return { html, toc, examples };
+}
+
+/** Framework-specific blocks in a guide's markdown (getting-started.md): `<div data-for-framework="react">`. */
+const hasFrameworkBlocks = (source: string) => /data-for-framework=/.test(source);
+
+export function renderDocument(slug: string) {
+  if (!slugs.has(slug)) return null;
+  const source = documentSource(slug);
+  const { html, toc, examples } = renderMarkdown(source);
   // The metadata sits under the title
   const meta = documentMeta(slug);
-  const withMeta = html.replace(/(<\/h1>\n?)/, `$1${metaHtml(meta)}`);
+  let withMeta = html.replace(/(<\/h1>\n?)/, `$1${metaHtml(meta)}`);
+  // The Frameworks page: its own introduction, then the six guides, each shown only for its
+  // framework (CSS from :root[data-framework], before any script), with its own table of
+  // contents. Each guide keeps its text; its h1 gives way to the page's, and its ids are
+  // prefixed with the framework so the six never collide.
+  let tocs: { framework: string; items: { title: string; id: string }[] }[] | null = null;
+  if (slug === 'frameworks') {
+    tocs = [];
+    const guides = Object.entries(FRAMEWORK_GUIDES).map(([guide, framework]) => {
+      const rendered = renderMarkdown(readFileSync(resolve(docsDir, `${guide}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''), `${framework}-`);
+      tocs!.push({ framework, items: rendered.toc });
+      const body = rendered.html.replace(/<h1 id="[^"]*">[\s\S]*?<\/h1>\n?/, '');
+      return `<section class="framework-guide" data-for-framework="${framework}" aria-label="${escapeHTML(componentName(guide))}">${metaHtml(documentMeta(guide))}${body}</section>\n`;
+    }).join('');
+    withMeta = withMeta.replace('<!-- framework-guides -->', guides);
+  }
   const summary = docSummary(slug);
   // The meta description: the summary, unless the front matter gives a shorter one for
   // search results, which show about 160 characters.
-  return { html: withMeta, toc, title: componentName(slug), summary, description: meta.description ?? summary, frameworkSwitch: examples ? frameworkSwitch() : '' };
+  return {
+    html: withMeta, toc, tocs, title: componentName(slug), summary, description: meta.description ?? summary,
+    // The framework chips (server.ts renders them) on a page whose content follows the
+    // framework: its examples, its framework blocks, or the Frameworks page.
+    frameworks: examples || hasFrameworkBlocks(source) || slug === 'frameworks',
+  };
 }
-
-/**
- * The framework switch at the top of a documentation page with examples, where the
- * component pages have their framework tabs. Which button is on is CSS, from
- * `:root[data-framework]`, so it is right before any script runs; the script keeps
- * `aria-pressed` in step (src/client/site.ts).
- */
-const frameworkSwitch = (): string =>
-  `<div class="framework-tabs framework-switch" role="group" aria-label="Framework for the examples">${FRAMEWORKS.map(({ id, label }) =>
-    `<button type="button" class="framework-tab framework-switch__option" data-framework="${id}" aria-pressed="${id === 'vanilla'}">${label}</button>`).join('')}</div>\n`;

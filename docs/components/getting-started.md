@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-11-10
+updated: 2026-11-18
 status: published
 ---
 
@@ -8,8 +8,8 @@ status: published
 
 `material` is a Material Design 3 component library for the web, with no dependencies. The same
 components work as plain JavaScript factories, as web components, and as React, Vue, Svelte and
-SolidJS components. This page takes you from install to a first component; the switch at the
-top shows every example in the way you use it.
+SolidJS components. This page takes you from install to a first component; the chips at the
+top show every step and example in the way you use it.
 
 For coverage, measured sizes, browser support and the current limits, see [Why material](why-material.md).
 
@@ -34,7 +34,8 @@ has, and installs none of them itself.
 | [SolidJS](../solid/) | `material/solid` | SolidJS, SolidStart |
 
 The web components are built on the factories, and the framework components render the web
-components, so they all look and behave alike.
+components, so they all look and behave alike. Pick yours with the chips at the top: the steps
+below follow it, and [Frameworks](frameworks.md) has its guide.
 
 Each web component styles its own shadow root, which costs more on a first render than the same
 component as a factory: 1,000 text fields mount in about 290 ms as elements against about
@@ -65,14 +66,19 @@ against `base`. Explicit `data-theme-contrast` still needs `material/styles/cont
 The typography JavaScript entry brings in the full base; [Theming](../theming/#the-baseline)
 explains loading typography CSS separately when keeping the smaller base.
 
+<div data-for-framework="vanilla">
+
 With the **Vanilla** factories, also import each component's stylesheet:
 
 ```typescript
 import 'material/styles/button';
 ```
 
-The **web components** and the **framework components** carry their own styles in their
-shadow roots, so no page-level component stylesheets are needed. With web components, register them once:
+</div>
+<div data-for-framework="html">
+
+The **web components** carry their own styles in their shadow roots, so no page-level
+component stylesheets are needed. Register them once:
 
 ```typescript
 import 'material/elements/css';
@@ -81,8 +87,35 @@ import { defineAll } from 'material/elements';
 defineAll();
 ```
 
-The React, Vue, Svelte and SolidJS components register the element they render the first time
-it mounts.
+</div>
+<div data-for-framework="react">
+
+The **React** components carry their own styles in their shadow roots, so no page-level
+component stylesheets are needed. Import them from `material/react`; each registers the element
+it renders the first time it mounts.
+
+</div>
+<div data-for-framework="vue">
+
+The **Vue** components carry their own styles in their shadow roots, so no page-level
+component stylesheets are needed. Import them from `material/vue`; each registers the element it
+renders the first time it mounts.
+
+</div>
+<div data-for-framework="svelte">
+
+The **Svelte** components carry their own styles in their shadow roots, so no page-level
+component stylesheets are needed. Import them from `material/svelte`; each registers the element
+it renders the first time it mounts.
+
+</div>
+<div data-for-framework="solid">
+
+The **SolidJS** components carry their own styles in their shadow roots, so no page-level
+component stylesheets are needed. Import them from `material/solid`; each registers the element
+it renders the first time it mounts.
+
+</div>
 
 ## A first component
 
@@ -116,7 +149,7 @@ Browse the themes and every colour role in [Styles › Color](/styles/color/), a
 
 - [Components](/components/): every component in a playground, with the code for your
   framework.
-- The guide for [your framework](#choose-how-to-use-it), for its events, forms and
+- [Frameworks](frameworks.md): the guide for your framework, for its events, forms and
   server rendering.
 - [Architecture](../architecture/): how `material` is built.
 - [Examples](/examples/): whole screens in all six flavours.

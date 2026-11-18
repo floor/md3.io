@@ -9,7 +9,10 @@
 //   - Styles:     the Styles pages, with the colour roles and type scale roles they list.
 import MiniSearch, { type SearchResult as Hit } from 'minisearch';
 import { Marked, type Token } from 'marked';
-import { componentName, docGroups, docSlugs, documentSource, headingIds, docHref } from './content';
+import { componentName, docGroups, docSlugs, documentSource, headingIds, docHref, FRAMEWORK_GUIDES, frameworkHref } from './content';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { docsDir } from './content';
 import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
@@ -106,13 +109,20 @@ function componentDocuments(): IndexDocument[] {
 function docDocuments(): IndexDocument[] {
   const groupOf = new Map(docGroups.flatMap(group => group.items.map(item => [item.slug, group.label] as const)));
   const lexer = new Marked();
-  return docSlugs.flatMap(slug => {
-    const title = componentName(slug);
-    const page = docHref(slug);
-    const group = groupOf.get(slug) ?? 'Documentation';
+  // The documents, then the six framework guides: they are read on the Frameworks page, so
+  // each lands there with its framework chosen and its section's anchor (ids prefixed).
+  const sources = [
+    ...docSlugs.map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: groupOf.get(slug) ?? 'Documentation', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
+    ...Object.entries(FRAMEWORK_GUIDES).map(([guide, framework]) => ({
+      key: `frameworks:${framework}`, title: `${componentName(guide)} · Frameworks`, page: frameworkHref(framework), group: 'Guides',
+      source: readFileSync(resolve(docsDir, `${guide}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''),
+      url: (id: string) => frameworkHref(framework, id),
+    })),
+  ];
+  return sources.flatMap(({ key: slug, title, page, group, source, url }) => {
     const headingId = headingIds();
     const sections: { heading: string; id: string; text: string[] }[] = [{ heading: '', id: '', text: [] }];
-    for (const token of lexer.lexer(documentSource(slug)) as Token[]) {
+    for (const token of lexer.lexer(source) as Token[]) {
       if (token.type === 'heading') {
         // Every heading takes an id, as the rendered page numbers them.
         const { title: heading, id } = headingId(token.text);
@@ -124,7 +134,7 @@ function docDocuments(): IndexDocument[] {
     return sections.map(({ heading, id, text }, index): IndexDocument => ({
       id: `docs:${slug}${id ? `#${id}` : ''}`, section: 'Docs', title: index ? '' : title, heading, group,
       description: index ? '' : intro.slice(0, 200), tags: '', api: '',
-      body: plainText(text.join('\n')), url: id ? `${page}#${id}` : page, page,
+      body: plainText(text.join('\n')), url: url(id), page,
     }));
   });
 }

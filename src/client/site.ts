@@ -101,20 +101,9 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
 });
 
-// The documentation's framework switch: the choice shows every example of the page in that
-// framework, and is the one the playgrounds and the Examples remember.
-const switchOptions = [...document.querySelectorAll<HTMLButtonElement>('.framework-switch__option')];
-function showFramework(framework: string) {
-  root.dataset.framework = framework;
-  for (const option of switchOptions) option.setAttribute('aria-pressed', String(option.dataset.framework === framework));
-}
-if (switchOptions.length) showFramework(root.dataset.framework ?? 'vanilla');
-for (const option of switchOptions) {
-  option.addEventListener('click', () => {
-    showFramework(option.dataset.framework!);
-    try { localStorage.setItem('md3-example-framework', option.dataset.framework!); } catch { /* Storage may be unavailable. */ }
-  });
-}
+// The documentation's framework chips (document.eta): their code loads only on a page that
+// has them (src/client/docs-frameworks.ts).
+if (document.querySelector('.docs-frameworks')) void import('./docs-frameworks');
 
 // The package manager of the `install` blocks: one choice for every block, remembered.
 const managerOptions = [...document.querySelectorAll<HTMLButtonElement>('.doc-install__option')];
