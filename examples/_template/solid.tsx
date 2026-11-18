@@ -1,3 +1,4 @@
+/** @jsxImportSource solid-js */
 // Solid: material/solid wraps the same elements.
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
