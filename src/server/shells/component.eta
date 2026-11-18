@@ -50,7 +50,6 @@
         <% if (it.panel.scenario) { %>
         <section class="ui-section scenario-setup">
           <div class="ui-row control-row"><%~ it.panel.scenario %></div>
-          <p class="scenario-description" id="scenario-description">The options this playground starts with.</p>
         </section>
         <% } %>
         <%~ it.panel.sections %>

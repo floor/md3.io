@@ -49,6 +49,8 @@ describe('the material playground panel', () => {
     // Default is the way back; the form keeps its heading for assistive technology.
     expect(html).not.toMatch(/type="reset"/);
     expect(html).toContain('<h2 class="sr-only">Configuration</h2>');
+    // Nor a description line under the scenario select.
+    expect(html).not.toContain('id="scenario-description"');
     // mtrl's baseline tokens are scoped to the panel under the site's own mode
     // rule (tokens.css): dark by default, light once [data-theme-mode=light] is set.
     expect(html).toMatch(/<style>[^<]*\.playground--material/);

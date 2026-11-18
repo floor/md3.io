@@ -51,8 +51,14 @@ try {
         // (a) A component with scenarios has the section: select and description from it.
         const selected = await page.locator('#scenario').evaluate(el => String((el as HTMLElement & { value?: unknown }).value ?? ''));
         assert(selected === (scenario?.id ?? 'default'), `${where}: the Scenario select shows "${selected}"`);
-        const description = await page.locator('#scenario-description').textContent();
-        assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
+        // The pilot's material panel shows the select alone; the native panels keep
+        // the description line under it.
+        if (await page.locator('.playground--material').count()) {
+          assert((await page.locator('#scenario-description').count()) === 0, `${where}: the material panel shows a scenario description`);
+        } else {
+          const description = await page.locator('#scenario-description').textContent();
+          assert(description === (scenario?.description ?? 'The options this playground starts with.'), `${where}: the scenario description reads ${JSON.stringify(description)}`);
+        }
       } else {
         // (b) A component without scenarios has no Scenario section in the DOM at all.
         assert((await page.locator('.scenario-setup').count()) === 0, `${where}: a component without scenarios shows the Scenario section`);

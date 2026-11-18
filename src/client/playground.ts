@@ -275,8 +275,10 @@ function update(send = true, reset = false) {
 const scenarioById = (id: string) => scenarios.find(scenario => scenario.id === id);
 /** The select and its one-line description, from the selected entry. */
 function showScenario(id: string) {
-  if (!scenarioSelect || !scenarioDescription) return;
+  if (!scenarioSelect) return;
   scenarioSelect.value = id;
+  // The material panel has no description line: the select's value says it all.
+  if (!scenarioDescription) return;
   scenarioDescription.textContent = id === 'default' ? 'The options this playground starts with.'
     : id === 'custom' ? 'These options were changed from a scenario.'
     : scenarioById(id)?.description ?? 'The options this playground starts with.';

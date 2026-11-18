@@ -109,7 +109,7 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
     + groupInput('mode', 'light', true);
   const scenario = component.scenarios.length
     ? rowLabel('scenario', 'Scenario')
-      + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Scenario', id: 'scenario', value: 'default', 'aria-describedby': 'scenario-description' },
+      + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Scenario', id: 'scenario', value: 'default' },
         declaration('select-option', 'default', 'Default') + component.scenarios.map(scenario => declaration('select-option', scenario.id, scenario.name)).join('') + declaration('select-option', 'custom', 'Custom'), { styles: 'inline' })
     : null;
   const sections = [...new Set(component.controls.map(control => control.section))].map(section =>
