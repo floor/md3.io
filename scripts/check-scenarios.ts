@@ -233,12 +233,14 @@ try {
   assert((await favorite.getAttribute('class'))?.includes('mtrl-button--selected') === true, 'button/favorite: the preview is not selected');
   const vanilla = await page.locator('#generated-code').textContent();
   assert(vanilla?.includes('toggle: true') === true && vanilla.includes('selected: true'), 'button/favorite: the vanilla panel does not show the selected toggle');
-  await page.locator('.framework-tab[data-framework="html"]').click();
+  // The Button page's framework picker is material's chip set (Factory is the vanilla entry).
+  const frameworkChip = (name: string) => page.locator('m-chips.framework-chips').getByRole('gridcell', { name, exact: true });
+  await frameworkChip('Web Components').click();
   const html = await page.locator('#generated-code').textContent();
   assert(html?.includes('<m-button selected variant="filled" size="s" shape="round" toggle>Favorite</m-button>') === true, `button/favorite: the element panel reads ${JSON.stringify(html)}`);
   // The framework tab opens the code view. The click is on the live preview, and the
   // code it checks is the vanilla panel.
-  await page.locator('.framework-tab[data-framework="vanilla"]').click();
+  await frameworkChip('Factory').click();
   await page.getByRole('tab', { name: 'Live preview' }).click();
   await favorite.click();
   await page.waitForFunction(() => {
