@@ -5,7 +5,7 @@ Fetched 2026-11-18 from each project's own published assets. The logos and names
 | File | Source |
 |---|---|
 | webcomponent.svg | Web Components logo, added by the owner |
-| javascript.svg | JavaScript logo, a 16×16 rounded square with the letters cut out, provided by the owner (2026-11-18); used for Factory, plain JavaScript |
+| javascript.svg | JavaScript logo, a 16×16 rounded square with the letters cut out, provided by the owner (2026-11-18), in the JavaScript yellow (#F7DF1E) with a dark fill behind the cut-out letters so they read black on yellow on light and dark chips; used for Factory, plain JavaScript |
 | react.svg | https://raw.githubusercontent.com/reactjs/react.dev/main/public/images/brand/logo_light.svg |
 | vue.svg | https://raw.githubusercontent.com/vuejs/art/master/logo.svg |
 | svelte.svg | https://raw.githubusercontent.com/sveltejs/branding/master/svelte-logo.svg |
