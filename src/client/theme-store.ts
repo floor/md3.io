@@ -3,12 +3,16 @@
 //
 // Load order: a `?theme=` link wins (and leaves the address bar), then what this browser
 // saved, then mtrl's baseline. `?theme=<built-in name>` (`?theme=ocean`, the Themes
-// page's link) picks that base theme over what was saved, and stays in the address bar. The base theme and mode are also the playground's
-// appearance (`md3-preview-appearance`), so a theme picked in either place is the other's.
+// page's link) picks that base theme over what was saved, and stays in the address bar.
+//
+// The base theme and mode are the site's one appearance (appearance.ts). This store
+// never writes that key: a base or mode change here goes through setAppearance at once,
+// and a change made anywhere else (the header) arrives as `md3:appearance` and is
+// applied without saving. Its own key (`md3-styles-theme`) keeps the rest.
 import { defaultState, normalize, parse, serialize, type SectionKey, type ThemeBase, type ThemeState } from '../shared/theme-state';
+import { APPEARANCE_KEY, onAppearance, setAppearance } from './appearance';
 
 const STORAGE_KEY = 'md3-styles-theme';
-const APPEARANCE_KEY = 'md3-preview-appearance';
 const SAVE_DELAY = 300;
 
 export const themeBase: ThemeBase = JSON.parse(document.querySelector('#theme-base')?.textContent || '{"themes":["baseline"],"shape":{}}');
@@ -48,21 +52,21 @@ let saveTimer: ReturnType<typeof setTimeout> | undefined;
 function save() {
   clearTimeout(saveTimer);
   saveTimer = undefined;
-  try {
-    localStorage.setItem(STORAGE_KEY, serialize(state));
-    // Keep whatever else the playground stores beside theme and mode.
-    const appearance = readJson(APPEARANCE_KEY);
-    if (appearance.theme !== state.base || appearance.mode !== state.mode) localStorage.setItem(APPEARANCE_KEY, JSON.stringify({ ...appearance, theme: state.base, mode: state.mode }));
-  } catch { /* The page works without storage; the theme lasts until it closes. */ }
+  try { localStorage.setItem(STORAGE_KEY, serialize(state)); }
+  catch { /* The page works without storage; the theme lasts until it closes. */ }
 }
 // Throttled: a slider drag writes once it rests, the preview follows every tick.
 const scheduleSave = () => { saveTimer ??= setTimeout(save, SAVE_DELAY); };
 addEventListener('pagehide', () => { if (saveTimer !== undefined) save(); });
 
 function commit(next: ThemeState, persist = true) {
+  const appearanceChanged = next.base !== state.base || next.mode !== state.mode;
   state = next;
   if (persist) scheduleSave();
   for (const listener of listeners) listener(state);
+  // A base or mode chosen here is the site's appearance: written now, through the one
+  // writer, which tells the header and the rest (the event comes back here as a no-op).
+  if (persist && appearanceChanged) setAppearance({ theme: state.base, mode: state.mode === 'dark' ? 'dark' : 'light' });
 }
 
 export const themeStore = {
@@ -85,7 +89,18 @@ export const themeStore = {
   },
 };
 
-if (openedFromLink) save();
+// A link's base theme becomes the site's appearance once every module script has run
+// (the header listens from site.js, which may execute after this one).
+if (openedFromLink) {
+  save();
+  const share = () => setAppearance({ theme: state.base, mode: state.mode === 'dark' ? 'dark' : 'light' });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', share, { once: true }); else share();
+}
+// The header (or any other place) changed the appearance: applied here, not saved again.
+onAppearance(({ theme, mode }) => {
+  if (theme === state.base && mode === state.mode) return;
+  commit(normalize({ ...state, base: theme, mode }, themeBase), false);
+});
 // Another tab changed the theme, or the playground the appearance.
 addEventListener('storage', (event: StorageEvent) => {
   if (event.key !== STORAGE_KEY && event.key !== APPEARANCE_KEY) return;

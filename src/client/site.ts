@@ -1,5 +1,6 @@
 import './search';
 import { applyTheme } from './theme-sheets';
+import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
 // The mode button is material's icon button (base.eta): its label goes on the host and,
 // until the element is defined, on the inner button that carries it.
@@ -11,24 +12,10 @@ function updateThemeLabel() {
 }
 updateThemeLabel();
 // One appearance for the whole site (base.eta's head script): the material theme from
-// the Themes menu and the mode from the moon. Both are stored, reach the playground's
-// preview and panel through the `md3:appearance` event, and the frames read them on load.
-const APPEARANCE_KEY = 'md3-preview-appearance';
-function saveAppearance() {
-  const theme = root.dataset.siteTheme ?? 'baseline';
-  const mode = root.dataset.themeMode === 'dark' ? 'dark' : 'light';
-  root.dataset.previewMode = mode;
-  try {
-    const saved = JSON.parse(localStorage.getItem(APPEARANCE_KEY) || '{}') || {};
-    localStorage.setItem(APPEARANCE_KEY, JSON.stringify({ ...saved, theme, mode }));
-    localStorage.setItem('md3-site-mode', mode);
-  } catch { /* Storage may be unavailable. */ }
-  window.dispatchEvent(new CustomEvent('md3:appearance', { detail: { theme, mode } }));
-}
+// the Themes menu and the mode from the moon. appearance.ts is its only writer; the
+// header, like every other place, applies the `md3:appearance` event it dispatches.
 themeToggle?.addEventListener('click', () => {
-  root.dataset.themeMode = root.dataset.themeMode === 'dark' ? 'light' : 'dark';
-  updateThemeLabel();
-  saveAppearance();
+  setAppearance({ mode: currentAppearance().mode === 'dark' ? 'light' : 'dark' });
 });
 
 // The header's Themes control (base.eta): material's icon button, server-rendered and
@@ -37,16 +24,38 @@ themeToggle?.addEventListener('click', () => {
 // scope takes the site theme like the panel's (theme-sheets.ts).
 const themePicker = document.querySelector<HTMLElement>('#theme-picker');
 const headerScope = document.querySelector<HTMLElement>('.header__themes');
-// Until the element is defined, its inner button carries the popup semantics itself.
+// The inner button is the focusable control, so it carries the popup semantics: the
+// server-rendered one now, and again after the element's definition loads, whose
+// upgrade rebuilds the shadow root with a button that only gets aria-label from the
+// host (review of #92) — and on every open and close.
 const innerButton = () => themePicker?.shadowRoot?.querySelector('button') ?? null;
-innerButton()?.setAttribute('aria-haspopup', 'menu');
-innerButton()?.setAttribute('aria-expanded', 'false');
+const markPopup = () => {
+  const button = innerButton();
+  button?.setAttribute('aria-haspopup', 'menu');
+  button?.setAttribute('aria-expanded', themePicker?.getAttribute('aria-expanded') === 'true' ? 'true' : 'false');
+};
+markPopup();
+// The upgrade also replaces the focused inner button, so focus fell to <body>: a
+// keyboard user who tabbed to Theme pressed Enter on nothing. The header icon button
+// that had focus when the definition arrived gets it back.
+// The upgrade's removal fires a focusout with focus going nowhere, so the host is only
+// forgotten when focus actually lands somewhere else on the page.
+let focusedIconHost: HTMLElement | null = null;
+document.addEventListener('focusin', event => {
+  const host = [themePicker, themeToggle].find(candidate => candidate && candidate.contains(event.target as Node)) ?? null;
+  focusedIconHost = host;
+});
 let loadingMenu: Promise<typeof import('./theme-menu')> | null = null;
-const loadMenu = () => (loadingMenu ??= import('./theme-menu'));
+const loadMenu = () => (loadingMenu ??= import('./theme-menu').then(module => {
+  markPopup();
+  const active = document.activeElement;
+  if (focusedIconHost && (!active || active === document.body)) focusedIconHost.focus();
+  return module;
+}));
 for (const intent of ['pointerenter', 'focusin'] as const) themePicker?.addEventListener(intent, () => void loadMenu(), { once: true });
 const expanded = (open: boolean) => {
   themePicker?.setAttribute('aria-expanded', String(open));
-  innerButton()?.setAttribute('aria-expanded', String(open));
+  markPopup();
 };
 let menuMade = false;
 themePicker?.addEventListener('click', async () => {
@@ -54,19 +63,19 @@ themePicker?.addEventListener('click', async () => {
   // first click, which makes it, opens it from here.
   if (menuMade) return;
   const module = await loadMenu();
-  const menu = module.themeMenu(theme => {
-    root.dataset.siteTheme = theme;
-    module.markTheme(theme);
-    saveAppearance();
-  }, expanded);
+  const menu = module.themeMenu(theme => setAppearance({ theme }), expanded);
   if (!menu) return;
   menuMade = true;
-  module.markTheme(root.dataset.siteTheme ?? 'baseline');
+  module.markTheme(currentAppearance().theme);
   menu.show();
 });
-// The header scope follows the appearance, as the panel does (playground.ts).
-window.addEventListener('md3:appearance', event => {
-  const { theme, mode } = (event as CustomEvent<{ theme: string; mode: string }>).detail;
+// The header follows the appearance, whoever changed it (its own buttons, a Styles
+// page): the root's theme, the mode button's label, the menu's check, and its scope.
+onAppearance(({ theme, mode }) => {
+  root.dataset.siteTheme = theme;
+  root.dataset.themeMode = mode;
+  updateThemeLabel();
+  if (menuMade) void loadMenu().then(module => module.markTheme(theme));
   if (!headerScope) return;
   headerScope.dataset.themeMode = mode;
   applyTheme(document, theme, [headerScope]);

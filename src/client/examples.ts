@@ -1,6 +1,8 @@
 // The example page: framework tabs switch the running frame and its source; the
-// choice and the frame's appearance persist, and the URL carries the framework.
+// choice persists and the URL carries the framework; the frame follows the site's
+// appearance (the header).
 import { applyTheme } from './theme-sheets';
+import { onAppearance } from './appearance';
 import { copyText } from './site';
 import { mountDeviceFrame } from './device-frame';
 
@@ -12,7 +14,6 @@ if (page) {
   // Mobile, Tablet or Desktop: the frame at that device's size (src/client/device-frame.ts).
   mountDeviceFrame(frame, { label: 'Example device' });
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('.framework-tab')];
-  const APPEARANCE = 'md3-preview-appearance';
   const FRAMEWORK = 'md3-example-framework';
 
   const select = (id: string, focus = false): void => {
@@ -67,20 +68,13 @@ if (page) {
     });
   }
 
-  // Theme and mode: the frame reads them on load, as the playground's preview does.
-  const theme = document.querySelector<HTMLSelectElement>('#example-theme')!;
-  const modes = [...document.querySelectorAll<HTMLInputElement>('input[name="example-mode"]')];
-  try {
-    const saved = JSON.parse(localStorage.getItem(APPEARANCE) || '{}') as { theme?: string; mode?: string };
-    if (saved.theme && [...theme.options].some(o => o.value === saved.theme)) theme.value = saved.theme;
-    for (const m of modes) m.checked = m.value === (saved.mode === 'dark' ? 'dark' : 'light');
-  } catch { /* Storage may be unavailable. */ }
-  const applyAppearance = (): void => {
-    const mode = modes.find(m => m.checked)?.value ?? 'light';
-    try { localStorage.setItem(APPEARANCE, JSON.stringify({ theme: theme.value, mode })); } catch { /* Storage may be unavailable. */ }
+  // Theme and mode come from the site header (appearance.ts): a frame reads them on load,
+  // as the playground's preview does, and the open frame follows every change live.
+  onAppearance(({ theme, mode }) => {
     const root = frame.contentDocument?.documentElement;
-    if (root) { applyTheme(root.ownerDocument, theme.value); root.dataset.themeMode = mode; root.style.colorScheme = mode; }
-  };
-  theme.addEventListener('change', applyAppearance);
-  for (const m of modes) m.addEventListener('change', applyAppearance);
+    if (!root) return;
+    void applyTheme(root.ownerDocument, theme);
+    root.dataset.themeMode = mode;
+    root.style.colorScheme = mode;
+  });
 }

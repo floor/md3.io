@@ -30,8 +30,10 @@ function loadTheme(doc: Document, theme: string): Promise<void> {
         return link;
       });
     loading = Promise.all(sheets.map(link => new Promise<void>(resolve => {
-      link.addEventListener('load', () => resolve(), { once: true });
-      link.addEventListener('error', () => resolve(), { once: true });
+      // Both listeners go once either fires: a loaded sheet keeps no handler behind.
+      const settle = () => { link.removeEventListener('load', settle); link.removeEventListener('error', settle); resolve(); };
+      link.addEventListener('load', settle);
+      link.addEventListener('error', settle);
       if (contrast && link.dataset.part === 'theme') contrast.before(link);
       else if (contrast) contrast.after(link);
       else doc.head.append(link);
@@ -43,11 +45,12 @@ function loadTheme(doc: Document, theme: string): Promise<void> {
 
 /**
  * Shows `theme` in `doc` once its sheets are in; the latest call wins. The theme goes
- * on `targets` (the page's panel scopes) or, by default, on the document's root.
+ * on `targets` (the page's panel scopes) or, by default, on the document's root. The
+ * promise settles once that has happened, or once a later call has taken over.
  */
-export function applyTheme(doc: Document, theme: string, targets: readonly HTMLElement[] = [doc.documentElement]): void {
+export function applyTheme(doc: Document, theme: string, targets: readonly HTMLElement[] = [doc.documentElement]): Promise<void> {
   wanted.set(doc, theme);
-  void loadTheme(doc, theme).then(() => {
+  return loadTheme(doc, theme).then(() => {
     if (wanted.get(doc) !== theme) return;
     for (const target of targets) target.dataset.theme = theme;
   });

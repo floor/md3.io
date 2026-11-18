@@ -224,7 +224,10 @@ try {
   await pickTheme('Ocean');
   await until(() => page.locator('.theme-app__note').textContent().then(text => !!text?.startsWith('Original colours set by hand; variants generated from #')), true, 'A hand-made theme says its colours are set by hand, and where its variants come from');
   // Ten switches: listeners and elements stay flat, and a switch paints within a frame.
-  const counts = () => page.evaluate(() => ({ listeners: (window as unknown as { __listeners: number }).__listeners, nodes: document.getElementsByTagName('*').length }));
+  // A theme picked here is the site's appearance (appearance.ts), so the header loads that
+  // theme's two sheets once (theme-sheets.ts): a bounded cache, at most one pair per theme,
+  // left out of the element count and checked on its own below (no sheet loaded twice).
+  const counts = () => page.evaluate(() => ({ listeners: (window as unknown as { __listeners: number }).__listeners, nodes: document.getElementsByTagName('*').length - document.querySelectorAll('link[data-theme-sheet]').length }));
   // mtrl takes a closed menu out of the page on a timer, after its closing animation, and
   // pickTheme only waits for the item to be hidden: each count waits for the select's menu
   // (38 elements) to have left, so both are of the same page and must be equal.
@@ -246,6 +249,8 @@ try {
   const after = await counts();
   console.log(`Ten theme switches: listeners ${before.listeners} → ${after.listeners}, elements ${before.nodes} → ${after.nodes}`);
   assert(after.listeners === before.listeners && after.nodes === before.nodes, `Ten theme switches add no listener and no element, and lose none: ${JSON.stringify(before)} → ${JSON.stringify(after)}`);
+  const sheetHrefs = await page.evaluate(() => [...document.querySelectorAll<HTMLLinkElement>('link[data-theme-sheet]')].map(link => link.href));
+  assert(new Set(sheetHrefs).size === sheetHrefs.length, `Ten theme switches load each theme's sheets once: ${sheetHrefs.length} links, ${new Set(sheetHrefs).size} distinct`);
   const switchMs = await page.evaluate(async () => {
     const app = (window as unknown as { themeApp: { state: { set(key: string, value: unknown): void } } }).themeApp;
     // From the change to its colours computed and laid out: the work the next frame waits on.
