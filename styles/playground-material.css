@@ -81,11 +81,6 @@
 .playground--material m-tabs::part(divider) { display: none; }
 .playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
 
-/* The mode group and the theme select share the heading row with the tabs. */
-.playground--material .preview-appearance m-select { width: 168px; min-width: 0; }
-
-@media (max-width: 720px) {
-    .playground--material .preview-appearance m-select { width: auto; flex: 1; }
 }
 
 /* The material heading (tabs, the 168px theme select, the Light/Dark group)

@@ -115,14 +115,16 @@ export function isDisabled(page: Page, name: string): Promise<boolean> {
 
 /** Picks the preview's theme (the heading's select, material or native). */
 export async function chooseTheme(page: Page, label: string): Promise<void> {
-  const host = page.locator('m-select#preview-theme');
-  if (await host.count()) {
-    const value = await host.locator('m-select-option').filter({ hasText: label }).first().getAttribute('value');
-    await clickUntil(page, async () => { await host.click(); await pickOption(page, label); },
-      () => host.evaluate((element, wanted) => String((element as HTMLElement & { value?: unknown }).value) === wanted, value), `theme ${label}`);
-    return;
-  }
-  await page.locator('#preview-theme').selectOption({ label });
+  // The site header's Themes control: material's icon button and menu (one theme for
+  // the whole site, preview and panel). The button toggles the menu: open it only if
+  // its items are not showing, then pick.
+  const value = await page.locator('#theme-menu-template').evaluate((template, wanted) =>
+    [...(template as HTMLTemplateElement).content.querySelectorAll('m-menu-item')].find(item => item.textContent?.trim() === wanted)?.getAttribute('value') ?? '', label);
+  await clickUntil(page, async () => {
+    const item = page.getByRole('menuitem', { name: label, exact: true });
+    if (!await item.isVisible().catch(() => false)) await page.locator('#theme-picker').click();
+    await item.click();
+  }, () => page.evaluate(wanted => document.documentElement.dataset.siteTheme === wanted, value), `theme ${label}`);
 }
 
 /**
@@ -137,15 +139,11 @@ async function clickUntil(page: Page, act: () => Promise<void>, took: () => Prom
   if (!await took()) throw new Error(`panel-driver: the click on ${what} did not take`);
 }
 
-/** Picks the preview's mode, light or dark. */
+/** Sets the site's mode, light or dark (the header's moon): site, preview and panel together. */
 export async function chooseMode(page: Page, mode: 'light' | 'dark'): Promise<void> {
-  const group = page.locator('m-button-group[data-group-for="mode"]');
-  if (await group.count()) {
-    await clickUntil(page, () => group.getByRole('button', { name: mode === 'light' ? 'Light' : 'Dark', exact: true }).click(),
-      () => page.evaluate(wanted => document.querySelector<HTMLInputElement>('input[data-input-for="mode"]')?.value === wanted, mode), `mode ${mode}`);
-    return;
-  }
-  await page.locator(`input[name="mode"][value="${mode}"]`).check({ force: true });
+  if (await page.evaluate(() => document.documentElement.dataset.themeMode) === mode) return;
+  await clickUntil(page, () => page.locator('#theme-toggle').click(),
+    () => page.evaluate(wanted => document.documentElement.dataset.themeMode === wanted, mode), `mode ${mode}`);
 }
 
 /** Picks a framework in the picker above the heading (Factory is the vanilla entry). */

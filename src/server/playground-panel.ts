@@ -21,9 +21,12 @@ import { resolve } from 'node:path';
 
 /** The playground section's extra class, where the panel's mtrl tokens are set. */
 export const PANEL_SCOPE = 'playground--material';
-/** mtrl's baseline tokens on the panel: dark by default like the site's own
- *  tokens, light when the site's inline script sets data-theme-mode=light. */
-export const panelTokens = scopedTokensSiteDefault(`.${PANEL_SCOPE}`);
+/** The site header's material scope (the Themes button and menu, base.eta). */
+export const HEADER_SCOPE = 'site-material';
+/** mtrl's baseline tokens on the material scopes (the playground panel, the header),
+ *  on every page: dark by default like the site's own tokens, light when the site's
+ *  inline script sets data-theme-mode=light; the chosen theme on a scope wins. */
+export const materialTokens = scopedTokensSiteDefault([`.${PANEL_SCOPE}`, `.${HEADER_SCOPE}`]);
 
 /**
  * How the elements get their shadow-root styles. Link mode (material/ssr) points
@@ -36,7 +39,7 @@ const elementCssBase: string | null = (() => {
   try { return JSON.parse(readFileSync(resolve(root, 'dist/element-css/base.json'), 'utf8')).base; }
   catch { return null; }
 })();
-const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementCssBase } as const : { styles: 'inline' } as const;
+export const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementCssBase } as const : { styles: 'inline' } as const;
 
 /** Every piece of a panel's element markup, for linkedStylesheets. */
 export const panelMarkup = (panel: ReturnType<typeof materialPanel>): string =>
@@ -181,15 +184,11 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // Live preview / View code.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), renderStyles);
-  // Theme and mode, the native heading's own row: label, compact select, xs
-  // group. The mode group is not form-associated: its hidden input carries the
-  // name (associated to the configuration form from outside it).
-  const appearance = `<label for="preview-theme">Theme</label>`
-    + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Theme', id: 'preview-theme', name: 'theme', form: 'configuration', value: themes[0] },
-      themes.map(theme => declaration('select-option', theme, (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' '))).join(''), renderStyles)
-    + renderElement('m-button-group', { selection: 'single', required: true, kind: 'connected', size: 'xs', value: 'light', 'aria-label': 'Preview mode', 'data-group-for': 'mode' },
-      declaration('button-group-item', 'light', 'Light') + declaration('button-group-item', 'dark', 'Dark'), renderStyles)
-    + groupInput('mode', 'light', true);
+  // Theme and mode come from the site header (one appearance for the whole site,
+  // site.ts): the heading keeps only the form's copy of them, for the state and the
+  // generated code. playground.ts sets them from the site and on md3:appearance.
+  const appearance = '<input type="hidden" name="theme" value="baseline" form="configuration" data-appearance="theme">'
+    + '<input type="hidden" name="mode" value="light" form="configuration" data-appearance="mode">';
   // Every page has the Scenario row, Default and Custom at least: with no Reset, its
   // Default is the way back to the starting options, also on the pages that have no
   // named scenarios (divider, badge, progress, loading indicator).

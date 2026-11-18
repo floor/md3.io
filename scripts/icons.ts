@@ -122,6 +122,10 @@ const names = [
   // The bottom app bar's notes figure (src/shared/content/bottom-app-bar.ts): a checkbox and a brush.
   'check_box',
   'brush',
+  // The site header's Themes and mode buttons (src/server/shells/base.eta).
+  'palette',
+  'light_mode',
+  'dark_mode',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

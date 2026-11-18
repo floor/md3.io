@@ -1,0 +1,4 @@
+<%/* Every theme's two sheets, inert (a template's links are never fetched); the server
+     still rewrites their hrefs to the hashed files. theme-sheets.eta (the frames) and the
+     component page's head include it; src/client/theme-sheets.ts loads from it. */%>
+  <template id="theme-sheets"><% it.themes.filter(theme => theme !== 'baseline').forEach(theme => { %><link rel="stylesheet" data-theme-sheet="<%= theme %>" data-part="theme" href="/dist/material/themes/<%= theme %>.css" /><link rel="stylesheet" data-theme-sheet="<%= theme %>" data-part="contrast" href="/dist/material/themes/<%= theme %>-contrast.css" /><% }); %></template>

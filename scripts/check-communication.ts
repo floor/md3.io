@@ -203,7 +203,7 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
     await reset();
-    assert(await page.locator('#preview-theme').evaluate(host => String((host as HTMLElement & { value?: unknown }).value)) === 'ocean', 'Reset discarded the selected theme');
+    assert(await page.evaluate(() => document.documentElement.dataset.siteTheme) === 'ocean', 'Reset discarded the selected theme');
     await page.setViewportSize({ width: 1440, height: 900 });
     assert(errors.length === 0, errors.join('\n'));
   }

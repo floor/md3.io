@@ -20,13 +20,17 @@ describe('site routes and documentation', () => {
       expect(await response.text()).toContain('<!doctype html>');
     }
   });
-  test('the breadcrumb separator is hidden from assistive technology', async () => {
-    expect(await (await get('/docs/')).text()).toContain('<span class="header__sep" aria-hidden="true">/');
-  });
-  test('a guide keeps the section name and the docs overview does not', async () => {
-    const headerClass = (html: string) => html.match(/<header class="([^"]*)"/)?.[1];
-    expect(headerClass(await (await get('/docs/getting-started/')).text())).toBe('header header--section-only');
-    expect(headerClass(await (await get('/docs/')).text())).toBe('header');
+  test('the header is the logo and the navigation: no section crumb, no brand dot', async () => {
+    // The "/ <section>" after the logo and the dot after "material" are gone; the page's
+    // eyebrow and the sidebar's label still name the section. The logo link keeps a name.
+    for (const path of ['/docs/', '/docs/getting-started/', '/components/button/']) {
+      const html = await (await get(path)).text();
+      expect(html.match(/<header class="([^"]*)"/)?.[1], path).toBe('header');
+      expect(html, path).not.toContain('header__sep');
+      expect(html, path).not.toContain('header__section');
+      expect(html, path).not.toContain('brand-dot');
+      expect(html, path).toContain('<a class="header__logo" href="/" aria-label="material, home">');
+    }
   });
   test('each component reference links to its own playground', async () => {
     for (const slug of componentSlugs) {
@@ -691,7 +695,11 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
   expect(assets).toContain(manifest['/dist/playground-material.js']);
   for (const asset of assets.filter(asset => !elementSheets(asset))) expect(Object.values(manifest)).toContain(asset);
   const home = await (await get('/')).text();
-  expect([...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1])).toEqual([manifest['/dist/css/home.css']]);
+  // The header's Themes button links material's element sheets from its shadow root
+  // (every page); the page's own sheet is still the one bundle.
+  const homeSheets = [...home.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)].map(match => match[1]!);
+  expect(homeSheets.filter(href => !elementSheets(href))).toEqual([manifest['/dist/css/home.css']]);
+  expect(homeSheets.filter(elementSheets).length).toBeGreaterThan(0);
   expect(home).toContain('aria-label="Search (⌘K)"');
   expect(home).toContain('aria-keyshortcuts="Meta+K Control+K"');
   // Whatever CSS the server sends is minified, including a file a page no longer links.

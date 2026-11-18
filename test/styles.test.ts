@@ -16,7 +16,6 @@ describe('Styles pages', () => {
       const html = await response.text();
       expect(html).toContain(`<h1>${heading}</h1>`);
       expect(html).toContain('<a href="/styles/" class="active">Styles</a>');
-      expect(html).toContain('<span class="header__section">Styles</span>');
       expect(html).toContain(`href="${path}" aria-current="page"`);
       expect(html).toMatch(/\/dist\/css\/styles\.[a-f0-9]{10}\.css/);
       expect(html).not.toContain('/styles/styles-pages.css');

@@ -8,14 +8,17 @@ const loads = new WeakMap<Document, Map<string, Promise<void>>>();
 const wanted = new WeakMap<Document, string>();
 
 function loadTheme(doc: Document, theme: string): Promise<void> {
-  if (theme === 'baseline' || doc.querySelector(`head > link[data-theme-sheet="${theme}"]`)) return Promise.resolve();
+  if (theme === 'baseline') return Promise.resolve();
   const started = loads.get(doc) ?? new Map<string, Promise<void>>();
   loads.set(doc, started);
   let loading = started.get(theme);
   if (!loading) {
     const template = doc.querySelector<HTMLTemplateElement>('#theme-sheets');
     const contrast = doc.getElementById('contrast-sheet');
+    // Only the parts not already in the head (a page or frame writes the active
+    // theme's main sheet before its first paint).
     const sheets = [...template?.content.querySelectorAll<HTMLLinkElement>(`[data-theme-sheet="${theme}"]`) ?? []]
+      .filter(link => !doc.querySelector(`head > link[data-theme-sheet="${theme}"][data-part="${link.dataset.part}"]`))
       .map(link => doc.importNode(link, true) as HTMLLinkElement);
     loading = Promise.all(sheets.map(link => new Promise<void>(resolve => {
       link.addEventListener('load', () => resolve(), { once: true });
@@ -29,8 +32,14 @@ function loadTheme(doc: Document, theme: string): Promise<void> {
   return loading;
 }
 
-/** Shows `theme` in `doc` once its sheets are in; the latest call wins. */
-export function applyTheme(doc: Document, theme: string): void {
+/**
+ * Shows `theme` in `doc` once its sheets are in; the latest call wins. The theme goes
+ * on `targets` (the page's panel scopes) or, by default, on the document's root.
+ */
+export function applyTheme(doc: Document, theme: string, targets: readonly HTMLElement[] = [doc.documentElement]): void {
   wanted.set(doc, theme);
-  void loadTheme(doc, theme).then(() => { if (wanted.get(doc) === theme) doc.documentElement.dataset.theme = theme; });
+  void loadTheme(doc, theme).then(() => {
+    if (wanted.get(doc) !== theme) return;
+    for (const target of targets) target.dataset.theme = theme;
+  });
 }
