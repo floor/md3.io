@@ -126,19 +126,15 @@ export async function chooseTheme(page: Page, label: string): Promise<void> {
 }
 
 /**
- * Clicks, then confirms the click took; if it did not, clicks once more and says
- * so in the log, as a person would click again. Seen on the Communication pages
- * (progress, loading indicator, snackbar, tooltip): the Dark click right after a
- * theme pick does not take, after the check's earlier steps on that page; the same
- * two clicks on a fresh page always take. The cause is not established yet (see
- * PR #91); the check's final assertions are unchanged.
+ * Clicks, then confirms the click took, and fails saying what it reads if not.
+ * (A second click here once hid a real bug: material's single-selection group
+ * cleared on a click on its selected segment, so a remembered Dark clicked again
+ * went back to light. The groups are `required` now.)
  */
 async function clickUntil(page: Page, act: () => Promise<void>, took: () => Promise<boolean>, what: string): Promise<void> {
   await act();
   for (let i = 0; i < 20 && !await took(); i++) await page.waitForTimeout(50);
-  if (await took()) return;
-  console.log(`panel-driver: the first click on ${what} did not take; clicking again`);
-  await act();
+  if (!await took()) throw new Error(`panel-driver: the click on ${what} did not take`);
 }
 
 /** Picks the preview's mode, light or dark. */

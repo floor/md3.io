@@ -153,7 +153,9 @@ export function materialControl(control: Control, slug: string, initial: Record<
   return row(control,
     `<span class="control-label" id="label-${escape(control.key)}">${escape(control.label)}</span>`
     + groupInput(control.key, String(control.initial))
-    + renderElement('m-button-group', { ...enabledWhen, selection: 'single', kind: 'connected', size: 'xs', value: String(control.initial), 'data-group-for': control.key }, items, renderStyles),
+    // required: a click on the selected segment keeps it, as the radio it replaced did
+    // (material's single-selection group clears on that click otherwise).
+    + renderElement('m-button-group', { ...enabledWhen, selection: 'single', required: true, kind: 'connected', size: 'xs', value: String(control.initial), 'data-group-for': control.key }, items, renderStyles),
     ' control-row', `label-${control.key}`);
 }
 
@@ -185,7 +187,7 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   const appearance = `<label for="preview-theme">Theme</label>`
     + renderElement('m-select', { variant: 'outlined', density: 'compact', 'aria-label': 'Theme', id: 'preview-theme', name: 'theme', form: 'configuration', value: themes[0] },
       themes.map(theme => declaration('select-option', theme, (theme.charAt(0).toUpperCase() + theme.slice(1)).replaceAll('-', ' '))).join(''), renderStyles)
-    + renderElement('m-button-group', { selection: 'single', kind: 'connected', size: 'xs', value: 'light', 'aria-label': 'Preview mode', 'data-group-for': 'mode' },
+    + renderElement('m-button-group', { selection: 'single', required: true, kind: 'connected', size: 'xs', value: 'light', 'aria-label': 'Preview mode', 'data-group-for': 'mode' },
       declaration('button-group-item', 'light', 'Light') + declaration('button-group-item', 'dark', 'Dark'), renderStyles)
     + groupInput('mode', 'light', true);
   // Every page has the Scenario row, Default and Custom at least: with no Reset, its
