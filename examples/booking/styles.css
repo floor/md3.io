@@ -1,13 +1,10 @@
-/* Layout for the example only: the components bring their own styles. */
+/* Layout for the example only: the components and material's typography utilities bring the rest. */
 .booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 560px); }
 .booking__intro { display: flex; flex-direction: column; gap: 4px; }
-.booking__title { margin: 0; color: var(--mtrl-sys-color-on-surface); font: 500 22px/28px Roboto, system-ui, sans-serif; }
-.booking__lede { margin: 0; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
+.booking__title, .booking__lede, .booking__label, .booking__range { margin: 0; }
 .booking__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.booking__grid > * { display: block; width: 100%; min-width: 0; }
+.booking__grid > *, .booking__group > * { display: block; width: 100%; min-width: 0; }
 .booking__group { display: flex; flex-direction: column; gap: 8px; }
-.booking__label { margin: 0; color: var(--mtrl-sys-color-on-surface); font: 500 14px/20px Roboto, system-ui, sans-serif; }
-.booking__group > * { display: block; width: 100%; }
+.booking__total { min-height: 1.5em; }
 .booking__actions { display: flex; justify-content: flex-end; gap: 8px; }
-.booking__total { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
 @media (max-width: 520px) { .booking__grid { grid-template-columns: minmax(0, 1fr); } }

@@ -67,11 +67,23 @@ export const withDates = (s: Booking, checkIn: string, checkOut: string): Bookin
   checkOut: parseDay(checkOut) < parseDay(checkIn) ? checkIn : checkOut,
 });
 
-export const roomOf = (s: Booking) => ROOMS.find((room) => room.value === s.room) ?? ROOMS[1];
+/** Rooms whose nightly rate sits inside the chosen price range. */
+export const eligibleRooms = (s: Booking) => ROOMS.filter((room) => room.rate >= s.priceMin && room.rate <= s.priceMax);
+
+export const roomOf = (s: Booking) => eligibleRooms(s).find((room) => room.value === s.room) ?? null;
+
+/** A new price range keeps the choice inside it: an excluded room moves to the first eligible one, or to none. */
+export const withPrice = (s: Booking, priceMin: number, priceMax: number): Booking => {
+  const next = { ...s, priceMin, priceMax };
+  if (!roomOf(next)) next.room = eligibleRooms(next)[0]?.value ?? "";
+  return next;
+};
 
 export const total = (s: Booking): number => {
+  const room = roomOf(s);
+  if (!room) return 0;
   const count = nights(s);
-  let sum = count * roomOf(s).rate;
+  let sum = count * room.rate;
   if (s.breakfast) sum += count * 18;
   if (s.parking) sum += count * 12;
   if (s.lateCheckout) sum += 25;
@@ -80,23 +92,38 @@ export const total = (s: Booking): number => {
 
 export const money = (value: number): string => `$${value}`;
 
+export const rangeText = (s: Booking): string => `${money(s.priceMin)}–${money(s.priceMax)} a night`;
+
 export const totalText = (s: Booking): string =>
-  `Estimated total ${money(total(s))} for ${nights(s)} ${nights(s) === 1 ? "night" : "nights"} · Nightly price ${money(s.priceMin)}–${money(s.priceMax)}`;
+  roomOf(s)
+    ? `Estimated total ${money(total(s))} for ${nights(s)} ${nights(s) === 1 ? "night" : "nights"}`
+    : "No rooms in this price range";
 
 export const summary = (s: Booking): string => {
+  const room = roomOf(s);
+  if (!room) return "No rooms in this price range";
   const extras = EXTRAS.filter((extra) => s[extra.key]).map((extra) => extra.label);
   return (
-    `${roomOf(s).label}, ${nights(s)} ${nights(s) === 1 ? "night" : "nights"} · Check-in ${s.checkIn}, check-out ${s.checkOut} · ` +
+    `${room.label}, ${nights(s)} ${nights(s) === 1 ? "night" : "nights"} · Check-in ${s.checkIn}, check-out ${s.checkOut} · ` +
     `Arrival ${s.arrivalTime} · ${s.adults} ${s.adults === "1" ? "adult" : "adults"}, ${s.children} ${s.children === "1" ? "child" : "children"}` +
     `${extras.length ? ` · ${extras.join(", ")}` : ""} · ${totalText(s)}`
   );
 };
 
-export interface BookingErrors { name?: string; email?: string }
+/** A typed time, normalized to HH:MM, or null when it is not a 24-hour time. */
+export const normalizeTime = (text: string): string | null => {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(text.trim());
+  if (!match) return null;
+  const hour = Number(match[1]);
+  return hour <= 23 ? `${String(hour).padStart(2, "0")}:${match[2]}` : null;
+};
+
+export interface BookingErrors { name?: string; email?: string; arrivalTime?: string }
 
 export const validate = (s: Booking): BookingErrors => {
   const errors: BookingErrors = {};
   if (!s.name.trim()) errors.name = "Enter your name";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim())) errors.email = "Enter a valid email address";
+  if (!normalizeTime(s.arrivalTime)) errors.arrivalTime = "Enter a valid time";
   return errors;
 };

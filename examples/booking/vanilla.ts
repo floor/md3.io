@@ -9,23 +9,24 @@ import createSlider from "material/components/slider";
 import createSnackbar from "material/components/snackbar";
 import createTextField from "material/components/text-field";
 import createTimePicker from "material/components/timepicker";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, summary, totalText, validate, withDates, type Booking } from "./shared";
+import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, roomOf, summary, totalText, validate, withDates, withPrice, type Booking } from "./shared";
 
 let s: Booking = { ...DEFAULTS };
 const app = document.getElementById("app")!;
 const section = Object.assign(document.createElement("section"), { className: "booking" });
 const div = (className: string): HTMLDivElement => Object.assign(document.createElement("div"), { className });
-const text = (className: string, value: string): HTMLParagraphElement => Object.assign(document.createElement("p"), { className, textContent: value });
+const text = (className: string, value: string, tag = "p"): HTMLElement => Object.assign(document.createElement(tag), { className, textContent: value });
 
 const intro = div("booking__intro");
-intro.append(text("booking__title", "Book a stay"), text("booking__lede", "Choose dates, guests and a room. The total updates as you go."));
+intro.append(text("booking__title mtrl-headline-small", "Book a stay", "h2"), text("booking__lede mtrl-body-medium", "Choose dates, guests and a room. The total updates as you go."));
 const grid = div("booking__grid");
-const status = Object.assign(document.createElement("output"), { className: "booking__total" });
+const status = Object.assign(document.createElement("output"), { className: "booking__total mtrl-body-medium" });
 status.setAttribute("role", "status");
+const range = text("booking__range mtrl-body-medium", "");
 
 const checkIn = createDatePicker({ label: "Check-in", variant: "modal", closeOnSelect: true, dateFormat: "YYYY-MM-DD", value: s.checkIn });
 const checkOut = createDatePicker({ label: "Check-out", variant: "modal", closeOnSelect: true, dateFormat: "YYYY-MM-DD", value: s.checkOut, minDate: s.checkIn });
-const arrival = createTextField({ label: "Arrival time", value: s.arrivalTime, trailingIcon: CLOCK_ICON, trailingIconLabel: "Choose time" });
+const arrival = createTextField({ label: "Arrival time", value: s.arrivalTime, supportingText: "24-hour time", trailingIcon: CLOCK_ICON, trailingIconLabel: "Choose time" });
 const nameField = createTextField({ label: "Name", supportingText: "Required" });
 const adults = createSelect({ label: "Adults", value: s.adults, options: ADULT_OPTIONS.map((n) => ({ id: n, text: n })) });
 const children = createSelect({ label: "Children", value: s.children, options: CHILD_OPTIONS.map((n) => ({ id: n, text: n })) });
@@ -35,10 +36,14 @@ grid.append(checkIn.element, checkOut.element, arrival.element, nameField.elemen
 const roomGroup = div("booking__group");
 const radios = createRadios({ name: "room", value: s.room, options: ROOMS.map((room) => ({ value: room.value, label: `${room.label} — $${room.rate} a night` })) });
 radios.element.setAttribute("aria-label", "Room type");
-roomGroup.append(text("booking__label", "Room type"), radios.element);
+roomGroup.append(text("booking__label mtrl-title-small", "Room type"), radios.element);
 
 const extrasGroup = div("booking__group");
-extrasGroup.append(text("booking__label", "Extras"));
+extrasGroup.setAttribute("role", "group");
+extrasGroup.setAttribute("aria-labelledby", "extras-label");
+const extrasLabel = text("booking__label mtrl-title-small", "Extras");
+extrasLabel.id = "extras-label";
+extrasGroup.append(extrasLabel);
 for (const extra of EXTRAS) {
   const control = createCheckbox({ label: `${extra.label} — $${extra.price} ${extra.unit}` });
   control.element.querySelector("svg")?.setAttribute("aria-hidden", "true");
@@ -47,13 +52,14 @@ for (const extra of EXTRAS) {
 }
 
 const priceGroup = div("booking__group");
-const slider = createSlider({ range: true, min: 50, max: 300, step: 10, value: s.priceMin, secondValue: s.priceMax });
+const slider = createSlider({ range: true, showValue: true, min: 50, max: 300, step: 10, value: s.priceMin, secondValue: s.priceMax });
 slider.element.setAttribute("aria-label", "Price range");
 slider.element.querySelectorAll('[role="slider"]').forEach((handle, index) => handle.setAttribute("aria-label", index === 0 ? "Price range minimum" : "Price range maximum"));
-priceGroup.append(text("booking__label", "Price range"), slider.element);
+priceGroup.append(text("booking__label mtrl-title-small", "Price range"), slider.element, range);
 
 const timePicker = createTimePicker({ value: s.arrivalTime, format: "24h", title: "Arrival time" });
 const snackbar = createSnackbar({ message: "Booking confirmed" });
+const summaryEl = document.createElement("p");
 const dialog = createDialog({
   title: "Confirm booking",
   container: section,
@@ -63,10 +69,15 @@ const dialog = createDialog({
     { text: "Confirm booking", variant: "text", onClick: () => { section.append(snackbar.element); snackbar.show(); } },
   ],
 });
+dialog.getContentElement()?.append(summaryEl);
 
 const render = (): void => {
   status.textContent = totalText(s);
-  dialog.setContent(`<p>${summary(s)}</p>`);
+  range.textContent = rangeText(s);
+  summaryEl.textContent = summary(s);
+  const eligible = new Set(eligibleRooms(s).map((room) => room.value));
+  for (const room of ROOMS) eligible.has(room.value) ? radios.enableOption(room.value) : radios.disableOption(room.value);
+  if (radios.getValue() !== (s.room || null)) radios.setValue(s.room || null);
 };
 
 checkIn.on("change", ({ iso }) => {
@@ -76,13 +87,22 @@ checkIn.on("change", ({ iso }) => {
   render();
 });
 checkOut.on("change", ({ iso }) => { s = withDates(s, s.checkIn, iso); render(); });
-arrival.on("input", ({ value }) => { s = { ...s, arrivalTime: value }; });
-arrival.on("trailing", () => timePicker.open());
-timePicker.on("change", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setValue(value); });
+arrival.on("input", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setError(false); });
+arrival.on("change", ({ value }) => {
+  const time = normalizeTime(value);
+  if (time) { s = { ...s, arrivalTime: time }; arrival.setValue(time); arrival.setError(false); }
+  else arrival.setError(true, "Enter a valid time");
+});
+arrival.on("trailing", () => {
+  const time = normalizeTime(s.arrivalTime);
+  timePicker.setValue(time ?? "15:00");
+  timePicker.open();
+});
+timePicker.on("change", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setValue(value); arrival.setError(false); });
 adults.on("change", ({ value }) => { s = { ...s, adults: value ?? s.adults }; render(); });
 children.on("change", ({ value }) => { s = { ...s, children: value ?? s.children }; render(); });
-radios.on("change", ({ value }) => { s = { ...s, room: value }; render(); });
-slider.on("input", ({ value, secondValue }) => { s = { ...s, priceMin: value, priceMax: secondValue ?? s.priceMax }; render(); });
+radios.on("change", ({ value }) => { s = { ...s, room: value ?? "" }; render(); });
+slider.on("input", ({ value, secondValue }) => { s = withPrice(s, value, secondValue ?? s.priceMax); render(); });
 nameField.on("input", ({ value }) => { s = { ...s, name: value }; nameField.setError(false); });
 emailField.on("input", ({ value }) => { s = { ...s, email: value }; emailField.setError(false); });
 
@@ -92,10 +112,11 @@ book.on("click", () => {
   const errors = validate(s);
   nameField.setError(Boolean(errors.name), errors.name);
   emailField.setError(Boolean(errors.email), errors.email);
-  if (!errors.name && !errors.email) { render(); dialog.open(); }
+  arrival.setError(Boolean(errors.arrivalTime), errors.arrivalTime);
+  if (!errors.name && !errors.email && !errors.arrivalTime && roomOf(s)) { render(); dialog.open(); }
 });
 actions.append(book.element);
 
-section.append(intro, grid, roomGroup, extrasGroup, priceGroup, actions, status, timePicker.element);
+section.append(intro, grid, roomGroup, extrasGroup, priceGroup, status, actions, timePicker.element);
 app.append(section);
 render();
