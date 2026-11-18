@@ -42,7 +42,7 @@ let unknownScenario = false;
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.preview-tab')];
 // The view switcher: <m-tabs>, whose value is the showing panel.
 const viewTabs = document.querySelector<TabsHost>('m-tabs[aria-label="Playground view"]');
-const copyButton = document.querySelector<HTMLButtonElement>('#copy-code')!;
+const copyButton = document.querySelector<HTMLElement>('#copy-code')!;
 const previewDot = document.querySelector<HTMLElement>('.preview-dot')!;
 let state: ComponentState = initialComponentState(slug);
 
@@ -123,7 +123,6 @@ const VIEW_KEY = 'md3-playground-view';
 function showPanel(showingCode: boolean) {
   document.getElementById('live-panel')!.hidden = showingCode;
   document.getElementById('code-panel')!.hidden = !showingCode;
-  copyButton.hidden = !showingCode;
   previewDot.hidden = showingCode;
 }
 function selectTab(selected: HTMLButtonElement, save = false) {
@@ -134,7 +133,6 @@ function selectTab(selected: HTMLButtonElement, save = false) {
     document.getElementById(tab.getAttribute('aria-controls')!)!.hidden = !active;
   }
   const showingCode = selected.id === 'code-tab';
-  copyButton.hidden = !showingCode;
   previewDot.hidden = showingCode;
   if (save) {
     try { localStorage.setItem(VIEW_KEY, showingCode ? 'code' : 'preview'); } catch { /* Storage may be unavailable. */ }
@@ -427,8 +425,22 @@ window.addEventListener('message', event => {
   }
   if (event.data?.type === 'md3:error') status.textContent = 'Preview could not load. Please reload the page.';
 });
+/** One material snackbar, made on first use inside the panel's scope (it takes the theme). */
+type SnackbarHost = HTMLElement & { show(): void };
+let snackbar: SnackbarHost | null = null;
+function showSnackbar(message: string) {
+  if (!snackbar) {
+    snackbar = document.createElement('m-snackbar') as SnackbarHost;
+    snackbar.setAttribute('duration', 'short');
+    document.querySelector('.playground.playground--material')?.append(snackbar);
+  }
+  snackbar.setAttribute('message', message);
+  snackbar.show();
+}
 copyButton.addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(currentCode().text); status.textContent = 'Code copied'; }
+  // The snackbar is the confirmation and its own live region (role="status"), so the
+  // footer's status stays quiet on success: one announcement, not two.
+  try { await navigator.clipboard.writeText(currentCode().text); showSnackbar('Code copied'); }
   catch {
     switchView('code');
     const range = document.createRange(); range.selectNodeContents(code);

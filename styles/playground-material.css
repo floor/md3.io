@@ -73,6 +73,9 @@
 .playground--material .configuration .control-label { color: var(--mtrl-sys-color-on-surface); }
 .playground--material .configuration .ui-title { color: var(--mtrl-sys-color-on-surface-variant); }
 
+/* Copy code at the right end of the preview heading (the status dot stays beside the tabs). */
+.playground--material .preview-heading .preview-copy { margin-left: auto; }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */

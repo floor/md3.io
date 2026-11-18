@@ -29,17 +29,20 @@ try {
 
   const originalButton = await button.elementHandle();
   const previewHeight = (await page.locator('.preview-panel').boundingBox())!.height;
+  assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Live preview did not show Copy code in the preview heading');
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.getByRole('tabpanel', { name: 'View code' }).isVisible(), 'Code did not open in the playground');
   assert(await page.locator('#generated-code .hljs-keyword').count() > 0 && await page.locator('#generated-code .hljs-string').count() > 0, 'JavaScript syntax highlighting is missing');
   const darkKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
-  assert(await page.locator('.playground-space > #copy-code').isVisible(), 'Code view did not show Copy code over the code');
+  // Copy code sits in the preview heading, material's xs button, in both views.
+  assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Code view did not show Copy code in the preview heading');
   assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
   assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
   await page.getByRole('tab', { name: 'Live preview' }).focus();
   await page.keyboard.press('Enter');
   assert(await page.getByRole('tab', { name: 'Live preview' }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
-  assert(!await page.locator('#copy-code').isVisible(), 'Live preview still shows Copy code');
+  // Copy code stays in the heading in Live preview too: copying needs no view switch.
+  assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Live preview lost Copy code from the heading');
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
   await page.getByRole('tab', { name: 'View code' }).focus();
   await page.keyboard.press('Enter');

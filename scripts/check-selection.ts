@@ -145,7 +145,7 @@ try {
     }
     await page.getByRole('tab', { name: 'View code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
-    await page.locator('#playground-status').filter({ hasText: 'Code copied' }).waitFor();
+    await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: code copy is stale`);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
