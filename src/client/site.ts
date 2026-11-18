@@ -91,6 +91,7 @@ let lastFocused = document.activeElement;
 document.addEventListener('focusin', event => {
   if (event.target instanceof Element) lastFocused = event.target;
 });
+const focusedElement = () => document.activeElement === document.body ? lastFocused : document.activeElement;
 function setMenu(open: boolean, restoreFocus = false) {
   sidebar?.classList.toggle('sidebar--open', open);
   overlay?.classList.toggle('overlay--visible', open);
@@ -101,7 +102,7 @@ function setMenu(open: boolean, restoreFocus = false) {
 }
 setMenu(false);
 drawerLayout.addEventListener('change', () => {
-  const focused = document.activeElement === document.body ? lastFocused : document.activeElement;
+  const focused = focusedElement();
   setMenu(false);
   if (drawerLayout.matches) {
     if (headerNav?.contains(focused) || sidebar?.contains(focused)) hamburger?.focus();
@@ -117,6 +118,19 @@ overlay?.addEventListener('click', () => setMenu(false, true));
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
 });
+
+const docToc = document.querySelector('.doc-toc');
+if (docToc) {
+  const tocHidden = matchMedia('(width < 1200px)');
+  tocHidden.addEventListener('change', () => {
+    const focused = focusedElement();
+    if (!tocHidden.matches || !(focused instanceof HTMLAnchorElement) || !docToc.contains(focused)) return;
+    const id = focused.getAttribute('href')?.slice(1) ?? '';
+    const target = document.getElementById(id) ?? document.getElementById('content');
+    if (target && !target.hasAttribute('tabindex')) target.tabIndex = -1;
+    target?.focus();
+  });
+}
 
 // The documentation's framework chips (document.eta): their code loads only on a page that
 // has them (src/client/docs-frameworks.ts).

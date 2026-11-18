@@ -64,13 +64,28 @@ if (panel) {
   document.addEventListener('focusin', event => {
     if (event.target instanceof Element) lastFocused = event.target;
   });
+  window.addEventListener('blur', () => {
+    // Focus moving into a sample does not bubble a focusin to this document.
+    if (frames.contains(document.activeElement)) lastFocused = document.activeElement;
+  });
+  const focusedElement = () => document.activeElement === document.body ? lastFocused : document.activeElement;
   narrow.addEventListener('change', () => {
-    const focused = document.activeElement === document.body ? lastFocused : document.activeElement;
+    const focused = focusedElement();
     dock();
     if (!narrow.matches && !collapsible && focused === toggle) compare.focus();
     if (narrow.matches && panel.dataset.open !== 'true' && body.contains(focused)) toggle.focus();
   });
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true', true));
+
+  const previewSwitch = panel.querySelector<HTMLElement>('.styles-preview__switch')!;
+  new ResizeObserver(() => {
+    const focused = focusedElement();
+    const switchVisible = previewSwitch.getClientRects().length > 0;
+    if (!switchVisible && previewSwitch.contains(focused)) compare.focus();
+    if (switchVisible && focused instanceof HTMLIFrameElement && frames.contains(focused) && !focused.getClientRects().length) {
+      previewSwitch.querySelector<HTMLInputElement>('input:checked')?.focus();
+    }
+  }).observe(body);
 
   // Compare: the base theme beside yours, side by side where the panel is wide enough
   // (a container query), otherwise one at a time with the Yours / Base switch.

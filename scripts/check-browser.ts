@@ -285,6 +285,18 @@ try {
   await page.setViewportSize({ width: 839, height: 900 });
   await page.waitForFunction(() => document.activeElement === document.getElementById('hamburger'));
 
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await page.goto(`${base}docs/frameworks/`);
+  const tocLink = page.locator('.doc-toc a:visible').first();
+  const headingId = (await tocLink.getAttribute('href'))!.slice(1);
+  await tocLink.focus();
+  await page.screenshot({ path: `${capture}/toc-focus-1200.png`, animations: 'disabled' });
+  await page.setViewportSize({ width: 1199, height: 900 });
+  await page.waitForFunction(id => document.activeElement?.id === id, headingId);
+  await page.screenshot({ path: `${capture}/toc-focus-1199.png`, animations: 'disabled' });
+  await page.setViewportSize({ width: 1200, height: 900 });
+  assert(await page.evaluate(id => document.activeElement?.id === id, headingId), 'The heading keeps focus as the TOC returns');
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}components/button/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();

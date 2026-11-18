@@ -627,6 +627,25 @@ try {
   assert(await comparePreview.evaluate(node => document.activeElement === node), 'The visible Compare control keeps focus');
   assert(await frames.getAttribute('data-show') === 'base', 'The dock retains the comparison');
 
+  await page.setViewportSize({ width: 1599, height: 900 });
+  await assertPreviewLayout(false);
+  const baseChoice = stylesPreview.getByRole('radio', { name: 'Base', exact: true });
+  await baseChoice.focus();
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-1599-compare.png` });
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.getElementById('styles-compare'));
+  await baseChoice.waitFor({ state: 'hidden' });
+  await assertSampleFits(mainFrame, '1600px selected theme');
+  await assertSampleFits(baseFrame, '1600px base theme');
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-1600-compare.png` });
+
+  await mainFrame.contentFrame().getByRole('button', { name: 'Open navigation', exact: true }).focus();
+  assert(await mainFrame.evaluate(node => document.activeElement === node), 'Focus is inside the theme sample before shrinking');
+  await page.setViewportSize({ width: 1599, height: 900 });
+  await baseChoice.waitFor();
+  await page.waitForFunction(() => document.activeElement?.matches('input[name="styles-show"][value="base"]'));
+  assert(await frames.getAttribute('data-show') === 'base' && !await mainFrame.isVisible(), 'The narrower pane restores the selected frame');
+
   await page.setViewportSize({ width: 840, height: 900 });
   await page.goto(`${base}/styles/shape/`);
   await assertPreviewLayout(true);
