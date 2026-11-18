@@ -47,10 +47,11 @@ describe('the material playground panel', () => {
     expect(html).toMatch(/<input type="hidden" name="mode" value="light" data-input-for="mode" form="configuration">/);
     // Reset is material's own text button, still a form reset.
     expect(html).toMatch(/<m-button[^>]*type="reset"/);
-    // mtrl's baseline tokens are scoped to the panel, light and dark, the way
-    // the catalog cards get theirs.
+    // mtrl's baseline tokens are scoped to the panel under the site's own mode
+    // rule (tokens.css): dark by default, light once [data-theme-mode=light] is set.
     expect(html).toMatch(/<style>[^<]*\.playground--material/);
-    expect(html).toContain(':root[data-theme-mode=dark] .playground--material');
+    expect(html).toContain(':root[data-theme-mode=light] .playground--material{color-scheme:light');
+    expect(html).toContain('\n.playground--material{color-scheme:dark');
     // The glue module loads, and only this page maps it.
     expect(html).toContain('"/dist/playground-material.js":');
     expect(html).toMatch(/<script type="module" src="\/dist\/playground-material\.[a-f0-9]+\.js"><\/script>/);
