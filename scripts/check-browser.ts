@@ -187,24 +187,104 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-desktop.png`, fullPage: false });
   const tocHref = await page.locator('.doc-toc a').first().getAttribute('href');
   assert(tocHref && await page.locator(tocHref).count() === 1, 'TOC target is missing');
-  // The header (logo, navigation, search, Themes and mode buttons; no section crumb any
-  // more) and the document do not overflow at 360, 599 or 600 px.
-  const breadcrumb = () => page.evaluate(() => {
-    const header = document.querySelector('.header') as HTMLElement;
-    const root = document.documentElement;
-    return {
-      headerFits: header.scrollWidth === header.clientWidth,
-      documentFits: root.scrollWidth === root.clientWidth,
-    };
-  });
-  const fits = (width: number, reading: { headerFits: boolean; documentFits: boolean }) =>
-    assert(reading.headerFits && reading.documentFits, `At ${width} px the header or the document overflows horizontally`);
-  await page.setViewportSize({ width: 360, height: 844 });
-  fits(360, await breadcrumb());
-  await page.setViewportSize({ width: 599, height: 844 });
-  fits(599, await breadcrumb());
-  await page.setViewportSize({ width: 600, height: 844 });
-  fits(600, await breadcrumb());
+
+  // Each served CSS bundle can override the shared shell. Check computed styles
+  // across the boundaries on one route from every bundle.
+  const routes = [
+    { name: 'home', path: '' },
+    { name: 'playground', path: 'components/button/' },
+    { name: 'catalog', path: 'components/' },
+    { name: 'docs', path: 'docs/frameworks/' },
+    // This route redirects to Showcase once the rename lands.
+    { name: 'example', path: 'examples/settings/' },
+    { name: 'styles', path: 'styles/' },
+    { name: 'colour-lab', path: 'styles/color-lab/' },
+    { name: 'themes', path: 'styles/themes/' },
+  ];
+  const hamburger = page.locator('.header').getByRole('button', { name: 'Open navigation', includeHidden: true });
+  const sidebar = page.locator('#sidebar');
+  const headerNav = page.locator('.header__nav');
+  const capture = resolve(output, 'breakpoints');
+  await mkdir(capture, { recursive: true });
+  for (const { name, path } of routes) {
+    await page.goto(`${base}${path}`);
+    for (const width of [360, 390, 412, 599, 600, 700, 839, 840, 1024, 1199, 1200, 1440, 1599, 1600]) {
+      await page.setViewportSize({ width, height: 900 });
+      const drawer = width < 840;
+      const tier = `${name} at ${width}px`;
+      await page.waitForFunction(docked => document.querySelector<HTMLElement>('#sidebar')!.inert === docked, drawer);
+      const geometry = await page.evaluate(() => {
+        const header = document.querySelector<HTMLElement>('.header')!;
+        const layout = document.querySelector<HTMLElement>('.layout')!;
+        const root = document.documentElement;
+        return {
+          headerWidth: header.clientWidth,
+          headerScroll: header.scrollWidth,
+          layoutWidth: layout.getBoundingClientRect().width,
+          viewportWidth: root.clientWidth,
+          documentScroll: root.scrollWidth,
+          sidebarPosition: getComputedStyle(document.querySelector('#sidebar')!).position,
+          logoSize: getComputedStyle(document.querySelector('.header__logo')!).fontSize,
+          padding: getComputedStyle(root).getPropertyValue('--page-padding').trim(),
+        };
+      });
+      assert(geometry.headerScroll <= geometry.headerWidth && geometry.documentScroll <= width,
+        `${tier}: horizontal overflow ${JSON.stringify(geometry)}`);
+      assert(geometry.sidebarPosition === (drawer ? 'fixed' : 'sticky'), `${tier}: wrong sidebar layout`);
+      assert(geometry.logoSize === (width < 600 ? '20px' : '23px'), `${tier}: wrong shell sizing`);
+      const padding = width < 600 ? '28px 18px 40px' : width < 1200 ? '32px 28px 48px' : '8px 40px 64px';
+      assert(geometry.padding === padding, `${tier}: wrong page spacing`);
+      const expectedLayout = width < 1600 ? Math.min(1472, geometry.viewportWidth) : Math.min(1840, geometry.viewportWidth - 128);
+      assert(Math.abs(geometry.layoutWidth - expectedLayout) < 1, `${tier}: wrong shell gutter or width cap`);
+      assert(await hamburger.isVisible() === drawer && await headerNav.isVisible() === !drawer, `${tier}: wrong navigation controls`);
+
+      if ([390, 599, 600, 700].includes(width)) {
+        const firstHeaderLink = headerNav.locator('a').first();
+        const firstDrawerLink = sidebar.locator('.mobile-navigation a').first();
+        for (const link of [firstHeaderLink, firstDrawerLink]) {
+          const focused = await link.evaluate(node => {
+            node.focus();
+            return document.activeElement === node;
+          });
+          assert(!focused, `${tier}: hidden navigation accepted keyboard focus`);
+        }
+        await hamburger.press('Enter');
+        await firstDrawerLink.waitFor({ state: 'visible' });
+        await firstDrawerLink.focus();
+        assert(await firstDrawerLink.evaluate(node => document.activeElement === node), `${tier}: open drawer link cannot take focus`);
+        await page.keyboard.press('Escape');
+        assert(await hamburger.evaluate(node => document.activeElement === node), `${tier}: closing the drawer lost focus`);
+      }
+      if ((name === 'home' || name === 'docs') && [390, 599, 600].includes(width)) {
+        await page.locator('#search-trigger').click();
+        const search = page.getByRole('dialog', { name: 'Search the site' });
+        const searchPanel = search.locator('.search-dialog');
+        const bounds = await searchPanel.boundingBox();
+        assert(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width,
+          `${tier}: search exceeds the viewport`);
+        // The opening animation scales the bounds. The computed width tests the layout.
+        const panelWidth = await searchPanel.evaluate(node => parseFloat(getComputedStyle(node).width));
+        assert(width < 600 ? panelWidth === width : panelWidth < width, `${tier}: wrong search presentation`);
+        await page.keyboard.press('Escape');
+        assert(await page.locator('#search-trigger').evaluate(node => document.activeElement === node),
+          `${tier}: search lost focus on close`);
+      }
+      if ((name === 'home' && [390, 600, 839, 840, 1200, 1600].includes(width))
+        || (name === 'playground' && [700, 1024, 1440].includes(width))) {
+        await page.screenshot({ path: `${capture}/${name}-${width}.png`, animations: 'disabled' });
+      }
+    }
+  }
+
+  await page.goto(`${base}components/button/`);
+  await page.setViewportSize({ width: 839, height: 900 });
+  await hamburger.press('Enter');
+  await sidebar.getByRole('link', { name: 'Styles', exact: true }).focus();
+  await page.setViewportSize({ width: 840, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('.header__nav a[href="/styles/"]'));
+  await page.setViewportSize({ width: 839, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.getElementById('hamburger'));
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}components/button/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();

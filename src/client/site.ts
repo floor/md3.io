@@ -84,17 +84,34 @@ onAppearance(({ theme, mode }) => {
 const hamburger = document.querySelector<HTMLButtonElement>('#hamburger');
 const sidebar = document.querySelector<HTMLElement>('#sidebar');
 const overlay = document.querySelector<HTMLButtonElement>('#overlay');
-const mobile = matchMedia('(max-width: 720px)');
+const headerNav = document.querySelector<HTMLElement>('.header__nav');
+const drawerLinks = sidebar?.querySelector('.mobile-navigation');
+const drawerLayout = matchMedia('(width < 840px)');
+let lastFocused = document.activeElement;
+document.addEventListener('focusin', event => {
+  if (event.target instanceof Element) lastFocused = event.target;
+});
 function setMenu(open: boolean, restoreFocus = false) {
   sidebar?.classList.toggle('sidebar--open', open);
   overlay?.classList.toggle('overlay--visible', open);
   hamburger?.setAttribute('aria-expanded', String(open));
-  if (sidebar) sidebar.inert = mobile.matches && !open;
+  if (sidebar) sidebar.inert = drawerLayout.matches && !open;
   if (overlay) overlay.hidden = !open;
   if (restoreFocus) hamburger?.focus();
 }
 setMenu(false);
-mobile.addEventListener('change', () => setMenu(false));
+drawerLayout.addEventListener('change', () => {
+  const focused = document.activeElement === document.body ? lastFocused : document.activeElement;
+  setMenu(false);
+  if (drawerLayout.matches) {
+    if (headerNav?.contains(focused) || sidebar?.contains(focused)) hamburger?.focus();
+  } else if (focused === hamburger || focused === overlay || drawerLinks?.contains(focused)
+    || (sidebar?.contains(focused) && sidebar.getClientRects().length === 0)) {
+    const links = [...(headerNav?.querySelectorAll<HTMLAnchorElement>('a') ?? [])];
+    const sameLink = focused instanceof HTMLAnchorElement ? links.find(link => link.href === focused.href) : undefined;
+    (sameLink ?? links.find(link => link.classList.contains('active')) ?? links[0])?.focus();
+  }
+});
 hamburger?.addEventListener('click', () => setMenu(hamburger.getAttribute('aria-expanded') !== 'true'));
 overlay?.addEventListener('click', () => setMenu(false, true));
 document.addEventListener('keydown', event => {

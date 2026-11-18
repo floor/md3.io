@@ -375,13 +375,13 @@
 /* ─── Responsive ─────────────────────────────────────────────────── */
 
 /* The nav hides on narrow screens: the search button takes its place at the end. */
-@media (max-width: 720px) {
+@media (width < 840px) {
     .header .header__search {
         margin-left: auto;
     }
 }
 
-@media (max-width: 640px) {
+@media (width < 600px) {
     .search-overlay {
         padding-top: 0;
         align-items: flex-start;

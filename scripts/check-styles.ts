@@ -547,6 +547,69 @@ try {
       await page.screenshot({ animations: 'disabled', path: `${output}/styles-${path.split('/').filter(Boolean).join('-')}-375-${mode}.png`, fullPage: false });
     }
   }
+
+  const stylesPreview = page.locator('#styles-preview');
+  const previewToggle = stylesPreview.getByRole('button', { name: 'Preview', exact: true });
+  const comparePreview = stylesPreview.getByRole('checkbox', { name: 'Compare', exact: true });
+  const frames = stylesPreview.locator('.styles-preview__frames');
+  const mainFrame = stylesPreview.locator('[data-frame="theme"] iframe');
+  const assertPreviewLayout = async (docked: boolean) => {
+    await until(() => stylesPreview.evaluate(node => node.classList.contains('styles-preview--docked')), docked, 'Preview docked state');
+    const layout = await stylesPreview.evaluate(node => {
+      const styles = getComputedStyle(node);
+      const pageBounds = node.parentElement!.querySelector('.styles-page')!.getBoundingClientRect();
+      const bounds = node.getBoundingClientRect();
+      return {
+        position: styles.position,
+        top: styles.top,
+        bottom: styles.bottom,
+        besidePage: bounds.left >= pageBounds.right - 1,
+        width: bounds.width,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    assert(layout.position === 'sticky' && layout.overflow <= 0, `Preview geometry: ${JSON.stringify(layout)}`);
+    assert(docked ? layout.bottom === '0px' && !layout.besidePage : layout.top !== 'auto' && layout.besidePage,
+      `Preview is in the wrong pane: ${JSON.stringify(layout)}`);
+  };
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.goto(`${base}/styles/`);
+  await previewToggle.click();
+  await comparePreview.check();
+  await stylesPreview.getByRole('radio', { name: 'Base', exact: true }).check();
+  await page.setViewportSize({ width: 839, height: 900 });
+  await previewToggle.focus();
+  await assertPreviewLayout(true);
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-839.png` });
+
+  await page.setViewportSize({ width: 840, height: 900 });
+  await assertPreviewLayout(false);
+  assert(!await previewToggle.isVisible(), 'The side pane leaves the dock toggle hidden');
+  await page.waitForFunction(() => document.activeElement === document.getElementById('styles-compare'));
+  assert(await comparePreview.isChecked() && await frames.getAttribute('data-show') === 'base', 'The side pane retains the comparison');
+  assert(await stylesPreview.getByRole('radiogroup', { name: 'Show' }).isVisible(), 'A narrow side preview keeps the comparison switch');
+  const cardLefts = await page.locator('.styles-cards:not(.styles-cards--coming) > .styles-card')
+    .evaluateAll(cards => cards.map(card => card.getBoundingClientRect().left));
+  assert(cardLefts.length > 1 && new Set(cardLefts).size === 1, 'Foundation cards stack beside the preview at 840px');
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-840.png` });
+
+  await page.setViewportSize({ width: 839, height: 900 });
+  await assertPreviewLayout(true);
+  assert(await previewToggle.getAttribute('aria-expanded') === 'true', 'The preview returns to the dock open');
+  assert(await comparePreview.evaluate(node => document.activeElement === node), 'The visible Compare control keeps focus');
+  assert(await frames.getAttribute('data-show') === 'base', 'The dock retains the comparison');
+
+  await page.setViewportSize({ width: 840, height: 900 });
+  await page.goto(`${base}/styles/shape/`);
+  await assertPreviewLayout(true);
+  assert(!await mainFrame.isVisible(), 'Shape starts with its preview closed');
+  await previewToggle.click();
+  await assertPreviewLayout(false);
+  assert(await mainFrame.isVisible() && await previewToggle.isVisible(), 'Shape keeps its toggle next to the expanded preview');
+  await page.setViewportSize({ width: 839, height: 900 });
+  await assertPreviewLayout(true);
+  assert(await mainFrame.isVisible() && await previewToggle.getAttribute('aria-expanded') === 'true', 'Shape docks without closing');
+
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
   console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, the Theme name field (its reserved row: no jump through a refusal at 1440, 390 and 375 px), destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {

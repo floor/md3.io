@@ -18,11 +18,7 @@
 .playground--material m-select,
 .playground--material m-text-field { --mtrl-sys-color-outline: var(--mtrl-sys-color-outline-variant); }
 
-/* A wider side panel than the native one's 340px (site.css): room for the
-   material fields and the five-button groups. From 1200px (M3's large
-   breakpoint) only: between 1001 and 1199px the 40px came out of the preview
-   column, and at 1024px the heading's Light/Dark group ran 12px past it
-   (check-selection). At 1000px and below the panel stacks under the preview. */
+/* Large windows have room for the five-button groups in a wider control pane. */
 @media (min-width: 1200px) {
     .playground.playground--material { grid-template-columns: minmax(0, 1fr) 380px; }
 }
@@ -92,13 +88,3 @@
    native preview-tabs sat. */
 .playground--material m-tabs::part(divider) { display: none; }
 .playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
-
-}
-
-/* The material heading (tabs, the 168px theme select, the Light/Dark group)
-   needs more room than the native one: between 1151px, where ui.css stops
-   wrapping it, and 1299px its row ran past the heading (measured 1160–1290px).
-   The same wrap ui.css gives narrower windows, up to 1299px. */
-@media (max-width: 1299px) {
-    .playground--material .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; }
-}

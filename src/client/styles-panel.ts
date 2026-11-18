@@ -42,12 +42,15 @@ if (panel) {
   const baseFigure = panel.querySelector<HTMLElement>('[data-frame="base"]')!;
   const baseFrame = baseFigure.querySelector('iframe')!;
 
-  // Docked: a bar pinned to the bottom that opens upward. Always on narrow screens, and
-  // on a page that asks for a collapsible preview (data-collapsible) while it is closed.
+  // Below expanded the preview docks. At expanded and above the Shape preview
+  // still docks while closed.
   const toggle = panel.querySelector<HTMLButtonElement>('#styles-preview-toggle')!;
-  const narrow = matchMedia('(max-width: 1100px)');
-  const OPEN_KEY = panel.hasAttribute('data-collapsible') ? 'md3-styles-preview-open-wide' : 'md3-styles-preview-open';
-  const dock = () => panel.classList.toggle('styles-preview--docked', narrow.matches || (panel.hasAttribute('data-collapsible') && panel.dataset.open !== 'true'));
+  const body = panel.querySelector<HTMLElement>('#styles-preview-body')!;
+  const compare = panel.querySelector<HTMLInputElement>('#styles-compare')!;
+  const narrow = matchMedia('(width < 840px)');
+  const collapsible = panel.hasAttribute('data-collapsible');
+  const OPEN_KEY = collapsible ? 'md3-styles-preview-open-wide' : 'md3-styles-preview-open';
+  const dock = () => panel.classList.toggle('styles-preview--docked', narrow.matches || (collapsible && panel.dataset.open !== 'true'));
   const setOpen = (open: boolean, save = false) => {
     toggle.setAttribute('aria-expanded', String(open));
     panel.dataset.open = String(open);
@@ -57,12 +60,20 @@ if (panel) {
   let open = false;
   try { open = localStorage.getItem(OPEN_KEY) === 'true'; } catch { /* Closed by default. */ }
   setOpen(open);
-  narrow.addEventListener('change', dock);
+  let lastFocused = document.activeElement;
+  document.addEventListener('focusin', event => {
+    if (event.target instanceof Element) lastFocused = event.target;
+  });
+  narrow.addEventListener('change', () => {
+    const focused = document.activeElement === document.body ? lastFocused : document.activeElement;
+    dock();
+    if (!narrow.matches && !collapsible && focused === toggle) compare.focus();
+    if (narrow.matches && panel.dataset.open !== 'true' && body.contains(focused)) toggle.focus();
+  });
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true', true));
 
   // Compare: the base theme beside yours, side by side where the panel is wide enough
   // (a container query), otherwise one at a time with the Yours / Base switch.
-  const compare = panel.querySelector<HTMLInputElement>('#styles-compare')!;
   compare.addEventListener('change', () => {
     panel.classList.toggle('styles-preview--compare', compare.checked);
     baseFigure.hidden = !compare.checked;

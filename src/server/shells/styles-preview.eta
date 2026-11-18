@@ -6,7 +6,7 @@
      it.collapsible: true for a preview that starts closed on wide screens too. */
   const title = name => (name.charAt(0).toUpperCase() + name.slice(1)).replaceAll('-', ' ');
 %>
-<aside class="styles-preview<%= it.collapsible ? " styles-preview--docked" : "" %>" id="styles-preview" aria-label="Live preview" <%~ it.collapsible ? "data-collapsible data-open=\"false\"" : "" %>>
+<aside class="styles-preview<%= it.collapsible ? " styles-preview--docked" : "" %>" id="styles-preview" aria-label="Live preview"<%~ it.collapsible ? " data-collapsible" : "" %> data-open="false">
   <div class="styles-preview__bar">
     <button type="button" class="styles-preview__toggle" id="styles-preview-toggle" aria-expanded="false" aria-controls="styles-preview-body">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>Preview
