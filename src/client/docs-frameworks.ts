@@ -31,3 +31,16 @@ onAppearance(({ theme, mode }) => {
   for (const scope of scopes) scope.dataset.themeMode = mode;
   void applyTheme(document, theme, scopes);
 });
+
+// An old guide link's anchor (/docs/react/#events, redirected here with the hash kept)
+// names the guide's own heading; on this page the headings are prefixed with the
+// framework (react-events). Map it, once the markup exists, and go there.
+if (location.pathname === '/docs/frameworks/' && location.hash.length > 1) {
+  const anchor = decodeURIComponent(location.hash.slice(1));
+  const framework = root.dataset.framework ?? 'vanilla';
+  const prefixed = document.getElementById(`${framework}-${anchor}`);
+  if (!document.getElementById(anchor) && prefixed) {
+    history.replaceState(null, '', `${location.pathname}${location.search}#${prefixed.id}`);
+    prefixed.scrollIntoView();
+  }
+}

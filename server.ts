@@ -263,7 +263,12 @@ export async function handleRequest(request: Request): Promise<Response> {
   // The six framework guides are one Frameworks page: their URLs, and the guides' older
   // /docs/components/<slug>/ ones, answer 301 to it with that framework chosen.
   else if (/^\/docs\/(?:components\/)?[a-z-]+\/$/.test(path) && path.split('/').at(-2)! in FRAMEWORK_GUIDES) {
-    response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: frameworkHref(FRAMEWORK_GUIDES[path.split('/').at(-2)!]!) } });
+    // The request's other query parameters carry over; the fragment stays with the browser
+    // (a Location without one keeps the request's), and the Frameworks page maps an old
+    // guide anchor to its prefixed heading (docs-frameworks.ts).
+    const location = new URL(frameworkHref(FRAMEWORK_GUIDES[path.split('/').at(-2)!]!), url);
+    for (const [key, value] of url.searchParams) if (key !== 'framework') location.searchParams.append(key, value);
+    response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: location.pathname + location.search } });
   }
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
