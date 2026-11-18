@@ -589,11 +589,12 @@ try {
         title: titleNode.textContent,
         titleFits: titleNode.scrollWidth <= titleNode.clientWidth && titleNode.getBoundingClientRect().right <= bounds('[aria-label="Favorites"]').left + 1,
         sampleFits: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        chipsFit: bounds('.mtrl-chips').top >= bounds('.mtrl-top-app-bar').bottom && bounds('.mtrl-chips').bottom <= body.bottom,
         cardFits: cardLines.length > 0 && cardLines.every(line => line.left >= body.left && line.right <= body.right && line.bottom <= body.bottom),
         fabFits: fab.top >= body.bottom && fab.right <= innerWidth && fab.bottom <= innerHeight,
       };
     });
-    assert(geometry.title === 'Weekend trips' && geometry.titleFits && geometry.sampleFits
+    assert(geometry.title === 'Weekend trips' && geometry.titleFits && geometry.sampleFits && geometry.chipsFit
       && geometry.cardFits && geometry.fabFits, `${label}: sample geometry ${JSON.stringify(geometry)}`);
   };
   await page.setViewportSize({ width: 600, height: 900 });
