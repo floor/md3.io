@@ -25,6 +25,13 @@
     .playground.playground--material { grid-template-columns: minmax(0, 1fr) 380px; }
 }
 
+/* With the wider panel the row labels take material's own switch label size,
+   16px (body large, .mtrl-switch__label in material's switch.css) — the site's
+   --fs-md — instead of the native panel's 13px (--fs-sm, site.css), and its
+   regular weight instead of the native panel's bold. Every row label, switch
+   labels included, so the rows read as one column. */
+.playground--material .control-label { font-size: var(--fs-md); font-weight: var(--fw-normal); }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */
