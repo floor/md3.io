@@ -94,7 +94,7 @@ function materialControl(control: Control, slug: string): string {
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[]): { tabs: string; appearance: string; scenario: string | null; sections: string; reset: string } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[]): { tabs: string; appearance: string; scenario: string | null; sections: string } {
   // Live preview / View code. The framework tabs above stay native in the pilot.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
     declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), { styles: 'inline' });
@@ -116,6 +116,8 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
     `<section class="ui-section configuration-controls" aria-labelledby="section-${section!.toLowerCase()}"><h3 class="ui-title" id="section-${section!.toLowerCase()}">${escape(section!)}</h3>`
     + component.controls.filter(control => control.section === section).map(control => materialControl(control, slug)).join('')
     + '</section>').join('');
-  const reset = renderElement('m-button', { type: 'reset', variant: 'text' }, 'Reset', { styles: 'inline' });
-  return { tabs, appearance, scenario, sections, reset };
+  // No Reset button: the Scenario select is the way back. Choosing Default applies
+  // the playground's starting options, which is all Reset restored (the theme and
+  // mode were already kept), so the panel opens on the scenario row.
+  return { tabs, appearance, scenario, sections };
 }

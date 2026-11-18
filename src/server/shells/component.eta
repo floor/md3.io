@@ -42,7 +42,7 @@
       </div>
     </div>
     <form class="split-panel configuration" id="configuration">
-      <div class="panel-heading"><h2 class="ui-title">CONFIGURATION</h2><% if (it.panel) { %><%~ it.panel.reset %><% } else { %><button type="reset" class="reset-button">Reset</button><% } %></div>
+      <% if (it.panel) { %><h2 class="sr-only">Configuration</h2><% } else { %><div class="panel-heading"><h2 class="ui-title">CONFIGURATION</h2><button type="reset" class="reset-button">Reset</button></div><% } %>
       <div class="configuration-body">
       <% if (it.slug === 'chips') { %><input type="hidden" name="selectedChips" id="chips-selectedChips" value="" /><% } %>
       <% if (it.slug === 'checkbox') { %><input type="hidden" name="checkedChildren" id="checkbox-checkedChildren" value="" /><% } %>

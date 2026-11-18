@@ -91,11 +91,14 @@ try {
   assert(!parentHasMaterial, 'Material CSS leaked into the site');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: 'Configuration reset' }).waitFor();
-  assert(await page.locator('#button-text').evaluate(el => String((el as HTMLElement & { value?: string }).value)) === 'Button', 'Reset did not restore text');
+  // The pilot has no Reset: the Scenario select's Default is the way back.
+  assert(await page.getByRole('button', { name: 'Reset', exact: true }).count() === 0, 'The material panel still shows Reset');
+  await page.locator('#scenario').click();
+  await page.getByRole('option', { name: 'Default', exact: true }).click();
+  await page.waitForFunction(() => String((document.querySelector('#button-text') as HTMLElement & { value?: string } | null)?.value) === 'Button');
   await button.waitFor();
-  assert(await button.isEnabled(), 'Reset did not enable the button');
+  await page.waitForFunction(() => !document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLButtonElement>('button')?.disabled);
+  assert(await button.isEnabled(), 'Default did not enable the button');
   const assertAppearance = async (theme: string, mode: string) => {
     await page.waitForFunction(({ theme, mode }) => {
       const root = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement;

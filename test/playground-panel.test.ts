@@ -45,8 +45,10 @@ describe('the material playground panel', () => {
     expect(html).toContain('<input type="hidden" name="size" value="s" data-input-for="size">');
     expect(html).toMatch(/<input type="hidden" name="icon" value="none" data-input-for="icon">/);
     expect(html).toMatch(/<input type="hidden" name="mode" value="light" data-input-for="mode" form="configuration">/);
-    // Reset is material's own text button, still a form reset.
-    expect(html).toMatch(/<m-button[^>]*type="reset"/);
+    // No heading row and no Reset: the panel opens on the scenario row, whose
+    // Default is the way back; the form keeps its heading for assistive technology.
+    expect(html).not.toMatch(/type="reset"/);
+    expect(html).toContain('<h2 class="sr-only">Configuration</h2>');
     // mtrl's baseline tokens are scoped to the panel under the site's own mode
     // rule (tokens.css): dark by default, light once [data-theme-mode=light] is set.
     expect(html).toMatch(/<style>[^<]*\.playground--material/);
