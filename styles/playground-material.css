@@ -18,6 +18,13 @@
 .playground--material m-select,
 .playground--material m-text-field { --mtrl-sys-color-outline: var(--mtrl-sys-color-outline-variant); }
 
+/* A wider side panel than the native one's 340px (site.css): room for the
+   material fields and the five-button groups. Only in the two-column layout;
+   at 1000px and below the panel stacks under the preview, as site.css has it. */
+@media (min-width: 1001px) {
+    .playground.playground--material { grid-template-columns: minmax(0, 1fr) 380px; }
+}
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */
