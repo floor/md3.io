@@ -106,6 +106,7 @@
 /docs/why-material/
 /examples/
 /examples/settings/
+/examples/notes/
 /privacy/
 /styles/
 /styles/color/
