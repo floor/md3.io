@@ -3,7 +3,7 @@
 The Showcase (`/showcase/`) holds complete interfaces — a settings screen, an email client,
 a notes app — each one written six times: as web components, and through the React, Vue,
 Svelte, Solid and vanilla APIs of the same `material` library. Every tab of an example is
-the same interface, not five pages that drift apart: a check loads each variant, drives it
+the same interface, not six pages that drift apart: a check loads each variant, drives it
 like a visitor would, and compares what they show.
 
 This guide is for anyone adding an example, including by pull request. Copy
@@ -46,8 +46,12 @@ examples/<slug>/
 ## Register it
 
 Registration is one line in `examples/index.ts`: import the example's `meta.ts` and add it
-to the array, in the order the section should list it. Everything follows from that — the
-page, its frame routes, the section list, search, the sitemap.
+to the array, in the order the section should list it. The page, its frame routes, the
+section list, search and the sitemap all follow from that list.
+
+One more file lists the pages by hand: `data/published-urls.txt`, which the published-URLs
+test checks the sitemap against. Add `/showcase/<slug>/` there too, in sorted order, or
+`bun test test/` fails on the new page.
 
 Nothing else looks at the folder: `scripts/build-examples.ts`, the pages and the checks all
 read the registered list, and `scripts/write-asset-manifest.ts` skips folders starting with
@@ -73,11 +77,16 @@ In your worktree, with each exit code read:
 
 ```sh
 bun run build          # bundles the site and every example variant
-bun run typecheck
+bun run typecheck      # tsc: the site, and every .ts and .tsx in examples/
 bun test test/
 bun run docs:check
 bun run test:browser   # includes scripts/check-examples.ts
 ```
+
+`tsc` covers every TypeScript file an example ships: `tsconfig.json` includes `examples/`,
+and the Solid files carry their own `@jsxImportSource` pragma, so their JSX is checked
+against Solid's types, not React's. The one file it cannot read is `svelte.svelte`; the
+build compiles it and `check-examples` runs it in Chromium with the rest.
 
 `bun scripts/check-examples.ts` alone runs just the examples check; rebuild first
 (`bun scripts/build.ts`), because the frames load what the build wrote. The browser checks
@@ -104,7 +113,8 @@ need Playwright's Chromium once: `bunx playwright install chromium`.
 
 - The folder is a copy of `_template/` renamed, one commit per idea, conventional commits
   (`feat(showcase): …`, `docs(showcase): …`).
-- `examples/index.ts` registers the example.
+- `examples/index.ts` registers the example, and `data/published-urls.txt` lists its page
+  (`/showcase/<slug>/`, sorted).
 - Every gate above passes; quote each one's last line and exit code in the PR body.
 - The six variants behave identically — that is what the examples check asserts; if you had
   to make one differ, say so in the PR and why.
