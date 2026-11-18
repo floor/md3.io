@@ -74,11 +74,15 @@ describe('the material playground panel', () => {
       const radios = new Set([...html.matchAll(/<input type="radio" name="([^"]+)"/g)].map(match => match[1]));
       const nativeIconRows = components[slug].controls.filter(control => control.kind === 'icons' && (control.options?.length ?? 0) > 5).map(control => control.key);
       expect([...radios].filter(name => !nativeIconRows.includes(name!)), slug).toEqual([]);
-      // Sliders, dates, times and icon rows past five keep the native inputs until
+      // Dates, times and icon rows past five keep the native inputs until
       // their batch (briefs/plan-playground-material-rollout.md).
       for (const control of components[slug].controls) {
-        const native = control.kind === 'range' || control.kind === 'date' || control.kind === 'time' || (control.kind === 'icons' && (control.options?.length ?? 0) > 5);
-        if (control.kind === 'range') expect(html, `${slug}.${control.key}`).toContain(`<input class="ui-slider" type="range" id="control-${control.key}" name="${control.key}"`);
+        const native = control.kind === 'date' || control.kind === 'time' || (control.kind === 'icons' && (control.options?.length ?? 0) > 5);
+        // A range is material's slider, beside the numeric read-out.
+        if (control.kind === 'range') {
+          expect(html, `${slug}.${control.key}`).toMatch(new RegExp(`<m-slider [^>]*name="${control.key}"`));
+          expect(html, `${slug}.${control.key}`).toContain(`data-value-for="${control.key}"`);
+        }
         if (control.kind === 'date' || control.kind === 'time') expect(html, `${slug}.${control.key}`).toContain(`<input class="ui-input control-input" type="${control.kind}"`);
         if (control.kind === 'icons') expect(html.includes(`data-group-for="${control.key}"`), `${slug}.${control.key}`).toBe(!native);
       }

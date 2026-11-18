@@ -23,9 +23,7 @@ try {
   // Reset: the Scenario select's Default is the way back.
   const choose = (key: string, value: string) => panel.choose(page, key, value);
   const toggle = (key: string) => panel.toggle(page, key);
-  const range = async (key: string, value: string) => {
-    await page.locator(`#configuration input[name="${key}"]`).fill(value);
-  };
+  const range = (key: string, value: string) => panel.slide(page, key, value);
   const checked = (key: string, expected: boolean) => panel.waitForSwitch(page, key, expected);
   const reset = () => panel.backToDefault(page);
   const canvasPainted = async () => {
@@ -61,7 +59,7 @@ try {
       await frame.getByText('80%', { exact: true }).waitFor();
       await toggle('indeterminate');
       await frame.locator('[role="progressbar"]:not([aria-valuenow])').waitFor();
-      assert(await page.locator('#configuration [name="value"]').isDisabled(), 'Indeterminate value should be inactive');
+      assert(await panel.isDisabled(page, 'value'), 'Indeterminate value should be inactive');
       await toggle('disabled');
       await frame.locator('[role="progressbar"][aria-disabled="true"]').waitFor();
       await reset();

@@ -39,6 +39,14 @@
    narrower than its six chips, as M3's chip sets do, instead of wrapping. */
 .framework-chips-row { margin-bottom: 18px; min-width: 0; }
 
+/* Slider rows: material's slider takes the space beside the numeric read-out, as
+   the native range input did (site.css .control-range is a flex row; a block host
+   without a basis collapses to nothing in it). */
+.playground--material .control-range m-slider { flex: 1 1 auto; min-width: 0; }
+/* The read-out beside it at 14px (--fs-ui), with the 16px row labels, instead of
+   the native panel's 12px (site.css .control-range output). */
+.playground--material .control-range output { font-size: var(--fs-ui); }
+
 /* Switch rows: the host fills the site's row, so the switch's own
    space-between container places its slotted label left and its track at the
    row's right end — the only layout this row needs from the site. */

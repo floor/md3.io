@@ -163,8 +163,8 @@ describe('a control a named set replaces', () => {
 
     const slider = await page('/components/slider/');
     expect(rowOpen(slider, 'secondValue')).not.toContain('data-replaced');
-    expect(slider).toContain('name="secondValue" value="80"');
-    expect(slider).toContain('data-enabled-when="range"');
+    // Material's slider; Value and Range end step by the page's Step option (10 by default).
+    expect(slider).toMatch(/<m-slider value="80" step="10" [^>]*name="secondValue"[^>]*data-enabled-when="range"/);
 
     const checkbox = await page('/components/checkbox/');
     expect(rowOpen(checkbox, 'value')).not.toContain('data-replaced');

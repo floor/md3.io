@@ -35,7 +35,8 @@ try {
       const radio = elements.find(element => element instanceof HTMLInputElement && element.type === 'radio' && element.checked);
       if (radio) return [key, (radio as HTMLInputElement).value];
       const first = elements[0];
-      return [key, first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? ''];
+      // A material host's value can be a number (the slider's); the form reads text.
+      return [key, String(first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? '')];
     })), [...keys]);
   }
   for (const slug of componentSlugs) {

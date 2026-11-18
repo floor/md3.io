@@ -13,7 +13,7 @@
 // row a control sits in, its label on the left and the control on the right —
 // is still the site's own (styles/playground-material.css).
 import { renderElement } from 'material/ssr';
-import { componentIcons } from '../shared/components';
+import { componentIcons, initialComponentState } from '../shared/components';
 import { FRAMEWORKS } from '../shared/frameworks';
 import type { ComponentDefinition, Control } from '../shared/content/types';
 import { scopedTokensSiteDefault } from './tokens';
@@ -84,12 +84,12 @@ const ariaName = (label: string) => ({ 'aria-label': label });
 /**
  * One control, as material's own element. The row and label around it stay the site's.
  * A kind the panel does not render as an element yet comes back as the control itself,
- * for the template's native partial (control-native.eta): sliders, dates, times, and
+ * for the template's native partial (control-native.eta): dates, times, and
  * icon rows past five options, each until its own batch of the rollout
  * (briefs/plan-playground-material-rollout.md).
  */
-export function materialControl(control: Control, slug: string): string | Control {
-  if (control.kind === 'range' || control.kind === 'date' || control.kind === 'time') return control;
+export function materialControl(control: Control, slug: string, initial: Record<string, unknown> = {}): string | Control {
+  if (control.kind === 'date' || control.kind === 'time') return control;
   if (control.kind === 'icons' && (control.options?.length ?? 0) > 5) return control;
   const enabledWhen = control.enabledWhen ? { 'data-enabled-when': control.enabledWhen } : {};
   if (control.kind === 'toggle') {
@@ -106,6 +106,17 @@ export function materialControl(control: Control, slug: string): string | Contro
     return row(control,
       rowLabel(`control-${control.key}`, control.label)
       + renderElement('m-select', { ...enabledWhen, ...ariaName(control.label), variant: 'outlined', density: 'compact', name: control.key, id: `control-${control.key}`, value: String(control.initial) }, options, renderStyles),
+      ' control-row');
+  }
+  if (control.kind === 'range') {
+    // material's slider, form-associated, with the native row's numeric read-out
+    // beside it (an <output> the panel keeps in step, as it did for the range input).
+    const id = `control-${control.key}`;
+    return row(control,
+      rowLabel(id, control.label)
+      + `<div class="control-range"><output for="${escape(id)}" data-value-for="${escape(control.key)}">${escape(String(control.initial))}</output>`
+      + renderElement('m-slider', { ...enabledWhen, ...ariaName(control.label), name: control.key, id, min: control.min ?? 0, max: control.max ?? 100, step: control.stepFrom ? Number(initial[control.stepFrom]) || control.step || 1 : control.step ?? 1, value: Number(control.initial) }, '', renderStyles)
+      + '</div>',
       ' control-row');
   }
   if (control.kind === 'text') {
@@ -168,7 +179,7 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   const sections = [...new Set(component.controls.map(control => control.section))].map(section => ({
     id: section!.toLowerCase(),
     title: section!,
-    items: component.controls.filter(control => control.section === section).map(control => materialControl(control, slug)),
+    items: component.controls.filter(control => control.section === section).map(control => materialControl(control, slug, initialComponentState(slug as Parameters<typeof initialComponentState>[0]))),
   }));
   // No Reset button: the Scenario select is the way back. Choosing Default applies
   // the playground's starting options, which is all Reset restored (the theme and

@@ -92,7 +92,7 @@ export async function fill(page: Page, name: string, text: string): Promise<void
 /** The value the control named `name` carries: what the form reads. */
 export function value_(page: Page, name: string): Promise<string> {
   return page.evaluate(key => {
-    const host = document.querySelector<HTMLElement & { value?: unknown }>(`#configuration m-select[name="${key}"], #configuration m-text-field[name="${key}"]`);
+    const host = document.querySelector<HTMLElement & { value?: unknown }>(`#configuration m-select[name="${key}"], #configuration m-text-field[name="${key}"], #configuration m-slider[name="${key}"]`);
     if (host) return String(host.value ?? '');
     const groupInput = document.querySelector<HTMLInputElement>(`input[data-input-for="${key}"]`);
     if (groupInput) return groupInput.value;
@@ -106,7 +106,7 @@ export { value_ as valueOf };
 /** Whether the control named `name` is disabled (an element's attribute, a native input's property). */
 export function isDisabled(page: Page, name: string): Promise<boolean> {
   return page.evaluate(key => {
-    const host = document.querySelector(`#configuration m-select[name="${key}"], #configuration m-switch[name="${key}"], #configuration m-text-field[name="${key}"], #configuration m-button-group[data-group-for="${key}"]`);
+    const host = document.querySelector(`#configuration m-select[name="${key}"], #configuration m-switch[name="${key}"], #configuration m-text-field[name="${key}"], #configuration m-slider[name="${key}"], #configuration m-button-group[data-group-for="${key}"]`);
     if (host) return host.hasAttribute('disabled');
     const inputs = [...document.querySelectorAll<HTMLInputElement>(`#configuration [name="${key}"]`)];
     return inputs.length > 0 && inputs.every(input => input.disabled);
@@ -165,7 +165,7 @@ export async function waitForValue(page: Page, name: string, expected: string): 
 }
 async function waitForValueOnce(page: Page, name: string, expected: string): Promise<void> {
   await page.waitForFunction(([key, wanted]) => {
-    const host = document.querySelector<HTMLElement & { value?: unknown }>(`#configuration m-select[name="${key}"], #configuration m-text-field[name="${key}"]`);
+    const host = document.querySelector<HTMLElement & { value?: unknown }>(`#configuration m-select[name="${key}"], #configuration m-text-field[name="${key}"], #configuration m-slider[name="${key}"]`);
     if (host) return String(host.value ?? '') === wanted;
     const groupInput = document.querySelector<HTMLInputElement>(`input[data-input-for="${key}"]`);
     if (groupInput) return groupInput.value === wanted;
@@ -220,4 +220,22 @@ export async function previewSettled(page: Page): Promise<void> {
     if (kept) return;
   }
   throw new Error('The preview kept re-rendering');
+}
+
+/** Moves the slider named `name` to `value`, through its handle with the arrow
+ *  keys (material's slider), or by typing into a native range input. */
+export async function slide(page: Page, name: string, value: string): Promise<void> {
+  const host = inPanel(page, `m-slider[name="${name}"]`);
+  if (await host.count()) {
+    const { current, step } = await host.evaluate(element => ({
+      current: Number((element as HTMLElement & { value?: unknown }).value),
+      step: Number(element.getAttribute('step')) || 1,
+    }));
+    const presses = Math.round((Number(value) - current) / step);
+    await host.getByRole('slider').first().focus();
+    for (let i = 0; i < Math.abs(presses); i++) await page.keyboard.press(presses > 0 ? 'ArrowRight' : 'ArrowLeft');
+    await waitForValue(page, name, value);
+    return;
+  }
+  await inPanel(page, `input[name="${name}"]`).fill(value);
 }

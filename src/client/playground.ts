@@ -220,6 +220,15 @@ function readForm(): ComponentState {
   return normalizeComponentState(slug, input);
 }
 function syncControls(next: ComponentState) {
+  // A range that steps by another control (stepFrom) takes that step first: material's
+  // slider snaps a value to its step, so a scenario's 72 under the default step of 10
+  // would land on 70.
+  for (const control of components[slug].controls) {
+    if (!control.stepFrom) continue;
+    const range = form.querySelector<HTMLElement>(`[name="${control.key}"]`);
+    const step = String(next[control.stepFrom] ?? control.step ?? 1);
+    if (range && range.getAttribute('step') !== step) range.setAttribute('step', step);
+  }
   for (const control of components[slug].controls) {
     for (const input of form.querySelectorAll<HTMLElement>(`[name="${control.key}"]`)) {
       // A group's hidden input belongs to the pilot's glue, which keeps its reset
