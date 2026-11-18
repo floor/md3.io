@@ -25,8 +25,12 @@ if (page) {
   const FRAMEWORK = 'md3-example-framework';
   let current = '';
 
-  const select = (id: string): void => {
+  // `remember`: write the shared choice (read by the playgrounds and the docs switch) only
+  // for a framework this page offers, picked on a chip or named by the address; a fallback
+  // stays on this page.
+  const select = (id: string, remember = false): void => {
     const framework = offered(id) ? id : first;
+    const keep = remember && offered(id);
     if (framework === current) return;
     current = framework;
     if (chips) {
@@ -43,18 +47,19 @@ if (page) {
     const url = new URL(location.href);
     url.searchParams.set('framework', framework);
     history.replaceState(null, '', url);
-    try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ }
+    if (keep) { try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ } }
   };
 
   chips?.addEventListener('change', event => {
     const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? chips.value;
     const id = String(Array.isArray(value) ? value[0] ?? '' : value ?? '');
-    if (id) select(id);
+    if (id) select(id, true);
   });
 
-  let initial = new URLSearchParams(location.search).get('framework');
-  try { initial ??= localStorage.getItem(FRAMEWORK); } catch { /* Storage may be unavailable. */ }
-  select(initial ?? first);
+  const asked = new URLSearchParams(location.search).get('framework');
+  let saved: string | null = null;
+  try { saved = localStorage.getItem(FRAMEWORK); } catch { /* Storage may be unavailable. */ }
+  if (asked) select(asked, true); else select(saved ?? first);
 
   // File tabs and copy, per framework.
   for (const source of document.querySelectorAll<HTMLElement>('.example-source')) {
@@ -74,7 +79,11 @@ if (page) {
 
   // Theme and mode come from the site header (appearance.ts): a frame reads them on load,
   // as the playground's preview does, and the open frame follows every change live.
+  // The chips row (a material scope) follows too, as on the component pages.
+  const scopes = [...document.querySelectorAll<HTMLElement>('.playground--material')];
   onAppearance(({ theme, mode }) => {
+    for (const scope of scopes) scope.dataset.themeMode = mode;
+    void applyTheme(document, theme, scopes);
     const root = frame.contentDocument?.documentElement;
     if (!root) return;
     void applyTheme(root.ownerDocument, theme);

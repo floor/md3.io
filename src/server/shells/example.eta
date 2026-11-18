@@ -1,17 +1,17 @@
 <div class="page-wrap example-page" data-example="<%= it.example.slug %>">
-  <%/* The framework chips, as on the component pages; the row carries the material scope. */%><div class="framework-chips-row playground--material"><%~ it.frameworks %></div>
+  <%/* The framework chips, as on the component pages; the row carries the material scope. */%><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.frameworks %></div>
   <header class="page-heading"><h1><%= it.example.title %></h1><p><%= it.example.description %></p></header>
   <div class="example-layout">
     <div class="example-main">
       <section class="preview-panel example-preview" aria-label="Running example">
-        <iframe id="example-frame" title="<%= it.example.title %> example" src="/examples/<%= it.example.slug %>/frame/<%= it.variants[0].id %>/"></iframe>
+        <iframe id="example-frame" title="<%= it.example.title %> example" src="/examples/<%= it.example.slug %>/frame/<%= it.framework %>/"></iframe>
         <div class="preview-footer">
           <span id="example-status" role="status" aria-live="polite"></span>
         </div>
       </section>
       <section class="preview-panel example-code" aria-label="Source">
       <% it.variants.forEach((variant, i) => { %>
-        <div class="example-source" data-framework="<%= variant.id %>" <%= i === 0 ? '' : 'hidden' %>>
+        <div class="example-source" data-framework="<%= variant.id %>" <%= variant.id === it.framework ? '' : 'hidden' %>>
           <div class="panel-heading">
             <div class="preview-tabs" role="tablist" aria-label="<%= variant.label %> files">
             <% variant.files.forEach((file, j) => { %>

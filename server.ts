@@ -240,7 +240,10 @@ export async function handleRequest(request: Request): Promise<Response> {
         ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)) });
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)),
+      // The address's framework when the example has it, so the first paint (frame and source)
+      // is the one the address names; otherwise its first variant. The client keeps it in step.
+      framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
   }
   else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, themeSheets, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
   else if (path === '/styles/') response = page(path, 'Styles — material', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
