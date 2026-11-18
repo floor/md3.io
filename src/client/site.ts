@@ -1,4 +1,5 @@
 import './search';
+import './site-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -79,26 +80,6 @@ onAppearance(({ theme, mode }) => {
   if (!headerScope) return;
   headerScope.dataset.themeMode = mode;
   applyTheme(document, theme, [headerScope]);
-});
-
-const hamburger = document.querySelector<HTMLButtonElement>('#hamburger');
-const sidebar = document.querySelector<HTMLElement>('#sidebar');
-const overlay = document.querySelector<HTMLButtonElement>('#overlay');
-const mobile = matchMedia('(max-width: 720px)');
-function setMenu(open: boolean, restoreFocus = false) {
-  sidebar?.classList.toggle('sidebar--open', open);
-  overlay?.classList.toggle('overlay--visible', open);
-  hamburger?.setAttribute('aria-expanded', String(open));
-  if (sidebar) sidebar.inert = mobile.matches && !open;
-  if (overlay) overlay.hidden = !open;
-  if (restoreFocus) hamburger?.focus();
-}
-setMenu(false);
-mobile.addEventListener('change', () => setMenu(false));
-hamburger?.addEventListener('click', () => setMenu(hamburger.getAttribute('aria-expanded') !== 'true'));
-overlay?.addEventListener('click', () => setMenu(false, true));
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
 });
 
 // The documentation's framework chips (document.eta): their code loads only on a page that

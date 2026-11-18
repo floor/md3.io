@@ -89,24 +89,21 @@ function page(path: string, title: string, description: string, template: string
   const isExamples = path.startsWith('/examples');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
-  // The privacy page stands outside the sections: no sidebar and no breadcrumb (base.eta).
-  const isPrivacy = template === 'privacy';
-  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isPrivacy ? [] : componentGroups;
+  const isComponents = path.startsWith('/components/');
+  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isComponents ? componentGroups : [];
   // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
   // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, icon, docGroups, guideGroup, components, playgroundGroups, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
-  // Where the title already names the section, the compact header can drop the breadcrumb.
-  // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
+  const section = sidebarGroups[0]?.label ?? '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'component' && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
-    path, title, description, isHome, noSidebar: isPrivacy, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog: template === 'catalog', catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, isHome, isExamples, isComponents, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog: template === 'catalog', catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -130,6 +127,12 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
 const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
+const primaryDestinations = [
+  { label: 'Components', href: '/components/', icon: 'tab' },
+  { label: 'Styles', href: '/styles/', icon: 'palette' },
+  { label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' },
+  { label: 'Documentation', href: '/docs/', icon: 'article' },
+];
 /** The reading order across sections, a cycle: the documentation, Styles, Examples, and back. */
 const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 

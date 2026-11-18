@@ -6,7 +6,7 @@ import { materialTokens } from './playground-panel';
 
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
-const shell = ['tokens', 'shell', 'ui', 'content', 'syntax'] as const;
+const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.

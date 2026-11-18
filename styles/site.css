@@ -14,11 +14,9 @@ html[data-theme-mode="light"] { color-scheme: light; }
 }
 .sidebar__label { font-size: var(--fs-xs); color: var(--text); }
 .sidebar__link { font-size: var(--fs-md); }
-/* The credits sit at the foot of the sidebar, below the navigation however short it is. */
-.sidebar { display: flex; flex-direction: column; }
+/* Keep the section index credits after its links. */
 .sidebar__foot { margin-top: auto; padding: 24px 20px 4px; font-size: var(--fs-xs); color: var(--text-dim); }
 .sidebar__foot a { color: inherit; }
-.mobile-navigation { display: none; }
 .page-wrap { padding: 8px 40px 64px; width: 100%; }
 .page-heading { margin-bottom: 30px; }
 .page-heading h1 { font-size: 40px; letter-spacing: -1px; line-height: 1.2; margin: 10px 0 12px; }
@@ -106,8 +104,6 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .doc-toc a { display: block; color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs); padding: 3px 0; }
 .doc-toc a:hover { color: var(--accent-text); }
 .md table { display: block; max-width: 100%; overflow-x: auto; }
-.home .sidebar--home { display: none; }
-.no-sidebar .sidebar { display: none; }
 .landing { width: 100%; max-width: 1120px; margin: auto; padding: 0 40px; }
 .landing .hero { padding: 72px 0 48px; }
 .landing .hero__name { font-size: clamp(44px, 6vw, 72px); line-height: 1.08; margin: 24px 0; }
@@ -131,7 +127,6 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   :root { --site-footer-height: 60px; }
   .site-footer { height: var(--site-footer-height); align-items: center; padding-block: 0; }
   .layout:has(.component-page) { min-height: calc(100dvh - var(--site-footer-height)); }
-  .layout:has(.component-page) .sidebar { height: calc(100dvh - var(--header-height) - var(--site-footer-height)); }
   .content:has(.component-page) { min-height: calc(100dvh - var(--header-height) - var(--site-footer-height)); }
   .component-page { height: calc(100dvh - var(--header-height) - var(--site-footer-height)); display: flex; flex-direction: column; padding-top: 8px; padding-bottom: 24px; }
   .component-page .page-heading { flex-shrink: 0; margin-bottom: 22px; }
@@ -144,12 +139,8 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .component-page:is([data-component="datepicker"], [data-component="timepicker"]) .playground-space { height: 560px; min-height: 560px; }
 }
 @media (max-width: 720px) {
-  .mobile-navigation { display: block; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-  .home .sidebar--home { display: block; }
-  .no-sidebar .sidebar { display: block; }
   .site-footer { padding-inline: 12px; }
   .home .site-footer { max-width: min(1040px, 100% - 44px); }
-  .header__nav { display: none; }
   .page-wrap { padding: 28px 18px 40px; }
   .page-heading h1 { font-size: 34px; }
   .page-heading p { font-size: var(--fs-base); }
