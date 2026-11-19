@@ -120,17 +120,18 @@ export const normalizeTime = (text: string): string | null => {
 
 export interface BookingErrors { name?: string; email?: string; arrivalTime?: string; room?: string }
 
-/** The four steps, in order; the owner asked for three or four — this is four. */
+/** The four steps, in order; the owner asked for three or four — this is four. The value
+ * is the stepper's step id: data-stepper-goto and goTo() name a step by it. */
 export const STEPS = [
-  { title: "Dates and arrival" },
-  { title: "Guests and room" },
-  { title: "Extras" },
-  { title: "Your details and review" },
+  { value: "dates", title: "Dates and arrival" },
+  { value: "guests", title: "Guests and room" },
+  { value: "extras", title: "Extras" },
+  { value: "details", title: "Your details and review" },
 ] as const;
 
 export const stepHeading = (step: number): string => `Step ${step} of 4 · ${STEPS[step - 1]!.title}`;
-export const stepLabel = (step: number): string => `Step ${step} of 4`;
-export const stepProgress = (step: number): number => step;
+export const stepValue = (step: number): string => STEPS[step - 1]!.value;
+export const stepNumberOf = (value: string): number => STEPS.findIndex((entry) => entry.value === value) + 1;
 
 /** Next validates the step it leaves; Book validates the details and requires a room. */
 export const validateStep = (s: Booking, step: number): BookingErrors => {

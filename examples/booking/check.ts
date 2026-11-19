@@ -18,14 +18,17 @@ export default async function steps(page: Page): Promise<void> {
   const arrival = page.getByRole("textbox", { name: "Arrival time", ...exact });
   const chooseTime = page.getByRole("button", { name: "Choose time", ...exact });
   const heading = () => page.getByRole("heading", { name: /^Step \d of 4/ });
-  // A step change puts focus on the new step's heading.
+  // A step change puts focus on the new step's heading. The stepper's own header
+  // for the step is the current one: its button carries aria-current and expands
+  // the panel that is showing.
   const stepShows = async (n: number, title: string) => {
     await page.getByRole("heading", { name: `Step ${n} of 4 · ${title}`, ...exact }).waitFor();
-    await includes(`progressbar "Step ${n} of 4"`);
-    // The name alone could go stale; the value itself must be n of 4.
-    const progress = page.getByRole("progressbar");
-    assert.equal(await progress.getAttribute("aria-valuenow"), String(n), `step ${n} progress is ${n} of 4`);
-    assert.equal(await progress.getAttribute("aria-valuemax"), "4", "progress max is 4");
+    await includes(`Step ${n} of 4`);
+    // The one current header is this step's; its text is the indicator's number,
+    // the label, and — once completed — a ", Completed, Editable" suffix.
+    const header = page.locator('[aria-current="step"]');
+    assert.match((await header.textContent()) ?? "", new RegExp(`^\\d+${title}(,.*)?$`), `step ${n}'s header is the current step`);
+    assert.equal(await header.getAttribute("aria-expanded"), "true", `step ${n}'s header expands its panel`);
   };
   const stepIs = async (n: number, title: string) => {
     await stepShows(n, title);
