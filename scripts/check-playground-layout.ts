@@ -165,20 +165,39 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         const place = await page.evaluate(() => {
           const rows = [...document.querySelectorAll('.framework-chips-row')];
           const h1 = document.querySelector('h1')!.getBoundingClientRect();
-          const row = rows[0]!.getBoundingClientRect();
+          const rowEl = rows[0]!;
+          const row = rowEl.getBoundingClientRect();
           const intro = [...document.querySelectorAll('p')].find(p => p.getBoundingClientRect().bottom <= row.top + 1 && p.getBoundingClientRect().top > h1.top);
-          return { count: rows.length, afterTitle: row.top >= h1.bottom, gap: intro ? Math.round(row.top - intro.getBoundingClientRect().bottom) : -1, inPreview: !!rows[0]!.closest('.preview-panel, .preview-frameworks') };
+          let next = rowEl.nextElementSibling;
+          while (next && next.getBoundingClientRect().height === 0) next = next.nextElementSibling;
+          return { count: rows.length, afterTitle: row.top >= h1.bottom, gap: intro ? Math.round(row.top - intro.getBoundingClientRect().bottom) : -1, below: next ? Math.round(next.getBoundingClientRect().top - row.bottom) : -1, inPreview: !!rowEl.closest('.preview-panel') };
         });
-        assert(place.count === 1 && place.afterTitle && place.gap >= 0 && place.gap <= 32 && !place.inPreview, `${label} at ${width}px: the chips row is not directly under the title and description (${JSON.stringify(place)})`);
+        assert(place.count === 1 && place.afterTitle && place.gap === 20 && place.below === 18 && !place.inPreview, `${label} at ${width}px: the chips row does not share the 20px/18px gaps (${JSON.stringify(place)})`);
       }
     }
-    // Keyboard: right after the heading — from the breadcrumb, Tab reaches the chips.
+    // Keyboard: right after the heading on all three types — Tab from the page's
+    // own navigation reaches the chips before any preview or frame control.
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(new URL('components/button/', base).href);
     await page.locator('.component-list-up').focus();
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
-    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'The framework chips are not reachable right after the heading');
+    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'component: the framework chips are not reachable right after the heading');
+    await page.goto(new URL('docs/components/button/', base).href);
+    await page.locator('.doc-toolbar a').first().focus();
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('Tab');
+      if (await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null)) break;
+    }
+    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'documentation: the framework chips are not reachable right after the heading');
+    await page.goto(new URL('showcase/settings/', base).href);
+    await page.evaluate(() => (document.querySelector('h1') as HTMLElement).setAttribute('tabindex', '-1'));
+    await page.locator('h1').focus();
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press('Tab');
+      if (await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null)) break;
+    }
+    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'showcase: the framework chips are not reachable right after the heading');
     assert(errors.length === 0, errors.join('\n'));
     console.log('Playground reflow checks passed at 360, 390, 412, 700, 840, 1024 and 1440px.');
   } finally {
