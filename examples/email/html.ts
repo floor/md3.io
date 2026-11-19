@@ -5,7 +5,7 @@ import { defineAll } from "material/elements";
 import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-  archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
+  archiveChecked, archiveOpen, anyArchiveable, archiveable, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
   emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, keepRowFocus,
   mailbox, openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder,
   setLabel, setQuery, toggleChecked, toggleStar, visibleMessages,
@@ -106,7 +106,9 @@ function detail(m: Message): HTMLElement {
   const actions = el("footer", { class: "mail-message__actions" });
   actions.append(
     el("m-button", { variant: "outlined", icon: icons.reply, class: "mail-message__reply" }, "Reply"),
-    el("m-button", { variant: "outlined", icon: icons.archive, class: "mail-message__archive" }, ARCHIVE_LABEL),
+    ...(archiveable(m)
+      ? [el("m-button", { variant: "outlined", icon: icons.archive, class: "mail-message__archive" }, ARCHIVE_LABEL)]
+      : []),
     el("m-button", { variant: "outlined", icon: icons.delete, class: "mail-message__delete" }, DELETE_LABEL),
   );
   article.append(
@@ -148,7 +150,10 @@ function update(): void {
       selection.append(
         el("m-icon-button", { class: "mail__clear", icon: icons.close, "aria-label": CLEAR_LABEL }),
         el("span", { class: "mail__selection-count" }, selectionText(s.checked.length)),
-        el("m-icon-button", { class: "mail__archive", icon: icons.archive, "aria-label": ARCHIVE_LABEL }),
+        // Archive only where it can act: the selection holds an unarchived inbox message.
+        ...(anyArchiveable(messages, s.checked)
+          ? [el("m-icon-button", { class: "mail__archive", icon: icons.archive, "aria-label": ARCHIVE_LABEL })]
+          : []),
         el("m-icon-button", { class: "mail__delete", icon: icons.delete, "aria-label": DELETE_LABEL }),
       );
     }

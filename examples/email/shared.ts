@@ -350,9 +350,25 @@ const remove = (s: MailState, messages: Message[], ids: string[]): void => {
   closeIfHidden(s, messages);
 };
 
+/** Archive is an Inbox action: a message can leave the Inbox only if it is in it. */
+export const archiveable = (m: Message): boolean => m.folder === "inbox" && !m.archived;
+
+/** Whether anything in the selection would move — otherwise the bar hides Archive. */
+export const anyArchiveable = (messages: Message[], ids: string[]): boolean =>
+  ids.some((id) => {
+    const m = findMessage(messages, id);
+    return !!m && archiveable(m);
+  });
+
 /** Archive keeps the message: it leaves the Inbox, but Starred still gathers it. */
 const archive = (s: MailState, messages: Message[], ids: string[]): void => {
-  for (const m of messages) if (ids.includes(m.id)) m.archived = true;
+  const eligible = ids.filter((id) => {
+    const m = findMessage(messages, id);
+    return !!m && archiveable(m);
+  });
+  if (!eligible.length) return;
+  for (const m of messages) if (eligible.includes(m.id)) m.archived = true;
+  s.checked = s.checked.filter((id) => !eligible.includes(id));
   pruneChecked(s, messages);
   closeIfHidden(s, messages);
 };

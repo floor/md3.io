@@ -7,7 +7,7 @@ import {
 import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-  archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
+  archiveChecked, archiveOpen, anyArchiveable, archiveable, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
   emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
   openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
   setQuery, toggleChecked, toggleStar, visibleMessages,
@@ -77,7 +77,7 @@ export default defineComponent({
       messages, FOLDERS, LABELS, icons,
       RAIL_LABEL, CHIPS_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
       ARCHIVE_LABEL, BACK_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
-      emptyText, selectLabel, selectionText,
+      emptyText, selectLabel, selectionText, anyArchiveable, archiveable,
       onRail: (e: CustomEvent<{ value: string }>) => setFolder(s, e.detail.value as FolderId),
       onQuery: (e: CustomEvent<{ value: string }>) => setQuery(s, messages, e.detail.value),
       onLabel: (e: CustomEvent<{ value: string | null }>) => setLabel(s, messages, e.detail.value ?? null),
@@ -120,7 +120,8 @@ export default defineComponent({
             <template v-if="s.checked.length">
               <MIconButton :icon="icons.close" :aria-label="CLEAR_LABEL" @click="clear" />
               <span class="mail__selection-count">{{ selectionText(s.checked.length) }}</span>
-              <MIconButton :icon="icons.archive" :aria-label="ARCHIVE_LABEL" @click="archiveSelection" />
+              <!-- Archive only where it can act: the selection holds an unarchived inbox message. -->
+              <MIconButton v-if="anyArchiveable(messages, s.checked)" :icon="icons.archive" :aria-label="ARCHIVE_LABEL" @click="archiveSelection" />
               <MIconButton :icon="icons.delete" :aria-label="DELETE_LABEL" @click="deleteSelection" />
             </template>
           </div>
@@ -153,7 +154,7 @@ export default defineComponent({
             <div class="mail-message__body"><p v-for="(p, i) in open.body" :key="i">{{ p }}</p></div>
             <footer class="mail-message__actions">
               <MButton variant="outlined" :icon="icons.reply" @click="reply">Reply</MButton>
-              <MButton variant="outlined" :icon="icons.archive" @click="archiveOpenMessage">{{ ARCHIVE_LABEL }}</MButton>
+              <MButton v-if="archiveable(open)" variant="outlined" :icon="icons.archive" @click="archiveOpenMessage">{{ ARCHIVE_LABEL }}</MButton>
               <MButton variant="outlined" :icon="icons.delete" @click="deleteOpenMessage">{{ DELETE_LABEL }}</MButton>
             </footer>
           </article>

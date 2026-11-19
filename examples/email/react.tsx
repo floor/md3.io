@@ -9,7 +9,7 @@ import type { DialogElement, SnackbarElement } from "material/elements";
 import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-  archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
+  archiveChecked, archiveOpen, anyArchiveable, archiveable, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
   emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
   openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
   setQuery, toggleChecked, toggleStar, visibleMessages,
@@ -92,7 +92,10 @@ export default function Email() {
               <>
                 <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onClick={() => act(() => set((d) => { clearChecked(d); }))} />
                 <span className="mail__selection-count">{selectionText(s.checked.length)}</span>
-                <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onClick={() => act(() => update(() => archiveChecked(s, messages)))} />
+                {/* Archive only where it can act: the selection holds an unarchived inbox message. */}
+                {anyArchiveable(messages, s.checked) && (
+                  <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onClick={() => act(() => update(() => archiveChecked(s, messages)))} />
+                )}
                 <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onClick={() => act(() => update(() => deleteChecked(s, messages)))} />
               </>
             )}
@@ -131,7 +134,9 @@ export default function Email() {
               <div className="mail-message__body">{open.body.map((p, i) => <p key={i}>{p}</p>)}</div>
               <footer className="mail-message__actions">
                 <Button variant="outlined" icon={icons.reply} onClick={() => showDialog((d) => { replyToOpen(d, messages); })}>Reply</Button>
-                <Button variant="outlined" icon={icons.archive} onClick={() => closeOpenMessage(archiveOpen)}>{ARCHIVE_LABEL}</Button>
+                {archiveable(open) && (
+                  <Button variant="outlined" icon={icons.archive} onClick={() => closeOpenMessage(archiveOpen)}>{ARCHIVE_LABEL}</Button>
+                )}
                 <Button variant="outlined" icon={icons.delete} onClick={() => closeOpenMessage(deleteOpen)}>{DELETE_LABEL}</Button>
               </footer>
             </article>

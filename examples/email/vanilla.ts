@@ -14,7 +14,7 @@ import { defineDialog, defineSnackbar } from "material/elements";
 import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-  archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
+  archiveChecked, archiveOpen, anyArchiveable, archiveable, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
   emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, keepRowFocus,
   mailbox, openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder,
   setLabel, setQuery, toggleChecked, toggleStar, visibleMessages,
@@ -139,11 +139,16 @@ function update(): void {
     if (s.checked.length) {
       const clear = createIconButton({ icon: icons.close, ariaLabel: CLEAR_LABEL });
       clear.on("click", () => { clearChecked(s); update(); });
-      const archive = createIconButton({ icon: icons.archive, ariaLabel: ARCHIVE_LABEL });
-      archive.on("click", () => { archiveChecked(s, messages); update(); });
+      selection.append(clear.element, span("mail__selection-count", selectionText(s.checked.length)));
+      // Archive only where it can act: the selection holds an unarchived inbox message.
+      if (anyArchiveable(messages, s.checked)) {
+        const archive = createIconButton({ icon: icons.archive, ariaLabel: ARCHIVE_LABEL });
+        archive.on("click", () => { archiveChecked(s, messages); update(); });
+        selection.append(archive.element);
+      }
       const remove = createIconButton({ icon: icons.delete, ariaLabel: DELETE_LABEL });
       remove.on("click", () => { deleteChecked(s, messages); update(); });
-      selection.append(clear.element, span("mail__selection-count", selectionText(s.checked.length)), archive.element, remove.element);
+      selection.append(remove.element);
     }
 
     rows.replaceChildren();
@@ -219,11 +224,15 @@ function detail(m: Message): HTMLElement {
   const actions = Object.assign(document.createElement("footer"), { className: "mail-message__actions" });
   const reply = createButton({ text: "Reply", variant: "outlined", icon: icons.reply });
   reply.on("click", () => { replyToOpen(s, messages); syncDraft(); dialog.show(); });
-  const archive = createButton({ text: ARCHIVE_LABEL, variant: "outlined", icon: icons.archive });
-  archive.on("click", () => { archiveOpen(s, messages); update(); focusList(); });
+  actions.append(reply.element);
+  if (archiveable(m)) {
+    const archive = createButton({ text: ARCHIVE_LABEL, variant: "outlined", icon: icons.archive });
+    archive.on("click", () => { archiveOpen(s, messages); update(); focusList(); });
+    actions.append(archive.element);
+  }
   const remove = createButton({ text: DELETE_LABEL, variant: "outlined", icon: icons.delete });
   remove.on("click", () => { deleteOpen(s, messages); update(); focusList(); });
-  actions.append(reply.element, archive.element, remove.element);
+  actions.append(remove.element);
 
   article.append(
     head, meta,
