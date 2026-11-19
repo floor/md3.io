@@ -5,6 +5,7 @@ import {
   Button, Checkbox, Chips, Chip, Dialog, ExtendedFab, IconButton,
   NavigationRail, NavigationRailItem, Search, Snackbar, TextField,
 } from "material/react";
+import type { DialogElement, SnackbarElement } from "material/elements";
 import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
@@ -20,8 +21,8 @@ const messages = mailbox();
 export default function Email() {
   const [s, setS] = useState<MailState>(initialState);
   const [, bump] = useState(0);
-  const dialog = useRef<(HTMLElement & { show(): void; close(): void }) | null>(null);
-  const snackbar = useRef<(HTMLElement & { show(): void }) | null>(null);
+  const dialog = useRef<DialogElement | null>(null);
+  const snackbar = useRef<SnackbarElement | null>(null);
   // Mutations (star, archive, delete, send) change the mailbox, not the state object.
   const update = (fn?: () => void) => {
     fn?.();
@@ -75,7 +76,7 @@ export default function Email() {
             <Search placeholder={SEARCH_PLACEHOLDER} noExpandOnFocus fullWidth
               onInput={(e) => set((d) => { setQuery(d, messages, e.detail.value); })} />
             <Chips ariaLabel={CHIPS_LABEL} selection="single"
-              onChange={(e) => set((d) => { setLabel(d, messages, e.detail.value ?? null); })}>
+              onChange={(e) => set((d) => { const v = e.detail.value; setLabel(d, messages, Array.isArray(v) ? (v[0] ?? null) : v); })}>
               {LABELS.map((l) => <Chip key={l.id} value={l.id} label={l.label} />)}
             </Chips>
           </header>

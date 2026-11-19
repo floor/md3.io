@@ -58,12 +58,12 @@ search.on("input", ({ value }: { value: string }) => {
   update();
 });
 const chips = createChips({
-  ariaLabel: CHIPS_LABEL,
   multiSelect: false,
   chips: LABELS.map((l) => ({ label: l.label, value: l.id })),
 });
-chips.on("change", ({ value }: { value: string | null }) => {
-  setLabel(s, messages, value ?? null);
+chips.element.setAttribute("aria-label", CHIPS_LABEL);
+chips.on("change", ({ value }: { value: string | string[] | null }) => {
+  setLabel(s, messages, Array.isArray(value) ? (value[0] ?? null) : value);
   update();
 });
 top.append(search.element, chips.element);

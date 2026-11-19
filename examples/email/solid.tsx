@@ -1,3 +1,4 @@
+/** @jsxImportSource solid-js — this file's JSX is Solid's, not React's; tsc reads it. */
 // Solid: material/solid wraps the same elements. The store changes through
 // setS(produce(...)); the mailbox is a plain array, re-read when tick bumps.
 import { createMemo, createSignal, For, Show } from "solid-js";
@@ -6,6 +7,7 @@ import {
   Button, Checkbox, Chip, Chips, Dialog, ExtendedFab, IconButton,
   NavigationRail, NavigationRailItem, Search, Snackbar, TextField,
 } from "material/solid";
+import type { DialogElement, SnackbarElement } from "material/elements";
 import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
@@ -20,8 +22,8 @@ const messages = mailbox();
 
 export default function Email() {
   const [s, setS] = createStore<MailState>(initialState());
-  let dialog: (HTMLElement & { show(): void; close(): void }) | undefined;
-  let snackbar: (HTMLElement & { show(): void }) | undefined;
+  let dialog: DialogElement | undefined;
+  let snackbar: SnackbarElement | undefined;
 
   const [tick, setTick] = createSignal(0);
   const update = (fn: (draft: MailState) => void) => {
@@ -78,7 +80,10 @@ export default function Email() {
             <Search placeholder={SEARCH_PLACEHOLDER} noExpandOnFocus fullWidth
               onInput={(e: CustomEvent<{ value: string }>) => update((d) => { setQuery(d, messages, e.detail.value); })} />
             <Chips ariaLabel={CHIPS_LABEL} selection="single"
-              onChange={(e: CustomEvent<{ value: string | null }>) => update((d) => { setLabel(d, messages, e.detail.value ?? null); })}>
+              onChange={(e: CustomEvent<{ value: string | string[] | null }>) => update((d) => {
+                const v = e.detail.value;
+                setLabel(d, messages, Array.isArray(v) ? (v[0] ?? null) : v);
+              })}>
               <For each={LABELS}>{(l) => <Chip value={l.id} label={l.label} />}</For>
             </Chips>
           </header>
