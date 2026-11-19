@@ -10,11 +10,9 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .header__mark { display: inline-block; width: 20px; height: 20px; margin-right: 7px; vertical-align: -1px; }
 .sidebar__label { font-size: var(--fs-xs); color: var(--text); }
 .sidebar__link { font-size: var(--fs-md); }
-/* The credits sit at the foot of the sidebar, below the navigation however short it is. */
-.sidebar { display: flex; flex-direction: column; }
+/* Keep the section index credits after its links. */
 .sidebar__foot { margin-top: auto; padding: 24px 20px 4px; font-size: var(--fs-xs); color: var(--text-dim); }
 .sidebar__foot a { color: inherit; }
-.mobile-navigation { border-bottom: 1px solid var(--border); padding-bottom: 16px; }
 .page-wrap { padding: var(--page-padding); width: 100%; }
 .page-heading { margin-bottom: 30px; }
 .page-heading h1 { font-size: 34px; letter-spacing: -1px; line-height: 1.2; margin: 10px 0 12px; }
@@ -136,14 +134,12 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 }
 @media (min-width: 840px) {
   .header__logo { padding: 3px 12px; }
-  .mobile-navigation, .home .sidebar--home, .no-sidebar .sidebar { display: none; }
   .docs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
   /* The old playground can split when its actual content has room. Its pane
      layout is revisited after the rail and component list land. */
   .content:has(.component-page) { container: component-detail / inline-size; min-height: calc(100dvh - var(--header-height) - var(--site-footer-height)); }
   .layout:has(.component-page) { min-height: calc(100dvh - var(--site-footer-height)); }
-  .layout:has(.component-page) .sidebar { height: calc(100dvh - var(--header-height) - var(--site-footer-height)); }
   .layout:has(.component-page) + .site-footer { height: var(--site-footer-height); align-items: center; padding-block: 0; }
 }
 @media (min-width: 1200px) {

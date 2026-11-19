@@ -129,73 +129,6 @@ samp {
 
 
 
-.header__nav {
-    margin-left: auto;
-    display: none;
-    gap: 2px;
-}
-
-.header__nav a {
-    font-size: var(--fs-md);
-    color: var(--text-dim);
-    text-decoration: none;
-    transition: color 0.15s;
-    padding: 3px 12px;
-    border-radius: 6px;
-}
-
-.header__nav a:hover {
-    color: var(--text-muted);
-}
-
-.header__nav a.active {
-    color: var(--text);
-}
-
-.header__hamburger {
-    display: block;
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-    padding: 8px;
-    order: -1;
-}
-
-/* ─── Mobile Dropdown ────────────────────────────────────────────── */
-
-.dropdown {
-    display: none;
-    position: fixed;
-    top: var(--header-height);
-    left: 0;
-    right: 0;
-    background: var(--dropdown-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px 16px;
-    z-index: 99;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.dropdown--open {
-    display: flex;
-}
-
-.dropdown a {
-    display: block;
-    font-size: var(--fs-base);
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 8px 0;
-}
-
-.dropdown a:hover {
-    color: var(--text);
-}
-
 /* ─── Badge ──────────────────────────────────────────────────────── */
 
 .badge {
@@ -224,40 +157,6 @@ samp {
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────────── */
-
-.sidebar {
-    position: fixed;
-    inset: var(--header-height) auto 0 0;
-    width: 260px;
-    visibility: hidden;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease, visibility 0.25s;
-    background: var(--bg);
-    box-shadow: 4px 0 24px var(--shadow-sidebar);
-    flex-shrink: 0;
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 20px 0;
-    z-index: 50;
-}
-
-.sidebar--open {
-    visibility: visible;
-    transform: translateX(0);
-}
-
-.sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 2px;
-}
 
 .sidebar__group {
     margin-bottom: 20px;
@@ -432,20 +331,6 @@ samp {
     display: none;
 }
 
-/* ─── Overlay (mobile sidebar backdrop) ──────────────────────────── */
-
-.overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--overlay-bg);
-    z-index: 40;
-}
-
-.overlay--visible {
-    display: block;
-}
-
 /* ─── Overview Cards (docs, examples & benchmarks index) ──────────── */
 
 .overview {
@@ -617,7 +502,6 @@ samp {
 
 html[data-theme-mode] body,
 html[data-theme-mode] .header,
-html[data-theme-mode] .sidebar,
 html[data-theme-mode] .content,
 html[data-theme-mode] .toc,
 html[data-theme-mode] .ui-card,
@@ -632,9 +516,6 @@ html[data-theme-mode] .badge {
         border-color 0.25s ease;
 }
 
-html[data-theme-mode] .sidebar {
-    transition: transform 0.25s ease, visibility 0.25s, background-color 0.25s ease, border-color 0.25s ease;
-}
 
 /* ─── Responsive: large screens ──────────────────────────────────── */
 
@@ -685,33 +566,6 @@ html[data-theme-mode] .sidebar {
 
     .overview__card-desc {
         font-size: 14px;
-    }
-}
-
-/* The full header first fits at the expanded breakpoint. The temporary drawer
-   serves compact and medium until the bar and rail replace it. */
-@media (min-width: 840px) {
-    .header__inner {
-        padding: 0 12px 0 8px;
-        gap: 16px;
-    }
-
-    .header__nav {
-        display: flex;
-    }
-
-    .header__hamburger {
-        display: none;
-    }
-
-    .sidebar {
-        position: sticky;
-        bottom: auto;
-        height: calc(100vh - var(--header-height));
-        width: var(--sidebar-width);
-        visibility: visible;
-        transform: none;
-        box-shadow: none;
     }
 }
 
@@ -913,6 +767,3 @@ select:focus-visible,
 /* Material Symbols and brand marks inline in text (server.ts icon()): the size of the
    text they sit in, on its baseline, in its colour. */
 .inline-icon { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; }
-/* The header's GitHub link is the mark alone, at the nav's icon size. */
-.header__github { display: inline-flex; align-items: center; }
-.header__github .inline-icon { width: 20px; height: 20px; vertical-align: middle; }

@@ -201,18 +201,23 @@ try {
     { name: 'colour-lab', path: 'styles/color-lab/' },
     { name: 'themes', path: 'styles/themes/' },
   ];
-  const hamburger = page.locator('.header').getByRole('button', { name: 'Open navigation', includeHidden: true });
-  const sidebar = page.locator('#sidebar');
-  const headerNav = page.locator('.header__nav');
+  const bar = page.locator('#site-primary-bar');
+  const rail = page.locator('#site-primary-rail');
+  const primary = page.getByRole('navigation', { name: 'Primary navigation', exact: true });
   const capture = resolve(output, 'breakpoints');
   await mkdir(capture, { recursive: true });
   for (const { name, path } of routes) {
     await page.goto(`${base}${path}`);
     for (const width of [360, 390, 412, 599, 600, 700, 839, 840, 1024, 1199, 1200, 1440, 1599, 1600]) {
       await page.setViewportSize({ width, height: 900 });
-      const drawer = width < 840;
+      const compact = width < 600;
       const tier = `${name} at ${width}px`;
-      await page.waitForFunction(docked => document.querySelector<HTMLElement>('#sidebar')!.inert === docked, drawer);
+      const inactive = compact ? rail : bar;
+      await page.waitForFunction(compact => {
+        const bar = document.querySelector<HTMLElement>('#site-primary-bar')!;
+        const rail = document.querySelector<HTMLElement>('#site-primary-rail')!;
+        return bar.hidden === !compact && rail.hidden === compact;
+      }, compact);
       const geometry = await page.evaluate(() => {
         const header = document.querySelector<HTMLElement>('.header')!;
         const layout = document.querySelector<HTMLElement>('.layout')!;
@@ -223,37 +228,28 @@ try {
           layoutWidth: layout.getBoundingClientRect().width,
           viewportWidth: root.clientWidth,
           documentScroll: root.scrollWidth,
-          sidebarPosition: getComputedStyle(document.querySelector('#sidebar')!).position,
           logoSize: getComputedStyle(document.querySelector('.header__logo')!).fontSize,
           padding: getComputedStyle(root).getPropertyValue('--page-padding').trim(),
         };
       });
       assert(geometry.headerScroll <= geometry.headerWidth && geometry.documentScroll <= width,
         `${tier}: horizontal overflow ${JSON.stringify(geometry)}`);
-      assert(geometry.sidebarPosition === (drawer ? 'fixed' : 'sticky'), `${tier}: wrong sidebar layout`);
       assert(geometry.logoSize === (width < 600 ? '20px' : '23px'), `${tier}: wrong shell sizing`);
       const padding = width < 600 ? '28px 18px 40px' : width < 1200 ? '32px 28px 48px' : '8px 40px 64px';
       assert(geometry.padding === padding, `${tier}: wrong page spacing`);
       const expectedLayout = width < 1600 ? Math.min(1472, geometry.viewportWidth) : Math.min(1840, geometry.viewportWidth - 128);
       assert(Math.abs(geometry.layoutWidth - expectedLayout) < 1, `${tier}: wrong shell gutter or width cap`);
-      assert(await hamburger.isVisible() === drawer && await headerNav.isVisible() === !drawer, `${tier}: wrong navigation controls`);
-
+      assert(await bar.isVisible() === compact && await rail.isVisible() === !compact
+        && await primary.count() === 1, `${tier}: wrong primary navigation`);
+      if (!compact) {
+        assert(Math.abs((await rail.boundingBox())!.width - 96) < 1, `${tier}: wrong rail width`);
+      }
       if ([390, 599, 600, 700].includes(width)) {
-        const firstHeaderLink = headerNav.locator('a').first();
-        const firstDrawerLink = sidebar.locator('.mobile-navigation a').first();
-        for (const link of [firstHeaderLink, firstDrawerLink]) {
-          const focused = await link.evaluate(node => {
-            node.focus();
-            return document.activeElement === node;
-          });
-          assert(!focused, `${tier}: hidden navigation accepted keyboard focus`);
-        }
-        await hamburger.press('Enter');
-        await firstDrawerLink.waitFor({ state: 'visible' });
-        await firstDrawerLink.focus();
-        assert(await firstDrawerLink.evaluate(node => document.activeElement === node), `${tier}: open drawer link cannot take focus`);
-        await page.keyboard.press('Escape');
-        assert(await hamburger.evaluate(node => document.activeElement === node), `${tier}: closing the drawer lost focus`);
+        const focused = await inactive.locator('a').first().evaluate(node => {
+          node.focus();
+          return document.activeElement === node;
+        });
+        assert(!focused, `${tier}: hidden navigation accepted keyboard focus`);
       }
       if ((name === 'home' || name === 'docs') && [390, 599, 600].includes(width)) {
         await page.locator('#search-trigger').click();
@@ -277,13 +273,12 @@ try {
   }
 
   await page.goto(`${base}components/button/`);
-  await page.setViewportSize({ width: 839, height: 900 });
-  await hamburger.press('Enter');
-  await sidebar.getByRole('link', { name: 'Styles', exact: true }).focus();
-  await page.setViewportSize({ width: 840, height: 900 });
-  await page.waitForFunction(() => document.activeElement === document.querySelector('.header__nav a[href="/styles/"]'));
-  await page.setViewportSize({ width: 839, height: 900 });
-  await page.waitForFunction(() => document.activeElement === document.getElementById('hamburger'));
+  await page.setViewportSize({ width: 599, height: 900 });
+  await bar.getByRole('link', { name: 'Styles', exact: true }).focus();
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-rail a[href="/styles/"]'));
+  await page.setViewportSize({ width: 599, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-bar a[href="/styles/"]'));
 
   await page.setViewportSize({ width: 1200, height: 900 });
   await page.goto(`${base}docs/frameworks/`);
@@ -306,9 +301,7 @@ try {
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile code view overflows the page');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-mobile.png`, fullPage: true });
-  await page.locator('#hamburger').click();
-  assert(await page.locator('#hamburger').getAttribute('aria-expanded') === 'true', 'Mobile menu did not open');
-  await page.locator('#sidebar .mobile-navigation').getByRole('link', { name: 'Documentation', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Documentation', exact: true }).click();
   await page.getByRole('heading', { name: 'Documentation', exact: true }).waitFor();
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });

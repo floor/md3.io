@@ -1,4 +1,5 @@
 import './search';
+import { currentFocus } from './site-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -81,49 +82,11 @@ onAppearance(({ theme, mode }) => {
   applyTheme(document, theme, [headerScope]);
 });
 
-const hamburger = document.querySelector<HTMLButtonElement>('#hamburger');
-const sidebar = document.querySelector<HTMLElement>('#sidebar');
-const overlay = document.querySelector<HTMLButtonElement>('#overlay');
-const headerNav = document.querySelector<HTMLElement>('.header__nav');
-const drawerLinks = sidebar?.querySelector('.mobile-navigation');
-const drawerLayout = matchMedia('(width < 840px)');
-let lastFocused = document.activeElement;
-document.addEventListener('focusin', event => {
-  if (event.target instanceof Element) lastFocused = event.target;
-});
-const focusedElement = () => document.activeElement === document.body ? lastFocused : document.activeElement;
-function setMenu(open: boolean, restoreFocus = false) {
-  sidebar?.classList.toggle('sidebar--open', open);
-  overlay?.classList.toggle('overlay--visible', open);
-  hamburger?.setAttribute('aria-expanded', String(open));
-  if (sidebar) sidebar.inert = drawerLayout.matches && !open;
-  if (overlay) overlay.hidden = !open;
-  if (restoreFocus) hamburger?.focus();
-}
-setMenu(false);
-drawerLayout.addEventListener('change', () => {
-  const focused = focusedElement();
-  setMenu(false);
-  if (drawerLayout.matches) {
-    if (headerNav?.contains(focused) || sidebar?.contains(focused)) hamburger?.focus();
-  } else if (focused === hamburger || focused === overlay || drawerLinks?.contains(focused)
-    || (sidebar?.contains(focused) && sidebar.getClientRects().length === 0)) {
-    const links = [...(headerNav?.querySelectorAll<HTMLAnchorElement>('a') ?? [])];
-    const sameLink = focused instanceof HTMLAnchorElement ? links.find(link => link.href === focused.href) : undefined;
-    (sameLink ?? links.find(link => link.classList.contains('active')) ?? links[0])?.focus();
-  }
-});
-hamburger?.addEventListener('click', () => setMenu(hamburger.getAttribute('aria-expanded') !== 'true'));
-overlay?.addEventListener('click', () => setMenu(false, true));
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
-});
-
 const docToc = document.querySelector('.doc-toc');
 if (docToc) {
   const tocHidden = matchMedia('(width < 1200px)');
   tocHidden.addEventListener('change', () => {
-    const focused = focusedElement();
+    const focused = currentFocus();
     if (!tocHidden.matches || !(focused instanceof HTMLAnchorElement) || !docToc.contains(focused)) return;
     const id = focused.getAttribute('href')?.slice(1) ?? '';
     const target = document.getElementById(id) ?? document.getElementById('content');
