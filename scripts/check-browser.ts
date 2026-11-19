@@ -236,16 +236,18 @@ try {
     const lines = prose.slice(0, 12).flatMap(fullLines).sort((a, b) => a - b);
     // Long inline code and URLs wrap inside the paragraph instead of the page.
     const overflowing = prose.filter(p => p.scrollWidth > p.clientWidth + 1).length;
-    // Wide code blocks and tables scroll inside the measure, not the page.
+    // Wide code blocks and tables scroll inside the column, not the page.
     const mdBox = md.getBoundingClientRect();
     const escapees = [...md.querySelectorAll('pre, table')].filter(block => {
       const box = block.getBoundingClientRect();
       return box.width > 0 && (box.left < mdBox.left - 0.5 || box.right > mdBox.right + 0.5);
     }).map(block => `${block.tagName}.${String(block.className).slice(0, 40)}${block.textContent.trim().slice(0, 30)}`);
+    const codeWidth = Math.max(0, ...[...md.querySelectorAll('pre')].map(block => block.getBoundingClientRect().width));
     return {
       count: lines.length,
       median: lines[Math.floor(lines.length / 2)] ?? 0,
       longest: lines[lines.length - 1] ?? 0,
+      codeWidth,
       overflowing,
       escapees,
       fits: document.documentElement.scrollWidth <= window.innerWidth,
@@ -261,7 +263,10 @@ try {
     assert(reading.count >= 2 && reading.median >= 40 && reading.median <= 60 && reading.longest <= 66,
       `${route} at ${width}: measure is ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want 40–60)`);
     assert(reading.overflowing === 0, `${route} at ${width}: ${reading.overflowing} paragraphs overflow their line box`);
-    assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the measure (${reading.escapees.join('; ')})`);
+    assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the column (${reading.escapees.join('; ')})`);
+    // The measure caps the prose, never the column: at desktop widths a code block
+    // spans the column again, not the reading width (today's 320px capture fails this).
+    if (width === 1440) assert(reading.codeWidth >= 600, `${route} at ${width}: code blocks are ${reading.codeWidth}px wide (want the column, 600+)`);
     return reading;
   };
   for (const width of [360, 390, 412, 700, 1024, 1440]) {
