@@ -7,7 +7,7 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -88,19 +88,19 @@ const internalHtml = (body: string) => new Response(versionAssets(body), { heade
 const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
-  const isExamples = path.startsWith('/examples');
+  const isExamples = path.startsWith('/showcase');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
   // The privacy page stands outside the sections: no sidebar and no breadcrumb (base.eta).
   const isPrivacy = template === 'privacy';
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isPrivacy ? [] : componentGroups;
   // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
-  // component docs lead to Styles, Styles to Examples. Not on the playgrounds, which
+  // component docs lead to Styles, Styles to the Showcase. Not on the playgrounds, which
   // fill the window, nor outside the sidebar's pages.
   const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
   const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
   const content = eta.render(template, { ...data, icon, docGroups, guideGroup, components, playgroundGroups, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
+  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
   // Where the title already names the section, the compact header can drop the breadcrumb.
   // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
@@ -131,8 +131,8 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
     `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? `${icon('arrow_back')} Previous` : `Next ${icon('arrow_forward')}`}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
-const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
-/** The reading order across sections, a cycle: the documentation, Styles, Examples, and back. */
+const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
+/** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
@@ -231,9 +231,14 @@ export async function handleRequest(request: Request): Promise<Response> {
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component }))
       : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
-  else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
-  else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
-    const [, slug, , framework] = /^\/examples\/([a-z-]+)\/(frame\/([a-z]+)\/)?$/.exec(path)!;
+  else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
+  // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
+  // to its /showcase/ twin, the query kept (the browser keeps the fragment).
+  else if (path === '/examples/' || /^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
+    response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/showcase/${path.slice('/examples/'.length)}${url.search}` } });
+  }
+  else if (/^\/showcase\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
+    const [, slug, , framework] = /^\/showcase\/([a-z-]+)\/(frame\/([a-z]+)\/)?$/.exec(path)!;
     const example = exampleBySlug(slug!);
     const variants = example ? exampleVariants(slug!) : null;
     if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
@@ -242,7 +247,7 @@ export async function handleRequest(request: Request): Promise<Response> {
         ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)),
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
       // The address's framework when the example has it, so the first paint (frame and source)
       // is the one the address names; otherwise its first variant. The client keeps it in step.
       framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
