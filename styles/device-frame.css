@@ -7,8 +7,6 @@
   border-bottom: 1px solid var(--border);
   /* Primary and secondary are not repainted here: the bar inherits the page's
      chosen theme roles from <html data-theme> directly. */
-  --mtrl-sys-color-secondary-container: var(--accent-dim);
-  --mtrl-sys-color-on-secondary-container: var(--text);
   --mtrl-sys-color-surface-container: var(--surface-container);
   --mtrl-sys-color-surface-container-low: var(--bg-card);
   --mtrl-sys-color-on-surface: var(--text);

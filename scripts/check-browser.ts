@@ -139,6 +139,50 @@ try {
     assert(code?.includes(`dataset.theme = '${theme}'`) && code.includes(`dataset.themeMode = '${mode}'`), 'Generated code lost the saved appearance');
   };
   await assertAppearance('ocean', 'dark');
+  // Filled controls and accent-tinted surfaces keep AA contrast in a dark theme
+  // and a light one: text on a role fill is that role's on-pair (white on a dark
+  // theme's light primary was 1.7:1). Includes the Styles toggles, checked and not.
+  for (const [theme, mode] of [['ocean', 'dark'], ['forest', 'light']] as const) {
+    const themedContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await themedContext.addInitScript(([t, m]) => {
+      localStorage.setItem('md3-preview-appearance', JSON.stringify({ theme: t, mode: m }));
+      localStorage.setItem('md3-site-mode', m!);
+    }, [theme, mode]);
+    const themedPage = await themedContext.newPage();
+    for (const route of ['styles/', '']) {
+      await themedPage.goto(`${base}${route}`);
+      await themedPage.waitForTimeout(400);
+      const rows = await themedPage.evaluate(() => {
+        const luminance = (rgb: string) => {
+          const [r, g, b] = rgb.match(/[\d.]+/g)!.slice(0, 3).map(part => {
+            const value = Number(part) / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+        };
+        const backgroundOf = (element: Element): string => {
+          for (let node: Element | null = element; node; node = node.parentElement) {
+            const color = getComputedStyle(node).backgroundColor;
+            if (!color.endsWith(', 0)') && color !== 'transparent') return color;
+          }
+          return 'rgb(255, 255, 255)';
+        };
+        const candidates = [...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary')];
+        return candidates.filter(element => element.getBoundingClientRect().width > 0).map(element => {
+          const style = getComputedStyle(element);
+          const ratio = (Math.max(luminance(style.color), luminance(backgroundOf(element))) + 0.05) / (Math.min(luminance(style.color), luminance(backgroundOf(element))) + 0.05);
+          const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && Number(style.fontWeight) >= 700);
+          return { text: element.textContent?.trim().slice(0, 24), ratio, large, iconOnly: !element.textContent?.trim() };
+        });
+      });
+      assert(rows.length >= 1, `${theme}/${mode} ${route || 'home'}: no filled controls found for the contrast check`);
+      for (const row of rows) {
+        const needed = row.large || row.iconOnly ? 3 : 4.5;
+        assert(row.ratio >= needed, `${theme}/${mode} ${route || 'home'}: "${row.text}" is ${row.ratio.toFixed(2)}:1 (want ${needed}:1)`);
+      }
+    }
+    await themedContext.close();
+  }
   // Hold both the iframe document and application bundles to expose loading-time flashes.
   const loadingPage = await context.newPage();
   let releaseDocument!: () => void;

@@ -210,7 +210,7 @@ samp {
 
 .badge--accent {
     border-color: var(--accent);
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
     background: var(--accent-dim);
 }
 
@@ -927,7 +927,7 @@ select:focus-visible,
 /* Sidebar links — highlight instead of ring */
 .sidebar__link:focus-visible {
     background: var(--accent-dim);
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
     outline: none;
 }
 

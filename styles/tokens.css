@@ -56,7 +56,7 @@
     --border-hover: var(--mtrl-sys-color-outline, #2e2e38);
     --accent: var(--mtrl-sys-color-primary, #4354a5);
     --accent-dim: var(--mtrl-sys-color-primary-container, rgba(102, 126, 234, 0.15));
-    --accent-glow: var(--mtrl-sys-color-primary-container, rgba(102, 126, 234, 0.06));
+    --accent-glow: color-mix(in srgb, var(--mtrl-sys-color-primary, #4354a5) 6%, transparent);
     --accent-text: var(--mtrl-sys-color-primary, #8da0f2);
 
     /* Colors: Semantic. Material has an error role; it has no success or
@@ -151,7 +151,7 @@
     --border-hover: var(--mtrl-sys-color-outline, #c0c0d0);
     --accent: var(--mtrl-sys-color-primary, #4a5cd8);
     --accent-dim: var(--mtrl-sys-color-primary-container, rgba(74, 92, 216, 0.08));
-    --accent-glow: var(--mtrl-sys-color-primary-container, rgba(74, 92, 216, 0.04));
+    --accent-glow: color-mix(in srgb, var(--mtrl-sys-color-primary, #4a5cd8) 6%, transparent);
     --accent-text: var(--mtrl-sys-color-primary, #4a5cd8);
 
     /* Colors: Semantic */
