@@ -39,31 +39,37 @@
 /* ─── Dark Theme (default) ───────────────────────────────────────── */
 
 :root {
-    /* Colors: Base */
-    --text: #e8e8ed;
-    --text-muted: #a8a8ba;
-    --text-dim: #8888a0;
-    --bg: #0c0c10;
-    --bg-sidebar: #101014;
-    --bg-card: #141418;
-    --bg-card-hover: #1a1a1f;
-    --surface-container: #18181e;
-    --border: #1e1e25;
-    --border-hover: #2e2e38;
-    --accent: #4354a5;
-    --accent-dim: rgba(102, 126, 234, 0.15);
-    --accent-glow: rgba(102, 126, 234, 0.06);
-    --accent-text: #8da0f2;
+    /* Colors: the site's aliases over the chosen Material theme's roles.
+       The theme sheet (loaded in the head for [data-theme] on <html>) supplies
+       --mtrl-sys-color-* for the saved theme and mode; every alias falls back
+       to the value the site used before themes reached it, so a slow or failed
+       sheet keeps the last usable palette instead of an unstyled page. */
+    --text: var(--mtrl-sys-color-on-surface, #e8e8ed);
+    --text-muted: var(--mtrl-sys-color-on-surface-variant, #a8a8ba);
+    --text-dim: var(--mtrl-sys-color-on-surface-variant, #8888a0);
+    --bg: var(--mtrl-sys-color-surface, #0c0c10);
+    --bg-sidebar: var(--mtrl-sys-color-surface-container-low, #101014);
+    --bg-card: var(--mtrl-sys-color-surface-container, #141418);
+    --bg-card-hover: var(--mtrl-sys-color-surface-container-high, #1a1a1f);
+    --surface-container: var(--mtrl-sys-color-surface-container, #18181e);
+    --border: var(--mtrl-sys-color-outline-variant, #1e1e25);
+    --border-hover: var(--mtrl-sys-color-outline, #2e2e38);
+    --accent: var(--mtrl-sys-color-primary, #4354a5);
+    --accent-dim: var(--mtrl-sys-color-primary-container, rgba(102, 126, 234, 0.15));
+    --accent-glow: color-mix(in srgb, var(--mtrl-sys-color-primary, #4354a5) 6%, transparent);
+    --accent-text: var(--mtrl-sys-color-primary, #8da0f2);
 
-    /* Colors: Semantic */
+    /* Colors: Semantic. Material has an error role; it has no success or
+       warning role, so green and orange keep their hues in both modes. */
     --green: #4ade80;
     --green-dim: rgba(74, 222, 128, 0.1);
     --orange: #fb923c;
     --orange-dim: rgba(251, 146, 60, 0.1);
-    --red: #f87171;
+    --red: var(--mtrl-sys-color-error, #f87171);
 
-    /* Colors: Badge semantic */
-    --badge-bg: rgba(255, 255, 255, 0.06);
+    /* Colors: Badge semantic: the neutral chip follows the theme; the
+       categorical hues have no theme role and stay. */
+    --badge-bg: var(--mtrl-sys-color-surface-container-highest, rgba(255, 255, 255, 0.06));
     --badge-success: #6fcf97;
     --badge-success-bg: rgba(111, 207, 151, 0.1);
     --badge-warning: #d4a052;
@@ -78,16 +84,16 @@
     --badge-purple-bg: rgba(176, 154, 223, 0.1);
 
     /* Colors: Code */
-    --bg-code: #18181e;
-    --bg-code-inline: #1c1c24;
+    --bg-code: var(--mtrl-sys-color-surface-container, #18181e);
+    --bg-code-inline: var(--mtrl-sys-color-surface-container-high, #1c1c24);
     --code-bar-bg: rgba(255, 255, 255, 0.02);
 
     /* Colors: Chrome */
-    --header-bg: rgba(12, 12, 16, 0.85);
-    --dropdown-bg: rgba(12, 12, 16, 0.95);
-    --sidebar-hover: rgba(255, 255, 255, 0.03);
-    --overlay-bg: rgba(0, 0, 0, 0.5);
-    --shadow-sidebar: rgba(0, 0, 0, 0.4);
+    --header-bg: color-mix(in srgb, var(--mtrl-sys-color-surface, #0c0c10) 85%, transparent);
+    --dropdown-bg: color-mix(in srgb, var(--mtrl-sys-color-surface, #0c0c10) 95%, transparent);
+    --sidebar-hover: color-mix(in srgb, var(--mtrl-sys-color-on-surface, #ffffff) 3%, transparent);
+    --overlay-bg: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000000) 50%, transparent);
+    --shadow-sidebar: color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 40%, transparent);
 
     /* Spacing */
     --header-height: 56px;
@@ -135,31 +141,32 @@
 /* ─── Light Theme ────────────────────────────────────────────────── */
 
 [data-theme-mode="light"] {
-    /* Colors: Base */
-    --text: #1a1a2e;
-    --text-muted: #40405a;
-    --text-dim: #5c5c78;
-    --bg: #ffffff;
-    --bg-sidebar: #f5f5f8;
-    --bg-card: #f0f0f5;
-    --bg-card-hover: #e8e8f0;
-    --surface-container: #e8e8f0;
-    --border: #dcdce5;
-    --border-hover: #c0c0d0;
-    --accent: #4a5cd8;
-    --accent-dim: rgba(74, 92, 216, 0.08);
-    --accent-glow: rgba(74, 92, 216, 0.04);
-    --accent-text: #4a5cd8;
+    /* Colors: the same aliases over the theme's light roles, with the old
+       light palette as the fallback when no sheet has loaded. */
+    --text: var(--mtrl-sys-color-on-surface, #1a1a2e);
+    --text-muted: var(--mtrl-sys-color-on-surface-variant, #40405a);
+    --text-dim: var(--mtrl-sys-color-on-surface-variant, #5c5c78);
+    --bg: var(--mtrl-sys-color-surface, #ffffff);
+    --bg-sidebar: var(--mtrl-sys-color-surface-container-low, #f5f5f8);
+    --bg-card: var(--mtrl-sys-color-surface-container, #f0f0f5);
+    --bg-card-hover: var(--mtrl-sys-color-surface-container-high, #e8e8f0);
+    --surface-container: var(--mtrl-sys-color-surface-container, #e8e8f0);
+    --border: var(--mtrl-sys-color-outline-variant, #dcdce5);
+    --border-hover: var(--mtrl-sys-color-outline, #c0c0d0);
+    --accent: var(--mtrl-sys-color-primary, #4a5cd8);
+    --accent-dim: var(--mtrl-sys-color-primary-container, rgba(74, 92, 216, 0.08));
+    --accent-glow: color-mix(in srgb, var(--mtrl-sys-color-primary, #4a5cd8) 6%, transparent);
+    --accent-text: var(--mtrl-sys-color-primary, #4a5cd8);
 
     /* Colors: Semantic */
     --green: #16a34a;
     --green-dim: rgba(22, 163, 74, 0.08);
     --orange: #ea580c;
     --orange-dim: rgba(234, 88, 12, 0.08);
-    --red: #dc2626;
+    --red: var(--mtrl-sys-color-error, #dc2626);
 
     /* Colors: Badge semantic */
-    --badge-bg: #f0f0f2;
+    --badge-bg: var(--mtrl-sys-color-surface-container-highest, #f0f0f2);
     --badge-success: #1b6e20;
     --badge-success-bg: #e1f0e2;
     --badge-warning: #7a5000;
@@ -174,16 +181,16 @@
     --badge-purple-bg: #eae6f5;
 
     /* Colors: Code */
-    --bg-code: #f0f0f5;
-    --bg-code-inline: #eaeaf0;
+    --bg-code: var(--mtrl-sys-color-surface-container, #f0f0f5);
+    --bg-code-inline: var(--mtrl-sys-color-surface-container-high, #eaeaf0);
     --code-bar-bg: rgba(0, 0, 0, 0.02);
 
     /* Colors: Chrome */
-    --header-bg: rgba(255, 255, 255, 0.85);
-    --dropdown-bg: rgba(255, 255, 255, 0.95);
-    --sidebar-hover: rgba(0, 0, 0, 0.03);
-    --overlay-bg: rgba(0, 0, 0, 0.3);
-    --shadow-sidebar: rgba(0, 0, 0, 0.15);
+    --header-bg: color-mix(in srgb, var(--mtrl-sys-color-surface, #ffffff) 85%, transparent);
+    --dropdown-bg: color-mix(in srgb, var(--mtrl-sys-color-surface, #ffffff) 95%, transparent);
+    --sidebar-hover: color-mix(in srgb, var(--mtrl-sys-color-on-surface, #000000) 3%, transparent);
+    --overlay-bg: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000000) 30%, transparent);
+    --shadow-sidebar: color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 15%, transparent);
 }
 
 /* Material 3 breakpoints (CSS pixels on the site).

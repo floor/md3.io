@@ -100,13 +100,23 @@ try {
   assert(copied === await page.locator('#generated-code').textContent(), 'Copied code differs from the highlighted source');
   assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('material/themes/ocean'), 'Copied code is stale');
   // Material's component CSS stays in the frame and the elements' shadow roots. The
-  // page may load the chosen theme's sheet (one appearance for the whole site): it only
-  // sets roles under [data-theme], which only the material scopes carry.
+  // page may load the chosen theme's sheet (one appearance for the whole site): its
+  // roles land on <html data-theme> itself (layout step 8: the site's own colours
+  // follow the theme) and on the material scopes, and nowhere else.
   const leak = await page.evaluate(() => ({
     sheets: [...document.styleSheets].map(sheet => sheet.href ?? '').filter(href => href.includes('/dist/material/') && !href.includes('/dist/material/themes/')),
-    themed: [...document.querySelectorAll('[data-theme]')].filter(element => !element.matches('.playground--material, .site-material')).map(element => element.tagName),
+    themed: [...document.querySelectorAll('[data-theme]')].filter(element => element !== document.documentElement && !element.matches('.playground--material, .site-material')).map(element => element.tagName),
   }));
   assert(leak.sheets.length === 0 && leak.themed.length === 0, `Material CSS leaked into the site: ${JSON.stringify(leak)}`);
+  // Layout step 8: the site's own surfaces take the chosen theme's roles at the root.
+  await page.waitForFunction(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--mtrl-sys-color-surface)';
+    document.body.append(probe);
+    const surface = getComputedStyle(probe).color;
+    probe.remove();
+    return document.documentElement.dataset.theme === 'ocean' && getComputedStyle(document.body).backgroundColor === surface;
+  });
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
   // The pilot has no Reset: the Scenario select's Default is the way back.
@@ -132,6 +142,82 @@ try {
     assert(code?.includes(`dataset.theme = '${theme}'`) && code.includes(`dataset.themeMode = '${mode}'`), 'Generated code lost the saved appearance');
   };
   await assertAppearance('ocean', 'dark');
+  // Filled controls and accent-tinted surfaces keep AA contrast in a dark theme
+  // and a light one: text on a role fill is that role's on-pair (white on a dark
+  // theme's light primary was 1.7:1). Covers the Styles toggles (checked and
+  // not), the primary buttons, and every surface the primary-container fill
+  // paints — the search dialog's active result, blockquotes, the Colour Lab's
+  // checked segments — plus the accent-glow wash behind the Styles "Aa".
+  for (const [theme, mode] of [['ocean', 'dark'], ['baseline', 'dark'], ['forest', 'dark'], ['forest', 'light']] as const) {
+    const themedContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await themedContext.addInitScript(([t, m]) => {
+      localStorage.setItem('md3-preview-appearance', JSON.stringify({ theme: t, mode: m }));
+      localStorage.setItem('md3-site-mode', m!);
+    }, [theme, mode]);
+    const themedPage = await themedContext.newPage();
+    for (const route of ['styles/', 'styles/color-lab/', 'docs/components/menu/', '']) {
+      await themedPage.goto(`${base}${route}`);
+      await themedPage.waitForTimeout(400);
+      if (route.startsWith('docs/')) {
+        // The search dialog's active result is an accent-dim surface too.
+        await themedPage.locator('#search-trigger').click();
+        await themedPage.locator('#search-input').fill('button');
+        await themedPage.locator('.search-dialog__result').first().waitFor();
+        await themedPage.keyboard.press('ArrowDown');
+        await themedPage.waitForTimeout(200);
+      }
+      const rows = await themedPage.evaluate(() => {
+        const luminance = (rgb: string) => {
+          const [r, g, b] = rgb.match(/[\d.]+/g)!.slice(0, 3).map(part => {
+            const value = Number(part) / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+        };
+        const backgroundOf = (element: Element): string => {
+          // Alpha backgrounds (the accent-glow wash) composite over what is under them.
+          const composite = (node: Element | null): [number, number, number] => {
+            if (!node) return [255, 255, 255];
+            const parts = getComputedStyle(node).backgroundColor.match(/[\d.]+/g)?.map(Number) ?? [];
+            const alpha = parts[3] ?? 1;
+            if (alpha >= 1) return [parts[0]!, parts[1]!, parts[2]!];
+            if (alpha <= 0) return composite(node.parentElement);
+            const under = composite(node.parentElement);
+            return [0, 1, 2].map(i => Math.round(parts[i]! * alpha + under[i]! * (1 - alpha))) as [number, number, number];
+          };
+          return `rgb(${composite(element).join(', ')})`;
+        };
+        const roleColor = (role: string) => {
+          const probe = document.createElement('span');
+          probe.style.color = `var(${role})`;
+          document.body.append(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        };
+        const container = roleColor('--mtrl-sys-color-primary-container');
+        // The filled controls named above, every surface painted with the
+        // primary-container fill (search's active result, blockquotes, the lab's
+        // checked segments), and the text inside those surfaces.
+        const tinted = [...document.querySelectorAll<HTMLElement>('*')].filter(element => getComputedStyle(element).backgroundColor === container);
+        const inside = tinted.flatMap(element => [element, ...element.querySelectorAll<HTMLElement>('*')]);
+        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary, .styles-card__visual--type span'), ...inside])];
+        return candidates.filter(element => element.getBoundingClientRect().width > 0
+          && ([...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) || element instanceof SVGElement)).map(element => {
+          const style = getComputedStyle(element);
+          const ratio = (Math.max(luminance(style.color), luminance(backgroundOf(element))) + 0.05) / (Math.min(luminance(style.color), luminance(backgroundOf(element))) + 0.05);
+          const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && Number(style.fontWeight) >= 700);
+          return { text: element.textContent?.trim().slice(0, 24), ratio, large, iconOnly: !element.textContent?.trim(), who: `${element.tagName.toLowerCase()}.${element.className}` };
+        });
+      });
+      assert(rows.length >= 1, `${theme}/${mode} ${route || 'home'}: no filled controls found for the contrast check`);
+      for (const row of rows) {
+        const needed = row.large || row.iconOnly ? 3 : 4.5;
+        assert(row.ratio >= needed, `${theme}/${mode} ${route || 'home'}: "${row.text}" (${row.who}) is ${row.ratio.toFixed(2)}:1 (want ${needed}:1)`);
+      }
+    }
+    await themedContext.close();
+  }
   // Hold both the iframe document and application bundles to expose loading-time flashes.
   const loadingPage = await context.newPage();
   let releaseDocument!: () => void;
@@ -145,7 +231,16 @@ try {
     await loadingPage.locator('#preview').waitFor();
     await loadingPage.waitForFunction(() => getComputedStyle(document.querySelector('#preview')!).colorScheme === 'dark');
     const background = await loadingPage.locator('#preview').evaluate(element => getComputedStyle(element).backgroundColor);
-    assert(background === 'rgb(29, 27, 32)', 'The empty iframe has a light loading background');
+    // The loading backdrop is the chosen theme's surface (ocean, dark, here), not a fixed colour.
+    const surface = await loadingPage.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--mtrl-sys-color-surface)';
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    assert(background === surface, `The empty iframe has a light loading background (${background} vs the theme surface ${surface})`);
     releaseDocument();
     const loadingFrame = loadingPage.frameLocator('#preview');
     await loadingFrame.locator('#stage').waitFor({ state: 'attached' });

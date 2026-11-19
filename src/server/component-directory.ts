@@ -1,6 +1,6 @@
 import type { ComponentSlug } from '../shared/components';
 
-// The component families follow the directory specified in the components A–Z brief.
+// Family labels follow https://m3.material.io/components. Their members use md3.io slugs.
 const families = [
   { id: 'buttons', name: 'Buttons', slugs: ['button', 'button-group', 'extended-fab', 'fab', 'fab-menu', 'icon-button', 'split-button'] },
   { id: 'date-time-pickers', name: 'Date & time pickers', slugs: ['datepicker', 'timepicker'] },

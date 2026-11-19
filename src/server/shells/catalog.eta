@@ -13,10 +13,10 @@
       <section class="component-catalog__section" aria-labelledby="catalog-<%= section.id %>">
         <h2 id="catalog-<%= section.id %>"><%= section.name %></h2>
         <div class="component-grid"><% section.items.forEach(({ slug, href }) => { const component = it.components[slug]; %>
-          <a class="component-card ui-card ui-card--interactive" href="<%= href %>">
+          <article class="component-card ui-card">
+            <div class="component-card__body"><h3><a href="<%= href %>"><%= component.name %></a></h3><p><%= component.summary %></p></div>
             <%~ it.catalogVisuals[slug] %>
-            <div class="component-card__body"><h3><%= component.name %></h3><p><%= component.summary %></p></div>
-          </a>
+          </article>
         <% }); %></div>
       </section>
     <% }); %>

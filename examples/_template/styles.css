@@ -1,0 +1,5 @@
+/* Layout for the example only: the components bring their own styles. */
+.notify { display: flex; flex-direction: column; gap: 16px; width: min(100%, 360px); }
+.notify p { margin: 0; }
+.notify__switch { display: block; width: 100%; }
+.notify__status { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
