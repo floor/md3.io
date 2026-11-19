@@ -152,4 +152,4 @@ Browse the themes and every colour role in [Styles › Color](/styles/color/), a
 - [Frameworks](frameworks.md): the guide for your framework, for its events, forms and
   server rendering.
 - [Architecture](../architecture/): how `material` is built.
-- [Examples](/examples/): whole screens in all six flavours.
+- [Showcase](/showcase/): whole screens in all six flavours.
