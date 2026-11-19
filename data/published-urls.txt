@@ -108,6 +108,9 @@
 /examples/settings/
 /examples/notes/
 /privacy/
+/showcase/
+/showcase/notes/
+/showcase/settings/
 /styles/
 /styles/color/
 /styles/color-lab/
