@@ -27,7 +27,8 @@ describe('stylesheets', () => {
     const list = minifyCss(readFileSync(resolve(import.meta.dir, '../node_modules/material/dist/styles/list.css'), 'utf8'));
     expect(list).toContain('.mtrl-list__item :is(button');
     const site = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8'));
-    expect(site).toContain('(max-width:1000px) and (min-width:721px)');
+    expect(site).toContain('@media (width < 600px)');
+    expect(site).toContain('@container component-detail (min-width:772px)');
     const preview = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/preview.css'), 'utf8'));
     expect(preview).toContain('#stage> :is(.mtrl-switch,.mtrl-slider,.mtrl-text-field,.mtrl-select,.mtrl-search)');
     const tokens = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/tokens.css'), 'utf8'));

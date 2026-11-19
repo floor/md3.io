@@ -1,5 +1,5 @@
 import './search';
-import './site-navigation';
+import { currentFocus } from './site-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -81,6 +81,19 @@ onAppearance(({ theme, mode }) => {
   headerScope.dataset.themeMode = mode;
   applyTheme(document, theme, [headerScope]);
 });
+
+const docToc = document.querySelector('.doc-toc');
+if (docToc) {
+  const tocHidden = matchMedia('(width < 1200px)');
+  tocHidden.addEventListener('change', () => {
+    const focused = currentFocus();
+    if (!tocHidden.matches || !(focused instanceof HTMLAnchorElement) || !docToc.contains(focused)) return;
+    const id = focused.getAttribute('href')?.slice(1) ?? '';
+    const target = document.getElementById(id) ?? document.getElementById('content');
+    if (target && !target.hasAttribute('tabindex')) target.tabIndex = -1;
+    target?.focus();
+  });
+}
 
 // The documentation's framework chips (document.eta): their code loads only on a page that
 // has them (src/client/docs-frameworks.ts).

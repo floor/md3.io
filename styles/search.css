@@ -375,7 +375,7 @@
 
 /* ─── Responsive ─────────────────────────────────────────────────── */
 
-@media (max-width: 640px) {
+@media (width < 600px) {
     .search-overlay {
         padding-top: 0;
         align-items: flex-start;

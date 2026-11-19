@@ -1,5 +1,3 @@
-export {};
-
 const bar = document.querySelector<HTMLElement>('#site-primary-bar');
 const rail = document.querySelector<HTMLElement>('#site-primary-rail');
 const dialog = document.querySelector<HTMLDialogElement>('#site-nav-dialog');
@@ -11,7 +9,7 @@ let lastFocus = document.activeElement;
 document.addEventListener('focusin', event => {
   if (event.target instanceof Element) lastFocus = event.target;
 });
-const currentFocus = () => document.activeElement === document.body ? lastFocus : document.activeElement;
+export const currentFocus = () => document.activeElement === document.body ? lastFocus : document.activeElement;
 
 if (bar && rail && dialog && opener && closer) {
   const compact = matchMedia('(width < 600px)');

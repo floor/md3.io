@@ -547,6 +547,117 @@ try {
       await page.screenshot({ animations: 'disabled', path: `${output}/styles-${path.split('/').filter(Boolean).join('-')}-375-${mode}.png`, fullPage: false });
     }
   }
+
+  const stylesPreview = page.locator('#styles-preview');
+  const previewToggle = stylesPreview.getByRole('button', { name: 'Preview', exact: true });
+  const comparePreview = stylesPreview.getByRole('checkbox', { name: 'Compare', exact: true });
+  const frames = stylesPreview.locator('.styles-preview__frames');
+  const mainFrame = stylesPreview.locator('[data-frame="theme"] iframe');
+  const baseFrame = stylesPreview.locator('[data-frame="base"] iframe');
+  const assertPreviewLayout = async (docked: boolean) => {
+    await until(() => stylesPreview.evaluate(node => node.classList.contains('styles-preview--docked')), docked, 'Preview docked state');
+    const layout = await stylesPreview.evaluate(node => {
+      const styles = getComputedStyle(node);
+      const pageBounds = node.parentElement!.querySelector('.styles-page')!.getBoundingClientRect();
+      const bounds = node.getBoundingClientRect();
+      return {
+        position: styles.position,
+        top: styles.top,
+        bottom: styles.bottom,
+        besidePage: bounds.left >= pageBounds.right - 1,
+        width: bounds.width,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    assert(layout.position === 'sticky' && layout.overflow <= 0, `Preview geometry: ${JSON.stringify(layout)}`);
+    assert(docked ? layout.bottom === '0px' && !layout.besidePage : layout.top !== 'auto' && layout.besidePage,
+      `Preview is in the wrong pane: ${JSON.stringify(layout)}`);
+  };
+  const assertSampleFits = async (frame: typeof mainFrame, label: string) => {
+    const title = frame.contentFrame().getByText('Weekend trips', { exact: true });
+    await title.waitFor({ state: 'visible' });
+    const geometry = await title.evaluate(async titleNode => {
+      await document.fonts.ready;
+      const node = titleNode.closest('#screen')!;
+      const bounds = (selector: string) => node.querySelector(selector)!.getBoundingClientRect();
+      const body = bounds('.screen__body');
+      const fab = bounds('.mtrl-fab');
+      const text = document.createRange();
+      text.selectNodeContents(node.querySelector('.mtrl-card__content')!);
+      const cardLines = Array.from(text.getClientRects());
+      return {
+        title: titleNode.textContent,
+        titleFits: titleNode.scrollWidth <= titleNode.clientWidth && titleNode.getBoundingClientRect().right <= bounds('[aria-label="Favorites"]').left + 1,
+        sampleFits: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        chipsFit: bounds('.mtrl-chips').top >= bounds('.mtrl-top-app-bar').bottom && bounds('.mtrl-chips').bottom <= body.bottom,
+        cardFits: cardLines.length > 0 && cardLines.every(line => line.left >= body.left && line.right <= body.right && line.bottom <= body.bottom),
+        fabFits: fab.top >= body.bottom && fab.right <= innerWidth && fab.bottom <= innerHeight,
+      };
+    });
+    assert(geometry.title === 'Weekend trips' && geometry.titleFits && geometry.sampleFits && geometry.chipsFit
+      && geometry.cardFits && geometry.fabFits, `${label}: sample geometry ${JSON.stringify(geometry)}`);
+  };
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.goto(`${base}/styles/`);
+  await previewToggle.click();
+  await comparePreview.check();
+  await stylesPreview.getByRole('radio', { name: 'Base', exact: true }).check();
+  await page.setViewportSize({ width: 839, height: 900 });
+  await previewToggle.focus();
+  await assertPreviewLayout(true);
+  assert(!await mainFrame.isVisible(), 'The dock shows one comparison sample');
+  await assertSampleFits(baseFrame, '839px dock');
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-839.png` });
+
+  await page.setViewportSize({ width: 840, height: 900 });
+  await assertPreviewLayout(false);
+  assert(!await previewToggle.isVisible(), 'The side pane leaves the dock toggle hidden');
+  await page.waitForFunction(() => document.activeElement === document.getElementById('styles-compare'));
+  assert(await comparePreview.isChecked() && await frames.getAttribute('data-show') === 'base', 'The side pane retains the comparison');
+  assert(await stylesPreview.getByRole('radiogroup', { name: 'Show' }).isVisible(), 'A narrow side preview keeps the comparison switch');
+  assert(!await mainFrame.isVisible(), 'The expanded side pane shows one comparison sample');
+  await assertSampleFits(baseFrame, '840px side preview');
+  const cardLefts = await page.locator('.styles-cards:not(.styles-cards--coming) > .styles-card')
+    .evaluateAll(cards => cards.map(card => card.getBoundingClientRect().left));
+  assert(cardLefts.length > 1 && new Set(cardLefts).size === 1, 'Foundation cards stack beside the preview at 840px');
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-840.png` });
+
+  await page.setViewportSize({ width: 839, height: 900 });
+  await assertPreviewLayout(true);
+  assert(await previewToggle.getAttribute('aria-expanded') === 'true', 'The preview returns to the dock open');
+  assert(await comparePreview.evaluate(node => document.activeElement === node), 'The visible Compare control keeps focus');
+  assert(await frames.getAttribute('data-show') === 'base', 'The dock retains the comparison');
+
+  await page.setViewportSize({ width: 1599, height: 900 });
+  await assertPreviewLayout(false);
+  const baseChoice = stylesPreview.getByRole('radio', { name: 'Base', exact: true });
+  await baseChoice.focus();
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-1599-compare.png` });
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.getElementById('styles-compare'));
+  await baseChoice.waitFor({ state: 'hidden' });
+  await assertSampleFits(mainFrame, '1600px selected theme');
+  await assertSampleFits(baseFrame, '1600px base theme');
+  await page.screenshot({ animations: 'disabled', path: `${output}/styles-preview-1600-compare.png` });
+
+  await mainFrame.contentFrame().getByRole('button', { name: 'Open navigation', exact: true }).focus();
+  assert(await mainFrame.evaluate(node => document.activeElement === node), 'Focus is inside the theme sample before shrinking');
+  await page.setViewportSize({ width: 1599, height: 900 });
+  await baseChoice.waitFor();
+  await page.waitForFunction(() => document.activeElement?.matches('input[name="styles-show"][value="base"]'));
+  assert(await frames.getAttribute('data-show') === 'base' && !await mainFrame.isVisible(), 'The narrower pane restores the selected frame');
+
+  await page.setViewportSize({ width: 840, height: 900 });
+  await page.goto(`${base}/styles/shape/`);
+  await assertPreviewLayout(true);
+  assert(!await mainFrame.isVisible(), 'Shape starts with its preview closed');
+  await previewToggle.click();
+  await assertPreviewLayout(false);
+  assert(await mainFrame.isVisible() && await previewToggle.isVisible(), 'Shape keeps its toggle next to the expanded preview');
+  await page.setViewportSize({ width: 839, height: 900 });
+  await assertPreviewLayout(true);
+  assert(await mainFrame.isVisible() && await previewToggle.getAttribute('aria-expanded') === 'true', 'Shape docks without closing');
+
   assert(!errors.length, `Browser errors:\n${errors.join('\n')}`);
   console.log('Styles pages: Themes app (mtrl select, cards from mtrl CSS, ?theme= link, snackbar copy, palettes, one Scheme card that follows the site mode in place, flat listeners over 10 switches and 10 site mode toggles, a switch within a frame, the Theme name field (its reserved row: no jump through a refusal at 1440, 390 and 375 px), destroy, 390 px), theme and mode swap, shared appearance key, sample text, copy, shape step edits in the gallery and preview, shape library and morph, export CSS, share link, preview dialog, 375 px in both site themes.');
 } finally {
