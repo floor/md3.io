@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-10
+updated: 2026-11-19
 status: published
 ---
 
@@ -98,7 +98,10 @@ The field and trigger are built immediately. With code splitting enabled, the ca
 loads on the first open, or earlier on `pointerenter` or `focus` on the trigger. `isOpen()` and
 the open/close state and events remain synchronous. Until the calendar arrives, `aria-expanded`
 stays `false` and a modal dialog takes its name from `label` through `aria-label`; focus enters
-the calendar only when ready. A `close()` while loading keeps it closed when the chunk lands.
+the calendar only when ready. A `close()` while loading keeps it closed when the chunk lands. A
+failed calendar import closes a waiting open and emits `loaderror` with the error; a later open
+may try again, though browsers may cache the rejected module URL, so recovery can require a page
+reload.
 
 ## API
 
@@ -155,6 +158,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 |-------|---------|-------------|
 | `change` | `{ value, rangeEndDate, formattedValue, iso }` | The committed value changed: `value` as `getValue()` returns it, `rangeEndDate` a range's end (`null` otherwise), `iso` the value as ISO text |
 | `open` / `close` | `{ value }` | The calendar opened or closed |
+| `loaderror` | `{ error }` | A deferred calendar chunk failed to load; a later open may try again |
 
 Every `change` has the same shape, whether the calendar, the field or `setValue()` committed
 it; a docked range emits once, when both its dates are chosen. The web component's `change`

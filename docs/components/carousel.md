@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-09
+updated: 2026-11-19
 status: published
 ---
 
@@ -135,7 +135,8 @@ The web component's `change` carries `{ value }` too.
 
 - The carousel is a `region` with `aria-roledescription="carousel"`, named by `ariaLabel`:
   name each carousel on a page distinctly.
-- Each item is a focusable `group` with `aria-roledescription="slide"`, labelled "n of total".
+- Each item is a focusable `group` with `aria-roledescription="slide"`, named by a nonempty
+  `title`, then the image's `alt` text, and "n of total" only when neither supplies a name.
   Focusing one brings it into the focal position.
 - The arrows move between items, `Left` and `Right` (`Up` and `Down` full screen); `Home` and
   `End` go to the ends. Touch, trackpad and wheel scroll it natively.

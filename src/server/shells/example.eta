@@ -35,7 +35,7 @@
         <dl class="example-sizes"><% it.variants.forEach(variant => { %><div data-framework="<%= variant.id %>"><dt><%= variant.label %></dt><dd><%= (variant.gzip / 1024).toFixed(1) %> KB</dd></div><% }); %></dl>
       </section>
       <section class="ui-section"><h2 class="ui-title">COMPONENTS</h2>
-        <p><% it.example.components.forEach((slug, i) => { %><a class="text-link" href="/components/<%= slug %>/"><%= slug %></a><%= i < it.example.components.length - 1 ? ', ' : '' %><% }); %></p>
+        <p><% it.example.components.forEach((slug, i) => { %><% if (it.components[slug]) { %><a class="text-link" href="/components/<%= slug %>/"><%= slug %></a><% } else { %><%= slug %><% } %><%= i < it.example.components.length - 1 ? ', ' : '' %><% }); %></p>
       </section>
     </aside>
   </div>
