@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-11-10
+updated: 2026-11-19
 status: published
 ---
 
@@ -234,12 +234,11 @@ selector. So the stylesheet does not style a host the server already rendered, i
 
 ### Runtimes
 
-Node and Bun are supported in `material` 3.0.0. Worker and edge runtimes are unsupported.
-
-Each server entry lists the `browser` condition first. A resolver that tries `workerd` or
-`worker` before `browser` (Cloudflare Workers does) loads the browser stub. There
-`renderElement` throws "material/ssr is server-only", and importing a bridge does nothing, so
-the page renders with no declarative roots and no error.
+Node and Bun are supported in `material` 3.0.0. Since 3.14.0 the five SSR subpath entries also
+resolve to their server builds under the `workerd` and `worker` export conditions, ahead of
+`browser`, so a server rendered in a worker runtime (Cloudflare Workers resolves that way) loads
+the real renderer instead of the browser stub — including the four framework bridges and their
+render rollback behavior. Ordinary Node and browser resolution are unchanged.
 
 ### React: hydration, Suspense
 
