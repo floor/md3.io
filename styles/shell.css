@@ -32,6 +32,9 @@
 }
 
 .skip-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--site-target-size);
     position: absolute;
     top: -100vh;
     left: 0;
@@ -113,6 +116,10 @@ samp {
 }
 
 .header__logo {
+    display: inline-flex;
+    align-items: center;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     font-size: var(--fs-md);
     font-weight: var(--fw-bold);
     color: var(--text);
@@ -172,7 +179,9 @@ samp {
 }
 
 .sidebar__link {
-    display: block;
+    display: flex;
+    align-items: center;
+    min-height: var(--site-target-size);
     font-size: var(--fs-md);
     color: var(--text-muted);
     text-decoration: none;

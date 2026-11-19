@@ -39,7 +39,10 @@ if (dialog && input && results) {
     input.value = '';
     show([]);
     results.replaceChildren();
-    returnFocus?.focus();
+    // The dialog normally restores focus synchronously. The queued close event
+    // must leave focus alone if the user has already tabbed to the next control.
+    const focused = document.activeElement;
+    if (!focused || focused === document.body || dialog.contains(focused)) returnFocus?.focus();
   });
 
   document.addEventListener('keydown', event => {

@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import * as panel from './panel-driver';
 import { checkPlaygroundLayout } from './check-playground-layout';
+import { checkInputTargets } from './check-input-targets';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const base = server.url.toString();
@@ -318,6 +319,7 @@ try {
   await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   await checkPlaygroundLayout(context, base, output);
+  await checkInputTargets(browser, base, output);
   console.log(`Browser checks passed. Screenshots: ${output}`);
 } finally {
   await browser.close();

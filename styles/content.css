@@ -478,7 +478,7 @@
 .doc-install { margin: 16px 0 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-code); overflow: hidden; }
 .doc-install__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
 .doc-install__switch { display: flex; flex-wrap: wrap; gap: 2px; }
-.doc-install__option, .doc-install__copy { border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); cursor: pointer; }
+.doc-install__option, .doc-install__copy { min-width: var(--site-target-size); min-height: var(--site-target-size); border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); cursor: pointer; }
 .doc-install__option:hover, .doc-install__copy:hover { color: var(--text); }
 .doc-install__option:focus-visible, .doc-install__copy:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
 .doc-install__copy { font-family: inherit; }

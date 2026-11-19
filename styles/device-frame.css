@@ -28,6 +28,10 @@
   --mtrl-sys-shape-corner-extra-large: 28px;
 }
 .device__bar svg { width: 18px; height: 18px; }
+.device__bar button {
+  min-inline-size: var(--site-target-size);
+  min-block-size: var(--site-target-size);
+}
 .device__size { margin-left: auto; color: var(--text-muted); font: var(--fs-xs) var(--font-mono); white-space: nowrap; }
 .device__stage { min-width: 0; overflow: hidden; }
 /* Mobile and Tablet: the frame at the device's size, scaled from its top left into a
