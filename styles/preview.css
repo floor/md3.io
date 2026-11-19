@@ -12,6 +12,12 @@ html:is([data-component="switch"], [data-component="slider"], [data-component="t
 .mtrl-datepicker--docked { position: relative; inset: auto; width: 100%; max-width: 100%; max-height: calc(100dvh - 156px); }
 #stage > .mtrl-datepicker { min-width: 0; }
 @media (max-width: 400px) { #stage { padding: 20px; } }
+@media (width < 300px) {
+  html[data-component="datepicker"] #stage { padding-inline: 4px; }
+  .mtrl-datepicker__calendar { --mtrl-datepicker-grid-inset: 2px; max-width: calc(100vw - 8px); scrollbar-width: thin; }
+  .mtrl-datepicker__header { padding-inline: 2px; }
+  .mtrl-datepicker__month-selector { padding-inline: 2px; }
+}
 
 #stage > .mtrl-chips { width: fit-content; }
 
@@ -43,6 +49,11 @@ html[data-component="carousel"] #stage { height: 100%; padding: 24px 0 16px; }
 #stage > .mtrl-carousel { width: min(100%, 560px); height: min(360px, 100%); flex-shrink: 0; }
 #stage > .mtrl-carousel--full-screen { width: auto; max-width: calc(100% - 32px); height: min(600px, 100%); aspect-ratio: 2 / 3; }
 .mtrl-dialog:not(.mtrl-dialog--fullscreen) { max-width: calc(100vw - 32px); max-height: calc(100dvh - 24px); }
+@media (width < 300px) {
+  .mtrl-dialog:not(.mtrl-dialog--fullscreen) { min-width: 0; overflow: auto; }
+  .mtrl-dialog :is(.mtrl-dialog__header, .mtrl-dialog__content, .mtrl-dialog__footer) { padding-inline: 16px; }
+  .mtrl-dialog__footer { flex-wrap: wrap; }
+}
 .mtrl-side-sheet__container { max-width: min(400px, 100vw) !important; }
 
 html:is([data-component="badge"], [data-component="progress"], [data-component="loading-indicator"], [data-component="snackbar"], [data-component="tooltip"]) #stage { width: 100%; min-width: 0; }

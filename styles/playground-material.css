@@ -1,9 +1,85 @@
-/* styles/playground-material.css — the Button playground pilot's panel layout.
-   The material elements themselves are not restyled here: they render with
-   material's own shadow-DOM styles and baseline tokens (scoped to
-   .playground--material in the page head), at compact density with the groups
-   at the xs size. This sheet only lays out the rows around them — the same
-   rows, label on the left and control on the right, the native panel uses. */
+/* Component playground layout. The preview and configuration keep the same
+   iframe and form at every width. */
+.component-page {
+    --playground-preview-min: 310px;
+    min-width: 0;
+    height: auto;
+    padding: 20px clamp(18px, 2.4vw, 40px) 28px;
+}
+
+.component-page .page-heading { margin-block-end: 20px; }
+.component-page .playground-space {
+    height: auto;
+    min-height: var(--playground-preview-min);
+    flex: 1 1 auto;
+}
+
+@media (min-width: 600px) {
+    .component-page { --playground-preview-min: 350px; }
+}
+
+.component-page:is([data-component="datepicker"], [data-component="timepicker"]) {
+    --playground-preview-min: 560px;
+}
+.component-page:is([data-component="card"], [data-component="dialog"], [data-component="bottom-sheet"], [data-component="side-sheet"]) {
+    --playground-preview-min: 480px;
+}
+
+.preview-frameworks {
+    margin: 0;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    flex: none;
+}
+.playground--material .panel-heading.preview-heading {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    padding: 4px 12px;
+}
+
+.playground--material .configuration { container: configuration / inline-size; }
+
+@media (min-width: 840px) {
+    /* At 840px, the 96px rail and 160px list leave 584px. After 40px
+       padding and a 16px gap, the frame and controls have 240px and 288px.
+       The widest five-segment group measures 258px before section padding. */
+    .component-list-layout.component-list-layout--detail {
+        grid-template-columns: clamp(160px, 19vw, 256px) minmax(0, 1fr);
+    }
+    .component-page .playground {
+        grid-template-columns: minmax(0, 1fr) clamp(288px, 35%, 380px);
+    }
+    .layout:has(.component-page) { min-height: calc(100dvh - var(--site-footer-height, 60px)); }
+    .layout:has(.component-page) .content {
+        min-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
+    }
+    .layout:has(.component-page) > .sidebar {
+        height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
+    }
+    .layout:has(.component-page) + .site-footer {
+        min-height: var(--site-footer-height, 60px);
+        align-items: center;
+        padding-block: 0;
+    }
+}
+
+/* Fit the window when its height can accommodate a useful preview. For short
+   windows both panes grow in the document and all controls use the page scroll. */
+@media (min-width: 840px) and (min-height: 860px) {
+    .component-page {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
+    }
+    .component-page .playground { flex: 1; align-items: stretch; }
+    .playground--material .configuration { contain: size; overflow: clip; }
+    .playground--material .configuration-body {
+        flex: 1;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        scrollbar-width: thin;
+    }
+}
 
 /* The same fill-the-column rule the native panel gives its selects: material's
    hosts are inline-level and would otherwise keep their intrinsic width. */
@@ -17,15 +93,6 @@
    only; hover (on-surface), focus (primary) and error keep their own colours. */
 .playground--material m-select,
 .playground--material m-text-field { --mtrl-sys-color-outline: var(--mtrl-sys-color-outline-variant); }
-
-/* A wider side panel than the native one's 340px (site.css): room for the
-   material fields and the five-button groups. From 1200px (M3's large
-   breakpoint) only: between 1001 and 1199px the 40px came out of the preview
-   column, and at 1024px the heading's Light/Dark group ran 12px past it
-   (check-selection). At 1000px and below the panel stacks under the preview. */
-@media (min-width: 1200px) {
-    .playground.playground--material { grid-template-columns: minmax(0, 1fr) 380px; }
-}
 
 /* With the wider panel the row labels take material's own switch label size,
    16px (body large, .mtrl-switch__label in material's switch.css) — the site's
@@ -83,6 +150,12 @@
 .playground--material .control-row:has(m-button-group) { grid-template-columns: minmax(0, 1fr) auto; }
 .playground--material .control-row m-button-group { justify-self: end; }
 
+@container configuration (width < 340px) {
+    .playground--material .configuration .ui-section { padding-inline: 8px; }
+    .playground--material .configuration .control-row { grid-template-columns: minmax(0, 1fr); }
+    .playground--material .configuration .control-row m-button-group { justify-self: start; }
+}
+
 /* The heading's tabs without the scroll row: material's element has no
    attribute for the component's scrollable/showDivider config (it is
    creation-only, and the element maps only variant and value), so the parts
@@ -92,13 +165,3 @@
    native preview-tabs sat. */
 .playground--material m-tabs::part(divider) { display: none; }
 .playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
-
-}
-
-/* The material heading (tabs, the 168px theme select, the Light/Dark group)
-   needs more room than the native one: between 1151px, where ui.css stops
-   wrapping it, and 1299px its row ran past the heading (measured 1160–1290px).
-   The same wrap ui.css gives narrower windows, up to 1299px. */
-@media (max-width: 1299px) {
-    .playground--material .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; }
-}

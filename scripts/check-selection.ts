@@ -151,8 +151,10 @@ try {
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
     await page.getByRole('tab', { name: 'Live preview' }).click();
     await reset();
+    await page.setViewportSize({ width: 1440, height: 1080 });
+    await panel.checkPlaygroundScroll(page, slug, 'fit');
     await page.setViewportSize({ width: 1280, height: 640 });
-    assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), `${slug}: desktop page overflows vertically`);
+    await panel.checkPlaygroundScroll(page, slug, 'page');
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });

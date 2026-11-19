@@ -28,10 +28,7 @@ try {
     console.log(`Checking ${slug}`);
     for (const viewport of [{ width: 1440, height: 900 }, { width: 1366, height: 768 }, { width: 1280, height: 640 }]) {
       await page.setViewportSize(viewport);
-      const geometry = await page.evaluate(() => ({ width: innerWidth, height: innerHeight, scrollWidth: document.documentElement.scrollWidth, scrollHeight: document.documentElement.scrollHeight, panels: [...document.querySelectorAll('.component-page, .playground, .configuration, .configuration-body, .preview-panel')].map(e => ({ name: e.className, y: e.getBoundingClientRect().y, height: e.getBoundingClientRect().height })) }));
-      assert(geometry.scrollHeight <= geometry.height && geometry.scrollWidth <= geometry.width, `${slug}: desktop playground overflows at ${viewport.width}×${viewport.height}: ${JSON.stringify(geometry)}`);
-      const panel = await page.locator('.configuration').boundingBox();
-      assert(panel && panel.y + panel.height <= viewport.height, `${slug}: configuration extends below viewport`);
+      await panel.checkPlaygroundScroll(page, slug, viewport.height === 900 ? 'fit' : 'page');
     }
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.screenshot({ animations: 'disabled', path: `${output}/${slug}-desktop.png`, fullPage: true });
