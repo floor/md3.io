@@ -108,6 +108,7 @@
 /examples/settings/
 /privacy/
 /showcase/
+/showcase/email/
 /showcase/settings/
 /styles/
 /styles/color/
