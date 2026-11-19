@@ -71,7 +71,7 @@
 .md3-palette__strip { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; border-radius: 8px; overflow: hidden; }
 .md3-palette__tone { display: grid; place-items: center; min-width: 0; height: 52px; font: 400 11px/1 var(--mtrl-ref-typeface-plain); }
 
-@media (max-width: 700px) {
+@media (width < 840px) {
   .theme-app__content { padding: 16px 12px 40px; }
   .md3-scheme-card { padding: 14px; }
   .md3-palette__tone { height: 40px; font-size: 9px; letter-spacing: -0.3px; }

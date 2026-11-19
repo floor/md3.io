@@ -25,10 +25,12 @@ tabs.on("change", ({ value }: { value: string }) => {
   notifications.hidden = value !== "notifications";
 });
 
-const make = (key: keyof Settings, label: string, supportingText?: string) => {
-  const control = createSwitch({ label, checked: Boolean(s[key]), supportingText });
+/** The switch-backed settings; `tab` holds the selected panel instead. */
+type SwitchKey = "wifi" | "bluetooth" | "airplane" | "notifications" | "sounds";
+const make = (key: SwitchKey, label: string, supportingText?: string) => {
+  const control = createSwitch({ label, checked: s[key], supportingText });
   control.on("change", ({ checked }) => {
-    (s as Record<string, unknown>)[key] = checked;
+    s[key] = checked;
     if (key === "airplane") applyAirplane();
   });
   return control;

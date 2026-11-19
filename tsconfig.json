@@ -9,8 +9,10 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "types": ["bun"],
-    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "jsxImportSource": "react"
   },
-  "include": ["server.ts", "src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"],
+  "include": ["server.ts", "src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts", "examples/**/*.ts", "examples/**/*.tsx"],
   "exclude": ["scripts/check-docs/prelude.ts", "scripts/check-docs/templates.d.ts"]
 }
