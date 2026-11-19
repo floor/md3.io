@@ -9,7 +9,7 @@
         "eta": "4.5.1",
         "highlight.js": "11.11.1",
         "marked": "17.0.2",
-        "material": "3.12.0",
+        "material": "3.15.1",
         "minisearch": "^7.2.0",
       },
       "devDependencies": {
@@ -20,7 +20,7 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "babel-preset-solid": "^1.9",
-        "material-addons": "3.0.0",
+        "material-addons": "3.1.0",
         "playwright": "^1.63.0",
         "react": "^19",
         "react-dom": "^19",
@@ -239,9 +239,9 @@
 
     "marked": ["marked@17.0.2", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-s5HZGFQea7Huv5zZcAGhJLT3qLpAfnY7v7GWkICUr0+Wd5TFEtdlRR2XUL5Gg+RH7u2Df595ifrxR03mBaw7gA=="],
 
-    "material": ["material@3.12.0", "", { "peerDependencies": { "react": ">=18", "solid-js": ">=1.8", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-4JttwMISnRNdTYkpq5qeVMDhEQuUpeMaW7X5SB0UM3OHqfGPxf7X/Vg9mNsw6qUrWYUhOAFgHC2o04q8N5Yc6Q=="],
+    "material": ["material@3.15.1", "", { "peerDependencies": { "react": ">=18", "solid-js": ">=1.8", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-mnx7wg6ulwbuLBKiWtfYbuD+UIixzw7pnKjXn5KM3ET8vCuoEQnSXcZnpmfKjCrvxcKe+kayg9+/RepygL+f4g=="],
 
-    "material-addons": ["material-addons@3.0.0", "", { "peerDependencies": { "material": "^3.0.0" } }, "sha512-HlvAlFOw92SBQgtMjfte3jgforhWOfCbYjmz4yTF5Mzjux7d1sHNFUAPsrBt/7GPAH0A+os0/MFUEDwcLQY67w=="],
+    "material-addons": ["material-addons@3.1.0", "", { "peerDependencies": { "material": "^3.15.1", "react": ">=18", "solid-js": ">=1.8", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-BWZzE6czDHmCnBCHcK1SruE9NYYmsivZwBUDlzrr3o/MrK1bnssz5AO0D7V1h5zRMbjt+Gpu2+faMQpXjuHakw=="],
 
     "minisearch": ["minisearch@7.2.0", "", {}, "sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg=="],
 

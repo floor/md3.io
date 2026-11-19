@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-09
+updated: 2026-11-19
 status: published
 ---
 
@@ -30,7 +30,8 @@ tabs:
 ### Icons and a badge
 
 With a label, the icon sits above it and the row is 64dp tall. A tab with an icon and no
-label needs `ariaLabel`. A badge is a count or a short text, four characters at most.
+label needs `ariaLabel`; without it the tab's name falls back to its value. A badge is a
+count or a short text, four characters at most.
 
 ```example
 tabs:
@@ -122,7 +123,7 @@ Each entry of `tabs`, and the argument to `addTab()`.
 |--------|------|---------|-------------|
 | `text` | `string` | `undefined` | The label |
 | `icon` | `string` | `undefined` | Icon as SVG markup. With a label, the icon sits above it and the row is 64dp tall |
-| `ariaLabel` | `string` | `undefined` | The accessible name of a tab with an icon and no label, which otherwise has none |
+| `ariaLabel` | `string` | `undefined` | The accessible name of a tab with an icon and no label; without it the name falls back to the tab's text, then its `value`, with any badge count joined after |
 | `value` | `string` | `undefined` | Identifies the tab to `change`, `setActiveTab()` and its panel |
 | `state` | `'active' \| 'inactive'` | `'inactive'` | Whether the tab starts active |
 | `disabled` | `boolean` | `false` | Whether the tab starts disabled |
