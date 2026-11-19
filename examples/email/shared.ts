@@ -29,6 +29,8 @@ export interface Message {
   folder: "inbox" | "sent" | "drafts";
   from: string;
   address: string;
+  /** Who the message went to, kept so Sent can show it. */
+  to?: string;
   subject: string;
   snippet: string;
   body: string[];
@@ -36,6 +38,8 @@ export interface Message {
   date: string;
   starred: boolean;
   unread: boolean;
+  /** Archived mail leaves the Inbox but stays in the mailbox (and in Starred). */
+  archived?: boolean;
   labels: string[];
 }
 
@@ -152,7 +156,7 @@ export const MESSAGES: Message[] = [
     starred: false, unread: false, labels: ["travel"],
   }),
   message("m12", {
-    folder: "sent", from: "You", address: "you@mailbox.example",
+    folder: "sent", from: "You", address: "you@mailbox.example", to: "lena@fernwick.example",
     subject: "Re: Team offsite dates", snippet: "Either week works for me, with a slight preference for the 7th.",
     body: [
       "Either week works for me, with a slight preference for the week of the 7th. If we land on the 14th I will move my dentist appointment.",
@@ -161,7 +165,7 @@ export const MESSAGES: Message[] = [
     starred: false, unread: false, labels: ["work"],
   }),
   message("m13", {
-    folder: "sent", from: "You", address: "you@mailbox.example",
+    folder: "sent", from: "You", address: "you@mailbox.example", to: "priya.nair@halcyon.example",
     subject: "Lease renewal documents", snippet: "Signed and attached — thanks for the quick turnaround.",
     body: [
       "Signed and attached. Thanks for the quick turnaround on the corrections.",
@@ -221,18 +225,24 @@ const matches = (m: Message, query: string): boolean => {
   return [m.from, m.subject, m.snippet].some((text) => text.toLowerCase().includes(needle));
 };
 
-/** The rows the list shows: the folder (Starred gathers stars from everywhere), then the label chip, then the search. */
+/** The rows the list shows: the folder (Starred gathers stars from everywhere, archived or not), then the label chip, then the search. */
 export const visibleMessages = (messages: Message[], s: MailState): Message[] =>
   messages
-    .filter((m) => (s.folder === "starred" ? m.starred : m.folder === s.folder))
+    .filter((m) => {
+      if (s.folder === "starred") return m.starred;
+      if (s.folder === "inbox") return m.folder === "inbox" && !m.archived;
+      return m.folder === s.folder;
+    })
     .filter((m) => !s.label || m.labels.includes(s.label))
     .filter((m) => matches(m, s.query));
 
 export const unreadCount = (messages: Message[]): number =>
-  messages.filter((m) => m.folder === "inbox" && m.unread).length;
+  messages.filter((m) => m.folder === "inbox" && !m.archived && m.unread).length;
 
 export const folderCount = (messages: Message[], folder: FolderId): number =>
-  folder === "starred" ? messages.filter((m) => m.starred).length : messages.filter((m) => m.folder === folder).length;
+  folder === "starred"
+    ? messages.filter((m) => m.starred).length
+    : messages.filter((m) => m.folder === folder && (folder !== "inbox" || !m.archived)).length;
 
 /** A destination's badge, or null for none: unread in the Inbox, totals for Starred and Drafts. */
 export const badgeFor = (messages: Message[], folder: FolderId): { badge: string; label: string } | null => {
@@ -293,19 +303,28 @@ export const setFolder = (s: MailState, folder: FolderId): void => {
   s.checked = [];
 };
 
-export const setLabel = (s: MailState, label: string | null): void => {
+export const setLabel = (s: MailState, messages: Message[], label: string | null): void => {
   s.label = label;
-  s.checked = [];
+  pruneChecked(s, messages);
 };
 
-export const setQuery = (s: MailState, query: string): void => {
+export const setQuery = (s: MailState, messages: Message[], query: string): void => {
   s.query = query;
-  s.checked = [];
+  pruneChecked(s, messages);
 };
 
-export const toggleStar = (messages: Message[], id: string): void => {
+export const toggleStar = (s: MailState, messages: Message[], id: string): void => {
   const m = findMessage(messages, id);
   if (m) m.starred = !m.starred;
+  // Unstarring in Starred makes the row leave the view; the selection goes with it.
+  pruneChecked(s, messages);
+};
+
+/** The selection only ever holds rows the list shows. */
+export const pruneChecked = (s: MailState, messages: Message[]): void => {
+  if (!s.checked.length) return;
+  const visible = new Set(visibleMessages(messages, s).map((m) => m.id));
+  s.checked = s.checked.filter((id) => visible.has(id));
 };
 
 export const toggleChecked = (s: MailState, id: string): void => {
@@ -316,19 +335,31 @@ export const clearChecked = (s: MailState): void => {
   s.checked = [];
 };
 
-/** Removes the given messages from the mailbox and from any state pointing at them. */
-const remove = (s: MailState, messages: Message[], ids: string[]): void => {
-  for (let i = messages.length - 1; i >= 0; i--) if (ids.includes(messages[i]!.id)) messages.splice(i, 1);
-  if (s.open && ids.includes(s.open)) {
+/** Closes the reading pane when the open message is no longer in the list. */
+const closeIfHidden = (s: MailState, messages: Message[]): void => {
+  if (s.open && !visibleMessages(messages, s).some((m) => m.id === s.open)) {
     s.open = null;
     s.reading = false;
   }
-  s.checked = s.checked.filter((id) => !ids.includes(id));
 };
 
-export const archiveChecked = (s: MailState, messages: Message[]): void => remove(s, messages, [...s.checked]);
+/** Delete is permanent: the messages leave the mailbox and any state pointing at them. */
+const remove = (s: MailState, messages: Message[], ids: string[]): void => {
+  for (let i = messages.length - 1; i >= 0; i--) if (ids.includes(messages[i]!.id)) messages.splice(i, 1);
+  s.checked = s.checked.filter((id) => !ids.includes(id));
+  closeIfHidden(s, messages);
+};
+
+/** Archive keeps the message: it leaves the Inbox, but Starred still gathers it. */
+const archive = (s: MailState, messages: Message[], ids: string[]): void => {
+  for (const m of messages) if (ids.includes(m.id)) m.archived = true;
+  pruneChecked(s, messages);
+  closeIfHidden(s, messages);
+};
+
+export const archiveChecked = (s: MailState, messages: Message[]): void => archive(s, messages, [...s.checked]);
 export const deleteChecked = (s: MailState, messages: Message[]): void => remove(s, messages, [...s.checked]);
-export const archiveOpen = (s: MailState, messages: Message[]): void => { if (s.open) remove(s, messages, [s.open]); };
+export const archiveOpen = (s: MailState, messages: Message[]): void => { if (s.open) archive(s, messages, [s.open]); };
 export const deleteOpen = (s: MailState, messages: Message[]): void => { if (s.open) remove(s, messages, [s.open]); };
 
 export const openCompose = (s: MailState, draft?: Partial<Draft>): void => {
@@ -357,6 +388,7 @@ export const sendDraft = (s: MailState, messages: Message[]): Message => {
     folder: "sent",
     from: "You",
     address: "you@mailbox.example",
+    to: s.draft.to.trim(),
     subject: s.draft.subject.trim() || "(no subject)",
     snippet: snippetOf(body.join(" ")),
     body,
@@ -373,3 +405,32 @@ export const sendDraft = (s: MailState, messages: Message[]): Message => {
 };
 
 export const snippetOf = (text: string): string => (text.length > 80 ? `${text.slice(0, 77)}…` : text);
+
+// ---- Focus (every variant moves focus the same way) ----
+
+const focus = (selector: string): void => {
+  document.querySelector<HTMLElement>(selector)?.focus();
+};
+
+/** Opening a message moves focus to its heading in the reading pane. */
+export const focusHeading = (): void => focus(".mail-message__subject");
+/** Back returns focus to the row the message was opened from. */
+export const focusRow = (id: string): void => focus(`.mail-row[data-id="${id}"] .mail-row__open`);
+/** When the open message leaves, focus lands on the list it came from. */
+export const focusList = (): void => focus(".mail__rows");
+
+/**
+ * The vanilla and Web Components variants rebuild their rows on every change, which
+ * replaces a focused row control and drops focus to the body. This refocuses the
+ * rebuilt twin, so Space on a checkbox or a star keeps focus where it was. The
+ * elements take focus on their host; the factories render a focusable control inside.
+ */
+export const keepRowFocus = (fn: () => void): void => {
+  const active = document.activeElement as HTMLElement | null;
+  const part = active && ["mail-row__check", "mail-row__star", "mail-row__open"].find((c) => active!.closest(`.${c}`));
+  const id = part && (active!.closest("[data-id]") as HTMLElement | null)?.dataset.id;
+  fn();
+  if (!part || !id) return;
+  const twin = document.querySelector<HTMLElement>(`.mail-row[data-id="${id}"] .${part}`);
+  (twin?.querySelector<HTMLElement>("input, button") ?? twin)?.focus();
+};
