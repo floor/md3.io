@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-29
+updated: 2026-11-19
 status: published
 ---
 
@@ -59,7 +59,14 @@ button:
 ```
 
 The factory can also show progress in the icon slot (`progress`, `setProgress()`,
-`setLoading()`); the web component does not take it yet. Recipes built on buttons, such as an
+`setLoading()`); the web component does not take it yet. A button created with `loading: true`
+is busy from the start — the loading state shows immediately, including on server-rendered
+buttons, and `setLoading(true)` disables it synchronously, before the progress chunk arrives.
+The lazily created progress instance is exposed as `progress`, so the public progress API
+controls the displayed indicator. An optional lean stylesheet,
+`material/styles/button-filled-small-round`, covers buttons configured `variant: 'filled'`,
+`size: 's'` and `shape: 'round'`; other variants, sizes or shapes, including changes through
+setters, need `material/styles/button`. Recipes built on buttons, such as an
 upload with progress, a form submission or a multi-step process, are planned for
 [Showcase](/showcase/).
 
@@ -88,6 +95,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `ariaLabel` | `string` | `undefined` | ARIA label for accessibility (important for icon-only buttons) |
 | `progress` | `boolean\|object` | `undefined` | Progress indicator configuration |
 | `showProgress` | `boolean` | `false` | Whether to show progress initially |
+| `loading` | `boolean` | `false` | Creates the button busy: the loading state shows from the start, including server-rendered buttons |
 
 ### Methods
 
