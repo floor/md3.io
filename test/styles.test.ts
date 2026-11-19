@@ -16,7 +16,7 @@ describe('Styles pages', () => {
       const html = await response.text();
       expect(html).toContain(`<h1>${heading}</h1>`);
       expect(html).toContain(`<a class="site-nav-link" href="/styles/" aria-current="${path === '/styles/' ? 'page' : 'location'}">`);
-      expect(html).toContain(`href="${path}" aria-current="page"`);
+      expect(html).toMatch(new RegExp(`<a(?=[^>]*part="item")(?=[^>]*href="${path}")(?=[^>]*aria-current="page")[^>]*>`));
       expect(html).toMatch(/\/dist\/css\/styles\.[a-f0-9]{10}\.css/);
       expect(html).not.toContain('/styles/styles-pages.css');
       expect(html).not.toContain('/styles/roboto.css');
