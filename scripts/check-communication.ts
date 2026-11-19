@@ -134,7 +134,7 @@ try {
       await page.getByRole('heading', { name: 'Tooltip', exact: true }).hover();
       // Focus leaves the preview for a parent page control first (the panel has no
       // Reset now; the heading's Documentation link stands in).
-      await page.locator('.page-heading a.text-link').focus();
+      await page.getByRole('main').getByRole('link', { name: 'Documentation', exact: true }).focus();
       await target.focus();
       await frame.getByRole('tooltip').waitFor();
       assert(await target.getAttribute('aria-describedby') === await frame.getByRole('tooltip').getAttribute('id'), 'Tooltip is not associated with its target');
@@ -197,8 +197,10 @@ try {
     new Bun.Transpiler({ loader: 'js' }).transformSync(source);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
     await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await panel.checkPlaygroundScroll(page, slug, 'fit');
     await page.setViewportSize({ width: 1280, height: 640 });
-    assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), `${slug}: desktop page overflows vertically`);
+    await panel.checkPlaygroundScroll(page, slug, 'page');
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });

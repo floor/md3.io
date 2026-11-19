@@ -63,3 +63,17 @@ md3-catalog-tabs:not(:defined) { height: 64px; }
 /* The time picker is a dialog-sized surface: shown at a scale that fits the card. */
 md3-catalog-timepicker { zoom: 0.34; }
 md3-catalog-timepicker:not(:defined) { width: 580px; height: 380px; }
+.component-catalog { display: none; }
+.component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.component-card { display: block; padding: 0; overflow: hidden; }
+.component-card__body { padding: 20px; border-top: 1px solid var(--border); }
+.component-card__body h2 { font-size: var(--fs-lg); margin: 0 0 4px; }
+.component-card__body p, .catalog-note { font-size: var(--fs-ui); color: var(--text-muted); }
+.catalog-note { margin: 20px 16px 0; }
+
+@media (min-width: 840px) {
+  .component-catalog { display: block; grid-column: 2; grid-row: 1; padding-top: 24px; container-type: inline-size; }
+}
+@container (min-width: 580px) {
+  .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

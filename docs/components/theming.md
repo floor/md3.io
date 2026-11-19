@@ -1,6 +1,6 @@
 ---
 created: 2026-09-30
-updated: 2026-11-10
+updated: 2026-11-19
 status: published
 ---
 
@@ -528,7 +528,7 @@ plain `@use` without another `with (...)` clause:
 | `$tag-prefix` | `"m"` | Sets the tag prefix for undefined custom-element rules. |
 | `$direction-arms` | `false` | When truthy, emits physical direction arms for a bundler's CSS pipeline. |
 | `$typescale-tokens` | `false` | Enables the application typography profile above. |
-| `$spring-tokens` | `false` | Stores a boolean configuration value only; spring emission is not delivered by the gateway itself. |
+| `$spring-tokens` | `false` | Arms the gateway for spring motion token emission through `motion.spring-tokens` (below). |
 
 Omitting configuration preserves existing output, and loading the gateway alone adds no CSS. Both
 token flags are boolean; token maps are not a supported public configuration surface (use CSS
@@ -537,6 +537,13 @@ the gateway and a later entry with `with (...)`, produces Sass's standard alread
 Standalone direct contrast (`material/src/styles/themes` or `material/src/styles/main`) and
 tag-prefix (`material/src/styles/elements`) configuration remains supported when used
 independently.
+
+With `$spring-tokens: true` on the gateway, `@use "material/src/styles/motion"` and
+`@include motion.spring-tokens` where the application wants the defaults emit the thirteen
+`--mtrl-sys-motion-spring-*` properties from the library motion map, and component CSS reads
+them with today's literal values as fallbacks. Loading `motion` alone emits nothing, and leaving
+the switch unset keeps the shipped CSS unchanged. The JavaScript that schedules component state
+keeps its four literal deadlines, so a spring longer than those bounds is cut off there.
 
 ## Token catalogue
 
