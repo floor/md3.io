@@ -1,0 +1,10 @@
+/* Layout for the example only: the components and material's typography utilities bring the rest. */
+.booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 560px); }
+.booking__intro { display: flex; flex-direction: column; gap: 4px; }
+.booking__title, .booking__lede, .booking__label, .booking__range { margin: 0; }
+.booking__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.booking__grid > *, .booking__group > * { display: block; width: 100%; min-width: 0; }
+.booking__group { display: flex; flex-direction: column; gap: 8px; }
+.booking__total { min-height: 1.5em; }
+.booking__actions { display: flex; justify-content: flex-end; gap: 8px; }
+@media (max-width: 520px) { .booking__grid { grid-template-columns: minmax(0, 1fr); } }

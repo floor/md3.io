@@ -105,10 +105,14 @@
 /docs/web-components/
 /docs/why-material/
 /examples/
+/examples/booking/
 /examples/settings/
+/examples/notes/
 /privacy/
 /showcase/
+/showcase/booking/
 /showcase/email/
+/showcase/notes/
 /showcase/settings/
 /styles/
 /styles/color/
