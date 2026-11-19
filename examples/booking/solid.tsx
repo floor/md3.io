@@ -44,6 +44,7 @@ export default function Booking() {
   const next = () => {
     const stepErrors = validateStep({ ...s }, step());
     setErrors("arrivalTime", stepErrors.arrivalTime);
+    setErrors("room", stepErrors.room);
     if (stepErrors.arrivalTime || stepErrors.room) { focusFirstInvalid(step()); return; }
     if (step() < 4) gotoStep(step() + 1);
   };
@@ -108,8 +109,9 @@ export default function Booking() {
           <div class="booking__group">
             <p class="booking__label mtrl-title-small">Price range</p>
             <Slider ref={sliderEl} range showValue min={50} max={300} step={10} value={s.priceMin} secondValue={s.priceMax} aria-label="Price range"
-              onInput={(e) => setS(withPrice({ ...s }, e.detail.value, e.detail.secondValue ?? s.priceMax))} />
+              onInput={(e) => { setS(withPrice({ ...s }, e.detail.value, e.detail.secondValue ?? s.priceMax)); setErrors("room", undefined); }} />
             <p class="booking__range mtrl-body-medium">{rangeText({ ...s })}</p>
+            <Show when={errors.room}><p class="booking__field-error mtrl-body-small">{errors.room}</p></Show>
           </div>
         </div>
       </Show>
@@ -139,8 +141,11 @@ export default function Booking() {
             <For each={reviewLines({ ...s })}>
               {(line) => (
                 <div class="booking__review-row">
-                  <p class="booking__review-line mtrl-body-medium">{line.text}</p>
-                  <Button variant="text" ariaLabel={`Edit ${line.title}`} onClick={() => gotoStep(line.step)}>Edit</Button>
+                  <div class="booking__review-copy">
+                    <p class="booking__review-label mtrl-title-small">{line.label}</p>
+                    <p class="booking__review-line mtrl-body-medium">{line.text}</p>
+                  </div>
+                  <Button variant="text" ariaLabel={`Edit ${line.label}`} onClick={() => gotoStep(line.step)}>Edit</Button>
                 </div>
               )}
             </For>

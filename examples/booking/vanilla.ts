@@ -61,7 +61,9 @@ const priceGroup = div("booking__group");
 const slider = createSlider({ range: true, showValue: true, min: 50, max: 300, step: 10, value: s.priceMin, secondValue: s.priceMax });
 slider.element.setAttribute("aria-label", "Price range");
 slider.element.querySelectorAll('[role="slider"]').forEach((handle, index) => handle.setAttribute("aria-label", index === 0 ? "Price range minimum" : "Price range maximum"));
-priceGroup.append(text("booking__label mtrl-title-small", "Price range"), slider.element, range);
+const roomError = text("booking__field-error mtrl-body-small", "");
+roomError.hidden = true;
+priceGroup.append(text("booking__label mtrl-title-small", "Price range"), slider.element, range, roomError);
 step2.append(grid2, roomGroup, priceGroup);
 
 const step3 = stepPane(3);
@@ -113,13 +115,15 @@ const render = (): void => {
   const eligible = new Set(eligibleRooms(s).map((room) => room.value));
   for (const room of ROOMS) eligible.has(room.value) ? radios.enableOption(room.value) : radios.disableOption(room.value);
   if (radios.getValue() !== (s.room || null)) radios.setValue(s.room || null);
-  // The fourth step reviews the first three, each line with its Edit.
+  // The fourth step reviews the first three: a labelled line each, with its Edit.
   review.replaceChildren(
     ...reviewLines(s).map((line) => {
       const row = div("booking__review-row");
-      const edit = createButton({ text: "Edit", variant: "text", ariaLabel: `Edit ${line.title}` });
+      const copy = div("booking__review-copy");
+      copy.append(text("booking__review-label mtrl-title-small", line.label), text("booking__review-line mtrl-body-medium", line.text));
+      const edit = createButton({ text: "Edit", variant: "text", ariaLabel: `Edit ${line.label}` });
       edit.on("click", () => gotoStep(line.step));
-      row.append(text("booking__review-line mtrl-body-medium", line.text), edit.element);
+      row.append(copy, edit.element);
       return row;
     }),
   );
@@ -180,7 +184,12 @@ timePicker.on("change", ({ value }) => { s = { ...s, arrivalTime: value }; arriv
 adults.on("change", ({ value }) => { s = { ...s, adults: value ?? s.adults }; render(); });
 children.on("change", ({ value }) => { s = { ...s, children: value ?? s.children }; render(); });
 radios.on("change", ({ value }) => { s = { ...s, room: value ?? "" }; render(); });
-slider.on("input", ({ value, secondValue }) => { s = withPrice(s, value, secondValue ?? s.priceMax); render(); });
+slider.on("input", ({ value, secondValue }) => {
+  s = withPrice(s, value, secondValue ?? s.priceMax);
+  roomError.hidden = true;
+  roomError.textContent = "";
+  render();
+});
 nameField.on("input", ({ value }) => { s = { ...s, name: value }; nameField.setError(false); });
 emailField.on("input", ({ value }) => { s = { ...s, email: value }; emailField.setError(false); });
 
@@ -193,7 +202,7 @@ const nextButton = createButton({ text: "Next" });
 nextButton.on("click", () => {
   const errors = validateStep(s, step);
   if (errors.arrivalTime) { arrival.setError(true, errors.arrivalTime); focusFirstInvalid(); return; }
-  if (errors.room) { focusFirstInvalid(); return; }
+  if (errors.room) { roomError.textContent = errors.room; roomError.hidden = false; focusFirstInvalid(); return; }
   if (step < 4) gotoStep(step + 1);
 });
 const bookButton = createButton({ text: "Book" });

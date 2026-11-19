@@ -145,13 +145,13 @@ export const validateStep = (s: Booking, step: number): BookingErrors => {
   return {};
 };
 
-/** The fourth step reviews the first three; each line's Edit jumps back to its step. */
-export const reviewLines = (s: Booking): { step: number; title: string; text: string }[] => [
-  { step: 1, title: STEPS[0]!.title, text: `Check-in ${s.checkIn}, check-out ${s.checkOut} · Arrival ${s.arrivalTime}` },
+/** The fourth step reviews the first three: a labelled line each, whose Edit jumps back to its step. */
+export const reviewLines = (s: Booking): { step: number; label: string; text: string }[] => [
+  { step: 1, label: "Dates", text: `Check-in ${s.checkIn}, check-out ${s.checkOut} · Arrival ${s.arrivalTime}` },
   {
     step: 2,
-    title: STEPS[1]!.title,
+    label: "Guests and room",
     text: `${s.adults} ${s.adults === "1" ? "adult" : "adults"}, ${s.children} ${s.children === "1" ? "child" : "children"} · ${roomOf(s)?.label ?? "No room"} · ${rangeText(s)}`,
   },
-  { step: 3, title: STEPS[2]!.title, text: EXTRAS.filter((extra) => s[extra.key]).map((extra) => extra.label).join(", ") || "None" },
+  { step: 3, label: "Extras", text: EXTRAS.filter((extra) => s[extra.key]).map((extra) => extra.label).join(", ") || "None" },
 ];

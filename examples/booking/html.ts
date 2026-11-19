@@ -43,6 +43,7 @@ app.innerHTML = `
         <p class="booking__label mtrl-title-small">Price range</p>
         <m-slider id="price" range show-value min="50" max="300" step="10" value="${s.priceMin}" second-value="${s.priceMax}" aria-label="Price range"></m-slider>
         <p class="booking__range mtrl-body-medium" id="range"></p>
+        <p class="booking__field-error mtrl-body-small" id="room-error" hidden></p>
       </div>
     </div>
     <div class="booking__step" id="step-3" hidden>
@@ -114,18 +115,22 @@ const render = (): void => {
   }
   const radios = $("room");
   if (radios.value !== s.room) radios.value = s.room;
-  // The fourth step reviews the first three, each line with its Edit.
+  // The fourth step reviews the first three: a labelled line each, with its Edit.
   $("review").replaceChildren(
     ...reviewLines(s).map((line) => {
       const row = document.createElement("div");
       row.className = "booking__review-row";
+      const copy = document.createElement("div");
+      copy.className = "booking__review-copy";
+      const label = Object.assign(document.createElement("p"), { className: "booking__review-label mtrl-title-small", textContent: line.label });
       const text = Object.assign(document.createElement("p"), { className: "booking__review-line mtrl-body-medium", textContent: line.text });
       const edit = document.createElement("m-button");
       edit.setAttribute("variant", "text");
-      edit.setAttribute("aria-label", `Edit ${line.title}`);
+      edit.setAttribute("aria-label", `Edit ${line.label}`);
       edit.textContent = "Edit";
       edit.addEventListener("click", () => gotoStep(line.step));
-      row.append(text, edit);
+      copy.append(label, text);
+      row.append(copy, edit);
       return row;
     }),
   );
@@ -169,6 +174,9 @@ for (const extra of EXTRAS) {
 $("price").addEventListener("input", (event) => {
   const value = detail<{ value: number; secondValue?: number }>(event);
   s = withPrice(s, value.value, value.secondValue ?? s.priceMax);
+  const roomError = $("room-error");
+  roomError.hidden = true;
+  roomError.textContent = "";
   render();
 });
 $("name").addEventListener("input", (event) => { s = { ...s, name: detail<{ value: string }>(event).value }; setError("name", undefined, "Required"); });
@@ -178,7 +186,13 @@ $("email").addEventListener("input", (event) => { s = { ...s, email: detail<{ va
 $("next").addEventListener("click", () => {
   const errors = validateStep(s, step);
   if (errors.arrivalTime) { setError("arrival", errors.arrivalTime, "24-hour time"); focusFirstInvalid(); return; }
-  if (errors.room) { focusFirstInvalid(); return; }
+  if (errors.room) {
+    const roomError = $("room-error");
+    roomError.textContent = errors.room;
+    roomError.hidden = false;
+    focusFirstInvalid();
+    return;
+  }
   if (step < 4) gotoStep(step + 1);
 });
 $("back").addEventListener("click", () => gotoStep(step - 1));

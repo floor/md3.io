@@ -12,6 +12,6 @@ export default {
   how: [
     "Each step's heading says \"Step n of 4\", and moving between steps puts focus on it. Next validates the step it leaves and focuses the first field that needs fixing; Back never validates and never loses data. From the review, each Edit jumps back to its step.",
     "The date fields are material's date picker in its modal form, so the calendar icon opens the calendar; check-out's calendar starts at check-in, and an earlier check-out date moves back to check-in. The arrival field's clock icon opens material's time picker: a typed time is checked and normalized, the picker reopens at it, and a confirmed time writes back to the field.",
-    "State is live in every variant: the total, the dialog summary and the price range all read the same shared state. The price range decides which rooms can be chosen — a room outside it gives way to the first room inside it, and when no rate fits, the estimate says so and there is nothing to book. Book validates the name and email and shows the message under the field that needs fixing.",
+    "State is live in every variant: the total, the dialog summary and the price range all read the same shared state. The price range decides which rooms can be chosen — a room outside it gives way to the first room inside it, and when no rate fits, the range says so at its field and there is nothing to book. Book validates the name and email and shows the message under the field that needs fixing.",
   ],
 } satisfies ExampleMeta;

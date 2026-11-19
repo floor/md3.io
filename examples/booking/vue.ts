@@ -37,6 +37,7 @@ export default defineComponent({
     const next = () => {
       const stepErrors = validateStep({ ...s }, step.value);
       errors.arrivalTime = stepErrors.arrivalTime;
+      errors.room = stepErrors.room;
       if (stepErrors.arrivalTime || stepErrors.room) { focusFirstInvalid(step.value); return; }
       if (step.value < 4) gotoStep(step.value + 1);
     };
@@ -103,8 +104,9 @@ export default defineComponent({
         </div>
         <div class="booking__group">
           <p class="booking__label mtrl-title-small">Price range</p>
-          <MSlider ref="sliderEl" range show-value :min="50" :max="300" :step="10" :value="s.priceMin" :second-value="s.priceMax" aria-label="Price range" @input="Object.assign(s, withPrice(s, $event.detail.value, $event.detail.secondValue ?? s.priceMax))" />
+          <MSlider ref="sliderEl" range show-value :min="50" :max="300" :step="10" :value="s.priceMin" :second-value="s.priceMax" aria-label="Price range" @input="Object.assign(s, withPrice(s, $event.detail.value, $event.detail.secondValue ?? s.priceMax)); errors.room = undefined" />
           <p class="booking__range mtrl-body-medium">{{ rangeText(s) }}</p>
+          <p v-if="errors.room" class="booking__field-error mtrl-body-small">{{ errors.room }}</p>
         </div>
       </div>
       <div v-if="step === 3" class="booking__step">
@@ -120,8 +122,11 @@ export default defineComponent({
         </div>
         <div class="booking__group">
           <div v-for="line in reviewLines(s)" :key="line.step" class="booking__review-row">
-            <p class="booking__review-line mtrl-body-medium">{{ line.text }}</p>
-            <MButton variant="text" :aria-label="'Edit ' + line.title" @click="gotoStep(line.step)">Edit</MButton>
+            <div class="booking__review-copy">
+              <p class="booking__review-label mtrl-title-small">{{ line.label }}</p>
+              <p class="booking__review-line mtrl-body-medium">{{ line.text }}</p>
+            </div>
+            <MButton variant="text" :aria-label="'Edit ' + line.label" @click="gotoStep(line.step)">Edit</MButton>
           </div>
         </div>
       </div>

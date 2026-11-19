@@ -22,6 +22,10 @@ export default async function steps(page: Page): Promise<void> {
   const stepShows = async (n: number, title: string) => {
     await page.getByRole("heading", { name: `Step ${n} of 4 · ${title}`, ...exact }).waitFor();
     await includes(`progressbar "Step ${n} of 4"`);
+    // The name alone could go stale; the value itself must be n of 4.
+    const progress = page.getByRole("progressbar");
+    assert.equal(await progress.getAttribute("aria-valuenow"), String(n), `step ${n} progress is ${n} of 4`);
+    assert.equal(await progress.getAttribute("aria-valuemax"), "4", "progress max is 4");
   };
   const stepIs = async (n: number, title: string) => {
     await stepShows(n, title);
@@ -84,9 +88,11 @@ export default async function steps(page: Page): Promise<void> {
   await includes('combobox "Children": "1"');
 
   // The price range decides which rooms can be chosen; an empty range blocks Next
-  // with focus on the range, and restoring it unlocks the step.
+  // with focus on the range and its message at the field, and restoring it
+  // unlocks the step.
   const minHandle = page.getByRole("slider", { name: "Price range minimum", ...exact });
   const maxHandle = page.getByRole("slider", { name: "Price range maximum", ...exact });
+  const roomError = page.locator(".booking__field-error");
   await minHandle.focus();
   await page.keyboard.press("ArrowRight");
   await includes("$90–$240 a night");
@@ -96,8 +102,11 @@ export default async function steps(page: Page): Promise<void> {
   await next.click();
   await includes("Step 2 of 4");
   assert.ok(await isFocused(minHandle), "an empty price range focuses the range");
+  await roomError.waitFor();
+  assert.equal((await roomError.textContent())?.trim(), "No rooms in this price range", "the empty range shows its message at the field");
   await maxHandle.focus();
   await page.keyboard.press("End");
+  await roomError.waitFor({ state: "hidden" });
   await includes("$90–$300 a night");
   // The live region leaves the accessibility tree for a beat while it announces;
   // read the total itself rather than the snapshot here.
@@ -123,8 +132,13 @@ export default async function steps(page: Page): Promise<void> {
   await stepIs(4, "Your details and review");
   await includes("Estimated total $505 for 2 nights");
 
-  // The review shows the first three steps; Edit jumps back to its step.
+  // The review shows the first three steps, each row labelled with its Edit;
+  // Edit jumps back to its step.
   await includes("Check-in 2027-04-20, check-out 2027-04-22 · Arrival 17:30");
+  for (const label of ["Dates", "Guests and room", "Extras"]) {
+    await includes(label);
+    await page.getByRole("button", { name: `Edit ${label}`, ...exact }).waitFor();
+  }
   await page.getByRole("button", { name: "Edit Guests and room", ...exact }).click();
   await stepIs(2, "Guests and room");
   await next.click();

@@ -34,7 +34,7 @@
   };
   const next = () => {
     const stepErrors = validateStep(s, step);
-    errors = { ...errors, arrivalTime: stepErrors.arrivalTime };
+    errors = { ...errors, arrivalTime: stepErrors.arrivalTime, room: stepErrors.room };
     if (stepErrors.arrivalTime || stepErrors.room) { focusFirstInvalid(step); return; }
     if (step < 4) gotoStep(step + 1);
   };
@@ -103,8 +103,9 @@
       <div class="booking__group">
         <p class="booking__label mtrl-title-small">Price range</p>
         <Slider bind:this={sliderEl} range showValue min={50} max={300} step={10} value={s.priceMin} secondValue={s.priceMax} aria-label="Price range"
-          oninput={(e) => (s = withPrice(s, e.detail.value, e.detail.secondValue ?? s.priceMax))} />
+          oninput={(e) => { s = withPrice(s, e.detail.value, e.detail.secondValue ?? s.priceMax); errors = { ...errors, room: undefined }; }} />
         <p class="booking__range mtrl-body-medium">{rangeText(s)}</p>
+        {#if errors.room}<p class="booking__field-error mtrl-body-small">{errors.room}</p>{/if}
       </div>
     </div>
   {:else if step === 3}
@@ -127,8 +128,11 @@
       <div class="booking__group">
         {#each reviewLines(s) as line (line.step)}
           <div class="booking__review-row">
-            <p class="booking__review-line mtrl-body-medium">{line.text}</p>
-            <Button variant="text" ariaLabel={`Edit ${line.title}`} onclick={() => gotoStep(line.step)}>Edit</Button>
+            <div class="booking__review-copy">
+              <p class="booking__review-label mtrl-title-small">{line.label}</p>
+              <p class="booking__review-line mtrl-body-medium">{line.text}</p>
+            </div>
+            <Button variant="text" ariaLabel={`Edit ${line.label}`} onclick={() => gotoStep(line.step)}>Edit</Button>
           </div>
         {/each}
       </div>

@@ -50,7 +50,7 @@ export default function Booking() {
   };
   const next = () => {
     const stepErrors = validateStep(s, step);
-    setErrors((prev) => ({ ...prev, arrivalTime: stepErrors.arrivalTime }));
+    setErrors((prev) => ({ ...prev, arrivalTime: stepErrors.arrivalTime, room: stepErrors.room }));
     if (stepErrors.arrivalTime || stepErrors.room) { focusFirstInvalid(step); return; }
     if (step < 4) gotoStep(step + 1);
   };
@@ -121,8 +121,9 @@ export default function Booking() {
           <div className="booking__group">
             <p className="booking__label mtrl-title-small">Price range</p>
             <Slider ref={sliderRef} range showValue min={50} max={300} step={10} value={s.priceMin} secondValue={s.priceMax} aria-label="Price range"
-              onInput={(e) => setS((prev) => withPrice(prev, e.detail.value, e.detail.secondValue ?? prev.priceMax))} />
+              onInput={(e) => { setS((prev) => withPrice(prev, e.detail.value, e.detail.secondValue ?? prev.priceMax)); setErrors((prev) => ({ ...prev, room: undefined })); }} />
             <p className="booking__range mtrl-body-medium">{rangeText(s)}</p>
+            {errors.room && <p className="booking__field-error mtrl-body-small">{errors.room}</p>}
           </div>
         </div>
       )}
@@ -149,8 +150,11 @@ export default function Booking() {
           <div className="booking__group">
             {reviewLines(s).map((line) => (
               <div key={line.step} className="booking__review-row">
-                <p className="booking__review-line mtrl-body-medium">{line.text}</p>
-                <Button variant="text" ariaLabel={`Edit ${line.title}`} onClick={() => gotoStep(line.step)}>Edit</Button>
+                <div className="booking__review-copy">
+                  <p className="booking__review-label mtrl-title-small">{line.label}</p>
+                  <p className="booking__review-line mtrl-body-medium">{line.text}</p>
+                </div>
+                <Button variant="text" ariaLabel={`Edit ${line.label}`} onClick={() => gotoStep(line.step)}>Edit</Button>
               </div>
             ))}
           </div>
