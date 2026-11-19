@@ -141,17 +141,28 @@ try {
   await assertAppearance('ocean', 'dark');
   // Filled controls and accent-tinted surfaces keep AA contrast in a dark theme
   // and a light one: text on a role fill is that role's on-pair (white on a dark
-  // theme's light primary was 1.7:1). Includes the Styles toggles, checked and not.
-  for (const [theme, mode] of [['ocean', 'dark'], ['forest', 'light']] as const) {
+  // theme's light primary was 1.7:1). Covers the Styles toggles (checked and
+  // not), the primary buttons, and every surface the primary-container fill
+  // paints — the search dialog's active result, blockquotes, the Colour Lab's
+  // checked segments — plus the accent-glow wash behind the Styles "Aa".
+  for (const [theme, mode] of [['ocean', 'dark'], ['baseline', 'dark'], ['forest', 'dark'], ['forest', 'light']] as const) {
     const themedContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     await themedContext.addInitScript(([t, m]) => {
       localStorage.setItem('md3-preview-appearance', JSON.stringify({ theme: t, mode: m }));
       localStorage.setItem('md3-site-mode', m!);
     }, [theme, mode]);
     const themedPage = await themedContext.newPage();
-    for (const route of ['styles/', '']) {
+    for (const route of ['styles/', 'styles/color-lab/', 'docs/components/menu/', '']) {
       await themedPage.goto(`${base}${route}`);
       await themedPage.waitForTimeout(400);
+      if (route.startsWith('docs/')) {
+        // The search dialog's active result is an accent-dim surface too.
+        await themedPage.locator('#search-trigger').click();
+        await themedPage.locator('#search-input').fill('button');
+        await themedPage.locator('.search-dialog__result').first().waitFor();
+        await themedPage.keyboard.press('ArrowDown');
+        await themedPage.waitForTimeout(200);
+      }
       const rows = await themedPage.evaluate(() => {
         const luminance = (rgb: string) => {
           const [r, g, b] = rgb.match(/[\d.]+/g)!.slice(0, 3).map(part => {
@@ -161,24 +172,45 @@ try {
           return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
         };
         const backgroundOf = (element: Element): string => {
-          for (let node: Element | null = element; node; node = node.parentElement) {
-            const color = getComputedStyle(node).backgroundColor;
-            if (!color.endsWith(', 0)') && color !== 'transparent') return color;
-          }
-          return 'rgb(255, 255, 255)';
+          // Alpha backgrounds (the accent-glow wash) composite over what is under them.
+          const composite = (node: Element | null): [number, number, number] => {
+            if (!node) return [255, 255, 255];
+            const parts = getComputedStyle(node).backgroundColor.match(/[\d.]+/g)?.map(Number) ?? [];
+            const alpha = parts[3] ?? 1;
+            if (alpha >= 1) return [parts[0]!, parts[1]!, parts[2]!];
+            if (alpha <= 0) return composite(node.parentElement);
+            const under = composite(node.parentElement);
+            return [0, 1, 2].map(i => Math.round(parts[i]! * alpha + under[i]! * (1 - alpha))) as [number, number, number];
+          };
+          return `rgb(${composite(element).join(', ')})`;
         };
-        const candidates = [...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary')];
-        return candidates.filter(element => element.getBoundingClientRect().width > 0).map(element => {
+        const roleColor = (role: string) => {
+          const probe = document.createElement('span');
+          probe.style.color = `var(${role})`;
+          document.body.append(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        };
+        const container = roleColor('--mtrl-sys-color-primary-container');
+        // The filled controls named above, every surface painted with the
+        // primary-container fill (search's active result, blockquotes, the lab's
+        // checked segments), and the text inside those surfaces.
+        const tinted = [...document.querySelectorAll<HTMLElement>('*')].filter(element => getComputedStyle(element).backgroundColor === container);
+        const inside = tinted.flatMap(element => [element, ...element.querySelectorAll<HTMLElement>('*')]);
+        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary, .styles-card__visual--type span'), ...inside])];
+        return candidates.filter(element => element.getBoundingClientRect().width > 0
+          && ([...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) || element instanceof SVGElement)).map(element => {
           const style = getComputedStyle(element);
           const ratio = (Math.max(luminance(style.color), luminance(backgroundOf(element))) + 0.05) / (Math.min(luminance(style.color), luminance(backgroundOf(element))) + 0.05);
           const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && Number(style.fontWeight) >= 700);
-          return { text: element.textContent?.trim().slice(0, 24), ratio, large, iconOnly: !element.textContent?.trim() };
+          return { text: element.textContent?.trim().slice(0, 24), ratio, large, iconOnly: !element.textContent?.trim(), who: `${element.tagName.toLowerCase()}.${element.className}` };
         });
       });
       assert(rows.length >= 1, `${theme}/${mode} ${route || 'home'}: no filled controls found for the contrast check`);
       for (const row of rows) {
         const needed = row.large || row.iconOnly ? 3 : 4.5;
-        assert(row.ratio >= needed, `${theme}/${mode} ${route || 'home'}: "${row.text}" is ${row.ratio.toFixed(2)}:1 (want ${needed}:1)`);
+        assert(row.ratio >= needed, `${theme}/${mode} ${route || 'home'}: "${row.text}" (${row.who}) is ${row.ratio.toFixed(2)}:1 (want ${needed}:1)`);
       }
     }
     await themedContext.close();

@@ -325,6 +325,10 @@
     font-weight: var(--fw-bold);
 }
 
+.search-dialog__result--active mark {
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
+}
+
 /* ─── Empty State ────────────────────────────────────────────────── */
 
 .search-dialog__empty {
