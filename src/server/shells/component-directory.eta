@@ -1,5 +1,5 @@
 <% const link = item => include('sidebar-link', { path: it.path, item }); %>
-<ul class="component-directory" role="list" aria-labelledby="<%= it.heading %>">
+<ul class="component-directory" role="list"<% if (it.label) { %> aria-label="<%= it.label %>"<% } else { %> aria-labelledby="<%= it.heading %>"<% } %>>
   <li><%~ link({ name: 'Components overview', href: '/components/' }) %></li>
   <% it.entries.forEach(entry => { %>
     <li>

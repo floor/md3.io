@@ -98,6 +98,7 @@ try {
       await assertDestinations(`modal rail at ${width}px`);
       assert.equal(await rail.getAttribute('inert'), '');
       const section = modal.getByRole('navigation', { name: 'Component list', exact: true });
+      assert.equal(await page.locator('.component-list').count(), 1, 'the drawer uses a single component list');
       assert.equal(await section.getByRole('link', { name: 'Button', exact: true }).getAttribute('aria-current'), 'page');
       const last = section.getByRole('link').last();
       await page.keyboard.press('Shift+Tab');
@@ -107,6 +108,7 @@ try {
       await capture(`rail-open-${width}`);
       await page.keyboard.press('Escape');
       await assertClosedRail();
+      assert.equal(await page.locator('main .component-list').count(), 1, 'closing restores the component pane');
 
       const searchBox = (await searchTrigger.boundingBox())!;
       const x = searchBox.x + searchBox.width / 2;
@@ -188,10 +190,12 @@ try {
     if (width === 700) {
       await showRail();
       const modalLinks = modal.getByRole('navigation', { name: `${label} links`, exact: true });
+      assert.equal(await modalLinks.getAttribute('id'), 'sidebar', 'the modal borrows the inline index');
       assert.deepEqual(await modalLinks.locator('.sidebar__link').evaluateAll(links => links.map(link => link.getAttribute('href'))), hrefs);
       assert.equal(await modalLinks.locator('[aria-current="page"]').getAttribute('href'), path);
       await page.keyboard.press('Escape');
       await assertClosedRail();
+      await indexLinks.waitFor();
     }
   }
 
@@ -205,7 +209,8 @@ try {
     return {
       height: node.getBoundingClientRect().height, padding: style.padding, radius: style.borderRadius,
       color: label.color, background: fill.backgroundColor, opacity: fill.opacity, border: style.borderInlineStartWidth,
-      font: label.font, letterSpacing: label.letterSpacing,
+      fontFamily: label.fontFamily, fontSize: label.fontSize, lineHeight: label.lineHeight,
+      fontWeight: label.fontWeight, letterSpacing: label.letterSpacing,
     };
   });
   const activeFills = new Set<string>();
@@ -239,7 +244,11 @@ try {
       const reference = materialDrawer.locator('.mtrl-drawer__item--active');
       await themedPage.waitForFunction(() => document.querySelector('m-drawer')?.shadowRoot
         ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 48);
-      assert.deepEqual(await itemStyle(reference), selectedStyle, `${theme} ${mode} matches the real drawer at the same density`);
+      const { fontFamily, ...listStyle } = selectedStyle;
+      const { fontFamily: materialFont, ...drawerStyle } = await itemStyle(reference);
+      assert.match(fontFamily, /DIN Alternate/);
+      assert.match(materialFont, /Roboto/);
+      assert.deepEqual(drawerStyle, listStyle, `${theme} ${mode} matches the real drawer geometry, typescale and colours`);
 
       if (theme === 'spring') continue;
       for (const width of [700, 1440]) for (const [name, path] of [['overview', '/components/'], ['button', '/components/button/']]) {

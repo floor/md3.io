@@ -14,8 +14,13 @@ export const currentFocus = () => document.activeElement === document.body ? las
 if (bar && rail && dialog && opener && closer) {
   const compact = matchMedia('(width < 600px)');
   const medium = matchMedia('(600px <= width < 840px)');
+  // Move the server-rendered section list so its links and disclosure state serve both layouts.
+  const section = document.querySelector('.component-list, #sidebar');
+  const sectionParent = section?.parentNode;
+  const sectionNext = section?.nextSibling ?? null;
 
   const syncModal = () => {
+    if (section && section.parentNode === dialog && !dialog.open) sectionParent?.insertBefore(section, sectionNext);
     rail.inert = dialog.open;
     if (dialog.open) rail.setAttribute('aria-hidden', 'true');
     else rail.removeAttribute('aria-hidden');
@@ -40,12 +45,9 @@ if (bar && rail && dialog && opener && closer) {
     const moveFocus = () => {
       if (target.hidden) return;
       const links = Array.from(target.querySelectorAll('a'));
-      const sectionLink = leavingModal && !compact.matches && href
-        ? Array.from(document.querySelectorAll<HTMLAnchorElement>('.layout-main .sidebar__link'))
-          .find(link => link.getAttribute('href') === href && link.getClientRects().length)
-        : undefined;
-      (links.find(link => href && link.getAttribute('href') === href)
-        ?? sectionLink
+      const sectionFocus = !compact.matches && focused instanceof HTMLElement && section?.contains(focused)
+        && focused.getClientRects().length ? focused : null;
+      (sectionFocus ?? links.find(link => href && link.getAttribute('href') === href)
         ?? links.find(link => link.hasAttribute('aria-current')) ?? links[0])?.focus();
     };
     // Let the dialog release focus and the desktop index open before transferring it.
@@ -55,6 +57,7 @@ if (bar && rail && dialog && opener && closer) {
 
   opener.addEventListener('click', () => {
     if (!medium.matches || dialog.open) return;
+    if (section) dialog.append(section);
     dialog.showModal();
     syncModal();
   });

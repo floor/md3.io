@@ -50,23 +50,26 @@ describe('stylesheets', () => {
 
     const page = bundleCss('page');
     expect(page).toContain('.header__search');
+    expect(page).toContain('--mtrl-sys-typescale-label-large-font-size:14px');
+    expect(page).not.toContain('Roboto-latin-wght.woff2');
     // .hero__tagline also lives in site.css. .hero__frameworks is homepage.css only.
     expect(page).not.toContain('.hero__frameworks');
     expect(home).toContain('.hero__frameworks');
 
     const catalog = bundleCss('catalog');
     // "Roboto" also appears in the token font stack. The self-hosted file is roboto.css only.
-    const catalogOrder = ['Roboto-latin-wght.woff2', '.mtrl-drawer__item{display:flex', '.header__search', 'm-button:not(:defined)', '.catalog-visual'];
+    const catalogOrder = ['.mtrl-drawer__item{display:flex', '.header__search', 'Roboto-latin-wght.woff2', 'm-button:not(:defined)', '.catalog-visual'];
     catalogOrder.reduce((prev, needle) => { const index = at(catalog, needle); expect(index).toBeGreaterThan(prev); return index; }, -1);
     expect(catalog).not.toContain('.hero__frameworks');
 
     const examples = bundleCss('examples');
     expect(at(examples, '.header__search')).toBeLessThan(at(examples, '.example-layout'));
+    expect(examples).not.toContain('Roboto-latin-wght.woff2');
     expect(examples).not.toContain('.catalog-visual');
 
     const styles = bundleCss('styles');
-    expect(at(styles, 'Roboto-latin-wght.woff2')).toBeLessThan(at(styles, '.header__search'));
-    expect(at(styles, 'Roboto-latin-wght.woff2')).toBeLessThan(at(styles, '.styles-page'));
+    expect(at(styles, '.header__search')).toBeLessThan(at(styles, '.styles-page'));
+    expect(styles).not.toContain('Roboto-latin-wght.woff2');
     expect(styles).not.toContain('.catalog-visual');
     expect(styles.split('{').length).toBe(styles.split('}').length);
   });

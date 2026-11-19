@@ -138,17 +138,25 @@ body {
    uses 48px rows, which mtrl-drawer__item provides at density -2.
    https://m3.material.io/components/navigation-drawer/specs */
 .site-nav-dialog .site-nav-links { gap: 0; --mtrl-density: 0; }
-:is(.component-list, .section-index__links, .site-nav-dialog__section) { --mtrl-density: -2; }
+:is(.component-list, .section-index__links) { --mtrl-density: -2; }
 /* Let the packaged drawer rules supply the row and heading spacing. */
 .mtrl-drawer__item,
-.mtrl-drawer__section-label { margin: revert-layer; padding: revert-layer; }
-.mtrl-drawer__item { font-family: revert-layer; }
+.mtrl-drawer__section-label {
+    margin: revert-layer;
+    padding: revert-layer;
+    font: var(--mtrl-sys-typescale-label-large-font-weight)
+        var(--mtrl-sys-typescale-label-large-font-size) /
+        var(--mtrl-sys-typescale-label-large-line-height) var(--font-sans);
+    letter-spacing: var(--mtrl-sys-typescale-label-large-letter-spacing);
+}
 .mtrl-drawer__item-icon .inline-icon { width: revert-layer; height: revert-layer; }
 h2.mtrl-drawer__section-label { margin: 0; }
-.site-nav-dialog__section {
+.site-nav-dialog > :is(.component-list, .section-index__links) {
     margin-block-start: 12px;
+    padding-block: 0;
     border-block-start: 1px solid var(--border);
 }
+.site-nav-dialog :is(.catalog-note, .sidebar__foot) { display: none; }
 
 .layout-main {
     display: flex;

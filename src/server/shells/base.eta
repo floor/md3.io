@@ -116,13 +116,6 @@
   <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">
     <button type="button" class="site-nav-button mtrl-icon-button mtrl-icon-button--round mtrl-icon-button--standard" id="site-nav-close" aria-label="Close navigation" autofocus><span class="mtrl-icon-button__icon"><%~ it.icon('close') %></span></button>
     <%~ include('primary-links', { ...it, drawer: true }) %>
-    <% if (it.section === 'Components') { %>
-      <%~ include('component-list', { path: it.path, playgroundDirectory: it.playgroundDirectory, icon: it.icon, inRail: true }) %>
-    <% } else if (it.sidebarGroups.length) { %>
-      <nav class="site-nav-dialog__section" aria-label="<%= it.section %> links">
-        <%~ include('section-links', { ...it, heading: 'rail-docs-component-directory-heading' }) %>
-      </nav>
-    <% } %>
   </dialog>
   <%~ include('search', { icon: it.icon }) %>
 </body></html>
