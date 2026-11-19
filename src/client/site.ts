@@ -1,4 +1,5 @@
 import './search';
+import { currentFocus } from './site-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -81,25 +82,18 @@ onAppearance(({ theme, mode }) => {
   applyTheme(document, theme, [headerScope]);
 });
 
-const hamburger = document.querySelector<HTMLButtonElement>('#hamburger');
-const sidebar = document.querySelector<HTMLElement>('#sidebar');
-const overlay = document.querySelector<HTMLButtonElement>('#overlay');
-const mobile = matchMedia('(max-width: 720px)');
-function setMenu(open: boolean, restoreFocus = false) {
-  sidebar?.classList.toggle('sidebar--open', open);
-  overlay?.classList.toggle('overlay--visible', open);
-  hamburger?.setAttribute('aria-expanded', String(open));
-  if (sidebar) sidebar.inert = mobile.matches && !open;
-  if (overlay) overlay.hidden = !open;
-  if (restoreFocus) hamburger?.focus();
+const docToc = document.querySelector('.doc-toc');
+if (docToc) {
+  const tocHidden = matchMedia('(width < 1200px)');
+  tocHidden.addEventListener('change', () => {
+    const focused = currentFocus();
+    if (!tocHidden.matches || !(focused instanceof HTMLAnchorElement) || !docToc.contains(focused)) return;
+    const id = focused.getAttribute('href')?.slice(1) ?? '';
+    const target = document.getElementById(id) ?? document.getElementById('content');
+    if (target && !target.hasAttribute('tabindex')) target.tabIndex = -1;
+    target?.focus();
+  });
 }
-setMenu(false);
-mobile.addEventListener('change', () => setMenu(false));
-hamburger?.addEventListener('click', () => setMenu(hamburger.getAttribute('aria-expanded') !== 'true'));
-overlay?.addEventListener('click', () => setMenu(false, true));
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
-});
 
 const componentList = document.querySelector<HTMLElement>('.component-list');
 if (componentList) {

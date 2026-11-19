@@ -1133,7 +1133,7 @@ html[data-theme] .source__panel pre {
    Responsive: mobile
    ============================================================================ */
 
-@media (max-width: 720px) {
+@media (width < 600px) {
     .stats {
         gap: 16px;
         font-size: var(--fs-sm);
@@ -1164,7 +1164,7 @@ html[data-theme] .source__panel pre {
    Responsive: split layout stacking
    ============================================================================ */
 
-@media (max-width: 820px) {
+@media (width < 840px) {
     .split-layout {
         flex-direction: column;
     }
@@ -1178,8 +1178,4 @@ html[data-theme] .source__panel pre {
    on the Vanilla tab, the web component's on the others. The theme controls sit in
    the playground heading and the copy button over the code. */
 .component-size { margin-left: auto; color: var(--text-dim); font-size: var(--fs-xs); white-space: nowrap; cursor: help; }
-/* The playground heading fits on one row only when the preview panel is wide enough for its
-   toolbar; below 1150 px the two-column layout does not give it that, so the row wraps instead
-   of squeezing (#11). flex-wrap only wraps when it has to, so wider panels keep one row. */
-@media (max-width: 1150px) { .panel-heading.preview-heading { flex-wrap: wrap; padding-bottom: 8px; } }
 .component-size strong { color: var(--text-muted); font-family: var(--font-mono); font-weight: var(--fw-bold, 600); }

@@ -24,7 +24,7 @@ if (dialog && input && results) {
   }
 
   const open = (): void => {
-    if (dialog.open) return;
+    if (dialog.open || document.querySelector('dialog:modal')) return;
     returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.showModal();
     input.focus();

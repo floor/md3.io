@@ -1,0 +1,8 @@
+<nav class="site-nav-links" aria-label="Primary navigation">
+  <% it.primaryDestinations.forEach(destination => { %>
+    <a class="site-nav-link" href="<%= destination.href %>" <% if (it.path === destination.href) { %>aria-current="page"<% } else if (it.section === destination.label) { %>aria-current="location"<% } %>>
+      <span class="site-nav-link__icon"><%~ it.icon(destination.icon) %></span>
+      <span class="site-nav-link__label"><%= destination.label %></span>
+    </a>
+  <% }); %>
+</nav>

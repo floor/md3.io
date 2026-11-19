@@ -188,24 +188,107 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-desktop.png`, fullPage: false });
   const tocHref = await page.locator('.doc-toc a').first().getAttribute('href');
   assert(tocHref && await page.locator(tocHref).count() === 1, 'TOC target is missing');
-  // The header (logo, navigation, search, Themes and mode buttons; no section crumb any
-  // more) and the document do not overflow at 360, 599 or 600 px.
-  const breadcrumb = () => page.evaluate(() => {
-    const header = document.querySelector('.header') as HTMLElement;
-    const root = document.documentElement;
-    return {
-      headerFits: header.scrollWidth === header.clientWidth,
-      documentFits: root.scrollWidth === root.clientWidth,
-    };
-  });
-  const fits = (width: number, reading: { headerFits: boolean; documentFits: boolean }) =>
-    assert(reading.headerFits && reading.documentFits, `At ${width} px the header or the document overflows horizontally`);
-  await page.setViewportSize({ width: 360, height: 844 });
-  fits(360, await breadcrumb());
-  await page.setViewportSize({ width: 599, height: 844 });
-  fits(599, await breadcrumb());
-  await page.setViewportSize({ width: 600, height: 844 });
-  fits(600, await breadcrumb());
+
+  // Each served CSS bundle can override the shared shell. Check computed styles
+  // across the boundaries on one route from every bundle.
+  const routes = [
+    { name: 'home', path: '' },
+    { name: 'playground', path: 'components/button/' },
+    { name: 'catalog', path: 'components/' },
+    { name: 'docs', path: 'docs/frameworks/' },
+    // This route redirects to Showcase once the rename lands.
+    { name: 'example', path: 'examples/settings/' },
+    { name: 'styles', path: 'styles/' },
+    { name: 'colour-lab', path: 'styles/color-lab/' },
+    { name: 'themes', path: 'styles/themes/' },
+  ];
+  const bar = page.locator('#site-primary-bar');
+  const rail = page.locator('#site-primary-rail');
+  const primary = page.getByRole('navigation', { name: 'Primary navigation', exact: true });
+  const capture = resolve(output, 'breakpoints');
+  await mkdir(capture, { recursive: true });
+  for (const { name, path } of routes) {
+    await page.goto(`${base}${path}`);
+    for (const width of [360, 390, 412, 599, 600, 700, 839, 840, 1024, 1199, 1200, 1440, 1599, 1600]) {
+      await page.setViewportSize({ width, height: 900 });
+      const compact = width < 600;
+      const tier = `${name} at ${width}px`;
+      const inactive = compact ? rail : bar;
+      await inactive.waitFor({ state: 'hidden' });
+      const geometry = await page.evaluate(() => {
+        const header = document.querySelector<HTMLElement>('.header')!;
+        const layout = document.querySelector<HTMLElement>('.layout')!;
+        const root = document.documentElement;
+        return {
+          headerWidth: header.clientWidth,
+          headerScroll: header.scrollWidth,
+          layoutWidth: layout.getBoundingClientRect().width,
+          viewportWidth: root.clientWidth,
+          documentScroll: root.scrollWidth,
+          logoSize: getComputedStyle(document.querySelector('.header__logo')!).fontSize,
+          padding: getComputedStyle(root).getPropertyValue('--page-padding').trim(),
+        };
+      });
+      assert(geometry.headerScroll <= geometry.headerWidth && geometry.documentScroll <= width,
+        `${tier}: horizontal overflow ${JSON.stringify(geometry)}`);
+      assert(geometry.logoSize === (width < 600 ? '20px' : '23px'), `${tier}: wrong shell sizing`);
+      const padding = width < 600 ? '28px 18px 40px' : width < 1200 ? '32px 28px 48px' : '8px 40px 64px';
+      assert(geometry.padding === padding, `${tier}: wrong page spacing`);
+      const expectedLayout = width < 1600 ? Math.min(1472, geometry.viewportWidth) : Math.min(1840, geometry.viewportWidth - 128);
+      assert(Math.abs(geometry.layoutWidth - expectedLayout) < 1, `${tier}: wrong shell gutter or width cap`);
+      assert(await bar.isVisible() === compact && await rail.isVisible() === !compact
+        && await primary.count() === 1, `${tier}: wrong primary navigation`);
+      if (!compact) {
+        assert(Math.abs((await rail.boundingBox())!.width - 96) < 1, `${tier}: wrong rail width`);
+      }
+      if ([390, 599, 600, 700].includes(width)) {
+        const focused = await inactive.locator('a').first().evaluate(node => {
+          node.focus();
+          return document.activeElement === node;
+        });
+        assert(!focused, `${tier}: hidden navigation accepted keyboard focus`);
+      }
+      if ((name === 'home' || name === 'docs') && [390, 599, 600].includes(width)) {
+        await page.locator('#search-trigger').click();
+        const search = page.getByRole('dialog', { name: 'Search the site' });
+        const searchPanel = search.locator('.search-dialog');
+        const bounds = await searchPanel.boundingBox();
+        assert(bounds && bounds.x >= 0 && bounds.x + bounds.width <= width,
+          `${tier}: search exceeds the viewport`);
+        // The opening animation scales the bounds. The computed width tests the layout.
+        const panelWidth = await searchPanel.evaluate(node => parseFloat(getComputedStyle(node).width));
+        assert(width < 600 ? panelWidth === width : panelWidth < width, `${tier}: wrong search presentation`);
+        await page.keyboard.press('Escape');
+        assert(await page.locator('#search-trigger').evaluate(node => document.activeElement === node),
+          `${tier}: search lost focus on close`);
+      }
+      if ((name === 'home' && [390, 600, 839, 840, 1200, 1600].includes(width))
+        || (name === 'playground' && [700, 1024, 1440].includes(width))) {
+        await page.screenshot({ path: `${capture}/${name}-${width}.png`, animations: 'disabled' });
+      }
+    }
+  }
+
+  await page.goto(`${base}components/button/`);
+  await page.setViewportSize({ width: 599, height: 900 });
+  await bar.getByRole('link', { name: 'Styles', exact: true }).focus();
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-rail a[href="/styles/"]'));
+  await page.setViewportSize({ width: 599, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-bar a[href="/styles/"]'));
+
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await page.goto(`${base}docs/frameworks/`);
+  const tocLink = page.locator('.doc-toc a:visible').first();
+  const headingId = (await tocLink.getAttribute('href'))!.slice(1);
+  await tocLink.focus();
+  await page.screenshot({ path: `${capture}/toc-focus-1200.png`, animations: 'disabled' });
+  await page.setViewportSize({ width: 1199, height: 900 });
+  await page.waitForFunction(id => document.activeElement?.id === id, headingId);
+  await page.screenshot({ path: `${capture}/toc-focus-1199.png`, animations: 'disabled' });
+  await page.setViewportSize({ width: 1200, height: 900 });
+  assert(await page.evaluate(id => document.activeElement?.id === id, headingId), 'The heading keeps focus as the TOC returns');
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}components/button/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();
@@ -215,9 +298,7 @@ try {
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile code view overflows the page');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-mobile.png`, fullPage: true });
-  await page.locator('#hamburger').click();
-  assert(await page.locator('#hamburger').getAttribute('aria-expanded') === 'true', 'Mobile menu did not open');
-  await page.locator('#sidebar .mobile-navigation').getByRole('link', { name: 'Documentation', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Documentation', exact: true }).click();
   await page.getByRole('heading', { name: 'Documentation', exact: true }).waitFor();
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });

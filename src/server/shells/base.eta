@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title><%= it.title %></title>
   <meta name="description" content="<%= it.description %>" />
   <link rel="canonical" href="https://md3.io<%= it.path %>" />
@@ -32,7 +32,7 @@
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
   <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
-  <% if (it.section === 'Examples') { %><script type="module" src="/dist/examples.js"></script><% } %>
+  <% if (it.isExamples) { %><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>
     (() => { let mode; try { mode = localStorage.getItem('md3-site-mode'); } catch {} document.documentElement.dataset.themeMode = mode === 'light' || mode === 'dark' ? mode : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; })();
@@ -74,35 +74,43 @@
   </script>
   <script type="module" src="/dist/site.js"></script>
 </head>
-<body class="<%= it.isHome ? 'home' : it.noSidebar ? 'no-sidebar' : '' %>">
+<body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#content">Skip to content</a>
   <header class="header"><div class="header__inner">
     <a class="header__logo" href="/" aria-label="material, home"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material</a>
-    <nav class="header__nav" aria-label="Main navigation">
-      <a href="/components/" class="<%= it.section === 'Components' ? 'active' : '' %>">Components</a>
-      <a href="/styles/" class="<%= it.section === 'Styles' ? 'active' : '' %>">Styles</a>
-      <a href="/examples/" class="<%= it.section === 'Examples' ? 'active' : '' %>">Examples</a>
-      <a href="/docs/" class="<%= it.section === 'Documentation' ? 'active' : '' %>">Documentation</a>
-      <a class="header__github" href="https://github.com/floor/material" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in a new tab)" title="GitHub"><%~ it.icon('brands/github') %></a>
-    </nav>
     <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
       <svg class="header__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
     </button>
     <div class="header__themes <%= it.headerScope %>"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.themeButton %><%~ it.themeMenu %><%~ it.modeButton %></div>
-    <button type="button" class="header__hamburger" id="hamburger" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
   </div></header>
-  <button id="overlay" class="overlay" type="button" aria-label="Close navigation" hidden></button>
+  <div class="site-primary-bar" id="site-primary-bar">
+    <%~ include('primary-links', it) %>
+  </div>
   <div class="layout">
-    <nav class="sidebar<%= it.sidebarGroups.length ? '' : ' sidebar--site-only' %>" id="sidebar" aria-label="<%= it.section && it.sidebarGroups.length ? it.section : 'Site' %> navigation">
-      <div class="sidebar__group mobile-navigation"><a class="sidebar__link" href="/components/">Components</a><a class="sidebar__link" href="/styles/">Styles</a><a class="sidebar__link" href="/docs/">Documentation</a><a class="sidebar__link" href="https://github.com/floor/material">GitHub <%~ it.icon('open_in_new') %></a></div>
-      <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
-        <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
-      <% }); %></div><% }); %>
-      <div class="sidebar__foot">material · Material Design 3<br><a href="https://github.com/floor/material/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
-    </nav>
-    <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
+    <div class="site-primary-rail" id="site-primary-rail">
+      <button type="button" class="site-nav-button" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden><%~ it.icon('menu') %></button>
+      <%~ include('primary-links', it) %>
+    </div>
+    <div class="layout-main">
+      <% if (it.sidebarGroups.length) { %>
+        <details class="section-index" id="section-index">
+          <summary class="section-index__toggle"><%= it.section + ' index' %></summary>
+          <nav class="section-index__links" id="sidebar" aria-label="<%= it.section %> links">
+            <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
+              <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
+            <% }); %></div><% }); %>
+            <div class="sidebar__foot">material · Material Design 3<br><a href="https://github.com/floor/material/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
+          </nav>
+        </details>
+      <% } %>
+      <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
+    </div>
   </div>
   <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub <%~ it.icon('open_in_new') %></a><a href="/privacy/">Privacy</a></span></footer>
+  <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">
+    <button type="button" class="site-nav-button" id="site-nav-close" aria-label="Close navigation" autofocus><%~ it.icon('close') %></button>
+    <%~ include('primary-links', it) %>
+  </dialog>
   <%~ include('search', { icon: it.icon }) %>
 </body></html>
