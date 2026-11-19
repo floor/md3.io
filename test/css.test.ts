@@ -56,7 +56,7 @@ describe('stylesheets', () => {
 
     const catalog = bundleCss('catalog');
     // "Roboto" also appears in the token font stack. The self-hosted file is roboto.css only.
-    const catalogOrder = ['.header__search', 'Roboto-latin-wght.woff2', 'mtrl.preupgrade', 'm-button:not(:defined)', '.catalog-visual'];
+    const catalogOrder = ['Roboto-latin-wght.woff2', '.mtrl-drawer__item{display:flex', '.header__search', 'm-button:not(:defined)', '.catalog-visual'];
     catalogOrder.reduce((prev, needle) => { const index = at(catalog, needle); expect(index).toBeGreaterThan(prev); return index; }, -1);
     expect(catalog).not.toContain('.hero__frameworks');
 
@@ -65,7 +65,7 @@ describe('stylesheets', () => {
     expect(examples).not.toContain('.catalog-visual');
 
     const styles = bundleCss('styles');
-    expect(at(styles, '.header__search')).toBeLessThan(at(styles, 'Roboto-latin-wght.woff2'));
+    expect(at(styles, 'Roboto-latin-wght.woff2')).toBeLessThan(at(styles, '.header__search'));
     expect(at(styles, 'Roboto-latin-wght.woff2')).toBeLessThan(at(styles, '.styles-page'));
     expect(styles).not.toContain('.catalog-visual');
     expect(styles.split('{').length).toBe(styles.split('}').length);

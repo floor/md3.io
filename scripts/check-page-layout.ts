@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import type { Browser, Frame, Locator, Page } from 'playwright';
 import { examples } from '../examples';
 import { stylePages } from '../src/server/styles';
+import { checkTargets as checkTargetAreas } from './check-input-targets';
 
 const viewports = [
   { width: 360, height: 640 },
@@ -74,37 +75,14 @@ async function checkChrome(page: Page, destinations: string[], width: number, la
 }
 
 async function checkTargets(page: Page, label: string) {
-  // The enclosing label is the real target for native checkboxes/radios and the
-  // container receives pointer and touch events for Material sliders.
-  const small = await page.evaluate(() => {
-    const targets: Element[] = [];
-    const selector = [
-      'button', 'summary', 'select', 'textarea', 'input:not([type="hidden"])',
-      '.header__logo', '.site-nav-link', '.sidebar__link', '.component-list a', '.doc-toc a', '.site-footer__links a',
-      '.component-card h3 a', 'a.styles-card', 'a.doc-card', 'a.example-card', 'a.btn', '.page-nav__link', '.not-found > a',
-      '.page-heading__top a', '.doc-toolbar a', '.catalog-note a', '.lab-api-link', '.lab-upload', '.search-dialog__result',
-      '[part~="container"].mtrl-slider__container',
-    ].join(', ');
-    // The catalog previews are material's components at their own shipped sizes
-    // (the same controls their playground frames show, which this rule never
-    // collected): the 48px rule governs the site's own targets, not the demos.
-    const excluded = '.colour-lab-stage, .catalog-visual, [inert], [aria-hidden="true"]';
-    function collect(root: Document | ShadowRoot) {
-      targets.push(...[...root.querySelectorAll(selector)].filter(element => !element.closest(excluded)));
-      for (const element of root.querySelectorAll('*')) {
-        if (element.shadowRoot && !element.closest(excluded)) collect(element.shadowRoot);
-      }
-    }
-    collect(document);
-    return targets.flatMap(node => {
-      if (node.matches(':disabled, [aria-disabled="true"], [type="file"], [tabindex="-1"][aria-hidden="true"]')) return [];
-      const target = node instanceof HTMLInputElement && ['checkbox', 'radio'].includes(node.type) ? node.labels?.[0] ?? node : node;
-      const { width, height } = target.getBoundingClientRect();
-      if (!width || !height || getComputedStyle(node).visibility === 'hidden' || (width >= 47.9 && height >= 47.9)) return [];
-      return [{ target: node.getAttribute('aria-label') || node.id || target.textContent?.trim() || node.outerHTML.slice(0, 100), width, height }];
-    });
-  });
-  assert.deepEqual(small, [], `${label}: actual site targets must be at least 48 × 48 CSS px`);
+  const selector = [
+    'button', 'summary', 'select', 'textarea', 'input:not([type="hidden"])',
+    '.header__logo', '.site-nav-link', '.mtrl-drawer__item', '.doc-toc a', '.site-footer__links a',
+    '.component-card h3 a', 'a.styles-card', 'a.doc-card', 'a.example-card', 'a.btn', '.page-nav__link', '.not-found > a',
+    '.page-heading__top a', '.doc-toolbar a', '.catalog-note a', '.lab-api-link', '.lab-upload', '.search-dialog__result',
+    '[part~="container"].mtrl-slider__container',
+  ].join(', ');
+  await checkTargetAreas(page.locator(selector), label, true);
 }
 
 async function checkFooter(page: Page, label: string) {
@@ -181,7 +159,7 @@ async function checkOverlays(page: Page, captures: string, width: number) {
   await input.press('Escape');
   await dialog.waitFor({ state: 'hidden' });
   await page.locator('#search-trigger:focus-visible').waitFor();
-  if (width >= 600) {
+  if (width >= 600 && width < 840) {
     const open = page.locator('#site-nav-open');
     await open.press('Enter');
     const rail = page.getByRole('dialog', { name: 'Navigation', exact: true });

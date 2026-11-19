@@ -39,21 +39,29 @@
 
 .playground--material .configuration { container: configuration / inline-size; }
 
-/* Size the interactive parts themselves, including the server's shadow markup. */
-.playground--material m-button::part(button),
-.playground--material m-button-group::part(button),
-.playground--material m-tabs::part(tab),
-.playground--material m-select::part(input),
-.playground--material m-select::part(item),
-.playground--material m-text-field::part(input),
-.playground--material m-text-field[data-picker]::part(trailing-icon),
-.playground--material m-switch::part(label),
+/* Buttons, chips, switches and picker icons already have Material hit areas.
+   Expand the clickable field and slider parts behind their visible controls. */
+.playground--material m-select::part(select),
+.playground--material m-text-field::part(field),
 .playground--material m-slider::part(container) {
-    min-inline-size: var(--site-target-size);
-    min-block-size: var(--site-target-size);
+    isolation: isolate;
 }
 
-.playground--material m-text-field[data-picker]::part(trailing-icon) { inset-inline-end: 0; }
+.playground--material m-select:not([disabled])::part(select)::after,
+.playground--material m-text-field:not([disabled])::part(field)::after,
+.playground--material m-slider:not([disabled])::part(container)::after {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto;
+    height: var(--site-target-size);
+    transform: translateY(-50%);
+    z-index: -1;
+}
+
+/* Leave space for the 8px hit outset of an xs segment beside other controls. */
+.playground--material .configuration .ui-row:has(m-button-group) + .ui-row,
+.playground--material .configuration .ui-row + .ui-row:has(m-button-group) { margin-block-start: 12px; }
+.playground--material .configuration .ui-row:has(m-button-group) + .ui-row:has(m-button-group) { margin-block-start: 16px; }
 
 /* The date and time dialogs here edit the configuration form outside the demo. */
 .playground--material m-datepicker[data-panel-picker]::part(calendar) {
@@ -66,10 +74,19 @@
 }
 .playground--material m-timepicker[data-panel-picker]::part(toggle-type),
 .playground--material m-timepicker[data-panel-picker]::part(cancel),
-.playground--material m-timepicker[data-panel-picker]::part(confirm),
-.playground--material m-timepicker[data-panel-picker]::part(input) {
-    min-inline-size: var(--site-target-size);
-    min-block-size: var(--site-target-size);
+.playground--material m-timepicker[data-panel-picker]::part(confirm) {
+    position: relative;
+}
+
+.playground--material m-timepicker[data-panel-picker]::part(toggle-type)::after,
+.playground--material m-timepicker[data-panel-picker]::part(cancel)::after,
+.playground--material m-timepicker[data-panel-picker]::part(confirm)::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, var(--site-target-size));
+    height: max(100%, var(--site-target-size));
+    transform: translate(-50%, -50%);
 }
 
 @media (min-width: 840px) {
