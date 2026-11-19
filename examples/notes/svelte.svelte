@@ -120,7 +120,7 @@
   </section>
   {/if}
   {/if}
-  <ExtendedFab icon={ADD_ICON} text="New note" ariaLabel="New note" onclick={() => open(null)} />
+  <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onclick={() => open(null)}>New note</ExtendedFab>
   {#if narrow}
     <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} onclose={() => (draft = null)}>
       <div class="notes__fields">

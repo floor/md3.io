@@ -98,7 +98,7 @@ export default defineComponent({
         </div>
       </section>
       </template>
-      <MExtendedFab :icon="ADD_ICON" text="New note" ariaLabel="New note" @click="open(null)" />
+      <MExtendedFab :icon="ADD_ICON" ariaLabel="New note" @click="open(null)">New note</MExtendedFab>
       <MDialog v-if="!narrow" :open="draft !== null" :headline="draft && draft.note ? 'Edit note' : 'New note'" @close="draft = null">
         <div class="notes__fields">
           <MTextField label="Title" :value="draft ? draft.title : ''" @input="draft && (draft = { ...draft, title: $event.detail.value })" />

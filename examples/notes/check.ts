@@ -24,6 +24,15 @@ export default async function steps(page: Page): Promise<void> {
       });
     });
 
+  // The New note FAB is the extended one in every variant: its label is visible,
+  // not only an accessible name (the Vue and Svelte adapters once drew it
+  // icon-only, and the aria snapshots could not see the difference — a rendered
+  // label is about twice an icon-only FAB's 56px). Its text sits in the host, so
+  // neither textContent nor innerText reaches it through the role query; the box
+  // is the honest measure.
+  const fab = page.getByRole("button", { name: "New note", ...exact });
+  if (((await fab.boundingBox())?.width ?? 0) < 100) throw new Error("The New note FAB lost its visible label");
+
   // Filter by Work from the row above the grid, then clear it.
   await page.getByRole("gridcell", { name: "Work", ...exact }).first().click();
   await page.getByRole("gridcell", { name: "Work", ...exact }).first().click();
@@ -68,19 +77,42 @@ export default async function steps(page: Page): Promise<void> {
 
   // Delete a note from the editor. The snackbar dismisses itself on its timer;
   // the pointer moves away first, because a hover or focus inside it pauses that
-  // timer.
+  // timer. The toast is waited OPEN before it is waited out: a re-show can land
+  // a tick after the click (the Undo click before it closed the previous toast),
+  // and settling alone would pass on that dying toast.
   await page.getByRole("button", { name: "Open Story prompts", ...exact }).click();
   await page.getByRole("button", { name: "Delete", ...exact }).click();
   await page.mouse.move(8, 8);
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll("m-snackbar, .mtrl-snackbar")].some((host) => {
+      const root = host.shadowRoot ?? host;
+      const toast = root.querySelector("[popover]") ?? host;
+      return Number.parseFloat(getComputedStyle(toast).opacity) >= 0.9;
+    }),
+  );
   await snackbarSettled();
 
   // Delete in the editor of a note that was never saved discards the draft: the
-  // editor closes and no snackbar shows.
+  // editor closes, no snackbar opens for it, and the grid loses nothing. The
+  // toast is checked the moment the editor closes — a deletion that was forged
+  // here would have it at full opacity for its whole timer, and a check made
+  // after a fade would let that bug through.
+  const shown = page.getByRole("status").filter({ hasText: "Showing" });
   await page.getByRole("button", { name: "New note", ...exact }).click();
   await page.getByRole("textbox", { name: "Title", ...exact }).fill("Never saved");
+  const shownBefore = await shown.textContent();
   await page.getByRole("button", { name: "Delete", ...exact }).click();
   await page.getByRole("textbox", { name: "Title", ...exact }).waitFor({ state: "hidden" });
-  await snackbarSettled();
+  const toastOpen = await page.evaluate(() =>
+    [...document.querySelectorAll("m-snackbar, .mtrl-snackbar")].some((host) => {
+      const root = host.shadowRoot ?? host;
+      const toast = root.querySelector("[popover]") ?? host;
+      return Number.parseFloat(getComputedStyle(toast).opacity) >= 0.1;
+    }),
+  );
+  if (toastOpen) throw new Error("Delete of a never-saved note opened the deletion snackbar");
+  if ((await shown.textContent()) !== shownBefore) throw new Error("Delete of a never-saved note changed the note count");
+  if ((await page.getByRole("article", { name: "Never saved", ...exact }).count()) !== 0) throw new Error("A never-saved note reached the grid");
 
   // On a narrow frame the editor is the bottom sheet: reload narrow (the variant
   // picks its container when it loads), create a note there, and save it.
