@@ -31,12 +31,12 @@ describe('site search', () => {
     expect(renderDocument('colorpicker')!.html).toContain('id="swatches-only"');
   });
   test('an example is found by its name', () => {
-    expect(searchSite('settings').find(result => result.section === 'Examples')?.url).toBe('/examples/settings/');
+    expect(searchSite('settings').find(result => result.section === 'Showcase')?.url).toBe('/showcase/settings/');
   });
-  test('results come one per page, grouped Components, Styles, Docs, Examples', () => {
+  test('results come one per page, grouped Components, Styles, Docs, Showcase', () => {
     const results = searchSite('dialog', 50);
     expect(new Set(results.map(result => result.url.split('#')[0])).size).toBe(results.length);
-    const order = results.map(result => ['Components', 'Styles', 'Docs', 'Examples'].indexOf(result.section));
+    const order = results.map(result => ['Components', 'Styles', 'Docs', 'Showcase'].indexOf(result.section));
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
   test('the Styles pages are found by what they list', () => {

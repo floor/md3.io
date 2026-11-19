@@ -51,7 +51,7 @@ checkbox:
     set error: false
 ```
 
-A parent with its children, from the M3 guidelines, is planned for [Examples](/examples/).
+A parent with its children, from the M3 guidelines, is planned for [Showcase](/showcase/).
 
 ## API
 
