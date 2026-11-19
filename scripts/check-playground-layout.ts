@@ -129,6 +129,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
           if (width === 840) await page.screenshot({ animations: 'disabled', path: `${captures}/dialog-open-840.png` });
           await frame.getByRole('button', { name: 'Agree', exact: true }).click();
           await dialog.waitFor({ state: 'hidden' });
+          await panel.waitForSwitch(page, 'open', false);
         }
 
         const iframe = await page.locator('#preview').elementHandle();
