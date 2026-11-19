@@ -267,11 +267,14 @@ try {
       assert(viewport, 'menu: the open item does not intersect the viewport');
     },
     async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(200); });
-  // FAB menu likewise opens (its element uses the top layer itself).
+  // FAB menu likewise opens in the top layer (the menu presentation): the open
+  // item's box is inside the viewport, not clipped by the card (a layout-box
+  // height check cannot see clipping).
   await visual('fab-menu').scrollIntoViewIfNeeded();
   await visual('fab-menu').getByRole('button', { name: 'Reply options' }).click();
-  assert(await visual('fab-menu').locator('m-fab-menu').evaluate(el => el.shadowRoot!.querySelector('.mtrl-fab-menu--open') !== null
-    && [...el.shadowRoot!.querySelectorAll('*')].some(item => item.textContent?.trim() === 'Reply' && item.getBoundingClientRect().height > 0)), 'fab-menu: the menu did not open visibly');
+  const fabItem = page.getByRole('menuitem').first();
+  await fabItem.waitFor();
+  assert(await fabItem.evaluate(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth; }), 'fab-menu: the open item does not intersect the viewport');
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
   await staysOnOverview('fab-menu');
