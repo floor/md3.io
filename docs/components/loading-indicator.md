@@ -59,7 +59,7 @@ loading-indicator:
 ```
 
 `stop()` freezes it on its current frame, and `start()` runs it again. Recipes such as a
-button that shows it while its action runs are planned for [Examples](/examples/).
+button that shows it while its action runs are planned for [Showcase](/showcase/).
 
 ## API
 

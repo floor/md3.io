@@ -61,7 +61,7 @@ button:
 The factory can also show progress in the icon slot (`progress`, `setProgress()`,
 `setLoading()`); the web component does not take it yet. Recipes built on buttons, such as an
 upload with progress, a form submission or a multi-step process, are planned for
-[Examples](/examples/).
+[Showcase](/showcase/).
 
 ## API
 
