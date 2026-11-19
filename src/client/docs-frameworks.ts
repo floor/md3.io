@@ -1,5 +1,5 @@
 // The documentation's framework chips (document.eta): material's filter chip set, the same
-// picker as the playgrounds and the Examples. The choice is :root[data-framework], which
+// picker as the playgrounds and the Showcase. The choice is :root[data-framework], which
 // the head script sets before paint (base.eta) and the page's CSS reads to show that
 // framework's examples, guide and steps; a chip saves it for the whole site.
 import 'material/elements/css/chips';

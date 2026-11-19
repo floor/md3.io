@@ -1,4 +1,4 @@
-// The Examples section: what the pages need from examples/ and from the examples build.
+// The Showcase section (formerly Examples): what the pages need from examples/ and from the examples build.
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import hljs from 'highlight.js';

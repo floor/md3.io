@@ -108,6 +108,8 @@
 /examples/booking/
 /examples/settings/
 /privacy/
+/showcase/
+/showcase/settings/
 /styles/
 /styles/color/
 /styles/color-lab/
