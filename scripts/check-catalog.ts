@@ -47,6 +47,30 @@ async function checkComponentList(page: Page, overview: boolean) {
   return pane;
 }
 
+async function checkDetailFocusOrder(page: Page, width: number) {
+  const main = page.getByRole('main');
+  const detail = '#component-content';
+  const inDetail = () => page.evaluate(selector => !!document.activeElement?.closest(selector), detail);
+  await main.focus();
+  await page.keyboard.press('Tab');
+  if (width >= 840) {
+    const pane = main.getByRole('navigation', { name: 'Component list', exact: true });
+    const focused = await pane.getByRole('link', { name: 'Overview', exact: true }).evaluate(link => document.activeElement === link);
+    assert(focused, `${width}px: Tab enters the detail before the component list`);
+    const headings = main.getByRole('heading');
+    assert(await headings.nth(6).and(main.getByRole('heading', { name: 'Tooltip', level: 1, exact: true })).count() === 1,
+      `${width}px: the detail H1 must follow the six list headings`);
+    await pane.getByRole('link', { name: 'Tooltip', exact: true }).focus();
+    await page.keyboard.press('Tab');
+  }
+  assert(await inDetail(), `${width}px: Tab did not reach the component detail`);
+
+  await page.getByRole('link', { name: 'Skip to content', exact: true }).press('Enter');
+  assert(await page.locator(detail).evaluate(node => document.activeElement === node), `${width}px: Skip to content did not focus the detail`);
+  await page.keyboard.press('Tab');
+  assert(await inDetail(), `${width}px: Tab after the skip link left the detail`);
+}
+
 /** Per card: its custom elements, how many are not upgraded, and what is open over the page. */
 const inspect = (page: Page) => page.evaluate(() => {
   const roots = (root: Document | ShadowRoot): (Document | ShadowRoot)[] =>
@@ -237,6 +261,7 @@ try {
         `${width}px: showing the current link did not scroll only the list`);
     }
     await page.screenshot({ animations: 'disabled', path: `${captures}/detail-${width}.png` });
+    await checkDetailFocusOrder(page, width);
     await up.click();
     await page.waitForURL(`${base}/components/`);
   }
@@ -247,6 +272,7 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${captures}/detail-839.png` });
   await page.setViewportSize({ width: 840, height: 900 });
   const expandedList = await checkComponentList(page, false);
+  await checkDetailFocusOrder(page, 840);
   await expandedList.getByRole('link', { name: 'Tooltip', exact: true }).focus();
   await page.screenshot({ animations: 'disabled', path: `${captures}/detail-840.png` });
   await page.setViewportSize({ width: 839, height: 900 });

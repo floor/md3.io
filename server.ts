@@ -96,17 +96,19 @@ function page(path: string, title: string, description: string, template: string
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
   const isCatalog = template === 'catalog';
-  const isComponents = isCatalog || template === 'component';
+  const isComponentDetail = template === 'component';
+  const isComponents = isCatalog || isComponentDetail;
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
   // Component docs lead to Styles, and Styles to Examples.
   const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
   const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundGroups, componentGroups, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
-  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : template === 'component' && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
+    skipTarget: isComponentDetail ? 'component-content' : 'content',
     path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);

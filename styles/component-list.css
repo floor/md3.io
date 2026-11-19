@@ -39,6 +39,7 @@
 .component-list-up svg { width: 16px; height: 16px; }
 .component-page__title { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; }
 .component-list-layout--detail .component-list { display: none; }
+#component-content { scroll-margin-block-start: var(--header-height); }
 
 @media (min-width: 840px) {
   .component-list-layout {
