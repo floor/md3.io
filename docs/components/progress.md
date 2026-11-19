@@ -65,7 +65,7 @@ progress:
 
 `buffer` draws how much is ready ahead of a linear value, as for streaming media. `showLabel`
 shows the percentage beside the indicator, and `labelFormatter` writes it differently. Recipes
-such as an upload with progress are planned for [Examples](/examples/).
+such as an upload with progress are planned for [Showcase](/showcase/).
 
 ## API
 

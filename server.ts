@@ -7,7 +7,7 @@ import { components, componentIcons, isComponent, playgroundGroups } from './src
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -92,17 +92,17 @@ const componentGroups = [
 ];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
-  const isExamples = path.startsWith('/examples');
+  const isExamples = path.startsWith('/showcase');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
   const isCatalog = template === 'catalog';
   const isComponentDetail = template === 'component';
   const isComponents = isCatalog || isComponentDetail;
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
-  // Component docs lead to Styles, and Styles to Examples.
+  // Component docs lead to Styles, and Styles to the Showcase.
   const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
   const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundGroups, componentGroups, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Examples' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
+  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
@@ -132,14 +132,14 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
     `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? `${icon('arrow_back')} Previous` : `Next ${icon('arrow_forward')}`}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
-const exampleGroups = [{ label: 'Examples', items: [{ name: 'Overview', href: '/examples/' }, ...examples.map(example => ({ name: example.title, href: `/examples/${example.slug}/` }))] }];
+const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
 const primaryDestinations = [
   { label: 'Components', href: '/components/', icon: 'tab' },
   { label: 'Styles', href: '/styles/', icon: 'palette' },
   { label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' },
   { label: 'Documentation', href: '/docs/', icon: 'article' },
 ];
-/** The reading order across sections, a cycle: the documentation, Styles, Examples, and back. */
+/** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
@@ -238,9 +238,14 @@ export async function handleRequest(request: Request): Promise<Response> {
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component }))
       : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
-  else if (path === '/examples/') response = page(path, 'Examples — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
-  else if (/^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
-    const [, slug, , framework] = /^\/examples\/([a-z-]+)\/(frame\/([a-z]+)\/)?$/.exec(path)!;
+  else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
+  // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
+  // to its /showcase/ twin, the query kept (the browser keeps the fragment).
+  else if (path === '/examples/' || /^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
+    response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/showcase/${path.slice('/examples/'.length)}${url.search}` } });
+  }
+  else if (/^\/showcase\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
+    const [, slug, , framework] = /^\/showcase\/([a-z-]+)\/(frame\/([a-z]+)\/)?$/.exec(path)!;
     const example = exampleBySlug(slug!);
     const variants = example ? exampleVariants(slug!) : null;
     if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
@@ -249,7 +254,7 @@ export async function handleRequest(request: Request): Promise<Response> {
         ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)),
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
       // The address's framework when the example has it, so the first paint (frame and source)
       // is the one the address names; otherwise its first variant. The client keeps it in step.
       framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });

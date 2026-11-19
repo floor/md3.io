@@ -19,8 +19,8 @@ describe('sitemap and robots', () => {
     expect(response.headers.get('Content-Type')).toContain('application/xml');
     const xml = await response.text();
     const paths = [...xml.matchAll(/<loc>https:\/\/md3\.io([^<]*)<\/loc>/g)].map(match => match[1]!);
-    const expected = ['/', '/components/', '/docs/', '/examples/', '/privacy/', ...componentSlugs.map(slug => `/components/${slug}/`), ...docSlugs.map(docHref),
-      ...stylePages.map(page => page.href), ...examples.map(example => `/examples/${example.slug}/`)];
+    const expected = ['/', '/components/', '/docs/', '/showcase/', '/privacy/', ...componentSlugs.map(slug => `/components/${slug}/`), ...docSlugs.map(docHref),
+      ...stylePages.map(page => page.href), ...examples.map(example => `/showcase/${example.slug}/`)];
     expect([...paths].sort()).toEqual([...new Set(expected)].sort());
     expect(paths.filter(path => /^\/(preview|api)\/|\/frame\//.test(path))).toEqual([]);
     expect([...xml.matchAll(/<lastmod>([^<]*)<\/lastmod>/g)].every(match => /^\d{4}-\d{2}-\d{2}$/.test(match[1]!))).toBe(true);
@@ -71,7 +71,7 @@ describe('structured data', () => {
     expect(await trail('/docs/components/button/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Documentation https://md3.io/docs/', 'Button documentation https://md3.io/docs/components/button/']]]);
     expect(await trail('/components/switch/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Components https://md3.io/components/', 'Switch https://md3.io/components/switch/']]]);
     expect(await trail('/styles/color/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Styles https://md3.io/styles/', 'Color https://md3.io/styles/color/']]]);
-    expect(await trail('/examples/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Examples https://md3.io/examples/']]]);
+    expect(await trail('/showcase/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Showcase https://md3.io/showcase/']]]);
   });
   test('no text can close the script element', () => {
     const json = jsonForScript({ name: '</script><script>alert(1)</script> & more' });
@@ -83,7 +83,7 @@ describe('structured data', () => {
 describe('internal routes, errors and images', () => {
   test('previews and example frames are not indexed; pages are', async () => {
     expect((await get('/preview/button/')).headers.get('X-Robots-Tag')).toBe('noindex');
-    expect((await get(`/examples/${examples[0]!.slug}/frame/vanilla/`)).headers.get('X-Robots-Tag')).toBe('noindex');
+    expect((await get(`/showcase/${examples[0]!.slug}/frame/vanilla/`)).headers.get('X-Robots-Tag')).toBe('noindex');
     expect((await get('/components/button/')).headers.get('X-Robots-Tag')).toBeNull();
   });
   test('an unknown page is a 404, without structured data', async () => {

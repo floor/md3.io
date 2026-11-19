@@ -55,7 +55,7 @@ side-sheet:
 ```
 
 `toggle()` opens a closed sheet and closes an open one. Recipes such as filters applied on
-close are planned for [Examples](/examples/).
+close are planned for [Showcase](/showcase/).
 
 ## API
 

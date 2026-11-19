@@ -66,7 +66,7 @@ extended-fab:
 
 `position` fixes it to a corner, 16dp from both edges. Elevation works as on the FAB, with
 `lower()` and `raise()`. Driving the collapse from a list's scrolling is planned for
-[Examples](/examples/).
+[Showcase](/showcase/).
 
 ## API
 

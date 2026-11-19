@@ -11,7 +11,7 @@ const root = resolve(import.meta.dir, '..');
 const manifest = JSON.parse(readFileSync(resolve(root, 'dist/asset-manifest.json'), 'utf8')) as Record<string, string>;
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
 
-const pages = ['/', '/components/button/', '/docs/', '/preview/button/', '/styles/frame/', '/examples/settings/frame/vanilla/'];
+const pages = ['/', '/components/button/', '/docs/', '/preview/button/', '/styles/frame/', '/showcase/settings/frame/vanilla/'];
 
 describe('content-hashed assets', () => {
   test('every script and stylesheet in the HTML is a hashed file, and it is immutable', async () => {
