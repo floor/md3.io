@@ -109,6 +109,7 @@
 /examples/settings/
 /privacy/
 /showcase/
+/showcase/booking/
 /showcase/settings/
 /styles/
 /styles/color/
