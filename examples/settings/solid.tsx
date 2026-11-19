@@ -1,3 +1,4 @@
+/** @jsxImportSource solid-js — this file's JSX is Solid's, not React's; tsc reads it. */
 // Solid: material/solid wraps the same elements.
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
