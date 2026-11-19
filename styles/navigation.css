@@ -183,7 +183,7 @@ body {
     --mtrl-ref-typeface-brand: var(--font-sans);
 }
 .site-drawer::part(drawer) { width: 100%; height: auto; }
-.site-drawer::part(sheet) { max-width: none; padding: 0; border: 0; background: transparent; }
+.site-drawer::part(sheet) { width: 100%; max-width: none; padding: 0; border: 0; background: transparent; }
 .site-drawer::part(item-label) { white-space: normal; overflow-wrap: anywhere; }
 @media (scripting: none) {
     .site-drawer::part(group-items) { grid-template-rows: 1fr; visibility: visible; }

@@ -257,10 +257,21 @@ try {
         await themedPage.goto(url(path!));
         await themedPage.evaluate(() => document.fonts.ready);
         const save = (kind: string) => themedPage.screenshot({ path: `${railCaptures}/${kind}-${name}-${width}-${theme}-${mode}.png`, animations: 'disabled' });
+        const checkActiveRow = async () => {
+          const active = themedPage.locator('.site-drawer a[aria-current="page"]');
+          await active.scrollIntoViewIfNeeded();
+          assert(await active.evaluate(node => {
+            const host = (node.getRootNode() as ShadowRoot).host.getBoundingClientRect();
+            const row = node.getBoundingClientRect();
+            return row.left >= host.left && row.right <= host.right;
+          }), `${name} at ${width}px: the active row fits inside the pane`);
+        };
+        if (width === 1440) await checkActiveRow();
         await save('page');
         if (width === 700) {
           await themedPage.getByRole('button', { name: 'Expand navigation', exact: true }).click();
           await themedPage.getByRole('dialog', { name: 'Navigation', exact: true }).waitFor();
+          await checkActiveRow();
           await save('rail-open');
         }
       }
