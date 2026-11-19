@@ -9,11 +9,9 @@
 import type { Frame, Page } from "playwright";
 
 export async function checkFrame(frame: Frame): Promise<void> {
-  await frame.getByRole("button", { name: "New note", exact: true }).click();
-  const title = frame.getByRole("textbox", { name: "Title", exact: true });
-  await title.waitFor();
-  await frame.getByRole("button", { name: "Cancel", exact: true }).click();
-  await title.waitFor({ state: "hidden" });
+  await frame.getByRole("combobox", { name: "Search notes" }).fill("Pasta sauce");
+  await frame.getByRole("status").filter({ hasText: /^Showing 1 of / }).waitFor();
+  await frame.getByRole("button", { name: "Open Pasta sauce", exact: true }).waitFor();
 }
 
 export default async function steps(page: Page): Promise<void> {
