@@ -107,6 +107,15 @@ export function frameworkChips(available: (id: string) => boolean): string {
 }
 
 /**
+ * The one framework chips row for every page type (component, documentation and
+ * Showcase): the same markup, directly under the page's title and description.
+ * The row carries the material scope and takes the site theme as it is parsed.
+ */
+export function frameworkChipsRow(available: (id: string) => boolean, extraClass = ''): string {
+  return `<div class="framework-chips-row playground--material${extraClass ? ` ${extraClass}` : ''}"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script>${frameworkChips(available)}</div>`;
+}
+
+/**
  * The Showcase source panels' Copy code: material's xs tonal button with the content_copy
  * symbol, as in the playground's heading, in a small material scope of its own (the
  * panel is not one) that takes the site theme as it is parsed and follows it after

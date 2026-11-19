@@ -1,6 +1,6 @@
 <div class="page-wrap example-page" data-example="<%= it.example.slug %>">
-  <%/* The framework chips, as on the component pages; the row carries the material scope. */%><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.frameworks %></div>
   <header class="page-heading"><h1><%= it.example.title %></h1><p><%= it.example.description %></p></header>
+  <%~ it.frameworksRow %>
   <div class="example-layout">
     <div class="example-main">
       <section class="preview-panel example-preview" aria-label="Running example">

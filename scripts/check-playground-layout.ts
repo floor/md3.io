@@ -62,7 +62,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
           assert(previewBox.x + previewBox.width <= formBox.x && Math.abs(formBox.y - previewBox.y) < 1, `${label}: the panes must sit side by side`);
           assert(previewBox.width >= 239 && formBox.width >= 288, `${label}: the panes are too narrow (${previewBox.width}/${formBox.width})`);
         }
-        assert(await preview.locator('m-chips.framework-chips').count() === 1, `${label}: framework chips are outside the preview controls`);
+        assert(await page.locator('.framework-chips-row').count() === 1 && await page.locator('.preview-panel .framework-chips-row').count() === 0, `${label}: framework chips are not the one row under the heading`);
         if (width === 840) {
           const list = await page.locator('.component-list').boundingBox();
           assert(list && Math.abs(list.width - 160) < 1, `${label}: the component list must reserve 160px`);
@@ -155,6 +155,30 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         await page.screenshot({ animations: 'disabled', path: `${captures}/${slug}-${width}.png` });
       }
     }
+    // One framework chips row per page, in the same place on all three page types:
+    // directly under the title and description, never in the preview card.
+    for (const [label, path] of [['component', 'components/button/'], ['documentation', 'docs/components/button/'], ['showcase', 'showcase/settings/']] as const) {
+      for (const width of [390, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(new URL(path, base).href);
+        await page.locator('h1').waitFor();
+        const place = await page.evaluate(() => {
+          const rows = [...document.querySelectorAll('.framework-chips-row')];
+          const h1 = document.querySelector('h1')!.getBoundingClientRect();
+          const row = rows[0]!.getBoundingClientRect();
+          const intro = [...document.querySelectorAll('p')].find(p => p.getBoundingClientRect().bottom <= row.top + 1 && p.getBoundingClientRect().top > h1.top);
+          return { count: rows.length, afterTitle: row.top >= h1.bottom, gap: intro ? Math.round(row.top - intro.getBoundingClientRect().bottom) : -1, inPreview: !!rows[0]!.closest('.preview-panel, .preview-frameworks') };
+        });
+        assert(place.count === 1 && place.afterTitle && place.gap >= 0 && place.gap <= 32 && !place.inPreview, `${label} at ${width}px: the chips row is not directly under the title and description (${JSON.stringify(place)})`);
+      }
+    }
+    // Keyboard: right after the heading — from the breadcrumb, Tab reaches the chips.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(new URL('components/button/', base).href);
+    await page.locator('.component-list-up').focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'The framework chips are not reachable right after the heading');
     assert(errors.length === 0, errors.join('\n'));
     console.log('Playground reflow checks passed at 360, 390, 412, 700, 840, 1024 and 1440px.');
   } finally {
