@@ -897,13 +897,13 @@ doc-nav__link
 */
 
 [data-theme-mode="light"] .doc-nav__link {
-    background: #f8f8fa;
-    border-color: #e0e0e8;
+    background: var(--mtrl-sys-color-surface-container-low, #f8f8fa);
+    border-color: var(--mtrl-sys-color-outline-variant, #e0e0e8);
 }
 
 [data-theme-mode="light"] .doc-nav__link:hover {
-    background: #f0f0f5;
-    border-color: #d0d0d8;
+    background: var(--mtrl-sys-color-surface-container, #f0f0f5);
+    border-color: var(--mtrl-sys-color-outline, #d0d0d8);
 }
 
 /* ─── Accessibility: Focus indicators ────────────────────────────── */

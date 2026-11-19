@@ -8,7 +8,6 @@ const loads = new WeakMap<Document, Map<string, Promise<void>>>();
 const wanted = new WeakMap<Document, string>();
 
 function loadTheme(doc: Document, theme: string): Promise<void> {
-  if (theme === 'baseline') return Promise.resolve();
   const started = loads.get(doc) ?? new Map<string, Promise<void>>();
   loads.set(doc, started);
   let loading = started.get(theme);

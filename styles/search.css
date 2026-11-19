@@ -98,8 +98,8 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.35),
-        0 0 1px rgba(0, 0, 0, 0.2);
+        0 8px 30px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 35%, transparent),
+        0 0 1px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 20%, transparent);
     overflow: hidden;
     transition: transform 0.15s ease-out;
 }

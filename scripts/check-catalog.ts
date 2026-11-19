@@ -134,8 +134,9 @@ try {
   await setMode('dark');
   assert(await surface() === rgb(baseline.dark.get('surface')!) && await filled() === rgb(baseline.dark.get('primary')!), 'Dark site: the visuals are not mtrl baseline dark');
   await page.screenshot({ animations: 'disabled', path: `${output}/catalog-dark.png`, fullPage: true });
-  // The page around them keeps md3.io's own tokens.
-  assert(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--mtrl-sys-color-primary')) === '', 'mtrl tokens leaked onto :root');
+  // The page around them takes the same roles at the root (layout step 8): the
+  // site's own colours follow the chosen theme from <html data-theme>.
+  assert(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--mtrl-sys-color-primary').trim()) === baseline.dark.get('primary'), 'The chosen theme’s roles are not on :root');
 
   // A phone: no horizontal scroll, in either mode.
   await page.setViewportSize({ width: 390, height: 844 });

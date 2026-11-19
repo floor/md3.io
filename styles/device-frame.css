@@ -5,10 +5,8 @@
 .device__bar {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 10px;
   border-bottom: 1px solid var(--border);
-  --mtrl-sys-color-primary: var(--accent);
-  --mtrl-sys-color-on-primary: #fff;
-  --mtrl-sys-color-secondary: var(--accent);
-  --mtrl-sys-color-on-secondary: #fff;
+  /* Primary and secondary are not repainted here: the bar inherits the page's
+     chosen theme roles from <html data-theme> directly. */
   --mtrl-sys-color-secondary-container: var(--accent-dim);
   --mtrl-sys-color-on-secondary-container: var(--text);
   --mtrl-sys-color-surface-container: var(--surface-container);

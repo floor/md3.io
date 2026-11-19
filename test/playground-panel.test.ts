@@ -71,7 +71,7 @@ describe('the material playground panel', () => {
     expect(light).toBeGreaterThan(dark);
     // Every theme's sheets are named in a compact map; the chosen theme's main sheet
     // is written into the head for the panel's first paint, and no contrast.css.
-    expect(html).toMatch(/<script type="application\/json" id="theme-sheets">\{"neutral":\["[a-f0-9]{10}","[a-f0-9]{10}"\]/);
+    expect(html).toMatch(/<script type="application\/json" id="theme-sheets">\{"baseline":\["[a-f0-9]{10}","[a-f0-9]{10}"\]/);
     expect(html).not.toContain('id="contrast-sheet"');
     // The glue module loads, and only this page maps it.
     expect(html).toContain('"/dist/playground-material.js":');

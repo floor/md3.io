@@ -97,13 +97,23 @@ try {
   assert(copied === await page.locator('#generated-code').textContent(), 'Copied code differs from the highlighted source');
   assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('material/themes/ocean'), 'Copied code is stale');
   // Material's component CSS stays in the frame and the elements' shadow roots. The
-  // page may load the chosen theme's sheet (one appearance for the whole site): it only
-  // sets roles under [data-theme], which only the material scopes carry.
+  // page may load the chosen theme's sheet (one appearance for the whole site): its
+  // roles land on <html data-theme> itself (layout step 8: the site's own colours
+  // follow the theme) and on the material scopes, and nowhere else.
   const leak = await page.evaluate(() => ({
     sheets: [...document.styleSheets].map(sheet => sheet.href ?? '').filter(href => href.includes('/dist/material/') && !href.includes('/dist/material/themes/')),
-    themed: [...document.querySelectorAll('[data-theme]')].filter(element => !element.matches('.playground--material, .site-material')).map(element => element.tagName),
+    themed: [...document.querySelectorAll('[data-theme]')].filter(element => element !== document.documentElement && !element.matches('.playground--material, .site-material')).map(element => element.tagName),
   }));
   assert(leak.sheets.length === 0 && leak.themed.length === 0, `Material CSS leaked into the site: ${JSON.stringify(leak)}`);
+  // Layout step 8: the site's own surfaces take the chosen theme's roles at the root.
+  await page.waitForFunction(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--mtrl-sys-color-surface)';
+    document.body.append(probe);
+    const surface = getComputedStyle(probe).color;
+    probe.remove();
+    return document.documentElement.dataset.theme === 'ocean' && getComputedStyle(document.body).backgroundColor === surface;
+  });
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
   // The pilot has no Reset: the Scenario select's Default is the way back.
@@ -142,7 +152,16 @@ try {
     await loadingPage.locator('#preview').waitFor();
     await loadingPage.waitForFunction(() => getComputedStyle(document.querySelector('#preview')!).colorScheme === 'dark');
     const background = await loadingPage.locator('#preview').evaluate(element => getComputedStyle(element).backgroundColor);
-    assert(background === 'rgb(29, 27, 32)', 'The empty iframe has a light loading background');
+    // The loading backdrop is the chosen theme's surface (ocean, dark, here), not a fixed colour.
+    const surface = await loadingPage.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--mtrl-sys-color-surface)';
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    assert(background === surface, `The empty iframe has a light loading background (${background} vs the theme surface ${surface})`);
     releaseDocument();
     const loadingFrame = loadingPage.frameLocator('#preview');
     await loadingFrame.locator('#stage').waitFor({ state: 'attached' });
