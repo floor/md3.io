@@ -1,4 +1,5 @@
-/* Layout for the example only: the components bring their own styles. */
+/* Layout for the example only: the components bring their own styles. Text
+   appearance comes from the Material typescale roles and the inherited theme colors. */
 .mail {
   display: flex;
   width: min(100%, 1120px);
@@ -7,6 +8,9 @@
   position: relative;
   background: var(--mtrl-sys-color-surface-container-low);
   border-radius: 28px;
+  /* The panes split on the example's own width, so the Showcase Tablet preset (820px) gets both. */
+  container-type: inline-size;
+  container-name: mail;
 }
 .mail__main { display: flex; flex: 1; min-width: 0; }
 .mail__list-pane { display: flex; flex-direction: column; width: 100%; min-width: 0; }
@@ -14,20 +18,31 @@
 .mail[data-reading="true"] .mail__list-pane { display: none; }
 .mail[data-reading="true"] .mail__detail-pane { display: block; }
 
-@media (min-width: 840px) {
-  .mail__list-pane { width: 400px; flex: none; border-right: 1px solid var(--mtrl-sys-color-outline-variant); }
+@container mail (min-width: 700px) {
+  .mail__list-pane { width: clamp(280px, 45%, 400px); flex: none; border-right: 1px solid var(--mtrl-sys-color-outline-variant); }
   .mail[data-reading="true"] .mail__list-pane { display: flex; }
   .mail__detail-pane { display: block; }
   .mail-message__back { display: none; }
+  .mail-message { padding: 24px 28px; }
 }
 
 .mail__top { display: flex; flex-direction: column; gap: 12px; padding: 16px 16px 8px; }
 .mail__selection { display: flex; align-items: center; gap: 4px; padding: 0 12px; }
 .mail__selection:empty { display: none; }
-.mail__selection-count { flex: 1; font: 500 14px/20px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface); }
+.mail__selection-count {
+  flex: 1;
+  font: var(--mtrl-sys-typescale-label-large-font-weight) var(--mtrl-sys-typescale-label-large-font-size) / var(--mtrl-sys-typescale-label-large-line-height) var(--mtrl-sys-typescale-label-large-font);
+  letter-spacing: var(--mtrl-sys-typescale-label-large-letter-spacing);
+}
 
 .mail__rows { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 8px; list-style: none; display: flex; flex-direction: column; gap: 2px; }
-.mail__empty, .mail__placeholder { padding: 48px 24px; text-align: center; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
+.mail__empty, .mail__placeholder {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--mtrl-sys-color-on-surface-variant);
+  font: var(--mtrl-sys-typescale-body-medium-font-weight) var(--mtrl-sys-typescale-body-medium-font-size) / var(--mtrl-sys-typescale-body-medium-line-height) var(--mtrl-sys-typescale-body-medium-font);
+  letter-spacing: var(--mtrl-sys-typescale-body-medium-letter-spacing);
+}
 .mail__placeholder { display: grid; place-items: center; height: 100%; box-sizing: border-box; }
 
 .mail-row { display: flex; align-items: center; gap: 4px; border-radius: 16px; padding: 4px 4px 4px 8px; }
@@ -41,21 +56,58 @@
   background: none; border: 0; padding: 8px; margin: 0; text-align: start;
   font: inherit; color: inherit; cursor: pointer; border-radius: 12px;
 }
-.mail-row__sender { grid-area: sender; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 500 14px/20px Roboto, system-ui, sans-serif; }
-.mail-row__time { grid-area: time; font: 400 12px/16px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface-variant); }
-.mail-row__subject { grid-area: subject; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 14px/20px Roboto, system-ui, sans-serif; }
-.mail-row__snippet { grid-area: snippet; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 13px/18px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail-row__sender, .mail-row__subject, .mail-row__time, .mail-row__snippet { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mail-row__sender {
+  grid-area: sender;
+  font: var(--mtrl-sys-typescale-label-large-font-weight) var(--mtrl-sys-typescale-label-large-font-size) / var(--mtrl-sys-typescale-label-large-line-height) var(--mtrl-sys-typescale-label-large-font);
+  letter-spacing: var(--mtrl-sys-typescale-label-large-letter-spacing);
+}
+.mail-row__time {
+  grid-area: time;
+  color: var(--mtrl-sys-color-on-surface-variant);
+  font: var(--mtrl-sys-typescale-body-small-font-weight) var(--mtrl-sys-typescale-body-small-font-size) / var(--mtrl-sys-typescale-body-small-line-height) var(--mtrl-sys-typescale-body-small-font);
+  letter-spacing: var(--mtrl-sys-typescale-body-small-letter-spacing);
+}
+.mail-row__subject {
+  grid-area: subject;
+  font: var(--mtrl-sys-typescale-body-medium-font-weight) var(--mtrl-sys-typescale-body-medium-font-size) / var(--mtrl-sys-typescale-body-medium-line-height) var(--mtrl-sys-typescale-body-medium-font);
+  letter-spacing: var(--mtrl-sys-typescale-body-medium-letter-spacing);
+}
+.mail-row__snippet {
+  grid-area: snippet;
+  color: var(--mtrl-sys-color-on-surface-variant);
+  font: var(--mtrl-sys-typescale-body-small-font-weight) var(--mtrl-sys-typescale-body-small-font-size) / var(--mtrl-sys-typescale-body-small-line-height) var(--mtrl-sys-typescale-body-small-font);
+  letter-spacing: var(--mtrl-sys-typescale-body-small-letter-spacing);
+}
 .mail-row[data-unread] .mail-row__sender, .mail-row[data-unread] .mail-row__subject { font-weight: 700; }
 .mail-row__star { flex: none; }
 
-.mail-message { display: flex; flex-direction: column; gap: 8px; padding: 24px 28px; }
+.mail-message { display: flex; flex-direction: column; gap: 8px; padding: 20px; }
 .mail-message__head { display: flex; align-items: center; gap: 8px; }
-.mail-message__subject { margin: 0; font: 400 22px/28px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface); }
-.mail-message__meta { margin: 0; font: 500 14px/20px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface); }
-.mail-message__date { margin: 0; font: 400 12px/16px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface-variant); }
-.mail-message__body { margin-top: 12px; font: 400 14px/22px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface); }
+.mail-message__subject {
+  margin: 0;
+  font: var(--mtrl-sys-typescale-title-large-font-weight) var(--mtrl-sys-typescale-title-large-font-size) / var(--mtrl-sys-typescale-title-large-line-height) var(--mtrl-sys-typescale-title-large-font);
+  letter-spacing: var(--mtrl-sys-typescale-title-large-letter-spacing);
+}
+.mail-message__meta {
+  margin: 0;
+  font: var(--mtrl-sys-typescale-title-small-font-weight) var(--mtrl-sys-typescale-title-small-font-size) / var(--mtrl-sys-typescale-title-small-line-height) var(--mtrl-sys-typescale-title-small-font);
+  letter-spacing: var(--mtrl-sys-typescale-title-small-letter-spacing);
+}
+.mail-message__to, .mail-message__date {
+  margin: 0;
+  color: var(--mtrl-sys-color-on-surface-variant);
+  font: var(--mtrl-sys-typescale-body-small-font-weight) var(--mtrl-sys-typescale-body-small-font-size) / var(--mtrl-sys-typescale-body-small-line-height) var(--mtrl-sys-typescale-body-small-font);
+  letter-spacing: var(--mtrl-sys-typescale-body-small-letter-spacing);
+}
+.mail-message__body {
+  margin-top: 12px;
+  font: var(--mtrl-sys-typescale-body-medium-font-weight) var(--mtrl-sys-typescale-body-medium-font-size) / var(--mtrl-sys-typescale-body-medium-line-height) var(--mtrl-sys-typescale-body-medium-font);
+  letter-spacing: var(--mtrl-sys-typescale-body-medium-letter-spacing);
+}
 .mail-message__body p { margin: 0 0 12px; }
-.mail-message__actions { display: flex; gap: 8px; margin-top: 16px; }
+/* The actions wrap, so they fit the phone pane as well as the wide one. */
+.mail-message__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 
 .mail__compose { position: absolute; right: 24px; bottom: 24px; z-index: 1; }
 .mail-compose__fields { display: flex; flex-direction: column; gap: 12px; min-width: min(400px, 72vw); }
