@@ -75,7 +75,7 @@
   <script type="module" src="/dist/site.js"></script>
 </head>
 <body class="<%= it.isHome ? 'home' : '' %>">
-  <a class="skip-link" href="#content">Skip to content</a>
+  <a class="skip-link" href="#<%= it.skipTarget %>">Skip to content</a>
   <header class="header"><div class="header__inner">
     <a class="header__logo" href="/" aria-label="material, home"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material</a>
     <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">

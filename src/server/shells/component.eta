@@ -1,5 +1,6 @@
 <div class="component-list-layout component-list-layout--detail">
-<div class="page-wrap component-page" data-component="<%= it.slug %>">
+<%~ include('component-list', it) %>
+<div class="page-wrap component-page" id="component-content" tabindex="-1" data-component="<%= it.slug %>">
   <%/* The framework chips sit outside the playground: the row carries the panel's scope, so material's tokens reach it. */%><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div>
   <header class="page-heading">
     <div class="page-heading__top">
@@ -46,7 +47,6 @@
     </form>
   </section>
 </div>
-<%~ include('component-list', it) %>
 </div>
 <script type="module" src="/dist/playground-material.js"></script>
 <script type="module" src="/dist/playground.js"></script>
