@@ -214,7 +214,11 @@ try {
       const compact = width < 600;
       const tier = `${name} at ${width}px`;
       const inactive = compact ? rail : bar;
-      await inactive.waitFor({ state: 'hidden' });
+      await page.waitForFunction(compact => {
+        const bar = document.querySelector<HTMLElement>('#site-primary-bar')!;
+        const rail = document.querySelector<HTMLElement>('#site-primary-rail')!;
+        return bar.hidden === !compact && rail.hidden === compact;
+      }, compact);
       const geometry = await page.evaluate(() => {
         const header = document.querySelector<HTMLElement>('.header')!;
         const layout = document.querySelector<HTMLElement>('.layout')!;
