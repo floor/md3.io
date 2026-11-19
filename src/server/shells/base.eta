@@ -48,6 +48,10 @@
       let saved = {};
       try { saved = JSON.parse(localStorage.getItem('md3-preview-appearance') || '{}') || {}; } catch {}
       root.dataset.siteTheme = themes.includes(saved.theme) ? saved.theme : 'baseline';
+      // The whole page takes the theme, not only material's scopes: [data-theme]
+      // on <html> is what the theme sheet keys its roles to, and tokens.css maps
+      // the site's own colours onto them.
+      root.dataset.theme = root.dataset.siteTheme;
       root.dataset.previewMode = root.dataset.themeMode;
       if (saved.mode !== root.dataset.themeMode) {
         try { localStorage.setItem('md3-preview-appearance', JSON.stringify({ ...saved, theme: root.dataset.siteTheme, mode: root.dataset.themeMode })); } catch {}

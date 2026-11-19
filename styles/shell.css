@@ -149,7 +149,7 @@ samp {
 
 .badge--accent {
     border-color: var(--accent);
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
     background: var(--accent-dim);
 }
 
@@ -200,29 +200,6 @@ samp {
 .sidebar__link--active:hover {
     color: var(--accent-text);
     border-right-color: var(--accent);
-}
-
-.sidebar__badge {
-    font-size: 9px;
-    font-weight: var(--fw-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 5px;
-    border-radius: 4px;
-    background: var(--accent);
-    color: white;
-    margin-left: 6px;
-    margin-top: -2px;
-    vertical-align: middle;
-}
-
-.sidebar__badge--dot {
-    font-size: 0;
-    padding: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    display: inline-block;
 }
 
 /* ─── Content ────────────────────────────────────────────────────── */
@@ -465,16 +442,6 @@ samp {
     background: var(--bg-hover);
 }
 
-.variant-switcher__option--active {
-    color: #fff;
-    background-color: var(--accent);
-    font-weight: var(--fw-bold);
-}
-.variant-switcher__option--active:hover {
-    color: #fff;
-    background-color: var(--accent);
-    font-weight: var(--fw-bold);
-}
 
 .variant-switcher__option--disabled {
     color: var(--text-dim);
@@ -709,29 +676,19 @@ SWICHER
     color: var(--text);
 }
 
-.button-group .button--active {
-    background: var(--accent);
-    color: #fff;
-    font-weight: var(--fw-bold);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.button-group .button--active:hover {
-    background: var(--accent);
-}
 
 /*
 doc-nav__link
 */
 
 [data-theme-mode="light"] .doc-nav__link {
-    background: #f8f8fa;
-    border-color: #e0e0e8;
+    background: var(--mtrl-sys-color-surface-container-low, #f8f8fa);
+    border-color: var(--mtrl-sys-color-outline-variant, #e0e0e8);
 }
 
 [data-theme-mode="light"] .doc-nav__link:hover {
-    background: #f0f0f5;
-    border-color: #d0d0d8;
+    background: var(--mtrl-sys-color-surface-container, #f0f0f5);
+    border-color: var(--mtrl-sys-color-outline, #d0d0d8);
 }
 
 /* ─── Accessibility: Focus indicators ────────────────────────────── */
@@ -755,7 +712,7 @@ select:focus-visible,
 /* Sidebar links — highlight instead of ring */
 .sidebar__link:focus-visible {
     background: var(--accent-dim);
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
     outline: none;
 }
 

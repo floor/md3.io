@@ -247,9 +247,9 @@ export const roleUsage: Record<string, string[]> = (() => {
  * properties inherit into shadow roots, so mtrl's elements inside the scope take
  * them, while the page around it, which does not load base.css, keeps its own.
  */
-export function scopedTokens(scope: string, darkScope: string, css: string = baseCss): string {
+export function scopedTokens(scope: string, darkScope: string, css: string = baseCss, includeColors = true): string {
   const inMedia = (block: CssBlock) => block.path.some(part => part.startsWith('@media'));
-  const custom = (blocks: CssBlock[]) => new Map(blocks.flatMap(block => [...block.declarations].filter(([name]) => name.startsWith('--mtrl-'))));
+  const custom = (blocks: CssBlock[]) => new Map(blocks.flatMap(block => [...block.declarations].filter(([name]) => name.startsWith('--mtrl-') && (includeColors || !name.startsWith('--mtrl-sys-color-')))));
   const rule = (selector: string, scheme: Mode, declarations: Map<string, string>) =>
     `${selector}{color-scheme:${scheme};${[...declarations].map(([name, value]) => `${name}:${value}`).join(';')}}`;
   const blocks = parseCss(css);
