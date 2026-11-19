@@ -124,7 +124,7 @@ if (componentList) {
     }
     if (detail && focusedLink && componentList.contains(focusedLink)) {
       detail.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
-    } else if (focusedLink?.matches('.component-card')) {
+    } else if (focusedLink?.closest('.component-card')) {
       componentList.querySelector<HTMLElement>(`a[href="${CSS.escape(focusedLink.pathname)}"]`)?.focus();
     }
   });

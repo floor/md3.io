@@ -2,10 +2,10 @@
   <%~ include('component-list', it) %>
   <section class="page-wrap component-catalog" aria-label="Component previews">
     <div class="component-grid"><% it.playgroundGroups.forEach(group => { group.slugs.forEach(slug => { const component = it.components[slug]; %>
-      <a class="component-card ui-card ui-card--interactive" href="/components/<%= slug %>/">
+      <article class="component-card ui-card">
         <%~ it.catalogVisuals[slug] %>
-        <div class="component-card__body"><h2><%= component.name %></h2><p><%= component.summary %></p></div>
-      </a>
+        <div class="component-card__body"><h3><a href="/components/<%= slug %>/"><%= component.name %></a></h3><p><%= component.summary %></p></div>
+      </article>
     <% }); }); %></div>
   </section>
 </div>

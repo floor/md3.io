@@ -100,8 +100,8 @@ const visuals: Record<ComponentSlug, string> = {
     places.map(place => m('carousel-item', { src: picsum(place.id), alt: `${place.title}, ${place.location}`, description: place.location }, text(place.title))).join('')),
   divider: div('catalog-divider', `<p>Ideas for today</p>${m('divider')}<p>Places to explore</p>`),
   dialog: `<${SURFACES.dialog}></${SURFACES.dialog}>`,
-  'bottom-sheet': m('bottom-sheet', { open: true, headline: 'Plan your visit', 'peek-height': 120 }, '<p>Find a new trail, take in the view, and make time for a quiet moment.</p>'),
-  'side-sheet': m('side-sheet', { open: true, headline: 'Details', width: 240 }, '<p>A place for useful context, related information, and supporting actions.</p>'),
+  'bottom-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'bottom-sheet' }, 'Show bottom sheet') + m('bottom-sheet', { headline: 'Plan your visit', 'peek-height': 120 }, '<p>Find a new trail, take in the view, and make time for a quiet moment.</p>'),
+  'side-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'side-sheet' }, 'Show side sheet') + m('side-sheet', { headline: 'Details', width: 240 }, '<p>A place for useful context, related information, and supporting actions.</p>'),
   // Communication
   badge: ['inbox', 'heart'].map((icon, index) => div('catalog-badge',
     m('icon-button', { variant: 'tonal', icon: symbols[icon as 'inbox' | 'heart'], 'aria-label': index ? 'Favorites' : 'Inbox' }) + m('badge', index ? { variant: 'small' } : { label: 8 }))).join(''),
@@ -113,11 +113,14 @@ const visuals: Record<ComponentSlug, string> = {
 };
 
 /**
- * A card's visual: decorative, so `aria-hidden` and `inert` keep the card one
- * link with one name, and nothing inside takes focus or a click.
+ * A card's visual: the live component itself, so people can use it where it
+ * stands; the card's title, not the visual, is the link to its playground.
+ * Its colours inherit the page's chosen theme from <html data-theme>:
+ * catalogTokens above carries only mtrl's non-colour tokens on the scope, so
+ * nothing here pins Baseline over the theme (layout step 8).
  */
 export function catalogVisual(slug: ComponentSlug): string {
-  return `<div class="${CATALOG_SCOPE} ${CATALOG_SCOPE}--${slug}" aria-hidden="true" inert>${visuals[slug]}</div>`;
+  return `<div class="${CATALOG_SCOPE} ${CATALOG_SCOPE}--${slug}">${visuals[slug]}</div>`;
 }
 
 /** Every visual, for the checks. */

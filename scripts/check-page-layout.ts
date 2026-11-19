@@ -85,7 +85,10 @@ async function checkTargets(page: Page, label: string) {
       '.page-heading__top a', '.doc-toolbar a', '.catalog-note a', '.lab-api-link', '.lab-upload', '.search-dialog__result',
       '[part~="container"].mtrl-slider__container',
     ].join(', ');
-    const excluded = '.colour-lab-stage, [inert], [aria-hidden="true"]';
+    // The catalog previews are material's components at their own shipped sizes
+    // (the same controls their playground frames show, which this rule never
+    // collected): the 48px rule governs the site's own targets, not the demos.
+    const excluded = '.colour-lab-stage, .catalog-visual, [inert], [aria-hidden="true"]';
     function collect(root: Document | ShadowRoot) {
       targets.push(...[...root.querySelectorAll(selector)].filter(element => !element.closest(excluded)));
       for (const element of root.querySelectorAll('*')) {
