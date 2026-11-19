@@ -112,9 +112,9 @@ async function checkRouteFrame(page: Page, entry: RouteCase) {
     const target = page.locator(entry.frame);
     await target.waitFor();
     const frame = await loadedFrame(target);
-    if (entry.runFrame) {
+    if (entry.frame === '#example-frame') {
       await frame.locator('#app > *').first().waitFor();
-      await entry.runFrame(frame);
+      await entry.runFrame?.(frame);
       assert(await frame.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${entry.path}: the embedded app fits its frame`);
     } else {
       const button = frame.getByRole('button', { name: 'Button', exact: true });
@@ -185,7 +185,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
       name: `showcase-${slug}`,
       path: `${showcase}${slug}/`,
       frame: '#example-frame',
-      runFrame: (await import(`../examples/${slug}/check.ts`)).default as NonNullable<RouteCase['runFrame']>,
+      runFrame: (await import(`../examples/${slug}/check.ts`)).checkFrame as RouteCase['runFrame'],
     }))),
     ...stylePages.map(({ href }) => ({ name: href.replace(/^\/|\/$/g, '').replaceAll('/', '-'), path: href })),
   ];
@@ -233,7 +233,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
             await frame.waitForLoadState('load');
             await frame.evaluate(() => document.fonts.ready);
           }
-          if (entry.runFrame) await page.locator('.device__bar button').first().waitFor();
+          if (entry.frame === '#example-frame') await page.locator('.device__bar button').first().waitFor();
           const settled = await geometry(page);
           stableBox(cold.header, settled.header, ['x', 'y', 'width', 'height'], 1, `${label} header`);
           stableBox(cold.main, settled.main, ['x', 'y', 'width'], 1, `${label} main`);

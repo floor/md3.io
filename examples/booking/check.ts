@@ -3,7 +3,13 @@
 // the behaviour itself, so breaking one variant's rule fails this check even
 // before the snapshots are compared.
 import assert from "node:assert/strict";
-import type { Locator, Page } from "playwright";
+import type { Frame, Locator, Page } from "playwright";
+
+export async function checkFrame(frame: Frame): Promise<void> {
+  await frame.getByRole("heading", { name: "Step 1 of 4 · Dates and arrival", exact: true }).waitFor();
+  await frame.getByRole("button", { name: "Next", exact: true }).click();
+  await frame.getByRole("heading", { name: "Step 2 of 4 · Guests and room", exact: true }).waitFor();
+}
 
 export default async function steps(page: Page): Promise<void> {
   const exact = { exact: true } as const;
