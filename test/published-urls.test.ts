@@ -10,7 +10,7 @@
 // test closes the other half: every path sitemapPages() serves must be listed, so a new page
 // fails the test until its URL is appended.
 //
-// The examples need the examples build (`bun run build`): /examples/settings/ is a 404
+// The examples need the examples build (`bun run build`): /showcase/settings/ is a 404
 // until dist/examples/settings/sources.json exists.
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';

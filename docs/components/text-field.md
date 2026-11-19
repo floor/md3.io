@@ -77,7 +77,7 @@ text-field:
 ```
 
 A password field with a reveal button, and validating an email as it is left, are planned for
-[Examples](/examples/).
+[Showcase](/showcase/).
 
 ## API
 

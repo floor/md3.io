@@ -140,7 +140,7 @@ function renderMarkdown(source: string, idPrefix = '') {
   const headingId = headingIds();
   const parser = new Marked();
   // The page's `example` blocks follow the reader's framework, which the chips at the top
-  // of the page pick (document.eta): the same choice as the playgrounds and the Examples.
+  // of the page pick (document.eta): the same choice as the playgrounds and the Showcase.
   let examples = false;
   parser.use({ renderer: {
     code(token: Tokens.Code) {

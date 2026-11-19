@@ -15,7 +15,7 @@ async function until<T>(read: () => Promise<T>, want: T, message: string) {
   for (let i = 0; i < 50; i++) { got = await read(); if (got === want) return; await new Promise(resolve => setTimeout(resolve, 100)); }
   throw new Error(`${message}: got ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
 }
-const url = `${base}/examples/${examples[0]!.slug}/`;
+const url = `${base}/showcase/${examples[0]!.slug}/`;
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, colorScheme: 'dark' });
   const page = await context.newPage();

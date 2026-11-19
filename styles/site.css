@@ -176,3 +176,7 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
    (playground-panel.ts frameworkChips / frameworkLogo). */
 .framework-chips-row { margin-bottom: 18px; min-width: 0; }
 :root[data-theme-mode="dark"] .framework-chips-row { --brand-ink: #e6e1e5; }
+
+/* The Showcase source panels' Copy code (material's button in its own small scope,
+   playground-panel.ts showcaseCopyButton): at the panel header's right end. */
+.showcase-copy { margin-left: auto; display: inline-flex; align-items: center; flex-shrink: 0; }
