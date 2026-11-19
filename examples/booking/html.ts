@@ -56,7 +56,7 @@ const render = (): void => {
   total.textContent = totalText(s);
   $("range").textContent = rangeText(s);
   $("dialog-summary").textContent = summary(s);
-  const eligible = new Set(eligibleRooms(s).map((room) => room.value));
+  const eligible = new Set<string>(eligibleRooms(s).map((room) => room.value));
   for (const radio of app.querySelectorAll("m-radio")) {
     if (eligible.has(radio.getAttribute("value") ?? "")) radio.removeAttribute("disabled");
     else radio.setAttribute("disabled", "");
