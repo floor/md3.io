@@ -25,6 +25,10 @@ for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'st
 const mtrlDist = resolve(dirname(realpathSync(resolve(root, 'node_modules/material/package.json'))), 'dist');
 await cp(resolve(mtrlDist, 'styles'), resolve(outdir, 'material/styles'), { recursive: true });
 await cp(resolve(mtrlDist, 'themes'), resolve(outdir, 'material/themes'), { recursive: true });
+// material-addons' light-DOM styles are that package's one stylesheet; an example frame
+// using an addons component links it (server.ts's addonsStylesheet).
+await mkdir(resolve(outdir, 'material-addons'), { recursive: true });
+await cp(resolve(root, 'node_modules/material-addons/dist/styles.css'), resolve(outdir, 'material-addons/styles.css'));
 // The elements' pre-upgrade rules, for the components overview's cards.
 await cp(resolve(mtrlDist, 'elements/preupgrade.css'), resolve(outdir, 'material/elements/preupgrade.css'));
 // The elements' shadow-root stylesheets, for material/ssr's link mode: one shared,
