@@ -78,8 +78,6 @@ drawer.expandSection('projects');
 document.body.append(drawer.element);
 ```
 
-## Examples
-
 ### Modal
 
 A modal drawer opens over the page and locks it: the page does not scroll, and focus moves to
@@ -148,6 +146,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `prefix` | `string` | `'mtrl'` | Class-name prefix |
 | `componentName` | `string` | `'drawer'` | Component name used in class generation |
 | `onSelect` | `(event: DrawerSelectEvent) => void` | `undefined` | Called when a destination is chosen |
+| `onExpand` / `onCollapse` | `(event: DrawerSectionEvent) => void` | `undefined` | Called when a section opens or closes |
 | `onOpen` / `onClose` | `() => void` | `undefined` | Called when it opens or closes |
 
 #### Items
@@ -161,7 +160,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `activeIcon` | `string` | `undefined` | Icon shown while this destination is selected, as an HTML string. The element takes it as `selected-icon` |
 | `href` | `string` | `undefined` | Makes the destination a native `<a>` link instead of a button |
 | `items` | `DrawerItemConfig[]` | `undefined` | A non-empty list makes this destination an expandable section, its children nested destinations |
-| `expanded` | `boolean` | `false` | Whether a section starts expanded |
+| `expanded` | `boolean` | omitted: a child's `active` decides | Whether a section starts expanded — omitted opens the section when one of its children is `active`; an explicit `false` stays closed |
 | `badge` | `string` | `undefined` | Trailing text, such as an unread count |
 | `active` | `boolean` | `false` | Whether this destination starts selected |
 | `disabled` | `boolean` | `false` | Cannot be clicked or reached by the arrow keys, and carries `aria-disabled` |
@@ -178,6 +177,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `setBadge(id, badge)` | `DrawerComponent` | Sets a badge, or clears it with `''` |
 | `expandSection(id)` / `collapseSection(id)` / `toggleSection(id)` | `DrawerComponent` | Opens, closes or flips an expandable section |
 | `isSectionExpanded(id)` | `boolean` | Whether a section is open |
+| `getExpandedSections()` | `string[]` | The ids of the expanded sections |
 | `setHeadline(text)` / `getHeadline()` | `DrawerComponent` / `string` | The headline |
 | `on(event, handler)` / `off(event, handler)` | `DrawerComponent` | Events |
 | `addClass(...classes)` | `DrawerComponent` | Adds classes to the root |
@@ -189,7 +189,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Event | Payload | Description |
 |-------|---------|-------------|
 | `select` | `{ id, value, label, index, originalEvent }` | A destination was chosen |
-| `expand` / `collapse` | `{ id, value, label, expanded }` | An expandable section opened or closed |
+| `expand` / `collapse` | `{ id, value, label, expanded }` | An expandable section opened or closed; the web component forwards `{ value, expanded }` |
 | `open` / `close` | none | The drawer opened or closed |
 
 `<m-drawer-item>` takes `value`, `icon`, `selected-icon`, `badge`, `label`, `href` and
