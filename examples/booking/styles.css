@@ -1,5 +1,5 @@
 /* Layout for the example only: the components and material's typography utilities bring the rest. */
-.booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 560px); }
+.booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 880px); }
 .booking__intro { display: flex; flex-direction: column; gap: 4px; }
 .booking__title, .booking__lede, .booking__label, .booking__range, .booking__step-title, .booking__review-line, .booking__review-label, .booking__field-error { margin: 0; }
 /* The author rule below would beat the UA's [hidden]; an emptied error must take no space. */

@@ -62,8 +62,9 @@
   };
 </script>
 
-<!-- orientation "auto" turns vertical below 600px of container width: the booking column
-     is at most 560px, so the headers stack and every label stays readable. Each panel's
+<!-- orientation "auto" turns vertical below 600px of container width: the widened booking
+     column passes that on Desktop and Tablet frames, and stays vertical on Mobile;
+     labels sit below their indicators so all four fit on Tablet. Each panel's
      heading carries tabindex="-1", which the stepper's focus after an action reaches
      first, so a step change puts focus on the new step's heading. -->
 <section class="booking">
@@ -78,7 +79,7 @@
     <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
     <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
   </div>
-  <Stepper bind:this={stepperEl} linear orientation="auto" ariaLabel="Booking steps" defaultValue="dates" onbeforechange={veto}>
+  <Stepper bind:this={stepperEl} linear orientation="auto" labelPlacement="bottom" ariaLabel="Booking steps" defaultValue="dates" onbeforechange={veto}>
     <Step value="dates" label="Dates and arrival">
       <div class="booking__step">
         <h2 class="booking__step-title mtrl-title-large" tabindex="-1">{stepHeading(1)}</h2>
@@ -93,6 +94,7 @@
             onchange={(e) => commitTime(e.detail.value)}
             ontrailing={() => { const time = normalizeTime(s.arrivalTime); if (time) s.arrivalTime = time; timeOpen = true; }} />
         </div>
+              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -120,6 +122,7 @@
           <p class="booking__range mtrl-body-medium">{rangeText(s)}</p>
           {#if errors.room}<p class="booking__field-error mtrl-body-small">{errors.room}</p>{/if}
         </div>
+              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -132,6 +135,7 @@
             <Checkbox checked={s[extra.key]} onchange={(e) => (s[extra.key] = e.detail.checked)}>{extra.label} — ${extra.price} {extra.unit}</Checkbox>
           {/each}
         </div>
+              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -157,11 +161,11 @@
             </div>
           {/each}
         </div>
+              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div><Button onclick={book}>Book</Button></div></footer>
       </div>
     </Step>
   </Stepper>
-  <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
   <Timepicker label="Arrival time" format="24h" value={normalizeTime(s.arrivalTime) ?? "15:00"} open={timeOpen}
     onchange={(e) => { s.arrivalTime = e.detail.value; errors = { ...errors, arrivalTime: undefined }; }} onclose={() => (timeOpen = false)} />
   <Snackbar message="Booking confirmed" open={confirmed} onclose={() => (confirmed = false)} />

@@ -52,13 +52,21 @@ const actions = (...buttons: HTMLDivElement[]): HTMLElement => {
   return footer;
 };
 
+const totals: HTMLOutputElement[] = [];
+const makeTotal = (): HTMLOutputElement => {
+  const output = Object.assign(document.createElement("output"), { className: "booking__total mtrl-body-medium" });
+  output.setAttribute("role", "status");
+  totals.push(output);
+  return output;
+};
+
 const step1 = pane(1);
 const grid1 = div("booking__grid");
 const checkIn = createDatePicker({ label: "Check-in", variant: "modal", closeOnSelect: true, dateFormat: "YYYY-MM-DD", value: s.checkIn });
 const checkOut = createDatePicker({ label: "Check-out", variant: "modal", closeOnSelect: true, dateFormat: "YYYY-MM-DD", value: s.checkOut, minDate: s.checkIn });
 const arrival = createTextField({ label: "Arrival time", value: s.arrivalTime, supportingText: "24-hour time", trailingIcon: CLOCK_ICON, trailingIconLabel: "Choose time" });
 grid1.append(checkIn.element, checkOut.element, arrival.element);
-step1.append(grid1, actions(action("next", "Next")));
+step1.append(grid1, makeTotal(), actions(action("next", "Next")));
 
 const step2 = pane(2);
 const grid2 = div("booking__grid");
@@ -77,7 +85,7 @@ const range = text("booking__range mtrl-body-medium", "");
 const roomError = text("booking__field-error mtrl-body-small", "");
 roomError.hidden = true;
 priceGroup.append(text("booking__label mtrl-title-small", "Price range"), slider.element, range, roomError);
-step2.append(grid2, roomGroup, priceGroup, actions(action("prev", "Back"), action("next", "Next")));
+step2.append(grid2, roomGroup, priceGroup, makeTotal(), actions(action("prev", "Back"), action("next", "Next")));
 
 const step3 = pane(3);
 const extrasGroup = div("booking__group");
@@ -92,7 +100,7 @@ for (const extra of EXTRAS) {
   control.on("change", ({ checked }) => { s = { ...s, [extra.key]: checked }; render(); });
   extrasGroup.append(control.element);
 }
-step3.append(extrasGroup, actions(action("prev", "Back"), action("next", "Next")));
+step3.append(extrasGroup, makeTotal(), actions(action("prev", "Back"), action("next", "Next")));
 
 const step4 = pane(4);
 const grid4 = div("booking__grid");
@@ -142,11 +150,13 @@ const hook = (step: number): Exclude<StepConfig["validate"], undefined> => () =>
   return true;
 };
 
-// orientation "auto" turns vertical below 600px of container width: the booking column
-// is at most 560px, so the headers stack and every label stays readable.
+// orientation "auto" turns vertical below 600px of container width: the widened
+// booking column passes that on Desktop and Tablet frames, and stays vertical
+// on Mobile; labels sit below their indicators so all four fit on Tablet.
 const stepper = createStepper({
   linear: true,
   orientation: "auto",
+  labelPlacement: "bottom",
   focusOnAction: "heading",
   ariaLabel: "Booking steps",
   steps: [
@@ -167,10 +177,10 @@ book.on("click", () => {
   else if (errors.name) focusField(nameField.element);
   else if (errors.email) focusField(emailField.element);
 });
-step4.append(actions(action("prev", "Back"), wrap(book.element)));
+step4.append(makeTotal(), actions(action("prev", "Back"), wrap(book.element)));
 
 const render = (): void => {
-  total.textContent = totalText(s);
+  for (const total of totals) total.textContent = totalText(s);
   range.textContent = rangeText(s);
   summaryEl.textContent = summary(s);
   const eligible = new Set(eligibleRooms(s).map((room) => room.value));
@@ -190,9 +200,6 @@ const render = (): void => {
     }),
   );
 };
-
-const total = Object.assign(document.createElement("output"), { className: "booking__total mtrl-body-medium" });
-total.setAttribute("role", "status");
 
 checkIn.on("change", ({ iso }) => {
   s = withDates(s, iso, s.checkOut);
@@ -224,6 +231,6 @@ slider.on("input", ({ value, secondValue }) => {
 nameField.on("input", ({ value }) => { s = { ...s, name: value }; nameField.setError(false); });
 emailField.on("input", ({ value }) => { s = { ...s, email: value }; emailField.setError(false); });
 
-section.append(intro, stepper.element, total, timePicker.element);
+section.append(intro, stepper.element, timePicker.element);
 app.append(section);
 render();
