@@ -267,6 +267,23 @@ try {
     // The measure caps the prose, never the column: at desktop widths a code block
     // spans the column again, not the reading width (today's 320px capture fails this).
     if (width === 1440) assert(reading.codeWidth >= 600, `${route} at ${width}: code blocks are ${reading.codeWidth}px wide (want the column, 600+)`);
+    // Scrollable code blocks are keyboard scrollable in every browser, not only
+    // Chromium: each is a named, focusable group (Firefox/Safari focus rule).
+    const blocks = await page.locator('.md pre').evaluateAll(pres => pres.map(pre => ({
+      focusable: pre.getAttribute('tabindex') === '0' && pre.getAttribute('role') === 'group',
+      name: pre.getAttribute('aria-label') ?? '',
+    })));
+    assert(blocks.length > 0 && blocks.every(block => block.focusable && /code$/i.test(block.name)),
+      `${route} at ${width}: a code block is not a named focusable group (${JSON.stringify(blocks.slice(0, 3))})`);
+    if (width === 360 && route.includes('button')) {
+      const first = page.locator('.md pre').first();
+      await first.focus();
+      assert(await first.evaluate(pre => document.activeElement === pre), 'A code block did not take keyboard focus');
+      const before = await first.evaluate(pre => pre.scrollLeft);
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(100);
+      assert(await first.evaluate(pre => pre.scrollLeft) > before, 'A focused code block did not scroll with the keyboard');
+    }
     return reading;
   };
   for (const width of [360, 390, 412, 700, 1024, 1440]) {
