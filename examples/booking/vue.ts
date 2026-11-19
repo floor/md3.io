@@ -72,8 +72,9 @@ export default defineComponent({
     };
     return { s, errors, dialogOpen, confirmed, timeOpen, stepperEl, arrivalEl, sliderEl, nameEl, emailEl, setDates, veto, book, confirm, commitTime, openPicker, stepHeading, stepValue, totalText, summary, rangeText, reviewLines, normalizeTime, eligibleRooms, withPrice, ROOMS, EXTRAS, ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON };
   },
-  // orientation "auto" turns vertical below 600px of container width: the booking
-  // column is at most 560px, so the headers stack and every label stays readable.
+  // orientation "auto" turns vertical below 600px of container width: the widened
+  // booking column passes that on Desktop and Tablet frames, and stays vertical
+  // on Mobile; labels sit below their indicators so all four fit on Tablet.
   template: `
     <section class="booking">
       <MDialog headline="Confirm booking" :open="dialogOpen" @close="dialogOpen = false">
@@ -87,7 +88,7 @@ export default defineComponent({
         <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
         <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
       </div>
-      <MStepper ref="stepperEl" linear orientation="auto" aria-label="Booking steps" default-value="dates" @beforechange="veto">
+      <MStepper ref="stepperEl" linear orientation="auto" label-placement="bottom" aria-label="Booking steps" default-value="dates" @beforechange="veto">
         <MStep value="dates" label="Dates and arrival">
           <div class="booking__step">
             <h2 class="booking__step-title mtrl-title-large" tabindex="-1">{{ stepHeading(1) }}</h2>
@@ -96,6 +97,7 @@ export default defineComponent({
               <MDatepicker label="Check-out" variant="modal" close-on-select date-format="YYYY-MM-DD" :min="s.checkIn" :value="s.checkOut" @change="setDates(s.checkIn, $event.detail.value)" />
               <MTextField ref="arrivalEl" label="Arrival time" :value="s.arrivalTime" :trailing-icon="CLOCK_ICON" trailing-icon-label="Choose time" :supporting-text="errors.arrivalTime ?? '24-hour time'" :error="Boolean(errors.arrivalTime)" @input="s.arrivalTime = $event.detail.value; errors.arrivalTime = undefined" @change="commitTime($event.detail.value)" @trailing="openPicker" />
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
             <footer class="booking__actions"><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -122,6 +124,7 @@ export default defineComponent({
               <p class="booking__range mtrl-body-medium">{{ rangeText(s) }}</p>
               <p v-if="errors.room" class="booking__field-error mtrl-body-small">{{ errors.room }}</p>
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -132,6 +135,7 @@ export default defineComponent({
               <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
               <MCheckbox v-for="extra in EXTRAS" :key="extra.key" :checked="s[extra.key]" @change="s[extra.key] = $event.detail.checked">{{ extra.label }} — \${{ extra.price }} {{ extra.unit }}</MCheckbox>
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -153,11 +157,11 @@ export default defineComponent({
                 </div>
               </div>
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div><MButton @click="book">Book</MButton></div></footer>
           </div>
         </MStep>
       </MStepper>
-      <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
       <MTimepicker label="Arrival time" format="24h" :value="normalizeTime(s.arrivalTime) ?? '15:00'" :open="timeOpen" @change="s.arrivalTime = $event.detail.value; errors.arrivalTime = undefined" @close="timeOpen = false" />
       <MSnackbar message="Booking confirmed" :open="confirmed" @close="confirmed = false" />
     </section>`,

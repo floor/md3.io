@@ -29,12 +29,45 @@ export default async function steps(page: Page): Promise<void> {
     // completed — a ", Completed, Editable" suffix.
     const header = page.locator('[aria-current="step"]');
     assert.match((await header.textContent()) ?? "", new RegExp(`^\\d*${title}(?:, .*)?$`), `step ${n}'s header is the current step`);
-    assert.equal(await header.getAttribute("aria-expanded"), "true", `step ${n}'s header expands its panel`);
+    // Vertical headers expand their panel; horizontal ones are tabs and carry no aria-expanded.
+    const expanded = await header.getAttribute("aria-expanded");
+    assert.ok(expanded === "true" || expanded === null, `step ${n}'s header expands its panel`);
   };
   const stepIs = async (n: number, title: string) => {
     await stepShows(n, title);
     assert.ok(await isFocused(heading()), `focus moves to the step ${n} heading`);
   };
+
+  // Orientation follows the frame: horizontal on Desktop and Tablet, vertical
+  // on Mobile, and no step label is clipped on Tablet.
+  const headerBox = async (title: string) => {
+    const box = await page.getByRole("button", { name: new RegExp(title) }).first().boundingBox();
+    assert.ok(box, `no header box for ${title}`);
+    return box;
+  };
+  const orientationIs = async (want: "horizontal" | "vertical") => {
+    const boxes = await Promise.all(["Dates and arrival", "Guests and room", "Extras", "Your details and review"].map(headerBox));
+    if (want === "horizontal") assert.ok(boxes.every((b) => Math.abs(b.y - boxes[0]!.y) <= 4), `step headers are not across the top: ${JSON.stringify(boxes)}`);
+    else assert.ok(boxes.every((b) => Math.abs(b.x - boxes[0]!.x) <= 4), `step headers are not down the side: ${JSON.stringify(boxes)}`);
+  };
+  const labelsFit = async () => {
+    for (const title of ["Dates and arrival", "Guests and room", "Extras", "Your details and review"]) {
+      const header = page.getByRole("button", { name: new RegExp(title) }).first();
+      assert.ok(await header.evaluate((el) => el.scrollWidth <= el.clientWidth), `step label is clipped: ${title}`);
+    }
+  };
+  // The check page is the frame itself: its viewport is the frame's width.
+  await orientationIs("horizontal");
+  await page.setViewportSize({ width: 820, height: 900 });
+  await page.waitForTimeout(400);
+  await orientationIs("horizontal");
+  await labelsFit();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.waitForTimeout(400);
+  await orientationIs("vertical");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.waitForTimeout(400);
+  await orientationIs("horizontal");
 
   // Step 1: dates. Check-in moving past check-out pulls check-out with it.
   await stepShows(1, "Dates and arrival");
@@ -114,7 +147,7 @@ export default async function steps(page: Page): Promise<void> {
   await includes("$90–$300 a night");
   // The live region leaves the accessibility tree for a beat while it announces;
   // read the total itself rather than the snapshot here.
-  await page.getByText("Estimated total $190 for 2 nights", exact).waitFor();
+  await page.locator("output.booking__total:visible").filter({ hasText: "Estimated total $190 for 2 nights" }).waitFor();
 
   // Every room, then the chosen one; Next moves on with the total in step.
   for (const room of ["Standard room", "Double room", "Family room", "Suite"]) {
@@ -124,7 +157,7 @@ export default async function steps(page: Page): Promise<void> {
   await next.click();
   await stepIs(3, "Extras");
   // The Suite the second step chose carries onto the third.
-  await page.getByText("Estimated total $420 for 2 nights", exact).waitFor();
+  await page.locator("output.booking__total:visible").filter({ hasText: "Estimated total $420 for 2 nights" }).waitFor();
 
   // Every extra in the named group, and the total follows onto the third step.
   assert.equal(await page.getByRole("group", { name: "Extras", ...exact }).getByRole("checkbox").count(), 3);

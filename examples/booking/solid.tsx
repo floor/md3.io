@@ -70,8 +70,9 @@ export default function Booking() {
     </div>
   );
 
-  // orientation "auto" turns vertical below 600px of container width: the booking
-  // column is at most 560px, so the headers stack and every label stays readable.
+  // orientation "auto" turns vertical below 600px of container width: the widened
+  // booking column passes that on Desktop and Tablet frames, and stays vertical
+  // on Mobile; labels sit below their indicators so all four fit on Tablet.
   return (
     <section class="booking">
       <Dialog headline="Confirm booking" open={dialogOpen()} onClose={() => setDialogOpen(false)}
@@ -85,7 +86,7 @@ export default function Booking() {
         <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
         <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
       </div>
-      <Stepper ref={(el) => (stepperEl = el)} linear orientation="auto" ariaLabel="Booking steps" defaultValue="dates" onBeforechange={veto}>
+      <Stepper ref={(el) => (stepperEl = el)} linear orientation="auto" labelPlacement="bottom" ariaLabel="Booking steps" defaultValue="dates" onBeforechange={veto}>
         <Step value="dates" label="Dates and arrival">
           <div class="booking__step">
             {heading(1)}
@@ -100,6 +101,7 @@ export default function Booking() {
                 onChange={(e) => commitTime(e.detail.value)}
                 onTrailing={() => { const time = normalizeTime(s.arrivalTime); if (time) setS("arrivalTime", time); setTimeOpen(true); }} />
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
             <footer class="booking__actions">{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -127,6 +129,7 @@ export default function Booking() {
               <p class="booking__range mtrl-body-medium">{rangeText({ ...s })}</p>
               <Show when={errors.room}><p class="booking__field-error mtrl-body-small">{errors.room}</p></Show>
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
             <footer class="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -143,6 +146,7 @@ export default function Booking() {
                 )}
               </For>
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
             <footer class="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -170,11 +174,11 @@ export default function Booking() {
                 )}
               </For>
             </div>
+                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
             <footer class="booking__actions">{action("prev", "Back")}<div><Button onClick={book}>Book</Button></div></footer>
           </div>
         </Step>
       </Stepper>
-      <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
       <Timepicker label="Arrival time" format="24h" value={normalizeTime(s.arrivalTime) ?? "15:00"} open={timeOpen()}
         onChange={(e) => { setS("arrivalTime", e.detail.value); setErrors("arrivalTime", undefined); }} onClose={() => setTimeOpen(false)} />
       <Snackbar message="Booking confirmed" open={confirmed()} onClose={() => setConfirmed(false)} />

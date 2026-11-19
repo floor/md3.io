@@ -12,8 +12,9 @@ defineStepper();
 
 let s: Booking = { ...DEFAULTS };
 const app = document.getElementById("app")!;
-// orientation "auto" turns vertical below 600px of container width: the booking column
-// is at most 560px, so the headers stack and every label stays readable. focus-on-action
+// orientation "auto" turns vertical below 600px of container width: the widened booking
+// column passes that on Desktop and Tablet frames, and stays vertical on Mobile;
+// labels sit below their indicators so all four fit on Tablet. focus-on-action
 // is a factory option the element does not take; each panel's heading carries
 // tabindex="-1", which the default panel focus reaches first — the same focus landing.
 app.innerHTML = `
@@ -27,7 +28,7 @@ app.innerHTML = `
       <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
       <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
     </div>
-    <m-stepper id="stepper" orientation="auto" linear aria-label="Booking steps" value="dates">
+    <m-stepper id="stepper" orientation="auto" label-placement="bottom" linear aria-label="Booking steps" value="dates">
       <m-step value="dates" label="Dates and arrival">
         <div class="booking__step">
           <h2 class="booking__step-title mtrl-title-large" tabindex="-1">${stepHeading(1)}</h2>
@@ -36,6 +37,7 @@ app.innerHTML = `
             <m-datepicker id="check-out" label="Check-out" variant="modal" close-on-select date-format="YYYY-MM-DD" min="${s.checkIn}" value="${s.checkOut}"></m-datepicker>
             <m-text-field id="arrival" label="Arrival time" value="${s.arrivalTime}" supporting-text="24-hour time" trailing-icon-label="Choose time"></m-text-field>
           </div>
+          <output class="booking__total mtrl-body-medium" role="status"></output>
           <footer class="booking__actions"><div data-stepper-next><m-button id="next-1">Next</m-button></div></footer>
         </div>
       </m-step>
@@ -56,6 +58,7 @@ app.innerHTML = `
             <p class="booking__range mtrl-body-medium" id="range"></p>
             <p class="booking__field-error mtrl-body-small" id="room-error" hidden></p>
           </div>
+          <output class="booking__total mtrl-body-medium" role="status"></output>
           <footer class="booking__actions"><div data-stepper-prev><m-button variant="outlined">Back</m-button></div><div data-stepper-next><m-button>Next</m-button></div></footer>
         </div>
       </m-step>
@@ -66,6 +69,7 @@ app.innerHTML = `
             <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
             ${EXTRAS.map((extra) => `<m-checkbox id="${extra.key}">${extra.label} — $${extra.price} ${extra.unit}</m-checkbox>`).join("")}
           </div>
+          <output class="booking__total mtrl-body-medium" role="status"></output>
           <footer class="booking__actions"><div data-stepper-prev><m-button variant="outlined">Back</m-button></div><div data-stepper-next><m-button>Next</m-button></div></footer>
         </div>
       </m-step>
@@ -77,18 +81,18 @@ app.innerHTML = `
             <m-text-field id="email" label="Email" type="email" supporting-text="Required"></m-text-field>
           </div>
           <div class="booking__group" id="review"></div>
+          <output class="booking__total mtrl-body-medium" role="status"></output>
           <footer class="booking__actions"><div data-stepper-prev><m-button variant="outlined">Back</m-button></div><div id="book"><m-button>Book</m-button></div></footer>
         </div>
       </m-step>
     </m-stepper>
-    <output class="booking__total mtrl-body-medium" role="status"></output>
     <m-timepicker id="timepicker" label="Arrival time" value="${s.arrivalTime}" format="24h"></m-timepicker>
     <m-snackbar id="snackbar" message="Booking confirmed"></m-snackbar>
   </section>`;
 
 type Host = HTMLElement & { value: string; checked: boolean; show(): void; close(): void; setError(target: number | string, error: boolean): void };
 const $ = <T extends HTMLElement = Host>(id: string) => document.getElementById(id) as T;
-const total = app.querySelector("output")!;
+const totals = app.querySelectorAll("output");
 const arrival = $<HTMLElement & { value: string }>("arrival");
 arrival.setAttribute("trailing-icon", CLOCK_ICON);
 const detail = <T,>(event: Event): T => (event as CustomEvent<T>).detail;
@@ -134,7 +138,7 @@ stepper.addEventListener("beforechange", (event) => {
 });
 
 const render = (): void => {
-  total.textContent = totalText(s);
+  for (const total of totals) total.textContent = totalText(s);
   $("range").textContent = rangeText(s);
   $("dialog-summary").textContent = summary(s);
   const eligible = new Set<string>(eligibleRooms(s).map((room) => room.value));
