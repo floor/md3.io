@@ -8,7 +8,7 @@ import { componentDirectory } from './src/server/component-directory';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -134,6 +134,14 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
     `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? `${icon('arrow_back')} Previous` : `Next ${icon('arrow_forward')}`}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
+// A document's framework chips row sits directly under its title and
+// description: after the first paragraph that follows the h1.
+const withFrameworkChips = (document: ReturnType<typeof renderDocument>) => {
+  if (!document?.frameworks) return document;
+  const row = frameworkChipsRow(() => true, 'docs-frameworks');
+  const at = document.html.indexOf('</p>');
+  return { ...document, html: at < 0 ? row + document.html : document.html.slice(0, at + 4) + '\n' + row + document.html.slice(at + 4) };
+};
 const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
 const primaryDestinations = [
   { label: 'Components', href: '/components/', icon: 'tab' },
@@ -150,10 +158,15 @@ const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(g
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.
+// material-addons' components are not material's: their light-DOM styles ship as that
+// package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
+// example using any of them links that sheet instead.
+const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete']);
+const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
   const visit = (name: string) => {
-    if (order.includes(name)) return;
+    if (order.includes(name) || ADDONS_COMPONENTS.has(name)) return;
     const module = resolve(root, 'dist/material/styles', `${name}.js`);
     const source = existsSync(module) ? readFileSync(module, 'utf8') : '';
     for (const [, dependency] of source.matchAll(/import "\.\/([a-z-]+)\.js"/g)) if (dependency !== name) visit(dependency!);
@@ -257,10 +270,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     else if (framework) {
       response = variants.some(v => v.id === framework)
-        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
+        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components), addonStyles: addonsStylesheet(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworksRow: frameworkChipsRow(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
       // The address's framework when the example has it, so the first paint (frame and source)
       // is the one the address names; otherwise its first variant. The client keeps it in step.
       framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
@@ -293,7 +306,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
-    response = page(path, `${document.title} — material`, document.description, 'document', { ...document, frameworkChips: document.frameworks ? frameworkChips(() => true) : '', playground: null });
+    response = page(path, `${document.title} — material`, document.description, 'document', { ...withFrameworkChips(document)!, playground: null });
   }
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
@@ -301,7 +314,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (match && isGuide(match[1]!)) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/${match[1]}/` } });
     const document = match ? renderDocument(match[1]!) : null;
     response = document
-      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...document, frameworkChips: document.frameworks ? frameworkChips(() => true) : '', playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
+      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...withFrameworkChips(document)!, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
       : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;
