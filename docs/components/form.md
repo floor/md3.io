@@ -110,7 +110,7 @@ form.setData({ name: 'Grace' }, true);
 `protectChanges` guards unsaved changes: `beforeUnload` asks before the page is left, and
 `onDataOverwrite` blocks clicks outside the form and emits `data:conflict`, whose `cancel()`
 keeps the changes and `proceed()` discards them. Recipes such as an account form or a sign-in
-form are planned for [Examples](/examples/).
+form are planned for [Showcase](/showcase/).
 
 ## API
 
