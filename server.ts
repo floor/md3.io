@@ -135,10 +135,15 @@ const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.
+// material-addons' components are not material's: their light-DOM styles ship as that
+// package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
+// example using any of them links that sheet instead.
+const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete']);
+const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
   const visit = (name: string) => {
-    if (order.includes(name)) return;
+    if (order.includes(name) || ADDONS_COMPONENTS.has(name)) return;
     const module = resolve(root, 'dist/material/styles', `${name}.js`);
     const source = existsSync(module) ? readFileSync(module, 'utf8') : '';
     for (const [, dependency] of source.matchAll(/import "\.\/([a-z-]+)\.js"/g)) if (dependency !== name) visit(dependency!);
@@ -242,7 +247,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     else if (framework) {
       response = variants.some(v => v.id === framework)
-        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
+        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components), addonStyles: addonsStylesheet(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
     else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
