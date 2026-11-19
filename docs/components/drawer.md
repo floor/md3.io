@@ -76,7 +76,7 @@ A choice emits `select` with `{ id, label, index, originalEvent }`, `index` coun
 destinations only; the web component dispatches `change` with `{ value }`, the destination's
 id. `setActive()`, `setBadge()` and `setItems()` keep the drawer in step with the app, and emit
 nothing. Recipes such as a drawer that follows the route, or labels that load late, are planned
-for [Examples](/examples/).
+for [Showcase](/showcase/).
 
 ## API
 

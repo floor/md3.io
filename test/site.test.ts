@@ -89,6 +89,19 @@ describe('site routes and documentation', () => {
     expect(await head.text()).toBe('');
     expect((await get('/', 'POST')).status).toBe(405);
   });
+  test('the old Examples URLs answer 301 to their Showcase twin, query kept', async () => {
+    for (const [from, to] of [
+      ['/examples/', '/showcase/'],
+      ['/examples/settings/', '/showcase/settings/'],
+      ['/examples/settings/?framework=react', '/showcase/settings/?framework=react'],
+      ['/examples/settings/?framework=react&from=x', '/showcase/settings/?framework=react&from=x'],
+      ['/examples/settings/frame/vue/', '/showcase/settings/frame/vue/'],
+    ] as const) {
+      const response = await get(from);
+      expect(response.status, from).toBe(301);
+      expect(response.headers.get('Location'), from).toBe(to);
+    }
+  });
   test('the retired segmented button URL redirects to the button group', async () => {
     const response = await get('/docs/components/segmented-button/');
     expect(response.status).toBe(301);

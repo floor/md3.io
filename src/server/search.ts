@@ -5,7 +5,7 @@
 //     and its children's, the framework component names, every attribute and event.
 //   - Docs:       every markdown document, one entry per section, so a match in a
 //                 section links to its heading's anchor.
-//   - Examples:   title, description, the components used, and the side panel text.
+//   - Showcase:   title, description, the components used, and the side panel text.
 //   - Styles:     the Styles pages, with the colour roles and type scale roles they list.
 import MiniSearch, { type SearchResult as Hit } from 'minisearch';
 import { Marked, type Token } from 'marked';
@@ -20,7 +20,7 @@ import { stylePages } from './styles';
 import { colorGroups, shapeScale, typescale } from './tokens';
 import { themes } from '../shared/button';
 
-export const SECTIONS = ['Components', 'Styles', 'Docs', 'Examples'] as const;
+export const SECTIONS = ['Components', 'Styles', 'Docs', 'Showcase'] as const;
 type Section = (typeof SECTIONS)[number];
 
 interface IndexDocument {
@@ -141,12 +141,12 @@ function docDocuments(): IndexDocument[] {
 
 function exampleDocuments(): IndexDocument[] {
   return examples.map(example => ({
-    id: `examples:${example.slug}`, section: 'Examples', title: example.title, heading: '', group: '',
+    id: `examples:${example.slug}`, section: 'Showcase', title: example.title, heading: '', group: '',
     description: example.description,
     tags: example.components.flatMap(slug => [slug, `m-${slug}`]).join(' '),
     api: example.components.map(slug => components[slug as keyof typeof components]?.name ?? slug).join(' '),
     body: plainText([...example.about, ...example.how].join(' ')),
-    url: `/examples/${example.slug}/`, page: `/examples/${example.slug}/`,
+    url: `/showcase/${example.slug}/`, page: `/showcase/${example.slug}/`,
   }));
 }
 
@@ -227,7 +227,7 @@ function textSnippet(body: string, description: string, terms: string[]): string
   return `${start > 0 ? '…' : ''}${body.slice(start, end).trim()}${end < body.length ? '…' : ''}`;
 }
 
-/** Ranked results, the best entry of each page, grouped Components · Styles · Docs · Examples. */
+/** Ranked results, the best entry of each page, grouped Components · Styles · Docs · Showcase. */
 export function searchSite(query: string, limit = DEFAULT_LIMIT): SearchResult[] {
   const q = query.trim();
   if (!q) return [];
