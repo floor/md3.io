@@ -84,10 +84,13 @@ for (const name of readdirSync(stylesDir)) {
 }
 
 // An example's layout CSS is read from examples/<slug>/styles.css at request time.
-// The hashed copy is the minified text that route sends.
+// The hashed copy is the minified text that route sends. Folders starting with _
+// (examples/_template) are scaffolding to copy, not examples: nothing registers
+// them, so nothing else in the build ever looks at them either.
 const examplesRoot = resolve(root, 'examples');
 if (existsSync(examplesRoot)) {
   for (const slug of readdirSync(examplesRoot)) {
+    if (slug.startsWith('_')) continue;
     const file = join(examplesRoot, slug, 'styles.css');
     if (!statSafe(file)) continue;
     const logical = `/examples-styles/${slug}.css`;

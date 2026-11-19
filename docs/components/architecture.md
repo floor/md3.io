@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-10
+updated: 2026-11-19
 status: published
 description: How the material library is built in layers, from features and component factories to web components and the React, Vue, Svelte and SolidJS components.
 ---
@@ -108,6 +108,26 @@ and `BASELINE_SEED` for all 20 built-in themes, `material/src/styles/config` pro
 configure-once Sass gateway (including opt-in `$typescale-tokens: true` role fallbacks), and
 `material/tokens/catalogue.json` (`material/tokens/catalogue.schema.json`) ships a build-tool
 token catalogue with verification states and reason codes; see [Theming](../theming/).
+
+## Application icons
+
+Four glyphs are drawn by the library itself, under semantic names: the navigation rail's `menu`
+and `menu-open`, the `close` cross used by the side sheet and dialog close buttons, FAB-menu
+close controls, input-chip remove controls and filter-chip non-menu trailing actions, and the
+`expand-more` triangle of the select field's dropdown and a filter chip's trailing menu.
+`setIcons` replaces any of them by name and `getIcon(name, fallback)` resolves a registered
+value against a fallback; both are exported from `material`, `material/core` and
+`material/core/icons`.
+
+- Set icons before creating components or hydrating: components read the registry at creation,
+  and existing components do not update when it changes.
+- Calls merge the supplied names; `null`, `undefined` or an empty string clears that name and
+  restores its built-in glyph.
+- A component's own icon options win: the rail's per-instance icons take precedence over
+  component defaults, then the registry, then the built-ins, and a chip's own `trailingIcon`
+  beats the registry as the other slots do.
+- Without overrides, browser and server markup keep the existing glyphs; the snackbar and split
+  button keep their built-ins whatever the registry says.
 
 ## Web components
 
