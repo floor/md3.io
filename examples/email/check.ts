@@ -16,11 +16,28 @@ export default async function steps(page: Page): Promise<void> {
   // The badges: unread in the Inbox, totals for Starred and Drafts.
   await page.getByRole("button", { name: "Inbox, 3 unread" }).waitFor();
   await page.getByRole("button", { name: "Starred, 3 starred" }).waitFor();
+  await page.getByRole("button", { name: "Drafts, 2 drafts" }).waitFor();
   assert.equal(await rows(page).count(), 9, "the Inbox starts with nine messages");
+
+  // The rail marks the current folder with aria-current.
+  const currentFolder = (label: string) =>
+    page.waitForFunction((l) => document.querySelector("button[aria-current='page']")?.getAttribute("aria-label")?.startsWith(l), label);
 
   // Starred gathers the stars; Inbox brings the full list back.
   await page.getByRole("button", { name: "Starred" }).click();
   assert.equal(await rows(page).count(), 3, "Starred shows the three starred messages");
+  await currentFolder("Starred");
+  await page.getByRole("button", { name: "Inbox" }).click();
+  assert.equal(await rows(page).count(), 9);
+  await currentFolder("Inbox");
+
+  // Drafts offers no Archive: nothing there is an unarchived inbox message.
+  await page.getByRole("button", { name: "Drafts" }).click();
+  await page.getByRole("checkbox", { name: "Select Ideas for the offsite", ...exact }).click();
+  await page.getByText("1 selected", exact).waitFor();
+  assert.equal(await page.getByRole("button", { name: "Archive", ...exact }).count(), 0, "no Archive in Drafts");
+  await page.getByRole("button", { name: "Clear selection", ...exact }).click();
+  assert.equal(await page.getByText(/^\d+ selected$/).count(), 0, "the clear empties the selection");
   await page.getByRole("button", { name: "Inbox" }).click();
   assert.equal(await rows(page).count(), 9);
 
@@ -46,8 +63,10 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole("checkbox", { name: "Select Lunch on Friday?", ...exact }).click();
   await page.getByText("2 selected", exact).waitFor();
 
-  // Archive keeps the message: it leaves the Inbox, not the mailbox.
-  await page.getByRole("button", { name: "Archive", ...exact }).click();
+  // Archive keeps the message: it leaves the Inbox, not the mailbox. Enter activates
+  // the button, and emptying the selection bar moves focus to the list.
+  await page.getByRole("button", { name: "Archive", ...exact }).press("Enter");
+  assert.ok(await focusWithin(page, ".mail__rows"), "emptying the selection bar moves focus to the list");
   assert.equal(await page.getByText(/^\d+ selected$/).count(), 0, "the selection bar empties");
   await page.getByRole("button", { name: "Inbox, 2 unread" }).waitFor();
   assert.equal(await rows(page).count(), 7, "the archived rows leave the Inbox");
@@ -62,6 +81,7 @@ export default async function steps(page: Page): Promise<void> {
     .getByRole("button", { name: "Star", ...exact }).press(" ");
   assert.equal(await rows(page).count(), 2, "the unstarred row leaves Starred");
   assert.equal(await page.getByText(/^\d+ selected$/).count(), 0, "and leaves the selection");
+  assert.ok(await focusWithin(page, ".mail-row__open"), "removing the focused row moves focus to the next row");
   await page.getByRole("button", { name: "Inbox" }).click();
 
   // Space on a star keeps focus on the star.
@@ -95,9 +115,24 @@ export default async function steps(page: Page): Promise<void> {
   // returns focus to the row the message was opened from.
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(!(await page.locator(".mail__list-pane").isVisible()), "the list hides while reading");
+  // The actions sit inside the mailbox, and their centres are really tappable.
+  const mailBox = await page.locator(".mail").boundingBox();
+  assert.ok(mailBox, "the mailbox has a box");
   for (const name of ["Reply", "Archive", "Delete"]) {
-    const box = await page.getByRole("button", { name, ...exact }).boundingBox();
-    assert.ok(box && box.x >= 0 && box.x + box.width <= 390, `${name} fits the phone pane`);
+    const action = page.getByRole("button", { name, ...exact });
+    const box = await action.boundingBox();
+    assert.ok(box, `${name} has a box`);
+    assert.ok(
+      box.x >= mailBox.x && box.y >= mailBox.y && box.x + box.width <= mailBox.x + mailBox.width && box.y + box.height <= mailBox.y + mailBox.height,
+      `${name} fits inside the mailbox`,
+    );
+    const reachable = await action.evaluate((el, point) => {
+      const root = el.getRootNode();
+      const host = root instanceof ShadowRoot ? root.host : el;
+      const hit = document.elementFromPoint(point.x, point.y);
+      return Boolean(hit && host.contains(hit));
+    }, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+    assert.ok(reachable, `${name} is hit-testable at its centre`);
   }
   await page.getByRole("button", { name: "Back to list", ...exact }).click();
   assert.ok(await focusWithin(page, ".mail-row__open"), "Back returns focus to the row");
@@ -112,6 +147,15 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole("checkbox", { name: "Select Hostel booking confirmed", ...exact }).click();
   await page.getByRole("button", { name: "Delete", ...exact }).click();
   assert.equal(await rows(page).count(), 5, "the selection delete removes the row");
+
+  // Archive from the reading pane: the message leaves the Inbox, the pane clears,
+  // and focus lands on the list.
+  await page.getByRole("button", { name: /Quarterly budget review/ }).click();
+  await page.getByRole("button", { name: "Archive", ...exact }).click();
+  await page.getByText("Select a message to read.", exact).waitFor({ state: "attached" });
+  assert.ok(await focusWithin(page, ".mail__rows"), "archiving the open message moves focus to the list");
+  assert.equal(await rows(page).count(), 4, "the archived message leaves the Inbox");
+  assert.equal(await page.getByRole("button", { name: /Quarterly budget review/ }).count(), 0, "and the row is gone");
 
   // Compose, send, and the recipient is kept and shown in Sent.
   await page.getByRole("button", { name: "Compose", ...exact }).click();
