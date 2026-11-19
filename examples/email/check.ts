@@ -1,45 +1,130 @@
 // What a visitor does with this example; scripts/check-examples.ts runs it in every
-// framework and compares what each one shows afterwards.
+// framework and compares what each one shows afterwards. Every step asserts its
+// outcome — counts, badges, fields, focus, layout — so a behavior that drifts fails
+// here even when the final snapshot would hide it.
+import assert from "node:assert/strict";
 import type { Page } from "playwright";
 
+const exact = { exact: true } as const;
+const rows = (page: Page) => page.locator(".mail-row");
+// Focus sits on the element host (Web Components and the adapters) or on the
+// factory’s inner control (Vanilla) — either way, inside the part.
+const focusWithin = (page: Page, selector: string): Promise<boolean> =>
+  page.evaluate((sel) => Boolean((document.activeElement as HTMLElement | null)?.closest(sel)), selector);
+
 export default async function steps(page: Page): Promise<void> {
-  const exact = { exact: true } as const;
-  // The rail: Starred gathers the starred messages, Inbox brings the full list back.
+  // The badges: unread in the Inbox, totals for Starred and Drafts.
+  await page.getByRole("button", { name: "Inbox, 3 unread" }).waitFor();
+  await page.getByRole("button", { name: "Starred, 3 starred" }).waitFor();
+  assert.equal(await rows(page).count(), 9, "the Inbox starts with nine messages");
+
+  // Starred gathers the stars; Inbox brings the full list back.
   await page.getByRole("button", { name: "Starred" }).click();
+  assert.equal(await rows(page).count(), 3, "Starred shows the three starred messages");
   await page.getByRole("button", { name: "Inbox" }).click();
+  assert.equal(await rows(page).count(), 9);
+
   // The label chips filter, and a second click clears the filter.
   await page.getByRole("gridcell", { name: "Work", ...exact }).click();
+  assert.equal(await rows(page).count(), 3, "Work holds three messages");
   await page.getByRole("gridcell", { name: "Personal", ...exact }).click();
+  assert.equal(await rows(page).count(), 4, "Personal holds four");
   await page.getByRole("gridcell", { name: "Personal", ...exact }).click();
+  assert.equal(await rows(page).count(), 9, "the second click clears the filter");
+
   // The search filters by sender, subject and snippet; the clear button empties it.
   const search = page.getByRole("combobox", { name: "Search mail", ...exact });
   await search.click();
   await search.pressSequentially("budget", { delay: 20 });
+  assert.equal(await rows(page).count(), 1, "only the budget message matches");
   await page.getByRole("button", { name: "Clear search", ...exact }).click();
-  // Selecting rows shows the selection bar; Archive applies to the selection.
-  await page.getByRole("checkbox", { name: "Select Flight itinerary to Lisbon", ...exact }).click();
+  assert.equal(await rows(page).count(), 9);
+
+  // Space on a row checkbox toggles it and keeps focus on it.
+  await page.getByRole("checkbox", { name: "Select Flight itinerary to Lisbon", ...exact }).press(" ");
+  assert.ok(await focusWithin(page, ".mail-row__check"), "Space on the checkbox keeps focus on it");
   await page.getByRole("checkbox", { name: "Select Lunch on Friday?", ...exact }).click();
+  await page.getByText("2 selected", exact).waitFor();
+
+  // Archive keeps the message: it leaves the Inbox, not the mailbox.
   await page.getByRole("button", { name: "Archive", ...exact }).click();
-  // A row's star toggle.
+  assert.equal(await page.getByText(/^\d+ selected$/).count(), 0, "the selection bar empties");
+  await page.getByRole("button", { name: "Inbox, 2 unread" }).waitFor();
+  assert.equal(await rows(page).count(), 7, "the archived rows leave the Inbox");
+  await page.getByRole("button", { name: "Starred" }).click();
+  await page.getByRole("button", { name: "Starred, 3 starred" }).waitFor();
+  await page.getByRole("button", { name: /Flight itinerary to Lisbon/ }).waitFor();
+
+  // The selection only holds visible rows: unstarring in Starred prunes it.
+  await page.getByRole("checkbox", { name: "Select Conference talk slides", ...exact }).click();
+  await page.getByText("1 selected", exact).waitFor();
+  await page.getByRole("listitem").filter({ hasText: "Conference talk slides" })
+    .getByRole("button", { name: "Star", ...exact }).press(" ");
+  assert.equal(await rows(page).count(), 2, "the unstarred row leaves Starred");
+  assert.equal(await page.getByText(/^\d+ selected$/).count(), 0, "and leaves the selection");
+  await page.getByRole("button", { name: "Inbox" }).click();
+
+  // Space on a star keeps focus on the star.
   await page.getByRole("listitem").filter({ hasText: "New mockups for the kiosk app" })
-    .getByRole("button", { name: "Star", ...exact }).click();
-  // Opening a message, and Reply pre-filling the compose dialog; Cancel closes it.
+    .getByRole("button", { name: "Star", ...exact }).press(" ");
+  assert.ok(await focusWithin(page, ".mail-row__star"), "Space on the star keeps focus on it");
+
+  // Opening a message moves focus to its heading in the reading pane.
   await page.getByRole("button", { name: /Quarterly budget review/ }).click();
+  await page.getByRole("button", { name: "Inbox, 1 unread" }).waitFor();
+  assert.ok(await focusWithin(page, ".mail-message__subject"), "opening moves focus to the heading");
+
+  // Reply pre-fills To and Subject; Cancel clears the draft, so Compose starts blank.
   await page.getByRole("button", { name: "Reply", ...exact }).click();
+  assert.equal(await page.getByRole("textbox", { name: "To", ...exact }).inputValue(), "Lena Fischer");
+  assert.equal(await page.getByRole("textbox", { name: "Subject", ...exact }).inputValue(), "Re: Quarterly budget review");
   await page.getByRole("button", { name: "Cancel", ...exact }).click();
-  // On a narrow frame the open message takes the pane; the back action returns to the list.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Back to list", ...exact }).click();
-  await page.getByRole("button", { name: /New mockups for the kiosk app/ }).click();
-  await page.getByRole("button", { name: "Back to list", ...exact }).click();
-  await page.setViewportSize({ width: 1280, height: 720 });
-  // Compose, send, and the new message in Sent, confirmed by the snackbar.
+  await page.getByRole("alertdialog", { name: "New message" }).waitFor({ state: "hidden" });
   await page.getByRole("button", { name: "Compose", ...exact }).click();
-  await page.getByRole("textbox", { name: "To", ...exact }).fill("Robin");
+  assert.equal(await page.getByRole("textbox", { name: "To", ...exact }).inputValue(), "", "Cancel cleared the draft");
+  await page.getByRole("button", { name: "Cancel", ...exact }).click();
+  await page.getByRole("alertdialog", { name: "New message" }).waitFor({ state: "hidden" });
+
+  // The Showcase Tablet preset (820px) shows both panes; there is no Back there.
+  await page.setViewportSize({ width: 820, height: 1180 });
+  assert.ok(await page.locator(".mail__list-pane").isVisible(), "the list shows at 820px");
+  assert.ok(await page.locator(".mail__detail-pane").isVisible(), "the reading pane shows at 820px");
+  assert.ok(!(await page.getByRole("button", { name: "Back to list", ...exact }).isVisible()), "no Back on two panes");
+
+  // On the phone the message takes the pane, its actions fit inside it, and Back
+  // returns focus to the row the message was opened from.
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.ok(!(await page.locator(".mail__list-pane").isVisible()), "the list hides while reading");
+  for (const name of ["Reply", "Archive", "Delete"]) {
+    const box = await page.getByRole("button", { name, ...exact }).boundingBox();
+    assert.ok(box && box.x >= 0 && box.x + box.width <= 390, `${name} fits the phone pane`);
+  }
+  await page.getByRole("button", { name: "Back to list", ...exact }).click();
+  assert.ok(await focusWithin(page, ".mail-row__open"), "Back returns focus to the row");
+
+  // Delete is permanent — from the reading pane and from the selection bar.
+  // (At phone width the placeholder sits in the hidden detail pane, so attach is enough.)
+  await page.getByRole("button", { name: /Weekend farmers market/ }).click();
+  await page.getByRole("button", { name: "Delete", ...exact }).click();
+  await page.getByText("Select a message to read.", exact).waitFor({ state: "attached" });
+  assert.ok(await focusWithin(page, ".mail__rows"), "focus lands on the list");
+  assert.equal(await page.getByRole("button", { name: /Weekend farmers market/ }).count(), 0, "deleted from the mailbox");
+  await page.getByRole("checkbox", { name: "Select Hostel booking confirmed", ...exact }).click();
+  await page.getByRole("button", { name: "Delete", ...exact }).click();
+  assert.equal(await rows(page).count(), 5, "the selection delete removes the row");
+
+  // Compose, send, and the recipient is kept and shown in Sent.
+  await page.getByRole("button", { name: "Compose", ...exact }).click();
+  await page.getByRole("textbox", { name: "To", ...exact }).fill("robin@recipient.example");
   await page.getByRole("textbox", { name: "Subject", ...exact }).fill("Weekend plan");
   await page.getByRole("textbox", { name: "Message", ...exact }).fill("Let's go hiking on Saturday.");
   await page.getByRole("button", { name: "Send", ...exact }).click();
-  await page.getByRole("button", { name: "Sent" }).click();
+  await page.getByText("Message sent", exact).waitFor();
   // The dialog closes with an animation; wait for it to leave the tree before the snapshot.
   await page.getByRole("alertdialog", { name: "New message" }).waitFor({ state: "hidden" });
+  await page.getByRole("button", { name: "Sent" }).click();
+  await page.getByRole("button", { name: /Weekend plan/ }).click();
+  await page.getByText("To robin@recipient.example", exact).waitFor();
+
+  await page.setViewportSize({ width: 1280, height: 720 });
 }

@@ -10,7 +10,7 @@ export default {
     "Compose opens a dialog whose Send adds the message to Sent and confirms with a snackbar; Reply pre-fills it. On a narrow frame the list and the message are one pane at a time with a back action; from a tablet up they sit side by side.",
   ],
   how: [
-    "One shared module (<code>shared.ts</code>) holds the messages, the state and every transition — opening, starring, selecting, archiving, sending — so the six variants render and behave identically; <code>check.ts</code> proves it.",
-    "The rail's badges, the list rows and the reading pane are re-rendered from the state on every change. The dialog and the snackbar live in the top layer; the layouts swap panes in CSS at 840px.",
+    "One shared module (<code>shared.ts</code>) holds the messages, the state and every transition — opening, starring, selecting, archiving, sending — so the six variants render and behave identically; <code>check.ts</code> proves it, asserting every step's outcome.",
+    "Archive keeps a message (it leaves the Inbox but stays in Starred); Delete removes it for good. The selection only holds visible rows, and focus follows the pane that is shown. The layouts swap panes with a container query on the example's own width, so the Tablet preset gets both panes.",
   ],
 } satisfies ExampleMeta;
