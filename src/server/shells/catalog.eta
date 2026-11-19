@@ -3,8 +3,8 @@
   <section class="page-wrap component-catalog" aria-label="Component previews">
     <div class="component-grid"><% it.playgroundGroups.forEach(group => { group.slugs.forEach(slug => { const component = it.components[slug]; %>
       <article class="component-card ui-card">
-        <%~ it.catalogVisuals[slug] %>
         <div class="component-card__body"><h3><a href="/components/<%= slug %>/"><%= component.name %></a></h3><p><%= component.summary %></p></div>
+        <%~ it.catalogVisuals[slug] %>
       </article>
     <% }); }); %></div>
   </section>

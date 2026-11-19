@@ -167,6 +167,12 @@ try {
   }
   const titleLink = (slug: string) => page.locator(`.component-card:has(.catalog-visual--${slug})`).getByRole('link', { name: components[slug as keyof typeof components].name, exact: true });
   await titleLink('button').focus();
+  // Link first, then the preview's controls, then the next card's link.
+  await page.keyboard.press('Tab');
+  assert(await page.evaluate(() => document.activeElement?.closest('.catalog-visual--button') !== null), 'Tab from the title link did not reach the preview controls first');
+  await page.keyboard.press('Shift+Tab');
+  assert(await titleLink('button').evaluate(link => document.activeElement === link), 'Shift+Tab from the preview controls did not return to the title link');
+  await page.keyboard.press('Tab');
   let pastCard = false;
   for (let i = 0; i < 80 && !pastCard; i++) {
     await page.keyboard.press('Tab');
