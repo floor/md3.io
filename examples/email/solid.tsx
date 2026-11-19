@@ -12,7 +12,7 @@ import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
   archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
+  emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
   openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
   setQuery, toggleChecked, toggleStar, visibleMessages,
   type FolderId, type MailState, type Message,
@@ -62,6 +62,13 @@ export default function Email() {
     update((d) => { fn(d, messages); });
     focusList();
   };
+  // When the focused control can leave the DOM (a row unstarred out of Starred, an
+  // emptied selection bar), focus moves to its twin, its neighbour, or the list.
+  const act = (fn: () => void) => {
+    const restore = captureFocus();
+    fn();
+    restore();
+  };
 
   return (
     <section class="mail" data-reading={String(s.reading)}>
@@ -89,10 +96,10 @@ export default function Email() {
           </header>
           <div class="mail__selection">
             <Show when={s.checked.length > 0}>
-              <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onClick={() => update((d) => { clearChecked(d); })} />
+              <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onClick={() => act(() => update((d) => { clearChecked(d); }))} />
               <span class="mail__selection-count">{selectionText(s.checked.length)}</span>
-              <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onClick={() => update((d) => { archiveChecked(d, messages); })} />
-              <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onClick={() => update((d) => { deleteChecked(d, messages); })} />
+              <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onClick={() => act(() => update((d) => { archiveChecked(d, messages); }))} />
+              <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onClick={() => act(() => update((d) => { deleteChecked(d, messages); }))} />
             </Show>
           </div>
           <ul class="mail__rows" aria-label={ROWS_LABEL} tabindex="-1">
@@ -113,7 +120,7 @@ export default function Email() {
                   </button>
                   <IconButton class="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
                     selected={m.starred} ariaLabel={STAR_LABEL}
-                    onChange={() => update((d) => { toggleStar(d, messages, m.id); })} />
+                    onChange={() => act(() => update((d) => { toggleStar(d, messages, m.id); }))} />
                 </li>
               )}
             </For>

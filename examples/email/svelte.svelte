@@ -9,7 +9,7 @@
     ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
     FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
     archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-    emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
+    emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
     openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
     setQuery, toggleChecked, toggleStar, visibleMessages,
     type FolderId, type MailState, type Message,
@@ -68,6 +68,14 @@
     await flush();
     focusList();
   };
+  // When the focused control can leave the DOM (a row unstarred out of Starred, an
+  // emptied selection bar), focus moves to its twin, its neighbour, or the list.
+  const act = async (fn: () => void) => {
+    const restore = captureFocus();
+    fn();
+    await flush();
+    restore();
+  };
 </script>
 
 <section class="mail" data-reading={String(s.reading)}>
@@ -89,10 +97,10 @@
       </header>
       <div class="mail__selection">
         {#if s.checked.length}
-          <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onclick={() => clearChecked(s)} />
+          <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onclick={() => act(() => clearChecked(s))} />
           <span class="mail__selection-count">{selectionText(s.checked.length)}</span>
-          <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onclick={() => update(() => archiveChecked(s, messages))} />
-          <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onclick={() => update(() => deleteChecked(s, messages))} />
+          <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onclick={() => act(() => update(() => archiveChecked(s, messages)))} />
+          <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onclick={() => act(() => update(() => deleteChecked(s, messages)))} />
         {/if}
       </div>
       <ul class="mail__rows" aria-label={ROWS_LABEL} tabindex="-1">
@@ -109,7 +117,7 @@
               <span class="mail-row__time">{m.time}</span>
             </button>
             <IconButton class="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
-              selected={m.starred} ariaLabel={STAR_LABEL} onchange={() => update(() => toggleStar(s, messages, m.id))} />
+              selected={m.starred} ariaLabel={STAR_LABEL} onchange={() => act(() => update(() => toggleStar(s, messages, m.id)))} />
           </li>
         {/each}
       </ul>

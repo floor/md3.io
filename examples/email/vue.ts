@@ -8,7 +8,7 @@ import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
   archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
+  emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
   openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
   setQuery, toggleChecked, toggleStar, visibleMessages,
   type FolderId, type MailState, type Message,
@@ -62,6 +62,14 @@ export default defineComponent({
       await nextTick();
       focusList();
     };
+    // When the focused control can leave the DOM (a row unstarred out of Starred, an
+    // emptied selection bar), focus moves to its twin, its neighbour, or the list.
+    const act = async (fn: () => void) => {
+      const restore = captureFocus();
+      fn();
+      await nextTick();
+      restore();
+    };
 
     return {
       s, dialog, snackbar, open, visible, badges, sendDisabled, update, showDialog,
@@ -74,10 +82,10 @@ export default defineComponent({
       onQuery: (e: CustomEvent<{ value: string }>) => setQuery(s, messages, e.detail.value),
       onLabel: (e: CustomEvent<{ value: string | null }>) => setLabel(s, messages, e.detail.value ?? null),
       check: (m: Message) => toggleChecked(s, m.id),
-      star: (m: Message) => update(() => toggleStar(s, messages, m.id)),
-      clear: () => clearChecked(s),
-      archiveSelection: () => update(() => archiveChecked(s, messages)),
-      deleteSelection: () => update(() => deleteChecked(s, messages)),
+      star: (m: Message) => act(() => update(() => toggleStar(s, messages, m.id))),
+      clear: () => act(() => clearChecked(s)),
+      archiveSelection: () => act(() => update(() => archiveChecked(s, messages))),
+      deleteSelection: () => act(() => update(() => deleteChecked(s, messages))),
       reply: () => showDialog(() => replyToOpen(s, messages)),
       archiveOpenMessage: () => closeOpenMessage(archiveOpen),
       deleteOpenMessage: () => closeOpenMessage(deleteOpen),

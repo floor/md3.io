@@ -419,18 +419,45 @@ export const focusRow = (id: string): void => focus(`.mail-row[data-id="${id}"] 
 /** When the open message leaves, focus lands on the list it came from. */
 export const focusList = (): void => focus(".mail__rows");
 
+const focusInto = (el: Element | null | undefined): boolean => {
+  if (!el) return false;
+  // The elements take focus on their host; the factories render a focusable control inside.
+  ((el.querySelector("input, button") ?? el) as HTMLElement).focus();
+  return true;
+};
+
+/**
+ * Captures the focused control before an action and returns a restore for after the
+ * DOM settles. If focus survived (the frameworks keep their keyed nodes), nothing
+ * happens. If the control was rebuilt, its twin is focused. If the row left the
+ * view, focus moves to the row that took its place; if the control's region is gone
+ * (an emptied selection bar, a vanished list), focus lands on the list itself.
+ */
+export const captureFocus = (): (() => void) => {
+  const active = document.activeElement as HTMLElement | null;
+  if (!active || active === document.body || active === document.documentElement) return () => {};
+  const part = ["mail-row__check", "mail-row__star", "mail-row__open"].find((c) => active.closest(`.${c}`));
+  const row = active.closest<HTMLElement>(".mail-row");
+  const id = row?.dataset.id;
+  const index = row?.parentElement ? Array.prototype.indexOf.call(row.parentElement.children, row) : -1;
+  return () => {
+    const now = document.activeElement as HTMLElement | null;
+    if (now && now !== document.body && now !== document.documentElement) return;
+    if (part && id && focusInto(document.querySelector(`.mail-row[data-id="${id}"] .${part}`))) return;
+    const rows = document.querySelector(".mail__rows");
+    const next = index >= 0 && rows ? rows.children[Math.min(index, Math.max(0, rows.children.length - 1))] : undefined;
+    if (next && focusInto(next.querySelector(".mail-row__open"))) return;
+    (rows as HTMLElement | null)?.focus();
+  };
+};
+
 /**
  * The vanilla and Web Components variants rebuild their rows on every change, which
  * replaces a focused row control and drops focus to the body. This refocuses the
- * rebuilt twin, so Space on a checkbox or a star keeps focus where it was. The
- * elements take focus on their host; the factories render a focusable control inside.
+ * rebuilt twin — or, when the action removed the row, its neighbour or the list.
  */
 export const keepRowFocus = (fn: () => void): void => {
-  const active = document.activeElement as HTMLElement | null;
-  const part = active && ["mail-row__check", "mail-row__star", "mail-row__open"].find((c) => active!.closest(`.${c}`));
-  const id = part && (active!.closest("[data-id]") as HTMLElement | null)?.dataset.id;
+  const restore = captureFocus();
   fn();
-  if (!part || !id) return;
-  const twin = document.querySelector<HTMLElement>(`.mail-row[data-id="${id}"] .${part}`);
-  (twin?.querySelector<HTMLElement>("input, button") ?? twin)?.focus();
+  restore();
 };
