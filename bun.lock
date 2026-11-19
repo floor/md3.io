@@ -9,7 +9,7 @@
         "eta": "4.5.1",
         "highlight.js": "11.11.1",
         "marked": "17.0.2",
-        "material": "3.15.2",
+        "material": "3.15.3",
         "minisearch": "^7.2.0",
       },
       "devDependencies": {
@@ -20,7 +20,7 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "babel-preset-solid": "^1.9",
-        "material-addons": "3.1.0",
+        "material-addons": "3.2.0",
         "playwright": "^1.63.0",
         "react": "^19",
         "react-dom": "^19",
@@ -239,9 +239,9 @@
 
     "marked": ["marked@17.0.2", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-s5HZGFQea7Huv5zZcAGhJLT3qLpAfnY7v7GWkICUr0+Wd5TFEtdlRR2XUL5Gg+RH7u2Df595ifrxR03mBaw7gA=="],
 
-    "material": ["material@3.15.2", "", { "peerDependencies": { "react": ">=18", "solid-js": ">=1.8", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-x+J4MHRRJXi9HnuA+M6epvoZBZHhREv1TSIu5yKC0HzVjYRYJBiXCIxoNLplL69hiXfjK8LfLMIFhBN6DMSYXQ=="],
+    "material": ["material@3.15.3", "", { "peerDependencies": { "react": ">=18", "solid-js": ">=1.8 <2", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-Z4d9WDihgjh/D+TWdFgTDptbqWjNk4CeUKiF9A5bLSEUmlRDOTiBPhKXlNdNimo8HoW6V6C+cVl8PbEGtvBwWw=="],
 
-    "material-addons": ["material-addons@3.1.0", "", { "peerDependencies": { "material": "^3.15.1", "react": ">=18", "solid-js": ">=1.8", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-BWZzE6czDHmCnBCHcK1SruE9NYYmsivZwBUDlzrr3o/MrK1bnssz5AO0D7V1h5zRMbjt+Gpu2+faMQpXjuHakw=="],
+    "material-addons": ["material-addons@3.2.0", "", { "peerDependencies": { "material": "^3.15.1", "react": ">=18", "solid-js": ">=1.8 <2", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-5zcWiFNny8JPSqovwmCcw2HKJ+ms/Sj3IA1++DN7Pa+TaOwgpEu9lvd/KA7VO75JyvxxoG3yY5MSQUP0WnBbuw=="],
 
     "minisearch": ["minisearch@7.2.0", "", {}, "sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg=="],
 

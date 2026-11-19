@@ -1,5 +1,5 @@
 {
-  "material": "3.15.2",
+  "material": "3.15.3",
   "measured": "2026-11-19",
   "gzip": 9,
   "core": {
@@ -357,14 +357,14 @@
     },
     "dialog": {
       "factory": {
-        "alone": 19188,
+        "alone": 19209,
         "lazy": 6950,
-        "added": 10900
+        "added": 10922
       },
       "element": {
-        "alone": 25833,
+        "alone": 25847,
         "lazy": 7023,
-        "added": 14714
+        "added": 14733
       }
     },
     "bottom-sheet": {
@@ -429,14 +429,14 @@
     },
     "snackbar": {
       "factory": {
-        "alone": 19192,
+        "alone": 19206,
         "lazy": 6954,
-        "added": 10986
+        "added": 11006
       },
       "element": {
-        "alone": 25101,
+        "alone": 25114,
         "lazy": 7023,
-        "added": 13992
+        "added": 14000
       }
     },
     "tooltip": {
