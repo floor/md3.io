@@ -172,7 +172,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       assert(Number(await handle.getAttribute('aria-valuenow')) < after, 'ArrowLeft decreases the slider value');
       await checkPickers(page, base, width, captures);
 
-      await goto('/examples/settings/');
+      await goto('/showcase/settings/');
       const device = page.locator('.device__bar');
       await checkTargets(device.getByRole('button'), `${width}px device choices and Rotate`);
       await edge(page, device.getByRole('button', { name: 'Mobile', exact: true }), 'touch', 'right');

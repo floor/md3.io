@@ -25,7 +25,7 @@ try {
     await page.locator('.search-dialog__result').first().filter({ hasText: first }).waitFor();
   };
 
-  for (const path of ['/components/dialog/', '/docs/components/dialog/', '/examples/settings/']) {
+  for (const path of ['/components/dialog/', '/docs/components/dialog/', '/showcase/settings/']) {
     console.log(`Checking ${path}`);
     await page.goto(`${base}${path}`);
     await page.waitForLoadState('networkidle');
@@ -44,7 +44,7 @@ try {
   await page.locator('#search-trigger').click();
   assert(await isOpen(), 'the header button opens the dialog');
   assert(await page.getByRole('dialog', { name: 'Search the site' }).isVisible(), 'the dialog is named');
-  assert(await page.getByRole('combobox', { name: 'Search components, docs and examples' }).isVisible(), 'the input is a labelled combobox');
+  assert(await page.getByRole('combobox', { name: 'Search components, docs and showcase' }).isVisible(), 'the input is a labelled combobox');
 
   // Results: Bottom sheet under Components, the match marked.
   await typeQuery('peek', 'Bottom sheet');

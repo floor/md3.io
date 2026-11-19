@@ -196,8 +196,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
   const captures = resolve(output, 'page-layout');
   await mkdir(captures, { recursive: true });
   const url = (path: string) => new URL(path, base).href;
-  // The site switches to its canonical Showcase routes when that branch lands.
-  const showcase = (await fetch(url('/showcase/'))).ok ? '/showcase/' : '/examples/';
+  const showcase = '/showcase/';
   const routes: RouteCase[] = [
     ...fixedRoutes.map(([name, path, frame]) => ({ name, path, frame })),
     { name: 'showcase-overview', path: showcase },
