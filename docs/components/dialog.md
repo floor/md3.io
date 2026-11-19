@@ -80,7 +80,7 @@ dialog:
 A button's `onClick(event, dialog)` runs its action, and returning `false` keeps the dialog
 open; the web component's actions are buttons of your own. `confirm({ message })` asks a
 question in the dialog and resolves to the answer. Recipes such as confirming a deletion or a
-form that validates before it closes are planned for [Examples](/examples/).
+form that validates before it closes are planned for [Showcase](/showcase/).
 
 ## API
 

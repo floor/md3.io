@@ -89,7 +89,7 @@ A choice emits `select` with `{ item, itemId, itemData }`; the web component dis
 element than its opener, as the select does with its field; the opener still opens it and
 gets focus back. With `manualOpen`, the opener only places the menu and the app calls
 `open()`: a context menu at the pointer uses a zero-sized opener it moves there. Recipes such
-as a context menu or a menu inside a dialog are planned for [Examples](/examples/).
+as a context menu or a menu inside a dialog are planned for [Showcase](/showcase/).
 
 ### Deferred delivery
 
