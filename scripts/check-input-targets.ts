@@ -26,7 +26,7 @@ export async function checkTargets(targets: Locator, description: string, allowE
     const target = field ?? label ?? node;
     const bounds = target.getBoundingClientRect();
     const hitPart = target.matches('.mtrl-chip__action') ? '::before'
-      : target.matches('.mtrl-button, .mtrl-icon-button, .mtrl-drawer__item, .mtrl-menu__item, .mtrl-select, [part~="field"], .mtrl-slider__container, [part~="toggle-type"], [part~="cancel"], [part~="confirm"], .mtrl-text-field__trailing-icon')
+      : target.matches('.mtrl-button, .mtrl-icon-button, .site-icon-button, .mtrl-drawer__item, .mtrl-menu__item, .mtrl-select, [part~="field"], .mtrl-slider__container, [part~="toggle-type"], [part~="cancel"], [part~="confirm"], .mtrl-text-field__trailing-icon')
         ? '::after' : null;
     const hit = hitPart && getComputedStyle(target, hitPart);
     const expanded = hit && hit.content !== 'none' && hit.pointerEvents !== 'none';
@@ -237,7 +237,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
         await checkTargets(index, `${width}px documentation index toggle`);
         await edge(page, index, 'touch');
       }
-      await checkTargets(page.locator('.sidebar__link'), `${width}px documentation list links`);
+      await checkTargets(page.locator('#sidebar m-drawer a[part~="item"]'), `${width}px documentation list links`);
       await goto('/styles/');
       const previewToggle = page.locator('#styles-preview-toggle');
       if (width < 840) {

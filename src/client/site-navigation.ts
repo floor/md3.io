@@ -7,17 +7,32 @@ const closer = document.querySelector<HTMLButtonElement>('#site-nav-close');
 // Resizing can hide the focused element before the media query's event fires.
 let lastFocus = document.activeElement;
 document.addEventListener('focusin', event => {
-  if (event.target instanceof Element) lastFocus = event.target;
+  const target = event.composedPath()[0];
+  if (target instanceof Element) lastFocus = target;
 });
-export const currentFocus = () => document.activeElement === document.body ? lastFocus : document.activeElement;
+export const currentFocus = () => {
+  const active = document.activeElement;
+  return active?.shadowRoot?.activeElement ?? (active === document.body ? lastFocus : active);
+};
+export const containsFocus = (container: Element, target: Element | null) => {
+  const root = target?.getRootNode();
+  return container.contains(root instanceof ShadowRoot ? root.host : target);
+};
 
 if (bar && rail && dialog && opener && closer) {
   const compact = matchMedia('(width < 600px)');
   const medium = matchMedia('(600px <= width < 840px)');
   // Move the server-rendered section list so its links and disclosure state serve both layouts.
   const section = document.querySelector('.component-list, #sidebar');
+  const drawer = section?.querySelector('m-drawer');
   const sectionParent = section?.parentNode;
   const sectionNext = section?.nextSibling ?? null;
+
+  if (drawer) void import('./catalog/drawer').then(({ defineSiteDrawer }) => {
+    const id = drawer.shadowRoot?.activeElement?.getAttribute('data-id');
+    defineSiteDrawer();
+    if (id) drawer.shadowRoot?.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"]`)?.focus();
+  });
 
   const syncModal = () => {
     if (section && section.parentNode === dialog && !dialog.open) sectionParent?.insertBefore(section, sectionNext);
@@ -31,7 +46,7 @@ if (bar && rail && dialog && opener && closer) {
     const focused = currentFocus();
     const target = compact.matches ? bar : rail;
     const leavingPrimary = compact.matches ? rail.contains(focused) : bar.contains(focused);
-    const leavingModal = !medium.matches && (dialog.contains(focused) || focused === opener);
+    const leavingModal = !medium.matches && (containsFocus(dialog, focused) || focused === opener);
     const closeForResize = !medium.matches && dialog.open;
     const href = focused?.closest('a')?.getAttribute('href');
     bar.hidden = !compact.matches;
@@ -45,7 +60,7 @@ if (bar && rail && dialog && opener && closer) {
     const moveFocus = () => {
       if (target.hidden) return;
       const links = Array.from(target.querySelectorAll('a'));
-      const sectionFocus = !compact.matches && focused instanceof HTMLElement && section?.contains(focused)
+      const sectionFocus = !compact.matches && focused instanceof HTMLElement && section && containsFocus(section, focused)
         && focused.getClientRects().length ? focused : null;
       (sectionFocus ?? links.find(link => href && link.getAttribute('href') === href)
         ?? links.find(link => link.hasAttribute('aria-current')) ?? links[0])?.focus();
@@ -70,9 +85,11 @@ if (bar && rail && dialog && opener && closer) {
     if (event.key !== 'Tab') return;
     // Keep Tab inside the modal at both ends, including browsers that can
     // otherwise move keyboard focus to their chrome. Families can hide links.
-    const last = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button'))
-      .findLast(control => control.getClientRects().length);
-    const active = document.activeElement;
+    const visible = (control: HTMLElement) => control.getClientRects().length && !control.closest('[inert]');
+    const controls = 'a[href], button';
+    const last = Array.from(drawer?.shadowRoot?.querySelectorAll<HTMLElement>(controls) ?? []).findLast(visible)
+      ?? Array.from(dialog.querySelectorAll<HTMLElement>(controls)).findLast(visible);
+    const active = currentFocus();
     if (last && (event.shiftKey ? active === closer : active === last)) {
       event.preventDefault();
       (event.shiftKey ? last : closer).focus();
@@ -85,7 +102,7 @@ if (bar && rail && dialog && opener && closer) {
 
 const index = document.querySelector<HTMLDetailsElement>('#section-index, #component-catalog-index');
 const summary = index?.querySelector<HTMLElement>('summary');
-const indexLinks = index?.querySelector<HTMLElement>('nav');
+const indexLinks = index?.querySelector<HTMLElement>('m-drawer');
 if (index && summary && indexLinks) {
   const expanded = matchMedia('(min-width: 840px)');
   let openInline = index.open;
@@ -98,12 +115,12 @@ if (index && summary && indexLinks) {
       index.open = true;
       summary.hidden = true;
       if (focused === summary) {
-        const current = indexLinks.querySelector<HTMLElement>('[aria-current]');
-        (current?.getClientRects().length ? current : indexLinks.querySelector('a'))?.focus();
+        const current = indexLinks.shadowRoot?.querySelector<HTMLElement>('[aria-current]');
+        (current?.getClientRects().length ? current : indexLinks.shadowRoot?.querySelector('a'))?.focus();
       }
     } else {
       summary.hidden = false;
-      index.open = openInline || indexLinks.contains(focused);
+      index.open = openInline || containsFocus(indexLinks, focused);
     }
   };
   expanded.addEventListener('change', syncIndex);

@@ -1,5 +1,5 @@
 import './search';
-import { currentFocus } from './site-navigation';
+import { containsFocus, currentFocus } from './site-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -99,19 +99,14 @@ if (docToc) {
   });
 }
 
-for (const toggle of document.querySelectorAll<HTMLButtonElement>('.component-directory__toggle')) {
-  toggle.addEventListener('click', () => {
-    toggle.setAttribute('aria-expanded', String(toggle.getAttribute('aria-expanded') !== 'true'));
-  });
-}
-
 const componentList = document.querySelector<HTMLElement>('.component-list-layout--detail .component-list');
 if (componentList) {
   const detail = componentList.closest('.component-list-layout--detail');
+  const drawer = componentList.querySelector('m-drawer');
   const expanded = matchMedia('(min-width: 840px)');
   const keepCurrentComponentInView = () => {
     if (!expanded.matches) return;
-    const current = componentList.querySelector<HTMLElement>('[aria-current="page"]');
+    const current = drawer?.shadowRoot?.querySelector<HTMLElement>('[aria-current="page"]');
     if (!current?.getClientRects().length) return;
     const pane = componentList.getBoundingClientRect();
     const row = current.getBoundingClientRect();
@@ -121,7 +116,7 @@ if (componentList) {
   };
   expanded.addEventListener('change', () => {
     if (expanded.matches) keepCurrentComponentInView();
-    else if (componentList.contains(currentFocus())) {
+    else if (containsFocus(componentList, currentFocus())) {
       detail?.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
     }
   });

@@ -2,9 +2,7 @@
   padding-block: 8px 16px;
 }
 
-.component-list .sidebar__link {
-  scroll-margin-block-start: calc(var(--header-height) + 8px);
-}
+.component-list__heading { padding: 8px 28px 4px; color: var(--text-muted); font-size: var(--fs-ui); }
 .component-list-up { display: inline-flex; align-items: center; gap: 6px; }
 .component-list-up svg { width: 16px; height: 16px; }
 .component-page__title { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; }
@@ -34,7 +32,6 @@
     scroll-padding-block: 8px;
   }
   .component-list-layout > .component-page { grid-column: 2; grid-row: 1; }
-  .component-list .sidebar__link { scroll-margin-block-start: 0; }
   .component-catalog-index { border-block-end: 0; }
   .component-catalog-index .component-list { padding: 0; }
   .component-catalog-index[open] > summary { display: none; }

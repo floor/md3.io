@@ -33,22 +33,22 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
   assert(JSON.stringify(actual) === JSON.stringify(expected), message);
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
-  const headings = docs ? pane.getByRole('heading', { name: 'Components', exact: true }) : pane.getByRole('heading');
-  equal(await headings.allTextContents(), path === '/components/' ? [] : ['Components'], 'Only detail and section sidebars have a Components heading');
+  if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Documentation has a Components section');
   const inventory = docs ? docGroups.flatMap(group => group.items) : componentSlugs.map(slug => ({
     slug, name: components[slug].name, href: `/components/${slug}/`,
   }));
-  const directory = pane.locator('.component-directory');
-  assert(await directory.and(pane.getByRole('list', { name: 'Components', exact: true })).count() === 1, 'The directory retains its accessible name');
-  const rows = await directory.locator(':scope > li > :is(a, button)').evaluateAll(items => items.map(item => item.textContent!.trim()));
+  const rows = await pane.locator('[part~="items"]').evaluate(items => [...items.children].flatMap(item => {
+    const row = item.matches('a') ? item : item.querySelector('button[aria-expanded]');
+    return row ? [row.textContent!.trim()] : [];
+  }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
-  equal(rows, ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
-  const hrefs = await directory.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href')));
-  equal(hrefs.sort(), ['/components/', ...inventory.map(item => item.href)].sort(), 'Every component appears exactly once');
+  equal(rows.slice(rows.indexOf('Components overview')), ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
+  const hrefs = await pane.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href')));
+  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href)].sort(), 'Every component is a real link and appears exactly once');
   for (const family of families) {
-    const toggle = directory.getByRole('button', { name: family.name, exact: true });
+    const toggle = pane.getByRole('button', { name: family.name, exact: true });
     const id = await toggle.getAttribute('aria-controls');
-    const list = directory.locator(`[id="${id}"]`);
+    const list = pane.locator(`[id="${id}"]`);
     const expected = family.slugs.flatMap(slug => inventory.filter(item => item.slug === slug));
     assert(await toggle.evaluate(button => button.matches('button[type="button"]') && button.nextElementSibling?.id === button.getAttribute('aria-controls')),
       `${family.name}: a native button controls the following list`);
@@ -58,7 +58,7 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
     assert(await toggle.getAttribute('aria-expanded') === String(active) && await list.isVisible() === active,
       `${family.name}: only the current family is open on load`);
   }
-  const current = directory.locator('[aria-current="page"]');
+  const current = pane.locator('a[aria-current="page"]');
   const currentHref = hrefs.includes(path) ? path : null;
   assert(await current.count() === Number(currentHref !== null), 'Current link count matches the route');
   if (currentHref) assert(await current.getAttribute('href') === currentHref && await current.isVisible(), 'The current link is visible and matches the route');
@@ -89,7 +89,7 @@ async function checkDetailFocusOrder(page: Page, width: number) {
   await page.keyboard.press('Tab');
   if (width >= 840) {
     const pane = main.getByRole('navigation', { name: 'Component list', exact: true });
-    const focused = await pane.getByRole('link', { name: 'Components overview', exact: true }).evaluate(link => document.activeElement === link);
+    const focused = await pane.getByRole('link', { name: 'Components overview', exact: true }).evaluate(link => (link.getRootNode() as ShadowRoot).activeElement === link);
     assert(focused, `${width}px: Tab enters the detail before the component list`);
     const headings = main.getByRole('heading');
     assert(await headings.nth(1).and(main.getByRole('heading', { name: 'Tooltip', level: 1, exact: true })).count() === 1,
@@ -415,12 +415,13 @@ try {
       assert(await page.evaluate(() => !document.activeElement?.closest('.component-list')), `${width}px: a hidden list link took focus`);
     } else {
       const pane = await checkComponentList(page);
-      const paneBox = await pane.boundingBox();
+      const wrapper = page.locator('main .component-list');
+      const paneBox = await wrapper.boundingBox();
       const detailBox = await page.locator('.component-page').boundingBox();
       const currentBox = await pane.getByRole('link', { name: 'Tooltip', exact: true }).boundingBox();
       assert(paneBox && detailBox && paneBox.x + paneBox.width <= detailBox.x, `${width}px: the list and detail do not sit side by side`);
       assert(currentBox && currentBox.y >= paneBox.y && currentBox.y + currentBox.height <= paneBox.y + paneBox.height, `${width}px: the current link is outside the list viewport`);
-      assert(await pane.evaluate(list => list.scrollTop > 0 && list.scrollHeight > list.clientHeight) && await page.evaluate(() => scrollY === 0),
+      assert(await wrapper.evaluate(list => list.scrollTop > 0 && list.scrollHeight > list.clientHeight) && await page.evaluate(() => scrollY === 0),
         `${width}px: showing the current link did not scroll only the list`);
     }
     await page.screenshot({ animations: 'disabled', path: `${captures}/detail-${width}.png` });

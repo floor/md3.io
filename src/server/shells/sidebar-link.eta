@@ -1,5 +1,0 @@
-<% const current = it.item.href === it.path; %>
-<a class="sidebar__link mtrl-drawer__item<%= current ? ' mtrl-drawer__item--active' : '' %>" href="<%= it.item.href %>"<% if (current) { %> aria-current="page"<% } %>>
-  <span class="mtrl-drawer__active-indicator" aria-hidden="true"></span>
-  <span class="mtrl-drawer__item-label"><%= it.item.name %></span>
-</a>

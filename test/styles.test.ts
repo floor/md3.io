@@ -81,7 +81,7 @@ describe('Styles pages', () => {
   });
   test('the shape page is in the sitemap and the sidebar', async () => {
     expect(await (await get('/sitemap.xml')).text()).toContain('<loc>https://md3.io/styles/shape/</loc>');
-    expect(await (await get('/styles/color/')).text()).toContain('<a class="sidebar__link mtrl-drawer__item" href="/styles/shape/"');
+    expect(await (await get('/styles/color/')).text()).toMatch(/<a[^>]*part="item"[^>]*href="\/styles\/shape\//);
   });
   test('Styles is not active on other sections, and the stylesheet stays off them', async () => {
     const html = await (await get('/components/')).text();

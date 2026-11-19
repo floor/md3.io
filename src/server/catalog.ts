@@ -23,7 +23,8 @@ type Attributes = Record<string, string | number | boolean | undefined>;
 const attributes = (attrs: Attributes) => Object.entries(attrs)
   .map(([name, value]) => value === true ? ` ${name}` : value === false || value === undefined ? '' : ` ${name}="${escape(String(value))}"`).join('');
 /** An mtrl element: `m('chip', { selected: true }, 'Hiking')`. `content` is markup. */
-const m = (name: string, attrs: Attributes = {}, content = '') => `<m-${name}${attributes(attrs)}>${content}</m-${name}>`;
+const m = (name: string, attrs: Attributes = {}, content = '', prefix = 'm') =>
+  `<${prefix}-${name}${attributes(attrs)}>${content}</${prefix}-${name}>`;
 const text = escape;
 const div = (className: string, content: string) => `<div class="${className}">${content}</div>`;
 
@@ -79,7 +80,7 @@ const visuals: Record<ComponentSlug, string> = {
   'navigation-bar': m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail navigation' },
     destinations.map(item => m('navigation-bar-item', { value: item.value, icon: item.icon }, item.label)).join('')),
   drawer: m('drawer', { open: true, dense: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail' },
-    m('drawer-item', { type: 'section' }, 'Your mailbox') + destinations.map(item => m('drawer-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label)).join('')),
+    m('drawer-item', { type: 'section' }, 'Your mailbox', 'md3-catalog') + destinations.map(item => m('drawer-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label, 'md3-catalog')).join(''), 'md3-catalog'),
   // A surface: M3's fixed tab row, which <m-tabs> has no attribute for.
   tabs: `<${SURFACES.tabs}></${SURFACES.tabs}>`,
   menu: `<${SURFACES.menu}></${SURFACES.menu}>`,

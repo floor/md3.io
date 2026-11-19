@@ -3,18 +3,10 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { materialTokens } from './playground-panel';
-import { typescale } from './tokens';
 
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
-const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax', 'mtrl:drawer', 'mtrl:icon-button'] as const;
-const labelLarge = typescale.find(style => style.role === 'label-large')!;
-const drawerTypography = `:root{
-  --mtrl-sys-typescale-label-large-font-weight:${labelLarge.fontWeight};
-  --mtrl-sys-typescale-label-large-font-size:${labelLarge.fontSize};
-  --mtrl-sys-typescale-label-large-line-height:${labelLarge.lineHeight};
-  --mtrl-sys-typescale-label-large-letter-spacing:${labelLarge.letterSpacing}
-}`;
+const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
@@ -24,7 +16,7 @@ export const stylesheetBundles = {
   'material-panel': [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material'],
   // The components overview adds the elements' pre-upgrade rules and the catalog.
   catalog: [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'],
-  // Examples add the device chooser: mtrl's button group and icon button, then its sheet.
+  // Examples add the device chooser's Material button group and frame styles.
   examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:button-group', 'device-frame'],
   styles: [...shell, 'site', 'search', 'styles-pages'],
   // Colour Lab's real components, with colour scoped to its preview stage.
@@ -159,7 +151,7 @@ export function bundleCss(name: StylesheetBundle): string {
   const css = stylesheetBundles[name].map(file => {
     if (file === 'mtrl-tokens') return mtrlTokens();
     return readFileSync(fileFor(file), 'utf8');
-  }).join('\n') + '\n' + drawerTypography
+  }).join('\n')
     // material's scoped baseline tokens for the header's buttons and a component page's
     // panel: every page has the header, so every bundle carries them, cached with the
     // sheet instead of inline in each page's HTML.
