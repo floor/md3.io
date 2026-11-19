@@ -41,6 +41,7 @@
   const setFilter = (value: string[]) => (s = { ...s, filter: value as LabelId[] });
   const pin = (note: Note) => (s = { ...s, notes: s.notes.map((n) => (n === note ? { ...n, pinned: !n.pinned } : n)) });
 
+  const shownCount = $derived(visible(s).length);
   const pinnedNotes = $derived(visible(s).filter((n) => n.pinned));
   const otherNotes = $derived(visible(s).filter((n) => !n.pinned));
 </script>
@@ -59,6 +60,9 @@
     {/each}
   </Chips>
   <output class="notes__status" role="status">{status(s)}</output>
+  {#if shownCount === 0}
+    <p class="notes__empty">No notes match.</p>
+  {:else}
   {#if pinnedNotes.length > 0}
     <section class="notes__section">
       <h2>Pinned</h2>
@@ -66,7 +70,7 @@
         {#each pinnedNotes as note (note.id)}
           <Card headline={note.title}>
             {#snippet headerAction()}
-              <IconButton toggle selected={note.pinned} icon={PIN_ICON} ariaLabel={`${note.pinned ? "Unpin " : "Pin "}${note.title}`} onchange={() => pin(note)} />
+              <IconButton toggle selected={note.pinned} icon={PIN_ICON} ariaLabel={`Pin ${note.title}`} onchange={() => pin(note)} />
             {/snippet}
             <p>{note.text}</p>
             {#if note.labels.length > 0}
@@ -87,14 +91,14 @@
       </div>
     </section>
   {/if}
+  {#if otherNotes.length > 0}
   <section class="notes__section">
     <h2>Notes</h2>
-    {#if otherNotes.length > 0}
       <div class="notes__grid {s.view}">
         {#each otherNotes as note (note.id)}
           <Card headline={note.title}>
             {#snippet headerAction()}
-              <IconButton toggle selected={note.pinned} icon={PIN_ICON} ariaLabel={`${note.pinned ? "Unpin " : "Pin "}${note.title}`} onchange={() => pin(note)} />
+              <IconButton toggle selected={note.pinned} icon={PIN_ICON} ariaLabel={`Pin ${note.title}`} onchange={() => pin(note)} />
             {/snippet}
             <p>{note.text}</p>
             {#if note.labels.length > 0}
@@ -113,10 +117,9 @@
           </Card>
         {/each}
       </div>
-    {:else}
-      <p class="notes__empty">No notes match.</p>
-    {/if}
   </section>
+  {/if}
+  {/if}
   <ExtendedFab icon={ADD_ICON} text="New note" ariaLabel="New note" onclick={() => open(null)} />
   {#if narrow}
     <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} onclose={() => (draft = null)}>
@@ -130,7 +133,7 @@
         </Chips>
       </div>
       <div class="notes__editor-actions">
-        <Button variant="outlined" onclick={() => draft?.note && remove(draft.note)}>Delete</Button>
+        <Button variant="outlined" onclick={() => (draft?.note ? remove(draft.note) : (draft = null))}>Delete</Button>
         <Button variant="text" onclick={() => (draft = null)}>Cancel</Button>
         <Button onclick={save}>Save</Button>
       </div>
@@ -148,7 +151,7 @@
       </div>
       {#snippet actions()}
         <div class="notes__editor-actions">
-          <Button variant="outlined" onclick={() => draft?.note && remove(draft.note)}>Delete</Button>
+          <Button variant="outlined" onclick={() => (draft?.note ? remove(draft.note) : (draft = null))}>Delete</Button>
           <Button variant="text" onclick={() => (draft = null)}>Cancel</Button>
           <Button onclick={save}>Save</Button>
         </div>

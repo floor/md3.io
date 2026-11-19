@@ -1,23 +1,45 @@
 // What a visitor does with this example; scripts/check-examples.ts runs it in every
 // framework and compares what each one shows afterwards.
 //
-// Locators stay with roles and names, as Settings' check does. Two of them lean on
+// Locators stay with roles and names, as Settings' check does. Three of them lean on
 // DOM order, which is the same in every variant: the label filter sits above the
-// cards, and the editor's chips come after them, so the first "Work" gridcell is
-// the filter's and the last "Travel" one is the editor's. The editor's fields are
-// the only textboxes on the page, so they need no scoping.
+// cards, and the editor's chips come after them, so the first "Work" gridcell is the
+// filter's and the last "Travel" one is the editor's. The editor's fields are the
+// only textboxes on the page, so they need no scoping.
 import type { Page } from "playwright";
 
 export default async function steps(page: Page): Promise<void> {
   const exact = { exact: true } as const;
+  // A closed snackbar fades to opacity 0 but keeps its box (the component's own
+  // display rule beats the closed-popover one), so Playwright's visibility never
+  // turns — wait for the toast to settle instead. The element keeps its toast in
+  // a shadow root; the factory's toast is the root itself.
+  const snackbarSettled = () =>
+    page.waitForFunction(() => {
+      const hosts = [...document.querySelectorAll("m-snackbar, .mtrl-snackbar")];
+      return hosts.every((host) => {
+        const root = host.shadowRoot ?? host;
+        const toast = root.querySelector("[popover]") ?? host;
+        return Number.parseFloat(getComputedStyle(toast).opacity) < 0.1;
+      });
+    });
 
-  // Filter by Work, then clear the filter.
+  // Filter by Work from the row above the grid, then clear it.
   await page.getByRole("gridcell", { name: "Work", ...exact }).first().click();
   await page.getByRole("gridcell", { name: "Work", ...exact }).first().click();
 
-  // Search narrows the grid, down to nothing, and back.
-  await page.getByRole("combobox", { name: "Search notes" }).fill("pasta");
+  // A card's own chips filter too: isolate the Packing list card with the search,
+  // click its Shopping chip (with only the filter row besides it, the card's is
+  // the last "Shopping"), then clear both.
+  await page.getByRole("combobox", { name: "Search notes" }).fill("packing");
+  await page.getByRole("gridcell", { name: "Shopping", ...exact }).last().click();
+  await page.getByRole("gridcell", { name: "Shopping", ...exact }).last().click();
   await page.getByRole("combobox", { name: "Search notes" }).fill("");
+
+  // Search narrows the grid: a hit, a pinned-only hit (no empty message while a
+  // pinned note shows), nothing at all, and back.
+  await page.getByRole("combobox", { name: "Search notes" }).fill("pasta");
+  await page.getByRole("combobox", { name: "Search notes" }).fill("meeting");
   await page.getByRole("combobox", { name: "Search notes" }).fill("xylophone");
   await page.getByRole("combobox", { name: "Search notes" }).fill("");
 
@@ -44,8 +66,31 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Delete Spare keys", ...exact }).click();
   await page.getByRole("button", { name: "Undo", ...exact }).click();
 
-  // Delete from the editor, then dismiss the snackbar it shows.
+  // Delete a note from the editor. The snackbar dismisses itself on its timer;
+  // the pointer moves away first, because a hover or focus inside it pauses that
+  // timer.
   await page.getByRole("button", { name: "Open Story prompts", ...exact }).click();
   await page.getByRole("button", { name: "Delete", ...exact }).click();
-  await page.getByRole("button", { name: "Dismiss", ...exact }).click();
+  await page.mouse.move(8, 8);
+  await snackbarSettled();
+
+  // Delete in the editor of a note that was never saved discards the draft: the
+  // editor closes and no snackbar shows.
+  await page.getByRole("button", { name: "New note", ...exact }).click();
+  await page.getByRole("textbox", { name: "Title", ...exact }).fill("Never saved");
+  await page.getByRole("button", { name: "Delete", ...exact }).click();
+  await page.getByRole("textbox", { name: "Title", ...exact }).waitFor({ state: "hidden" });
+  await snackbarSettled();
+
+  // On a narrow frame the editor is the bottom sheet: reload narrow (the variant
+  // picks its container when it loads), create a note there, and save it.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
+  await page.getByRole("button", { name: "New note", ...exact }).click();
+  await page.getByRole("textbox", { name: "Title", ...exact }).fill("Narrow note");
+  await page.getByRole("textbox", { name: "Note", ...exact }).fill("Written on a phone.");
+  await page.getByRole("gridcell", { name: "Travel", ...exact }).last().click();
+  await page.getByRole("button", { name: "Save", ...exact }).click();
+  await page.getByRole("button", { name: "Delete Narrow note", ...exact }).waitFor();
 }

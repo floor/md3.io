@@ -60,7 +60,7 @@ const card = (note: Note): ReturnType<typeof createCard> => {
     icon: PIN_ICON,
     toggle: true,
     selected: note.pinned,
-    ariaLabel: `${note.pinned ? "Unpin" : "Pin"} ${note.title}`,
+    ariaLabel: `Pin ${note.title}`,
   });
   pin.on("change", () => {
     note.pinned = !note.pinned;
@@ -135,7 +135,7 @@ const dialog = narrow
   : createDialog({
       title: "Edit note",
       buttons: [
-        { text: "Delete", variant: "outlined", onClick: () => { if (editing) deleteNote(editing); } },
+        { text: "Delete", variant: "outlined", onClick: () => { if (editing && s.notes.includes(editing)) deleteNote(editing); } },
         { text: "Cancel", variant: "text" },
         { text: "Save", onClick: () => save() },
       ],
@@ -146,7 +146,11 @@ const editor = narrow
 if (dialog) (dialog as unknown as { structure: { content: HTMLElement } }).structure.content.append(fields);
 if (narrow) {
   sheetActions.append(
-    sheetButton("Delete", "outlined", () => { if (editing) deleteNote(editing); }).element,
+    sheetButton("Delete", "outlined", () => {
+      if (!editing) return;
+      if (s.notes.includes(editing)) deleteNote(editing);
+      else editor.close();
+    }).element,
     sheetButton("Cancel", "text", sheetClose).element,
     sheetButton("Save", undefined, () => save()).element,
   );
@@ -170,9 +174,12 @@ const editorOpen = (note: Note | null): void => {
 const fab = createExtendedFab({ icon: ADD_ICON, text: "New note", ariaLabel: "New note" });
 fab.on("click", () => editorOpen(null));
 
-// Deleting shows the snackbar; Undo puts the note back where it was. The
-// factory snackbar, too, shows itself until told otherwise.
-const snackbar = createSnackbar({ message: "Note deleted", action: "Undo", duration: 4000, dismissible: true });
+// Deleting shows the snackbar; Undo puts the note back where it was. The factory
+// snackbar joins the top layer, as the element always does: it shows in place and
+// hides on the popover's own timer. Unlike the element's, the factory toast stays
+// exposed in the accessibility tree until it has been shown once, so it is also
+// kept out of it until then (reported to the material team).
+const snackbar = createSnackbar({ message: "Note deleted", action: "Undo", duration: 4000, dismissible: true, layer: "top" });
 snackbar.element.style.display = "none";
 snackbar.on("close", () => (snackbar.element.style.display = "none"));
 let lastDeleted: { note: Note; at: number } | null = null;
@@ -204,10 +211,16 @@ const render = (): void => {
   const otherNotes = shown.filter((n) => !n.pinned);
   pinned.hidden = pinnedNotes.length === 0;
   pinned.replaceChildren(Object.assign(document.createElement("h2"), { textContent: "Pinned" }), grid(pinnedNotes));
-  rest.replaceChildren(
-    Object.assign(document.createElement("h2"), { textContent: "Notes" }),
-    otherNotes.length > 0 ? grid(otherNotes) : Object.assign(document.createElement("p"), { className: "notes__empty", textContent: "No notes match." }),
-  );
+  // One empty state for the page, as the other variants: the message shows only
+  // when nothing at all matches, and the Notes section hides when every visible
+  // note is pinned.
+  if (shown.length === 0) {
+    rest.hidden = false;
+    rest.replaceChildren(Object.assign(document.createElement("p"), { className: "notes__empty", textContent: "No notes match." }));
+  } else {
+    rest.hidden = otherNotes.length === 0;
+    rest.replaceChildren(Object.assign(document.createElement("h2"), { textContent: "Notes" }), grid(otherNotes));
+  }
 };
 
 shell.append(bar, filters.element, statusLine, pinned, rest, fab.element, editor.element, snackbar.element);

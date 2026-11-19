@@ -53,7 +53,7 @@ export default function Notes() {
         toggle
         selected={note.pinned}
         icon={PIN_ICON}
-        ariaLabel={`${note.pinned ? "Unpin" : "Pin"} ${note.title}`}
+        ariaLabel={`Pin ${note.title}`}
         onChange={() => setS((prev) => ({ ...prev, notes: prev.notes.map((n) => (n === note ? { ...n, pinned: !n.pinned } : n)) }))}
       />
       <p>{note.text}</p>
@@ -85,7 +85,7 @@ export default function Notes() {
   );
   const editorButtons = (
     <>
-      <Button variant="outlined" onClick={() => draft?.note && remove(draft.note)}>Delete</Button>
+      <Button variant="outlined" onClick={() => (draft?.note ? remove(draft.note) : setDraft(null))}>Delete</Button>
       <Button variant="text" onClick={() => setDraft(null)}>Cancel</Button>
       <Button onClick={save}>Save</Button>
     </>
@@ -113,16 +113,24 @@ export default function Notes() {
         ))}
       </Chips>
       <output className="notes__status" role="status">{status(s)}</output>
-      {pinnedNotes.length > 0 && (
-        <section className="notes__section">
-          <h2>Pinned</h2>
-          {grid(pinnedNotes)}
-        </section>
+      {shown.length === 0 ? (
+        <p className="notes__empty">No notes match.</p>
+      ) : (
+        <>
+          {pinnedNotes.length > 0 && (
+            <section className="notes__section">
+              <h2>Pinned</h2>
+              {grid(pinnedNotes)}
+            </section>
+          )}
+          {otherNotes.length > 0 && (
+            <section className="notes__section">
+              <h2>Notes</h2>
+              {grid(otherNotes)}
+            </section>
+          )}
+        </>
       )}
-      <section className="notes__section">
-        <h2>Notes</h2>
-        {otherNotes.length > 0 ? grid(otherNotes) : <p className="notes__empty">No notes match.</p>}
-      </section>
       <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onClick={() => open(null)}>New note</ExtendedFab>
       {narrow ? (
         <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} onClose={() => setDraft(null)}>

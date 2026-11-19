@@ -44,10 +44,11 @@ export default defineComponent({
     const setFilter = (value: string[]) => (s.value = { ...s.value, filter: value as LabelId[] });
     const pin = (note: Note) => (s.value = { ...s.value, notes: s.value.notes.map((n) => (n === note ? { ...n, pinned: !n.pinned } : n)) });
 
+    const shownCount = () => visible(s.value).length;
     const pinnedNotes = () => visible(s.value).filter((n) => n.pinned);
     const otherNotes = () => visible(s.value).filter((n) => !n.pinned);
 
-    return { s, draft, snackbar, narrow, LABELS, ADD_ICON, DELETE_ICON, GRID_ICON, LIST_ICON, PIN_ICON, labelOf, status, pinnedNotes, otherNotes, open, save, remove, undo, setFilter, pin };
+    return { s, draft, snackbar, narrow, LABELS, ADD_ICON, DELETE_ICON, GRID_ICON, LIST_ICON, PIN_ICON, labelOf, status, shownCount, pinnedNotes, otherNotes, open, save, remove, undo, setFilter, pin };
   },
   template: `
     <section class="notes">
@@ -62,11 +63,13 @@ export default defineComponent({
         <MChip v-for="l in LABELS" :key="l.value" :label="l.text" :value="l.value" />
       </MChips>
       <output class="notes__status" role="status">{{ status(s) }}</output>
+      <p v-if="shownCount() === 0" class="notes__empty">No notes match.</p>
+      <template v-else>
       <section v-if="pinnedNotes().length > 0" class="notes__section">
         <h2>Pinned</h2>
         <div :class="'notes__grid ' + s.view">
           <MCard v-for="note in pinnedNotes()" :key="note.id" :headline="note.title">
-            <MIconButton slot="header-action" toggle :selected="note.pinned" :icon="PIN_ICON" :aria-label="(note.pinned ? 'Unpin ' : 'Pin ') + note.title" @change="pin(note)" />
+            <MIconButton slot="header-action" toggle :selected="note.pinned" :icon="PIN_ICON" :aria-label="'Pin ' + note.title" @change="pin(note)" />
             <p>{{ note.text }}</p>
             <MChips v-if="note.labels.length > 0" :value="s.filter.join(',')" @change="setFilter($event.detail.value)">
               <MChip v-for="id in note.labels" :key="id" :label="labelOf(id)" :value="id" />
@@ -78,11 +81,11 @@ export default defineComponent({
           </MCard>
         </div>
       </section>
-      <section class="notes__section">
+      <section v-if="otherNotes().length > 0" class="notes__section">
         <h2>Notes</h2>
-        <div v-if="otherNotes().length > 0" :class="'notes__grid ' + s.view">
+        <div :class="'notes__grid ' + s.view">
           <MCard v-for="note in otherNotes()" :key="note.id" :headline="note.title">
-            <MIconButton slot="header-action" toggle :selected="note.pinned" :icon="PIN_ICON" :aria-label="(note.pinned ? 'Unpin ' : 'Pin ') + note.title" @change="pin(note)" />
+            <MIconButton slot="header-action" toggle :selected="note.pinned" :icon="PIN_ICON" :aria-label="'Pin ' + note.title" @change="pin(note)" />
             <p>{{ note.text }}</p>
             <MChips v-if="note.labels.length > 0" :value="s.filter.join(',')" @change="setFilter($event.detail.value)">
               <MChip v-for="id in note.labels" :key="id" :label="labelOf(id)" :value="id" />
@@ -93,8 +96,8 @@ export default defineComponent({
             </div>
           </MCard>
         </div>
-        <p v-else class="notes__empty">No notes match.</p>
       </section>
+      </template>
       <MExtendedFab :icon="ADD_ICON" text="New note" ariaLabel="New note" @click="open(null)" />
       <MDialog v-if="!narrow" :open="draft !== null" :headline="draft && draft.note ? 'Edit note' : 'New note'" @close="draft = null">
         <div class="notes__fields">
@@ -105,7 +108,7 @@ export default defineComponent({
           </MChips>
         </div>
         <div slot="actions" class="notes__editor-actions">
-          <MButton variant="outlined" @click="draft && draft.note && remove(draft.note)">Delete</MButton>
+          <MButton variant="outlined" @click="draft && (draft.note ? remove(draft.note) : (draft = null))">Delete</MButton>
           <MButton variant="text" @click="draft = null">Cancel</MButton>
           <MButton @click="save()">Save</MButton>
         </div>
@@ -119,7 +122,7 @@ export default defineComponent({
           </MChips>
         </div>
         <div class="notes__editor-actions">
-          <MButton variant="outlined" @click="draft && draft.note && remove(draft.note)">Delete</MButton>
+          <MButton variant="outlined" @click="draft && (draft.note ? remove(draft.note) : (draft = null))">Delete</MButton>
           <MButton variant="text" @click="draft = null">Cancel</MButton>
           <MButton @click="save()">Save</MButton>
         </div>

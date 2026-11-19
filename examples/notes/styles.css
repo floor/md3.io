@@ -1,20 +1,21 @@
-/* Layout for the example only: the components bring their own styles. */
+/* Layout for the example only: the components bring their own styles.
+   The element variants host <m-*> elements; Vanilla's factories build divs with
+   mtrl-* classes — every rule below names both shapes, as Settings' panel rules do. */
 .notes { display: flex; flex-direction: column; gap: 16px; width: 100%; }
 .notes__bar { display: flex; align-items: center; gap: 16px; }
-.notes__bar m-search { flex: 1; }
+.notes__bar > :first-child { flex: 1; }
 .notes__status { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
-.notes__filters { display: block; }
 .notes__section { display: flex; flex-direction: column; gap: 8px; }
 .notes__section h2 { margin: 0; font: 500 14px/20px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface); }
 .notes__section[hidden] { display: none; }
 .notes__grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 .notes__grid.list { display: flex; flex-direction: column; gap: 8px; }
-.notes__grid > m-card { display: block; }
-.notes__grid m-card p { margin: 0 0 8px; }
-.notes__grid.list m-card p { margin: 0; }
+.notes__grid > m-card, .notes__grid > .mtrl-card { display: block; }
+.notes__grid m-card p, .notes__grid .mtrl-card p { margin: 0 0 8px; }
+.notes__grid.list m-card p, .notes__grid.list .mtrl-card p { margin: 0; }
 .notes__card-actions { display: flex; align-items: center; gap: 4px; }
 .notes__empty { margin: 0; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
 .notes__fields { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; }
-.notes__fields m-text-field { display: block; width: 100%; }
+.notes__fields m-text-field, .notes__fields .mtrl-text-field { display: block; width: 100%; }
 .notes__editor-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.notes m-extended-fab { position: fixed; inset-inline-end: 24px; bottom: 24px; }
+.notes m-extended-fab, .notes .mtrl-extended-fab { position: fixed; inset-inline-end: 24px; bottom: 24px; }

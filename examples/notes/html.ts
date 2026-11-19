@@ -64,7 +64,7 @@ const card = (note: Note): HTMLElement => {
   pin.setAttribute("toggle", "");
   if (note.pinned) pin.setAttribute("selected", "");
   pin.setAttribute("icon", PIN_ICON);
-  pin.setAttribute("aria-label", `${note.pinned ? "Unpin" : "Pin"} ${note.title}`);
+  pin.setAttribute("aria-label", `Pin ${note.title}`);
   pin.addEventListener("change", () => {
     note.pinned = !note.pinned;
     render();
@@ -138,7 +138,10 @@ const editorDelete = document.createElement("m-button");
 editorDelete.setAttribute("variant", "outlined");
 editorDelete.textContent = "Delete";
 editorDelete.addEventListener("click", () => {
-  if (editing) deleteNote(editing);
+  // A note that was never saved is discarded; there is nothing to delete or undo.
+  if (!editing) return;
+  if (s.notes.includes(editing)) deleteNote(editing);
+  else editorClose();
 });
 const editorCancel = document.createElement("m-button");
 editorCancel.setAttribute("variant", "text");
@@ -217,10 +220,18 @@ const render = (): void => {
     Object.assign(document.createElement("h2"), { textContent: "Pinned" }),
     grid(pinnedNotes),
   );
-  rest.replaceChildren(
-    Object.assign(document.createElement("h2"), { textContent: "Notes" }),
-    otherNotes.length > 0 ? grid(otherNotes) : Object.assign(document.createElement("p"), { className: "notes__empty", textContent: "No notes match." }),
-  );
+  // One empty state for the page: the message shows only when nothing at all
+  // matches, and the Notes section hides when every visible note is pinned.
+  if (shown.length === 0) {
+    rest.hidden = false;
+    rest.replaceChildren(Object.assign(document.createElement("p"), { className: "notes__empty", textContent: "No notes match." }));
+  } else {
+    rest.hidden = otherNotes.length === 0;
+    rest.replaceChildren(
+      Object.assign(document.createElement("h2"), { textContent: "Notes" }),
+      grid(otherNotes),
+    );
+  }
 };
 
 if (narrow) {

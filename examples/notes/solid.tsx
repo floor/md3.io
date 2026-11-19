@@ -52,6 +52,7 @@ export default function Notes() {
     setS((prev) => ({ ...prev, notes: prev.notes.map((n) => (n === note ? { ...n, pinned: !n.pinned } : n)) }));
   };
 
+  const shownCount = () => visible(s()).length;
   const pinnedNotes = () => visible(s()).filter((n) => n.pinned);
   const otherNotes = () => visible(s()).filter((n) => !n.pinned);
   const noteCard = (note: Note) => (
@@ -61,7 +62,7 @@ export default function Notes() {
         toggle
         selected={note.pinned}
         icon={PIN_ICON}
-        ariaLabel={`${note.pinned ? "Unpin " : "Pin "}${note.title}`}
+        ariaLabel={`Pin ${note.title}`}
         onChange={() => pin(note)}
       />
       <p>{note.text}</p>
@@ -89,7 +90,7 @@ export default function Notes() {
   );
   const editorButtons = (
     <>
-      <Button variant="outlined" onClick={() => draft()?.note && remove(draft()!.note!)}>Delete</Button>
+      <Button variant="outlined" onClick={() => (draft()?.note ? remove(draft()!.note!) : setDraft(null))}>Delete</Button>
       <Button variant="text" onClick={() => setDraft(null)}>Cancel</Button>
       <Button onClick={save}>Save</Button>
     </>
@@ -108,18 +109,23 @@ export default function Notes() {
         <For each={LABELS}>{(l) => <Chip label={l.text} value={l.value} />}</For>
       </Chips>
       <output class="notes__status" role="status">{status(s())}</output>
-      <Show when={pinnedNotes().length > 0}>
-        <section class="notes__section">
-          <h2>Pinned</h2>
-          {grid(pinnedNotes())}
-        </section>
-      </Show>
-      <section class="notes__section">
-        <h2>Notes</h2>
-        <Show when={otherNotes().length > 0} fallback={<p class="notes__empty">No notes match.</p>}>
-          {grid(otherNotes())}
+      <Show
+        when={shownCount() > 0}
+        fallback={<p class="notes__empty">No notes match.</p>}
+      >
+        <Show when={pinnedNotes().length > 0}>
+          <section class="notes__section">
+            <h2>Pinned</h2>
+            {grid(pinnedNotes())}
+          </section>
         </Show>
-      </section>
+        <Show when={otherNotes().length > 0}>
+          <section class="notes__section">
+            <h2>Notes</h2>
+            {grid(otherNotes())}
+          </section>
+        </Show>
+      </Show>
       <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onClick={() => open(null)}>New note</ExtendedFab>
       <Show
         when={narrow}
