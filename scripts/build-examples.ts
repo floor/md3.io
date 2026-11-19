@@ -118,6 +118,10 @@ for (const example of examples) {
       entrypoints: ["example-entry"],
       target: "browser",
       minify: true,
+      // The Svelte variant resolves packages that ship under the "svelte" export
+      // condition (material's own adapters also carry "import"; material-addons'
+      // svelte entry does not yet, so the condition must come from here).
+      conditions: id === "svelte" ? ["browser", "svelte"] : undefined,
       plugins: [entryPlugin(dir, id, file), oneCopy, svelte, solid],
       define: {
         "process.env.NODE_ENV": '"production"',

@@ -2,10 +2,9 @@
 .booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 560px); }
 .booking__intro { display: flex; flex-direction: column; gap: 4px; }
 .booking__title, .booking__lede, .booking__label, .booking__range, .booking__step-title, .booking__review-line, .booking__review-label, .booking__field-error { margin: 0; }
-.booking__step-header { display: flex; flex-direction: column; gap: 8px; }
-.booking__step-header m-progress, .booking__step-header .mtrl-progress { display: block; width: 100%; }
+/* The author rule below would beat the UA's [hidden]; an emptied error must take no space. */
+.booking__field-error[hidden] { display: none; }
 .booking__step { display: flex; flex-direction: column; gap: 16px; }
-.booking__step[hidden] { display: none; }
 .booking__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .booking__grid > *, .booking__group > * { display: block; width: 100%; min-width: 0; }
 .booking__group { display: flex; flex-direction: column; gap: 8px; }
