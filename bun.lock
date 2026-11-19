@@ -9,7 +9,7 @@
         "eta": "4.5.1",
         "highlight.js": "11.11.1",
         "marked": "17.0.2",
-        "material": "3.15.3",
+        "material": "3.16.0",
         "minisearch": "^7.2.0",
       },
       "devDependencies": {
@@ -239,7 +239,7 @@
 
     "marked": ["marked@17.0.2", "", { "bin": { "marked": "bin/marked.js" } }, "sha512-s5HZGFQea7Huv5zZcAGhJLT3qLpAfnY7v7GWkICUr0+Wd5TFEtdlRR2XUL5Gg+RH7u2Df595ifrxR03mBaw7gA=="],
 
-    "material": ["material@3.15.3", "", { "peerDependencies": { "react": ">=18", "solid-js": ">=1.8 <2", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-Z4d9WDihgjh/D+TWdFgTDptbqWjNk4CeUKiF9A5bLSEUmlRDOTiBPhKXlNdNimo8HoW6V6C+cVl8PbEGtvBwWw=="],
+    "material": ["material@3.16.0", "", { "peerDependencies": { "react": ">=18", "solid-js": ">=1.8 <2", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-alyZSa6aNlDBXLMyGd1/T9USDAh7fU/g1I5RNf3G5dPAqXw0eY+IycX2NY0RlTtXs5poqCfZnGu5eMm0CpSNwQ=="],
 
     "material-addons": ["material-addons@3.2.0", "", { "peerDependencies": { "material": "^3.15.1", "react": ">=18", "solid-js": ">=1.8 <2", "svelte": ">=5", "vue": ">=3.4.20" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-5zcWiFNny8JPSqovwmCcw2HKJ+ms/Sj3IA1++DN7Pa+TaOwgpEu9lvd/KA7VO75JyvxxoG3yY5MSQUP0WnBbuw=="],
 
