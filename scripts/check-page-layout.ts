@@ -81,7 +81,7 @@ async function checkTargets(page: Page, label: string) {
     const selector = [
       'button', 'summary', 'select', 'textarea', 'input:not([type="hidden"])',
       '.header__logo', '.site-nav-link', '.sidebar__link', '.component-list a', '.doc-toc a', '.site-footer__links a',
-      'a.catalog-card', 'a.styles-card', 'a.doc-card', 'a.example-card', 'a.btn', '.page-nav__link', '.not-found > a',
+      'a.component-card', 'a.styles-card', 'a.doc-card', 'a.example-card', 'a.btn', '.page-nav__link', '.not-found > a',
       '.page-heading__top a', '.doc-toolbar a', '.catalog-note a', '.lab-api-link', '.lab-upload', '.search-dialog__result',
       '[part~="container"].mtrl-slider__container',
     ].join(', ');

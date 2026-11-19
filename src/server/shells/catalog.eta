@@ -1,11 +1,24 @@
 <div class="component-list-layout">
-  <%~ include('component-list', it) %>
+  <details class="component-catalog-index" id="component-catalog-index" open>
+    <summary class="section-index__toggle">Component index</summary>
+    <script>document.currentScript.parentElement.open = matchMedia('(min-width: 840px)').matches;</script>
+    <%~ include('component-list', it) %>
+  </details>
   <section class="page-wrap component-catalog" aria-label="Component previews">
-    <div class="component-grid"><% it.playgroundGroups.forEach(group => { group.slugs.forEach(slug => { const component = it.components[slug]; %>
-      <a class="component-card ui-card ui-card--interactive" href="/components/<%= slug %>/">
-        <%~ it.catalogVisuals[slug] %>
-        <div class="component-card__body"><h2><%= component.name %></h2><p><%= component.summary %></p></div>
-      </a>
-    <% }); }); %></div>
+    <header class="component-catalog__intro">
+      <h1>Components</h1>
+      <p>Try a component. Adjust the details. Copy what works.</p>
+    </header>
+    <% it.playgroundDirectory.sections.forEach(section => { %>
+      <section class="component-catalog__section" aria-labelledby="catalog-<%= section.id %>">
+        <h2 id="catalog-<%= section.id %>"><%= section.name %></h2>
+        <div class="component-grid"><% section.items.forEach(({ slug, href }) => { const component = it.components[slug]; %>
+          <a class="component-card ui-card ui-card--interactive" href="<%= href %>">
+            <%~ it.catalogVisuals[slug] %>
+            <div class="component-card__body"><h3><%= component.name %></h3><p><%= component.summary %></p></div>
+          </a>
+        <% }); %></div>
+      </section>
+    <% }); %>
   </section>
 </div>

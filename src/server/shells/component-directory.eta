@@ -1,0 +1,19 @@
+<% const link = item => include('component-directory-link', { ...it, item }); %>
+<ul class="component-directory" role="list" aria-labelledby="<%= it.heading %>">
+  <li><%~ link({ name: 'Components overview', href: '/components/' }) %></li>
+  <% it.entries.forEach(entry => { %>
+    <li>
+      <% if ('items' in entry) {
+        const id = it.heading + '-' + entry.id;
+        const expanded = entry.items.some(item => item.href === it.path);
+      %>
+        <button type="button" class="component-directory__toggle" id="<%= id %>-toggle" aria-expanded="<%= expanded %>" aria-controls="<%= id %>"><%= entry.name %><%~ it.icon('chevron_right') %></button>
+        <ul class="component-directory__items" id="<%= id %>" role="list" aria-labelledby="<%= id %>-toggle">
+          <% entry.items.forEach(item => { %><li><%~ link(item) %></li><% }); %>
+        </ul>
+      <% } else { %>
+        <%~ link(entry) %>
+      <% } %>
+    </li>
+  <% }); %>
+</ul>

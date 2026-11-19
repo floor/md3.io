@@ -1,9 +1,10 @@
 import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
-import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
+import { root, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
-import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
+import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
+import { componentDirectory } from './src/server/component-directory';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
@@ -83,13 +84,12 @@ const versionAssets = (body: string) => {
 const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
-const componentGroups = [
-  { label: 'Components', items: [{ name: 'Overview', href: '/components/' }] },
-  ...playgroundGroups.map(group => ({
-    label: group.label,
-    items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })),
-  })),
-];
+const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
+  slug, name: components[slug].name, href: `/components/${slug}/`,
+})));
+const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug)).map(slug => ({
+  slug, name: componentName(slug), href: docHref(slug),
+})));
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
   const isExamples = path.startsWith('/showcase');
@@ -101,7 +101,7 @@ function page(path: string, title: string, description: string, template: string
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
   // Component docs lead to Styles, and Styles to the Showcase.
   const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
-  const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundGroups, componentGroups, pager });
+  const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundDirectory, pager });
   const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
@@ -109,13 +109,13 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, docComponentEntries: isDocs ? documentationDirectory.entries : [], primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
-const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup, ...docGroups];
+const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** The previous and next links for a page, from the sidebar's items in order. */
 type PagerItem = { name: string; href: string; section?: string };
@@ -140,7 +140,11 @@ const primaryDestinations = [
   { label: 'Documentation', href: '/docs/', icon: 'article' },
 ];
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
-const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
+const documentationOrder = [...documentationGroups, {
+  label: 'Components',
+  items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
+}];
+const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.

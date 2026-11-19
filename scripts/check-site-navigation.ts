@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium, type Locator } from 'playwright';
 import { handleRequest } from '../server';
+import { componentDirectory } from '../src/server/component-directory';
 import { docGroups, guideGroup } from '../src/server/content';
 import { examples } from '../src/server/examples';
 import { stylePages } from '../src/server/styles';
@@ -114,7 +115,10 @@ try {
 
     if (width < 840) {
       await page.getByRole('link', { name: 'All components', exact: true }).click();
-      await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Icon button', exact: true }).click();
+      await page.locator('#component-catalog-index summary').click();
+      const directory = page.getByRole('navigation', { name: 'Component list', exact: true });
+      await directory.getByRole('button', { name: 'Buttons', exact: true }).click();
+      await directory.getByRole('link', { name: 'Icon button', exact: true }).click();
       await page.waitForURL(url('/components/icon-button/'));
     }
   }
@@ -136,8 +140,10 @@ try {
   await newPage.waitForURL(url('/docs/'));
   await newPage.close();
 
+  const docsEntries = componentDirectory(docGroups.flatMap(group => group.items)).entries;
+  const docsLinks = docsEntries.flatMap(entry => 'items' in entry ? entry.items : [entry]);
   const sections = [
-    { label: 'Documentation', path: '/docs/frameworks/', hrefs: ['/docs/', ...[guideGroup, ...docGroups].flatMap(group => group.items.map(item => item.href))] },
+    { label: 'Documentation', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), '/components/', ...docsLinks.map(item => item.href)] },
     { label: 'Styles', path: '/styles/shape/', hrefs: stylePages.map(style => style.href) },
     { label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] },
   ];

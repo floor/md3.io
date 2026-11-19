@@ -72,6 +72,9 @@
     })();
     (() => { let manager; try { manager = localStorage.getItem('md3-package-manager'); } catch {} if (['npm', 'pnpm', 'yarn', 'bun'].includes(manager)) document.documentElement.dataset.packageManager = manager; })();
   </script>
+  <% if (it.isCatalog || it.docComponentEntries.length || it.section === 'Components') { %>
+    <noscript><style>.component-directory__toggle { display: none !important; } .component-directory__items { display: block !important; }</style></noscript>
+  <% } %>
   <script type="module" src="/dist/site.js"></script>
 </head>
 <body class="<%= it.isHome ? 'home' : '' %>">
@@ -100,6 +103,12 @@
             <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
               <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
             <% }); %></div><% }); %>
+            <% if (it.docComponentEntries.length) { %>
+              <div class="sidebar__group">
+                <h2 class="sidebar__label" id="docs-component-directory-heading">Components</h2>
+                <%~ include('component-directory', { heading: 'docs-component-directory-heading', entries: it.docComponentEntries, path: it.path, icon: it.icon, docs: true }) %>
+              </div>
+            <% } %>
             <div class="sidebar__foot">material · Material Design 3<br><a href="https://github.com/floor/material/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
           </nav>
         </details>

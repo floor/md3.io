@@ -130,9 +130,6 @@ export const components = {
 };
 export type ComponentSlug = keyof typeof components;
 export const componentSlugs = Object.keys(components) as ComponentSlug[];
-export const playgroundGroups = [...new Set(componentSlugs.map(slug => components[slug].group))].map(label => ({
-  label, slugs: componentSlugs.filter(slug => components[slug].group === label),
-}));
 export const isComponent = (slug: string): slug is ComponentSlug => Object.hasOwn(components, slug);
 export function normalizeComponentState(slug: ComponentSlug, input: unknown): ComponentState {
   const raw = input && typeof input === 'object' ? input as Record<string, unknown> : {};

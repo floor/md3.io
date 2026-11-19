@@ -202,6 +202,35 @@ samp {
     border-right-color: var(--accent);
 }
 
+.sidebar__group h2.sidebar__label { margin-block-start: 0; }
+
+.component-directory,
+.component-directory__items { margin: 0; padding: 0; list-style: none; }
+.component-directory__items { padding-inline-start: 12px; }
+.component-directory__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--site-target-size);
+    padding: 6px 20px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--fs-md);
+    text-align: start;
+    cursor: pointer;
+}
+.component-directory__toggle:hover { background: var(--sidebar-hover); }
+.component-directory__toggle:focus-visible { outline-offset: -2px; }
+.component-directory__toggle .inline-icon { flex: none; margin: 0; }
+.component-directory__toggle[aria-expanded="false"] + .component-directory__items { display: none; }
+.component-directory__toggle[aria-expanded="true"] .inline-icon { transform: rotate(90deg); }
+
 .sidebar__badge {
     font-size: 9px;
     font-weight: var(--fw-bold);
