@@ -202,7 +202,10 @@ try {
   await visual('select').getByRole('combobox').focus();
   await page.keyboard.press('ArrowDown'); await page.waitForTimeout(250); await page.keyboard.press('ArrowDown'); await page.waitForTimeout(150); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   assert(await prop('select', 'm-select', 'value') === 'banana', 'select: the preview did not choose');
-  await visual('search').getByRole('searchbox').fill('par').catch(async () => { await visual('search').locator('input').fill('par'); });
+  await visual('search').scrollIntoViewIfNeeded();
+  const searchBox = visual('search').getByRole('searchbox');
+  await searchBox.fill('par').catch(async () => { await visual('search').locator('input').fill('par'); });
+  assert((await searchBox.inputValue().catch(() => '')) === 'par' || (await visual('search').locator('input').inputValue()) === 'par', 'search: typing did not land');
   // Overlays, each from its own card.
   const openClose = async (slug: string, trigger: string, open: () => Promise<void>, close: () => Promise<void>) => {
     await visual(slug).scrollIntoViewIfNeeded();
@@ -215,8 +218,22 @@ try {
     async () => { await page.getByRole('alertdialog').waitFor(); },
     async () => { await page.getByRole('button', { name: 'Cancel', exact: true }).click(); await page.getByRole('alertdialog').waitFor({ state: 'detached' }).catch(() => page.getByRole('alertdialog').waitFor({ state: 'hidden' })); });
   await openClose('menu', 'Show menu',
-    async () => { await page.getByRole('menuitem').first().waitFor(); },
+    async () => {
+      const item = page.getByRole('menuitem').first();
+      await item.waitFor();
+      // In the top layer, not clipped by the card: the item's box is on screen.
+      const viewport = await item.evaluate(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth; });
+      assert(viewport, 'menu: the open item does not intersect the viewport');
+    },
     async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(200); });
+  // FAB menu likewise opens (its element uses the top layer itself).
+  await visual('fab-menu').scrollIntoViewIfNeeded();
+  await visual('fab-menu').getByRole('button', { name: 'Reply options' }).click();
+  assert(await visual('fab-menu').locator('m-fab-menu').evaluate(el => el.shadowRoot!.querySelector('.mtrl-fab-menu--open') !== null
+    && [...el.shadowRoot!.querySelectorAll('*')].some(item => item.textContent?.trim() === 'Reply' && item.getBoundingClientRect().height > 0)), 'fab-menu: the menu did not open visibly');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await staysOnOverview('fab-menu');
   await openClose('snackbar', 'Show snackbar',
     async () => { await page.getByText('Your changes have been saved.').waitFor(); },
     async () => { await page.getByRole('button', { name: 'Dismiss' }).click().catch(() => page.keyboard.press('Escape')); await page.waitForTimeout(200); });

@@ -2,10 +2,9 @@
 // from mtrl/elements, in the playground's defaults where they fit a card. The
 // markup is rendered here; src/client/catalog.ts defines the elements.
 //
-// Dialogs, menus, snackbars, tooltips and the time picker open in the top layer
-// or as modals, which a card must not do: their cards hold a surface element
-// (`<md3-catalog-*>`) that src/client/catalog.ts builds from the same factory,
-// with mtrl's CSS in its shadow root, and shows open in place.
+// The overlay cards build theirs from the same factory in a live host
+// (src/client/catalog/<slug>.ts): a trigger inside the card, and the real
+// overlay, which opens in the top layer or as a modal and closes normally.
 import { symbols } from '../shared/icons';
 import { components, componentSlugs, type ComponentSlug } from '../shared/components';
 import { scopedTokens } from './tokens';
