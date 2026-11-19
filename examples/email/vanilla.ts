@@ -139,7 +139,7 @@ function update(): void {
     if (s.checked.length) {
       const clear = createIconButton({ icon: icons.close, ariaLabel: CLEAR_LABEL });
       clear.on("click", () => { clearChecked(s); update(); });
-      selection.append(clear.element, span("mail__selection-count", selectionText(s.checked.length)));
+      selection.append(clear.element, span("mail__selection-count mtrl-label-large", selectionText(s.checked.length)));
       // Archive only where it can act: the selection holds an unarchived inbox message.
       if (anyArchiveable(messages, s.checked)) {
         const archive = createIconButton({ icon: icons.archive, ariaLabel: ARCHIVE_LABEL });
@@ -154,7 +154,7 @@ function update(): void {
     rows.replaceChildren();
     const visible = visibleMessages(messages, s);
     if (!visible.length) {
-      const empty = Object.assign(document.createElement("li"), { className: "mail__empty", textContent: emptyText(s) });
+      const empty = Object.assign(document.createElement("li"), { className: "mail__empty mtrl-body-medium", textContent: emptyText(s) });
       rows.append(empty);
     }
     for (const m of visible) rows.append(row(m));
@@ -162,7 +162,7 @@ function update(): void {
     detailPane.replaceChildren();
     const open = findMessage(messages, s.open);
     if (!open) {
-      detailPane.append(Object.assign(document.createElement("div"), { className: "mail__placeholder", textContent: EMPTY_DETAIL }));
+      detailPane.append(Object.assign(document.createElement("div"), { className: "mail__placeholder mtrl-body-medium", textContent: EMPTY_DETAIL }));
     } else {
       detailPane.append(detail(open));
     }
@@ -184,10 +184,10 @@ function row(m: Message): HTMLLIElement {
   const open = Object.assign(document.createElement("button"), { className: "mail-row__open", type: "button" });
   open.setAttribute("aria-pressed", String(s.open === m.id));
   open.append(
-    span("mail-row__sender", m.from),
-    span("mail-row__subject", m.subject),
-    span("mail-row__snippet", m.snippet),
-    span("mail-row__time", m.time),
+    span("mail-row__sender mtrl-label-large", m.from),
+    span("mail-row__subject mtrl-body-medium", m.subject),
+    span("mail-row__snippet mtrl-body-small", m.snippet),
+    span("mail-row__time mtrl-body-small", m.time),
   );
   open.addEventListener("click", () => { openMessage(s, messages, m.id); update(); focusHeading(); });
 
@@ -212,13 +212,13 @@ function detail(m: Message): HTMLElement {
     update();
     if (id) focusRow(id);
   });
-  const subject = Object.assign(document.createElement("h2"), { className: "mail-message__subject", textContent: m.subject });
+  const subject = Object.assign(document.createElement("h2"), { className: "mail-message__subject mtrl-title-large", textContent: m.subject });
   subject.tabIndex = -1;
   head.append(back.element, subject);
 
-  const meta = Object.assign(document.createElement("p"), { className: "mail-message__meta", textContent: `${m.from} · ${m.address}` });
-  const date = Object.assign(document.createElement("p"), { className: "mail-message__date", textContent: m.date });
-  const text = Object.assign(document.createElement("div"), { className: "mail-message__body" });
+  const meta = Object.assign(document.createElement("p"), { className: "mail-message__meta mtrl-title-small", textContent: `${m.from} · ${m.address}` });
+  const date = Object.assign(document.createElement("p"), { className: "mail-message__date mtrl-body-small", textContent: m.date });
+  const text = Object.assign(document.createElement("div"), { className: "mail-message__body mtrl-body-medium" });
   for (const p of m.body) text.append(Object.assign(document.createElement("p"), { textContent: p }));
 
   const actions = Object.assign(document.createElement("footer"), { className: "mail-message__actions" });
@@ -236,7 +236,7 @@ function detail(m: Message): HTMLElement {
 
   article.append(
     head, meta,
-    ...(m.to ? [Object.assign(document.createElement("p"), { className: "mail-message__to", textContent: `To ${m.to}` })] : []),
+    ...(m.to ? [Object.assign(document.createElement("p"), { className: "mail-message__to mtrl-body-small", textContent: `To ${m.to}` })] : []),
     date, text, actions,
   );
   return article;

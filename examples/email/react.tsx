@@ -91,7 +91,7 @@ export default function Email() {
             {s.checked.length > 0 && (
               <>
                 <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onClick={() => act(() => set((d) => { clearChecked(d); }))} />
-                <span className="mail__selection-count">{selectionText(s.checked.length)}</span>
+                <span className="mail__selection-count mtrl-label-large">{selectionText(s.checked.length)}</span>
                 {/* Archive only where it can act: the selection holds an unarchived inbox message. */}
                 {anyArchiveable(messages, s.checked) && (
                   <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onClick={() => act(() => update(() => archiveChecked(s, messages)))} />
@@ -101,17 +101,17 @@ export default function Email() {
             )}
           </div>
           <ul className="mail__rows" aria-label={ROWS_LABEL} tabIndex={-1}>
-            {visible.length === 0 && <li className="mail__empty">{emptyText(s)}</li>}
+            {visible.length === 0 && <li className="mail__empty mtrl-body-medium">{emptyText(s)}</li>}
             {visible.map((m: Message) => (
               <li key={m.id} className="mail-row" data-id={m.id} data-unread={m.unread || undefined} data-open={s.open === m.id || undefined}>
                 <Checkbox className="mail-row__check" ariaLabel={selectLabel(m)} checked={s.checked.includes(m.id)}
                   onChange={() => set((d) => { toggleChecked(d, m.id); })} />
                 <button type="button" className="mail-row__open" aria-pressed={s.open === m.id}
                   onClick={() => openRow(m.id)}>
-                  <span className="mail-row__sender">{m.from}</span>
-                  <span className="mail-row__subject">{m.subject}</span>
-                  <span className="mail-row__snippet">{m.snippet}</span>
-                  <span className="mail-row__time">{m.time}</span>
+                  <span className="mail-row__sender mtrl-label-large">{m.from}</span>
+                  <span className="mail-row__subject mtrl-body-medium">{m.subject}</span>
+                  <span className="mail-row__snippet mtrl-body-small">{m.snippet}</span>
+                  <span className="mail-row__time mtrl-body-small">{m.time}</span>
                 </button>
                 <IconButton className="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
                   selected={m.starred} ariaLabel={STAR_LABEL}
@@ -121,17 +121,17 @@ export default function Email() {
           </ul>
         </div>
         <div className="mail__detail-pane">
-          {!open && <div className="mail__placeholder">{EMPTY_DETAIL}</div>}
+          {!open && <div className="mail__placeholder mtrl-body-medium">{EMPTY_DETAIL}</div>}
           {open && (
             <article className="mail-message">
               <header className="mail-message__head">
                 <IconButton className="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onClick={back} />
-                <h2 className="mail-message__subject" tabIndex={-1}>{open.subject}</h2>
+                <h2 className="mail-message__subject mtrl-title-large" tabIndex={-1}>{open.subject}</h2>
               </header>
-              <p className="mail-message__meta">{open.from} · {open.address}</p>
-              {open.to && <p className="mail-message__to">To {open.to}</p>}
-              <p className="mail-message__date">{open.date}</p>
-              <div className="mail-message__body">{open.body.map((p, i) => <p key={i}>{p}</p>)}</div>
+              <p className="mail-message__meta mtrl-title-small">{open.from} · {open.address}</p>
+              {open.to && <p className="mail-message__to mtrl-body-small">To {open.to}</p>}
+              <p className="mail-message__date mtrl-body-small">{open.date}</p>
+              <div className="mail-message__body mtrl-body-medium">{open.body.map((p, i) => <p key={i}>{p}</p>)}</div>
               <footer className="mail-message__actions">
                 <Button variant="outlined" icon={icons.reply} onClick={() => showDialog((d) => { replyToOpen(d, messages); })}>Reply</Button>
                 {archiveable(open) && (

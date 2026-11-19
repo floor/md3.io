@@ -78,10 +78,10 @@ function row(m: Message): HTMLLIElement {
   const open = el<HTMLButtonElement>("button", { type: "button", class: "mail-row__open", "aria-pressed": String(s.open === m.id) });
   open.dataset.id = m.id;
   open.append(
-    el("span", { class: "mail-row__sender" }, m.from),
-    el("span", { class: "mail-row__subject" }, m.subject),
-    el("span", { class: "mail-row__snippet" }, m.snippet),
-    el("span", { class: "mail-row__time" }, m.time),
+    el("span", { class: "mail-row__sender mtrl-label-large" }, m.from),
+    el("span", { class: "mail-row__subject mtrl-body-medium" }, m.subject),
+    el("span", { class: "mail-row__snippet mtrl-body-small" }, m.snippet),
+    el("span", { class: "mail-row__time mtrl-body-small" }, m.time),
   );
 
   const star = el("m-icon-button", {
@@ -99,9 +99,9 @@ function detail(m: Message): HTMLElement {
   const head = el("header", { class: "mail-message__head" });
   head.append(
     el("m-icon-button", { class: "mail-message__back", icon: icons.back, "aria-label": BACK_LABEL }),
-    el("h2", { class: "mail-message__subject", tabindex: "-1" }, m.subject),
+    el("h2", { class: "mail-message__subject mtrl-title-large", tabindex: "-1" }, m.subject),
   );
-  const text = el("div", { class: "mail-message__body" });
+  const text = el("div", { class: "mail-message__body mtrl-body-medium" });
   for (const p of m.body) text.append(el("p", {}, p));
   const actions = el("footer", { class: "mail-message__actions" });
   actions.append(
@@ -113,9 +113,9 @@ function detail(m: Message): HTMLElement {
   );
   article.append(
     head,
-    el("p", { class: "mail-message__meta" }, `${m.from} · ${m.address}`),
-    ...(m.to ? [el("p", { class: "mail-message__to" }, `To ${m.to}`)] : []),
-    el("p", { class: "mail-message__date" }, m.date),
+    el("p", { class: "mail-message__meta mtrl-title-small" }, `${m.from} · ${m.address}`),
+    ...(m.to ? [el("p", { class: "mail-message__to mtrl-body-small" }, `To ${m.to}`)] : []),
+    el("p", { class: "mail-message__date mtrl-body-small" }, m.date),
     text,
     actions,
   );
@@ -149,7 +149,7 @@ function update(): void {
     if (s.checked.length) {
       selection.append(
         el("m-icon-button", { class: "mail__clear", icon: icons.close, "aria-label": CLEAR_LABEL }),
-        el("span", { class: "mail__selection-count" }, selectionText(s.checked.length)),
+        el("span", { class: "mail__selection-count mtrl-label-large" }, selectionText(s.checked.length)),
         // Archive only where it can act: the selection holds an unarchived inbox message.
         ...(anyArchiveable(messages, s.checked)
           ? [el("m-icon-button", { class: "mail__archive", icon: icons.archive, "aria-label": ARCHIVE_LABEL })]
@@ -158,9 +158,9 @@ function update(): void {
       );
     }
     const visible = visibleMessages(messages, s);
-    rows.replaceChildren(...(visible.length ? visible.map(row) : [el("li", { class: "mail__empty" }, emptyText(s))]));
+    rows.replaceChildren(...(visible.length ? visible.map(row) : [el("li", { class: "mail__empty mtrl-body-medium" }, emptyText(s))]));
     const open = findMessage(messages, s.open);
-    detailPane.replaceChildren(open ? detail(open) : el("div", { class: "mail__placeholder" }, EMPTY_DETAIL));
+    detailPane.replaceChildren(open ? detail(open) : el("div", { class: "mail__placeholder mtrl-body-medium" }, EMPTY_DETAIL));
   });
 }
 

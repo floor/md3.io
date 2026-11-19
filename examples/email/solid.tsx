@@ -97,7 +97,7 @@ export default function Email() {
           <div class="mail__selection">
             <Show when={s.checked.length > 0}>
               <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onClick={() => act(() => update((d) => { clearChecked(d); }))} />
-              <span class="mail__selection-count">{selectionText(s.checked.length)}</span>
+              <span class="mail__selection-count mtrl-label-large">{selectionText(s.checked.length)}</span>
               {/* Archive only where it can act: the selection holds an unarchived inbox message. */}
               <Show when={anyArchiveable(messages, s.checked)}>
                 <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onClick={() => act(() => update((d) => { archiveChecked(d, messages); }))} />
@@ -107,7 +107,7 @@ export default function Email() {
           </div>
           <ul class="mail__rows" aria-label={ROWS_LABEL} tabindex="-1">
             <Show when={visible().length === 0}>
-              <li class="mail__empty">{emptyText(s)}</li>
+              <li class="mail__empty mtrl-body-medium">{emptyText(s)}</li>
             </Show>
             <For each={visible()}>
               {(m: Message) => (
@@ -116,10 +116,10 @@ export default function Email() {
                     onChange={() => update((d) => { toggleChecked(d, m.id); })} />
                   <button type="button" class="mail-row__open" aria-pressed={s.open === m.id}
                     onClick={() => openRow(m.id)}>
-                    <span class="mail-row__sender">{m.from}</span>
-                    <span class="mail-row__subject">{m.subject}</span>
-                    <span class="mail-row__snippet">{m.snippet}</span>
-                    <span class="mail-row__time">{m.time}</span>
+                    <span class="mail-row__sender mtrl-label-large">{m.from}</span>
+                    <span class="mail-row__subject mtrl-body-medium">{m.subject}</span>
+                    <span class="mail-row__snippet mtrl-body-small">{m.snippet}</span>
+                    <span class="mail-row__time mtrl-body-small">{m.time}</span>
                   </button>
                   <IconButton class="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
                     selected={m.starred} ariaLabel={STAR_LABEL}
@@ -130,19 +130,19 @@ export default function Email() {
           </ul>
         </div>
         <div class="mail__detail-pane">
-          <Show when={open()} fallback={<div class="mail__placeholder">{EMPTY_DETAIL}</div>}>
+          <Show when={open()} fallback={<div class="mail__placeholder mtrl-body-medium">{EMPTY_DETAIL}</div>}>
             {(m) => (
               <article class="mail-message">
                 <header class="mail-message__head">
                   <IconButton class="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onClick={back} />
-                  <h2 class="mail-message__subject" tabindex="-1">{m().subject}</h2>
+                  <h2 class="mail-message__subject mtrl-title-large" tabindex="-1">{m().subject}</h2>
                 </header>
-                <p class="mail-message__meta">{m().from} · {m().address}</p>
+                <p class="mail-message__meta mtrl-title-small">{m().from} · {m().address}</p>
                 <Show when={m().to}>
-                  <p class="mail-message__to">To {m().to}</p>
+                  <p class="mail-message__to mtrl-body-small">To {m().to}</p>
                 </Show>
-                <p class="mail-message__date">{m().date}</p>
-                <div class="mail-message__body">
+                <p class="mail-message__date mtrl-body-small">{m().date}</p>
+                <div class="mail-message__body mtrl-body-medium">
                   <For each={m().body}>{(p) => <p>{p}</p>}</For>
                 </div>
                 <footer class="mail-message__actions">

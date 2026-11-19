@@ -98,7 +98,7 @@
       <div class="mail__selection">
         {#if s.checked.length}
           <IconButton icon={icons.close} ariaLabel={CLEAR_LABEL} onclick={() => act(() => clearChecked(s))} />
-          <span class="mail__selection-count">{selectionText(s.checked.length)}</span>
+          <span class="mail__selection-count mtrl-label-large">{selectionText(s.checked.length)}</span>
           <!-- Archive only where it can act: the selection holds an unarchived inbox message. -->
           {#if anyArchiveable(messages, s.checked)}
             <IconButton icon={icons.archive} ariaLabel={ARCHIVE_LABEL} onclick={() => act(() => update(() => archiveChecked(s, messages)))} />
@@ -108,16 +108,16 @@
       </div>
       <ul class="mail__rows" aria-label={ROWS_LABEL} tabindex="-1">
         {#if !visible.length}
-          <li class="mail__empty">{emptyText(s)}</li>
+          <li class="mail__empty mtrl-body-medium">{emptyText(s)}</li>
         {/if}
         {#each visible as m (m.id)}
           <li class="mail-row" data-id={m.id} data-unread={m.unread || undefined} data-open={s.open === m.id || undefined}>
             <Checkbox class="mail-row__check" ariaLabel={selectLabel(m)} checked={s.checked.includes(m.id)} onchange={() => toggleChecked(s, m.id)} />
             <button type="button" class="mail-row__open" aria-pressed={s.open === m.id} onclick={() => openRow(m)}>
-              <span class="mail-row__sender">{m.from}</span>
-              <span class="mail-row__subject">{m.subject}</span>
-              <span class="mail-row__snippet">{m.snippet}</span>
-              <span class="mail-row__time">{m.time}</span>
+              <span class="mail-row__sender mtrl-label-large">{m.from}</span>
+              <span class="mail-row__subject mtrl-body-medium">{m.subject}</span>
+              <span class="mail-row__snippet mtrl-body-small">{m.snippet}</span>
+              <span class="mail-row__time mtrl-body-small">{m.time}</span>
             </button>
             <IconButton class="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
               selected={m.starred} ariaLabel={STAR_LABEL} onchange={() => act(() => update(() => toggleStar(s, messages, m.id)))} />
@@ -127,19 +127,19 @@
     </div>
     <div class="mail__detail-pane">
       {#if !open}
-        <div class="mail__placeholder">{EMPTY_DETAIL}</div>
+        <div class="mail__placeholder mtrl-body-medium">{EMPTY_DETAIL}</div>
       {:else}
         <article class="mail-message">
           <header class="mail-message__head">
             <IconButton class="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onclick={back} />
-            <h2 class="mail-message__subject" tabindex="-1">{open.subject}</h2>
+            <h2 class="mail-message__subject mtrl-title-large" tabindex="-1">{open.subject}</h2>
           </header>
-          <p class="mail-message__meta">{open.from} · {open.address}</p>
+          <p class="mail-message__meta mtrl-title-small">{open.from} · {open.address}</p>
           {#if open.to}
-            <p class="mail-message__to">To {open.to}</p>
+            <p class="mail-message__to mtrl-body-small">To {open.to}</p>
           {/if}
-          <p class="mail-message__date">{open.date}</p>
-          <div class="mail-message__body">
+          <p class="mail-message__date mtrl-body-small">{open.date}</p>
+          <div class="mail-message__body mtrl-body-medium">
             {#each open.body as p, i (i)}
               <p>{p}</p>
             {/each}

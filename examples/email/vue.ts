@@ -119,22 +119,22 @@ export default defineComponent({
           <div class="mail__selection">
             <template v-if="s.checked.length">
               <MIconButton :icon="icons.close" :aria-label="CLEAR_LABEL" @click="clear" />
-              <span class="mail__selection-count">{{ selectionText(s.checked.length) }}</span>
+              <span class="mail__selection-count mtrl-label-large">{{ selectionText(s.checked.length) }}</span>
               <!-- Archive only where it can act: the selection holds an unarchived inbox message. -->
               <MIconButton v-if="anyArchiveable(messages, s.checked)" :icon="icons.archive" :aria-label="ARCHIVE_LABEL" @click="archiveSelection" />
               <MIconButton :icon="icons.delete" :aria-label="DELETE_LABEL" @click="deleteSelection" />
             </template>
           </div>
           <ul class="mail__rows" :aria-label="ROWS_LABEL" tabindex="-1">
-            <li v-if="!visible.length" class="mail__empty">{{ emptyText(s) }}</li>
+            <li v-if="!visible.length" class="mail__empty mtrl-body-medium">{{ emptyText(s) }}</li>
             <li v-for="m in visible" :key="m.id" class="mail-row" :data-id="m.id"
               :data-unread="m.unread || undefined" :data-open="s.open === m.id || undefined">
               <MCheckbox class="mail-row__check" :aria-label="selectLabel(m)" :checked="s.checked.includes(m.id)" @change="check(m)" />
               <button type="button" class="mail-row__open" :aria-pressed="s.open === m.id" @click="openRow(m)">
-                <span class="mail-row__sender">{{ m.from }}</span>
-                <span class="mail-row__subject">{{ m.subject }}</span>
-                <span class="mail-row__snippet">{{ m.snippet }}</span>
-                <span class="mail-row__time">{{ m.time }}</span>
+                <span class="mail-row__sender mtrl-label-large">{{ m.from }}</span>
+                <span class="mail-row__subject mtrl-body-medium">{{ m.subject }}</span>
+                <span class="mail-row__snippet mtrl-body-small">{{ m.snippet }}</span>
+                <span class="mail-row__time mtrl-body-small">{{ m.time }}</span>
               </button>
               <MIconButton class="mail-row__star" toggle :icon="icons.star" :selected-icon="icons.starFill"
                 :selected="m.starred" :aria-label="STAR_LABEL" @change="star(m)" />
@@ -142,16 +142,16 @@ export default defineComponent({
           </ul>
         </div>
         <div class="mail__detail-pane">
-          <div v-if="!open" class="mail__placeholder">{{ EMPTY_DETAIL }}</div>
+          <div v-if="!open" class="mail__placeholder mtrl-body-medium">{{ EMPTY_DETAIL }}</div>
           <article v-else class="mail-message">
             <header class="mail-message__head">
               <MIconButton class="mail-message__back" :icon="icons.back" :aria-label="BACK_LABEL" @click="back" />
-              <h2 class="mail-message__subject" tabindex="-1">{{ open.subject }}</h2>
+              <h2 class="mail-message__subject mtrl-title-large" tabindex="-1">{{ open.subject }}</h2>
             </header>
-            <p class="mail-message__meta">{{ open.from }} · {{ open.address }}</p>
-            <p v-if="open.to" class="mail-message__to">To {{ open.to }}</p>
-            <p class="mail-message__date">{{ open.date }}</p>
-            <div class="mail-message__body"><p v-for="(p, i) in open.body" :key="i">{{ p }}</p></div>
+            <p class="mail-message__meta mtrl-title-small">{{ open.from }} · {{ open.address }}</p>
+            <p v-if="open.to" class="mail-message__to mtrl-body-small">To {{ open.to }}</p>
+            <p class="mail-message__date mtrl-body-small">{{ open.date }}</p>
+            <div class="mail-message__body mtrl-body-medium"><p v-for="(p, i) in open.body" :key="i">{{ p }}</p></div>
             <footer class="mail-message__actions">
               <MButton variant="outlined" :icon="icons.reply" @click="reply">Reply</MButton>
               <MButton v-if="archiveable(open)" variant="outlined" :icon="icons.archive" @click="archiveOpenMessage">{{ ARCHIVE_LABEL }}</MButton>
