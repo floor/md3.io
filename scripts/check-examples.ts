@@ -9,7 +9,7 @@
 //   bun scripts/build.ts && bun scripts/check-examples.ts
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { chromium, type Page } from "playwright";
+import { chromium, type Locator, type Page } from "playwright";
 import { handleRequest } from "../server";
 import { examples, FRAMEWORKS, exampleVariantIds, exampleReferenceId } from "../examples";
 
@@ -18,6 +18,39 @@ const browser = await chromium.launch();
 let checks = 0;
 
 try {
+  // What assistive tech gets: browsers drop `inert` and `aria-hidden` subtrees from the
+  // accessibility tree. Playwright's ariaSnapshot drops `aria-hidden` but not `inert`
+  // (material 3.15.2 guards its closed factory dialog and snackbar with `inert` alone
+  // until first open, floor/material#427), so a raw snapshot would show Vanilla a closed
+  // surface the element flavours — which render nothing until first open — never show.
+  // Mirror the browser: for the take, mark every inert element `aria-hidden` too, then
+  // restore. One place, used for both snapshots each variant is compared by.
+  const accessibleSnapshot = async (app: Locator): Promise<string> => {
+    await app.evaluate(() => {
+      const marked: { el: Element; had: string | null }[] = [];
+      const visit = (root: ParentNode): void => {
+        for (const el of ([...root.querySelectorAll("*")] as Element[])) {
+          if ((el as HTMLElement).inert) {
+            marked.push({ el, had: el.getAttribute("aria-hidden") });
+            el.setAttribute("aria-hidden", "true");
+          }
+          if (el.shadowRoot) visit(el.shadowRoot);
+        }
+      };
+      visit(document.getElementById("app")!);
+      (window as unknown as { __inertMarked?: { el: Element; had: string | null }[] }).__inertMarked = marked;
+    });
+    const snapshot = await app.ariaSnapshot();
+    await app.evaluate(() => {
+      for (const { el, had } of (window as unknown as { __inertMarked?: { el: Element; had: string | null }[] }).__inertMarked ?? []) {
+        if (had === null) el.removeAttribute("aria-hidden");
+        else el.setAttribute("aria-hidden", had);
+      }
+      delete (window as unknown as { __inertMarked?: unknown }).__inertMarked;
+    });
+    return snapshot;
+  };
+
   for (const example of examples) {
     const steps = (await import(resolve(import.meta.dir, "../examples", example.slug, "check.ts"))).default as (page: Page) => Promise<void>;
     const ids = exampleVariantIds(example);
@@ -34,10 +67,10 @@ try {
       const app = page.locator("#app");
       await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
       await page.waitForTimeout(100); // elements upgrade and adapters mount
-      const before = await app.ariaSnapshot();
+      const before = await accessibleSnapshot(app);
       await steps(page);
       await page.waitForTimeout(100);
-      const after = await app.ariaSnapshot();
+      const after = await accessibleSnapshot(app);
       await page.close();
       assert.deepEqual(problems, [], `${example.slug}/${label}: no errors or warnings`);
       if (isReference) {

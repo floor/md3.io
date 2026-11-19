@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-19
 status: published
 ---
 
@@ -127,4 +127,4 @@ The small type has no modifier class. The colors are the theme's: `surface` behi
 | Horizontal padding | 16dp, 12dp below the `sm` breakpoint |
 | Space after the leading button | 24dp |
 | Space between actions | 8dp |
-| Scrolled | Elevation level 1 |
+| Scrolled | Elevation level 2 |
