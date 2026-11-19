@@ -107,9 +107,11 @@
 /examples/
 /examples/booking/
 /examples/settings/
+/examples/notes/
 /privacy/
 /showcase/
 /showcase/booking/
+/showcase/notes/
 /showcase/settings/
 /styles/
 /styles/color/
