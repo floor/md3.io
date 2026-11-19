@@ -108,8 +108,8 @@ samp {
     align-items: center;
     width: 100%;
     max-width: min(var(--layout-max-width), 100% - 2 * var(--layout-gutter));
-    padding: 0 12px 0 8px;
-    gap: 16px;
+    padding: 0 12px;
+    gap: 8px;
 }
 
 .header__logo {
@@ -128,74 +128,6 @@ samp {
 
 
 
-
-.header__nav {
-    margin-left: auto;
-    display: flex;
-    gap: 2px;
-}
-
-.header__nav a {
-    font-size: var(--fs-md);
-    color: var(--text-dim);
-    text-decoration: none;
-    transition: color 0.15s;
-    padding: 3px 12px;
-    border-radius: 6px;
-}
-
-.header__nav a:hover {
-    color: var(--text-muted);
-}
-
-.header__nav a.active {
-    color: var(--text);
-}
-
-.header__hamburger {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-    padding: 8px;
-    order: -1;
-    margin-right: 12px;
-}
-
-/* ─── Mobile Dropdown ────────────────────────────────────────────── */
-
-.dropdown {
-    display: none;
-    position: fixed;
-    top: var(--header-height);
-    left: 0;
-    right: 0;
-    background: var(--dropdown-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 24px 16px;
-    z-index: 99;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.dropdown--open {
-    display: flex;
-}
-
-.dropdown a {
-    display: block;
-    font-size: var(--fs-base);
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 8px 0;
-}
-
-.dropdown a:hover {
-    color: var(--text);
-}
 
 /* ─── Badge ──────────────────────────────────────────────────────── */
 
@@ -225,31 +157,6 @@ samp {
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────────── */
-
-.sidebar {
-    position: sticky;
-    top: var(--header-height);
-    height: calc(100vh - var(--header-height));
-    width: var(--sidebar-width);
-    flex-shrink: 0;
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 20px 0;
-    z-index: 50;
-}
-
-.sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 2px;
-}
 
 .sidebar__group {
     margin-bottom: 20px;
@@ -424,20 +331,6 @@ samp {
     display: none;
 }
 
-/* ─── Overlay (mobile sidebar backdrop) ──────────────────────────── */
-
-.overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--overlay-bg);
-    z-index: 40;
-}
-
-.overlay--visible {
-    display: block;
-}
-
 /* ─── Overview Cards (docs, examples & benchmarks index) ──────────── */
 
 .overview {
@@ -609,7 +502,6 @@ samp {
 
 html[data-theme-mode] body,
 html[data-theme-mode] .header,
-html[data-theme-mode] .sidebar,
 html[data-theme-mode] .content,
 html[data-theme-mode] .toc,
 html[data-theme-mode] .ui-card,
@@ -624,6 +516,7 @@ html[data-theme-mode] .badge {
         border-color 0.25s ease;
 }
 
+
 /* ─── Responsive: large screens ──────────────────────────────────── */
 
 @media (min-width: 1200px) {
@@ -635,7 +528,7 @@ html[data-theme-mode] .badge {
 
 /* ─── Responsive: tablet ─────────────────────────────────────────── */
 
-@media (max-width: 1200px) {
+@media (width < 1200px) {
     .toc {
         display: none;
     }
@@ -645,11 +538,7 @@ html[data-theme-mode] .badge {
     }
 }
 
-@media (max-width: 900px) {
-    :root {
-        --sidebar-width: 190px;
-    }
-
+@media (width < 840px) {
     .overview {
         padding: 32px 28px 60px;
     }
@@ -680,79 +569,9 @@ html[data-theme-mode] .badge {
     }
 }
 
-/* ─── Responsive: no-sidebar pages (hamburger at 640px instead of 720px) ── */
+/* ─── Responsive: compact ────────────────────────────────────────── */
 
-body.no-sidebar .header__hamburger {
-    display: none;
-}
-
-body.no-sidebar .header__nav {
-    display: flex;
-}
-
-@media (max-width: 640px) {
-    body.no-sidebar .header__nav {
-        display: none;
-    }
-
-    body.no-sidebar .header__hamburger {
-        display: block;
-    }
-
-    body.no-sidebar .dropdown--open {
-        display: flex;
-    }
-}
-
-/* ─── Responsive: mobile ─────────────────────────────────────────── */
-
-@media (max-width: 720px) {
-    .sidebar {
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
-        bottom: 0;
-        transform: translateX(-100%);
-        transition: transform 0.25s ease;
-        width: 260px;
-        background: var(--bg);
-        box-shadow: 4px 0 24px var(--shadow-sidebar);
-    }
-
-    .sidebar--open {
-        transform: translateX(0);
-    }
-
-    .header__inner {
-        padding: 0 12px 0 12px;
-        gap: 8px;
-    }
-
-    .header__hamburger {
-        display: block;
-        margin-right: 0;
-    }
-
-    .header__nav {
-        display: none;
-    }
-
-    .header__logo {
-        display: block;
-        font-size: 20px;
-        margin-bottom: 4px;
-    }
-
-
-
-    .sidebar__label {
-        font-size: 11px;
-    }
-
-    .sidebar__link {
-        font-size: 14px;
-    }
-
+@media (width < 600px) {
     .overview {
         padding: 12px 20px 60px;
     }
@@ -948,6 +767,3 @@ select:focus-visible,
 /* Material Symbols and brand marks inline in text (server.ts icon()): the size of the
    text they sit in, on its baseline, in its colour. */
 .inline-icon { width: 1em; height: 1em; flex: none; vertical-align: -0.125em; }
-/* The header's GitHub link is the mark alone, at the nav's icon size. */
-.header__github { display: inline-flex; align-items: center; }
-.header__github .inline-icon { width: 20px; height: 20px; vertical-align: middle; }

@@ -21,30 +21,6 @@ async function checkPopup(popup: Locator, label: string) {
     `${label}: popup is clipped in the preview frame: ${JSON.stringify(metrics)}`);
 }
 
-/** Use the final shell's width budget when the earlier navigation PRs are pending. */
-async function checkShellBudget(page: Page, width: number) {
-  if (width < 600) return;
-  const rail = page.locator('.site-primary-rail');
-  if (await rail.count()) {
-    const bounds = await rail.boundingBox();
-    assert(bounds && Math.abs(bounds.width - 96) < 1, `${width}px: the collapsed rail must reserve 96px`);
-    if (width === 840 && !await page.locator('.component-list-layout--detail').count()) {
-      await page.addStyleTag({ content: '.layout-main .section-index { width: 160px; }' });
-    }
-    return;
-  }
-  if (width === 700) {
-    await page.addStyleTag({ content: '@media (600px <= width < 840px) { .layout { padding-inline-start: 96px; } }' });
-  }
-  if (width === 840) {
-    const list = page.locator('.component-list-layout--detail');
-    const content = await list.count()
-      ? '.layout { padding-inline-start: 96px; }'
-      : '.layout > .sidebar { width: 256px; }';
-    await page.addStyleTag({ content: `@media (width = 840px) { ${content} }` });
-  }
-}
-
 export async function checkPlaygroundLayout(context: BrowserContext, base: string, output: string) {
   const captures = resolve(output, 'playground-reflow');
   await mkdir(captures, { recursive: true });
@@ -71,7 +47,10 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         console.log(`Checking playground reflow for ${label}`);
         await page.setViewportSize({ width, height });
         await page.goto(new URL(`components/${slug}/`, base).href);
-        await checkShellBudget(page, width);
+        if (width >= 600) {
+          const rail = await page.locator('#site-primary-rail').boundingBox();
+          assert(rail && Math.abs(rail.width - 96) < 1, `${label}: the collapsed rail must reserve 96px`);
+        }
         await live.click();
         const preview = page.locator('.preview-panel');
         const previewBox = await preview.boundingBox();
@@ -85,6 +64,8 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         }
         assert(await preview.locator('m-chips.framework-chips').count() === 1, `${label}: framework chips are outside the preview controls`);
         if (width === 840) {
+          const list = await page.locator('.component-list').boundingBox();
+          assert(list && Math.abs(list.width - 160) < 1, `${label}: the component list must reserve 160px`);
           const used = await preview.evaluate(element => element.getBoundingClientRect().left);
           assert(Math.abs(used - 276) < 1, `${label}: expected 96px rail, 160px list and 20px padding before the preview, got ${used}px`);
         }

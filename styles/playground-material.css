@@ -53,9 +53,6 @@
     .layout:has(.component-page) .content {
         min-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
     }
-    .layout:has(.component-page) > .sidebar {
-        height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
-    }
     .layout:has(.component-page) + .site-footer {
         min-height: var(--site-footer-height, 60px);
         align-items: center;

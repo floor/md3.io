@@ -1,0 +1,22 @@
+<nav class="component-list" aria-label="Component list">
+  <% it.componentGroups.forEach((group, index) => {
+    const heading = `component-group-${index}`;
+    if (index !== 0) { %><div class="mtrl-list__divider" aria-hidden="true"></div><% }
+    if (it.isCatalog && index === 0) { %>
+      <header class="component-list__intro">
+        <h1 id="<%= heading %>"><%= group.label %></h1>
+        <p>Try a component. Adjust the details. Copy what works.</p>
+      </header>
+    <% } else { %>
+      <h2 class="mtrl-list__subheader" id="<%= heading %>"><%= group.label %></h2>
+    <% } %>
+    <ul class="mtrl-list__content" role="list" aria-labelledby="<%= heading %>">
+      <% group.items.forEach(item => { %>
+        <li><a class="mtrl-list__item" href="<%= item.href %>"<% if (it.path === item.href) { %> aria-current="page"<% } %>>
+          <span class="mtrl-list__text"><span class="mtrl-list__headline"><%= item.name %></span></span>
+        </a></li>
+      <% }); %>
+    </ul>
+  <% }); %>
+  <% if (it.isCatalog) { %><p class="catalog-note"><a href="/docs/">Browse the complete component reference <%~ it.icon('arrow_forward') %></a></p><% } %>
+</nav>

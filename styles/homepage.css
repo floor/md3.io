@@ -504,7 +504,7 @@ footer a:hover {
 
 /* ─── Tablet ─────────────────────────────────────── */
 
-@media (max-width: 800px) {
+@media (width < 840px) {
     .quickstart {
         grid-template-columns: 1fr;
     }
@@ -536,7 +536,7 @@ footer a:hover {
 
 /* ─── Mobile ─────────────────────────────────────── */
 
-@media (max-width: 640px) {
+@media (width < 600px) {
     .container {
         padding: 0 16px;
     }
@@ -550,7 +550,11 @@ footer a:hover {
     }
 
     .hero__logo {
-        margin-bottom: 16px;
+        margin-bottom: 14px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
     }
 
     .hero__frameworks {
@@ -568,8 +572,8 @@ footer a:hover {
     }
 
     .btn {
-        font-size: var(--fs-base);
-        padding: 9px 18px;
+        font-size: 14px;
+        padding: 8px 16px;
     }
 
     .install__cmd {
@@ -641,23 +645,6 @@ footer a:hover {
 
     .footer__links {
         gap: 12px 16px;
-    }
-}
-
-/* ─── Small phone ────────────────────────────────── */
-
-@media (max-width: 420px) {
-    .hero__logo {
-        margin-bottom: 14px;
-    }
-
-    .features {
-        grid-template-columns: 1fr;
-    }
-
-    .btn {
-        font-size: 14px;
-        padding: 8px 16px;
     }
 }
 

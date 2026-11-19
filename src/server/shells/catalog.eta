@@ -1,14 +1,11 @@
-<div class="page-wrap">
-  <header class="page-heading"><span class="eyebrow">EXPLORE THE LIBRARY</span><h1>Components</h1><p>Try a component. Adjust the details. Copy what works.</p></header>
-  <% it.playgroundGroups.forEach((group, index) => { %>
-  <section class="catalog-group" aria-labelledby="group-<%= index %>"><h2 class="catalog-label" id="group-<%= index %>"><%= group.label %></h2>
-    <div class="component-grid"><% group.slugs.forEach(slug => { const component = it.components[slug]; %>
+<div class="component-list-layout">
+  <%~ include('component-list', it) %>
+  <section class="page-wrap component-catalog" aria-label="Component previews">
+    <div class="component-grid"><% it.playgroundGroups.forEach(group => { group.slugs.forEach(slug => { const component = it.components[slug]; %>
       <a class="component-card ui-card ui-card--interactive" href="/components/<%= slug %>/">
         <%~ it.catalogVisuals[slug] %>
-        <div class="component-card__body"><div><h3><%= component.name %></h3><p><%= component.summary %></p></div></div>
+        <div class="component-card__body"><h2><%= component.name %></h2><p><%= component.summary %></p></div>
       </a>
-    <% }); %></div>
+    <% }); }); %></div>
   </section>
-  <% }); %>
-  <p class="catalog-note"><a href="/docs/">Browse the complete component reference <%~ it.icon('arrow_forward') %></a></p>
 </div>

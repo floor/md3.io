@@ -6,7 +6,8 @@ import { materialTokens } from './playground-panel';
 
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
-const shell = ['tokens', 'shell', 'ui', 'content', 'syntax'] as const;
+const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
+const componentList = ['mtrl:list', 'component-list'] as const;
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
@@ -14,9 +15,9 @@ export const stylesheetBundles = {
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
   // A component page adds Roboto (mtrl's typeface, which its elements name) and the panel's sheet.
-  'material-panel': [...shell, 'site', 'search', 'roboto', 'playground-material'],
+  'material-panel': [...shell, 'site', 'search', 'roboto', ...componentList, 'playground-material'],
   // The components overview adds Roboto, the elements' pre-upgrade rules, then the catalog.
-  catalog: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog'],
+  catalog: [...shell, 'site', 'search', 'roboto', ...componentList, 'preupgrade', 'catalog'],
   // Examples add the device chooser: mtrl's button group and icon button, then its sheet.
   examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'device-frame'],
   // Styles pages add Roboto, then their own sheet.
@@ -150,7 +151,11 @@ export function minifyCss(css: string): string {
 }
 
 export function bundleCss(name: StylesheetBundle): string {
-  const css = stylesheetBundles[name].map(file => file === 'mtrl-tokens' ? mtrlTokens() : readFileSync(fileFor(file), 'utf8')).join('\n')
+  const css = stylesheetBundles[name].map(file => {
+    if (file === 'mtrl-tokens') return mtrlTokens();
+    const sheet = readFileSync(fileFor(file), 'utf8');
+    return file === 'mtrl:list' ? `@scope (.component-list) { ${sheet} }` : sheet;
+  }).join('\n')
     // material's scoped baseline tokens for the header's buttons and a component page's
     // panel: every page has the header, so every bundle carries them, cached with the
     // sheet instead of inline in each page's HTML.

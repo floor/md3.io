@@ -56,14 +56,25 @@ const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
 const scope = 'catalog-visual';
 const prefix = `${scope}--`;
 const slugOf = (visual: Element) => [...visual.classList].find(name => name.startsWith(prefix))?.slice(prefix.length) as ComponentSlug | undefined;
+const expanded = matchMedia('(min-width: 840px)');
+const pending = new Set(document.querySelectorAll(`.${scope}`));
 
 // A card a viewport away starts loading, so it is usually upgraded before it is seen.
 const observer = new IntersectionObserver(entries => {
+  if (!expanded.matches) return;
   for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
+    if (!entry.isIntersecting || !pending.delete(entry.target)) continue;
     observer.unobserve(entry.target);
     const slug = slugOf(entry.target);
     if (slug && Object.hasOwn(modules, slug)) modules[slug]().then(module => module.define()).catch(error => console.error(`Could not load the ${slug} card`, error));
   }
 }, { rootMargin: '100% 0px' });
-for (const visual of document.querySelectorAll(`.${scope}`)) observer.observe(visual);
+function observeVisibleCatalog() {
+  if (!expanded.matches) {
+    observer.disconnect();
+    return;
+  }
+  for (const visual of pending) observer.observe(visual);
+}
+expanded.addEventListener('change', observeVisibleCatalog);
+observeVisibleCatalog();

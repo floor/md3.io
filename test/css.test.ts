@@ -26,6 +26,8 @@ describe('stylesheets', () => {
     // The space is the descendant combinator. `.item:is(button)` would match the item itself.
     const list = minifyCss(readFileSync(resolve(import.meta.dir, '../node_modules/material/dist/styles/list.css'), 'utf8'));
     expect(list).toContain('.mtrl-list__item :is(button');
+    const site = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8'));
+    expect(site).toContain('@media (width < 600px)');
     const playground = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/playground-material.css'), 'utf8'));
     expect(playground).toContain('(min-width:840px) and (min-height:860px)');
     const preview = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/preview.css'), 'utf8'));
