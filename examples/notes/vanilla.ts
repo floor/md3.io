@@ -156,12 +156,18 @@ if (narrow) {
   );
   fields.append(sheetActions);
 }
+// The factory dialog shows its content until it has been opened once; the
+// element the other variants use hides itself. Keep the factory one out of the
+// accessibility tree until it opens, the same as theirs.
+editor.element.hidden = true;
+editor.on("close", () => (editor.element.hidden = true));
 const editorOpen = (note: Note | null): void => {
   editing = note ?? { id: crypto.randomUUID(), title: "", text: "", labels: [], pinned: false };
   editor.setTitle(note ? "Edit note" : "New note");
   titleField.setValue(editing.title);
   textField.setValue(editing.text);
   setEditorChips(editing.labels);
+  editor.element.hidden = false;
   editor.open();
 };
 
@@ -170,14 +176,19 @@ fab.on("click", () => editorOpen(null));
 
 // Deleting shows the snackbar; Undo puts the note back where it was. The factory
 // snackbar joins the top layer, as the element always does: it shows in place and
-// hides on the popover's own timer.
+// hides on the popover's own timer. Unlike the element's, the factory toast stays
+// exposed in the accessibility tree until it has been shown once, so it is also
+// kept out of it until then (reported to the material team).
 const snackbar = createSnackbar({ message: "Note deleted", action: "Undo", duration: 4000, dismissible: true, layer: "top" });
+snackbar.element.style.display = "none";
+snackbar.on("close", () => (snackbar.element.style.display = "none"));
 let lastDeleted: { note: Note; at: number } | null = null;
 const deleteNote = (note: Note): void => {
   lastDeleted = { note, at: s.notes.indexOf(note) };
   s.notes = s.notes.filter((n) => n !== note);
   if (editor.isOpen?.()) editor.close();
   render();
+  snackbar.element.style.display = "";
   snackbar.show();
 };
 snackbar.on("action", () => {
