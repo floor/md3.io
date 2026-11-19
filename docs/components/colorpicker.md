@@ -71,7 +71,7 @@ colorpicker:
 `variant: 'dropdown'` or `'dialog'` opens the picker from a `trigger` element, and closes it on
 `Escape`, a click outside, or the choice of a swatch unless `closeOnSelect: false`. The
 eyedropper uses the browser's EyeDropper, or samples `imageSource`; `pickColor()` starts it.
-Recipes such as a theme color setting are planned for [Examples](/examples/).
+Recipes such as a theme color setting are planned for [Showcase](/showcase/).
 
 ## API
 

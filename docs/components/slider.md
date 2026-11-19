@@ -69,7 +69,7 @@ slider:
 `centered: true` fills the track from its midpoint. `orientation: 'vertical'` stands it up,
 taking its length from its CSS height; `insetIcon` puts an icon inside the track of a standard
 slider at size `M`, `L` or `XL`. Recipes such as a photo filter, an equalizer or a settings
-form are planned for [Examples](/examples/).
+form are planned for [Showcase](/showcase/).
 
 ## API
 

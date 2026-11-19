@@ -3,12 +3,16 @@
 // appearance (the header).
 import { applyTheme } from './theme-sheets';
 import 'material/elements/css/chips';
-import { defineChips } from 'material/elements';
+import 'material/elements/css/button';
+import 'material/elements/css/snackbar';
+import { defineButton, defineChips, defineSnackbar } from 'material/elements';
 import { onAppearance } from './appearance';
 import { copyText } from './site';
 import { mountDeviceFrame } from './device-frame';
 
 defineChips();
+defineButton();
+defineSnackbar();
 const page = document.querySelector<HTMLElement>('.example-page');
 if (page) {
   const slug = page.dataset.example!;
@@ -38,7 +42,7 @@ if (page) {
       else chips.setAttribute('value', framework);
     }
     const label = chipFor(framework)?.textContent?.trim() ?? framework;
-    const src = `/examples/${slug}/frame/${framework}/`;
+    const src = `/showcase/${slug}/frame/${framework}/`;
     if (!frame.src.endsWith(src)) frame.src = src;
     frame.title = `${page.querySelector('h1')?.textContent} — ${label}`;
     for (const source of document.querySelectorAll<HTMLElement>('.example-source')) source.hidden = source.dataset.framework !== framework;
@@ -61,6 +65,19 @@ if (page) {
   try { saved = localStorage.getItem(FRAMEWORK); } catch { /* Storage may be unavailable. */ }
   if (asked) select(asked, true); else select(saved ?? first);
 
+  /** One material snackbar, made on first use in the chips row's scope (it takes the theme). */
+  type SnackbarHost = HTMLElement & { show(): void };
+  let snackbar: SnackbarHost | null = null;
+  const showSnackbar = (message: string) => {
+    if (!snackbar) {
+      snackbar = document.createElement('m-snackbar') as SnackbarHost;
+      snackbar.setAttribute('duration', 'short');
+      document.querySelector('.framework-chips-row')?.append(snackbar);
+    }
+    snackbar.setAttribute('message', message);
+    snackbar.show();
+  };
+
   // File tabs and copy, per framework.
   for (const source of document.querySelectorAll<HTMLElement>('.example-source')) {
     const fileTabs = [...source.querySelectorAll<HTMLButtonElement>('[data-file][role="tab"]')];
@@ -69,10 +86,13 @@ if (page) {
       for (const t of fileTabs) { const on = t === tab; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; }
       for (const f of files) f.hidden = f.dataset.file !== tab.dataset.file;
     }));
-    source.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async event => {
-      const button = event.currentTarget as HTMLButtonElement;
+    // material's Copy code button: a copy confirms with the snackbar (its own live region);
+    // when the clipboard refuses, the button says so, as before.
+    source.querySelector<HTMLElement>('[data-copy]')?.addEventListener('click', async event => {
+      const button = event.currentTarget as HTMLElement;
       const visible = files.find(f => !f.hidden);
-      button.textContent = await copyText(visible?.textContent ?? '') ? 'Copied!' : 'Select and copy the code';
+      if (await copyText(visible?.textContent ?? '')) { showSnackbar('Code copied'); return; }
+      button.textContent = 'Select and copy the code';
       setTimeout(() => { button.textContent = 'Copy code'; }, 2000);
     });
   }

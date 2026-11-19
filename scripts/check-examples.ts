@@ -30,7 +30,7 @@ try {
       const problems: string[] = [];
       page.on("pageerror", (error) => problems.push(error.message));
       page.on("console", (message) => { if (message.type() === "error" || message.type() === "warning") problems.push(message.text()); });
-      await page.goto(`${server.url}examples/${example.slug}/frame/${id}/`);
+      await page.goto(`${server.url}showcase/${example.slug}/frame/${id}/`);
       const app = page.locator("#app");
       await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
       await page.waitForTimeout(100); // elements upgrade and adapters mount
@@ -57,6 +57,28 @@ try {
         await runVariant(f.id, f.label, false);
       }
     }
+
+    // The Showcase page's Copy code (material's xs button): for each framework it copies
+    // that framework's visible source, and material's snackbar says so, as the one
+    // status region with the text.
+    const context = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    for (const id of ids) {
+      await page.goto(`${server.url}showcase/${example.slug}/?framework=${id}`);
+      const source = page.locator(`.example-source[data-framework="${id}"]`);
+      await source.waitFor();
+      await source.getByRole("button", { name: "Copy code", exact: true }).click();
+      await page.getByRole("status").filter({ hasText: "Code copied" }).waitFor();
+      if (await page.getByRole("status").filter({ hasText: "Code copied" }).count() !== 1) throw new Error(`${example.slug}/${id}: "Code copied" is announced more than once`);
+      const copied = await page.evaluate(() => navigator.clipboard.readText());
+      const visible = (await source.locator("pre:not([hidden]) code").first().textContent()) ?? "";
+      if (!copied || copied.trim() !== visible.trim()) throw new Error(`${example.slug}/${id}: Copy code copied something other than the visible source`);
+    }
+    if (errors.length) throw new Error(`${example.slug} Copy code: ${errors.join("; ")}`);
+    await context.close();
+    console.log(`  ok ${example.slug}: Copy code in ${ids.length} frameworks`);
   }
 } finally {
   await browser.close();
