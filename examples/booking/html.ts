@@ -1,11 +1,12 @@
 // Web components: the elements themselves, no framework.
 import "material/elements/css";
 import { defineAll } from "material/elements";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, roomOf, summary, totalText, validate, withDates, withPrice, type Booking } from "./shared";
+import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, reviewLines, roomOf, stepHeading, stepLabel, stepProgress, summary, totalText, validateStep, withDates, withPrice, type Booking } from "./shared";
 
 defineAll();
 
 let s: Booking = { ...DEFAULTS };
+let step = 1;
 const app = document.getElementById("app")!;
 app.innerHTML = `
   <section class="booking">
@@ -16,32 +17,54 @@ app.innerHTML = `
     </m-dialog>
     <div class="booking__intro">
       <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
-      <p class="booking__lede mtrl-body-medium">Choose dates, guests and a room. The total updates as you go.</p>
+      <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
     </div>
-    <div class="booking__grid">
-      <m-datepicker id="check-in" label="Check-in" variant="modal" close-on-select date-format="YYYY-MM-DD" value="${s.checkIn}"></m-datepicker>
-      <m-datepicker id="check-out" label="Check-out" variant="modal" close-on-select date-format="YYYY-MM-DD" min="${s.checkIn}" value="${s.checkOut}"></m-datepicker>
-      <m-text-field id="arrival" label="Arrival time" value="${s.arrivalTime}" supporting-text="24-hour time" trailing-icon-label="Choose time"></m-text-field>
-      <m-text-field id="name" label="Name" supporting-text="Required"></m-text-field>
-      <m-select id="adults" label="Adults" value="${s.adults}">${ADULT_OPTIONS.map((n) => `<m-select-option value="${n}">${n}</m-select-option>`).join("")}</m-select>
-      <m-select id="children" label="Children" value="${s.children}">${CHILD_OPTIONS.map((n) => `<m-select-option value="${n}">${n}</m-select-option>`).join("")}</m-select>
-      <m-text-field id="email" label="Email" type="email" supporting-text="Required"></m-text-field>
+    <header class="booking__step-header" id="step-header">
+      <h2 class="booking__step-title mtrl-title-large" id="step-title" tabindex="-1"></h2>
+      <m-progress id="step-progress" max="4"></m-progress>
+    </header>
+    <div class="booking__step" id="step-1">
+      <div class="booking__grid">
+        <m-datepicker id="check-in" label="Check-in" variant="modal" close-on-select date-format="YYYY-MM-DD" value="${s.checkIn}"></m-datepicker>
+        <m-datepicker id="check-out" label="Check-out" variant="modal" close-on-select date-format="YYYY-MM-DD" min="${s.checkIn}" value="${s.checkOut}"></m-datepicker>
+        <m-text-field id="arrival" label="Arrival time" value="${s.arrivalTime}" supporting-text="24-hour time" trailing-icon-label="Choose time"></m-text-field>
+      </div>
     </div>
-    <div class="booking__group">
-      <p class="booking__label mtrl-title-small">Room type</p>
-      <m-radios id="room" aria-label="Room type" value="${s.room}">${ROOMS.map((room) => `<m-radio value="${room.value}">${room.label} — $${room.rate} a night</m-radio>`).join("")}</m-radios>
+    <div class="booking__step" id="step-2" hidden>
+      <div class="booking__grid">
+        <m-select id="adults" label="Adults" value="${s.adults}">${ADULT_OPTIONS.map((n) => `<m-select-option value="${n}">${n}</m-select-option>`).join("")}</m-select>
+        <m-select id="children" label="Children" value="${s.children}">${CHILD_OPTIONS.map((n) => `<m-select-option value="${n}">${n}</m-select-option>`).join("")}</m-select>
+      </div>
+      <div class="booking__group">
+        <p class="booking__label mtrl-title-small">Room type</p>
+        <m-radios id="room" aria-label="Room type" value="${s.room}">${ROOMS.map((room) => `<m-radio value="${room.value}">${room.label} — $${room.rate} a night</m-radio>`).join("")}</m-radios>
+      </div>
+      <div class="booking__group">
+        <p class="booking__label mtrl-title-small">Price range</p>
+        <m-slider id="price" range show-value min="50" max="300" step="10" value="${s.priceMin}" second-value="${s.priceMax}" aria-label="Price range"></m-slider>
+        <p class="booking__range mtrl-body-medium" id="range"></p>
+        <p class="booking__field-error mtrl-body-small" id="room-error" hidden></p>
+      </div>
     </div>
-    <div class="booking__group" role="group" aria-labelledby="extras-label">
-      <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
-      ${EXTRAS.map((extra) => `<m-checkbox id="${extra.key}">${extra.label} — $${extra.price} ${extra.unit}</m-checkbox>`).join("")}
+    <div class="booking__step" id="step-3" hidden>
+      <div class="booking__group" role="group" aria-labelledby="extras-label">
+        <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
+        ${EXTRAS.map((extra) => `<m-checkbox id="${extra.key}">${extra.label} — $${extra.price} ${extra.unit}</m-checkbox>`).join("")}
+      </div>
     </div>
-    <div class="booking__group">
-      <p class="booking__label mtrl-title-small">Price range</p>
-      <m-slider id="price" range show-value min="50" max="300" step="10" value="${s.priceMin}" second-value="${s.priceMax}" aria-label="Price range"></m-slider>
-      <p class="booking__range mtrl-body-medium" id="range"></p>
+    <div class="booking__step" id="step-4" hidden>
+      <div class="booking__grid">
+        <m-text-field id="name" label="Name" supporting-text="Required"></m-text-field>
+        <m-text-field id="email" label="Email" type="email" supporting-text="Required"></m-text-field>
+      </div>
+      <div class="booking__group" id="review"></div>
     </div>
     <output class="booking__total mtrl-body-medium" role="status"></output>
-    <footer class="booking__actions"><m-button id="book">Book</m-button></footer>
+    <footer class="booking__actions">
+      <m-button id="back" variant="outlined" hidden>Back</m-button>
+      <m-button id="next">Next</m-button>
+      <m-button id="book" hidden>Book</m-button>
+    </footer>
     <m-timepicker id="timepicker" label="Arrival time" value="${s.arrivalTime}" format="24h"></m-timepicker>
     <m-snackbar id="snackbar" message="Booking confirmed"></m-snackbar>
   </section>`;
@@ -52,6 +75,35 @@ const total = app.querySelector("output")!;
 const arrival = $<HTMLElement & { value: string }>("arrival");
 arrival.setAttribute("trailing-icon", CLOCK_ICON);
 const detail = <T,>(event: Event): T => (event as CustomEvent<T>).detail;
+
+// The step header — one piece, so material's stepper can replace it whole when
+// it lands. The heading carries the step, the progress shows n of 4.
+const renderStepHeader = (): void => {
+  $("step-title").textContent = stepHeading(step);
+  const progress = $<Host & { value: string }>("step-progress");
+  progress.value = String(stepProgress(step));
+  progress.setAttribute("aria-label", stepLabel(step));
+};
+const focusHeading = (): void => $("step-title").focus();
+const gotoStep = (next: number): void => {
+  step = next;
+  for (const n of [1, 2, 3, 4]) $(`step-${n}`).hidden = n !== step;
+  $("back").hidden = step === 1;
+  $("next").hidden = step === 4;
+  $("book").hidden = step !== 4;
+  renderStepHeader();
+  render();
+  focusHeading();
+};
+const focusFirstInvalid = (): void => {
+  if (step === 1) { arrival.focus(); return; }
+  if (step === 2) {
+    const slider = $("price");
+    const handle = (slider.shadowRoot ?? slider).querySelector<HTMLElement>('[role="slider"]');
+    (handle ?? slider).focus();
+  }
+};
+
 const render = (): void => {
   total.textContent = totalText(s);
   $("range").textContent = rangeText(s);
@@ -63,6 +115,25 @@ const render = (): void => {
   }
   const radios = $("room");
   if (radios.value !== s.room) radios.value = s.room;
+  // The fourth step reviews the first three: a labelled line each, with its Edit.
+  $("review").replaceChildren(
+    ...reviewLines(s).map((line) => {
+      const row = document.createElement("div");
+      row.className = "booking__review-row";
+      const copy = document.createElement("div");
+      copy.className = "booking__review-copy";
+      const label = Object.assign(document.createElement("p"), { className: "booking__review-label mtrl-title-small", textContent: line.label });
+      const text = Object.assign(document.createElement("p"), { className: "booking__review-line mtrl-body-medium", textContent: line.text });
+      const edit = document.createElement("m-button");
+      edit.setAttribute("variant", "text");
+      edit.setAttribute("aria-label", `Edit ${line.label}`);
+      edit.textContent = "Edit";
+      edit.addEventListener("click", () => gotoStep(line.step));
+      copy.append(label, text);
+      row.append(copy, edit);
+      return row;
+    }),
+  );
 };
 const setError = (id: string, message: string | undefined, fallback: string): void => {
   const field = $(id);
@@ -103,17 +174,37 @@ for (const extra of EXTRAS) {
 $("price").addEventListener("input", (event) => {
   const value = detail<{ value: number; secondValue?: number }>(event);
   s = withPrice(s, value.value, value.secondValue ?? s.priceMax);
+  const roomError = $("room-error");
+  roomError.hidden = true;
+  roomError.textContent = "";
   render();
 });
 $("name").addEventListener("input", (event) => { s = { ...s, name: detail<{ value: string }>(event).value }; setError("name", undefined, "Required"); });
 $("email").addEventListener("input", (event) => { s = { ...s, email: detail<{ value: string }>(event).value }; setError("email", undefined, "Required"); });
+
+// Next validates the step it leaves; Back never does and never loses data.
+$("next").addEventListener("click", () => {
+  const errors = validateStep(s, step);
+  if (errors.arrivalTime) { setError("arrival", errors.arrivalTime, "24-hour time"); focusFirstInvalid(); return; }
+  if (errors.room) {
+    const roomError = $("room-error");
+    roomError.textContent = errors.room;
+    roomError.hidden = false;
+    focusFirstInvalid();
+    return;
+  }
+  if (step < 4) gotoStep(step + 1);
+});
+$("back").addEventListener("click", () => gotoStep(step - 1));
 $("book").addEventListener("click", () => {
-  const errors = validate(s);
+  const errors = validateStep(s, 4);
   setError("name", errors.name, "Required");
   setError("email", errors.email, "Required");
-  setError("arrival", errors.arrivalTime, "24-hour time");
-  if (!errors.name && !errors.email && !errors.arrivalTime && roomOf(s)) { render(); $("dialog").show(); }
+  if (!errors.name && !errors.email && roomOf(s)) { render(); $("dialog").show(); }
+  else if (errors.name) $("name").focus();
+  else if (errors.email) $("email").focus();
 });
 $("cancel").addEventListener("click", () => $("dialog").close());
 $("confirm").addEventListener("click", () => { $("dialog").close(); $("snackbar").show(); });
+renderStepHeader();
 render();

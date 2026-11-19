@@ -10,29 +10,39 @@ export default async function steps(page: Page): Promise<void> {
   const snap = () => page.locator("#app").ariaSnapshot();
   const includes = async (text: string) => assert.ok((await snap()).includes(text), `snapshot includes: ${text}`);
   const excludes = async (text: string) => assert.ok(!(await snap()).includes(text), `snapshot excludes: ${text}`);
+  const isFocused = (locator: Locator) =>
+    locator.evaluate((el) => (el.getRootNode() as ShadowRoot).activeElement === el || document.activeElement === el);
+  const next = page.getByRole("button", { name: "Next", ...exact });
+  const back = page.getByRole("button", { name: "Back", ...exact });
   const book = page.getByRole("button", { name: "Book", ...exact });
   const arrival = page.getByRole("textbox", { name: "Arrival time", ...exact });
   const chooseTime = page.getByRole("button", { name: "Choose time", ...exact });
+  const heading = () => page.getByRole("heading", { name: /^Step \d of 4/ });
+  // A step change puts focus on the new step's heading.
+  const stepShows = async (n: number, title: string) => {
+    await page.getByRole("heading", { name: `Step ${n} of 4 · ${title}`, ...exact }).waitFor();
+    await includes(`progressbar "Step ${n} of 4"`);
+    // The name alone could go stale; the value itself must be n of 4.
+    const progress = page.getByRole("progressbar");
+    assert.equal(await progress.getAttribute("aria-valuenow"), String(n), `step ${n} progress is ${n} of 4`);
+    assert.equal(await progress.getAttribute("aria-valuemax"), "4", "progress max is 4");
+  };
+  const stepIs = async (n: number, title: string) => {
+    await stepShows(n, title);
+    assert.ok(await isFocused(heading()), `focus moves to the step ${n} heading`);
+  };
 
-  // Validation: an empty form shows its messages and opens nothing.
-  await book.click();
-  await page.getByText("Enter your name", exact).waitFor();
-  await page.getByText("Enter a valid email address", exact).waitFor();
-  await excludes("alertdialog");
-  await page.getByRole("textbox", { name: "Name", ...exact }).fill("Ada Lovelace");
-  await page.getByRole("textbox", { name: "Email", ...exact }).fill("ada@example.com");
-
-  // Dates: check-in moving past check-out pulls check-out with it, then check-out extends the stay.
+  // Step 1: dates. Check-in moving past check-out pulls check-out with it.
+  await stepShows(1, "Dates and arrival");
   await page.getByRole("button", { name: "Change date, 2027-04-10", ...exact }).click();
   await page.getByRole("gridcell", { name: "Tuesday, April 20, 2027" }).click();
   assert.equal(await page.getByRole("textbox", { name: "Check-out", ...exact }).inputValue(), "2027-04-20");
   await includes("Estimated total $120 for 1 night");
   await page.getByRole("textbox", { name: "Check-out", ...exact }).click();
   await page.getByRole("gridcell", { name: "Thursday, April 22, 2027" }).click();
-  assert.equal(await page.getByRole("textbox", { name: "Check-out", ...exact }).inputValue(), "2027-04-22");
   await includes("Estimated total $240 for 2 nights");
 
-  // Time: the picker writes back, a typed time is where it reopens, Cancel keeps it.
+  // Step 1: the time picker writes back, a typed time is where it reopens, Cancel keeps it.
   await chooseTime.click();
   await page.getByRole("button", { name: "Toggle input picker", ...exact }).click();
   await page.getByRole("spinbutton", { name: "Hour", ...exact }).fill("17");
@@ -45,16 +55,24 @@ export default async function steps(page: Page): Promise<void> {
   assert.equal(await page.getByRole("spinbutton", { name: "Minute", ...exact }).inputValue(), "25");
   await page.getByRole("button", { name: "Cancel", ...exact }).click();
   assert.equal(await arrival.inputValue(), "18:25");
-  await chooseTime.click();
-  await page.getByRole("button", { name: "OK", ...exact }).click();
-  assert.equal(await arrival.inputValue(), "18:25");
 
-  // An invalid time is rejected at Book and shown under the field; a valid one restores it.
+  // Next is blocked by an invalid step: the message shows, focus moves to the field,
+  // and the step does not change.
   await arrival.fill("not a time");
-  await book.click();
+  await next.click();
   await page.getByText("Enter a valid time", exact).waitFor();
-  await excludes("alertdialog");
+  assert.ok(await isFocused(arrival), "an invalid step focuses its first field");
+  await includes("Step 1 of 4");
   await arrival.fill("17:30");
+  await next.click();
+  await stepIs(2, "Guests and room");
+
+  // Back keeps the data and never validates.
+  await back.click();
+  await stepIs(1, "Dates and arrival");
+  assert.equal(await arrival.inputValue(), "17:30", "Back lost the arrival time");
+  await next.click();
+  await stepIs(2, "Guests and room");
 
   // Guests: both selects move.
   const choose = async (name: string, moves: number) => {
@@ -69,37 +87,77 @@ export default async function steps(page: Page): Promise<void> {
   await includes('combobox "Adults": "3"');
   await includes('combobox "Children": "1"');
 
-  // The price range decides which rooms can be chosen.
+  // The price range decides which rooms can be chosen; an empty range blocks Next
+  // with focus on the range and its message at the field, and restoring it
+  // unlocks the step.
   const minHandle = page.getByRole("slider", { name: "Price range minimum", ...exact });
   const maxHandle = page.getByRole("slider", { name: "Price range maximum", ...exact });
+  const roomError = page.locator(".booking__field-error");
   await minHandle.focus();
   await page.keyboard.press("ArrowRight");
   await includes("$90–$240 a night");
   await maxHandle.focus();
   await page.keyboard.press("Home");
   await includes("No rooms in this price range");
-  await includes('radio "Suite — $210 a night" [disabled]');
-  await book.click();
-  await excludes("alertdialog");
+  await next.click();
+  await includes("Step 2 of 4");
+  assert.ok(await isFocused(minHandle), "an empty price range focuses the range");
+  await roomError.waitFor();
+  assert.equal((await roomError.textContent())?.trim(), "No rooms in this price range", "the empty range shows its message at the field");
   await maxHandle.focus();
   await page.keyboard.press("End");
+  await roomError.waitFor({ state: "hidden" });
   await includes("$90–$300 a night");
-  await includes("Estimated total $190 for 2 nights");
+  // The live region leaves the accessibility tree for a beat while it announces;
+  // read the total itself rather than the snapshot here.
+  await page.getByText("Estimated total $190 for 2 nights", exact).waitFor();
 
-  // Every room and every extra, in the named Extras group.
-  assert.equal(await page.getByRole("group", { name: "Extras", ...exact }).getByRole("checkbox").count(), 3);
+  // Every room, then the chosen one; Next moves on with the total in step.
   for (const room of ["Standard room", "Double room", "Family room", "Suite"]) {
     await page.locator("label", { hasText: room }).click();
   }
   await includes('radio "Suite — $210 a night" [checked]');
+  await next.click();
+  await stepIs(3, "Extras");
+  // The Suite the second step chose carries onto the third.
+  await page.getByText("Estimated total $420 for 2 nights", exact).waitFor();
+
+  // Every extra in the named group, and the total follows onto the third step.
+  assert.equal(await page.getByRole("group", { name: "Extras", ...exact }).getByRole("checkbox").count(), 3);
   for (const extra of ["Breakfast", "Parking", "Late checkout"]) {
     await page.getByRole("checkbox", { name: new RegExp(extra) }).click();
   }
   await includes("Estimated total $505 for 2 nights");
+  await next.click();
+  await stepIs(4, "Your details and review");
+  await includes("Estimated total $505 for 2 nights");
+
+  // The review shows the first three steps, each row labelled with its Edit;
+  // Edit jumps back to its step.
+  await includes("Check-in 2027-04-20, check-out 2027-04-22 · Arrival 17:30");
+  for (const label of ["Dates", "Guests and room", "Extras"]) {
+    await includes(label);
+    await page.getByRole("button", { name: `Edit ${label}`, ...exact }).waitFor();
+  }
+  await page.getByRole("button", { name: "Edit Guests and room", ...exact }).click();
+  await stepIs(2, "Guests and room");
+  await next.click();
+  await stepIs(3, "Extras");
+  await next.click();
+  await stepIs(4, "Your details and review");
+
+  // Book is blocked by invalid details: the message shows under the first field,
+  // and focus follows it.
+  await book.click();
+  await page.getByText("Enter your name", exact).waitFor();
+  await page.getByText("Enter a valid email address", exact).waitFor();
+  assert.ok(await isFocused(page.getByRole("textbox", { name: "Name", ...exact })), "Book focuses the name field");
+  await page.getByRole("textbox", { name: "Name", ...exact }).fill("Ada Lovelace");
+  await book.click();
+  assert.ok(await isFocused(page.getByRole("textbox", { name: "Email", ...exact })), "Book focuses the email field");
+  await page.getByRole("textbox", { name: "Email", ...exact }).fill("ada@example.com");
 
   // Cancel leaves no snackbar; Book again and Confirm shows it, with the dialog gone first.
-  const isFocused = (locator: Locator) =>
-    locator.evaluate((el) => (el.getRootNode() as ShadowRoot).activeElement === el || document.activeElement === el);
   await book.click();
   const dialog = page.getByRole("alertdialog", { name: "Confirm booking", ...exact });
   await dialog.waitFor();

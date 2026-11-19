@@ -118,12 +118,40 @@ export const normalizeTime = (text: string): string | null => {
   return hour <= 23 ? `${String(hour).padStart(2, "0")}:${match[2]}` : null;
 };
 
-export interface BookingErrors { name?: string; email?: string; arrivalTime?: string }
+export interface BookingErrors { name?: string; email?: string; arrivalTime?: string; room?: string }
 
-export const validate = (s: Booking): BookingErrors => {
-  const errors: BookingErrors = {};
-  if (!s.name.trim()) errors.name = "Enter your name";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim())) errors.email = "Enter a valid email address";
-  if (!normalizeTime(s.arrivalTime)) errors.arrivalTime = "Enter a valid time";
-  return errors;
+/** The four steps, in order; the owner asked for three or four — this is four. */
+export const STEPS = [
+  { title: "Dates and arrival" },
+  { title: "Guests and room" },
+  { title: "Extras" },
+  { title: "Your details and review" },
+] as const;
+
+export const stepHeading = (step: number): string => `Step ${step} of 4 · ${STEPS[step - 1]!.title}`;
+export const stepLabel = (step: number): string => `Step ${step} of 4`;
+export const stepProgress = (step: number): number => step;
+
+/** Next validates the step it leaves; Book validates the details and requires a room. */
+export const validateStep = (s: Booking, step: number): BookingErrors => {
+  if (step === 1) return normalizeTime(s.arrivalTime) ? {} : { arrivalTime: "Enter a valid time" };
+  if (step === 2) return roomOf(s) ? {} : { room: "No rooms in this price range" };
+  if (step === 4) {
+    const errors: BookingErrors = {};
+    if (!s.name.trim()) errors.name = "Enter your name";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.email.trim())) errors.email = "Enter a valid email address";
+    return errors;
+  }
+  return {};
 };
+
+/** The fourth step reviews the first three: a labelled line each, whose Edit jumps back to its step. */
+export const reviewLines = (s: Booking): { step: number; label: string; text: string }[] => [
+  { step: 1, label: "Dates", text: `Check-in ${s.checkIn}, check-out ${s.checkOut} · Arrival ${s.arrivalTime}` },
+  {
+    step: 2,
+    label: "Guests and room",
+    text: `${s.adults} ${s.adults === "1" ? "adult" : "adults"}, ${s.children} ${s.children === "1" ? "child" : "children"} · ${roomOf(s)?.label ?? "No room"} · ${rangeText(s)}`,
+  },
+  { step: 3, label: "Extras", text: EXTRAS.filter((extra) => s[extra.key]).map((extra) => extra.label).join(", ") || "None" },
+];
