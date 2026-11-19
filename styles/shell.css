@@ -286,29 +286,6 @@ samp {
     border-right-color: var(--accent);
 }
 
-.sidebar__badge {
-    font-size: 9px;
-    font-weight: var(--fw-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 5px;
-    border-radius: 4px;
-    background: var(--accent);
-    color: white;
-    margin-left: 6px;
-    margin-top: -2px;
-    vertical-align: middle;
-}
-
-.sidebar__badge--dot {
-    font-size: 0;
-    padding: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
 /* ─── Content ────────────────────────────────────────────────────── */
 
 .content {
@@ -563,16 +540,6 @@ samp {
     background: var(--bg-hover);
 }
 
-.variant-switcher__option--active {
-    color: #fff;
-    background-color: var(--accent);
-    font-weight: var(--fw-bold);
-}
-.variant-switcher__option--active:hover {
-    color: #fff;
-    background-color: var(--accent);
-    font-weight: var(--fw-bold);
-}
 
 .variant-switcher__option--disabled {
     color: var(--text-dim);
@@ -881,16 +848,6 @@ SWICHER
     color: var(--text);
 }
 
-.button-group .button--active {
-    background: var(--accent);
-    color: #fff;
-    font-weight: var(--fw-bold);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.button-group .button--active:hover {
-    background: var(--accent);
-}
 
 /*
 doc-nav__link

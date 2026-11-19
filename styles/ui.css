@@ -413,13 +413,6 @@
     color: var(--accent-text);
 }
 
-.ui-ctrl-btn--active,
-.ui-ctrl-btn--active:hover {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-}
-
 /* ============================================================================
    Segmented Buttons — toggle group (e.g. selection mode)
    ============================================================================ */
@@ -457,15 +450,6 @@
 
 .ui-segmented__btn:hover {
     background: color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.ui-segmented__btn--active {
-    background: var(--accent);
-    color: white;
-}
-
-.ui-segmented__btn--active:hover {
-    background: var(--accent);
 }
 
 .ui-segmented__btn--disabled,
@@ -516,20 +500,6 @@
     font-family: var(--font-mono);
     padding-top: 6px;
     border-top: 1px solid var(--border);
-}
-
-.ui-detail__avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: white;
-    font-weight: var(--fw-bold);
-    font-size: var(--fs-ui);
-    flex-shrink: 0;
 }
 
 .ui-detail__email {
@@ -903,23 +873,6 @@
 
 .ui-switch input:checked + .ui-switch__track {
     background: var(--accent);
-}
-
-.ui-switch__track::after {
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    background: #fff;
-    transition: transform 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.ui-switch input:checked + .ui-switch__track::after {
-    transform: translateX(18px);
 }
 
 .ui-switch input:focus-visible + .ui-switch__track {

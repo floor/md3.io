@@ -4,36 +4,6 @@
    Covers: markdown body, code blocks, tables, syntax highlighting, errors.
    ============================================================================= */
 
-/* ─── Version switcher ──────────────────────────────────────────────────── */
-
-.version-switcher {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    flex: none;
-    z-index: 1;
-    font-family: var(--font-mono);
-}
-
-.version-switcher .ui-segmented__btn {
-    padding: 3px 10px;
-    font-size: var(--fs-xs);
-    text-decoration: none;
-}
-
-.version-switcher .ui-segmented__btn {
-    padding: 3px 10px;
-    font-size: var(--fs-xs);
-    text-decoration: none;
-    border: 2px solid transparent;
-}
-
-.version-switcher .ui-segmented__btn--active {
-    background: transparent;
-    color: var(--accent);
-    border: 2px solid var(--accent);
-}
-
 /* ─── Page metadata ─────────────────────────────────────────────────────── */
 
 .meta {
@@ -166,16 +136,14 @@
     margin-bottom: 16px;
     background: var(--accent-dim);
     color: var(--mtrl-sys-color-on-primary-container, var(--text));
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
 .md blockquote a, .md blockquote p {
     color: var(--mtrl-sys-color-on-primary-container, var(--text));
 }
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-}
 
 .md blockquote p {
-    color: var(--text-muted);
     margin-bottom: 0;
 }
 
