@@ -24,10 +24,11 @@ export default async function steps(page: Page): Promise<void> {
   const stepShows = async (n: number, title: string) => {
     await page.getByRole("heading", { name: `Step ${n} of 4 · ${title}`, ...exact }).waitFor();
     await includes(`Step ${n} of 4`);
-    // The one current header is this step's; its text is the indicator's number,
-    // the label, and — once completed — a ", Completed, Editable" suffix.
+    // The one current header is this step's; its text is the indicator's number
+    // (a check icon in place of it once completed), the label, and — once
+    // completed — a ", Completed, Editable" suffix.
     const header = page.locator('[aria-current="step"]');
-    assert.match((await header.textContent()) ?? "", new RegExp(`^\\d+${title}(,.*)?$`), `step ${n}'s header is the current step`);
+    assert.match((await header.textContent()) ?? "", new RegExp(`^\\d*${title}(?:, .*)?$`), `step ${n}'s header is the current step`);
     assert.equal(await header.getAttribute("aria-expanded"), "true", `step ${n}'s header expands its panel`);
   };
   const stepIs = async (n: number, title: string) => {
