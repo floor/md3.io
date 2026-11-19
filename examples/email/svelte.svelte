@@ -1,5 +1,6 @@
 <!-- Svelte: material/svelte wraps the same elements; $state mirrors the shared one. -->
 <script lang="ts">
+  import { tick as flush } from "svelte";
   import {
     Button, Checkbox, Chip, Chips, Dialog, ExtendedFab, IconButton,
     NavigationRail, NavigationRailItem, Search, Snackbar, TextField,
@@ -8,9 +9,9 @@
     ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
     FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
     archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-    emptyText, findMessage, goBack, icons, initialState, mailbox, openCompose, openMessage,
-    replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked,
-    toggleStar, visibleMessages,
+    emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
+    openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
+    setQuery, toggleChecked, toggleStar, visibleMessages,
     type FolderId, type MailState, type Message,
   } from "./shared";
 
@@ -48,6 +49,25 @@
       dialog?.element.close();
       snackbar?.element.show();
     });
+
+  // Focus moves after the re-render: to the heading on open, back to the row on
+  // Back, to the list when the open message leaves.
+  const openRow = async (m: Message) => {
+    update(() => openMessage(s, messages, m.id));
+    await flush();
+    focusHeading();
+  };
+  const back = async () => {
+    const id = s.open;
+    goBack(s);
+    await flush();
+    if (id) focusRow(id);
+  };
+  const closeOpenMessage = async (fn: (s: MailState, messages: Message[]) => void) => {
+    update(() => fn(s, messages));
+    await flush();
+    focusList();
+  };
 </script>
 
 <section class="mail" data-reading={String(s.reading)}>
@@ -60,8 +80,8 @@
   <div class="mail__main">
     <div class="mail__list-pane">
       <header class="mail__top">
-        <Search placeholder={SEARCH_PLACEHOLDER} noExpandOnFocus fullWidth oninput={(e: CustomEvent<{ value: string }>) => setQuery(s, e.detail.value)} />
-        <Chips ariaLabel={CHIPS_LABEL} selection="single" onchange={(e: CustomEvent<{ value: string | null }>) => setLabel(s, e.detail.value ?? null)}>
+        <Search placeholder={SEARCH_PLACEHOLDER} noExpandOnFocus fullWidth oninput={(e: CustomEvent<{ value: string }>) => setQuery(s, messages, e.detail.value)} />
+        <Chips ariaLabel={CHIPS_LABEL} selection="single" onchange={(e: CustomEvent<{ value: string | null }>) => setLabel(s, messages, e.detail.value ?? null)}>
           {#each LABELS as l (l.id)}
             <Chip value={l.id} label={l.label} />
           {/each}
@@ -75,21 +95,21 @@
           <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onclick={() => update(() => deleteChecked(s, messages))} />
         {/if}
       </div>
-      <ul class="mail__rows" aria-label={ROWS_LABEL}>
+      <ul class="mail__rows" aria-label={ROWS_LABEL} tabindex="-1">
         {#if !visible.length}
           <li class="mail__empty">{emptyText(s)}</li>
         {/if}
         {#each visible as m (m.id)}
           <li class="mail-row" data-id={m.id} data-unread={m.unread || undefined} data-open={s.open === m.id || undefined}>
             <Checkbox class="mail-row__check" ariaLabel={selectLabel(m)} checked={s.checked.includes(m.id)} onchange={() => toggleChecked(s, m.id)} />
-            <button type="button" class="mail-row__open" aria-pressed={s.open === m.id} onclick={() => update(() => openMessage(s, messages, m.id))}>
+            <button type="button" class="mail-row__open" aria-pressed={s.open === m.id} onclick={() => openRow(m)}>
               <span class="mail-row__sender">{m.from}</span>
               <span class="mail-row__subject">{m.subject}</span>
               <span class="mail-row__snippet">{m.snippet}</span>
               <span class="mail-row__time">{m.time}</span>
             </button>
             <IconButton class="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
-              selected={m.starred} ariaLabel={STAR_LABEL} onchange={() => update(() => toggleStar(messages, m.id))} />
+              selected={m.starred} ariaLabel={STAR_LABEL} onchange={() => update(() => toggleStar(s, messages, m.id))} />
           </li>
         {/each}
       </ul>
@@ -100,10 +120,13 @@
       {:else}
         <article class="mail-message">
           <header class="mail-message__head">
-            <IconButton class="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onclick={() => goBack(s)} />
-            <h2 class="mail-message__subject">{open.subject}</h2>
+            <IconButton class="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onclick={back} />
+            <h2 class="mail-message__subject" tabindex="-1">{open.subject}</h2>
           </header>
           <p class="mail-message__meta">{open.from} · {open.address}</p>
+          {#if open.to}
+            <p class="mail-message__to">To {open.to}</p>
+          {/if}
           <p class="mail-message__date">{open.date}</p>
           <div class="mail-message__body">
             {#each open.body as p, i (i)}
@@ -112,8 +135,8 @@
           </div>
           <footer class="mail-message__actions">
             <Button variant="outlined" icon={icons.reply} onclick={() => showDialog(() => replyToOpen(s, messages))}>Reply</Button>
-            <Button variant="outlined" icon={icons.archive} onclick={() => update(() => archiveOpen(s, messages))}>{ARCHIVE_LABEL}</Button>
-            <Button variant="outlined" icon={icons.delete} onclick={() => update(() => deleteOpen(s, messages))}>{DELETE_LABEL}</Button>
+            <Button variant="outlined" icon={icons.archive} onclick={() => closeOpenMessage(archiveOpen)}>{ARCHIVE_LABEL}</Button>
+            <Button variant="outlined" icon={icons.delete} onclick={() => closeOpenMessage(deleteOpen)}>{DELETE_LABEL}</Button>
           </footer>
         </article>
       {/if}

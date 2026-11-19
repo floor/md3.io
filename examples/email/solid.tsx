@@ -10,9 +10,9 @@ import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
   archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, goBack, icons, initialState, mailbox, openCompose, openMessage,
-  replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked,
-  toggleStar, visibleMessages,
+  emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
+  openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
+  setQuery, toggleChecked, toggleStar, visibleMessages,
   type FolderId, type MailState, type Message,
 } from "./shared";
 
@@ -45,6 +45,21 @@ export default function Email() {
     update(fn);
     dialog?.show();
   };
+  // Focus moves after the state settles (Solid applies it synchronously): to the
+  // heading on open, back to the row on Back, to the list when the open message leaves.
+  const openRow = (id: string) => {
+    update((d) => { openMessage(d, messages, id); });
+    focusHeading();
+  };
+  const back = () => {
+    const id = s.open;
+    update((d) => { goBack(d); });
+    if (id) focusRow(id);
+  };
+  const closeOpenMessage = (fn: (s: MailState, messages: Message[]) => void) => {
+    update((d) => { fn(d, messages); });
+    focusList();
+  };
 
   return (
     <section class="mail" data-reading={String(s.reading)}>
@@ -61,9 +76,9 @@ export default function Email() {
         <div class="mail__list-pane">
           <header class="mail__top">
             <Search placeholder={SEARCH_PLACEHOLDER} noExpandOnFocus fullWidth
-              onInput={(e: CustomEvent<{ value: string }>) => update((d) => { setQuery(d, e.detail.value); })} />
+              onInput={(e: CustomEvent<{ value: string }>) => update((d) => { setQuery(d, messages, e.detail.value); })} />
             <Chips ariaLabel={CHIPS_LABEL} selection="single"
-              onChange={(e: CustomEvent<{ value: string | null }>) => update((d) => { setLabel(d, e.detail.value ?? null); })}>
+              onChange={(e: CustomEvent<{ value: string | null }>) => update((d) => { setLabel(d, messages, e.detail.value ?? null); })}>
               <For each={LABELS}>{(l) => <Chip value={l.id} label={l.label} />}</For>
             </Chips>
           </header>
@@ -75,7 +90,7 @@ export default function Email() {
               <IconButton icon={icons.delete} ariaLabel={DELETE_LABEL} onClick={() => update((d) => { deleteChecked(d, messages); })} />
             </Show>
           </div>
-          <ul class="mail__rows" aria-label={ROWS_LABEL}>
+          <ul class="mail__rows" aria-label={ROWS_LABEL} tabindex="-1">
             <Show when={visible().length === 0}>
               <li class="mail__empty">{emptyText(s)}</li>
             </Show>
@@ -85,7 +100,7 @@ export default function Email() {
                   <Checkbox class="mail-row__check" ariaLabel={selectLabel(m)} checked={s.checked.includes(m.id)}
                     onChange={() => update((d) => { toggleChecked(d, m.id); })} />
                   <button type="button" class="mail-row__open" aria-pressed={s.open === m.id}
-                    onClick={() => update((d) => { openMessage(d, messages, m.id); })}>
+                    onClick={() => openRow(m.id)}>
                     <span class="mail-row__sender">{m.from}</span>
                     <span class="mail-row__subject">{m.subject}</span>
                     <span class="mail-row__snippet">{m.snippet}</span>
@@ -93,7 +108,7 @@ export default function Email() {
                   </button>
                   <IconButton class="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
                     selected={m.starred} ariaLabel={STAR_LABEL}
-                    onChange={() => update(() => { toggleStar(messages, m.id); })} />
+                    onChange={() => update((d) => { toggleStar(d, messages, m.id); })} />
                 </li>
               )}
             </For>
@@ -104,19 +119,21 @@ export default function Email() {
             {(m) => (
               <article class="mail-message">
                 <header class="mail-message__head">
-                  <IconButton class="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL}
-                    onClick={() => update((d) => { goBack(d); })} />
-                  <h2 class="mail-message__subject">{m().subject}</h2>
+                  <IconButton class="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onClick={back} />
+                  <h2 class="mail-message__subject" tabindex="-1">{m().subject}</h2>
                 </header>
                 <p class="mail-message__meta">{m().from} · {m().address}</p>
+                <Show when={m().to}>
+                  <p class="mail-message__to">To {m().to}</p>
+                </Show>
                 <p class="mail-message__date">{m().date}</p>
                 <div class="mail-message__body">
                   <For each={m().body}>{(p) => <p>{p}</p>}</For>
                 </div>
                 <footer class="mail-message__actions">
                   <Button variant="outlined" icon={icons.reply} onClick={() => showDialog((d) => { replyToOpen(d, messages); })}>Reply</Button>
-                  <Button variant="outlined" icon={icons.archive} onClick={() => update((d) => { archiveOpen(d, messages); })}>{ARCHIVE_LABEL}</Button>
-                  <Button variant="outlined" icon={icons.delete} onClick={() => update((d) => { deleteOpen(d, messages); })}>{DELETE_LABEL}</Button>
+                  <Button variant="outlined" icon={icons.archive} onClick={() => closeOpenMessage(archiveOpen)}>{ARCHIVE_LABEL}</Button>
+                  <Button variant="outlined" icon={icons.delete} onClick={() => closeOpenMessage(deleteOpen)}>{DELETE_LABEL}</Button>
                 </footer>
               </article>
             )}

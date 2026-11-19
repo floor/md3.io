@@ -1,5 +1,5 @@
 // Vue: material/vue wraps the same elements; a reactive state mirrors the shared one.
-import { computed, defineComponent, reactive, ref } from "vue";
+import { computed, defineComponent, nextTick, reactive, ref } from "vue";
 import {
   MButton, MCheckbox, MChip, MChips, MDialog, MExtendedFab, MIconButton,
   MNavigationRail, MNavigationRailItem, MSearch, MSnackbar, MTextField,
@@ -8,9 +8,9 @@ import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
   archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, goBack, icons, initialState, mailbox, openCompose, openMessage,
-  replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked,
-  toggleStar, visibleMessages,
+  emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
+  openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
+  setQuery, toggleChecked, toggleStar, visibleMessages,
   type FolderId, type MailState, type Message,
 } from "./shared";
 
@@ -38,27 +38,49 @@ export default defineComponent({
     };
     const open = computed(() => (tick.value, findMessage(messages, s.open)));
     const visible = computed(() => (tick.value, visibleMessages(messages, s)));
+    // Bound through a tick-keyed computed: a plain badgeFor() call references only the
+    // module-level mailbox, which the template compiler treats as non-reactive and
+    // would never patch again.
+    const badges = computed(() => (tick.value, Object.fromEntries(FOLDERS.map((f) => [f.id, badgeFor(messages, f.id)]))));
     const sendDisabled = computed(() => !canSend(s.draft));
 
+    // Focus moves after the re-render: to the heading on open, back to the row on
+    // Back, to the list when the open message leaves.
+    const openRow = async (m: Message) => {
+      update(() => openMessage(s, messages, m.id));
+      await nextTick();
+      focusHeading();
+    };
+    const back = async () => {
+      const id = s.open;
+      goBack(s);
+      await nextTick();
+      if (id) focusRow(id);
+    };
+    const closeOpenMessage = async (fn: (s: MailState, messages: Message[]) => void) => {
+      update(() => fn(s, messages));
+      await nextTick();
+      focusList();
+    };
+
     return {
-      s, dialog, snackbar, open, visible, sendDisabled, update, showDialog,
+      s, dialog, snackbar, open, visible, badges, sendDisabled, update, showDialog,
+      openRow, back,
       messages, FOLDERS, LABELS, icons,
       RAIL_LABEL, CHIPS_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
       ARCHIVE_LABEL, BACK_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
-      badgeFor, emptyText, selectLabel, selectionText,
+      emptyText, selectLabel, selectionText,
       onRail: (e: CustomEvent<{ value: string }>) => setFolder(s, e.detail.value as FolderId),
-      onQuery: (e: CustomEvent<{ value: string }>) => setQuery(s, e.detail.value),
-      onLabel: (e: CustomEvent<{ value: string | null }>) => setLabel(s, e.detail.value ?? null),
+      onQuery: (e: CustomEvent<{ value: string }>) => setQuery(s, messages, e.detail.value),
+      onLabel: (e: CustomEvent<{ value: string | null }>) => setLabel(s, messages, e.detail.value ?? null),
       check: (m: Message) => toggleChecked(s, m.id),
-      openRow: (m: Message) => update(() => openMessage(s, messages, m.id)),
-      star: (m: Message) => update(() => toggleStar(messages, m.id)),
-      back: () => goBack(s),
+      star: (m: Message) => update(() => toggleStar(s, messages, m.id)),
       clear: () => clearChecked(s),
       archiveSelection: () => update(() => archiveChecked(s, messages)),
       deleteSelection: () => update(() => deleteChecked(s, messages)),
       reply: () => showDialog(() => replyToOpen(s, messages)),
-      archiveOpenMessage: () => update(() => archiveOpen(s, messages)),
-      deleteOpenMessage: () => update(() => deleteOpen(s, messages)),
+      archiveOpenMessage: () => closeOpenMessage(archiveOpen),
+      deleteOpenMessage: () => closeOpenMessage(deleteOpen),
       compose: () => showDialog(() => openCompose(s)),
       cancelCompose: () => {
         closeCompose(s);
@@ -76,7 +98,7 @@ export default defineComponent({
     <section class="mail" :data-reading="String(s.reading)">
       <MNavigationRail :aria-label="RAIL_LABEL" :value="s.folder" @change="onRail">
         <MNavigationRailItem v-for="f in FOLDERS" :key="f.id" :value="f.id" :label="f.label" :icon="f.icon"
-          :selected-icon="f.activeIcon" :badge="badgeFor(messages, f.id)?.badge" :badge-label="badgeFor(messages, f.id)?.label" />
+          :selected-icon="f.activeIcon" :badge="badges[f.id]?.badge" :badge-label="badges[f.id]?.label" />
       </MNavigationRail>
       <div class="mail__main">
         <div class="mail__list-pane">
@@ -94,7 +116,7 @@ export default defineComponent({
               <MIconButton :icon="icons.delete" :aria-label="DELETE_LABEL" @click="deleteSelection" />
             </template>
           </div>
-          <ul class="mail__rows" :aria-label="ROWS_LABEL">
+          <ul class="mail__rows" :aria-label="ROWS_LABEL" tabindex="-1">
             <li v-if="!visible.length" class="mail__empty">{{ emptyText(s) }}</li>
             <li v-for="m in visible" :key="m.id" class="mail-row" :data-id="m.id"
               :data-unread="m.unread || undefined" :data-open="s.open === m.id || undefined">
@@ -115,9 +137,10 @@ export default defineComponent({
           <article v-else class="mail-message">
             <header class="mail-message__head">
               <MIconButton class="mail-message__back" :icon="icons.back" :aria-label="BACK_LABEL" @click="back" />
-              <h2 class="mail-message__subject">{{ open.subject }}</h2>
+              <h2 class="mail-message__subject" tabindex="-1">{{ open.subject }}</h2>
             </header>
             <p class="mail-message__meta">{{ open.from }} · {{ open.address }}</p>
+            <p v-if="open.to" class="mail-message__to">To {{ open.to }}</p>
             <p class="mail-message__date">{{ open.date }}</p>
             <div class="mail-message__body"><p v-for="(p, i) in open.body" :key="i">{{ p }}</p></div>
             <footer class="mail-message__actions">

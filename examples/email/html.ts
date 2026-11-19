@@ -6,9 +6,9 @@ import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
   archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, goBack, icons, initialState, mailbox, openCompose, openMessage,
-  replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked,
-  toggleStar, visibleMessages,
+  emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, keepRowFocus,
+  mailbox, openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder,
+  setLabel, setQuery, toggleChecked, toggleStar, visibleMessages,
   type FolderId, type MailState, type Message,
 } from "./shared";
 
@@ -47,7 +47,7 @@ const chips = el<HTMLElement & { value: string | null }>("m-chips", { "aria-labe
 for (const l of LABELS) chips.append(el("m-chip", { value: l.id, label: l.label }));
 top.append(search, chips);
 const selection = el("div", { class: "mail__selection" });
-const rows = el("ul", { class: "mail__rows", "aria-label": ROWS_LABEL });
+const rows = el("ul", { class: "mail__rows", "aria-label": ROWS_LABEL, tabindex: "-1" });
 listPane.append(top, selection, rows);
 const detailPane = el("div", { class: "mail__detail-pane" });
 main.append(listPane, detailPane);
@@ -99,7 +99,7 @@ function detail(m: Message): HTMLElement {
   const head = el("header", { class: "mail-message__head" });
   head.append(
     el("m-icon-button", { class: "mail-message__back", icon: icons.back, "aria-label": BACK_LABEL }),
-    el("h2", { class: "mail-message__subject" }, m.subject),
+    el("h2", { class: "mail-message__subject", tabindex: "-1" }, m.subject),
   );
   const text = el("div", { class: "mail-message__body" });
   for (const p of m.body) text.append(el("p", {}, p));
@@ -112,6 +112,7 @@ function detail(m: Message): HTMLElement {
   article.append(
     head,
     el("p", { class: "mail-message__meta" }, `${m.from} · ${m.address}`),
+    ...(m.to ? [el("p", { class: "mail-message__to" }, `To ${m.to}`)] : []),
     el("p", { class: "mail-message__date" }, m.date),
     text,
     actions,
@@ -126,33 +127,36 @@ const syncDraft = (): void => {
   send.toggleAttribute("disabled", !canSend(s.draft));
 };
 
-// The dynamic regions, rebuilt from the state on every change.
+// The dynamic regions, rebuilt from the state on every change. keepRowFocus puts
+// focus back on a row control the rebuild replaced.
 function update(): void {
-  section.dataset.reading = String(s.reading);
-  for (const f of FOLDERS) {
-    const item = rail.querySelector(`m-navigation-rail-item[value="${f.id}"]`)!;
-    const badge = badgeFor(messages, f.id);
-    if (badge) {
-      item.setAttribute("badge", badge.badge);
-      item.setAttribute("badge-label", badge.label);
-    } else {
-      item.removeAttribute("badge");
-      item.removeAttribute("badge-label");
+  keepRowFocus(() => {
+    section.dataset.reading = String(s.reading);
+    for (const f of FOLDERS) {
+      const item = rail.querySelector(`m-navigation-rail-item[value="${f.id}"]`)!;
+      const badge = badgeFor(messages, f.id);
+      if (badge) {
+        item.setAttribute("badge", badge.badge);
+        item.setAttribute("badge-label", badge.label);
+      } else {
+        item.removeAttribute("badge");
+        item.removeAttribute("badge-label");
+      }
     }
-  }
-  selection.replaceChildren();
-  if (s.checked.length) {
-    selection.append(
-      el("m-icon-button", { class: "mail__clear", icon: icons.close, "aria-label": CLEAR_LABEL }),
-      el("span", { class: "mail__selection-count" }, selectionText(s.checked.length)),
-      el("m-icon-button", { class: "mail__archive", icon: icons.archive, "aria-label": ARCHIVE_LABEL }),
-      el("m-icon-button", { class: "mail__delete", icon: icons.delete, "aria-label": DELETE_LABEL }),
-    );
-  }
-  const visible = visibleMessages(messages, s);
-  rows.replaceChildren(...(visible.length ? visible.map(row) : [el("li", { class: "mail__empty" }, emptyText(s))]));
-  const open = findMessage(messages, s.open);
-  detailPane.replaceChildren(open ? detail(open) : el("div", { class: "mail__placeholder" }, EMPTY_DETAIL));
+    selection.replaceChildren();
+    if (s.checked.length) {
+      selection.append(
+        el("m-icon-button", { class: "mail__clear", icon: icons.close, "aria-label": CLEAR_LABEL }),
+        el("span", { class: "mail__selection-count" }, selectionText(s.checked.length)),
+        el("m-icon-button", { class: "mail__archive", icon: icons.archive, "aria-label": ARCHIVE_LABEL }),
+        el("m-icon-button", { class: "mail__delete", icon: icons.delete, "aria-label": DELETE_LABEL }),
+      );
+    }
+    const visible = visibleMessages(messages, s);
+    rows.replaceChildren(...(visible.length ? visible.map(row) : [el("li", { class: "mail__empty" }, emptyText(s))]));
+    const open = findMessage(messages, s.open);
+    detailPane.replaceChildren(open ? detail(open) : el("div", { class: "mail__placeholder" }, EMPTY_DETAIL));
+  });
 }
 
 rail.addEventListener("change", (e) => {
@@ -160,11 +164,11 @@ rail.addEventListener("change", (e) => {
   update();
 });
 search.addEventListener("input", (e) => {
-  setQuery(s, (e as CustomEvent<{ value: string }>).detail.value);
+  setQuery(s, messages, (e as CustomEvent<{ value: string }>).detail.value);
   update();
 });
 chips.addEventListener("change", (e) => {
-  setLabel(s, (e as CustomEvent<{ value: string | null }>).detail.value ?? null);
+  setLabel(s, messages, (e as CustomEvent<{ value: string | null }>).detail.value ?? null);
   update();
 });
 
@@ -174,6 +178,7 @@ rows.addEventListener("click", (e) => {
   if (opener?.dataset.id) {
     openMessage(s, messages, opener.dataset.id);
     update();
+    focusHeading();
   }
 });
 rows.addEventListener("change", (e) => {
@@ -185,7 +190,7 @@ rows.addEventListener("change", (e) => {
   }
   const star = (e.target as HTMLElement).closest<HTMLElement>("m-icon-button.mail-row__star");
   if (star?.dataset.id) {
-    toggleStar(messages, star.dataset.id);
+    toggleStar(s, messages, star.dataset.id);
     update();
   }
 });
@@ -202,15 +207,23 @@ selection.addEventListener("click", (e) => {
 detailPane.addEventListener("click", (e) => {
   const hit = (e.target as HTMLElement).closest("m-icon-button.mail-message__back, m-button");
   if (!hit) return;
-  if (hit.classList.contains("mail-message__back")) goBack(s);
-  else if (hit.classList.contains("mail-message__reply")) {
+  if (hit.classList.contains("mail-message__back")) {
+    const id = s.open;
+    goBack(s);
+    update();
+    if (id) focusRow(id);
+    return;
+  }
+  if (hit.classList.contains("mail-message__reply")) {
     replyToOpen(s, messages);
     syncDraft();
     dialog.show();
     return;
-  } else if (hit.classList.contains("mail-message__archive")) archiveOpen(s, messages);
+  }
+  if (hit.classList.contains("mail-message__archive")) archiveOpen(s, messages);
   else if (hit.classList.contains("mail-message__delete")) deleteOpen(s, messages);
   update();
+  focusList();
 });
 
 fab.addEventListener("click", () => {

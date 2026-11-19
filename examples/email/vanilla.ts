@@ -15,9 +15,9 @@ import {
   ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
   FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
   archiveChecked, archiveOpen, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, goBack, icons, initialState, mailbox, openCompose, openMessage,
-  replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked,
-  toggleStar, visibleMessages,
+  emptyText, findMessage, focusHeading, focusList, focusRow, goBack, icons, initialState, keepRowFocus,
+  mailbox, openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder,
+  setLabel, setQuery, toggleChecked, toggleStar, visibleMessages,
   type FolderId, type MailState, type Message,
 } from "./shared";
 
@@ -54,7 +54,7 @@ const detailPane = Object.assign(document.createElement("div"), { className: "ma
 const top = Object.assign(document.createElement("header"), { className: "mail__top" });
 const search = createSearch({ placeholder: SEARCH_PLACEHOLDER, expandOnFocus: false, fullWidth: true });
 search.on("input", ({ value }: { value: string }) => {
-  setQuery(s, value);
+  setQuery(s, messages, value);
   update();
 });
 const chips = createChips({
@@ -63,7 +63,7 @@ const chips = createChips({
   chips: LABELS.map((l) => ({ label: l.label, value: l.id })),
 });
 chips.on("change", ({ value }: { value: string | null }) => {
-  setLabel(s, value ?? null);
+  setLabel(s, messages, value ?? null);
   update();
 });
 top.append(search.element, chips.element);
@@ -71,6 +71,7 @@ top.append(search.element, chips.element);
 const selection = Object.assign(document.createElement("div"), { className: "mail__selection" });
 const rows = Object.assign(document.createElement("ul"), { className: "mail__rows" });
 rows.setAttribute("aria-label", ROWS_LABEL);
+rows.tabIndex = -1;
 listPane.append(top, selection, rows);
 
 // The compose dialog (the element, in the top layer) with factory fields and buttons.
@@ -124,40 +125,43 @@ dialog.addEventListener("close", () => closeCompose(s));
 const span = (className: string, text: string): HTMLSpanElement =>
   Object.assign(document.createElement("span"), { className, textContent: text });
 
-// The dynamic regions, rebuilt from the state on every change.
+// The dynamic regions, rebuilt from the state on every change. keepRowFocus puts
+// focus back on a row control the rebuild replaced.
 function update(): void {
-  section.dataset.reading = String(s.reading);
-  for (const f of FOLDERS) {
-    const badge = badgeFor(messages, f.id);
-    rail.setBadge(f.id, badge ? badge.badge : (null as unknown as string), badge ? badge.label : undefined);
-  }
+  keepRowFocus(() => {
+    section.dataset.reading = String(s.reading);
+    for (const f of FOLDERS) {
+      const badge = badgeFor(messages, f.id);
+      rail.setBadge(f.id, badge ? badge.badge : (null as unknown as string), badge ? badge.label : undefined);
+    }
 
-  selection.replaceChildren();
-  if (s.checked.length) {
-    const clear = createIconButton({ icon: icons.close, ariaLabel: CLEAR_LABEL });
-    clear.on("click", () => { clearChecked(s); update(); });
-    const archive = createIconButton({ icon: icons.archive, ariaLabel: ARCHIVE_LABEL });
-    archive.on("click", () => { archiveChecked(s, messages); update(); });
-    const remove = createIconButton({ icon: icons.delete, ariaLabel: DELETE_LABEL });
-    remove.on("click", () => { deleteChecked(s, messages); update(); });
-    selection.append(clear.element, span("mail__selection-count", selectionText(s.checked.length)), archive.element, remove.element);
-  }
+    selection.replaceChildren();
+    if (s.checked.length) {
+      const clear = createIconButton({ icon: icons.close, ariaLabel: CLEAR_LABEL });
+      clear.on("click", () => { clearChecked(s); update(); });
+      const archive = createIconButton({ icon: icons.archive, ariaLabel: ARCHIVE_LABEL });
+      archive.on("click", () => { archiveChecked(s, messages); update(); });
+      const remove = createIconButton({ icon: icons.delete, ariaLabel: DELETE_LABEL });
+      remove.on("click", () => { deleteChecked(s, messages); update(); });
+      selection.append(clear.element, span("mail__selection-count", selectionText(s.checked.length)), archive.element, remove.element);
+    }
 
-  rows.replaceChildren();
-  const visible = visibleMessages(messages, s);
-  if (!visible.length) {
-    const empty = Object.assign(document.createElement("li"), { className: "mail__empty", textContent: emptyText(s) });
-    rows.append(empty);
-  }
-  for (const m of visible) rows.append(row(m));
+    rows.replaceChildren();
+    const visible = visibleMessages(messages, s);
+    if (!visible.length) {
+      const empty = Object.assign(document.createElement("li"), { className: "mail__empty", textContent: emptyText(s) });
+      rows.append(empty);
+    }
+    for (const m of visible) rows.append(row(m));
 
-  detailPane.replaceChildren();
-  const open = findMessage(messages, s.open);
-  if (!open) {
-    detailPane.append(Object.assign(document.createElement("div"), { className: "mail__placeholder", textContent: EMPTY_DETAIL }));
-  } else {
-    detailPane.append(detail(open));
-  }
+    detailPane.replaceChildren();
+    const open = findMessage(messages, s.open);
+    if (!open) {
+      detailPane.append(Object.assign(document.createElement("div"), { className: "mail__placeholder", textContent: EMPTY_DETAIL }));
+    } else {
+      detailPane.append(detail(open));
+    }
+  });
 }
 
 function row(m: Message): HTMLLIElement {
@@ -180,13 +184,13 @@ function row(m: Message): HTMLLIElement {
     span("mail-row__snippet", m.snippet),
     span("mail-row__time", m.time),
   );
-  open.addEventListener("click", () => { openMessage(s, messages, m.id); update(); });
+  open.addEventListener("click", () => { openMessage(s, messages, m.id); update(); focusHeading(); });
 
   const star = createIconButton({
     icon: icons.star, selectedIcon: icons.starFill, toggle: true, selected: m.starred, ariaLabel: STAR_LABEL,
   });
   star.element.classList.add("mail-row__star");
-  star.on("change", () => { toggleStar(messages, m.id); update(); });
+  star.on("change", () => { toggleStar(s, messages, m.id); update(); });
 
   li.append(check.element, open, star.element);
   return li;
@@ -197,8 +201,15 @@ function detail(m: Message): HTMLElement {
   const head = Object.assign(document.createElement("header"), { className: "mail-message__head" });
   const back = createIconButton({ icon: icons.back, ariaLabel: BACK_LABEL });
   back.element.classList.add("mail-message__back");
-  back.on("click", () => { goBack(s); update(); });
-  head.append(back.element, Object.assign(document.createElement("h2"), { className: "mail-message__subject", textContent: m.subject }));
+  back.on("click", () => {
+    const id = s.open;
+    goBack(s);
+    update();
+    if (id) focusRow(id);
+  });
+  const subject = Object.assign(document.createElement("h2"), { className: "mail-message__subject", textContent: m.subject });
+  subject.tabIndex = -1;
+  head.append(back.element, subject);
 
   const meta = Object.assign(document.createElement("p"), { className: "mail-message__meta", textContent: `${m.from} · ${m.address}` });
   const date = Object.assign(document.createElement("p"), { className: "mail-message__date", textContent: m.date });
@@ -209,12 +220,16 @@ function detail(m: Message): HTMLElement {
   const reply = createButton({ text: "Reply", variant: "outlined", icon: icons.reply });
   reply.on("click", () => { replyToOpen(s, messages); syncDraft(); dialog.show(); });
   const archive = createButton({ text: ARCHIVE_LABEL, variant: "outlined", icon: icons.archive });
-  archive.on("click", () => { archiveOpen(s, messages); update(); });
+  archive.on("click", () => { archiveOpen(s, messages); update(); focusList(); });
   const remove = createButton({ text: DELETE_LABEL, variant: "outlined", icon: icons.delete });
-  remove.on("click", () => { deleteOpen(s, messages); update(); });
+  remove.on("click", () => { deleteOpen(s, messages); update(); focusList(); });
   actions.append(reply.element, archive.element, remove.element);
 
-  article.append(head, meta, date, text, actions);
+  article.append(
+    head, meta,
+    ...(m.to ? [Object.assign(document.createElement("p"), { className: "mail-message__to", textContent: `To ${m.to}` })] : []),
+    date, text, actions,
+  );
   return article;
 }
 
