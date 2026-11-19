@@ -21,7 +21,7 @@
     "eta": "4.5.1",
     "highlight.js": "11.11.1",
     "marked": "17.0.2",
-    "material": "3.15.2",
+    "material": "3.15.3",
     "minisearch": "^7.2.0"
   },
   "devDependencies": {
@@ -32,7 +32,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-preset-solid": "^1.9",
-    "material-addons": "3.1.0",
+    "material-addons": "3.2.0",
     "playwright": "^1.63.0",
     "react": "^19",
     "react-dom": "^19",
