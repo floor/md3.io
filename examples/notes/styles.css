@@ -1,21 +1,95 @@
-/* Layout for the example only: the components bring their own styles.
-   The element variants host <m-*> elements; Vanilla's factories build divs with
-   mtrl-* classes — every rule below names both shapes, as Settings' panel rules do. */
-.notes { display: flex; flex-direction: column; gap: 16px; width: 100%; }
-.notes__bar { display: flex; align-items: center; gap: 16px; }
-.notes__bar > :first-child { flex: 1; }
-.notes__status { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
-.notes__section { display: flex; flex-direction: column; gap: 8px; }
-.notes__section h2 { margin: 0; font: 500 14px/20px Roboto, system-ui, sans-serif; color: var(--mtrl-sys-color-on-surface); }
-.notes__section[hidden] { display: none; }
-.notes__grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.notes__grid.list { display: flex; flex-direction: column; gap: 8px; }
-.notes__grid > m-card, .notes__grid > .mtrl-card { display: block; }
-.notes__grid m-card p, .notes__grid .mtrl-card p { margin: 0 0 8px; }
-.notes__grid.list m-card p, .notes__grid.list .mtrl-card p { margin: 0; }
-.notes__card-actions { display: flex; align-items: center; gap: 4px; }
-.notes__empty { margin: 0; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
+.notes {
+  --notes-fab-height: 56px;
+  --notes-fab-margin: 24px;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+/* The surface is inside the element's shadow root in the adapter variants. */
+.notes m-top-app-bar::part(top-app-bar), .notes .mtrl-top-app-bar {
+  position: relative;
+  z-index: 3;
+  border-radius: 16px;
+  background-color: var(--mtrl-sys-color-surface-container);
+}
+
+.notes__tools { display: flex; align-items: center; gap: 12px; }
+.notes__search { display: block; width: min(38cqi, 300px); }
+.notes__mobile-search { margin-top: 8px; }
+.notes__mobile-search .notes__search { width: 100%; }
+.notes__mobile-search[hidden], .notes__menu[hidden] { display: none; }
+
+.notes__workspace {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.notes__drawer { display: block; min-width: 0; }
+.notes__content { min-width: 0; }
+.notes__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+
+.notes__section + .notes__section { margin-top: 20px; }
+.notes__section h2 {
+  margin: 0 0 8px;
+  font-family: var(--mtrl-sys-typescale-title-small-font);
+  font-size: var(--mtrl-sys-typescale-title-small-font-size);
+  font-weight: var(--mtrl-sys-typescale-title-small-font-weight);
+  line-height: var(--mtrl-sys-typescale-title-small-line-height);
+  color: var(--mtrl-sys-color-on-surface-variant);
+}
+
+.notes__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
+
+.notes__grid.list { grid-template-columns: 1fr; gap: 8px; }
+.notes__card { position: relative; }
+.notes__card > :is(m-card, .mtrl-card) { display: block; height: 100%; }
+.notes__card-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.notes__open {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+.notes__open::after { content: ""; position: absolute; inset: 0; border-radius: 12px; z-index: 1; }
+.notes__open:focus-visible { outline: none; }
+.notes__open:focus-visible::after { outline: 2px solid var(--mtrl-sys-color-primary); outline-offset: 2px; }
+.notes__more { position: relative; z-index: 2; flex: none; }
+.notes__card p { margin: 0 0 8px; }
+.notes__card .notes__labels, .notes__card time { color: var(--mtrl-sys-color-on-surface-variant); font-size: 12px; }
+.notes__empty { padding: 24px; color: var(--mtrl-sys-color-on-surface-variant); }
+.notes__empty p { margin: 0 0 8px; }
+
 .notes__fields { display: flex; flex-direction: column; gap: 12px; padding-top: 4px; }
-.notes__fields m-text-field, .notes__fields .mtrl-text-field { display: block; width: 100%; }
+.notes__fields :is(m-text-field, .mtrl-text-field) { display: block; width: 100%; }
 .notes__editor-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.notes m-extended-fab, .notes .mtrl-extended-fab { position: fixed; inset-inline-end: 24px; bottom: 24px; }
+
+.notes :is(m-extended-fab, .mtrl-extended-fab) {
+  position: fixed;
+  z-index: 4;
+  inset-inline-end: var(--notes-fab-margin);
+  bottom: var(--notes-fab-margin);
+}
+
+.notes[data-compact="true"] { padding-bottom: calc(var(--notes-fab-height) + var(--notes-fab-margin)); }
+.notes[data-compact="true"] .notes__workspace { display: block; }
+.notes[data-compact="true"] .notes__drawer { position: absolute; }
