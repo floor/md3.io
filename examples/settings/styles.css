@@ -7,7 +7,7 @@
 .settings__group[aria-label="Account"] > m-list, .settings__group[aria-label="Account"] > .mtrl-list { display: none; }
 .settings__row { position: relative; display: flex; align-items: center; min-width: 0; }
 .settings__row > m-list, .settings__row > .mtrl-list { flex: 1; min-width: 0; }
-.settings__row > m-switch, .settings__row > .mtrl-switch { position: absolute; inset-inline-end: 16px; }
+.settings__row > m-switch, .settings__row > .mtrl-switch { position: absolute; inset-inline-end: 16px; width: 52px; }
 .settings__row > m-avatar, .settings__row > .mtrl-avatar { position: absolute; inset-inline-start: 16px; z-index: 1; }
 .settings__row m-list::part(list), .settings__row > .mtrl-list { padding-block: 0; }
 .settings__row--toggle m-list::part(item), .settings__row--toggle .mtrl-list__item { padding-inline-end: 88px; }
