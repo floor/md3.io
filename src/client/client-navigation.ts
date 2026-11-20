@@ -240,7 +240,12 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       await transition.updateCallbackDone;
     } else await swap();
   } catch {
-    if (request === controller && !superseded) location.replace(url.href);
+    if (request === controller && !superseded) {
+      // intercept() already committed the API entry. The click fallback has not
+      // pushed anything yet: assign preserves the page the reader must return to.
+      if (api) location.replace(url.href);
+      else location.assign(url.href);
+    }
   } finally { clearTimeout(timer); outerSignal?.removeEventListener('abort', abortForNavigation); }
 }
 if (shell && content && layout) {

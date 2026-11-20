@@ -194,6 +194,11 @@ try {
       await exit.waitForFunction(() => !(window as any).documentToken);
       assert.equal(new URL(exit.url()).pathname, new URL(path, server.url).pathname, `${kind}: full-load destination`);
       assert.equal(fetches, kind === 'full-load' ? 0 : 1, `${kind}: expected fetch path`);
+      await exit.waitForLoadState('load');
+      await exit.goBack();
+      await exit.waitForURL(href('/components/button/'));
+      await exit.getByRole('heading', { name: 'Button', exact: true }).waitFor();
+      assert.equal(new URL(exit.url()).pathname, '/components/button/', `${kind}: Back returns to the page left behind`);
       await exit.unrouteAll({ behavior: 'wait' });
     }
     await exits.close();
