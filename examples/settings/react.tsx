@@ -10,7 +10,7 @@ export default function Settings() {
   const snackbar = useRef<SnackbarElement | null>(null);
   const send = (a: Action) => {
     setS(previous => reduce(previous, a));
-    if (announces(a)) requestAnimationFrame(() => snackbar.current?.show());
+    if (announces(a)) requestAnimationFrame(() => { snackbar.current?.component?.setDuration("short"); snackbar.current?.show(); });
   };
   const row = (r: Row) => <div key={r.id}>
     <div className={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`}>

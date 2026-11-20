@@ -78,6 +78,9 @@ export default async function steps(page: Page | Frame): Promise<void> {
   await page.getByRole("alertdialog").waitFor({ state: "hidden" });
   await button("Search settings").click();
   await button("Airplane mode").click();
-  await page.getByRole("status").filter({ hasText: "Airplane mode on" }).waitFor();
+  const feedback = page.getByRole("status").filter({ hasText: "Airplane mode on" });
+  await feedback.waitFor();
+  await button("Dismiss").click();
+  await feedback.waitFor({ state: "hidden" });
 }
 export const checkFrame = steps;

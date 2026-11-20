@@ -123,6 +123,6 @@ function send(a: Action) {
   search.value = s.query;
   renderBody();
   if (before.dialog !== s.dialog) renderDialog();
-  if (announces(a)) { snackbar.setAttribute("message", s.notice); snackbar.show(); }
+  if (announces(a)) { snackbar.component?.setDuration("short"); snackbar.setAttribute("message", s.notice); snackbar.show(); }
 }
 renderBody();

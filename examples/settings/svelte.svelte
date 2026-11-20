@@ -8,7 +8,7 @@
   let snackbar: { element?: SnackbarElement } | undefined = $state();
   const send = (a: Action) => {
     s = reduce(s, a);
-    if (announces(a)) requestAnimationFrame(() => snackbar?.element?.show());
+    if (announces(a)) requestAnimationFrame(() => { snackbar?.element?.component?.setDuration("short"); snackbar?.element?.show(); });
   };
   const details = $derived(dialog(s));
 </script>

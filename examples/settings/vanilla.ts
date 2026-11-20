@@ -136,6 +136,6 @@ function send(a: Action) {
   search.setValue(s.query);
   renderBody();
   if (before.dialog !== s.dialog) renderDialog();
-  if (announces(a)) { snackbar.setMessage(s.notice); snackbar.show(); }
+  if (announces(a)) { snackbar.setDuration("short"); snackbar.setMessage(s.notice); snackbar.show(); }
 }
 renderBody();

@@ -12,7 +12,7 @@ export default defineComponent({
     const snackbar = ref<{ element?: SnackbarElement } | null>(null);
     const send = (a: Action) => {
       s.value = reduce(s.value, a);
-      if (announces(a)) requestAnimationFrame(() => snackbar.value?.element?.show());
+      if (announces(a)) requestAnimationFrame(() => { snackbar.value?.element?.component?.setDuration("short"); snackbar.value?.element?.show(); });
     };
     return { s, snackbar, send, ICONS, activate, isNetwork, details: computed(() => dialog(s.value)), shown: computed(() => groups(s.value)), wifi: computed(() => wifiRow(s.value)) };
   },
