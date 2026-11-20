@@ -218,6 +218,10 @@ try {
     if (!document.startViewTransition) return;
     const start = document.startViewTransition.bind(document);
     document.startViewTransition = update => {
+      (window as any).transitionNames = {
+        root: getComputedStyle(document.documentElement).viewTransitionName,
+        shell: [...document.querySelectorAll('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')].map(node => getComputedStyle(node).viewTransitionName),
+      };
       const transition = start(update);
       (window as any).navigationAnimation = transition.finished;
       return transition;
@@ -231,6 +235,10 @@ try {
   await capture.waitForFunction(() => location.pathname === '/components/icon-button/' && document.querySelector('h1')?.textContent === 'Icon button');
   await settled(capture);
   await capture.evaluate(() => (window as any).navigationAnimation);
+  const transitionNames = await capture.evaluate(() => (window as any).transitionNames);
+  assert.equal(transitionNames.root, 'none', 'the whole document is not snapshotted');
+  assert.ok(transitionNames.shell.length >= 4 && transitionNames.shell.every((name: string) => name === 'none'), 'header, rail, bar and drawer remain live during the content transition');
+  assert.equal(await capture.locator('#component-content').evaluate(node => getComputedStyle(node).viewTransitionName), 'page-content');
   await capture.screenshot({ path: resolve(output, '03-swapped.png') });
   const video = capture.video()!; await captureContext.close();
   await video.saveAs(resolve(output, 'drawer-navigation.webm'));

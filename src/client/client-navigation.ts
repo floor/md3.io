@@ -155,6 +155,9 @@ async function styles(next: Document, signal: AbortSignal) {
 // Snapshot the changing content, leaving the mounted drawer's own animation live.
 function nameTransitionContent() {
   document.documentElement.style.viewTransitionName = 'none';
+  // Explicitly leave shell chrome out of snapshots, so the real drawer pill keeps
+  // animating on screen while only the page-content snapshot cross-fades.
+  for (const shellElement of document.querySelectorAll<HTMLElement>('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')) shellElement.style.viewTransitionName = 'none';
   content!.style.viewTransitionName = '';
   (content!.querySelector<HTMLElement>('#component-content, .component-catalog') ?? content!).style.viewTransitionName = 'page-content';
 }
