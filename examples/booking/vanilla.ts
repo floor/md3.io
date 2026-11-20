@@ -59,26 +59,36 @@ const fieldError = (): HTMLElement => {
   return el;
 };
 
-// The price summary: a material card beside the stepper on wide frames, a compact
-// panel above it on mobile frames (styles.css orders it), live on every step.
+// The price summary: a material card beside the stepper on wide frames, and a
+// compact copy of the same card inside each step, just above its actions, on
+// narrow frames (styles.css shows one or the other). Both render the same lines.
 const summaryLines = div("booking__summary-lines");
 const summaryCard = createCard({ variant: "filled", header: { title: "Price summary" }, content: { children: [summaryLines] } });
 summaryCard.element.classList.add("booking__summary");
+const compactLines: HTMLDivElement[] = [];
+const makeCompact = (): HTMLElement => {
+  const lines = div("booking__summary-lines");
+  compactLines.push(lines);
+  const card = createCard({ variant: "filled", header: { title: "Price summary" }, content: { children: [lines] } });
+  card.element.classList.add("booking__summary-compact");
+  return card.element;
+};
+const summaryNodes = (): HTMLElement[] => [
+  ...priceLines(s).map((line) => {
+    const row = div("booking__price-line");
+    row.append(text("booking__price-line mtrl-body-medium", line.label, "span"), text("booking__price-line mtrl-body-medium", line.amount, "span"));
+    return row;
+  }),
+  (() => {
+    const row = div("booking__price-total");
+    row.append(text("booking__price-line mtrl-title-small", "Total", "span"), text("booking__price-line mtrl-title-small", totalText(s).replace("Estimated total ", ""), "span"));
+    return row;
+  })(),
+  text("booking__lede mtrl-body-medium", PROPERTY.policy),
+];
 const renderSummary = (): void => {
-  summaryLines.replaceChildren(
-    ...priceLines(s).map((line) => {
-      const row = div("booking__price-line");
-      row.append(text("booking__price-line mtrl-body-medium", line.label, "span"), text("booking__price-line mtrl-body-medium", line.amount, "span"));
-      return row;
-    }),
-    (() => {
-      const row = div("booking__price-total");
-      row.append(text("booking__price-line mtrl-title-small", "Total", "span"), text("booking__price-line mtrl-title-small", totalText(s).replace("Estimated total ", ""), "span"));
-      return row;
-    })(),
-    text("booking__lede mtrl-body-medium", totalText(s)),
-    text("booking__lede mtrl-body-medium", PROPERTY.policy),
-  );
+  summaryLines.replaceChildren(...summaryNodes());
+  for (const lines of compactLines) lines.replaceChildren(...summaryNodes());
 };
 
 const step1 = pane(1);
@@ -88,7 +98,7 @@ const arrival = createTextField({ label: "Arrival time", value: s.arrivalTime, s
 grid1.append(stay.element, arrival.element);
 const stayLine = text("booking__stay mtrl-body-medium", "");
 const datesError = fieldError();
-step1.append(grid1, stayLine, datesError, actions(action("next", "Next")));
+step1.append(grid1, stayLine, datesError, makeCompact(), actions(action("next", "Next")));
 
 const step2 = pane(2);
 const grid2 = div("booking__grid");
@@ -131,7 +141,7 @@ roomsEl.addEventListener("keydown", (event) => {
   else if (event.key === " " || event.key === "Enter") { event.preventDefault(); s = { ...s, room: value }; render(); roomCards.get(value)?.focus(); }
 });
 roomGroup.append(text("booking__label mtrl-title-small", "Room type"), roomsEl);
-step2.append(grid2, roomGroup, actions(action("prev", "Back"), action("next", "Next")));
+step2.append(grid2, roomGroup, makeCompact(), actions(action("prev", "Back"), action("next", "Next")));
 
 const step3 = pane(3);
 const extrasGroup = div("booking__group");
@@ -146,7 +156,7 @@ for (const extra of EXTRAS) {
   control.on("change", ({ checked }) => { s = { ...s, [extra.key]: checked }; render(); });
   extrasGroup.append(control.element);
 }
-step3.append(extrasGroup, actions(action("prev", "Back"), action("next", "Next")));
+step3.append(extrasGroup, makeCompact(), actions(action("prev", "Back"), action("next", "Next")));
 
 const step4 = pane(4);
 const grid4 = div("booking__grid");
@@ -213,7 +223,7 @@ book.on("click", () => {
   else if (errors.name) focusField(nameField.element);
   else if (errors.email) focusField(emailField.element);
 });
-step4.append(actions(action("prev", "Back"), wrap(book.element)));
+step4.append(makeCompact(), actions(action("prev", "Back"), wrap(book.element)));
 
 const render = (): void => {
   stayLine.textContent = stayText(s);

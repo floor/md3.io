@@ -108,6 +108,21 @@
         </div>
         <p class="booking__stay mtrl-body-medium">{stayText(s)}</p>
         {#if errors.dates}<p class="booking__field-error mtrl-body-small">{errors.dates}</p>{/if}
+                <Card variant="filled" headline="Price summary" class="booking__summary-compact">
+          <div class="booking__summary-lines">
+            {#each priceLines(s) as line (line.label)}
+              <div class="booking__price-line">
+                <span class="booking__price-line mtrl-body-medium">{line.label}</span>
+                <span class="booking__price-line mtrl-body-medium">{line.amount}</span>
+              </div>
+            {/each}
+            <div class="booking__price-total">
+              <span class="booking__price-line mtrl-title-small">Total</span>
+              <span class="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
+            </div>
+            <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
+          </div>
+        </Card>
         <footer class="booking__actions"><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -141,6 +156,21 @@
             {/each}
           </div>
         </div>
+                <Card variant="filled" headline="Price summary" class="booking__summary-compact">
+          <div class="booking__summary-lines">
+            {#each priceLines(s) as line (line.label)}
+              <div class="booking__price-line">
+                <span class="booking__price-line mtrl-body-medium">{line.label}</span>
+                <span class="booking__price-line mtrl-body-medium">{line.amount}</span>
+              </div>
+            {/each}
+            <div class="booking__price-total">
+              <span class="booking__price-line mtrl-title-small">Total</span>
+              <span class="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
+            </div>
+            <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
+          </div>
+        </Card>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -153,6 +183,21 @@
             <Checkbox checked={s[extra.key]} onchange={(e) => (s[extra.key] = e.detail.checked)}>{extra.label} — ${extra.price} {extra.unit}</Checkbox>
           {/each}
         </div>
+                <Card variant="filled" headline="Price summary" class="booking__summary-compact">
+          <div class="booking__summary-lines">
+            {#each priceLines(s) as line (line.label)}
+              <div class="booking__price-line">
+                <span class="booking__price-line mtrl-body-medium">{line.label}</span>
+                <span class="booking__price-line mtrl-body-medium">{line.amount}</span>
+              </div>
+            {/each}
+            <div class="booking__price-total">
+              <span class="booking__price-line mtrl-title-small">Total</span>
+              <span class="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
+            </div>
+            <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
+          </div>
+        </Card>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -178,6 +223,21 @@
             </div>
           {/each}
         </div>
+                <Card variant="filled" headline="Price summary" class="booking__summary-compact">
+          <div class="booking__summary-lines">
+            {#each priceLines(s) as line (line.label)}
+              <div class="booking__price-line">
+                <span class="booking__price-line mtrl-body-medium">{line.label}</span>
+                <span class="booking__price-line mtrl-body-medium">{line.amount}</span>
+              </div>
+            {/each}
+            <div class="booking__price-total">
+              <span class="booking__price-line mtrl-title-small">Total</span>
+              <span class="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
+            </div>
+            <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
+          </div>
+        </Card>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div><Button onclick={book}>Book</Button></div></footer>
       </div>
     </Step>
@@ -194,7 +254,6 @@
         <span class="booking__price-line mtrl-title-small">Total</span>
         <span class="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
       </div>
-      <p class="booking__lede mtrl-body-medium">{totalText(s)}</p>
       <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
     </div>
   </Card>

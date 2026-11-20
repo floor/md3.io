@@ -42,7 +42,10 @@ const svgImage = (sky: string, hill: string, accent: string): string =>
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="${sky}"/><g transform="translate(0,30)"><circle cx="520" cy="72" r="38" fill="${accent}"/><path d="M0 250 Q160 190 320 240 T640 230 V360 H0 Z" fill="${hill}"/><path d="M0 300 Q200 260 400 295 T640 290 V360 H0 Z" fill="${accent}" opacity=".45"/><rect x="250" y="150" width="140" height="92" rx="6" fill="#fff8ee"/><path d="M238 152 L320 104 L402 152 Z" fill="#5b4a3f"/><rect x="302" y="196" width="36" height="46" fill="#5b4a3f"/></g></svg>`,
   )}`;
 
-export const HERO_IMAGE = svgImage("#bcd9ea", "#7fae7a", "#e9b44c");
+/** The hero scene is drawn for the banner's own 7:3 frame, so cover never crops it. */
+export const HERO_IMAGE = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 360"><rect width="840" height="360" fill="#bcd9ea"/><circle cx="712" cy="64" r="36" fill="#e9b44c"/><path d="M0 258 Q210 200 420 246 T840 238 V360 H0 Z" fill="#7fae7a"/><path d="M0 306 Q260 268 520 298 T840 296 V360 H0 Z" fill="#e9b44c" opacity=".45"/><rect x="350" y="158" width="140" height="92" rx="6" fill="#fff8ee"/><path d="M338 160 L420 112 L502 160 Z" fill="#5b4a3f"/><rect x="402" y="204" width="36" height="46" fill="#5b4a3f"/></svg>`,
+)}`;
 
 export const ROOMS = [
   { value: "standard", label: "Standard room", rate: 95, beds: "1 queen bed", size: "19 m²", features: "Garden view · Rain shower", image: svgImage("#cfe4ef", "#8db489", "#e9b44c") },

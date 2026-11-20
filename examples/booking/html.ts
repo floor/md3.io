@@ -37,6 +37,7 @@ app.innerHTML = `
           </div>
           <p class="booking__stay mtrl-body-medium" id="stay-line"></p>
           <p class="booking__field-error mtrl-body-small" id="dates-error" hidden></p>
+          <m-card class="booking__summary-compact" variant="filled" headline="Price summary"><div class="booking__summary-lines" data-summary-lines></div></m-card>
           <footer class="booking__actions"><div data-stepper-next><m-button id="next-1">Next</m-button></div></footer>
         </div>
       </m-step>
@@ -62,6 +63,7 @@ app.innerHTML = `
               </div>`).join("")}
             </div>
           </div>
+          <m-card class="booking__summary-compact" variant="filled" headline="Price summary"><div class="booking__summary-lines" data-summary-lines></div></m-card>
           <footer class="booking__actions"><div data-stepper-prev><m-button variant="outlined">Back</m-button></div><div data-stepper-next><m-button>Next</m-button></div></footer>
         </div>
       </m-step>
@@ -72,6 +74,7 @@ app.innerHTML = `
             <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
             ${EXTRAS.map((extra) => `<m-checkbox id="${extra.key}">${extra.label} — $${extra.price} ${extra.unit}</m-checkbox>`).join("")}
           </div>
+          <m-card class="booking__summary-compact" variant="filled" headline="Price summary"><div class="booking__summary-lines" data-summary-lines></div></m-card>
           <footer class="booking__actions"><div data-stepper-prev><m-button variant="outlined">Back</m-button></div><div data-stepper-next><m-button>Next</m-button></div></footer>
         </div>
       </m-step>
@@ -83,12 +86,13 @@ app.innerHTML = `
             <m-text-field id="email" label="Email" type="email" supporting-text="Required"></m-text-field>
           </div>
           <div class="booking__group" id="review"></div>
+          <m-card class="booking__summary-compact" variant="filled" headline="Price summary"><div class="booking__summary-lines" data-summary-lines></div></m-card>
           <footer class="booking__actions"><div data-stepper-prev><m-button variant="outlined">Back</m-button></div><div id="book"><m-button>Book</m-button></div></footer>
         </div>
       </m-step>
     </m-stepper>
     <m-card class="booking__summary" variant="filled" headline="Price summary">
-      <div class="booking__summary-lines" id="summary-lines"></div>
+      <div class="booking__summary-lines" id="summary-lines" data-summary-lines></div>
     </m-card>
     </div>
     <m-timepicker id="timepicker" label="Arrival time" value="${s.arrivalTime}" format="24h"></m-timepicker>
@@ -139,28 +143,29 @@ stepper.addEventListener("beforechange", (event) => {
 const render = (): void => {
   $("stay-line").textContent = stayText(s);
   $("dialog-summary").textContent = summary(s);
-  $("summary-lines").replaceChildren(
-    ...priceLines(s).map((line) => {
-      const row = document.createElement("div");
-      row.className = "booking__price-line";
-      for (const part of [line.label, line.amount]) {
-        const span = Object.assign(document.createElement("span"), { className: "booking__price-line mtrl-body-medium", textContent: part });
-        row.append(span);
-      }
-      return row;
-    }),
-    (() => {
-      const row = document.createElement("div");
-      row.className = "booking__price-total";
-      for (const part of ["Total", totalText(s).replace("Estimated total ", "")]) {
-        const span = Object.assign(document.createElement("span"), { className: "booking__price-line mtrl-title-small", textContent: part });
-        row.append(span);
-      }
-      return row;
-    })(),
-    Object.assign(document.createElement("p"), { className: "booking__lede mtrl-body-medium", textContent: totalText(s) }),
-    Object.assign(document.createElement("p"), { className: "booking__lede mtrl-body-medium", textContent: PROPERTY.policy }),
-  );
+  for (const container of app.querySelectorAll<HTMLElement>("[data-summary-lines]")) {
+    container.replaceChildren(
+      ...priceLines(s).map((line) => {
+        const row = document.createElement("div");
+        row.className = "booking__price-line";
+        for (const part of [line.label, line.amount]) {
+          const span = Object.assign(document.createElement("span"), { className: "booking__price-line mtrl-body-medium", textContent: part });
+          row.append(span);
+        }
+        return row;
+      }),
+      (() => {
+        const row = document.createElement("div");
+        row.className = "booking__price-total";
+        for (const part of ["Total", totalText(s).replace("Estimated total ", "")]) {
+          const span = Object.assign(document.createElement("span"), { className: "booking__price-line mtrl-title-small", textContent: part });
+          row.append(span);
+        }
+        return row;
+      })(),
+      Object.assign(document.createElement("p"), { className: "booking__lede mtrl-body-medium", textContent: PROPERTY.policy }),
+    );
+  }
   for (const option of app.querySelectorAll<HTMLElement>("[data-room]")) {
     const selected = option.dataset.room === s.room;
     option.setAttribute("aria-checked", String(selected));

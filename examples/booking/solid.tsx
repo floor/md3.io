@@ -72,8 +72,8 @@ export default function Booking() {
     else if (event.key === "End") { event.preventDefault(); selectRoom(ROOMS[ROOMS.length - 1]!.value, true); }
     else if (event.key === " " || event.key === "Enter") { event.preventDefault(); selectRoom(value, true); }
   };
-  const summaryPanel = (
-    <Card variant="filled" headline="Price summary" class="booking__summary">
+  const summaryCard = (cls: string) => (
+    <Card variant="filled" headline="Price summary" class={cls}>
       <div class="booking__summary-lines">
         <For each={priceLines({ ...s })}>{(line) => (
           <div class="booking__price-line">
@@ -85,11 +85,11 @@ export default function Booking() {
           <span class="booking__price-line mtrl-title-small">Total</span>
           <span class="booking__price-line mtrl-title-small">{totalText({ ...s }).replace("Estimated total ", "")}</span>
         </div>
-        <p class="booking__lede mtrl-body-medium">{totalText({ ...s })}</p>
         <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
       </div>
     </Card>
   );
+  const summaryPanel = summaryCard("booking__summary");
   // Each panel's heading carries tabindex -1: the stepper's focus after an action
   // reaches it first, so a step change puts focus on the new step's heading.
   const heading = (step: number) => <h2 class="booking__step-title mtrl-title-large" tabindex={-1}>{stepHeading(step)}</h2>;
@@ -134,6 +134,7 @@ export default function Booking() {
             </div>
             <p class="booking__stay mtrl-body-medium">{stayText({ ...s })}</p>
             <Show when={errors.dates}><p class="booking__field-error mtrl-body-small">{errors.dates}</p></Show>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -167,6 +168,7 @@ export default function Booking() {
                 )}</For>
               </div>
             </div>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -183,6 +185,7 @@ export default function Booking() {
                 )}
               </For>
             </div>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -210,6 +213,7 @@ export default function Booking() {
                 )}
               </For>
             </div>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("prev", "Back")}<div><Button onClick={book}>Book</Button></div></footer>
           </div>
         </Step>

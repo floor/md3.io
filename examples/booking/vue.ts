@@ -109,6 +109,19 @@ export default defineComponent({
             </div>
             <p class="booking__stay mtrl-body-medium">{{ stayText(s) }}</p>
             <p v-if="errors.dates" class="booking__field-error mtrl-body-small">{{ errors.dates }}</p>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -139,6 +152,19 @@ export default defineComponent({
                 </div>
               </div>
             </div>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -149,6 +175,19 @@ export default defineComponent({
               <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
               <MCheckbox v-for="extra in EXTRAS" :key="extra.key" :checked="s[extra.key]" @change="s[extra.key] = $event.detail.checked">{{ extra.label }} — \${{ extra.price }} {{ extra.unit }}</MCheckbox>
             </div>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -170,6 +209,19 @@ export default defineComponent({
                 </div>
               </div>
             </div>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div><MButton @click="book">Book</MButton></div></footer>
           </div>
         </MStep>
@@ -184,7 +236,6 @@ export default defineComponent({
             <span class="booking__price-line mtrl-title-small">Total</span>
             <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
           </div>
-          <p class="booking__lede mtrl-body-medium">{{ totalText(s) }}</p>
           <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
         </div>
       </MCard>

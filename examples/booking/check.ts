@@ -89,7 +89,7 @@ export default async function steps(page: Page): Promise<void> {
   assert.equal(await stay.inputValue(), "2027-04-20 - 2027-04-22");
   await includes("Check-in 2027-04-20 → Check-out 2027-04-22 · 2 nights");
   await includes("Double room · $120 × 2 nights");
-  await includes("Estimated total $284 for 2 nights");
+  await includes("$284 for 2 nights");
   await pickRange("Tuesday, April 20, 2027", "Tuesday, April 20, 2027");
   await includes("Check-in 2027-04-20 → Check-out 2027-04-20 · 0 nights");
   await includes("Choose at least 1 night");
@@ -97,7 +97,7 @@ export default async function steps(page: Page): Promise<void> {
   await includes("Step 1 of 4");
   assert.ok(await isFocused(stay), "an invalid range focuses the stay field");
   await pickRange("Tuesday, April 20, 2027", "Thursday, April 22, 2027");
-  await includes("Estimated total $284 for 2 nights");
+  await includes("$284 for 2 nights");
 
   // Step 1: the time picker writes back, a typed time is where it reopens, Cancel keeps it.
   await chooseTime.click();
@@ -156,14 +156,14 @@ export default async function steps(page: Page): Promise<void> {
   await page.keyboard.press("ArrowRight");
   await focusedRoomIs("family");
   await checkedRoom("Family room, King + 2 single beds, 32 m², $155 a night, Sea view · Kitchenette");
-  await includes("Estimated total $361 for 2 nights");
+  await includes("$361 for 2 nights");
   await page.keyboard.press("ArrowLeft");
   await focusedRoomIs("double");
   await checkedRoom("Double room, 1 king bed, 24 m², $120 a night, Sea view · Balcony");
   await page.keyboard.press("Home");
   await focusedRoomIs("standard");
   await checkedRoom("Standard room, 1 queen bed, 19 m², $95 a night, Garden view · Rain shower");
-  await includes("Estimated total $229 for 2 nights");
+  await includes("$229 for 2 nights");
   await page.keyboard.press("Space");
   await checkedRoom("Standard room, 1 queen bed, 19 m², $95 a night, Garden view · Rain shower");
   await page.keyboard.press("End");
@@ -171,11 +171,11 @@ export default async function steps(page: Page): Promise<void> {
   await checkedRoom("Suite, 1 king bed, 41 m², $210 a night, Private terrace · Soaking tub");
   await page.locator('[data-room="suite"]').click();
   await checkedRoom("Suite, 1 king bed, 41 m², $210 a night, Private terrace · Soaking tub");
-  await includes("Estimated total $482 for 2 nights");
+  await includes("$482 for 2 nights");
   await next.click();
   await stepIs(3, "Extras");
   // The Suite the second step chose carries onto the third.
-  await includes("Estimated total $482 for 2 nights");
+  await includes("$482 for 2 nights");
 
   // Every extra in the named group, and the total follows onto the third step.
   assert.equal(await page.getByRole("group", { name: "Extras", ...exact }).getByRole("checkbox").count(), 3);
@@ -183,10 +183,10 @@ export default async function steps(page: Page): Promise<void> {
     await page.getByRole("checkbox", { name: new RegExp(extra) }).click();
   }
   await includes("Extras");
-  await includes("Estimated total $576 for 2 nights");
+  await includes("$576 for 2 nights");
   await next.click();
   await stepIs(4, "Your details and review");
-  await includes("Estimated total $576 for 2 nights");
+  await includes("$576 for 2 nights");
 
   // The review shows the first three steps, each row labelled with its Edit;
   // Edit jumps back to its step.
@@ -239,5 +239,5 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Confirm booking", ...exact }).click();
   await dialog.waitFor({ state: "hidden" });
   await page.getByText("Booking confirmed", exact).waitFor();
-  await includes("Estimated total $576 for 2 nights");
+  await includes("$576 for 2 nights");
 }
