@@ -1,11 +1,12 @@
 // React: the generated adapters render the same Material elements.
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { SnackbarElement } from "material/elements";
 import { Button, Dialog, IconButton, List, ListItem, Progress, Snackbar, Switch, TextField, TopAppBar } from "material/react";
 import { Avatar } from "material-addons/react";
-import { DEFAULTS, ICONS, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
+import { DEFAULTS, ICONS, mountRowControls, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
 
 export default function Settings() {
+  useLayoutEffect(() => mountRowControls(), []);
   const [s, setS] = useState(DEFAULTS);
   const snackbar = useRef<SnackbarElement | null>(null);
   const send = (a: Action) => {
@@ -16,9 +17,10 @@ export default function Settings() {
     <div className={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`}>
       {r.account && <Avatar variant="text" size="medium" text="MV" decorative />}
       <List selection="single" onActivate={e => activate(e, () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }))}>
-        <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled} />
-      </List>
+        <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled}>
       {r.toggle && <Switch ariaLabel={r.label} checked={s[r.toggle]} disabled={r.disabled} onChange={e => send({ type: "toggle", key: r.toggle!, checked: e.detail.checked })} />}
+        </ListItem>
+      </List>
     </div>
     {r.storage && <div className="settings__storage"><Progress variant="linear" value={38} max={128} ariaLabel="Storage used" /></div>}
   </div>;

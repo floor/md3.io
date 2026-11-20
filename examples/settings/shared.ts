@@ -108,3 +108,78 @@ export function activate(event: CustomEvent<{ value: string }>, action: () => vo
   (event.currentTarget as HTMLElement & { value: string | null }).value = null;
   action();
 }
+
+/** Material 3.16's list declarations expose icon/text slots, but not control nodes.
+ * Project the framework-owned switch from its declaration into the rendered row.
+ * The switch is the row's sole keyboard action; pointer activation of its text
+ * still uses the list's activate event. Reapply after the list refreshes its rows.
+ */
+export function mountRowControls(root = document.getElementById("app")!): () => void {
+  const controls = new WeakMap<HTMLElement, HTMLElement>();
+  const wired = new WeakSet<HTMLElement>();
+  const stopClick = (event: Event) => event.stopPropagation();
+  let active = true;
+  let frame = 0;
+  let focusedLabel = "";
+  const focusIn = (event: FocusEvent) => {
+    const input = event.composedPath().find(node => node instanceof HTMLElement && node.getAttribute("role") === "switch") as HTMLElement | undefined;
+    focusedLabel = input?.getAttribute("aria-label") ?? "";
+  };
+  const focusOut = (event: FocusEvent) => { if (event.relatedTarget) focusedLabel = ""; };
+  root.addEventListener("focusin", focusIn);
+  root.addEventListener("focusout", focusOut);
+  const observer = new MutationObserver(() => sync());
+  const sync = () => {
+    if (!active) return;
+    observer.disconnect();
+    let pending = false;
+    const roots: ShadowRoot[] = [];
+    const switches: HTMLElement[] = [];
+    for (const wrapper of root.querySelectorAll<HTMLElement>(".settings__row--toggle")) {
+      const list = wrapper.querySelector<HTMLElement>("m-list, .mtrl-list");
+      const control = controls.get(wrapper) ?? wrapper.querySelector<HTMLElement>("m-switch, .mtrl-switch");
+      if (!list || !control) continue;
+      controls.set(wrapper, control);
+      switches.push(control);
+      const surface = list.shadowRoot ?? list;
+      if (list.shadowRoot) roots.push(list.shadowRoot);
+      const row = surface.querySelector<HTMLElement>('[role="listitem"]');
+      if (!row) { pending = true; continue; }
+      row.querySelector(".mtrl-list__action")?.remove();
+      control.style.width = "52px";
+      control.style.flex = "0 0 auto";
+      if (!wired.has(control)) {
+        control.addEventListener("click", stopClick);
+        wired.add(control);
+      }
+      if (!row.contains(control)) {
+        const host = control as HTMLElement & { checked?: boolean };
+        const checked = host.checked;
+        row.append(control);
+        if (checked !== undefined) host.checked = checked;
+      }
+    }
+    observer.observe(root, { childList: true, subtree: true });
+    for (const surface of roots) observer.observe(surface, { childList: true, subtree: true });
+    // Rebuilding a list must not discard keyboard focus on a live preference.
+    if (focusedLabel && document.activeElement === document.body) {
+      for (const control of switches) {
+        const input = (control.shadowRoot ?? control).querySelector<HTMLInputElement>('[role="switch"]');
+        if (input?.getAttribute("aria-label") === focusedLabel && !input.disabled) {
+          input.focus({ preventScroll: true });
+          break;
+        }
+      }
+    }
+    if (pending && !frame) frame = requestAnimationFrame(() => { frame = 0; sync(); });
+  };
+  sync();
+  return () => {
+    active = false;
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+    root.removeEventListener("focusin", focusIn);
+    root.removeEventListener("focusout", focusOut);
+    for (const control of root.querySelectorAll<HTMLElement>("m-switch, .mtrl-switch")) control.removeEventListener("click", stopClick);
+  };
+}

@@ -9,7 +9,7 @@ import createSwitch from "material/components/switch";
 import createTextField from "material/components/text-field";
 import createTopAppBar from "material/components/top-app-bar";
 import { createAvatar } from "material-addons/components/avatar";
-import { DEFAULTS, ICONS, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
+import { DEFAULTS, ICONS, mountRowControls, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
 let s = { ...DEFAULTS };
 const div = (className: string) => Object.assign(document.createElement("div"), { className });
 const paragraph = (text: string) => Object.assign(document.createElement("p"), { textContent: text });
@@ -49,13 +49,18 @@ function row(r: Row): HTMLDivElement {
     bodyControls.push(avatar);
     line.append(avatar.element);
   }
-  line.append(list(undefined, [{ id: r.id, headline: r.label, supportingText: r.supporting, leading: r.icon ? { type: "icon", content: r.icon } : undefined, trailing: r.toggle ? undefined : { type: "icon", content: ICONS.chevron }, disabled: r.disabled }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id })));
+  let control: ReturnType<typeof createSwitch> | undefined;
   if (r.toggle) {
-    const control = createSwitch({ ariaLabel: r.label, checked: s[r.toggle], disabled: r.disabled });
+    control = createSwitch({ ariaLabel: r.label, checked: s[r.toggle], disabled: r.disabled });
     control.on("change", e => send({ type: "toggle", key: r.toggle!, checked: e.checked }));
     bodyControls.push(control);
-    line.append(control.element);
   }
+  line.append(list(undefined, [{
+    id: r.id, headline: r.label, supportingText: r.supporting,
+    leading: r.icon ? { type: "icon", content: r.icon } : undefined,
+    trailing: control ? { type: "control", content: control.element } : { type: "icon", content: ICONS.chevron },
+    disabled: r.disabled,
+  }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id })));
   wrapper.append(line);
   if (r.storage) {
     const usage = div("settings__storage");
@@ -139,3 +144,4 @@ function send(a: Action) {
   if (announces(a)) { snackbar.setDuration("short"); snackbar.setMessage(s.notice); snackbar.show(); }
 }
 renderBody();
+mountRowControls();

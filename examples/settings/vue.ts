@@ -1,20 +1,23 @@
 // Vue: reactive state and the generated Material adapters.
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, onMounted, onBeforeUnmount, ref } from "vue";
 import type { SnackbarElement } from "material/elements";
 import { MButton, MDialog, MIconButton, MList, MListItem, MProgress, MSnackbar, MSwitch, MTextField, MTopAppBar } from "material/vue";
 import { MAvatar } from "material-addons/vue";
-import { DEFAULTS, ICONS, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action } from "./shared";
+import { DEFAULTS, ICONS, mountRowControls, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action } from "./shared";
 
 export default defineComponent({
   components: { MAvatar, MButton, MDialog, MIconButton, MList, MListItem, MProgress, MSnackbar, MSwitch, MTextField, MTopAppBar },
   setup() {
+    let dispose: (() => void) | undefined;
+    onMounted(() => { dispose = mountRowControls(); });
+    onBeforeUnmount(() => dispose?.());
     const s = ref({ ...DEFAULTS });
     const snackbar = ref<{ element?: SnackbarElement } | null>(null);
     const send = (a: Action) => {
       s.value = reduce(s.value, a);
       if (announces(a)) requestAnimationFrame(() => { snackbar.value?.element?.component?.setDuration("short"); snackbar.value?.element?.show(); });
     };
-    return { s, snackbar, send, ICONS, activate, isNetwork, details: computed(() => dialog(s.value)), shown: computed(() => groups(s.value)), wifi: computed(() => wifiRow(s.value)) };
+    return { s, snackbar, send, ICONS, mountRowControls, activate, isNetwork, details: computed(() => dialog(s.value)), shown: computed(() => groups(s.value)), wifi: computed(() => wifiRow(s.value)) };
   },
   template: `
     <section class="settings">
@@ -32,9 +35,10 @@ export default defineComponent({
               <div class="settings__row" :class="{ 'settings__row--toggle': r.toggle, 'settings__row--account': r.account }">
                 <MAvatar v-if="r.account" variant="text" size="medium" text="MV" decorative />
                 <MList selection="single" @activate="activate($event, () => send(r.toggle ? { type: 'toggle', key: r.toggle, checked: !s[r.toggle] } : { type: 'row', id: r.id }))">
-                  <MListItem :value="r.id" :headline="r.label" :supporting-text="r.supporting" :leading-icon="r.icon || undefined" :trailing-icon="r.toggle ? undefined : ICONS.chevron" :disabled="r.disabled" />
-                </MList>
+                  <MListItem :value="r.id" :headline="r.label" :supporting-text="r.supporting" :leading-icon="r.icon || undefined" :trailing-icon="r.toggle ? undefined : ICONS.chevron" :disabled="r.disabled">
                 <MSwitch v-if="r.toggle" :aria-label="r.label" :checked="s[r.toggle]" :disabled="r.disabled" @change="send({ type: 'toggle', key: r.toggle, checked: $event.detail.checked })" />
+                </MListItem>
+                </MList>
               </div>
               <div v-if="r.storage" class="settings__storage"><MProgress variant="linear" :value="38" :max="128" aria-label="Storage used" /></div>
             </div>
@@ -44,9 +48,10 @@ export default defineComponent({
         <div v-else class="settings__wifi">
           <div><div class="settings__row settings__row--toggle">
             <MList selection="single" @activate="activate($event, () => send({ type: 'toggle', key: 'wifi', checked: !s.wifi }))">
-              <MListItem :value="wifi.id" :headline="wifi.label" :supporting-text="wifi.supporting" :leading-icon="wifi.icon" :disabled="wifi.disabled" />
-            </MList>
+              <MListItem :value="wifi.id" :headline="wifi.label" :supporting-text="wifi.supporting" :leading-icon="wifi.icon" :disabled="wifi.disabled">
             <MSwitch aria-label="Use Wi-Fi" :checked="s.wifi" :disabled="s.airplane" @change="send({ type: 'toggle', key: 'wifi', checked: $event.detail.checked })" />
+                </MListItem>
+            </MList>
           </div></div>
           <MList v-if="s.wifi && !s.airplane" selection="single" aria-label="Nearby networks" @activate="activate($event, () => send({ type: 'row', id: $event.detail.value }))">
             <MListItem kind="subheader" headline="Nearby networks" />

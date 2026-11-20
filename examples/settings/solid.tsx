@@ -1,12 +1,14 @@
 /** @jsxImportSource solid-js */
 // Solid: reactive state with the generated Material adapters.
+import { onCleanup, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import type { SnackbarElement } from "material/elements";
 import { Button, Dialog, IconButton, List, ListItem, Progress, Snackbar, Switch, TextField, TopAppBar } from "material/solid";
 import { Avatar } from "material-addons/solid";
-import { DEFAULTS, ICONS, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
+import { DEFAULTS, ICONS, mountRowControls, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
 
 export default function Settings() {
+  onMount(() => onCleanup(mountRowControls()));
   const [s, setS] = createStore({ ...DEFAULTS });
   let snackbar: SnackbarElement | undefined;
   const send = (a: Action) => {
@@ -17,9 +19,10 @@ export default function Settings() {
     <div class={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`}>
       {r.account && <Avatar variant="text" size="medium" text="MV" decorative />}
       <List selection="single" onActivate={e => activate(e, () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }))}>
-        <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled} />
-      </List>
+        <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled}>
       {r.toggle && <Switch ariaLabel={r.label} checked={s[r.toggle]} disabled={r.disabled} onChange={e => send({ type: "toggle", key: r.toggle!, checked: e.detail.checked })} />}
+        </ListItem>
+      </List>
     </div>
     {r.storage && <div class="settings__storage"><Progress variant="linear" value={38} max={128} ariaLabel="Storage used" /></div>}
   </div>;

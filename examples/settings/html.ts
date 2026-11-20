@@ -3,7 +3,7 @@ import "material/elements/css";
 import "material-addons/elements/css/avatar";
 import { defineAll } from "material/elements";
 import { defineAvatar } from "material-addons/elements/avatar";
-import { DEFAULTS, ICONS, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
+import { DEFAULTS, ICONS, mountRowControls, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
 defineAll();
 defineAvatar();
 let s = { ...DEFAULTS };
@@ -50,7 +50,7 @@ function row(r: Row): HTMLDivElement {
   if (r.toggle) {
     const control = element("m-switch", { "aria-label": r.label, checked: s[r.toggle], disabled: r.disabled });
     control.addEventListener("change", e => send({ type: "toggle", key: r.toggle!, checked: (e as CustomEvent<{ checked: boolean }>).detail.checked }));
-    line.append(control);
+    line.querySelector("m-list-item")!.append(control);
   }
   wrapper.append(line);
   if (r.storage) {
@@ -126,3 +126,4 @@ function send(a: Action) {
   if (announces(a)) { snackbar.component?.setDuration("short"); snackbar.setAttribute("message", s.notice); snackbar.show(); }
 }
 renderBody();
+mountRowControls();

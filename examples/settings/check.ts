@@ -4,6 +4,7 @@ import type { Frame, Page } from "playwright";
 
 export default async function steps(page: Page | Frame): Promise<void> {
   const button = (name: string) => page.getByRole("button", { name, exact: true });
+  const row = (name: string) => page.getByText(name, { exact: true });
   const toggle = (name: string) => page.getByRole("switch", { name, exact: true });
   // Framework adapters commit controlled properties after the event handler returns.
   const equal = async <T>(read: () => Promise<T>, expected: T, message = "The setting reaches the expected state") => {
@@ -13,6 +14,30 @@ export default async function steps(page: Page | Frame): Promise<void> {
     }
     assert.equal(await read(), expected, message);
   };
+  const assertRowStops = async () => {
+    const rows = await page.locator(".settings__row").evaluateAll(wrappers => wrappers.map(wrapper => {
+      const list = wrapper.querySelector("m-list, .mtrl-list")!;
+      const item = (list.shadowRoot ?? list).querySelector('[role="listitem"]');
+      const controls: HTMLElement[] = [];
+      const visit = (root: ParentNode) => {
+        for (const element of root.querySelectorAll<HTMLElement>("*")) {
+          if (element.tabIndex >= 0 && !(element as HTMLInputElement).disabled && element.getClientRects().length && getComputedStyle(element).visibility !== "hidden") controls.push(element);
+          if (element.shadowRoot) visit(element.shadowRoot);
+        }
+      };
+      if (item) visit(item);
+      const toggleRow = wrapper.classList.contains("settings__row--toggle");
+      const host = item?.querySelector("m-switch, .mtrl-switch");
+      const input = host ? (host.shadowRoot ?? host).querySelector<HTMLInputElement>('[role="switch"]') : null;
+      return { name: item?.textContent, count: controls.length, expected: input?.disabled || item?.getAttribute("aria-disabled") === "true" ? 0 : 1, nested: !toggleRow || !!input };
+    }));
+    assert.ok(rows.length > 0);
+    for (const row of rows) {
+      assert.equal(row.nested, true, `${row.name}: switch belongs inside its list item`);
+      assert.equal(row.count, row.expected, `${row.name}: one Tab stop per enabled settings row`);
+    }
+  };
+  await assertRowStops();
   if (await button("Device information").isVisible()) {
     await button("Device information").click();
     await page.getByRole("alertdialog").waitFor();
@@ -27,16 +52,16 @@ export default async function steps(page: Page | Frame): Promise<void> {
   }
   for (const label of ["Adaptive brightness", "Use location", "Notification sounds"]) {
     const initial = await toggle(label).isChecked();
-    await button(label).click();
+    await row(label).click();
     await equal(() => toggle(label).isChecked(), !initial, `${label}: the row applies immediately`);
     await toggle(label).click();
     await equal(() => toggle(label).isChecked(), initial, `${label}: the switch applies immediately`);
   }
-  await button("Allow notifications").click();
+  await row("Allow notifications").click();
   await equal(() => toggle("Notification sounds").isDisabled(), true);
   await toggle("Allow notifications").click();
   await equal(() => toggle("Notification sounds").isDisabled(), false);
-  await button("Bluetooth").click();
+  await row("Bluetooth").click();
   await equal(() => toggle("Bluetooth").isChecked(), true);
   await toggle("Airplane mode").click();
   await equal(() => toggle("Bluetooth").isChecked(), false);
@@ -44,13 +69,15 @@ export default async function steps(page: Page | Frame): Promise<void> {
   await button("Wi-Fi").click();
   await equal(() => toggle("Use Wi-Fi").isChecked(), false);
   await equal(() => toggle("Use Wi-Fi").isDisabled(), true);
+  await assertRowStops();
   assert.equal(await page.getByRole("button", { name: "Willow Loft", exact: true }).count(), 0);
   await button("Back").click();
-  await button("Airplane mode").click();
+  await row("Airplane mode").click();
   await equal(() => toggle("Bluetooth").isChecked(), false, "Airplane mode does not silently re-enable Bluetooth");
   await button("Wi-Fi").click();
   await equal(() => toggle("Use Wi-Fi").isChecked(), false, "Airplane mode does not silently re-enable Wi-Fi");
   await toggle("Use Wi-Fi").click();
+  await assertRowStops();
   for (const name of ["Willow Loft", "Courtyard Guest", "Fern House", "Willow Studio"]) {
     await button(name).click();
     await button("Connect").click();
@@ -64,7 +91,7 @@ export default async function steps(page: Page | Frame): Promise<void> {
   await button("Connect").click();
   await page.getByRole("alertdialog").waitFor({ state: "hidden" });
   await button("Garden Room").waitFor();
-  await button("Use Wi-Fi").click();
+  await row("Use Wi-Fi").click();
   await equal(() => toggle("Use Wi-Fi").isChecked(), false);
   await toggle("Use Wi-Fi").click();
   await button("Back").click();
@@ -77,7 +104,7 @@ export default async function steps(page: Page | Frame): Promise<void> {
   await button("Done").click();
   await page.getByRole("alertdialog").waitFor({ state: "hidden" });
   await button("Search settings").click();
-  await button("Airplane mode").click();
+  await row("Airplane mode").click();
   const feedback = page.getByRole("status").filter({ hasText: "Airplane mode on" });
   await feedback.waitFor();
   await button("Dismiss").click();

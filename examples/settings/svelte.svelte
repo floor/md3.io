@@ -1,9 +1,11 @@
 <!-- Svelte: reactive state and the generated Material adapters. -->
 <script lang="ts">
+  import { onMount } from "svelte";
   import type { SnackbarElement } from "material/elements";
   import { Button, Dialog, IconButton, List, ListItem, Progress, Snackbar, Switch, TextField, TopAppBar } from "material/svelte";
   import { Avatar } from "material-addons/svelte";
-  import { DEFAULTS, ICONS, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
+  import { DEFAULTS, ICONS, mountRowControls, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
+  onMount(() => mountRowControls());
   let s = $state({ ...DEFAULTS });
   let snackbar: { element?: SnackbarElement } | undefined = $state();
   const send = (a: Action) => {
@@ -18,9 +20,10 @@
     <div class={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`}>
       {#if r.account}<Avatar variant="text" size="medium" text="MV" decorative />{/if}
       <List selection="single" onactivate={e => activate(e, () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }))}>
-        <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled} />
-      </List>
+        <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled}>
       {#if r.toggle}<Switch ariaLabel={r.label} checked={s[r.toggle]} disabled={r.disabled} onchange={e => send({ type: "toggle", key: r.toggle!, checked: e.detail.checked })} />{/if}
+        </ListItem>
+      </List>
     </div>
     {#if r.storage}<div class="settings__storage"><Progress variant="linear" value={38} max={128} ariaLabel="Storage used" /></div>{/if}
   </div>
