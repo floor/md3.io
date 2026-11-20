@@ -19,7 +19,7 @@ describe('Colour Lab', () => {
     expect(response.status).toBe(200);
     const html = await response.text();
     expect(html).toContain('<h1>Colour Lab</h1>');
-    expect(html).toMatch(/href="\/styles\/color-lab\/" aria-current="page"/);
+    expect(html).toMatch(/<a(?=[^>]*part="item")(?=[^>]*href="\/styles\/color-lab\/")(?=[^>]*aria-current="page")[^>]*>/);
     expect(html).toMatch(/\/dist\/colour-lab\.[a-f0-9]{10}\.js/);
     expect(html).toMatch(/\/dist\/css\/colour-lab\.[a-f0-9]{10}\.css/);
     expect(html).not.toContain('material/styles/base.css');

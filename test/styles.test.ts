@@ -16,7 +16,7 @@ describe('Styles pages', () => {
       const html = await response.text();
       expect(html).toContain(`<h1>${heading}</h1>`);
       expect(html).toContain(`<a class="site-nav-link" href="/styles/" aria-current="${path === '/styles/' ? 'page' : 'location'}">`);
-      expect(html).toContain(`href="${path}" aria-current="page"`);
+      expect(html).toMatch(new RegExp(`<a(?=[^>]*part="item")(?=[^>]*href="${path}")(?=[^>]*aria-current="page")[^>]*>`));
       expect(html).toMatch(/\/dist\/css\/styles\.[a-f0-9]{10}\.css/);
       expect(html).not.toContain('/styles/styles-pages.css');
       expect(html).not.toContain('/styles/roboto.css');
@@ -81,7 +81,7 @@ describe('Styles pages', () => {
   });
   test('the shape page is in the sitemap and the sidebar', async () => {
     expect(await (await get('/sitemap.xml')).text()).toContain('<loc>https://md3.io/styles/shape/</loc>');
-    expect(await (await get('/styles/color/')).text()).toContain('<a class="sidebar__link mtrl-drawer__item" href="/styles/shape/"');
+    expect(await (await get('/styles/color/')).text()).toMatch(/<a[^>]*part="item"[^>]*href="\/styles\/shape\//);
   });
   test('Styles is not active on other sections, and the stylesheet stays off them', async () => {
     const html = await (await get('/components/')).text();

@@ -1,6 +1,5 @@
-<% const heading = 'component-directory-heading'; %>
-<nav class="component-list" aria-label="Component list">
-  <% if (!it.isCatalog) { %><h2 class="mtrl-drawer__section-label" id="<%= heading %>">Components</h2><% } %>
-  <%~ include('component-directory', { heading, label: it.isCatalog ? 'Components' : undefined, entries: it.playgroundDirectory.entries, path: it.path, icon: it.icon }) %>
+<div class="component-list">
+  <% if (!it.isCatalog) { %><h2 class="component-list__heading">Components</h2><% } %>
+  <%~ it.componentDrawer %>
   <% if (it.isCatalog) { %><p class="catalog-note"><a href="/docs/">Browse the complete component reference <%~ it.icon('arrow_forward') %></a></p><% } %>
-</nav>
+</div>

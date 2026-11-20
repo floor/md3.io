@@ -18,7 +18,7 @@ const showcasePath = '/showcase/';
 const destinations = ['Components', 'Styles', showcaseLabel, 'Documentation'];
 const widths = [360, 390, 412, 700, 840, 1024, 1440];
 const linkNames = (nav: Locator) => nav.getByRole('link').allTextContents();
-const focused = (locator: Locator) => locator.evaluate(node => document.activeElement === node);
+const focused = (locator: Locator) => locator.evaluate(node => (node.getRootNode() as Document | ShadowRoot).activeElement === node);
 
 try {
   const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce' });
@@ -149,7 +149,8 @@ try {
   await size(840);
   await modal.waitFor({ state: 'hidden' });
   await open.waitFor({ state: 'hidden' });
-  await page.waitForFunction(() => document.activeElement?.matches('#sidebar a[href="/styles/color/"]'));
+  await page.waitForFunction(() => document.activeElement?.closest('#sidebar') &&
+    document.activeElement.shadowRoot?.activeElement?.matches('a[href="/styles/color/"]'));
   const [newPage] = await Promise.all([
     context.waitForEvent('page'),
     nav.getByRole('link', { name: 'Documentation', exact: true }).click({ modifiers: ['ControlOrMeta'] }),
@@ -182,7 +183,7 @@ try {
     const geometry = (await index.boundingBox())!;
     const content = (await page.locator('#content').boundingBox())!;
     assert.equal(await indexLinks.count(), 1);
-    assert.deepEqual(await indexLinks.locator('.sidebar__link').evaluateAll(links => links.map(link => link.getAttribute('href'))), hrefs);
+    assert.deepEqual(await indexLinks.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href'))), hrefs);
     assert.equal(await indexLinks.locator('[aria-current="page"]').getAttribute('href'), path);
     assert.ok(width < 840 ? geometry.y + geometry.height <= content.y + 1 : geometry.x + geometry.width <= content.x + 1,
       `${label} index uses the right placement at ${width}px`);
@@ -190,8 +191,8 @@ try {
     if (width === 700) {
       await showRail();
       const modalLinks = modal.getByRole('navigation', { name: `${label} links`, exact: true });
-      assert.equal(await modalLinks.getAttribute('id'), 'sidebar', 'the modal borrows the inline index');
-      assert.deepEqual(await modalLinks.locator('.sidebar__link').evaluateAll(links => links.map(link => link.getAttribute('href'))), hrefs);
+      assert.equal(await modal.locator('#sidebar m-drawer').count(), 1, 'the modal borrows the inline drawer');
+      assert.deepEqual(await modalLinks.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href'))), hrefs);
       assert.equal(await modalLinks.locator('[aria-current="page"]').getAttribute('href'), path);
       await page.keyboard.press('Escape');
       await assertClosedRail();
@@ -199,7 +200,7 @@ try {
     }
   }
 
-  const railCaptures = resolve(output, 'rail-list-polish');
+  const railCaptures = resolve(output, 'drawer-pane');
   await mkdir(railCaptures, { recursive: true });
   const itemStyle = (item: Locator) => item.evaluate(node => {
     const style = getComputedStyle(node);
@@ -224,25 +225,25 @@ try {
       const themedPage = await themed.newPage();
       await themedPage.goto(url('/components/'));
       await themedPage.locator(`html[data-theme="${theme}"][data-theme-mode="${mode}"]`).waitFor();
-      const selected = themedPage.locator('main .sidebar__link[aria-current="page"]');
+      const selected = themedPage.locator('main .site-drawer a[aria-current="page"]');
       const selectedStyle = await itemStyle(selected);
       assert.equal(selectedStyle.height, 48, 'section row matches the live sidebar density');
       assert.equal(selectedStyle.opacity, '1', 'active indicator fills the pill');
       assert.equal(selectedStyle.border, '0px');
       activeFills.add(selectedStyle.background);
-      const family = themedPage.locator('main .component-directory__toggle').first();
+      const family = themedPage.locator('main .site-drawer button[aria-expanded]').first();
       const familyStyle = await itemStyle(family);
       for (const prop of ['height', 'padding', 'radius'] as const) assert.equal(familyStyle[prop], selectedStyle[prop], `family ${prop}`);
 
-      const materialDrawer = themedPage.locator('m-drawer');
+      const materialDrawer = themedPage.locator('.catalog-visual md3-catalog-drawer');
       await materialDrawer.scrollIntoViewIfNeeded();
-      await themedPage.locator('m-drawer:defined').waitFor();
+      await themedPage.locator('.catalog-visual md3-catalog-drawer:defined').waitFor();
       await materialDrawer.evaluate(node => {
         node.removeAttribute('dense');
         node.style.setProperty('--mtrl-density', '-2');
       });
       const reference = materialDrawer.locator('.mtrl-drawer__item--active');
-      await themedPage.waitForFunction(() => document.querySelector('m-drawer')?.shadowRoot
+      await themedPage.waitForFunction(() => document.querySelector('.catalog-visual md3-catalog-drawer')?.shadowRoot
         ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 48);
       const { fontFamily, ...listStyle } = selectedStyle;
       const { fontFamily: materialFont, ...drawerStyle } = await itemStyle(reference);
@@ -251,15 +252,26 @@ try {
       assert.deepEqual(drawerStyle, listStyle, `${theme} ${mode} matches the real drawer geometry, typescale and colours`);
 
       if (theme === 'spring') continue;
-      for (const width of [700, 1440]) for (const [name, path] of [['overview', '/components/'], ['button', '/components/button/']]) {
+      for (const width of [700, 1440]) for (const [name, path] of [['component-button', '/components/button/'], ['docs-button', '/docs/components/button/']]) {
         await themedPage.setViewportSize({ width, height: 900 });
         await themedPage.goto(url(path!));
         await themedPage.evaluate(() => document.fonts.ready);
         const save = (kind: string) => themedPage.screenshot({ path: `${railCaptures}/${kind}-${name}-${width}-${theme}-${mode}.png`, animations: 'disabled' });
+        const checkActiveRow = async () => {
+          const active = themedPage.locator('.site-drawer a[aria-current="page"]');
+          await active.scrollIntoViewIfNeeded();
+          assert(await active.evaluate(node => {
+            const host = (node.getRootNode() as ShadowRoot).host.getBoundingClientRect();
+            const row = node.getBoundingClientRect();
+            return row.left >= host.left && row.right <= host.right;
+          }), `${name} at ${width}px: the active row fits inside the pane`);
+        };
+        if (width === 1440) await checkActiveRow();
         await save('page');
         if (width === 700) {
           await themedPage.getByRole('button', { name: 'Expand navigation', exact: true }).click();
           await themedPage.getByRole('dialog', { name: 'Navigation', exact: true }).waitFor();
+          await checkActiveRow();
           await save('rail-open');
         }
       }
@@ -319,6 +331,12 @@ try {
     await primary.getByRole('link', { name: showcaseLabel, exact: true }).click();
     await staticPage.waitForURL(url(showcasePath));
   }
+  await staticPage.setViewportSize({ width: 1440, height: 900 });
+  await staticPage.goto(url('/components/button/'));
+  const staticDrawer = staticPage.getByRole('navigation', { name: 'Component list', exact: true });
+  const staticLink = staticDrawer.getByRole('link', { name: 'Navigation rail', exact: true });
+  await staticLink.click();
+  await staticPage.waitForURL(url('/components/navigation-rail/'));
   await noScript.close();
   console.log(`Site navigation checks passed at ${widths.join(', ')}px, with 599/600 and 839/840 transitions. Captures: ${output}`);
 } finally {

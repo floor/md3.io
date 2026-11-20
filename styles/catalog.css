@@ -33,6 +33,7 @@
 
 /* Pinned to the card's edges, as they are to the window's. */
 .catalog-visual--navigation-rail, .catalog-visual--drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
+md3-catalog-drawer:not(:defined) { visibility: hidden; }
 .catalog-visual--navigation-bar { align-items: flex-end; padding: 0; }
 .catalog-visual--navigation-bar m-navigation-bar { width: 100%; }
 /* The rail's three destinations are taller than the card: scaled as the list and dialog are. */

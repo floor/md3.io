@@ -5,11 +5,10 @@
 // page styles it, filling its container. The choice is remembered per viewer.
 //
 // One module for every page that shows a frame of real mtrl: the example pages
-// (src/server/shells/example.eta) and the Styles pages. The toolbar is mtrl itself, a
-// connected button group and an icon button, painted with the site's colours
+// (src/server/shells/example.eta) and the Styles pages. The toolbar pairs a Material
+// connected button group with a rotate button, both painted with the site's colours
 // (styles/device-frame.css).
 import createButtonGroup from 'material/components/button-group';
-import createIconButton from 'material/components/icon-button';
 import smartphone from '../../icons/smartphone.svg' with { type: 'text' };
 import tablet from '../../icons/tablet.svg' with { type: 'text' };
 import desktop from '../../icons/desktop_windows.svg' with { type: 'text' };
@@ -85,18 +84,21 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     buttons: (Object.keys(DEVICES) as Device[]).map(device => ({ value: device, text: DEVICES[device].label, icon: DEVICES[device].icon, selected: device === choice.device })),
   });
   group.element.setAttribute('aria-label', options.label ?? 'Device');
-  const turn = createIconButton({ icon: rotate, ariaLabel: 'Rotate', variant: 'standard', size: 'xs', toggle: true, selected: choice.landscape, toggleOnClick: false, ripple: false });
+  const turn = document.createElement('button');
+  turn.type = 'button';
+  turn.className = 'site-icon-button device__rotate';
+  turn.setAttribute('aria-label', 'Rotate');
+  turn.innerHTML = rotate;
   const readout = document.createElement('span');
   readout.className = 'device__size';
   readout.setAttribute('aria-live', 'polite');
-  bar.append(group.element, turn.element, readout);
+  bar.append(group.element, turn, readout);
 
   const layout = () => {
     const desktop = choice.device === 'desktop';
     root.dataset.device = choice.device;
-    turn.element.disabled = desktop;
-    turn.element.setAttribute('aria-pressed', String(choice.landscape && !desktop));
-    turn.element.classList.toggle('mtrl-icon-button--selected', choice.landscape && !desktop);
+    turn.disabled = desktop;
+    turn.setAttribute('aria-pressed', String(choice.landscape && !desktop));
     const size = fit(choice, stage.clientWidth || root.clientWidth, Math.max(360, innerHeight - 120));
     if (!size) {
       viewport.removeAttribute('style');
@@ -124,7 +126,7 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     const value = (event as { values?: string[] }).values?.[0];
     if (isDevice(value) && value !== choice.device) set({ device: value });
   });
-  turn.element.addEventListener('click', () => { if (choice.device !== 'desktop') set({ landscape: !choice.landscape }); });
+  turn.addEventListener('click', () => { if (choice.device !== 'desktop') set({ landscape: !choice.landscape }); });
 
   const observer = new ResizeObserver(() => layout());
   observer.observe(stage);

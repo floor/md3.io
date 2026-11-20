@@ -50,7 +50,8 @@ describe('stylesheets', () => {
 
     const page = bundleCss('page');
     expect(page).toContain('.header__search');
-    expect(page).toContain('--mtrl-sys-typescale-label-large-font-size:14px');
+    expect(page).toContain('.site-drawer::part(sheet)');
+    expect(page).not.toContain('.mtrl-drawer__item{display:flex');
     expect(page).not.toContain('Roboto-latin-wght.woff2');
     // .hero__tagline also lives in site.css. .hero__frameworks is homepage.css only.
     expect(page).not.toContain('.hero__frameworks');
@@ -58,7 +59,7 @@ describe('stylesheets', () => {
 
     const catalog = bundleCss('catalog');
     // "Roboto" also appears in the token font stack. The self-hosted file is roboto.css only.
-    const catalogOrder = ['.mtrl-drawer__item{display:flex', '.header__search', 'Roboto-latin-wght.woff2', 'm-button:not(:defined)', '.catalog-visual'];
+    const catalogOrder = ['.site-drawer::part(sheet)', '.header__search', 'Roboto-latin-wght.woff2', 'm-button:not(:defined)', '.catalog-visual'];
     catalogOrder.reduce((prev, needle) => { const index = at(catalog, needle); expect(index).toBeGreaterThan(prev); return index; }, -1);
     expect(catalog).not.toContain('.hero__frameworks');
 
