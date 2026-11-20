@@ -143,6 +143,10 @@ try {
     await go('/styles/color/');
     assert.equal(await page.locator('#site-nav-dialog').getAttribute('open'), null);
     assert.equal(await page.locator('#site-primary-rail').getAttribute('inert'), null);
+    await go('/components/');
+    assert.equal(await page.locator('#component-catalog-index').evaluate(index => (index as HTMLDetailsElement).open), false, 'mobile catalog starts closed, like a direct load');
+    await page.locator('#component-catalog-index summary').click();
+    await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('button', { name: 'Buttons', exact: true }).waitFor();
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.locator('#search-trigger').click();
     await page.locator('#search-dialog[open]').waitFor();

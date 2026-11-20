@@ -119,6 +119,9 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
   const indexLinks = index?.querySelector<HTMLElement>('m-drawer');
   if (index && summary && indexLinks) {
     const expanded = matchMedia('(min-width: 840px)');
+    // The catalog's parser-time script cannot run in fetched HTML. Apply the same
+    // initial responsive state on every visit before tracking user disclosures.
+    if (index.id === 'component-catalog-index') index.open = expanded.matches;
     let openInline = index.open;
     life.events(index).addEventListener('toggle', () => {
       if (!expanded.matches) openInline = index.open;
