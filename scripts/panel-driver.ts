@@ -146,7 +146,7 @@ export async function chooseMode(page: Page, mode: 'light' | 'dark'): Promise<vo
     () => page.evaluate(wanted => document.documentElement.dataset.themeMode === wanted, mode), `mode ${mode}`);
 }
 
-/** Picks a framework in the picker above the heading (Factory is the vanilla entry). */
+/** Picks a framework with the preview controls (Factory is the vanilla entry). */
 export async function chooseFramework(page: Page, id: string): Promise<void> {
   const chips = page.locator('m-chips.framework-chips');
   if (await chips.count()) {
@@ -257,4 +257,35 @@ export async function slide(page: Page, name: string, value: string): Promise<vo
     return;
   }
   await inPanel(page, `input[name="${name}"]`).fill(value);
+}
+
+/** A wide, tall playground fits the window. A short window uses document scrolling. */
+export async function checkPlaygroundScroll(page: Page, label: string, scroll: 'fit' | 'page'): Promise<void> {
+  const metrics = await page.evaluate(() => {
+    const root = document.documentElement;
+    const form = document.querySelector('#configuration')!;
+    const body = form.querySelector('.configuration-body')!;
+    return {
+      width: innerWidth, height: innerHeight, scrollWidth: root.scrollWidth, scrollHeight: root.scrollHeight,
+      formOverflow: getComputedStyle(form).overflowY, bodyOverflow: getComputedStyle(body).overflowY,
+    };
+  });
+  if (metrics.scrollWidth > metrics.width + 1) throw new Error(`${label}: playground overflows horizontally: ${JSON.stringify(metrics)}`);
+  if (scroll === 'fit') {
+    if (metrics.scrollHeight > metrics.height + 1) throw new Error(`${label}: playground does not fit the tall window: ${JSON.stringify(metrics)}`);
+    return;
+  }
+  if (metrics.formOverflow !== 'visible' || metrics.bodyOverflow !== 'visible') {
+    throw new Error(`${label}: configuration has its own scroll in a short or narrow window: ${JSON.stringify(metrics)}`);
+  }
+  const last = inPanel(page, '.ui-row:visible').last();
+  const reachable = await last.evaluate(element => {
+    element.scrollIntoView({ block: 'center', behavior: 'instant' });
+    const header = document.querySelector('.header')!.getBoundingClientRect();
+    const bar = document.querySelector('.site-primary-bar')?.getBoundingClientRect();
+    const bottom = bar?.height ? bar.top : innerHeight;
+    const row = element.getBoundingClientRect();
+    return row.top >= header.bottom && row.bottom <= bottom + 1;
+  });
+  if (!reachable) throw new Error(`${label}: the final configuration row is obscured`);
 }

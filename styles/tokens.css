@@ -95,7 +95,6 @@
     --toc-width: 240px;
     --page-padding: 28px 18px 40px;
     --document-padding: 28px 18px 48px;
-    --preview-height: 310px;
     --site-footer-height: 60px;
     /* Widest the header and page shell grow, and the room they keep at each
        side of the window (see the window size classes below) */
@@ -194,7 +193,6 @@
     :root {
         --page-padding: 32px 28px 48px;
         --document-padding: 32px 32px 60px;
-        --preview-height: 350px;
     }
 }
 @media (min-width: 1200px) {

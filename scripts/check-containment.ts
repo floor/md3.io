@@ -218,8 +218,10 @@ try {
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
     await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await panel.checkPlaygroundScroll(page, slug, 'fit');
     await page.setViewportSize({ width: 1280, height: 640 });
-    assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), `${slug}: desktop page overflows vertically`);
+    await panel.checkPlaygroundScroll(page, slug, 'page');
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     if (['dialog', 'bottom-sheet', 'side-sheet'].includes(slug)) {
