@@ -5,10 +5,10 @@
   import { Avatar } from "material-addons/svelte";
   import { DEFAULTS, ICONS, activate, announces, dialog, groups, isNetwork, reduce, wifiRow, type Action, type Row } from "./shared";
   let s = $state({ ...DEFAULTS });
-  let snackbar: SnackbarElement | undefined = $state();
+  let snackbar: { element?: SnackbarElement } | undefined = $state();
   const send = (a: Action) => {
     s = reduce(s, a);
-    if (announces(a)) requestAnimationFrame(() => snackbar?.show());
+    if (announces(a)) requestAnimationFrame(() => snackbar?.element?.show());
   };
   const details = $derived(dialog(s));
 </script>
@@ -28,11 +28,15 @@
 
 <section class="settings">
   <TopAppBar headline={s.screen === "wifi" ? "Wi-Fi" : "Settings"} type="small" noScroll>
-    {#if s.screen === "wifi"}<IconButton slot="leading" icon={ICONS.back} ariaLabel="Back" onclick={() => send({ type: "back" })} />{/if}
-    <div slot="trailing" class="settings__actions">
+    {#snippet leading()}
+    {#if s.screen === "wifi"}<IconButton icon={ICONS.back} ariaLabel="Back" onclick={() => send({ type: "back" })} />{/if}
+    {/snippet}
+    {#snippet trailing()}
+    <div class="settings__actions">
     <IconButton icon={ICONS.search} ariaLabel="Search settings" onclick={() => send({ type: "search" })} />
     <IconButton class="settings__mobile" icon={ICONS.more} ariaLabel="Device information" onclick={() => send({ type: "row", id: "version" })} />
     </div>
+    {/snippet}
   </TopAppBar>
   <div class="settings__content">
     {#if s.searching}<div class="settings__search"><TextField label="Search settings" type="search" value={s.query} oninput={e => send({ type: "query", value: e.detail.value })} /></div>{/if}
@@ -69,10 +73,12 @@
         <TextField label="Password (optional)" type="password" value={s.password} oninput={e => send({ type: "password", value: e.detail.value })} />
       </div>
     {/if}
-    <div slot="actions" class="settings__actions">
+    {#snippet actions()}
+    <div class="settings__actions">
       <Button variant="text" onclick={() => send({ type: "close" })}>{isNetwork(s) || s.dialog === "add-network" ? "Cancel" : "Done"}</Button>
       {#if isNetwork(s) || s.dialog === "add-network"}<Button disabled={s.dialog === "add-network" && !s.draftName.trim()} onclick={() => send({ type: s.dialog === "add-network" ? "add" : "connect" })}>Connect</Button>{/if}
     </div>
+    {/snippet}
   </Dialog>
   <Snackbar message={s.notice} duration="short" dismissible bind:this={snackbar} />
 </section>

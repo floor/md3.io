@@ -5,6 +5,14 @@ import type { Frame, Page } from "playwright";
 export default async function steps(page: Page | Frame): Promise<void> {
   const button = (name: string) => page.getByRole("button", { name, exact: true });
   const toggle = (name: string) => page.getByRole("switch", { name, exact: true });
+  // Framework adapters commit controlled properties after the event handler returns.
+  const equal = async <T>(read: () => Promise<T>, expected: T, message = "The setting reaches the expected state") => {
+    for (let attempt = 0; attempt < 40; attempt++) {
+      if (await read() === expected) return;
+      await page.waitForTimeout(50);
+    }
+    assert.equal(await read(), expected, message);
+  };
   if (await button("Device information").isVisible()) {
     await button("Device information").click();
     await page.getByRole("alertdialog").waitFor();
@@ -20,28 +28,28 @@ export default async function steps(page: Page | Frame): Promise<void> {
   for (const label of ["Adaptive brightness", "Use location", "Notification sounds"]) {
     const initial = await toggle(label).isChecked();
     await button(label).click();
-    assert.equal(await toggle(label).isChecked(), !initial, `${label}: the row applies immediately`);
+    await equal(() => toggle(label).isChecked(), !initial, `${label}: the row applies immediately`);
     await toggle(label).click();
-    assert.equal(await toggle(label).isChecked(), initial, `${label}: the switch applies immediately`);
+    await equal(() => toggle(label).isChecked(), initial, `${label}: the switch applies immediately`);
   }
   await button("Allow notifications").click();
-  assert.equal(await toggle("Notification sounds").isDisabled(), true);
+  await equal(() => toggle("Notification sounds").isDisabled(), true);
   await toggle("Allow notifications").click();
-  assert.equal(await toggle("Notification sounds").isDisabled(), false);
+  await equal(() => toggle("Notification sounds").isDisabled(), false);
   await button("Bluetooth").click();
-  assert.equal(await toggle("Bluetooth").isChecked(), true);
+  await equal(() => toggle("Bluetooth").isChecked(), true);
   await toggle("Airplane mode").click();
-  assert.equal(await toggle("Bluetooth").isChecked(), false);
-  assert.equal(await toggle("Bluetooth").isDisabled(), true);
+  await equal(() => toggle("Bluetooth").isChecked(), false);
+  await equal(() => toggle("Bluetooth").isDisabled(), true);
   await button("Wi-Fi").click();
-  assert.equal(await toggle("Use Wi-Fi").isChecked(), false);
-  assert.equal(await toggle("Use Wi-Fi").isDisabled(), true);
+  await equal(() => toggle("Use Wi-Fi").isChecked(), false);
+  await equal(() => toggle("Use Wi-Fi").isDisabled(), true);
   assert.equal(await page.getByRole("button", { name: "Willow Loft", exact: true }).count(), 0);
   await button("Back").click();
   await button("Airplane mode").click();
-  assert.equal(await toggle("Bluetooth").isChecked(), false, "Airplane mode does not silently re-enable Bluetooth");
+  await equal(() => toggle("Bluetooth").isChecked(), false, "Airplane mode does not silently re-enable Bluetooth");
   await button("Wi-Fi").click();
-  assert.equal(await toggle("Use Wi-Fi").isChecked(), false, "Airplane mode does not silently re-enable Wi-Fi");
+  await equal(() => toggle("Use Wi-Fi").isChecked(), false, "Airplane mode does not silently re-enable Wi-Fi");
   await toggle("Use Wi-Fi").click();
   for (const name of ["Willow Loft", "Courtyard Guest", "Fern House", "Willow Studio"]) {
     await button(name).click();
@@ -57,7 +65,7 @@ export default async function steps(page: Page | Frame): Promise<void> {
   await page.getByRole("alertdialog").waitFor({ state: "hidden" });
   await button("Garden Room").waitFor();
   await button("Use Wi-Fi").click();
-  assert.equal(await toggle("Use Wi-Fi").isChecked(), false);
+  await equal(() => toggle("Use Wi-Fi").isChecked(), false);
   await toggle("Use Wi-Fi").click();
   await button("Back").click();
   await button("Search settings").click();

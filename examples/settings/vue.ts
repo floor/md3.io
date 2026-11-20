@@ -9,10 +9,10 @@ export default defineComponent({
   components: { MAvatar, MButton, MDialog, MIconButton, MList, MListItem, MProgress, MSnackbar, MSwitch, MTextField, MTopAppBar },
   setup() {
     const s = ref({ ...DEFAULTS });
-    const snackbar = ref<SnackbarElement | null>(null);
+    const snackbar = ref<{ element?: SnackbarElement } | null>(null);
     const send = (a: Action) => {
       s.value = reduce(s.value, a);
-      if (announces(a)) requestAnimationFrame(() => snackbar.value?.show());
+      if (announces(a)) requestAnimationFrame(() => snackbar.value?.element?.show());
     };
     return { s, snackbar, send, ICONS, activate, isNetwork, details: computed(() => dialog(s.value)), shown: computed(() => groups(s.value)), wifi: computed(() => wifiRow(s.value)) };
   },
