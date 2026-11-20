@@ -3,6 +3,7 @@
 // and dark, and mtrl's schemeToTokens names them. If mtrl changes how it builds a
 // scheme, this fails until the page follows.
 import { describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -38,6 +39,18 @@ const installedVersion = (JSON.parse(readFileSync(join(mtrl, 'package.json'), 'u
 const loadGenerateThemesScript = (): string => {
   const inPackage = join(mtrl, 'scripts/generate-themes.ts');
   if (existsSync(inPackage)) return readFileSync(inPackage, 'utf8');
+  // npm omits this development script. Keep the exact generator for the pinned
+  // package as test data, so a clean/remote checkout uses the same independent
+  // reference as a developer machine. Metadata records its upstream commit/license.
+  const fixture = join(import.meta.dir, 'fixtures', `material-${installedVersion}-generate-themes.ts.txt`);
+  if (existsSync(fixture)) {
+    const metadata = JSON.parse(readFileSync(join(import.meta.dir, 'fixtures', `material-${installedVersion}-generator.json`), 'utf8')) as { version: string; sha256: string };
+    const source = readFileSync(fixture, 'utf8');
+    if (metadata.version !== installedVersion || createHash('sha256').update(source).digest('hex') !== metadata.sha256) {
+      throw new Error(`Material ${installedVersion} generator reference failed its integrity check`);
+    }
+    return source;
+  }
   const candidates = [
     resolve(import.meta.dir, '../../material'),
     resolve(import.meta.dir, '../../../material'),
