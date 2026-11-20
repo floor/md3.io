@@ -49,7 +49,7 @@ describe('the example fence', () => {
   test('renders six highlighted panels, and the framework chips at the top of a page with examples', async () => {
     const html = renderExample(withEvent);
     expect(html.match(/class="doc-example__panel"/g)).toHaveLength(6);
-    expect(html).toContain('data-framework="solid"><span class="doc-example__label">SolidJS</span><pre><code class="hljs language-typescript">');
+    expect(html).toContain('data-framework="solid"><span class="doc-example__label">SolidJS</span><pre tabindex="0" role="group" aria-label="TypeScript code"><code class="hljs language-typescript">');
     const document = renderDocument('slider')!;
     // A page whose content follows the framework gets the chips (server.ts inserts the
     // row under the title and description); a framework-agnostic page gets none.

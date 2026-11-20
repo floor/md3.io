@@ -71,7 +71,7 @@ export function renderInstall(packages: string): string {
   const options = PACKAGE_MANAGERS.map(({ id }) =>
     `<button type="button" class="doc-install__option" data-package-manager="${id}" aria-pressed="${id === 'bun'}">${id}</button>`).join('');
   const commands = PACKAGE_MANAGERS.map(({ id, command }) =>
-    `<pre class="doc-install__command" data-package-manager="${id}"><code class="hljs language-bash">${hljs.highlight(`${command} ${packages}`, { language: 'bash' }).value}</code></pre>`).join('');
+    `<pre class="doc-install__command" data-package-manager="${id}" tabindex="0" role="group" aria-label="Bash code"><code class="hljs language-bash">${hljs.highlight(`${command} ${packages}`, { language: 'bash' }).value}</code></pre>`).join('');
   return `<div class="doc-install"><div class="doc-install__bar"><div class="doc-install__switch" role="group" aria-label="Package manager">${options}</div>` +
     `<button type="button" class="doc-install__copy">Copy</button></div>${commands}</div>\n`;
 }
@@ -83,6 +83,9 @@ function codeLanguage(lang = ''): string {
   const language = LANGUAGES[name] ?? name;
   return language && hljs.getLanguage(language) ? language : '';
 }
+
+/** A code block's accessible name, from its language: scrollable blocks are keyboard-focusable in every browser. */
+export const codeLabel = (language: string): string => (language ? `${hljs.getLanguage(language)?.name ?? language} code` : "Code");
 /**
  * A page's summary: the first sentence of its opening paragraph, which the page
  * template makes "what the component is", as plain text.
@@ -153,7 +156,7 @@ function renderMarkdown(source: string, idPrefix = '') {
       // language (after it come docs:check's flags, such as `fragment`).
       const language = codeLanguage(token.lang);
       const body = language ? hljs.highlight(token.text, { language }).value : escapeHTML(token.text);
-      return `<pre><code class="hljs${language ? ` language-${language}` : ''}">${body}</code></pre>\n`;
+      return `<pre tabindex="0" role="group" aria-label="${escapeHTML(codeLabel(language))}"><code class="hljs${language ? ` language-${language}` : ''}">${body}</code></pre>\n`;
     },
     heading(this: { parser: { parseInline: (tokens: Tokens.Generic[]) => string } }, token: Tokens.Heading) {
       const { title, id: bare } = headingId(token.text);

@@ -391,6 +391,141 @@ try {
   await page.setViewportSize({ width: 1200, height: 900 });
   assert(await page.evaluate(id => document.activeElement?.id === id, headingId), 'The heading keeps focus as the TOC returns');
 
+  // The header (logo, navigation, search, Themes and mode buttons; no section crumb any
+  // more) and the document do not overflow at 360, 599 or 600 px.
+  const breadcrumb = () => page.evaluate(() => {
+    const header = document.querySelector('.header') as HTMLElement;
+    const root = document.documentElement;
+    return {
+      headerFits: header.scrollWidth === header.clientWidth,
+      documentFits: root.scrollWidth === root.clientWidth,
+    };
+  });
+  const fits = (width: number, reading: { headerFits: boolean; documentFits: boolean }) =>
+    assert(reading.headerFits && reading.documentFits, `At ${width} px the header or the document overflows horizontally`);
+  await page.setViewportSize({ width: 360, height: 844 });
+  fits(360, await breadcrumb());
+  await page.setViewportSize({ width: 599, height: 844 });
+  fits(599, await breadcrumb());
+  await page.setViewportSize({ width: 600, height: 844 });
+  fits(600, await breadcrumb());
+
+  // Layout step 6, the reading measure: Material keeps body text between 40 and 60
+  // characters a line. Full lines only — a paragraph's last line is short by nature.
+  // Measured with the documentation's own font once fonts are ready.
+  const measureProse = () => page.evaluate(() => {
+    const md = document.querySelector('.md')!;
+    const fullLines = (paragraph: HTMLElement): number[] => {
+      const lines = new Map<number, { chars: number; width: number }>();
+      const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+      const texts: Text[] = [];
+      while (walker.nextNode()) texts.push(walker.currentNode as Text);
+      for (const node of texts) {
+        for (let i = 0; i < node.textContent!.length; i++) {
+          const range = document.createRange();
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          const rect = range.getBoundingClientRect();
+          if (!rect.width) continue;
+          const key = Math.round(rect.top / 4);
+          const line = lines.get(key) ?? { chars: 0, width: 0 };
+          line.chars++;
+          line.width += rect.width;
+          lines.set(key, line);
+        }
+      }
+      return [...lines.values()].filter(line => line.width > paragraph.clientWidth * 0.95).map(line => line.chars);
+    };
+    const prose = [...md.querySelectorAll<HTMLElement>('p')].filter(p => p.textContent!.trim().length > 120 && !p.closest('pre, table, .doc-example'));
+    const lines = prose.slice(0, 12).flatMap(fullLines).sort((a, b) => a - b);
+    // Long inline code and URLs wrap inside the paragraph instead of the page.
+    const overflowing = prose.filter(p => p.scrollWidth > p.clientWidth + 1).length;
+    // Wide code blocks and tables scroll inside the column, not the page.
+    const mdBox = md.getBoundingClientRect();
+    const escapees = [...md.querySelectorAll('pre, table')].filter(block => {
+      const box = block.getBoundingClientRect();
+      return box.width > 0 && (box.left < mdBox.left - 0.5 || box.right > mdBox.right + 0.5);
+    }).map(block => `${block.tagName}.${String(block.className).slice(0, 40)}${block.textContent.trim().slice(0, 30)}`);
+    const codeWidth = Math.max(0, ...[...md.querySelectorAll('pre')].map(block => block.getBoundingClientRect().width));
+    return {
+      count: lines.length,
+      median: lines[Math.floor(lines.length / 2)] ?? 0,
+      longest: lines[lines.length - 1] ?? 0,
+      codeWidth,
+      overflowing,
+      escapees,
+      fits: document.documentElement.scrollWidth <= window.innerWidth,
+      toc: (document.querySelector('.doc-toc') as HTMLElement | null)?.offsetParent !== null,
+    };
+  });
+  const measureAt = async (width: number, route: string) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${base}${route}`);
+    await page.locator('.md h1').waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    const reading = await measureProse();
+    assert(reading.count >= 2 && reading.median >= 40 && reading.median <= 60 && reading.longest <= 66,
+      `${route} at ${width}: measure is ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want 40–60)`);
+    assert(reading.overflowing === 0, `${route} at ${width}: ${reading.overflowing} paragraphs overflow their line box`);
+    assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the column (${reading.escapees.join('; ')})`);
+    // The measure caps the prose, never the column: at desktop widths a code block
+    // spans the column again, not the reading width (today's 320px capture fails this).
+    if (width === 1440) assert(reading.codeWidth >= 600, `${route} at ${width}: code blocks are ${reading.codeWidth}px wide (want the column, 600+)`);
+    // Scrollable code blocks are keyboard scrollable in every browser, not only
+    // Chromium: each is a named, focusable group (Firefox/Safari focus rule).
+    const blocks = await page.locator('.md pre').evaluateAll(pres => pres.map(pre => ({
+      focusable: pre.getAttribute('tabindex') === '0' && pre.getAttribute('role') === 'group',
+      name: pre.getAttribute('aria-label') ?? '',
+    })));
+    assert(blocks.length > 0 && blocks.every(block => block.focusable && /code$/i.test(block.name)),
+      `${route} at ${width}: a code block is not a named focusable group (${JSON.stringify(blocks.slice(0, 3))})`);
+    if (width === 360 && route.includes('button')) {
+      const first = page.locator('.md pre').first();
+      await first.focus();
+      assert(await first.evaluate(pre => document.activeElement === pre), 'A code block did not take keyboard focus');
+      const before = await first.evaluate(pre => pre.scrollLeft);
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(100);
+      assert(await first.evaluate(pre => pre.scrollLeft) > before, 'A focused code block did not scroll with the keyboard');
+    }
+    return reading;
+  };
+  for (const width of [360, 390, 412, 700, 1024, 1440]) {
+    // Guide prose and API prose: Getting started reads like a guide, Button carries
+    // the API tables.
+    await measureAt(width, 'docs/getting-started/');
+    const api = await measureAt(width, 'docs/components/button/');
+    if (width === 1024) assert(api.toc === false, 'The table of contents shows below its breakpoint');
+    if (width === 1440) {
+      assert(api.toc === true, 'The table of contents is hidden at 1440 px');
+      await page.locator('.doc-toc a').first().click();
+      await page.waitForTimeout(400);
+      const landed = await page.evaluate(() => {
+        const toc = document.querySelector('.doc-toc a')!;
+        const heading = document.querySelector(toc.getAttribute('href')!)!;
+        const box = heading.getBoundingClientRect();
+        return box.top >= 0 && box.top < window.innerHeight;
+      });
+      assert(landed, 'A table-of-contents fragment no longer lands on its heading');
+    }
+    await page.screenshot({ animations: 'disabled', path: `${output}/docs-measure-${width}.png` });
+  }
+  // Enlarged text narrows the measure with it (ch grows with the font) and the page
+  // still fits; the fragment still lands and the focus ring is reachable. The table
+  // of contents is part of this, so this runs where it shows (above 1150 px).
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${base}docs/components/button/`);
+  await page.locator('.md h1').waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
+  const enlarged = await measureProse();
+  assert(enlarged.fits && enlarged.median <= 60, `Enlarged text overflows or loses the measure (${enlarged.median} characters)`);
+  assert(enlarged.median < 52, 'Enlarged text did not narrow the measure');
+  await page.locator('.doc-toc a').first().focus();
+  const focused = await page.evaluate(() => document.activeElement === document.querySelector('.doc-toc a'));
+  assert(focused && enlarged.fits, 'Focus is lost or the page overflows with enlarged text');
+  await page.screenshot({ animations: 'disabled', path: `${output}/docs-measure-enlarged.png` });
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}components/button/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();

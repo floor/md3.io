@@ -21,7 +21,7 @@ import hljs from 'highlight.js';
 import { components, isComponent } from '../shared/components';
 import { appName, appRef, FRAMEWORKS, frameworkCode, handlerCall, isField, type ExampleAction, type ExampleHandler, type ExampleStep, type Framework } from '../shared/frameworks';
 import { elementMeta } from './elements-meta';
-import { componentName, escapeHTML } from './content';
+import { codeLabel, componentName, escapeHTML } from './content';
 
 export interface ExampleBlock {
   slug: string;
@@ -235,7 +235,7 @@ export function renderExample(source: string): string {
   } catch (error) {
     return `<p class="doc-example__error">This example does not render: ${escapeHTML((error as Error).message)}</p>\n`;
   }
-  const highlight = (text: string, language: string) => `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
+  const highlight = (text: string, language: string) => `<pre tabindex="0" role="group" aria-label="${escapeHTML(codeLabel(language))}"><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
   const vanilla = highlight(rendered.code.vanilla!, 'javascript');
   const note = addon(slug)
     ? `<p class="framework-note">The ${addon(slug)!.name} comes from material-addons, which has no web components: its vanilla factory works in any framework.</p>`
