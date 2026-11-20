@@ -169,7 +169,7 @@ const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(g
 // material-addons' components are not material's: their light-DOM styles ship as that
 // package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
 // example using any of them links that sheet instead.
-const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete']);
+const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete', 'avatar']);
 const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
