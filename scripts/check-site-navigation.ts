@@ -225,7 +225,8 @@ try {
       const themedPage = await themed.newPage();
       await themedPage.goto(url('/components/'));
       await themedPage.locator(`html[data-theme="${theme}"][data-theme-mode="${mode}"]`).waitFor();
-      const selected = themedPage.locator('main .site-drawer a[aria-current="page"]');
+      const selected = themedPage.locator('main .site-drawer:defined a[aria-current="page"]');
+      await selected.waitFor({ state: 'visible' });
       const selectedStyle = await itemStyle(selected);
       assert.equal(selectedStyle.height, 48, 'section row matches the live sidebar density');
       assert.equal(selectedStyle.opacity, '1', 'active indicator fills the pill');
