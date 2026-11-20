@@ -1,5 +1,5 @@
-<% const link = item => include('component-directory-link', { ...it, item }); %>
-<ul class="component-directory" role="list" aria-labelledby="<%= it.heading %>">
+<% const link = item => include('sidebar-link', { path: it.path, item }); %>
+<ul class="component-directory" role="list"<% if (it.label) { %> aria-label="<%= it.label %>"<% } else { %> aria-labelledby="<%= it.heading %>"<% } %>>
   <li><%~ link({ name: 'Components overview', href: '/components/' }) %></li>
   <% it.entries.forEach(entry => { %>
     <li>
@@ -7,7 +7,11 @@
         const id = it.heading + '-' + entry.id;
         const expanded = entry.items.some(item => item.href === it.path);
       %>
-        <button type="button" class="component-directory__toggle" id="<%= id %>-toggle" aria-expanded="<%= expanded %>" aria-controls="<%= id %>"><%= entry.name %><%~ it.icon('chevron_right') %></button>
+        <button type="button" class="component-directory__toggle mtrl-drawer__item" id="<%= id %>-toggle" aria-expanded="<%= expanded %>" aria-controls="<%= id %>">
+          <span class="mtrl-drawer__active-indicator" aria-hidden="true"></span>
+          <span class="mtrl-drawer__item-label"><%= entry.name %></span>
+          <span class="mtrl-drawer__item-icon"><%~ it.icon('chevron_right') %></span>
+        </button>
         <ul class="component-directory__items" id="<%= id %>" role="list" aria-labelledby="<%= id %>-toggle">
           <% entry.items.forEach(item => { %><li><%~ link(item) %></li><% }); %>
         </ul>

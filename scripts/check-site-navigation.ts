@@ -16,7 +16,7 @@ const url = (path: string) => new URL(path, server.url).href;
 const showcaseLabel = 'Showcase';
 const showcasePath = '/showcase/';
 const destinations = ['Components', 'Styles', showcaseLabel, 'Documentation'];
-const widths = [360, 390, 412, 700, 1024, 1440];
+const widths = [360, 390, 412, 700, 840, 1024, 1440];
 const linkNames = (nav: Locator) => nav.getByRole('link').allTextContents();
 const focused = (locator: Locator) => locator.evaluate(node => document.activeElement === node);
 
@@ -52,9 +52,12 @@ try {
 
   for (const width of widths) {
     const compact = width < 600;
+    const medium = width >= 600 && width < 840;
     await size(width);
     await goto('/components/button/');
     await assertDestinations(`${width}px`);
+    const visibleOpener = page.getByRole('button', { name: 'Expand navigation', exact: true });
+    assert.equal(await visibleOpener.count(), medium ? 1 : 0, `${width}px rail opener`);
     const bar = page.locator('#site-primary-bar');
     const rail = page.locator('#site-primary-rail');
     const shown = compact ? bar : rail;
@@ -87,10 +90,17 @@ try {
     } else {
       assert.equal(chrome.width, 96, 'collapsed rail uses its layout width');
       await capture(`rail-${width}`);
+    }
+    if (medium) {
+      assert.equal((await open.boundingBox())?.height, 40, 'rail opener keeps its Material visual height');
       await showRail();
+      assert.equal((await close.boundingBox())?.height, 40, 'rail closer keeps its Material visual height');
       await assertDestinations(`modal rail at ${width}px`);
       assert.equal(await rail.getAttribute('inert'), '');
-      const last = modal.getByRole('link', { name: 'Documentation', exact: true });
+      const section = modal.getByRole('navigation', { name: 'Component list', exact: true });
+      assert.equal(await page.locator('.component-list').count(), 1, 'the drawer uses a single component list');
+      assert.equal(await section.getByRole('link', { name: 'Button', exact: true }).getAttribute('aria-current'), 'page');
+      const last = section.getByRole('link').last();
       await page.keyboard.press('Shift+Tab');
       assert.equal(await focused(last), true);
       await page.keyboard.press('Tab');
@@ -98,6 +108,7 @@ try {
       await capture(`rail-open-${width}`);
       await page.keyboard.press('Escape');
       await assertClosedRail();
+      assert.equal(await page.locator('main .component-list').count(), 1, 'closing restores the component pane');
 
       const searchBox = (await searchTrigger.boundingBox())!;
       const x = searchBox.x + searchBox.width / 2;
@@ -133,6 +144,12 @@ try {
   await page.waitForFunction(() => document.activeElement?.closest('#site-primary-bar') && document.activeElement?.getAttribute('href') === '/docs/');
   await size(600);
   await page.waitForFunction(() => document.activeElement?.closest('#site-primary-rail') && document.activeElement?.getAttribute('href') === '/docs/');
+  await showRail();
+  await modal.getByRole('link', { name: 'Color', exact: true }).focus();
+  await size(840);
+  await modal.waitFor({ state: 'hidden' });
+  await open.waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => document.activeElement?.matches('#sidebar a[href="/styles/color/"]'));
   const [newPage] = await Promise.all([
     context.waitForEvent('page'),
     nav.getByRole('link', { name: 'Documentation', exact: true }).click({ modifiers: ['ControlOrMeta'] }),
@@ -147,11 +164,11 @@ try {
     { label: 'Styles', path: '/styles/shape/', hrefs: stylePages.map(style => style.href) },
     { label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] },
   ];
-  for (const { label, path, hrefs } of sections) for (const width of [...widths, 839, 840]) {
+  for (const { label, path, hrefs } of sections) for (const width of [...widths, 839]) {
     await size(width);
     await goto(path);
     const index = page.locator('#section-index');
-    const indexLinks = page.getByRole('navigation', { name: `${label} links`, exact: true });
+    const indexLinks = index.getByRole('navigation', { name: `${label} links`, exact: true });
     const summary = index.locator('summary');
     assert.equal(await index.count(), 1);
     if (width < 840) await summary.click(); else await summary.waitFor({ state: 'hidden' });
@@ -170,7 +187,87 @@ try {
     assert.ok(width < 840 ? geometry.y + geometry.height <= content.y + 1 : geometry.x + geometry.width <= content.x + 1,
       `${label} index uses the right placement at ${width}px`);
     if (width === 839 || width === 840) await capture(`index-${label.toLowerCase()}-${width}`);
+    if (width === 700) {
+      await showRail();
+      const modalLinks = modal.getByRole('navigation', { name: `${label} links`, exact: true });
+      assert.equal(await modalLinks.getAttribute('id'), 'sidebar', 'the modal borrows the inline index');
+      assert.deepEqual(await modalLinks.locator('.sidebar__link').evaluateAll(links => links.map(link => link.getAttribute('href'))), hrefs);
+      assert.equal(await modalLinks.locator('[aria-current="page"]').getAttribute('href'), path);
+      await page.keyboard.press('Escape');
+      await assertClosedRail();
+      await indexLinks.waitFor();
+    }
   }
+
+  const railCaptures = resolve(output, 'rail-list-polish');
+  await mkdir(railCaptures, { recursive: true });
+  const itemStyle = (item: Locator) => item.evaluate(node => {
+    const style = getComputedStyle(node);
+    const indicator = node.querySelector('.mtrl-drawer__active-indicator')!;
+    const fill = getComputedStyle(indicator, '::before');
+    const label = getComputedStyle(node.querySelector('.mtrl-drawer__item-label')!);
+    return {
+      height: node.getBoundingClientRect().height, padding: style.padding, radius: style.borderRadius,
+      color: label.color, background: fill.backgroundColor, opacity: fill.opacity, border: style.borderInlineStartWidth,
+      fontFamily: label.fontFamily, fontSize: label.fontSize, lineHeight: label.lineHeight,
+      fontWeight: label.fontWeight, letterSpacing: label.letterSpacing,
+    };
+  });
+  const activeFills = new Set<string>();
+  for (const [theme, mode] of [['baseline', 'light'], ['spring', 'light'], ['ocean', 'dark']] as const) {
+    const themed = await browser.newContext({ reducedMotion: 'reduce', colorScheme: mode, viewport: { width: 1440, height: 900 } });
+    try {
+      await themed.addInitScript(([name, appearance]) => {
+        localStorage.setItem('md3-site-mode', appearance);
+        localStorage.setItem('md3-preview-appearance', JSON.stringify({ theme: name, mode: appearance }));
+      }, [theme, mode]);
+      const themedPage = await themed.newPage();
+      await themedPage.goto(url('/components/'));
+      await themedPage.locator(`html[data-theme="${theme}"][data-theme-mode="${mode}"]`).waitFor();
+      const selected = themedPage.locator('main .sidebar__link[aria-current="page"]');
+      const selectedStyle = await itemStyle(selected);
+      assert.equal(selectedStyle.height, 48, 'section row matches the live sidebar density');
+      assert.equal(selectedStyle.opacity, '1', 'active indicator fills the pill');
+      assert.equal(selectedStyle.border, '0px');
+      activeFills.add(selectedStyle.background);
+      const family = themedPage.locator('main .component-directory__toggle').first();
+      const familyStyle = await itemStyle(family);
+      for (const prop of ['height', 'padding', 'radius'] as const) assert.equal(familyStyle[prop], selectedStyle[prop], `family ${prop}`);
+
+      const materialDrawer = themedPage.locator('m-drawer');
+      await materialDrawer.scrollIntoViewIfNeeded();
+      await themedPage.locator('m-drawer:defined').waitFor();
+      await materialDrawer.evaluate(node => {
+        node.removeAttribute('dense');
+        node.style.setProperty('--mtrl-density', '-2');
+      });
+      const reference = materialDrawer.locator('.mtrl-drawer__item--active');
+      await themedPage.waitForFunction(() => document.querySelector('m-drawer')?.shadowRoot
+        ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 48);
+      const { fontFamily, ...listStyle } = selectedStyle;
+      const { fontFamily: materialFont, ...drawerStyle } = await itemStyle(reference);
+      assert.match(fontFamily, /DIN Alternate/);
+      assert.match(materialFont, /Roboto/);
+      assert.deepEqual(drawerStyle, listStyle, `${theme} ${mode} matches the real drawer geometry, typescale and colours`);
+
+      if (theme === 'spring') continue;
+      for (const width of [700, 1440]) for (const [name, path] of [['overview', '/components/'], ['button', '/components/button/']]) {
+        await themedPage.setViewportSize({ width, height: 900 });
+        await themedPage.goto(url(path!));
+        await themedPage.evaluate(() => document.fonts.ready);
+        const save = (kind: string) => themedPage.screenshot({ path: `${railCaptures}/${kind}-${name}-${width}-${theme}-${mode}.png`, animations: 'disabled' });
+        await save('page');
+        if (width === 700) {
+          await themedPage.getByRole('button', { name: 'Expand navigation', exact: true }).click();
+          await themedPage.getByRole('dialog', { name: 'Navigation', exact: true }).waitFor();
+          await save('rail-open');
+        }
+      }
+    } finally {
+      await themed.close();
+    }
+  }
+  assert.equal(activeFills.size, 3, 'selection follows Baseline, Spring, and Ocean dark');
 
   await size(390);
   await goto('/docs/theming/');

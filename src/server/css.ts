@@ -3,25 +3,30 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { materialTokens } from './playground-panel';
+import { typescale } from './tokens';
 
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
-const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
-const componentList = ['mtrl:list', 'component-list'] as const;
+const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax', 'mtrl:drawer', 'mtrl:icon-button'] as const;
+const labelLarge = typescale.find(style => style.role === 'label-large')!;
+const drawerTypography = `:root{
+  --mtrl-sys-typescale-label-large-font-weight:${labelLarge.fontWeight};
+  --mtrl-sys-typescale-label-large-font-size:${labelLarge.fontSize};
+  --mtrl-sys-typescale-label-large-line-height:${labelLarge.lineHeight};
+  --mtrl-sys-typescale-label-large-letter-spacing:${labelLarge.letterSpacing}
+}`;
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
   home: [...shell, 'homepage', 'site', 'search'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
-  // A component page adds Roboto (mtrl's typeface, which its elements name) and the panel's sheet.
-  'material-panel': [...shell, 'site', 'search', 'roboto', ...componentList, 'playground-material'],
-  // The components overview adds Roboto, the elements' pre-upgrade rules, then the catalog.
-  catalog: [...shell, 'site', 'search', 'roboto', ...componentList, 'preupgrade', 'catalog'],
+  'material-panel': [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material'],
+  // The components overview adds the elements' pre-upgrade rules and the catalog.
+  catalog: [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'],
   // Examples add the device chooser: mtrl's button group and icon button, then its sheet.
-  examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:icon-button', 'mtrl:button-group', 'device-frame'],
-  // Styles pages add Roboto, then their own sheet.
-  styles: [...shell, 'site', 'search', 'roboto', 'styles-pages'],
+  examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:button-group', 'device-frame'],
+  styles: [...shell, 'site', 'search', 'styles-pages'],
   // Colour Lab's real components, with colour scoped to its preview stage.
   'colour-lab': [...shell, 'site', 'search', 'roboto', 'mtrl-tokens', 'mtrl:button', 'mtrl:icon-button', 'mtrl:fab', 'mtrl:card', 'mtrl:text-field', 'mtrl:checkbox', 'mtrl:radios', 'mtrl:switch', 'mtrl:slider', 'mtrl:chips', 'mtrl:badge', 'colour-lab'],
   // The Themes app: the Styles sheet, mtrl's type and shape tokens and ripple, the mtrl
@@ -153,9 +158,8 @@ export function minifyCss(css: string): string {
 export function bundleCss(name: StylesheetBundle): string {
   const css = stylesheetBundles[name].map(file => {
     if (file === 'mtrl-tokens') return mtrlTokens();
-    const sheet = readFileSync(fileFor(file), 'utf8');
-    return file === 'mtrl:list' ? `@scope (.component-list) { ${sheet} }` : sheet;
-  }).join('\n')
+    return readFileSync(fileFor(file), 'utf8');
+  }).join('\n') + '\n' + drawerTypography
     // material's scoped baseline tokens for the header's buttons and a component page's
     // panel: every page has the header, so every bundle carries them, cached with the
     // sheet instead of inline in each page's HTML.

@@ -34,11 +34,12 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
   const headings = docs ? pane.getByRole('heading', { name: 'Components', exact: true }) : pane.getByRole('heading');
-  equal(await headings.allTextContents(), ['Components'], 'The directory has one Components heading');
+  equal(await headings.allTextContents(), path === '/components/' ? [] : ['Components'], 'Only detail and section sidebars have a Components heading');
   const inventory = docs ? docGroups.flatMap(group => group.items) : componentSlugs.map(slug => ({
     slug, name: components[slug].name, href: `/components/${slug}/`,
   }));
   const directory = pane.locator('.component-directory');
+  assert(await directory.and(pane.getByRole('list', { name: 'Components', exact: true })).count() === 1, 'The directory retains its accessible name');
   const rows = await directory.locator(':scope > li > :is(a, button)').evaluateAll(items => items.map(item => item.textContent!.trim()));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
   equal(rows, ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');

@@ -1,6 +1,0 @@
-<% const current = it.item.href === it.path; %>
-<% if (it.docs) { %>
-  <a class="sidebar__link<%= current ? ' sidebar__link--active' : '' %>" href="<%= it.item.href %>"<% if (current) { %> aria-current="page"<% } %>><%= it.item.name %></a>
-<% } else { %>
-  <a class="mtrl-list__item" href="<%= it.item.href %>"<% if (current) { %> aria-current="page"<% } %>><span class="mtrl-list__text"><span class="mtrl-list__headline"><%= it.item.name %></span></span></a>
-<% } %>

@@ -169,64 +169,11 @@ samp {
     margin-bottom: 20px;
 }
 
-.sidebar__label {
-    font-size: var(--fs-base);
-    font-weight: var(--fw-bold);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 0 20px;
-    margin-bottom: 6px;
-}
-
-.sidebar__link {
-    display: flex;
-    align-items: center;
-    min-height: var(--site-target-size);
-    font-size: var(--fs-md);
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 0 20px;
-    transition: all 0.1s;
-    margin-right: 8px;
-    border-radius: 6px;
-    /*border-right: 2px solid transparent;*/
-}
-
-.sidebar__link:hover {
-    color: var(--text);
-}
-
-.sidebar__link--active,
-.sidebar__link--active:hover {
-    color: var(--accent-text);
-    border-right-color: var(--accent);
-}
-
-.sidebar__group h2.sidebar__label { margin-block-start: 0; }
-
 .component-directory,
 .component-directory__items { margin: 0; padding: 0; list-style: none; }
 .component-directory__items { padding-inline-start: 12px; }
-.component-directory__toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: var(--site-target-size);
-    padding: 6px 20px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: inherit;
-    font-family: inherit;
-    font-size: var(--fs-md);
-    text-align: start;
-    cursor: pointer;
-}
-.component-directory__toggle:hover { background: var(--sidebar-hover); }
-.component-directory__toggle:focus-visible { outline-offset: -2px; }
+.sidebar__link .mtrl-drawer__item-label,
+.component-directory__toggle .mtrl-drawer__item-label { white-space: normal; overflow-wrap: anywhere; }
 .component-directory__toggle .inline-icon { flex: none; margin: 0; }
 .component-directory__toggle[aria-expanded="false"] + .component-directory__items { display: none; }
 .component-directory__toggle[aria-expanded="true"] .inline-icon { transform: rotate(90deg); }
@@ -510,7 +457,6 @@ html[data-theme-mode] .header,
 html[data-theme-mode] .content,
 html[data-theme-mode] .toc,
 html[data-theme-mode] .ui-card,
-html[data-theme-mode] .sidebar__link,
 html[data-theme-mode] .md pre,
 html[data-theme-mode] .md code,
 html[data-theme-mode] .md table,
@@ -736,13 +682,6 @@ select:focus-visible,
 .ui-card:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
-}
-
-/* Sidebar links — highlight instead of ring */
-.sidebar__link:focus-visible {
-    background: var(--accent-dim);
-    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
-    outline: none;
 }
 
 /* ─── Accessibility: Reduced motion ──────────────────────────────── */

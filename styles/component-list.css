@@ -1,31 +1,9 @@
 .component-list {
-  --mtrl-density: -1;
-  --mtrl-sys-color-surface: transparent;
-  --mtrl-sys-color-on-surface: var(--text);
-  --mtrl-sys-color-on-surface-variant: var(--text-muted);
-  --mtrl-sys-color-outline-variant: var(--border);
-  padding: 24px clamp(18px, 4vw, 36px) 40px;
+  padding-block: 8px 16px;
 }
 
-.component-list .mtrl-list__subheader { margin: 0; padding: 12px 16px 4px; }
-.component-list .component-directory__toggle { padding-inline: 16px; }
-.component-list .mtrl-list__item {
-  color: inherit;
-  padding: 6px 16px;
-  border-radius: 8px;
-  text-decoration: none;
+.component-list .sidebar__link {
   scroll-margin-block-start: calc(var(--header-height) + 8px);
-}
-.component-list .mtrl-list__headline { white-space: normal; }
-.component-list .mtrl-list__item:hover { background: var(--sidebar-hover); }
-.component-list .mtrl-list__item:focus-visible { outline-offset: -2px; }
-.component-list .mtrl-list__item[aria-current="page"] {
-  background: var(--sidebar-hover);
-  box-shadow: inset 3px 0 var(--accent);
-}
-.component-list .mtrl-list__item[aria-current="page"] .mtrl-list__headline {
-  color: var(--accent-text);
-  font-weight: var(--fw-bold);
 }
 .component-list-up { display: inline-flex; align-items: center; gap: 6px; }
 .component-list-up svg { width: 16px; height: 16px; }
@@ -49,14 +27,14 @@
     top: var(--header-height);
     max-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 0px));
     border-inline-end: 1px solid var(--border);
-    padding: 16px 8px;
+    padding-block: 8px 16px;
     overflow-y: auto;
     overscroll-behavior-y: contain;
     scrollbar-width: thin;
     scroll-padding-block: 8px;
   }
   .component-list-layout > .component-page { grid-column: 2; grid-row: 1; }
-  .component-list .mtrl-list__item { scroll-margin-block-start: 0; }
+  .component-list .sidebar__link { scroll-margin-block-start: 0; }
   .component-catalog-index { border-block-end: 0; }
   .component-catalog-index .component-list { padding: 0; }
   .component-catalog-index[open] > summary { display: none; }

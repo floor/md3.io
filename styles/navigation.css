@@ -81,8 +81,7 @@ body {
     border-radius: 999px;
 }
 
-.site-nav-link__icon .inline-icon,
-.site-nav-button .inline-icon {
+.site-nav-link__icon .inline-icon {
     width: 24px;
     height: 24px;
 }
@@ -93,8 +92,7 @@ body {
     text-align: center;
 }
 
-.site-nav-link:hover .site-nav-link__icon,
-.site-nav-button:hover {
+.site-nav-link:hover .site-nav-link__icon {
     background: var(--bg-card-hover);
 }
 
@@ -113,49 +111,52 @@ body {
 }
 
 .site-nav-button {
-    display: grid;
-    place-items: center;
-    width: 48px;
-    min-height: 48px;
+    display: flex;
     margin: 0 auto 10px;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
 }
+.site-nav-button .inline-icon { width: 100%; height: 100%; }
 
 .site-nav-dialog {
     position: fixed;
     inset: 0 auto 0 0;
-    width: min(280px, 100%);
+    width: min(360px, 100%);
     height: 100dvh;
     max-height: none;
     margin: 0;
-    padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+    padding: max(12px, env(safe-area-inset-top, 0px)) 0 max(12px, env(safe-area-inset-bottom, 0px));
     overflow: auto;
     overscroll-behavior: contain;
-    border: 1px solid var(--border);
-    border-radius: 0 20px 20px 0;
+    border: 0;
+    border-radius: 0 var(--mtrl-sys-shape-corner-large, 16px) var(--mtrl-sys-shape-corner-large, 16px) 0;
     background: var(--bg-sidebar);
     color: var(--text);
 }
 
 .site-nav-dialog::backdrop { background: var(--overlay-bg); }
-.site-nav-dialog .site-nav-button { margin-inline: 0 auto; }
-.site-nav-dialog .site-nav-link {
-    flex: none;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 12px;
-    min-height: 56px;
-    padding-inline: 8px;
-    border-radius: 999px;
-    font-size: var(--fs-md);
+.site-nav-dialog .site-nav-button { margin-inline: 12px auto; }
+/* Material's drawer defaults to 56px at density 0. The live Material sidebar
+   uses 48px rows, which mtrl-drawer__item provides at density -2.
+   https://m3.material.io/components/navigation-drawer/specs */
+.site-nav-dialog .site-nav-links { gap: 0; --mtrl-density: 0; }
+:is(.component-list, .section-index__links) { --mtrl-density: -2; }
+/* Let the packaged drawer rules supply the row and heading spacing. */
+.mtrl-drawer__item,
+.mtrl-drawer__section-label {
+    margin: revert-layer;
+    padding: revert-layer;
+    font: var(--mtrl-sys-typescale-label-large-font-weight)
+        var(--mtrl-sys-typescale-label-large-font-size) /
+        var(--mtrl-sys-typescale-label-large-line-height) var(--font-sans);
+    letter-spacing: var(--mtrl-sys-typescale-label-large-letter-spacing);
 }
-.site-nav-dialog .site-nav-link:hover { background: var(--bg-card-hover); }
-.site-nav-dialog .site-nav-link[aria-current] { background: var(--accent-dim); }
-.site-nav-dialog .site-nav-link .site-nav-link__icon { width: 32px; background: transparent; }
+.mtrl-drawer__item-icon .inline-icon { width: revert-layer; height: revert-layer; }
+h2.mtrl-drawer__section-label { margin: 0; }
+.site-nav-dialog > :is(.component-list, .section-index__links) {
+    margin-block-start: 12px;
+    padding-block: 0;
+    border-block-start: 1px solid var(--border);
+}
+.site-nav-dialog :is(.catalog-note, .sidebar__foot) { display: none; }
 
 .layout-main {
     display: flex;
@@ -196,6 +197,7 @@ body {
 }
 
 @media (min-width: 840px) {
+    #site-nav-open { display: none; }
     .layout-main { flex-direction: row; }
     .section-index {
         position: sticky;

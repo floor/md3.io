@@ -96,7 +96,7 @@
   </div>
   <div class="layout">
     <div class="site-primary-rail" id="site-primary-rail">
-      <button type="button" class="site-nav-button" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden><%~ it.icon('menu') %></button>
+      <button type="button" class="site-nav-button mtrl-icon-button mtrl-icon-button--round mtrl-icon-button--standard" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden><span class="mtrl-icon-button__icon"><%~ it.icon('menu') %></span></button>
       <%~ include('primary-links', it) %>
     </div>
     <div class="layout-main">
@@ -104,15 +104,7 @@
         <details class="section-index" id="section-index">
           <summary class="section-index__toggle"><%= it.section + ' index' %></summary>
           <nav class="section-index__links" id="sidebar" aria-label="<%= it.section %> links">
-            <% it.sidebarGroups.forEach(group => { %><div class="sidebar__group"><div class="sidebar__label"><%= group.label %></div><% group.items.forEach(item => { %>
-              <a class="sidebar__link <%= it.path === item.href ? 'sidebar__link--active' : '' %>" href="<%= item.href %>" <% if (it.path === item.href) { %>aria-current="page"<% } %>><%= item.name %></a>
-            <% }); %></div><% }); %>
-            <% if (it.docComponentEntries.length) { %>
-              <div class="sidebar__group">
-                <h2 class="sidebar__label" id="docs-component-directory-heading">Components</h2>
-                <%~ include('component-directory', { heading: 'docs-component-directory-heading', entries: it.docComponentEntries, path: it.path, icon: it.icon, docs: true }) %>
-              </div>
-            <% } %>
+            <%~ include('section-links', { ...it, heading: 'docs-component-directory-heading' }) %>
             <div class="sidebar__foot">material · Material Design 3<br><a href="https://github.com/floor/material/blob/main/LICENSE">MIT license</a><br>Icons: <a href="https://fonts.google.com/icons">Material Symbols</a> by Google, <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0</a><br>Type: <a href="https://fonts.google.com/specimen/Roboto">Roboto</a> by Google, <a href="https://openfontlicense.org">OFL 1.1</a></div>
           </nav>
         </details>
@@ -122,8 +114,8 @@
   </div>
   <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub <%~ it.icon('open_in_new') %></a><a href="/privacy/">Privacy</a></span></footer>
   <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">
-    <button type="button" class="site-nav-button" id="site-nav-close" aria-label="Close navigation" autofocus><%~ it.icon('close') %></button>
-    <%~ include('primary-links', it) %>
+    <button type="button" class="site-nav-button mtrl-icon-button mtrl-icon-button--round mtrl-icon-button--standard" id="site-nav-close" aria-label="Close navigation" autofocus><span class="mtrl-icon-button__icon"><%~ it.icon('close') %></span></button>
+    <%~ include('primary-links', { ...it, drawer: true }) %>
   </dialog>
   <%~ include('search', { icon: it.icon }) %>
 </body></html>

@@ -7,24 +7,65 @@ import * as panel from './panel-driver';
 const widths = [360, 390, 412, 700, 840, 1024, 1440];
 const targetSize = 48;
 
-async function checkTargets(targets: Locator, description: string) {
-  await targets.first().waitFor();
-  const targetBoxes = await targets.evaluateAll(nodes => nodes.filter(node => node.getClientRects().length).map(node => {
-    const { width, height } = node.getBoundingClientRect();
-    return { width, height, name: node.getAttribute('aria-label') || node.textContent?.trim() || node.localName };
-  }));
-  assert(targetBoxes.length > 0, `${description}: no visible controls`);
+export async function checkTargets(targets: Locator, description: string, allowEmpty = false) {
+  if (!allowEmpty) await targets.first().waitFor();
+  const targetBoxes = await targets.evaluateAll((nodes, layout) => nodes.flatMap(node => {
+    if (node.matches(':disabled, [aria-disabled="true"]') || layout && node.matches('[type="file"], [tabindex="-1"][aria-hidden="true"]')) return [];
+    // Follow the hosts when checking whether a shadow control is in a demo or
+    // behind a modal. These scopes have their own checks.
+    for (let ancestor: Element | null = node; layout && ancestor;) {
+      if (ancestor.matches('.colour-lab-stage, .catalog-visual, [inert], [aria-hidden="true"]')) return [];
+      const root = ancestor.getRootNode();
+      ancestor = ancestor.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
+    }
+    const original = node.getBoundingClientRect();
+    if (!original.width || !original.height || getComputedStyle(node).visibility === 'hidden') return [];
+    const field = node.matches('.mtrl-text-field__input') ? node.closest('.mtrl-select') ?? node.closest('[part~="field"]') : null;
+    const label = node instanceof HTMLInputElement && ['checkbox', 'radio'].includes(node.type)
+      && !node.matches('.mtrl-switch__input') ? node.labels?.[0] : null;
+    const target = field ?? label ?? node;
+    const bounds = target.getBoundingClientRect();
+    const hitPart = target.matches('.mtrl-chip__action') ? '::before'
+      : target.matches('.mtrl-button, .mtrl-icon-button, .mtrl-drawer__item, .mtrl-menu__item, .mtrl-select, [part~="field"], .mtrl-slider__container, [part~="toggle-type"], [part~="cancel"], [part~="confirm"], .mtrl-text-field__trailing-icon')
+        ? '::after' : null;
+    const hit = hitPart && getComputedStyle(target, hitPart);
+    const expanded = hit && hit.content !== 'none' && hit.pointerEvents !== 'none';
+    return [{
+      width: Math.max(bounds.width, expanded ? parseFloat(hit.width) || 0 : 0),
+      height: Math.max(bounds.height, expanded ? parseFloat(hit.height) || 0 : 0),
+      name: node.getAttribute('aria-label') || node.textContent?.trim() || node.localName,
+    }];
+  }), allowEmpty);
+  assert(allowEmpty || targetBoxes.length > 0, `${description}: no visible controls`);
   const undersized = targetBoxes.filter(({ width, height }) => width < targetSize - 0.1 || height < targetSize - 0.1);
   assert.deepEqual(undersized, [], `${description}: actual targets must be at least 48 × 48px`);
 }
 
-async function edge(page: Page, target: Locator, input: 'touch' | 'pointer', side: 'left' | 'right' | 'top' = 'top') {
+async function edge(page: Page, target: Locator, input: 'touch' | 'pointer', side: 'left' | 'right' | 'top' | 'top-right' = 'top') {
   await target.evaluate(node => node.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' }));
   const box = await target.boundingBox();
   assert(box, 'The input target has no bounds');
-  const x = box.x + (side === 'left' ? 2 : side === 'right' ? box.width - 2 : box.width / 2);
-  const y = box.y + (side === 'top' ? 2 : box.height / 2);
+  const x = box.x + box.width / 2 + (side === 'left' ? 2 - Math.max(targetSize, box.width) / 2
+    : side.endsWith('right') ? Math.max(targetSize, box.width) / 2 - 2 : 0);
+  const y = box.y + box.height / 2 + (side.startsWith('top') ? 2 - Math.max(targetSize, box.height) / 2 : 0);
   await (input === 'touch' ? page.touchscreen.tap(x, y) : page.mouse.click(x, y));
+}
+
+export async function checkVisualControlSizes(page: Page) {
+  const config = page.locator('#configuration');
+  const scenario = config.getByRole('combobox', { name: 'Scenario', exact: true });
+  const size = config.locator('m-button-group[data-group-for="size"]');
+  const controls = [
+    { name: 'select', control: scenario, height: 40 },
+    { name: 'text field', control: config.getByRole('textbox', { name: 'Text', exact: true }), height: 40 },
+    { name: 'XS button group', control: size, height: 32 },
+    { name: 'XS button', control: size.getByRole('button', { name: 'M', exact: true }), height: 32 },
+    { name: 'theme icon button', control: page.locator('#theme-picker button[part~="icon-button"]'), height: 40 },
+    { name: 'mode icon button', control: page.locator('#theme-toggle button[part~="icon-button"]'), height: 40 },
+  ];
+  if (page.viewportSize()!.width === 1440) controls.push({ name: 'select row', control: config.locator('.ui-row:has(#scenario)'), height: 40 });
+  const actual = await Promise.all(controls.map(async ({ name, control }) => [name, (await control.boundingBox())?.height]));
+  assert.deepEqual(Object.fromEntries(actual), Object.fromEntries(controls.map(({ name, height }) => [name, height])), 'Material visual heights');
 }
 
 async function checkPickers(page: Page, base: string, width: number, captures: string) {
@@ -34,7 +75,7 @@ async function checkPickers(page: Page, base: string, width: number, captures: s
     const triggers = fields.locator('button[part~="trailing-icon"]');
     await checkTargets(triggers, `${width}px ${kind} picker triggers`);
     const trigger = triggers.first();
-    await edge(page, trigger, 'touch', 'right');
+    await edge(page, trigger, 'touch');
     const popup = page.locator(`m-${kind}picker[data-panel-picker]`).getByRole('dialog');
     await popup.waitFor();
     await checkTargets(popup.locator('button:visible'), `${width}px ${kind} picker buttons`);
@@ -112,12 +153,14 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await checkTargets(componentList.getByRole('link'), `${width}px component list rows`);
       await edge(page, buttonLink, 'touch');
       await page.waitForURL(new URL('components/button/', base).href);
+      await checkVisualControlSizes(page);
 
       const frameworks = page.getByRole('grid', { name: 'Framework', exact: true });
       const factory = frameworks.getByRole('gridcell', { name: 'Factory', exact: true });
       const web = frameworks.getByRole('gridcell', { name: 'Web Components', exact: true });
       await checkTargets(frameworks.locator('button[part~="action"]'), `${width}px framework actions`);
-      await edge(page, factory, 'touch', 'right');
+      await web.click();
+      await edge(page, factory.locator('button[part~="action"]'), 'touch');
       assert.equal(await factory.getAttribute('aria-selected'), 'true', 'The chip edge selects Factory');
       await factory.press('ArrowRight');
       assert(await web.evaluate(node => (node.getRootNode() as ShadowRoot).activeElement === node), 'ArrowRight moves between chips');
@@ -134,10 +177,13 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await checkTargets(page.getByRole('button', { name: 'Copy code', exact: true }), `${width}px copy control`);
 
       const config = page.locator('#configuration');
-      await checkTargets(config.getByRole('textbox', { name: 'Text', exact: true }), `${width}px text input`);
+      const text = config.getByRole('textbox', { name: 'Text', exact: true });
+      await checkTargets(text, `${width}px text input`);
+      await edge(page, text, 'touch');
+      assert(await text.evaluate(node => (node.getRootNode() as ShadowRoot).activeElement === node), 'The text field hit outset focuses the input');
       const scenario = config.getByRole('combobox', { name: 'Scenario', exact: true });
       await checkTargets(scenario, `${width}px scenario control`);
-      await scenario.press('Enter');
+      await edge(page, scenario, 'touch');
       await checkTargets(page.getByRole('listbox').getByRole('option'), `${width}px configuration options`);
       await page.keyboard.press('Escape');
       await page.getByRole('listbox').waitFor({ state: 'hidden' });
@@ -146,7 +192,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       const size = config.locator('m-button-group[data-group-for="size"]');
       await checkTargets(size.getByRole('button'), `${width}px connected group buttons`);
       const medium = size.getByRole('button', { name: 'M', exact: true });
-      await edge(page, medium, 'pointer', 'right');
+      await edge(page, medium, 'pointer');
       await panel.waitForValue(page, 'size', 'm');
       await medium.press('ArrowRight');
       await panel.waitForValue(page, 'size', 'l');
@@ -157,7 +203,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await page.keyboard.press('Shift+Tab');
       assert(await large.evaluate(node => (node.getRootNode() as ShadowRoot).activeElement === node), 'Shift+Tab returns to the selected segment');
       await page.screenshot({ path: `${captures}/configuration-${width}.png`, animations: 'disabled' });
-      const toggle = config.locator('m-switch[name="toggle"] label[part~="label"]');
+      const toggle = config.locator('m-switch[name="toggle"] input[part~="input"]');
       await checkTargets(toggle, `${width}px switch label`);
       await edge(page, toggle, 'touch', 'top');
       await panel.waitForSwitch(page, 'toggle', true);
@@ -168,7 +214,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await checkTargets(trackTarget, `${width}px slider pointer area`);
       const handle = slider.getByRole('slider').first();
       const before = await handle.getAttribute('aria-valuenow');
-      await edge(page, trackTarget, 'touch', 'right');
+      await edge(page, trackTarget, 'touch', 'top-right');
       assert.notEqual(await handle.getAttribute('aria-valuenow'), before, 'An edge tap changes the slider value');
       const after = Number(await handle.getAttribute('aria-valuenow'));
       await handle.press('ArrowLeft');

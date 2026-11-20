@@ -6,7 +6,13 @@
 // cards, and the editor's chips come after them, so the first "Work" gridcell is the
 // filter's and the last "Travel" one is the editor's. The editor's fields are the
 // only textboxes on the page, so they need no scoping.
-import type { Page } from "playwright";
+import type { Frame, Page } from "playwright";
+
+export async function checkFrame(frame: Frame): Promise<void> {
+  await frame.getByRole("combobox", { name: "Search notes" }).fill("Pasta sauce");
+  await frame.getByRole("status").filter({ hasText: /^Showing 1 of / }).waitFor();
+  await frame.getByRole("button", { name: "Open Pasta sauce", exact: true }).waitFor();
+}
 
 export default async function steps(page: Page): Promise<void> {
   const exact = { exact: true } as const;
