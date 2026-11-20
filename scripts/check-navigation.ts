@@ -172,7 +172,8 @@ try {
     const exits = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
     if (fallback) await exits.addInitScript(() => Object.defineProperty(window, 'navigation', { value: undefined }));
     const exit = await exits.newPage();
-    for (const kind of ['non-html', 'error', 'timeout', 'full-load', 'shell']) {
+    for (const kind of ['non-html', 'error', 'timeout', 'full-load', 'shell', 'mismatched-shell']) {
+      console.log(`  ${fallback ? 'click fallback' : 'Navigation API'} exit: ${kind}`);
       await exit.goto(href('/components/button/'));
       await settled(exit);
       await exit.evaluate(() => { (window as any).documentToken = 'same document'; });
@@ -183,6 +184,7 @@ try {
         ++fetches;
         if (kind === 'error') { await route.abort('failed'); return; }
         if (kind === 'timeout') { await new Promise(resolve => setTimeout(resolve, 3400)); await route.fulfill({ body: 'late', contentType: 'text/plain' }).catch(() => {}); return; }
+        if (kind === 'mismatched-shell') { await route.fulfill({ body: '<!doctype html><html><head><title>Other layout</title></head><body>Different layout</body></html>', contentType: 'text/html' }); return; }
         if (kind === 'non-html') { await route.fulfill({ body: 'Not HTML', contentType: 'text/plain' }); return; }
         await route.continue();
       });
@@ -193,11 +195,16 @@ try {
       }, { path, kind });
       await exit.waitForFunction(() => !(window as any).documentToken);
       assert.equal(new URL(exit.url()).pathname, new URL(path, server.url).pathname, `${kind}: full-load destination`);
-      assert.equal(fetches, kind === 'full-load' ? 0 : 1, `${kind}: expected fetch path`);
+      assert.equal(fetches, kind === 'full-load' || kind === 'shell' ? 0 : 1, `${kind}: expected fetch path`);
       await exit.waitForLoadState('load');
       await exit.goBack();
       await exit.waitForURL(href('/components/button/'));
-      await exit.getByRole('heading', { name: 'Button', exact: true }).waitFor();
+      await exit.waitForFunction(() => document.querySelector('#content h1')?.textContent === 'Button').catch(async error => {
+        console.error('Back destination:', fallback, kind, exit.url(), await exit.locator('h1').allTextContents());
+        throw error;
+      });
+      await exit.locator('#content h1').waitFor({ state: 'visible' });
+      assert.equal(await exit.locator('#content h1').evaluate(node => !!node.closest('[inert], [aria-hidden="true"]')), false, `${kind}: restored heading is accessible`);
       assert.equal(new URL(exit.url()).pathname, '/components/button/', `${kind}: Back returns to the page left behind`);
       await exit.unrouteAll({ behavior: 'wait' });
     }

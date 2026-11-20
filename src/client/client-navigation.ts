@@ -29,7 +29,10 @@ status.className = 'sr-only navigation-announcement';
 document.body.append(status);
 
 function eligible(url: URL) {
-  return url.origin === location.origin && /^https?:$/.test(url.protocol);
+  // These HTML documents deliberately have a different shell and no site router.
+  // Keep their native history entry rather than first committing an API intercept.
+  const frame = /^\/preview\//.test(url.pathname) || url.pathname === '/styles/frame/' || /^\/showcase\/[^/]+\/frame\//.test(url.pathname);
+  return !frame && url.origin === location.origin && /^https?:$/.test(url.protocol);
 }
 function excluded(link: Element | null | undefined) {
   return !!link?.closest('[data-full-load], [download], [target]');
@@ -244,10 +247,9 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     } else await swap();
   } catch {
     if (request === controller && !superseded) {
-      // intercept() already committed the API entry. The click fallback has not
-      // pushed anything yet: assign preserves the page the reader must return to.
-      if (api) location.replace(url.href);
-      else location.assign(url.href);
+      // Hand the failed visit back to native navigation without replacing the
+      // source page's entry. Back must still return to the page left behind.
+      location.assign(url.href);
     }
   } finally { clearTimeout(timer); outerSignal?.removeEventListener('abort', abortForNavigation); }
 }
