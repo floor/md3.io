@@ -75,15 +75,29 @@ export default async function steps(page: Page): Promise<void> {
   await page.waitForTimeout(400);
   await orientationIs("horizontal");
 
-  // Step 1: dates. Check-in moving past check-out pulls check-out with it.
+  // Step 1: one range picker takes the stay. Picking 20th to 22nd is 2 nights;
+  // a same-day range is 0 nights and Next is blocked at the field.
   await stepShows(1, "Dates and arrival");
-  await page.getByRole("button", { name: "Change date, 2027-04-10", ...exact }).click();
-  await page.getByRole("gridcell", { name: "Tuesday, April 20, 2027" }).click();
-  assert.equal(await page.getByRole("textbox", { name: "Check-out", ...exact }).inputValue(), "2027-04-20");
-  await includes("Estimated total $120 for 1 night");
-  await page.getByRole("textbox", { name: "Check-out", ...exact }).click();
-  await page.getByRole("gridcell", { name: "Thursday, April 22, 2027" }).click();
-  await includes("Estimated total $240 for 2 nights");
+  const stay = page.getByRole("textbox", { name: "Check-in → Check-out", ...exact });
+  const pickRange = async (start: string, end: string) => {
+    await page.getByRole("button", { name: /Change date/ }).click();
+    await page.getByRole("gridcell", { name: start }).click();
+    await page.getByRole("gridcell", { name: end }).click();
+    await page.getByRole("button", { name: "OK", ...exact }).click();
+  };
+  await pickRange("Tuesday, April 20, 2027", "Thursday, April 22, 2027");
+  assert.equal(await stay.inputValue(), "2027-04-20 - 2027-04-22");
+  await includes("Check-in 2027-04-20 → Check-out 2027-04-22 · 2 nights");
+  await includes("Double room · $120 × 2 nights");
+  await includes("Estimated total $284 for 2 nights");
+  await pickRange("Tuesday, April 20, 2027", "Tuesday, April 20, 2027");
+  await includes("Check-in 2027-04-20 → Check-out 2027-04-20 · 0 nights");
+  await includes("Choose at least 1 night");
+  await next.click();
+  await includes("Step 1 of 4");
+  assert.ok(await isFocused(stay), "an invalid range focuses the stay field");
+  await pickRange("Tuesday, April 20, 2027", "Thursday, April 22, 2027");
+  await includes("Estimated total $284 for 2 nights");
 
   // Step 1: the time picker writes back, a typed time is where it reopens, Cancel keeps it.
   await chooseTime.click();
@@ -130,50 +144,49 @@ export default async function steps(page: Page): Promise<void> {
   await includes('combobox "Adults": "3"');
   await includes('combobox "Children": "1"');
 
-  // The price range decides which rooms can be chosen; an empty range blocks Next
-  // with focus on the range and its message at the field, and restoring it
-  // unlocks the step.
-  const minHandle = page.getByRole("slider", { name: "Price range minimum", ...exact });
-  const maxHandle = page.getByRole("slider", { name: "Price range maximum", ...exact });
-  const roomError = page.locator(".booking__field-error");
-  await minHandle.focus();
+  // The rooms are selectable cards in a radio group. The arrows move the choice,
+  // Home and End jump to the ends, and Space selects the focused card; a click
+  // chooses too. The summary panel follows every move.
+  const checkedRoom = (name: string) => includes(`radio "${name}" [checked]`);
+  await checkedRoom("Double room, 1 king bed, 24 m², $120 a night, Sea view · Balcony");
+  const doubleCard = page.locator('[data-room="double"]');
+  const focusedRoomIs = (value: string) =>
+    page.waitForFunction((v) => (document.activeElement as HTMLElement | null)?.dataset?.room === v, value);
+  await doubleCard.focus();
   await page.keyboard.press("ArrowRight");
-  await includes("$90–$240 a night");
-  await maxHandle.focus();
+  await focusedRoomIs("family");
+  await checkedRoom("Family room, King + 2 single beds, 32 m², $155 a night, Sea view · Kitchenette");
+  await includes("Estimated total $361 for 2 nights");
+  await page.keyboard.press("ArrowLeft");
+  await focusedRoomIs("double");
+  await checkedRoom("Double room, 1 king bed, 24 m², $120 a night, Sea view · Balcony");
   await page.keyboard.press("Home");
-  await includes("No rooms in this price range");
-  await next.click();
-  await includes("Step 2 of 4");
-  assert.ok(await isFocused(minHandle), "an empty price range focuses the range");
-  await roomError.waitFor();
-  assert.equal((await roomError.textContent())?.trim(), "No rooms in this price range", "the empty range shows its message at the field");
-  await maxHandle.focus();
+  await focusedRoomIs("standard");
+  await checkedRoom("Standard room, 1 queen bed, 19 m², $95 a night, Garden view · Rain shower");
+  await includes("Estimated total $229 for 2 nights");
+  await page.keyboard.press("Space");
+  await checkedRoom("Standard room, 1 queen bed, 19 m², $95 a night, Garden view · Rain shower");
   await page.keyboard.press("End");
-  await roomError.waitFor({ state: "hidden" });
-  await includes("$90–$300 a night");
-  // The live region leaves the accessibility tree for a beat while it announces;
-  // read the total itself rather than the snapshot here.
-  await page.locator("output.booking__total:visible").filter({ hasText: "Estimated total $190 for 2 nights" }).waitFor();
-
-  // Every room, then the chosen one; Next moves on with the total in step.
-  for (const room of ["Standard room", "Double room", "Family room", "Suite"]) {
-    await page.locator("label", { hasText: room }).click();
-  }
-  await includes('radio "Suite — $210 a night" [checked]');
+  await focusedRoomIs("suite");
+  await checkedRoom("Suite, 1 king bed, 41 m², $210 a night, Private terrace · Soaking tub");
+  await page.locator('[data-room="suite"]').click();
+  await checkedRoom("Suite, 1 king bed, 41 m², $210 a night, Private terrace · Soaking tub");
+  await includes("Estimated total $482 for 2 nights");
   await next.click();
   await stepIs(3, "Extras");
   // The Suite the second step chose carries onto the third.
-  await page.locator("output.booking__total:visible").filter({ hasText: "Estimated total $420 for 2 nights" }).waitFor();
+  await includes("Estimated total $482 for 2 nights");
 
   // Every extra in the named group, and the total follows onto the third step.
   assert.equal(await page.getByRole("group", { name: "Extras", ...exact }).getByRole("checkbox").count(), 3);
   for (const extra of ["Breakfast", "Parking", "Late checkout"]) {
     await page.getByRole("checkbox", { name: new RegExp(extra) }).click();
   }
-  await includes("Estimated total $505 for 2 nights");
+  await includes("Extras");
+  await includes("Estimated total $576 for 2 nights");
   await next.click();
   await stepIs(4, "Your details and review");
-  await includes("Estimated total $505 for 2 nights");
+  await includes("Estimated total $576 for 2 nights");
 
   // The review shows the first three steps, each row labelled with its Edit;
   // Edit jumps back to its step.
@@ -204,7 +217,7 @@ export default async function steps(page: Page): Promise<void> {
   await book.click();
   const dialog = page.getByRole("alertdialog", { name: "Confirm booking", ...exact });
   await dialog.waitFor();
-  const summaryText = "Suite, 2 nights · Check-in 2027-04-20, check-out 2027-04-22 · Arrival 17:30 · 3 adults, 1 child · Breakfast, Parking, Late checkout · Estimated total $505 for 2 nights";
+  const summaryText = "Suite, 2 nights · Check-in 2027-04-20, check-out 2027-04-22 · Arrival 17:30 · 3 adults, 1 child · Breakfast, Parking, Late checkout · Estimated total $576 for 2 nights";
   await includes(summaryText);
   // The dialog's accessible description is that summary, in every variant.
   const description = await dialog.evaluate((el) => {
@@ -226,5 +239,5 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Confirm booking", ...exact }).click();
   await dialog.waitFor({ state: "hidden" });
   await page.getByText("Booking confirmed", exact).waitFor();
-  await includes("Estimated total $505 for 2 nights");
+  await includes("Estimated total $576 for 2 nights");
 }

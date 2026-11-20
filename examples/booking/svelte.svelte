@@ -2,11 +2,11 @@
      whose headers replace the hand-built step header and whose data-stepper-* actions
      replace the wiring between Back, Next and the panels. -->
 <script lang="ts">
-  import { Button, Checkbox, Datepicker, Dialog, Radio, Radios, Select, SelectOption, Slider, Snackbar, TextField, Timepicker } from "material/svelte";
+  import { Button, Card, Checkbox, Datepicker, Dialog, Select, SelectOption, Snackbar, TextField, Timepicker } from "material/svelte";
   import { Stepper, Step } from "material-addons/svelte";
   import type { StepperElement } from "material-addons/elements";
   import type { StepperBeforeChangeEvent } from "material-addons/components/stepper";
-  import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, reviewLines, roomOf, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withDates, withPrice, type Booking, type BookingErrors } from "./shared";
+  import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, HERO_IMAGE, PROPERTY, ROOMS, TODAY, normalizeTime, priceLines, rangeParts, reviewLines, roomAfter, roomOf, stayText, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withRange, type Booking, type BookingErrors } from "./shared";
 
   let s = $state<Booking>({ ...DEFAULTS });
   let errors = $state<BookingErrors>({});
@@ -15,19 +15,29 @@
   let timeOpen = $state(false);
   let stepperEl: { element: StepperElement } | undefined = $state();
   let arrivalEl: HTMLElement | undefined = $state();
-  let sliderEl: HTMLElement | undefined = $state();
+  let stayEl: HTMLElement | undefined = $state();
+  let roomsEl: HTMLElement | undefined = $state();
   let nameEl: HTMLElement | undefined = $state();
   let emailEl: HTMLElement | undefined = $state();
 
   // A component's bind:this is its instance; the element is what takes focus.
   const elementOf = (component: { element?: HTMLElement } | undefined) => component?.element ?? component;
   const focusFirstInvalid = (n: number) => {
-    if (n === 1) elementOf(arrivalEl)?.focus();
-    else if (n === 2) {
-      const slider = elementOf(sliderEl);
-      const handle = (slider?.shadowRoot ?? slider)?.querySelector<HTMLElement>('[role="slider"]');
-      (handle ?? slider)?.focus();
+    if (n === 1) {
+      if (validateStep(s, 1).dates) elementOf(stayEl)?.focus();
+      else elementOf(arrivalEl)?.focus();
     }
+  };
+  const selectRoom = (value: string, focus = false) => {
+    s.room = value;
+    if (focus) requestAnimationFrame(() => roomsEl?.querySelector<HTMLElement>(`[data-room="${value}"]`)?.focus());
+  };
+  const onRoomKey = (event: KeyboardEvent, value: string) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); selectRoom(roomAfter(value, 1), true); }
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); selectRoom(roomAfter(value, -1), true); }
+    else if (event.key === "Home") { event.preventDefault(); selectRoom(ROOMS[0]!.value, true); }
+    else if (event.key === "End") { event.preventDefault(); selectRoom(ROOMS[ROOMS.length - 1]!.value, true); }
+    else if (event.key === " " || event.key === "Enter") { event.preventDefault(); selectRoom(value, true); }
   };
   // The adapter exposes no validator functions, so a forward move is checked in the
   // stepper's cancellable beforechange: an invalid step vetoes the move (the payload's
@@ -39,8 +49,8 @@
     const { previousValue } = event.detail;
     const n = stepNumberOf(previousValue);
     const stepErrors = validateStep(s, n);
-    errors = { ...errors, arrivalTime: stepErrors.arrivalTime, room: stepErrors.room };
-    if (stepErrors.arrivalTime || stepErrors.room) {
+    errors = { ...errors, arrivalTime: stepErrors.arrivalTime, dates: stepErrors.dates };
+    if (stepErrors.dates || stepErrors.arrivalTime) {
       event.detail.preventDefault();
       stepperEl?.element.setError(previousValue, true);
       focusFirstInvalid(n);
@@ -76,25 +86,28 @@
     {/snippet}
   </Dialog>
   <div class="booking__intro">
-    <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
-    <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
+    <img class="booking__hero" src={HERO_IMAGE} alt="The Dune House above the dunes in {PROPERTY.town}" loading="lazy" />
+    <h1 class="booking__title mtrl-headline-small">{PROPERTY.name}</h1>
+    <p class="booking__lede mtrl-body-medium">{PROPERTY.town} · {PROPERTY.rating}</p>
+    <p class="booking__lede mtrl-body-medium">{PROPERTY.lede}</p>
+    <p class="booking__lede mtrl-body-medium">{PROPERTY.facts}</p>
   </div>
+  <div class="booking__layout">
   <Stepper bind:this={stepperEl} linear orientation="auto" labelPlacement="bottom" ariaLabel="Booking steps" defaultValue="dates" onbeforechange={veto}>
     <Step value="dates" label="Dates and arrival">
       <div class="booking__step">
         <h2 class="booking__step-title mtrl-title-large" tabindex="-1">{stepHeading(1)}</h2>
         <div class="booking__grid">
-          <Datepicker label="Check-in" variant="modal" closeOnSelect dateFormat="YYYY-MM-DD" value={s.checkIn}
-            onchange={(e) => (s = withDates(s, e.detail.value, s.checkOut))} />
-          <Datepicker label="Check-out" variant="modal" closeOnSelect dateFormat="YYYY-MM-DD" min={s.checkIn} value={s.checkOut}
-            onchange={(e) => (s = withDates(s, s.checkIn, e.detail.value))} />
+          <Datepicker bind:this={stayEl} label="Check-in → Check-out" variant="modal" selectionMode="range" dateFormat="YYYY-MM-DD" min={TODAY} value="{s.checkIn}/{s.checkOut}"
+            onchange={(e) => { const parts = rangeParts(e.detail.value); if (parts) { s = withRange(s, parts[0], parts[1]); errors = { ...errors, dates: undefined }; } }} />
           <TextField bind:this={arrivalEl} label="Arrival time" value={s.arrivalTime} trailingIcon={CLOCK_ICON} trailingIconLabel="Choose time"
             supportingText={errors.arrivalTime ?? "24-hour time"} error={Boolean(errors.arrivalTime)}
             oninput={(e) => { s.arrivalTime = e.detail.value; errors = { ...errors, arrivalTime: undefined }; }}
             onchange={(e) => commitTime(e.detail.value)}
             ontrailing={() => { const time = normalizeTime(s.arrivalTime); if (time) s.arrivalTime = time; timeOpen = true; }} />
         </div>
-              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
+        <p class="booking__stay mtrl-body-medium">{stayText(s)}</p>
+        {#if errors.dates}<p class="booking__field-error mtrl-body-small">{errors.dates}</p>{/if}
         <footer class="booking__actions"><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -111,18 +124,23 @@
         </div>
         <div class="booking__group">
           <p class="booking__label mtrl-title-small">Room type</p>
-          <Radios aria-label="Room type" value={s.room} onchange={(e) => (s.room = e.detail.value ?? s.room)}>
-            {#each ROOMS as room}<Radio value={room.value} disabled={!eligibleRooms(s).some((r) => r.value === room.value)}>{room.label} — ${room.rate} a night</Radio>{/each}
-          </Radios>
+          <div class="booking__rooms" role="radiogroup" aria-label="Room type" bind:this={roomsEl}>
+            {#each ROOMS as room (room.value)}
+              <div class="booking__room" role="radio" aria-label="{room.label}, {room.beds}, {room.size}, ${room.rate} a night, {room.features}" aria-checked={s.room === room.value} tabindex={s.room === room.value ? 0 : -1} data-room={room.value}
+                onclick={() => selectRoom(room.value, true)} onkeydown={(e) => onRoomKey(e, room.value)}>
+                <Card variant="outlined">
+                  <div class="booking__room-card">
+                    <img class="booking__room-image" src={room.image} alt="" loading="lazy" />
+                    <p class="booking__room-name mtrl-title-medium">{room.label}</p>
+                    <p class="booking__room-facts mtrl-body-medium">{room.beds} · {room.size}</p>
+                    <p class="booking__room-price mtrl-body-medium">${room.rate} a night</p>
+                    <p class="booking__room-features mtrl-body-medium">{room.features}</p>
+                  </div>
+                </Card>
+              </div>
+            {/each}
+          </div>
         </div>
-        <div class="booking__group">
-          <p class="booking__label mtrl-title-small">Price range</p>
-          <Slider bind:this={sliderEl} range showValue min={50} max={300} step={10} value={s.priceMin} secondValue={s.priceMax} aria-label="Price range"
-            oninput={(e) => { s = withPrice(s, e.detail.value, e.detail.secondValue ?? s.priceMax); errors = { ...errors, room: undefined }; }} />
-          <p class="booking__range mtrl-body-medium">{rangeText(s)}</p>
-          {#if errors.room}<p class="booking__field-error mtrl-body-small">{errors.room}</p>{/if}
-        </div>
-              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -135,7 +153,6 @@
             <Checkbox checked={s[extra.key]} onchange={(e) => (s[extra.key] = e.detail.checked)}>{extra.label} — ${extra.price} {extra.unit}</Checkbox>
           {/each}
         </div>
-              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div data-stepper-next><Button>Next</Button></div></footer>
       </div>
     </Step>
@@ -161,11 +178,27 @@
             </div>
           {/each}
         </div>
-              <output class="booking__total mtrl-body-medium" role="status">{totalText(s)}</output>
         <footer class="booking__actions"><div data-stepper-prev><Button variant="outlined">Back</Button></div><div><Button onclick={book}>Book</Button></div></footer>
       </div>
     </Step>
   </Stepper>
+  <Card variant="filled" headline="Price summary" class="booking__summary">
+    <div class="booking__summary-lines">
+      {#each priceLines(s) as line (line.label)}
+        <div class="booking__price-line">
+          <span class="booking__price-line mtrl-body-medium">{line.label}</span>
+          <span class="booking__price-line mtrl-body-medium">{line.amount}</span>
+        </div>
+      {/each}
+      <div class="booking__price-total">
+        <span class="booking__price-line mtrl-title-small">Total</span>
+        <span class="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
+      </div>
+      <p class="booking__lede mtrl-body-medium">{totalText(s)}</p>
+      <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
+    </div>
+  </Card>
+  </div>
   <Timepicker label="Arrival time" format="24h" value={normalizeTime(s.arrivalTime) ?? "15:00"} open={timeOpen}
     onchange={(e) => { s.arrivalTime = e.detail.value; errors = { ...errors, arrivalTime: undefined }; }} onclose={() => (timeOpen = false)} />
   <Snackbar message="Booking confirmed" open={confirmed} onclose={() => (confirmed = false)} />
