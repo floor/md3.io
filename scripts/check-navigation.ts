@@ -16,12 +16,12 @@ const paths = ['/components/button/', '/docs/frameworks/', '/showcase/', '/showc
 async function mainText(page: Page) {
   return page.locator('#content').evaluate(main => {
     const clone = main.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll('script, style, [role="status"], #playground-status, #styles-status, #example-status, #theme-app, #colour-lab, .device__bar, #generated-code').forEach(node => node.remove());
+    clone.querySelectorAll('script, style, noscript, [role="status"], #playground-status, #styles-status, #example-status, #theme-app, #colour-lab, .device__bar, #generated-code').forEach(node => node.remove());
     return clone.textContent?.replace(/\s+/g, ' ').trim();
   });
 }
 async function settled(page: Page) {
-  if (await page.locator('#preview').count()) await page.frameLocator('#preview').locator('#stage > *').first().waitFor();
+  if (await page.locator('#preview').count()) await page.frameLocator('#preview').locator('#stage > *').first().waitFor({ state: 'attached' });
   if (await page.locator('#example-frame').count()) await page.frameLocator('#example-frame').locator('body > *').first().waitFor();
   if (await page.locator('#theme-app').count()) await page.locator('#theme-app button').first().waitFor();
   await page.evaluate(() => document.fonts.ready);
@@ -59,6 +59,7 @@ try {
     const header = await page.locator('header.header').elementHandle();
     const drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
     const go = async (path: string) => {
+      console.log(`  ${fallback ? 'click fallback' : 'Navigation API'}: ${path}`);
       const visits = await page.evaluate(() => (window as any).visits.length);
       await page.evaluate(path => {
         const link = document.createElement('a'); link.href = path; document.body.append(link); link.click(); link.remove();
@@ -81,7 +82,7 @@ try {
       assert.equal(await mainText(page), await mainText(direct), `${path}: direct and swapped main text`);
       assert.deepEqual(await page.locator('head script[type="application/ld+json"]').allTextContents(), await direct.locator('head script[type="application/ld+json"]').allTextContents());
       await direct.close();
-      assert.equal(await page.evaluate(() => document.activeElement?.matches('h1, #content')), true, 'focus moves to content');
+      assert.equal(await page.evaluate(() => document.activeElement?.matches('h1, #content')), true, `focus moves to content (active: ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 250))})`);
     };
     // Start with a real drawer click (including the selected-pill API and section state).
     await page.locator('m-drawer.site-drawer').getByRole('button', { name: 'Navigation', exact: true }).click();
@@ -101,11 +102,11 @@ try {
     for (const path of paths.slice(1)) {
       await go(path);
       if (path === '/docs/frameworks/') {
-        await page.locator('.docs-frameworks m-chip[value="react"]').click();
+        await page.locator('.docs-frameworks m-chips').getByRole('gridcell', { name: 'React', exact: true }).click();
         await page.waitForFunction(() => document.documentElement.dataset.framework === 'react');
       }
       if (path === '/showcase/settings/') {
-        await page.locator('m-chip[value="html"]').click();
+        await page.locator('m-chips.framework-chips').getByRole('gridcell', { name: 'Web Components', exact: true }).click();
         await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#example-frame')?.src.includes('/frame/html/'));
       }
       if (path === '/styles/typography/') {
@@ -132,6 +133,25 @@ try {
     const counters = await page.evaluate(() => (window as any).visits.at(-1).initializations);
     assert.equal(counters['site-content'], await page.evaluate(() => (window as any).visits.length + 1), 'one site init per navigation');
     assert.equal(counters.playground, counters['playground-material'], 'panel and preview each initialize once');
+    await go('/');
+    await go('/components/button/');
+    // The modal rail borrows the same drawer, and must release the background before
+    // the content swap. Search and the lazy theme menu close on navigation as well.
+    await page.setViewportSize({ width: 700, height: 900 });
+    await page.locator('#site-nav-open').click();
+    await page.locator('#site-nav-dialog[open]').waitFor();
+    await go('/styles/color/');
+    assert.equal(await page.locator('#site-nav-dialog').getAttribute('open'), null);
+    assert.equal(await page.locator('#site-primary-rail').getAttribute('inert'), null);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.locator('#search-trigger').click();
+    await page.locator('#search-dialog[open]').waitFor();
+    await go('/components/button/');
+    assert.equal(await page.locator('#search-dialog').getAttribute('open'), null);
+    await page.locator('#theme-picker').click();
+    await page.waitForFunction(() => document.getElementById('theme-picker')?.getAttribute('aria-expanded') === 'true');
+    await go('/docs/frameworks/');
+    assert.equal(await page.locator('#theme-picker').getAttribute('aria-expanded'), 'false');
     // Modifier clicks remain browser-owned and never produce a swap in this document.
     const beforeModifier = await page.evaluate(() => (window as any).visits.length);
     const popup = context.waitForEvent('page');

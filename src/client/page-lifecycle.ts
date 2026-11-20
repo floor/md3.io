@@ -60,3 +60,13 @@ export function leavePage() {
   for (const life of visits.values()) life.destroy();
   visits.clear();
 }
+
+// Page widgets may refine the address during init (framework, scenario or theme).
+// The Navigation API aborts its pending event for replaceState; that internal update
+// must not cancel the content swap that initialized the widget.
+export let updatingPageURL = false;
+export function replacePageURL(url: string | URL) {
+  updatingPageURL = true;
+  try { history.replaceState(history.state, '', url); }
+  finally { updatingPageURL = false; }
+}

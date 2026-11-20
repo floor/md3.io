@@ -6,7 +6,7 @@ import 'material/elements/css/chips';
 import { defineChips } from 'material/elements';
 import { applyTheme } from './theme-sheets';
 import { onAppearance } from './appearance';
-import { registerPage } from './page-lifecycle';
+import { registerPage, replacePageURL } from './page-lifecycle';
 registerPage('docs-frameworks', (content, life) => {
   defineChips();
   const root = document.documentElement;
@@ -22,7 +22,7 @@ registerPage('docs-frameworks', (content, life) => {
       try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ }
       // The address keeps the choice when it named one (a shared link stays true to the page).
       const url = new URL(location.href);
-      if (url.searchParams.has('framework')) { url.searchParams.set('framework', framework); history.replaceState(history.state, '', url); }
+      if (url.searchParams.has('framework')) { url.searchParams.set('framework', framework); replacePageURL(url); }
     });
   }
   // The chips row is a material scope: it follows the header's theme and mode, as on the
@@ -41,7 +41,7 @@ registerPage('docs-frameworks', (content, life) => {
     const framework = root.dataset.framework ?? 'vanilla';
     const prefixed = content.querySelector<HTMLElement>(`#${CSS.escape(`${framework}-${anchor}`)}`);
     if (!content.querySelector<HTMLElement>(`#${CSS.escape(anchor)}`) && prefixed) {
-      history.replaceState(history.state, '', `${location.pathname}${location.search}#${prefixed.id}`);
+      replacePageURL(`${location.pathname}${location.search}#${prefixed.id}`);
       prefixed.scrollIntoView();
     }
   }

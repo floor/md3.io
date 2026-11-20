@@ -1,3 +1,4 @@
+import { replacePageURL } from './page-lifecycle';
 // The Styles section's theme store: the only place that writes theme state. Pages call
 // get, set, reset and subscribe; the preview, the export and the other tabs follow.
 //
@@ -33,7 +34,7 @@ function load(): { state: ThemeState; fromLink: boolean } {
   }
   if (linked !== null) {
     url.searchParams.delete('theme');
-    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    replacePageURL(url.pathname + url.search + url.hash);
     const state = parse(linked, themeBase);
     if (state) return { state, fromLink: true };
   }

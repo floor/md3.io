@@ -11,7 +11,7 @@ import { railActiveOptions } from '../shared/content/navigation-rail';
 import { tabActiveOptions } from '../shared/content/tabs';
 import { applyTheme } from './theme-sheets';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
-import { registerPage } from './page-lifecycle';
+import { registerPage, replacePageURL } from './page-lifecycle';
 registerPage('playground', (content, life) => {
   hljs.registerLanguage('javascript', javascript);
   hljs.registerLanguage('typescript', typescript);
@@ -302,7 +302,7 @@ registerPage('playground', (content, life) => {
     const url = new URL(location.href);
     if ((url.searchParams.get('scenario') ?? null) === id) return;
     if (id === null) url.searchParams.delete('scenario'); else url.searchParams.set('scenario', id);
-    history.replaceState(history.state, '', url);
+    replacePageURL(url);
   }
   /** A hand edit: the options no longer match a scenario, so the select says Custom. */
   function markCustom() {

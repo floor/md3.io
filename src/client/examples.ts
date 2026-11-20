@@ -9,7 +9,7 @@ import { defineButton, defineChips, defineSnackbar } from 'material/elements';
 import { onAppearance } from './appearance';
 import { copyText } from './site';
 import { mountDeviceFrame } from './device-frame';
-import { registerPage } from './page-lifecycle';
+import { registerPage, replacePageURL } from './page-lifecycle';
 registerPage('examples', (content, life) => {
   defineChips();
   defineButton();
@@ -52,7 +52,7 @@ registerPage('examples', (content, life) => {
       status.textContent = `Running the ${label} version`;
       const url = new URL(location.href);
       url.searchParams.set('framework', framework);
-      history.replaceState(history.state, '', url);
+      replacePageURL(url);
       if (keep) { try { localStorage.setItem(FRAMEWORK, framework); } catch { /* Storage may be unavailable. */ } }
     };
 

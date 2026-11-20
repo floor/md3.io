@@ -21,7 +21,12 @@ export const containsFocus = (container: Element, target: Element | null) => {
 };
 
 let restoreSection = () => {};
-export function closeSiteNavigation() { restoreSection(); }
+export function closeSiteNavigation() {
+  // close is queued: the next page's handler may be installed before it fires.
+  // A navigation hands focus to its heading, rather than back to the rail opener.
+  if (dialog?.open) dialog.addEventListener('close', event => event.stopImmediatePropagation(), { once: true, capture: true });
+  restoreSection();
+}
 
 export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
   if (bar && rail && dialog && opener && closer) {

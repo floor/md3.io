@@ -3,7 +3,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Element/moveBefore
 import './site-content';
 import { closeSiteNavigation } from './site-navigation';
-import { preparePage, enterPage, leavePage, pageInitializations } from './page-lifecycle';
+import { preparePage, enterPage, leavePage, pageInitializations, updatingPageURL } from './page-lifecycle';
 import { currentAppearance } from './appearance';
 import { applyTheme } from './theme-sheets';
 
@@ -55,7 +55,7 @@ function swapBody(next: Document) {
   const oldPane = persistentDrawer?.closest<HTMLElement>('.component-list, #sidebar');
   const previousScroll = oldPane?.scrollTop ?? 0;
   const signature = persistentDrawer ? drawerSignature(persistentDrawer) : '';
-  if (persistentDrawer) drawerStates.set(signature, {
+  if (persistentDrawer && oldPane) drawerStates.set(signature, {
     expanded: persistentDrawer.getExpandedSections?.() ?? [], scroll: previousScroll,
   });
   // Insert the destination while connected, then move the live drawer before removing
@@ -152,15 +152,23 @@ async function styles(next: Document, signal: AbortSignal) {
     });
   }));
 }
+// Snapshot the changing content, leaving the mounted drawer's own animation live.
+function nameTransitionContent() {
+  document.documentElement.style.viewTransitionName = 'none';
+  content!.style.viewTransitionName = '';
+  (content!.querySelector<HTMLElement>('#component-content, .component-catalog') ?? content!).style.viewTransitionName = 'page-content';
+}
+function hashTarget(url: URL) {
+  let id: string;
+  try { id = decodeURIComponent(url.hash.slice(1)); } catch { id = url.hash.slice(1); }
+  return document.getElementById(id) ?? document.getElementById(`${document.documentElement.dataset.framework}-${id}`);
+}
 function restore(url: URL, position?: [number, number]) {
   const target = content?.querySelector<HTMLElement>('h1') ?? content;
   if (target) { if (!target.hasAttribute('tabindex')) target.tabIndex = -1; target.focus({ preventScroll: true }); }
   if (position) scrollTo(...position);
-  else if (url.hash) {
-    let id: string;
-    try { id = decodeURIComponent(url.hash.slice(1)); } catch { id = url.hash.slice(1); }
-    (document.getElementById(id) ?? document.getElementById(`${document.documentElement.dataset.framework}-${id}`))?.scrollIntoView();
-  } else scrollTo(0, 0);
+  else if (url.hash) hashTarget(url)?.scrollIntoView();
+  else scrollTo(0, 0);
   status.textContent = document.title;
 }
 /** Dynamic imports cannot be cancelled; stop waiting on them when a visit expires. */
@@ -177,7 +185,9 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
   const controller = new AbortController();
   request = controller;
   const { signal } = controller;
-  outerSignal?.addEventListener('abort', () => controller.abort(), { once: true });
+  let superseded = false;
+  const abortForNavigation = () => { if (!updatingPageURL) { superseded = true; controller.abort(); } };
+  outerSignal?.addEventListener('abort', abortForNavigation, { once: true });
   const timer = setTimeout(() => controller.abort('timeout'), 3000);
   try {
     const response = await fetch(url, { signal, headers: { Accept: 'text/html' } });
@@ -199,6 +209,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     if (next.querySelector('.docs-frameworks')) await abortable(import('./docs-frameworks'), signal);
     if (next.querySelector('m-drawer.site-drawer')) await abortable(import('./catalog/drawer').then(module => module.defineSiteDrawer()), signal);
     if (signal.aborted) throw signal.reason;
+    const transitionEnabled = !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
     const swap = async () => {
       if (signal.aborted) return;
       closeShell();
@@ -206,6 +217,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       commit();
       swapHead(next, url);
       swapBody(next);
+      if (transitionEnabled) nameTransitionContent();
       for (const link of pageStyles(document)) {
         const wanted = pageStyles(next).find(sheet => new URL(sheet.getAttribute('href')!, location.origin).href === link.href);
         link.media = wanted?.media ?? 'not all';
@@ -220,15 +232,16 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       restore(new URL(location.href), position);
       document.dispatchEvent(new CustomEvent('md3:navigated', { detail: { url: renderedURL, initializations: { ...pageInitializations } } }));
     };
-    if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (transitionEnabled) {
+      nameTransitionContent();
       const transition = document.startViewTransition(swap);
       // A newer navigation can skip an in-flight animation without failing its swap.
       void transition.ready.catch(() => {});
       await transition.updateCallbackDone;
     } else await swap();
   } catch {
-    if (request === controller && !outerSignal?.aborted) location.replace(url.href);
-  } finally { clearTimeout(timer); }
+    if (request === controller && !superseded) location.replace(url.href);
+  } finally { clearTimeout(timer); outerSignal?.removeEventListener('abort', abortForNavigation); }
 }
 if (shell && content && layout) {
   if (api) {
@@ -247,9 +260,21 @@ if (shell && content && layout) {
       const link = event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || !link || excluded(link)) return;
       const url = new URL(link.href);
-      if (!eligible(url) || (url.pathname === location.pathname && url.search === location.search && url.hash)) return;
+      if (!eligible(url)) return;
       event.preventDefault();
       remember();
+      if (url.pathname === location.pathname && url.search === location.search && url.hash) {
+        request?.abort();
+        if (url.href !== location.href) {
+          fallbackKey = crypto.randomUUID();
+          history.pushState({ md3Navigation: fallbackKey }, '', url);
+        }
+        renderedURL = url.href;
+        const target = hashTarget(url);
+        if (target) { if (!target.hasAttribute('tabindex')) target.tabIndex = -1; target.focus({ preventScroll: true }); target.scrollIntoView(); }
+        remember();
+        return;
+      }
       void navigate(url, undefined, () => {
         fallbackKey = crypto.randomUUID();
         history.pushState({ md3Navigation: fallbackKey }, '', url);
