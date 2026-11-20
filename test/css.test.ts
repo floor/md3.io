@@ -15,7 +15,7 @@ describe('stylesheets', () => {
     expect(ui).not.toContain('/*');
     expect(ui).toContain('.ui-card');
     expect(ui).toContain('viewBox="0 0 24 24"');
-    expect(ui).toContain('content:""');
+    expect(minifyCss(readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8'))).toContain("content:''");
     const search = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/search.css'), 'utf8'));
     // `[open] .search-dialog` is a descendant. Dropping the space would restyle the dialog itself.
     expect(search).toContain('.search-overlay[open] .search-dialog{transform:scale(0.98)}');

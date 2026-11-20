@@ -46,8 +46,10 @@ const icon = (name: string): string => {
 };
 // Every theme's two sheets as theme → [main hash, contrast hash] (theme-sheets-template.eta):
 // about a tenth of the size of the 38 <link>s it replaces in each page. '' before a build.
+// Baseline is in the map too: since the site's own colours take the theme's roles
+// at <html data-theme>, the default palette needs its sheet like any other.
 const sheetHash = (path: string) => assetManifest[path]?.match(/\.([a-f0-9]{10})\.css$/)?.[1] ?? '';
-const themeSheets = JSON.stringify(Object.fromEntries(themes.filter(theme => theme !== 'baseline')
+const themeSheets = JSON.stringify(Object.fromEntries(themes
   .map(theme => [theme, [sheetHash(`/dist/material/themes/${theme}.css`), sheetHash(`/dist/material/themes/${theme}-contrast.css`)]])))
   .replaceAll('<', '\\u003c');
 // The header's Themes control, material's own: an icon button server-rendered on every

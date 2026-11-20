@@ -12,8 +12,9 @@ import { scopedTokens } from './tokens';
 
 /** The visual's class, where mtrl's tokens are set. */
 export const CATALOG_SCOPE = 'catalog-visual';
-/** mtrl's baseline tokens on the visuals: light, and dark when the site is. */
-export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`);
+/** mtrl's non-colour tokens on the visuals: their colours inherit the page's
+ * chosen theme from <html data-theme>, like every other surface. */
+export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`, undefined, false);
 
 /** The surface elements of the overlays, by component. */
 export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs' } as const;

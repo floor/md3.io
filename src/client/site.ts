@@ -75,6 +75,10 @@ themePicker?.addEventListener('click', async () => {
 onAppearance(({ theme, mode }) => {
   root.dataset.siteTheme = theme;
   root.dataset.themeMode = mode;
+  // The page itself follows: applyTheme switches <html data-theme> only once
+  // the new theme's sheets have loaded, so the palette on screen stays the
+  // last usable one while they load (or if they fail).
+  void applyTheme(document, theme);
   updateThemeLabel();
   if (menuMade) void loadMenu().then(module => module.markTheme(theme));
   if (!headerScope) return;
