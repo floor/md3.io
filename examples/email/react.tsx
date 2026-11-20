@@ -1,18 +1,19 @@
-// React: material/react wraps the same elements.
-import { useRef, useState } from "react";
+// React: material/react wraps the same elements, and material-addons/react the avatar.
+import { Fragment, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import {
-  Button, Checkbox, Chips, Chip, Dialog, ExtendedFab, IconButton,
-  NavigationRail, NavigationRailItem, Search, Snackbar, TextField,
+  Button, Checkbox, Chips, Chip, Dialog, Drawer, DrawerItem, ExtendedFab, IconButton,
+  NavigationRail, NavigationRailItem, Search, Snackbar, TextField, TopAppBar,
 } from "material/react";
+import { Avatar } from "material-addons/react";
 import type { DialogElement, SnackbarElement } from "material/elements";
 import {
-  ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
-  FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-  archiveChecked, archiveOpen, anyArchiveable, archiveable, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
-  openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
-  setQuery, toggleChecked, toggleStar, visibleMessages,
+  ARCHIVE_LABEL, ATTACHMENTS_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
+  FOLDERS, LABELS, MENU_LABEL, RAIL_LABEL, REPLY_ALL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
+  archiveChecked, archiveOpen, anyArchiveable, archiveable, attachmentCountText, badgeFor, canSend, clearChecked, closeCompose,
+  closeDrawer, deleteChecked, deleteOpen, emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow,
+  folderName, goBack, groupedMessages, icons, initialState, initialsOf, mailbox, openCompose, openDrawer, openMessage,
+  replyAllToOpen, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked, toggleStar,
   type FolderId, type MailState, type Message,
 } from "./shared";
 
@@ -35,7 +36,7 @@ export default function Email() {
   });
 
   const open = findMessage(messages, s.open);
-  const visible = visibleMessages(messages, s);
+  const groups = groupedMessages(messages, s);
   // The dialog is always mounted; opening it is imperative, as in the other variants.
   // flushSync first, so the fields carry the new draft (the reply's prefill) when it opens.
   const showDialog = (fn: (draft: MailState) => void) => {
@@ -77,8 +78,23 @@ export default function Email() {
           );
         })}
       </NavigationRail>
+      <Drawer className="mail__drawer" modal headline={RAIL_LABEL} value={s.folder} open={s.drawer}
+        onClose={() => set((d) => { closeDrawer(d); })}
+        onChange={(e) => set((d) => { setFolder(d, e.detail.value as FolderId); })}>
+        {FOLDERS.map((f) => {
+          const badge = badgeFor(messages, f.id);
+          return (
+            <DrawerItem key={f.id} value={f.id} label={f.label} icon={f.icon} selectedIcon={f.activeIcon}
+              badge={badge?.badge} />
+          );
+        })}
+      </Drawer>
       <div className="mail__main">
         <div className="mail__list-pane">
+          <TopAppBar className="mail__bar" headline={folderName(s.folder)} noScroll>
+            <IconButton slot="leading" className="mail__menu" icon={icons.menu} ariaLabel={MENU_LABEL}
+              onClick={() => set((d) => { openDrawer(d); })} />
+          </TopAppBar>
           <header className="mail__top">
             <Search placeholder={SEARCH_PLACEHOLDER} noExpandOnFocus fullWidth
               onInput={(e) => set((d) => { setQuery(d, messages, e.detail.value); })} />
@@ -101,22 +117,31 @@ export default function Email() {
             )}
           </div>
           <ul className="mail__rows" aria-label={ROWS_LABEL} tabIndex={-1}>
-            {visible.length === 0 && <li className="mail__empty mtrl-body-medium">{emptyText(s)}</li>}
-            {visible.map((m: Message) => (
-              <li key={m.id} className="mail-row" data-id={m.id} data-unread={m.unread || undefined} data-open={s.open === m.id || undefined}>
-                <Checkbox className="mail-row__check" ariaLabel={selectLabel(m)} checked={s.checked.includes(m.id)}
-                  onChange={() => set((d) => { toggleChecked(d, m.id); })} />
-                <button type="button" className="mail-row__open" aria-pressed={s.open === m.id}
-                  onClick={() => openRow(m.id)}>
-                  <span className="mail-row__sender mtrl-label-large">{m.from}</span>
-                  <span className="mail-row__subject mtrl-body-medium">{m.subject}</span>
-                  <span className="mail-row__snippet mtrl-body-small">{m.snippet}</span>
-                  <span className="mail-row__time mtrl-body-small">{m.time}</span>
-                </button>
-                <IconButton className="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
-                  selected={m.starred} ariaLabel={STAR_LABEL}
-                  onChange={() => act(() => update(() => toggleStar(s, messages, m.id)))} />
-              </li>
+            {groups.length === 0 && <li className="mail__empty mtrl-body-medium">{emptyText(s)}</li>}
+            {groups.map((g) => (
+              <Fragment key={g.label}>
+                <li className="mail__day mtrl-label-medium">{g.label}</li>
+                {g.messages.map((m: Message) => (
+                  <li key={m.id} className="mail-row" data-id={m.id} data-unread={m.unread || undefined} data-open={s.open === m.id || undefined}>
+                    <Checkbox className="mail-row__check" ariaLabel={selectLabel(m)} checked={s.checked.includes(m.id)}
+                      onChange={() => set((d) => { toggleChecked(d, m.id); })} />
+                    <Avatar className="mail-row__avatar" variant="text" size="medium" text={initialsOf(m.from)} decorative />
+                    <button type="button" className="mail-row__open" aria-pressed={s.open === m.id}
+                      onClick={() => openRow(m.id)}>
+                      <span className="mail-row__sender mtrl-label-large">{m.from}</span>
+                      <span className="mail-row__subject mtrl-body-medium">{m.subject}</span>
+                      {m.attachments && m.attachments.length > 0 && (
+                        <span className="mail-row__attachments mtrl-label-small">{attachmentCountText(m.attachments)}</span>
+                      )}
+                      <span className="mail-row__snippet mtrl-body-small">{m.snippet}</span>
+                      <span className="mail-row__time mtrl-body-small">{m.time}</span>
+                    </button>
+                    <IconButton className="mail-row__star" toggle icon={icons.star} selectedIcon={icons.starFill}
+                      selected={m.starred} ariaLabel={STAR_LABEL}
+                      onChange={() => act(() => update(() => toggleStar(s, messages, m.id)))} />
+                  </li>
+                ))}
+              </Fragment>
             ))}
           </ul>
         </div>
@@ -128,12 +153,24 @@ export default function Email() {
                 <IconButton className="mail-message__back" icon={icons.back} ariaLabel={BACK_LABEL} onClick={back} />
                 <h2 className="mail-message__subject mtrl-title-large" tabIndex={-1}>{open.subject}</h2>
               </header>
-              <p className="mail-message__meta mtrl-title-small">{open.from} · {open.address}</p>
-              {open.to && <p className="mail-message__to mtrl-body-small">To {open.to}</p>}
-              <p className="mail-message__date mtrl-body-small">{open.date}</p>
+              <div className="mail-message__sender">
+                <Avatar className="mail-message__avatar" variant="text" size="medium" text={initialsOf(open.from)} decorative />
+                <div className="mail-message__from">
+                  <p className="mail-message__meta mtrl-title-small">{open.from} · {open.address}</p>
+                  {open.to && <p className="mail-message__to mtrl-body-small">To {open.to}</p>}
+                  {open.cc && open.cc.length > 0 && <p className="mail-message__cc mtrl-body-small">Cc {open.cc.join(", ")}</p>}
+                  <p className="mail-message__date mtrl-body-small">{open.date}</p>
+                </div>
+              </div>
               <div className="mail-message__body mtrl-body-medium">{open.body.map((p, i) => <p key={i}>{p}</p>)}</div>
+              {open.attachments && open.attachments.length > 0 && (
+                <ul className="mail-message__attachments" aria-label={ATTACHMENTS_LABEL}>
+                  {open.attachments.map((file) => <li key={file} className="mail-message__attachment mtrl-label-medium">{file}</li>)}
+                </ul>
+              )}
               <footer className="mail-message__actions">
                 <Button variant="outlined" icon={icons.reply} onClick={() => showDialog((d) => { replyToOpen(d, messages); })}>Reply</Button>
+                <Button variant="outlined" icon={icons.replyAll} onClick={() => showDialog((d) => { replyAllToOpen(d, messages); })}>{REPLY_ALL_LABEL}</Button>
                 {archiveable(open) && (
                   <Button variant="outlined" icon={icons.archive} onClick={() => closeOpenMessage(archiveOpen)}>{ARCHIVE_LABEL}</Button>
                 )}

@@ -1,16 +1,17 @@
-// Vue: material/vue wraps the same elements; a reactive state mirrors the shared one.
+// Vue: material/vue wraps the same elements, and material-addons/vue the avatar.
 import { computed, defineComponent, nextTick, reactive, ref } from "vue";
 import {
-  MButton, MCheckbox, MChip, MChips, MDialog, MExtendedFab, MIconButton,
-  MNavigationRail, MNavigationRailItem, MSearch, MSnackbar, MTextField,
+  MButton, MCheckbox, MChip, MChips, MDialog, MDrawer, MDrawerItem, MExtendedFab, MIconButton,
+  MNavigationRail, MNavigationRailItem, MSearch, MSnackbar, MTextField, MTopAppBar,
 } from "material/vue";
+import { MAvatar } from "material-addons/vue";
 import {
-  ARCHIVE_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
-  FOLDERS, LABELS, RAIL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-  archiveChecked, archiveOpen, anyArchiveable, archiveable, badgeFor, canSend, clearChecked, closeCompose, deleteChecked, deleteOpen,
-  emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow, goBack, icons, initialState, mailbox,
-  openCompose, openMessage, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel,
-  setQuery, toggleChecked, toggleStar, visibleMessages,
+  ARCHIVE_LABEL, ATTACHMENTS_LABEL, BACK_LABEL, CHIPS_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
+  FOLDERS, LABELS, MENU_LABEL, RAIL_LABEL, REPLY_ALL_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
+  archiveChecked, archiveOpen, anyArchiveable, archiveable, attachmentCountText, badgeFor, canSend, clearChecked, closeCompose,
+  closeDrawer, deleteChecked, deleteOpen, emptyText, findMessage, captureFocus, focusHeading, focusList, focusRow,
+  folderName, goBack, groupedMessages, icons, initialState, initialsOf, mailbox, openCompose, openDrawer, openMessage,
+  replyAllToOpen, replyToOpen, selectLabel, selectionText, sendDraft, setFolder, setLabel, setQuery, toggleChecked, toggleStar,
   type FolderId, type MailState, type Message,
 } from "./shared";
 
@@ -18,8 +19,8 @@ const messages = mailbox();
 
 export default defineComponent({
   components: {
-    MButton, MCheckbox, MChip, MChips, MDialog, MExtendedFab, MIconButton,
-    MNavigationRail, MNavigationRailItem, MSearch, MSnackbar, MTextField,
+    MAvatar, MButton, MCheckbox, MChip, MChips, MDialog, MDrawer, MDrawerItem, MExtendedFab, MIconButton,
+    MNavigationRail, MNavigationRailItem, MSearch, MSnackbar, MTextField, MTopAppBar,
   },
   setup() {
     const s = reactive<MailState>(initialState());
@@ -37,7 +38,7 @@ export default defineComponent({
       dialog.value?.element.show();
     };
     const open = computed(() => (tick.value, findMessage(messages, s.open)));
-    const visible = computed(() => (tick.value, visibleMessages(messages, s)));
+    const groups = computed(() => (tick.value, groupedMessages(messages, s)));
     // Bound through a tick-keyed computed: a plain badgeFor() call references only the
     // module-level mailbox, which the template compiler treats as non-reactive and
     // would never patch again.
@@ -72,12 +73,16 @@ export default defineComponent({
     };
 
     return {
-      s, dialog, snackbar, open, visible, badges, sendDisabled, update, showDialog,
+      s, dialog, snackbar, open, groups, badges, sendDisabled, update, showDialog,
       openRow, back,
       messages, FOLDERS, LABELS, icons,
       RAIL_LABEL, CHIPS_LABEL, ROWS_LABEL, SEARCH_PLACEHOLDER, SENT_TEXT, STAR_LABEL,
-      ARCHIVE_LABEL, BACK_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
+      ARCHIVE_LABEL, ATTACHMENTS_LABEL, BACK_LABEL, CLEAR_LABEL, COMPOSE_HEADLINE, DELETE_LABEL, EMPTY_DETAIL,
+      MENU_LABEL, REPLY_ALL_LABEL,
       emptyText, selectLabel, selectionText, anyArchiveable, archiveable,
+      attachmentCountText, folderName, initialsOf,
+      showDrawer: () => openDrawer(s),
+      hideDrawer: () => closeDrawer(s),
       onRail: (e: CustomEvent<{ value: string }>) => setFolder(s, e.detail.value as FolderId),
       onQuery: (e: CustomEvent<{ value: string }>) => setQuery(s, messages, e.detail.value),
       onLabel: (e: CustomEvent<{ value: string | null }>) => setLabel(s, messages, e.detail.value ?? null),
@@ -87,6 +92,7 @@ export default defineComponent({
       archiveSelection: () => act(() => update(() => archiveChecked(s, messages))),
       deleteSelection: () => act(() => update(() => deleteChecked(s, messages))),
       reply: () => showDialog(() => replyToOpen(s, messages)),
+      replyAll: () => showDialog(() => replyAllToOpen(s, messages)),
       archiveOpenMessage: () => closeOpenMessage(archiveOpen),
       deleteOpenMessage: () => closeOpenMessage(deleteOpen),
       compose: () => showDialog(() => openCompose(s)),
@@ -108,8 +114,18 @@ export default defineComponent({
         <MNavigationRailItem v-for="f in FOLDERS" :key="f.id" :value="f.id" :label="f.label" :icon="f.icon"
           :selected-icon="f.activeIcon" :badge="badges[f.id]?.badge" :badge-label="badges[f.id]?.label" />
       </MNavigationRail>
+      <MDrawer class="mail__drawer" modal :headline="RAIL_LABEL" :value="s.folder" :open="s.drawer"
+        @close="hideDrawer" @change="onRail">
+        <MDrawerItem v-for="f in FOLDERS" :key="f.id" :value="f.id" :label="f.label" :icon="f.icon"
+          :selected-icon="f.activeIcon" :badge="badges[f.id]?.badge" />
+      </MDrawer>
       <div class="mail__main">
         <div class="mail__list-pane">
+          <MTopAppBar class="mail__bar" :headline="folderName(s.folder)" no-scroll>
+            <template #leading>
+              <MIconButton class="mail__menu" :icon="icons.menu" :aria-label="MENU_LABEL" @click="showDrawer" />
+            </template>
+          </MTopAppBar>
           <header class="mail__top">
             <MSearch :placeholder="SEARCH_PLACEHOLDER" no-expand-on-focus full-width @input="onQuery" />
             <MChips :aria-label="CHIPS_LABEL" selection="single" @change="onLabel">
@@ -126,19 +142,24 @@ export default defineComponent({
             </template>
           </div>
           <ul class="mail__rows" :aria-label="ROWS_LABEL" tabindex="-1">
-            <li v-if="!visible.length" class="mail__empty mtrl-body-medium">{{ emptyText(s) }}</li>
-            <li v-for="m in visible" :key="m.id" class="mail-row" :data-id="m.id"
-              :data-unread="m.unread || undefined" :data-open="s.open === m.id || undefined">
-              <MCheckbox class="mail-row__check" :aria-label="selectLabel(m)" :checked="s.checked.includes(m.id)" @change="check(m)" />
-              <button type="button" class="mail-row__open" :aria-pressed="s.open === m.id" @click="openRow(m)">
-                <span class="mail-row__sender mtrl-label-large">{{ m.from }}</span>
-                <span class="mail-row__subject mtrl-body-medium">{{ m.subject }}</span>
-                <span class="mail-row__snippet mtrl-body-small">{{ m.snippet }}</span>
-                <span class="mail-row__time mtrl-body-small">{{ m.time }}</span>
-              </button>
-              <MIconButton class="mail-row__star" toggle :icon="icons.star" :selected-icon="icons.starFill"
-                :selected="m.starred" :aria-label="STAR_LABEL" @change="star(m)" />
-            </li>
+            <li v-if="!groups.length" class="mail__empty mtrl-body-medium">{{ emptyText(s) }}</li>
+            <template v-for="g in groups" :key="g.label">
+              <li class="mail__day mtrl-label-medium">{{ g.label }}</li>
+              <li v-for="m in g.messages" :key="m.id" class="mail-row" :data-id="m.id"
+                :data-unread="m.unread || undefined" :data-open="s.open === m.id || undefined">
+                <MCheckbox class="mail-row__check" :aria-label="selectLabel(m)" :checked="s.checked.includes(m.id)" @change="check(m)" />
+                <MAvatar class="mail-row__avatar" variant="text" size="medium" :text="initialsOf(m.from)" decorative />
+                <button type="button" class="mail-row__open" :aria-pressed="s.open === m.id" @click="openRow(m)">
+                  <span class="mail-row__sender mtrl-label-large">{{ m.from }}</span>
+                  <span class="mail-row__subject mtrl-body-medium">{{ m.subject }}</span>
+                  <span v-if="m.attachments?.length" class="mail-row__attachments mtrl-label-small">{{ attachmentCountText(m.attachments) }}</span>
+                  <span class="mail-row__snippet mtrl-body-small">{{ m.snippet }}</span>
+                  <span class="mail-row__time mtrl-body-small">{{ m.time }}</span>
+                </button>
+                <MIconButton class="mail-row__star" toggle :icon="icons.star" :selected-icon="icons.starFill"
+                  :selected="m.starred" :aria-label="STAR_LABEL" @change="star(m)" />
+              </li>
+            </template>
           </ul>
         </div>
         <div class="mail__detail-pane">
@@ -148,12 +169,22 @@ export default defineComponent({
               <MIconButton class="mail-message__back" :icon="icons.back" :aria-label="BACK_LABEL" @click="back" />
               <h2 class="mail-message__subject mtrl-title-large" tabindex="-1">{{ open.subject }}</h2>
             </header>
-            <p class="mail-message__meta mtrl-title-small">{{ open.from }} · {{ open.address }}</p>
-            <p v-if="open.to" class="mail-message__to mtrl-body-small">To {{ open.to }}</p>
-            <p class="mail-message__date mtrl-body-small">{{ open.date }}</p>
+            <div class="mail-message__sender">
+              <MAvatar class="mail-message__avatar" variant="text" size="medium" :text="initialsOf(open.from)" decorative />
+              <div class="mail-message__from">
+                <p class="mail-message__meta mtrl-title-small">{{ open.from }} · {{ open.address }}</p>
+                <p v-if="open.to" class="mail-message__to mtrl-body-small">To {{ open.to }}</p>
+                <p v-if="open.cc?.length" class="mail-message__cc mtrl-body-small">Cc {{ open.cc.join(', ') }}</p>
+                <p class="mail-message__date mtrl-body-small">{{ open.date }}</p>
+              </div>
+            </div>
             <div class="mail-message__body mtrl-body-medium"><p v-for="(p, i) in open.body" :key="i">{{ p }}</p></div>
+            <ul v-if="open.attachments?.length" class="mail-message__attachments" :aria-label="ATTACHMENTS_LABEL">
+              <li v-for="file in open.attachments" :key="file" class="mail-message__attachment mtrl-label-medium">{{ file }}</li>
+            </ul>
             <footer class="mail-message__actions">
               <MButton variant="outlined" :icon="icons.reply" @click="reply">Reply</MButton>
+              <MButton variant="outlined" :icon="icons.replyAll" @click="replyAll">{{ REPLY_ALL_LABEL }}</MButton>
               <MButton v-if="archiveable(open)" variant="outlined" :icon="icons.archive" @click="archiveOpenMessage">{{ ARCHIVE_LABEL }}</MButton>
               <MButton variant="outlined" :icon="icons.delete" @click="deleteOpenMessage">{{ DELETE_LABEL }}</MButton>
             </footer>

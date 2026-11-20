@@ -10,18 +10,21 @@ import draftsIcon from "../../icons/drafts.svg" with { type: "text" };
 import draftsFillIcon from "../../icons/drafts-fill.svg" with { type: "text" };
 import editIcon from "../../icons/edit.svg" with { type: "text" };
 import replyIcon from "../../icons/reply.svg" with { type: "text" };
+import replyAllIcon from "../../icons/groups.svg" with { type: "text" };
 import archiveIcon from "../../icons/archive.svg" with { type: "text" };
 import deleteIcon from "../../icons/delete.svg" with { type: "text" };
 import backIcon from "../../icons/arrow_back.svg" with { type: "text" };
 import closeIcon from "../../icons/close.svg" with { type: "text" };
+import menuIcon from "../../icons/menu.svg" with { type: "text" };
 
 export const icons = {
   inbox: inboxIcon, inboxFill: inboxFillIcon,
   star: starIcon, starFill: starFillIcon,
   send: sendIcon, sendFill: sendFillIcon,
   drafts: draftsIcon, draftsFill: draftsFillIcon,
-  edit: editIcon, reply: replyIcon, archive: archiveIcon, delete: deleteIcon,
-  back: backIcon, close: closeIcon,
+  edit: editIcon, reply: replyIcon, replyAll: replyAllIcon,
+  archive: archiveIcon, delete: deleteIcon,
+  back: backIcon, close: closeIcon, menu: menuIcon,
 };
 
 export interface Message {
@@ -31,9 +34,13 @@ export interface Message {
   address: string;
   /** Who the message went to, kept so Sent can show it. */
   to?: string;
+  /** Additional recipients on the thread, included by Reply all. */
+  cc?: string[];
   subject: string;
   snippet: string;
   body: string[];
+  /** Attached filenames shown on the row and in the reading pane. */
+  attachments?: string[];
   time: string;
   date: string;
   starred: boolean;
@@ -49,21 +56,25 @@ const message = (id: string, m: Omit<Message, "id">): Message => ({ id, ...m });
 export const MESSAGES: Message[] = [
   message("m1", {
     folder: "inbox", from: "Lena Fischer", address: "lena@fernwick.example",
+    cc: ["Jonas Lindqvist", "Priya Nair"],
     subject: "Quarterly budget review", snippet: "The Q3 numbers are in — can you look them over before Thursday?",
     body: [
       "The Q3 numbers are in, and the hosting line is 12% over plan while print came in under. Could you look them over before Thursday's review?",
       "If the trend holds I will move the November offsite budget across to cover it. Let me know if you agree.",
     ],
+    attachments: ["Q3-budget-review.pdf", "Hosting-forecast.csv"],
     time: "9:41 AM", date: "Wednesday, November 18, 2026 at 9:41 AM",
     starred: false, unread: true, labels: ["work"],
   }),
   message("m2", {
     folder: "inbox", from: "Tomás Reyes", address: "tomas@papercrane.example",
+    cc: ["Santiago Vidal"],
     subject: "Flight itinerary to Lisbon", snippet: "Booked! Out on the 6:20 flight, back Sunday evening.",
     body: [
       "Booked! We leave on the 6:20 flight on Friday and come back Sunday evening. The confirmation code is LSB-4821.",
       "The apartment is ten minutes from the old town, so we can walk everywhere. I will send the check-in instructions closer to the date.",
     ],
+    attachments: ["Lisbon-e-ticket.pdf"],
     time: "8:15 AM", date: "Wednesday, November 18, 2026 at 8:15 AM",
     starred: true, unread: true, labels: ["travel"],
   }),
@@ -89,11 +100,13 @@ export const MESSAGES: Message[] = [
   }),
   message("m5", {
     folder: "inbox", from: "Jonas Lindqvist", address: "jonas@bramble.example",
+    cc: ["Lena Fischer", "Aiko Tanabe"],
     subject: "New mockups for the kiosk app", snippet: "Second round of screens is up, including the empty states you asked for.",
     body: [
       "The second round of screens is up in the shared folder, including the empty states you asked for and a first pass at the dark theme.",
       "Can you leave comments by Friday? I would like to lock the layout before the build starts.",
     ],
+    attachments: ["Kiosk-mockups-v2.fig", "Dark-theme-preview.png"],
     time: "Yesterday", date: "Tuesday, November 17, 2026 at 11:20 AM",
     starred: false, unread: true, labels: ["work"],
   }),
@@ -109,11 +122,13 @@ export const MESSAGES: Message[] = [
   }),
   message("m7", {
     folder: "inbox", from: "Aiko Tanabe", address: "aiko@kiteandfern.example",
+    cc: ["Lena Fischer"],
     subject: "Conference talk slides", snippet: "Here is the deck from the Helsinki talk, plus the demo links.",
     body: [
       "Here is the deck from the Helsinki talk, plus the demo links I promised. The motion section starts at slide 40.",
       "Happy to do a shorter version for the team next month if there is interest.",
     ],
+    attachments: ["Helsinki-motion-talk.pdf"],
     time: "Nov 13", date: "Friday, November 13, 2026 at 4:35 PM",
     starred: true, unread: false, labels: ["work"],
   }),
@@ -170,13 +185,21 @@ export const MESSAGES: Message[] = [
     body: [
       "Signed and attached. Thanks for the quick turnaround on the corrections.",
     ],
+    attachments: ["Lease-renewal-signed.pdf"],
     time: "Nov 6", date: "Friday, November 6, 2026 at 3:29 PM",
     starred: true, unread: false, labels: ["personal"],
   }),
 ];
 
 /** A fresh, mutable copy of the messages, so a reload restores them. */
-export const mailbox = (): Message[] => MESSAGES.map((m) => ({ ...m, body: [...m.body], labels: [...m.labels] }));
+export const mailbox = (): Message[] =>
+  MESSAGES.map((m) => ({
+    ...m,
+    body: [...m.body],
+    labels: [...m.labels],
+    ...(m.cc ? { cc: [...m.cc] } : {}),
+    ...(m.attachments ? { attachments: [...m.attachments] } : {}),
+  }));
 
 export const FOLDERS = [
   { id: "inbox", label: "Inbox", icon: icons.inbox, activeIcon: icons.inboxFill },
@@ -192,6 +215,14 @@ export const LABELS = [
   { id: "travel", label: "Travel" },
 ] as const;
 
+export const DAY_GROUPS = ["Today", "Yesterday", "Earlier"] as const;
+export type DayGroup = (typeof DAY_GROUPS)[number];
+
+export interface MessageGroup {
+  label: DayGroup;
+  messages: Message[];
+}
+
 export interface Draft {
   to: string;
   subject: string;
@@ -205,16 +236,30 @@ export interface MailState {
   open: string | null;
   checked: string[];
   reading: boolean;
+  drawer: boolean;
   compose: boolean;
   draft: Draft;
 }
 
+/** Preselects the first unread message (`m1`) so wide frames show a message on load, while `reading: false` keeps phones on the list. */
 export const initialState = (): MailState => ({
-  folder: "inbox", label: null, query: "", open: null, checked: [], reading: false,
-  compose: false, draft: { to: "", subject: "", message: "" },
+  folder: "inbox", label: null, query: "", open: "m1", checked: [], reading: false,
+  drawer: false, compose: false, draft: { to: "", subject: "", message: "" },
 });
 
 // ---- Reading the state ----
+
+export const initialsOf = (name: string): string =>
+  name.split(/\s+/).filter((w) => /^\p{L}/u.test(w)).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("") || "?";
+
+export const attachmentCountText = (files: string[]): string =>
+  files.length === 1 ? "1 file" : `${files.length} files`;
+
+export const dayGroupOf = (m: Message): DayGroup => {
+  if (m.time === "Yesterday") return "Yesterday";
+  if (m.time === "Just now" || m.time.includes("AM") || m.time.includes("PM")) return "Today";
+  return "Earlier";
+};
 
 export const findMessage = (messages: Message[], id: string | null): Message | undefined =>
   messages.find((m) => m.id === id);
@@ -235,6 +280,14 @@ export const visibleMessages = (messages: Message[], s: MailState): Message[] =>
     })
     .filter((m) => !s.label || m.labels.includes(s.label))
     .filter((m) => matches(m, s.query));
+
+/** The visible rows grouped into Today, Yesterday and Earlier. */
+export const groupedMessages = (messages: Message[], s: MailState): MessageGroup[] => {
+  const visible = visibleMessages(messages, s);
+  return DAY_GROUPS
+    .map((label) => ({ label, messages: visible.filter((m) => dayGroupOf(m) === label) }))
+    .filter((g) => g.messages.length > 0);
+};
 
 export const unreadCount = (messages: Message[]): number =>
   messages.filter((m) => m.folder === "inbox" && !m.archived && m.unread).length;
@@ -257,7 +310,7 @@ export const badgeFor = (messages: Message[], folder: FolderId): { badge: string
   return null;
 };
 
-const folderName = (folder: FolderId): string => FOLDERS.find((f) => f.id === folder)!.label;
+export const folderName = (folder: FolderId): string => FOLDERS.find((f) => f.id === folder)!.label;
 const labelName = (id: string): string => LABELS.find((l) => l.id === id)?.label ?? id;
 
 /** What the list says when there is nothing to show. */
@@ -275,6 +328,9 @@ export const BACK_LABEL = "Back to list";
 export const CLEAR_LABEL = "Clear selection";
 export const ARCHIVE_LABEL = "Archive";
 export const DELETE_LABEL = "Delete";
+export const REPLY_ALL_LABEL = "Reply all";
+export const ATTACHMENTS_LABEL = "Attachments";
+export const MENU_LABEL = "Open folders";
 export const COMPOSE_HEADLINE = "New message";
 export const EMPTY_DETAIL = "Select a message to read.";
 export const SENT_TEXT = "Message sent";
@@ -296,11 +352,20 @@ export const goBack = (s: MailState): void => {
   s.reading = false;
 };
 
+export const openDrawer = (s: MailState): void => {
+  s.drawer = true;
+};
+
+export const closeDrawer = (s: MailState): void => {
+  s.drawer = false;
+};
+
 export const setFolder = (s: MailState, folder: FolderId): void => {
   s.folder = folder;
   s.open = null;
   s.reading = false;
   s.checked = [];
+  s.drawer = false;
 };
 
 export const setLabel = (s: MailState, messages: Message[], label: string | null): void => {
@@ -388,6 +453,14 @@ export const replyToOpen = (s: MailState, messages: Message[]): void => {
   openCompose(s, m ? { to: m.from, subject: `Re: ${m.subject.replace(/^Re: /, "")}` } : {});
 };
 
+export const replyAllRecipients = (m: Message): string =>
+  [m.folder === "sent" && m.to ? m.to : m.from, ...(m.cc ?? [])].join(", ");
+
+export const replyAllToOpen = (s: MailState, messages: Message[]): void => {
+  const m = findMessage(messages, s.open);
+  openCompose(s, m ? { to: replyAllRecipients(m), subject: `Re: ${m.subject.replace(/^Re: /, "")}` } : {});
+};
+
 export const closeCompose = (s: MailState): void => {
   s.compose = false;
 };
@@ -455,15 +528,16 @@ export const captureFocus = (): (() => void) => {
   const part = ["mail-row__check", "mail-row__star", "mail-row__open"].find((c) => active.closest(`.${c}`));
   const row = active.closest<HTMLElement>(".mail-row");
   const id = row?.dataset.id;
-  const index = row?.parentElement ? Array.prototype.indexOf.call(row.parentElement.children, row) : -1;
+  const allRows = [...document.querySelectorAll<HTMLElement>(".mail-row")];
+  const index = row ? allRows.indexOf(row) : -1;
   return () => {
     const now = document.activeElement as HTMLElement | null;
     if (now && now !== document.body && now !== document.documentElement) return;
     if (part && id && focusInto(document.querySelector(`.mail-row[data-id="${id}"] .${part}`))) return;
-    const rows = document.querySelector(".mail__rows");
-    const next = index >= 0 && rows ? rows.children[Math.min(index, Math.max(0, rows.children.length - 1))] : undefined;
+    const remaining = [...document.querySelectorAll<HTMLElement>(".mail-row")];
+    const next = index >= 0 ? remaining[Math.min(index, remaining.length - 1)] : undefined;
     if (next && focusInto(next.querySelector(".mail-row__open"))) return;
-    (rows as HTMLElement | null)?.focus();
+    document.querySelector<HTMLElement>(".mail__rows")?.focus();
   };
 };
 
