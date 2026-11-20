@@ -247,9 +247,10 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     } else await swap();
   } catch {
     if (request === controller && !superseded) {
-      // Hand the failed visit back to native navigation without replacing the
-      // source page's entry. Back must still return to the page left behind.
-      location.assign(url.href);
+      // The API has already committed the destination entry; reload that entry.
+      // A failed click fallback has not pushed yet, so preserve its source entry.
+      if (api) location.replace(url.href);
+      else location.assign(url.href);
     }
   } finally { clearTimeout(timer); outerSignal?.removeEventListener('abort', abortForNavigation); }
 }
