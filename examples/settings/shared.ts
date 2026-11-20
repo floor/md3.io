@@ -136,7 +136,7 @@ export function mountRowControls(root = document.getElementById("app")!): () => 
     const roots: ShadowRoot[] = [];
     const switches: HTMLElement[] = [];
     for (const wrapper of root.querySelectorAll<HTMLElement>(".settings__row--toggle")) {
-      const list = wrapper.querySelector<HTMLElement>("m-list, .mtrl-list");
+      const list = wrapper.querySelector<HTMLElement>("m-list, [role='list']");
       const control = controls.get(wrapper) ?? wrapper.querySelector<HTMLElement>("m-switch, .mtrl-switch");
       if (!list || !control) continue;
       controls.set(wrapper, control);

@@ -16,7 +16,8 @@ export default async function steps(page: Page | Frame): Promise<void> {
   };
   const assertRowStops = async () => {
     const rows = await page.locator(".settings__row").evaluateAll(wrappers => wrappers.map(wrapper => {
-      const list = wrapper.querySelector("m-list, .mtrl-list")!;
+      const list = wrapper.querySelector("m-list, [role='list']");
+      if (!list) return { name: wrapper.outerHTML, count: 0, expected: 1, nested: false };
       const item = (list.shadowRoot ?? list).querySelector('[role="listitem"]');
       const controls: HTMLElement[] = [];
       const visit = (root: ParentNode) => {
