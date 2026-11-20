@@ -111,3 +111,69 @@ if (page) {
     root.style.colorScheme = mode;
   });
 }
+
+// The overview gallery (/showcase/): material filter chips by component and by
+// tag, the choice kept in the URL query, and each card's live preview frame
+// loaded only when the card nears the viewport (data-src becomes src) — a live
+// frame per card would otherwise pull every example's bundle on first paint.
+const overview = document.querySelector<HTMLElement>('.showcase-overview');
+if (overview) {
+  const cards = [...overview.querySelectorAll<HTMLElement>('.showcase-card-item')];
+  const count = overview.querySelector<HTMLElement>('#showcase-count');
+  const state: Record<'component' | 'tag', string> = { component: '', tag: '' };
+  const params = new URLSearchParams(location.search);
+  state.component = params.get('component') ?? '';
+  state.tag = params.get('tag') ?? '';
+
+  const apply = (): void => {
+    let shown = 0;
+    for (const card of cards) {
+      const components = (card.dataset.components ?? '').split(' ').filter(Boolean);
+      const tags = (card.dataset.tags ?? '').split(' ').filter(Boolean);
+      const visible = (!state.component || components.includes(state.component)) && (!state.tag || tags.includes(state.tag));
+      card.hidden = !visible;
+      if (visible) shown++;
+    }
+    if (count) count.textContent = `${shown} ${shown === 1 ? 'example' : 'examples'}`;
+    const url = new URL(location.href);
+    for (const group of ['component', 'tag'] as const) {
+      if (state[group]) url.searchParams.set(group, state[group]);
+      else url.searchParams.delete(group);
+    }
+    history.replaceState(null, '', url);
+  };
+
+  for (const set of overview.querySelectorAll<HTMLElement>('m-chips[data-filter-group]')) {
+    const group = set.dataset.filterGroup as 'component' | 'tag';
+    const initial = state[group];
+    if (initial) {
+      const host = set as HTMLElement & { value: unknown };
+      if (set.matches(':defined')) host.value = initial;
+      else set.setAttribute('value', initial);
+    }
+    set.addEventListener('change', event => {
+      const detail = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? (set as HTMLElement & { value: unknown }).value;
+      const value = String(Array.isArray(detail) ? detail[0] ?? '' : detail ?? '');
+      state[group] = value === 'all' ? '' : value;
+      apply();
+    });
+  }
+  apply();
+
+  const frames = [...overview.querySelectorAll<HTMLIFrameElement>('.example-card__frame')];
+  const load = (frame: HTMLIFrameElement): void => { if (frame.dataset.src && !frame.src) frame.src = frame.dataset.src; };
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) { load(entry.target as HTMLIFrameElement); observer.unobserve(entry.target); }
+      }
+    }, { rootMargin: '400px' });
+    for (const frame of frames) observer.observe(frame);
+  } else for (const frame of frames) load(frame);
+
+  const scopes = [...overview.querySelectorAll<HTMLElement>('.playground--material')];
+  onAppearance(({ theme, mode }) => {
+    for (const scope of scopes) scope.dataset.themeMode = mode;
+    void applyTheme(document, theme, scopes);
+  });
+}

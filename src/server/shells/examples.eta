@@ -1,12 +1,20 @@
-<div class="page-wrap examples-page">
+<div class="page-wrap examples-page showcase-overview">
   <header class="page-heading"><span class="eyebrow">SHOWCASE</span><h1>Showcase</h1>
     <p>The same interfaces in every framework. Each one runs the web components: directly in HTML, through the React, Vue, Svelte and Solid adapters, or as the factories they are built on.</p></header>
+  <div class="showcase-filters playground--material">
+    <script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script>
+    <div class="showcase-filters__group"><span class="showcase-filters__label">Component</span><%~ it.componentFilters %></div>
+    <div class="showcase-filters__group"><span class="showcase-filters__label">Tag</span><%~ it.tagFilters %></div>
+    <p class="showcase-filters__count" id="showcase-count" role="status"><%= it.examples.length %> examples</p>
+  </div>
   <ul class="example-grid">
   <% it.examples.forEach(example => { %>
-    <li><a class="example-card" href="/showcase/<%= example.slug %>/">
+    <li class="showcase-card-item" data-components="<%= example.components.join(' ') %>" data-tags="<%= example.tags.join(' ') %>"><a class="example-card" href="/showcase/<%= example.slug %>/">
+      <span class="example-card__preview" aria-hidden="true"><iframe class="example-card__frame" data-src="/showcase/<%= example.slug %>/frame/html/" title="" tabindex="-1" inert></iframe></span>
       <span class="example-card__title"><%= example.title %></span>
       <span class="example-card__description"><%= example.description %></span>
       <span class="example-card__components"><%= example.components.join(' · ') %></span>
+      <span class="example-card__tags"><%= example.tags.join(' · ') %></span>
     </a></li>
   <% }); %>
   </ul>

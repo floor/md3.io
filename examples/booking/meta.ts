@@ -5,6 +5,7 @@ export default {
   title: "Booking",
   description: "A trip booking form in four steps, with a live total on every step, the same in every framework.",
   components: ["datepicker", "timepicker", "text-field", "select", "radios", "checkbox", "slider", "button", "dialog", "snackbar", "stepper"],
+  tags: ["Apps", "Forms", "Travel"],
   about: [
     "Book a stay in four steps: dates and arrival, guests and room, extras, then your details with a review of the first three. The estimated total stays visible on every step, and material-addons' stepper shows the way through.",
     "Every tab above runs the same components. The HTML tab uses the web components directly; React, Vue, Svelte and Solid use the generated adapters around them; Vanilla uses the factories the elements are built on. The stepper is material-addons' in every variant.",
