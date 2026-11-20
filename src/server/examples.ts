@@ -44,7 +44,7 @@ const escapeChip = (value: string): string => value.replace(/[&<>"]/g, char => (
  */
 export function filterChips(label: string, group: string, values: string[]): string {
   const chips = ['<m-chip value="all">All</m-chip>', ...values.map(value => `<m-chip value="${escapeChip(value)}">${escapeChip(componentName(value))}</m-chip>`)].join('');
-  return renderElement('m-chips', { class: 'showcase-filters__chips', selection: 'single', value: 'all', scrollable: true, 'aria-label': label, 'data-filter-group': group }, chips, renderStyles);
+  return renderElement('m-chips', { class: 'showcase-filters__chips', selection: 'single', value: 'all', 'aria-label': label, 'data-filter-group': group }, chips, renderStyles);
 }
 
 /** Each framework's files, highlighted, and its bundle size. Null before the examples build ran, or for a stale build. */
