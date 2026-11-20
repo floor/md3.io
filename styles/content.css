@@ -56,6 +56,13 @@
     word-wrap: break-word;
 }
 
+/* The measure is for prose, not the column: paragraphs, list items and
+   blockquotes keep 40–60 characters a line, while headings, code blocks and
+   tables keep the column's width and scroll inside themselves. */
+.md :is(p, li, blockquote) {
+    max-width: var(--measure);
+}
+
 .md h1 {
     font-size: var(--fs-4xl);
     font-weight: var(--fw-bold);
@@ -376,6 +383,19 @@
 
 /* ─── Responsive: small screens ─────────────────────────────────────────── */
 
+/* At compact widths the column is the window; thin the page's own gutters so
+   prose still reaches the 40-character floor (360 − 2 × 12 − 2 × 12 = 312px
+   ≈ 40 characters). */
+@media (max-width: 412px) {
+    .page-wrap:has(> .document-layout) {
+        padding-inline: 12px;
+    }
+
+    .page-wrap > .document-layout .md {
+        padding-inline: 12px;
+    }
+}
+
 @media (width < 600px) {
     .md {
         padding: 12px 20px 60px;
@@ -404,10 +424,10 @@
         padding: 12px 14px;
     }
 
+    /* Code keeps its own bounded scroll area at every width (the plan's step 6):
+       it no longer soft-wraps mid-token on phones. */
     .md pre code {
         font-size: 14px;
-        word-break: break-all;
-        white-space: pre-wrap;
     }
 
     .md table {

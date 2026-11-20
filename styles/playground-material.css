@@ -25,12 +25,6 @@
     --playground-preview-min: 480px;
 }
 
-.preview-frameworks {
-    margin: 0;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    flex: none;
-}
 .playground--material .panel-heading.preview-heading {
     flex-wrap: wrap;
     gap: 4px 8px;
