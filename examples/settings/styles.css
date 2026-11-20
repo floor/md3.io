@@ -1,7 +1,28 @@
-/* Layout for the example only: the components bring their own styles. */
-.settings { display: flex; flex-direction: column; gap: 16px; width: min(100%, 420px); }
-.settings__panel { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
-.settings__panel[hidden] { display: none; }
-.settings__panel > * { display: block; width: 100%; }
+/* Layout only. Material components supply surfaces, type, color and interaction. */
+#app { padding: 0; }
+.settings { box-sizing: border-box; padding-block-start: 64px; width: 100%; min-width: 0; display: flex; flex-direction: column; }
+.settings__content { width: min(100%, 1040px); box-sizing: border-box; margin: 0 auto; padding: 8px 24px 32px; }
+.settings__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 32px; align-items: start; }
+.settings__group:first-child { grid-column: 1 / -1; }
+.settings__group[aria-label="Account"] > m-list, .settings__group[aria-label="Account"] > .mtrl-list { display: none; }
+.settings__row { position: relative; display: flex; align-items: center; min-width: 0; }
+.settings__row > m-list, .settings__row > .mtrl-list { flex: 1; min-width: 0; }
+.settings__row > m-switch, .settings__row > .mtrl-switch { position: absolute; inset-inline-end: 16px; }
+.settings__row > m-avatar, .settings__row > .mtrl-avatar { position: absolute; inset-inline-start: 16px; z-index: 1; }
+.settings__row m-list::part(list), .settings__row > .mtrl-list { padding-block: 0; }
+.settings__row--toggle m-list::part(item), .settings__row--toggle .mtrl-list__item { padding-inline-end: 88px; }
+.settings__row--account m-list::part(item), .settings__row--account .mtrl-list__item { padding-inline-start: 72px; }
+.settings__row m-list::part(supporting), .settings__row .mtrl-list__supporting { -webkit-line-clamp: 2; }
+.settings__storage { padding: 0 16px 12px 56px; }
+.settings__search { margin: 8px 16px 16px; }
+.settings__search > * { width: 100%; }
+.settings__wifi { max-width: 680px; margin: 0 auto; }
+.settings__fields { display: flex; flex-direction: column; gap: 16px; }
+.settings__fields > * { width: 100%; }
 .settings__actions { display: flex; justify-content: flex-end; gap: 8px; }
-.settings__status { min-height: 1.5em; color: var(--mtrl-sys-color-on-surface-variant); font: 400 14px/20px Roboto, system-ui, sans-serif; }
+.settings__mobile { display: none; }
+@media (max-width: 600px) {
+  .settings__content { padding: 0 0 24px; }
+  .settings__grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .settings__mobile { display: block; }
+}
