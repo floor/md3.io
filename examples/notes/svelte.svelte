@@ -1,9 +1,22 @@
 <!-- Svelte: material/svelte wraps the same elements; bind: keeps their live state. -->
 <script lang="ts">
-  import { BottomSheet, Button, ButtonGroup, ButtonGroupItem, Card, Chip, Chips, Dialog, Drawer, DrawerItem, ExtendedFab, IconButton, Menu, MenuItem, Search, Snackbar, TextField, TopAppBar } from "material/svelte";
+  import "material/elements/css/top-app-bar";
+  import { defineTopAppBar } from "material/elements";
+  import { BottomSheet, Button, ButtonGroup, ButtonGroupItem, Card, Chip, Chips, Dialog, Drawer, DrawerItem, ExtendedFab, IconButton, Menu, MenuItem, Search, Snackbar, TextField } from "material/svelte";
   import { DEFAULTS, LABELS, ADD_ICON, CLOSE_ICON, GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON,
     categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, observeCompact, status, visible,
     type Category, type LabelId, type Note, type State } from "./shared";
+
+  defineTopAppBar();
+  // Svelte drops a slot attribute on a child it does not treat as a custom-element slot,
+  // so the tools never reach the bar. Assign the slot once the node is in the bar.
+  const slotTrailing = (node: HTMLElement) => {
+    node.slot = "trailing";
+  };
+  let menu = $state<{ element?: HTMLElement } | null>(null);
+  $effect(() => {
+    if (menu?.element) menu.element.slot = "leading";
+  });
 
   let shell = $state<HTMLElement>();
   let compact = $state(false);
@@ -72,12 +85,14 @@
 {/snippet}
 
 <section class="notes" bind:this={shell} data-compact={compact}>
-  <TopAppBar headline="Notes" noScroll>
+  <!-- The bar is the element. A slot attribute on these children is discarded by the
+       Svelte compiler, so the slot is assigned once the node is in the bar. -->
+  <m-top-app-bar headline="Notes" no-scroll>
     {#if compact}
-      <IconButton slot="leading" class="notes__menu" icon={MENU_ICON} ariaLabel="Open categories"
+      <IconButton bind:this={menu} class="notes__menu" icon={MENU_ICON} ariaLabel="Open categories"
         onclick={() => (drawerOpen = true)} />
     {/if}
-    <div slot="trailing" class="notes__tools">
+    <div class="notes__tools" use:slotTrailing>
       {#if compact}
         <IconButton icon={searchOpen ? CLOSE_ICON : SEARCH_ICON}
           ariaLabel={searchOpen ? "Close search" : "Search notes"} onclick={toggleSearch} />
@@ -90,7 +105,7 @@
         </ButtonGroup>
       {/if}
     </div>
-  </TopAppBar>
+  </m-top-app-bar>
   {#if compact}
     <div class="notes__mobile-search" hidden={!searchOpen}>{@render search()}</div>
   {/if}
