@@ -7,6 +7,7 @@
 .example-stage { container-type: inline-size; }
 .example-stage > .example-heading { gap: 4px 8px; padding: 4px 12px; flex-wrap: nowrap; }
 .example-heading .device__bar { margin-left: auto; border-bottom: 0; padding-block: 0; background: none; flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; }
+.example-stage[data-view="code"] .example-heading .device__bar { display: none; }
 /* The size readout is the piece that wraps the bar onto a second row and drops the
    frame when the script mounts it. The buttons stay; the readout returns when the card is wide. */
 @container (width < 720px) {

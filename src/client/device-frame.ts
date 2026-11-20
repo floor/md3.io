@@ -109,7 +109,11 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     root.dataset.device = choice.device;
     turn.disabled = desktop;
     turn.setAttribute('aria-pressed', String(choice.landscape && !desktop));
-    const size = fit(choice, stage.clientWidth || root.clientWidth, Math.max(360, innerHeight - 120));
+    // A hidden Preview (the Code tab) reports no width. Measuring it floors the
+    // scale at 0.1 and the readout sticks at 10% until the stage is shown again.
+    const available = stage.clientWidth || root.clientWidth;
+    if (available <= 0) return;
+    const size = fit(choice, available, Math.max(360, innerHeight - 120));
     if (!size) {
       viewport.removeAttribute('style');
       frame.style.removeProperty('width');

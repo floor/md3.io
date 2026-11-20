@@ -73,9 +73,13 @@ try {
   // Preview / Code, the address, and Back / Forward.
   const previewTab = page.getByRole('tab', { name: 'Preview', exact: true });
   const codeTab = page.getByRole('tab', { name: 'Code', exact: true });
+  await deviceButton('Mobile').click();
+  await until(frameWidth, 390, 'Mobile gives the frame a 390 px window before Code');
   await codeTab.click();
   await page.waitForURL(/[?&]view=code/);
   await page.locator('#example-code').waitFor();
+  assert(await bar.isHidden(), 'Code hides the device bar');
+  assert(await bar.locator('.device__size').textContent() === '390 × 844', 'Code does not remeasure the hidden frame');
   await previewTab.click();
   await page.locator('#example-preview').waitFor();
   assert(!await page.locator('#example-code').isVisible(), 'Preview hides Code');
@@ -96,6 +100,7 @@ try {
   await page.goto(`${url}?view=code`);
   await page.locator('#example-code').waitFor();
   assert(await page.locator('#example-preview').isHidden(), '?view=code opens Code');
+  assert(await bar.isHidden(), '?view=code hides the device bar');
 
   // A phone: Mobile is scaled to fit, and the page does not scroll sideways.
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'light' });
