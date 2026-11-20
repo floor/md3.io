@@ -9,9 +9,13 @@
 import type { Frame, Page } from "playwright";
 
 export async function checkFrame(frame: Frame): Promise<void> {
-  await frame.getByRole("combobox", { name: "Search notes" }).fill("Pasta sauce");
+  const search = frame.getByRole("combobox", { name: "Search notes" });
+  await search.fill("Pasta sauce");
   await frame.getByRole("status").filter({ hasText: /^Showing 1 of / }).waitFor();
   await frame.getByRole("button", { name: "Open Pasta sauce", exact: true }).waitFor();
+  // Dismiss search to cancel its scheduled input focus before the outer page tests Tab.
+  await frame.getByRole("button", { name: "Go back", exact: true }).click();
+  await search.and(frame.locator('[aria-expanded="false"]')).waitFor();
 }
 
 export default async function steps(page: Page): Promise<void> {
