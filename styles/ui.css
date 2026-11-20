@@ -214,6 +214,7 @@
 }
 
 .ui-input {
+    min-height: var(--site-target-size);
     width: 64px;
     padding: 5px 8px;
     border: 1px solid var(--border);
@@ -239,6 +240,7 @@
 }
 
 .ui-select {
+    min-height: var(--site-target-size);
     padding: 5px 24px 5px 8px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -276,6 +278,8 @@
 .ui-btn {
     display: inline-flex;
     align-items: center;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     gap: 4px;
     padding: 5px 10px;
     border: 1px solid var(--border);
@@ -437,6 +441,8 @@
 
 .ui-segmented__btn {
     flex: 1;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     padding: 5px 10px;
     border: none;
     background: var(--bg);

@@ -11,7 +11,8 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 34px;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     padding: 0 10px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -124,7 +125,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
+    padding: 8px 16px;
     border-bottom: 1px solid var(--border);
 }
 
@@ -138,6 +139,7 @@
 .search-dialog__input {
     flex: 1;
     min-width: 0;
+    min-height: var(--site-target-size);
     border: none;
     outline: none;
     box-shadow: none;
@@ -153,11 +155,15 @@
 }
 
 .search-dialog__input:focus-visible {
-    outline: none;
+    outline: 2px solid var(--accent-text);
+    outline-offset: -2px;
+    border-radius: var(--radius-sm);
 }
 
 .search-dialog__input-esc {
     flex-shrink: 0;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     padding: 2px 6px;
     border: 1px solid var(--border);
     border-radius: var(--radius-xs);
@@ -222,6 +228,7 @@
 
 .search-dialog__result {
     display: flex;
+    min-height: var(--site-target-size);
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;

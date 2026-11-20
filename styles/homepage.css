@@ -105,6 +105,7 @@
 .btn {
     display: inline-flex;
     align-items: center;
+    min-height: var(--site-target-size);
     gap: 8px;
     padding: 10px 22px;
     border-radius: var(--radius-sm);

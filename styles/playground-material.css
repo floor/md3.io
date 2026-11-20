@@ -39,6 +39,39 @@
 
 .playground--material .configuration { container: configuration / inline-size; }
 
+/* Size the interactive parts themselves, including the server's shadow markup. */
+.playground--material m-button::part(button),
+.playground--material m-button-group::part(button),
+.playground--material m-tabs::part(tab),
+.playground--material m-select::part(input),
+.playground--material m-select::part(item),
+.playground--material m-text-field::part(input),
+.playground--material m-text-field[data-picker]::part(trailing-icon),
+.playground--material m-switch::part(label),
+.playground--material m-slider::part(container) {
+    min-inline-size: var(--site-target-size);
+    min-block-size: var(--site-target-size);
+}
+
+.playground--material m-text-field[data-picker]::part(trailing-icon) { inset-inline-end: 0; }
+
+/* The date and time dialogs here edit the configuration form outside the demo. */
+.playground--material m-datepicker[data-panel-picker]::part(calendar) {
+    --mtrl-datepicker-grid-inset: 0px;
+    max-inline-size: calc(100vw - 8px);
+    scrollbar-width: thin;
+}
+.playground--material m-datepicker[data-panel-picker]::part(week) {
+    min-inline-size: calc(7 * var(--site-target-size));
+}
+.playground--material m-timepicker[data-panel-picker]::part(toggle-type),
+.playground--material m-timepicker[data-panel-picker]::part(cancel),
+.playground--material m-timepicker[data-panel-picker]::part(confirm),
+.playground--material m-timepicker[data-panel-picker]::part(input) {
+    min-inline-size: var(--site-target-size);
+    min-block-size: var(--site-target-size);
+}
+
 @media (min-width: 840px) {
     /* At 840px, the 96px rail and 160px list leave 584px. After 40px
        padding and a 16px gap, the frame and controls have 240px and 288px.

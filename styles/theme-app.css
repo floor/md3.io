@@ -18,6 +18,10 @@
 
 .theme-app > .mtrl-top-app-bar { position: sticky; left: auto; right: auto; top: var(--header-height); z-index: 5; background: var(--mtrl-sys-color-surface-container); }
 .theme-app__actions { display: flex; align-items: center; gap: 4px; }
+.theme-app :is(.mtrl-icon-button, .mtrl-button-group__button, .mtrl-text-field__input, .mtrl-menu__item) {
+  min-inline-size: var(--site-target-size);
+  min-block-size: var(--site-target-size);
+}
 .theme-app__controls { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 16px; padding: 16px 24px 0; }
 .theme-app__controls > .mtrl-select, .theme-app__controls > .mtrl-text-field { width: 200px; }
 /* The next select is 280px unless the page sets a width (the text field's min
@@ -48,22 +52,28 @@
 .md3-scheme-grid__surfaces { grid-area: surfaces; display: grid; gap: 8px; align-content: start; }
 .md3-scheme-grid__inverse { grid-area: inverse; display: grid; gap: 8px; align-content: start; }
 .md3-scheme-col { display: flex; flex-direction: column; min-width: 0; }
-.md3-scheme-row { display: grid; grid-template-columns: repeat(var(--count), minmax(0, 1fr)); min-width: 0; }
+.md3-scheme-row {
+  --scheme-row-gap: 0px;
+  --scheme-tile-width: calc((100% - (var(--count) - 1) * var(--scheme-row-gap)) / var(--count));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(var(--site-target-size), var(--scheme-tile-width)), 1fr));
+  gap: var(--scheme-row-gap);
+  min-width: 0;
+}
 /* Scrim and shadow, both black: a gap between them, as MTB draws it. */
-.md3-scheme-grid__inverse .md3-scheme-row { gap: 8px; }
+.md3-scheme-grid__inverse .md3-scheme-row { --scheme-row-gap: 8px; }
 .md3-scheme-tile {
-  display: flex; align-items: flex-start; min-width: 0; margin: 0; padding: 8px 10px; border: 0; border-radius: 0;
+  display: flex; align-items: flex-start; min-width: var(--site-target-size); margin: 0; padding: 8px 10px; border: 0; border-radius: 0;
   font: 400 12px/16px var(--mtrl-ref-typeface-plain); letter-spacing: 0.4px; text-align: left; overflow-wrap: anywhere; cursor: copy;
 }
 .md3-scheme-tile--tall { min-height: 88px; }
-.md3-scheme-tile--short { min-height: 44px; }
+.md3-scheme-tile--short { min-height: var(--site-target-size); }
 .md3-scheme-tile:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
 /* A narrow card: the Error and inverse column wraps under the main block, side by side. */
 @container (max-width: 700px) {
   .md3-scheme-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "main main" "surfaces surfaces" "error inverse"; }
   .md3-scheme-tile { padding: 6px; font-size: 11px; line-height: 14px; letter-spacing: 0.2px; }
   .md3-scheme-tile--tall { min-height: 72px; }
-  .md3-scheme-tile--short { min-height: 40px; }
 }
 
 /* A tonal palette: 18 equal cells. */
