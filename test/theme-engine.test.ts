@@ -3,7 +3,7 @@
 // and dark, and mtrl's schemeToTokens names them. If mtrl changes how it builds a
 // scheme, this fails until the page follows.
 import { describe, expect, test } from 'bun:test';
-import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -26,39 +26,22 @@ interface ThemeGenerator {
   schemeFor: (spec: ThemeSpec, isDark: boolean) => unknown;
 }
 
-// mtrl's script, copied to a temp directory and run from there, has to resolve its
-// imports from md3.io, not from mtrl's checkout (file:../material): that checkout may
-// not have its devDependencies installed, and a temp directory has no package tree
-// at all. Three of its four imports need pointing elsewhere: the two bare packages,
-// material-color-utilities (the same pinned 0.4.0) and sass, at md3.io's own
-// installed copies, and the relative ../src/core/theme at mtrl's source or dist. The
-// fourth, node:fs, is a builtin and resolves as it is.
+// The pinned upstream fixture runs from a temporary directory, so its imports
+// must resolve from this project's installed dependencies and Material package.
 const mtrl = resolve(import.meta.dir, '../node_modules/material');
 const installedVersion = (JSON.parse(readFileSync(join(mtrl, 'package.json'), 'utf8')) as { version: string }).version;
 const loadGenerateThemesScript = (): string => {
-  const inPackage = join(mtrl, 'scripts/generate-themes.ts');
-  if (existsSync(inPackage)) return readFileSync(inPackage, 'utf8');
-  const candidates = [
-    resolve(import.meta.dir, '../../material'),
-    resolve(import.meta.dir, '../../../material'),
-    resolve(import.meta.dir, '../../../../material'),
-  ];
-  for (const repo of candidates) {
-    const pkgPath = join(repo, 'package.json');
-    const scriptPath = join(repo, 'scripts/generate-themes.ts');
-    if (existsSync(pkgPath) && existsSync(scriptPath)) {
-      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version?: string };
-      if (pkg.version === installedVersion) return readFileSync(scriptPath, 'utf8');
-    }
-    if (existsSync(join(repo, '.git'))) {
-      const tagPkg = spawnSync('git', ['-C', repo, 'show', `v${installedVersion}:package.json`], { encoding: 'utf8' });
-      if (tagPkg.status === 0 && (JSON.parse(tagPkg.stdout) as { version?: string }).version === installedVersion) {
-        const tagScript = spawnSync('git', ['-C', repo, 'show', `v${installedVersion}:scripts/generate-themes.ts`], { encoding: 'utf8' });
-        if (tagScript.status === 0) return tagScript.stdout;
-      }
-    }
+  const fixture = join(import.meta.dir, 'fixtures', `material-${installedVersion}-generate-themes.ts.txt`);
+  const metadataFile = join(import.meta.dir, 'fixtures', `material-${installedVersion}-generator.json`);
+  if (!existsSync(fixture) || !existsSync(metadataFile)) {
+    throw new Error(`No pinned generator reference for material@${installedVersion}; refresh test/fixtures from the matching upstream version`);
   }
-  throw new Error(`No scripts/generate-themes.ts found for material@${installedVersion}`);
+  const metadata = JSON.parse(readFileSync(metadataFile, 'utf8')) as { version: string; sha256: string };
+  const source = readFileSync(fixture, 'utf8');
+  if (metadata.version !== installedVersion || createHash('sha256').update(source).digest('hex') !== metadata.sha256) {
+    throw new Error(`Material ${installedVersion} generator reference failed its integrity check`);
+  }
+  return source;
 };
 const rewrite = (source: string, specifier: string, target: string): string => {
   const from = `from ${JSON.stringify(specifier)}`;
