@@ -205,6 +205,15 @@ try {
   await nojs.close();
   // Capture with motion enabled: before, immediately after click, and settled.
   const captureContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, recordVideo: { dir: output }, reducedMotion: 'no-preference' });
+  await captureContext.addInitScript(() => {
+    if (!document.startViewTransition) return;
+    const start = document.startViewTransition.bind(document);
+    document.startViewTransition = update => {
+      const transition = start(update);
+      (window as any).navigationAnimation = transition.finished;
+      return transition;
+    };
+  });
   const capture = await captureContext.newPage();
   await capture.goto(href('/components/button/')); await settled(capture);
   await capture.screenshot({ path: resolve(output, '01-before.png') });
@@ -212,6 +221,7 @@ try {
   await capture.screenshot({ path: resolve(output, '02-click.png') });
   await capture.waitForFunction(() => location.pathname === '/components/icon-button/' && document.querySelector('h1')?.textContent === 'Icon button');
   await settled(capture);
+  await capture.evaluate(() => (window as any).navigationAnimation);
   await capture.screenshot({ path: resolve(output, '03-swapped.png') });
   const video = capture.video()!; await captureContext.close();
   await video.saveAs(resolve(output, 'drawer-navigation.webm'));
