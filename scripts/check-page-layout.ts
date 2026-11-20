@@ -237,7 +237,11 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           const settled = await geometry(page);
           stableBox(cold.header, settled.header, ['x', 'y', 'width', 'height'], 1, `${label} header`);
           stableBox(cold.main, settled.main, ['x', 'y', 'width'], 1, `${label} main`);
-          stableBox(cold.heading, settled.heading, ['x', 'y'], 8, `${label} heading`);
+          // The centered Privacy article can change width when its font loads.
+          const headingPosition = (heading: Box | null) => entry.name === 'privacy' && heading
+            ? { ...heading, x: heading.x + heading.width / 2 }
+            : heading;
+          stableBox(headingPosition(cold.heading), headingPosition(settled.heading), ['x', 'y'], 8, `${label} heading`);
           assert.deepEqual(cold.frames.map(frame => frame.key), settled.frames.map(frame => frame.key), `${label}: frame identity`);
           for (const [index, frame] of cold.frames.entries()) {
             const final = settled.frames[index]!;
