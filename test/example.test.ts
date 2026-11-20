@@ -51,8 +51,8 @@ describe('the example fence', () => {
     expect(html.match(/class="doc-example__panel"/g)).toHaveLength(6);
     expect(html).toContain('data-framework="solid"><span class="doc-example__label">SolidJS</span><pre><code class="hljs language-typescript">');
     const document = renderDocument('slider')!;
-    // A page whose content follows the framework gets the chips (server.ts renders them in
-    // document.eta); a framework-agnostic page gets none.
+    // A page whose content follows the framework gets the chips (server.ts inserts the
+    // row under the title and description); a framework-agnostic page gets none.
     expect(document.frameworks).toBe(true);
     expect(renderDocument('architecture')!.frameworks).toBe(false);
     expect(document.html).not.toContain('doc-example__error');

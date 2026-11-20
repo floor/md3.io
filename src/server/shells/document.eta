@@ -1,5 +1,4 @@
 <div class="document-layout"><article class="md">
-  <% if (it.frameworkChips) { %><%/* The framework chips, as on the playgrounds and Examples: the row carries the material scope and the site theme from the first frame; site.ts keeps the choice. */%><div class="framework-chips-row playground--material docs-frameworks"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.frameworkChips %></div><% } %>
   <div class="doc-toolbar"><a href="/docs/"><%~ it.icon('arrow_back') %> Documentation</a><% if (it.playground) { %><a href="<%= it.playground %>">Open playground <%~ it.icon('arrow_outward') %></a><% } %></div>
   <%~ it.html %>
   <%~ it.pager %>
