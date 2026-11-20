@@ -8,10 +8,12 @@ import { baseline, scopedTokens } from '../src/server/tokens';
 const get = async (path: string) => (await handleRequest(new Request(`http://md3.test${path}`))).text();
 
 describe('the components overview', () => {
-  test('every card shows an mtrl element, inert and hidden from assistive technology', () => {
+  test('every card shows a live mtrl element, never inert or hidden', () => {
     for (const slug of componentSlugs) {
       const visual = catalogVisuals[slug];
-      expect(visual, slug).toMatch(/^<div class="catalog-visual catalog-visual--[a-z-]+" aria-hidden="true" inert>/);
+      expect(visual, slug).toMatch(/^<div class="catalog-visual catalog-visual--[a-z-]+">/);
+      expect(visual.split('>')[0], slug).not.toContain('inert');
+      expect(visual.split('>')[0], slug).not.toContain('aria-hidden');
       expect(visual, slug).toMatch(/<(m|md3-catalog)-[a-z-]+[ >]/);
     }
   });

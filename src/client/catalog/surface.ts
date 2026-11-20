@@ -1,23 +1,14 @@
-// The overlays open in the top layer or as modals, which a card must not do. Their
-// cards hold a surface element instead: the same factory, built by mtrl's
-// defineElement in a shadow root with the component's own CSS, and shown open in
-// place, without showModal(), a popover, a scrim or a focus trap.
+// The overlay cards (dialog, menu, snackbar, tooltip, time picker, tabs and
+// toolbar) hold a live factory in a shadow root: a trigger inside the card,
+// and the real overlay, which opens and closes normally over the page.
 import { defineElement, registerStyles, type ElementComponent } from 'material/elements';
 
-// The factories place their surfaces with position: fixed, as overlays; in a card the
-// surface is laid out where it stands.
 registerStyles({
   'catalog-surface': ':host{display:block}*,*::before,*::after{box-sizing:border-box}'
-    + ':host .mtrl-dialog{margin:0;min-width:0;width:320px}'
-    + ':host .mtrl-menu,:host .mtrl-snackbar,:host .mtrl-tooltip{position:relative;inset:auto;translate:none}'
-    + ':host .mtrl-snackbar{min-width:0}'
-    // Room for the 8px arrow between the button and the tooltip.
-    + ':host .mtrl-tooltip{margin-top:12px}'
-    + ':host .catalog-tooltip{display:flex;flex-direction:column;align-items:center}'
-    + ':host .mtrl-time-picker__dialog{position:static;margin:0}',
+    + ':host .catalog-tooltip{display:flex;flex-direction:column;align-items:center}',
 });
 
-/** A surface element: `create` builds the factory and shows it open. */
+/** A live overlay card's element: `create` builds its trigger and component. */
 export function surface(tag: string, styles: string[], create: () => ElementComponent): void {
   if (customElements.get(tag)) return;
   customElements.define(tag, defineElement({ name: tag, create, styles: ['catalog-surface', ...styles] }).element);
