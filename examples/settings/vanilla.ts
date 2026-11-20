@@ -35,10 +35,13 @@ const snackbar = createSnackbar({ message: "Airplane mode off", duration: "short
 shell.append(bar.element, content, modal.element, snackbar.element);
 document.getElementById("app")!.append(shell);
 let bodyControls: { destroy(): void }[] = [];
-function list(label: string | undefined, items: ListItem[], activate?: (id: string) => void) {
-  const control = createList({ ariaLabel: label, items, trackSelection: !!activate });
+function list(label: string | undefined, items: ListItem[], activate?: (id: string) => void, controlRow = false) {
+  const control = createList({ ariaLabel: label, items, trackSelection: !!activate && !controlRow });
   bodyControls.push(control);
-  if (activate) control.on("select", e => { e.preventDefault(); activate(String(e.item.id)); });
+  if (activate && controlRow) control.element.addEventListener("click", () => {
+    if (!items[0]?.disabled) activate(String(items[0]?.id));
+  });
+  else if (activate) control.on("select", e => { e.preventDefault(); activate(String(e.item.id)); });
   return control.element;
 }
 function row(r: Row): HTMLDivElement {
@@ -60,7 +63,7 @@ function row(r: Row): HTMLDivElement {
     leading: r.icon ? { type: "icon", content: r.icon } : undefined,
     trailing: control ? { type: "control", content: control.element } : { type: "icon", content: ICONS.chevron },
     disabled: r.disabled,
-  }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id })));
+  }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }), !!r.toggle));
   wrapper.append(line);
   if (r.storage) {
     const usage = div("settings__storage");
