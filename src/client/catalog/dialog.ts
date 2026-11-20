@@ -9,7 +9,7 @@ import { surface } from './surface';
 export const define = (): void => surface('md3-catalog-dialog', ['progress', 'button', 'divider', 'dialog'], () => {
   const host = document.createElement('div');
   const trigger = createButton({ text: 'Show dialog', variant: 'tonal' });
-  const dialog = createDialog({ ...dialogDefaults, open: false });
+  const dialog = createDialog({ ...dialogDefaults, container: host, layer: 'top' });
   trigger.on('click', () => dialog.open());
   host.append(trigger.element);
   return { element: host, destroy: () => { dialog.destroy(); trigger.destroy(); } };

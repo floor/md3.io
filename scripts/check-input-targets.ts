@@ -105,6 +105,9 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await edge(page, nav.getByRole('link', { name: 'Components', exact: true }), 'touch', 'right');
       await page.waitForURL(new URL('components/', base).href);
       const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
+      if (width < 840) await page.locator('#component-catalog-index summary').click();
+      await checkTargets(componentList.getByRole('button'), `${width}px component family disclosures`);
+      await edge(page, componentList.getByRole('button', { name: 'Buttons', exact: true }), 'touch');
       const buttonLink = componentList.getByRole('link', { name: 'Button', exact: true });
       await checkTargets(componentList.getByRole('link'), `${width}px component list rows`);
       await edge(page, buttonLink, 'touch');

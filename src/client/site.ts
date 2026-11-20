@@ -99,18 +99,20 @@ if (docToc) {
   });
 }
 
-const componentList = document.querySelector<HTMLElement>('.component-list');
+for (const toggle of document.querySelectorAll<HTMLButtonElement>('.component-directory__toggle')) {
+  toggle.addEventListener('click', () => {
+    toggle.setAttribute('aria-expanded', String(toggle.getAttribute('aria-expanded') !== 'true'));
+  });
+}
+
+const componentList = document.querySelector<HTMLElement>('.component-list-layout--detail .component-list');
 if (componentList) {
   const detail = componentList.closest('.component-list-layout--detail');
   const expanded = matchMedia('(min-width: 840px)');
-  let focusedLink: HTMLAnchorElement | null = null;
-  document.addEventListener('focusin', event => {
-    focusedLink = event.target instanceof HTMLAnchorElement ? event.target : null;
-  });
   const keepCurrentComponentInView = () => {
-    if (!detail || !expanded.matches) return;
+    if (!expanded.matches) return;
     const current = componentList.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!current) return;
+    if (!current?.getClientRects().length) return;
     const pane = componentList.getBoundingClientRect();
     const row = current.getBoundingClientRect();
     if (row.top < pane.top || row.bottom > pane.bottom) {
@@ -118,14 +120,9 @@ if (componentList) {
     }
   };
   expanded.addEventListener('change', () => {
-    if (expanded.matches) {
-      keepCurrentComponentInView();
-      return;
-    }
-    if (detail && focusedLink && componentList.contains(focusedLink)) {
-      detail.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
-    } else if (focusedLink?.closest('.component-card')) {
-      componentList.querySelector<HTMLElement>(`a[href="${CSS.escape(focusedLink.pathname)}"]`)?.focus();
+    if (expanded.matches) keepCurrentComponentInView();
+    else if (componentList.contains(currentFocus())) {
+      detail?.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
     }
   });
   keepCurrentComponentInView();

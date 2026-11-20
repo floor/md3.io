@@ -59,7 +59,7 @@ if (bar && rail && dialog && opener && closer) {
   syncNavigation();
 }
 
-const index = document.querySelector<HTMLDetailsElement>('#section-index');
+const index = document.querySelector<HTMLDetailsElement>('#section-index, #component-catalog-index');
 const summary = index?.querySelector<HTMLElement>('summary');
 const indexLinks = index?.querySelector<HTMLElement>('nav');
 if (index && summary && indexLinks) {
@@ -74,7 +74,8 @@ if (index && summary && indexLinks) {
       index.open = true;
       summary.hidden = true;
       if (focused === summary) {
-        (indexLinks.querySelector<HTMLElement>('[aria-current]') ?? indexLinks.querySelector('a'))?.focus();
+        const current = indexLinks.querySelector<HTMLElement>('[aria-current]');
+        (current?.getClientRects().length ? current : indexLinks.querySelector('a'))?.focus();
       }
     } else {
       summary.hidden = false;
