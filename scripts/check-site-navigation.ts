@@ -113,8 +113,8 @@ try {
     }
 
     if (width < 840) {
-      await page.locator('summary').filter({ hasText: /^Browse components$/ }).click();
-      await page.locator('#sidebar').getByRole('link', { name: 'Icon button', exact: true }).click();
+      await page.getByRole('link', { name: 'All components', exact: true }).click();
+      await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Icon button', exact: true }).click();
       await page.waitForURL(url('/components/icon-button/'));
     }
   }

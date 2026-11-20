@@ -168,14 +168,15 @@ try {
     releaseModules();
     await loadingPage.close();
   }
-  await page.locator('#sidebar').getByRole('link', { name: 'Icon button', exact: true }).click();
+  const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
+  await componentList.getByRole('link', { name: 'Icon button', exact: true }).click();
   await assertAppearance('ocean', 'dark');
   await page.reload();
   await assertAppearance('ocean', 'dark');
   // A subsequent choice must replace the previous preference on the next component.
   await panel.chooseTheme(page, 'Forest');
   await panel.chooseMode(page, 'light');
-  await page.locator('#sidebar').getByRole('link', { name: 'Button group', exact: true }).click();
+  await componentList.getByRole('link', { name: 'Button group', exact: true }).click();
   await assertAppearance('forest', 'light');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'The site mode and the preview mode moved apart');
   await page.evaluate(() => localStorage.setItem('md3-preview-appearance', '{invalid json'));

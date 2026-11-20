@@ -78,14 +78,7 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
 .preview-appearance { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
 .preview-appearance .ui-select { width: 120px; min-width: 0; }
 .preview-footer #playground-status { overflow-wrap: anywhere; }
-.catalog-group + .catalog-group { margin-top: 32px; }
 .catalog-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px; }
-.component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
-.component-card { display: block; padding: 0; overflow: hidden; }
-.component-card__body { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-top: 1px solid var(--border); }
-.component-card__body h3 { font-size: var(--fs-lg); margin-bottom: 4px; }
-.component-card__body p, .catalog-note { font-size: var(--fs-ui); color: var(--text-muted); }
-.catalog-note { margin-top: 28px; }
 .architecture-link { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; font-size: var(--fs-base); }
 .docs-group { margin-top: 30px; }
 .docs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -120,7 +113,6 @@ html[data-preview-mode="dark"] #preview { background: #1d1b20; color-scheme: dar
   .page-heading p { font-size: var(--fs-lg); }
   .preview-tabs { gap: 22px; }
   .code-panel { padding: 24px; }
-  .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .landing { padding: 0 40px; }
   .landing .hero { padding: 72px 0 48px; }
   .landing .hero__tagline { font-size: var(--fs-xl); }

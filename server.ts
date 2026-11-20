@@ -83,27 +83,33 @@ const versionAssets = (body: string) => {
 const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
-const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
+const componentGroups = [
+  { label: 'Components', items: [{ name: 'Overview', href: '/components/' }] },
+  ...playgroundGroups.map(group => ({
+    label: group.label,
+    items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })),
+  })),
+];
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
   const isExamples = path.startsWith('/showcase');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
-  const isComponents = path.startsWith('/components/');
-  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isComponents ? componentGroups : [];
-  // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
-  // component docs lead to Styles, Styles to the Showcase. Not on the playgrounds, which
-  // fill the window, nor outside the sidebar's pages.
-  const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
-  const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
-  const content = eta.render(template, { ...data, icon, docGroups, guideGroup, components, playgroundGroups, pager });
-  const section = sidebarGroups[0]?.label ?? '';
+  const isCatalog = template === 'catalog';
+  const isComponentDetail = template === 'component';
+  const isComponents = isCatalog || isComponentDetail;
+  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
+  // Component docs lead to Styles, and Styles to the Showcase.
+  const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
+  const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundGroups, componentGroups, pager });
+  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
-  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'component' && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
-    path, title, description, isHome, isExamples, isComponents, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog: template === 'catalog', catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    skipTarget: isComponentDetail ? 'component-content' : 'content',
+    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
