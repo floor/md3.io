@@ -3,28 +3,34 @@
   <%~ it.frameworksRow %>
   <div class="example-layout">
     <div class="example-main">
-      <section class="preview-panel example-preview" aria-label="Running example">
-        <iframe id="example-frame" title="<%= it.example.title %> example" src="/showcase/<%= it.example.slug %>/frame/<%= it.framework %>/"></iframe>
-        <div class="preview-footer">
-          <span id="example-status" role="status" aria-live="polite"></span>
+      <section class="preview-panel example-stage playground--material" data-view="<%= it.view %>" aria-label="Running example"><%/* The card's scope takes the site theme as it is parsed, so the tabs match the component pages at first paint. */%><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script>
+        <div class="panel-heading preview-heading example-heading">
+          <%~ it.viewTabs %>
+          <p class="example-phone-note">On a phone, this preview is the Mobile frame.</p>
         </div>
-      </section>
-      <section class="preview-panel example-code" aria-label="Source">
-      <% it.variants.forEach((variant, i) => { %>
-        <div class="example-source" data-framework="<%= variant.id %>" <%= variant.id === it.framework ? '' : 'hidden' %>>
-          <div class="panel-heading">
-            <div class="preview-tabs" role="tablist" aria-label="<%= variant.label %> files">
-            <% variant.files.forEach((file, j) => { %>
-              <button type="button" class="preview-tab" role="tab" data-file="<%= j %>" aria-selected="<%= j === 0 ? 'true' : 'false' %>" <%= j === 0 ? '' : 'tabindex="-1"' %>><%= file.name %></button>
-            <% }); %>
-            </div>
-            <%~ it.copyButton %>
+        <div id="example-preview" class="example-preview" role="tabpanel" aria-label="Preview" <%= it.view === 'code' ? 'hidden' : '' %>>
+          <iframe id="example-frame" title="<%= it.example.title %> example" src="/showcase/<%= it.example.slug %>/frame/<%= it.framework %>/"></iframe>
+          <div class="preview-footer">
+            <span id="example-status" role="status" aria-live="polite"></span>
           </div>
-          <% variant.files.forEach((file, j) => { %>
-            <pre class="example-file" data-file="<%= j %>" <%= j === 0 ? '' : 'hidden' %>><code class="hljs"><%~ file.html %></code></pre>
-          <% }); %>
         </div>
-      <% }); %>
+        <div id="example-code" class="example-code" role="tabpanel" aria-label="Code" tabindex="-1" <%= it.view === 'code' ? '' : 'hidden' %>>
+        <% it.variants.forEach(variant => { %>
+          <div class="example-source" data-framework="<%= variant.id %>" <%= variant.id === it.framework ? '' : 'hidden' %>>
+            <div class="panel-heading">
+              <div class="preview-tabs" role="tablist" aria-label="<%= variant.label %> files">
+              <% variant.files.forEach((file, j) => { %>
+                <button type="button" class="preview-tab" role="tab" id="example-file-tab-<%= variant.id %>-<%= j %>" aria-controls="example-file-<%= variant.id %>-<%= j %>" data-file="<%= j %>" aria-selected="<%= j === 0 ? 'true' : 'false' %>" <%= j === 0 ? '' : 'tabindex="-1"' %>><%= file.name %></button>
+              <% }); %>
+              </div>
+              <%~ it.copyButton %>
+            </div>
+            <% variant.files.forEach((file, j) => { %>
+              <pre class="example-file" id="example-file-<%= variant.id %>-<%= j %>" role="tabpanel" aria-labelledby="example-file-tab-<%= variant.id %>-<%= j %>" data-file="<%= j %>" <%= j === 0 ? '' : 'hidden' %>><code class="hljs"><%~ file.html %></code></pre>
+            <% }); %>
+          </div>
+        <% }); %>
+        </div>
       </section>
     </div>
     <aside class="split-panel example-aside">

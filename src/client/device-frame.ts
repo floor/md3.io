@@ -27,6 +27,8 @@ export interface DeviceFrameOptions {
   storageKey?: string;
   /** The group's accessible name. */
   label?: string;
+  /** Where the toolbar is placed. Defaults to the top of the frame's own stack. */
+  barParent?: HTMLElement;
   /** Called after every change, with the size applied (undefined on Desktop). */
   onChange?: (choice: DeviceChoice, size?: { width: number; height: number; scale: number }) => void;
 }
@@ -34,6 +36,8 @@ export interface DeviceFrame {
   element: HTMLElement;
   get(): DeviceChoice;
   set(choice: Partial<DeviceChoice>): void;
+  /** Show `choice` without remembering it. `null` returns to the remembered choice. */
+  hold(choice: DeviceChoice | null): void;
   destroy(): void;
 }
 
@@ -60,11 +64,14 @@ export function fit(choice: DeviceChoice, available: number, maxHeight = Infinit
 
 /**
  * Puts the device chooser above `frame` and wraps it in a stage that sizes it. The
- * frame stays the same element (its `src` and listeners are untouched).
+ * frame stays the same element (its `src` and listeners are untouched). `barParent`
+ * places the toolbar somewhere else, such as a card header.
  */
 export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameOptions = {}): DeviceFrame {
   const key = options.storageKey ?? 'md3-device';
-  let choice = readChoice(key);
+  let persisted = readChoice(key);
+  let held: DeviceChoice | null = null;
+  const shown = (): DeviceChoice => held ?? persisted;
 
   const root = document.createElement('div');
   root.className = 'device';
@@ -77,11 +84,13 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
   frame.replaceWith(root);
   viewport.append(frame);
   stage.append(viewport);
-  root.append(bar, stage);
+  if (options.barParent) options.barParent.append(bar);
+  else root.append(bar);
+  root.append(stage);
 
   const group = createButtonGroup({
     kind: 'connected', selection: 'single', required: true, size: 'xs', variant: 'tonal', ripple: false,
-    buttons: (Object.keys(DEVICES) as Device[]).map(device => ({ value: device, text: DEVICES[device].label, icon: DEVICES[device].icon, selected: device === choice.device })),
+    buttons: (Object.keys(DEVICES) as Device[]).map(device => ({ value: device, text: DEVICES[device].label, icon: DEVICES[device].icon, selected: device === persisted.device })),
   });
   group.element.setAttribute('aria-label', options.label ?? 'Device');
   const turn = document.createElement('button');
@@ -95,6 +104,7 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
   bar.append(group.element, turn, readout);
 
   const layout = () => {
+    const choice = shown();
     const desktop = choice.device === 'desktop';
     root.dataset.device = choice.device;
     turn.disabled = desktop;
@@ -117,16 +127,21 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     options.onChange?.(choice, size);
   };
   const set = (next: Partial<DeviceChoice>) => {
-    choice = { ...choice, ...next };
-    if (!group.isSelected(choice.device)) group.select(choice.device);
-    saveChoice(key, choice);
+    persisted = { ...persisted, ...next };
+    if (!held && !group.isSelected(persisted.device)) group.select(persisted.device);
+    saveChoice(key, persisted);
+    layout();
+  };
+  const hold = (next: DeviceChoice | null) => {
+    held = next;
     layout();
   };
   group.on('change', event => {
+    if (held) return;
     const value = (event as { values?: string[] }).values?.[0];
-    if (isDevice(value) && value !== choice.device) set({ device: value });
+    if (isDevice(value) && value !== persisted.device) set({ device: value });
   });
-  turn.addEventListener('click', () => { if (choice.device !== 'desktop') set({ landscape: !choice.landscape }); });
+  turn.addEventListener('click', () => { if (!held && persisted.device !== 'desktop') set({ landscape: !persisted.landscape }); });
 
   const observer = new ResizeObserver(() => layout());
   observer.observe(stage);
@@ -135,11 +150,13 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
 
   return {
     element: root,
-    get: () => ({ ...choice }),
+    get: () => ({ ...shown() }),
     set,
+    hold,
     destroy() {
       observer.disconnect();
       removeEventListener('resize', layout);
+      bar.remove();
       root.replaceWith(frame);
       for (const property of ['width', 'height', 'transform']) frame.style.removeProperty(property);
     },

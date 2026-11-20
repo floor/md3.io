@@ -25,7 +25,7 @@ try {
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   console.log(`Checking the device chooser on ${url}`);
   await page.goto(url);
-  const bar = page.locator('.example-preview .device__bar');
+  const bar = page.locator('.example-heading .device__bar');
   const group = bar.getByRole('group', { name: 'Example device' }).or(bar.locator('.mtrl-button-group'));
   await group.first().waitFor();
   const frameWidth = () => page.locator('#example-frame').evaluate(frame => (frame as HTMLIFrameElement).contentWindow!.innerWidth);
@@ -60,6 +60,42 @@ try {
   await deviceButton('Desktop').click();
   await until(fills, true, 'Desktop fills the container again');
   assert(!errors.length, `No errors: ${errors.join('; ')}`);
+
+  // Desktop stands close to the viewport: at least 70% of 900px, and the 900px cap at 1080px.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.waitForFunction(() => document.querySelector('#example-frame')!.getBoundingClientRect().height >= 630);
+  const at900 = await page.locator('#example-frame').evaluate(frame => frame.getBoundingClientRect().height);
+  assert(at900 >= 900 * 0.7, `Desktop frame at 1440×900 is ${at900}px, want at least 630`);
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const at1080 = await page.locator('#example-frame').evaluate(frame => frame.getBoundingClientRect().height);
+  assert(at1080 <= 900.5 && at1080 >= 860, `Desktop frame at 1920×1080 is ${at1080}px, want the 900px cap`);
+
+  // Preview / Code, the address, and Back / Forward.
+  const previewTab = page.getByRole('tab', { name: 'Preview', exact: true });
+  const codeTab = page.getByRole('tab', { name: 'Code', exact: true });
+  await codeTab.click();
+  await page.waitForURL(/[?&]view=code/);
+  await page.locator('#example-code').waitFor();
+  await previewTab.click();
+  await page.locator('#example-preview').waitFor();
+  assert(!await page.locator('#example-code').isVisible(), 'Preview hides Code');
+  await codeTab.focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#example-code').waitFor();
+  assert(await page.evaluate(() => document.activeElement?.id === 'example-code'), 'Keyboard activation moves focus into the code panel');
+  const fileTabs = page.locator('#example-code .example-source:not([hidden]) [role="tab"]');
+  if (await fileTabs.count() > 1) {
+    await fileTabs.first().focus();
+    await page.keyboard.press('ArrowRight');
+    assert(await fileTabs.nth(1).getAttribute('aria-selected') === 'true', 'ArrowRight moves between source files');
+  }
+  await page.goBack();
+  await page.locator('#example-preview').waitFor();
+  await page.goForward();
+  await page.locator('#example-code').waitFor();
+  await page.goto(`${url}?view=code`);
+  await page.locator('#example-code').waitFor();
+  assert(await page.locator('#example-preview').isHidden(), '?view=code opens Code');
 
   // A phone: Mobile is scaled to fit, and the page does not scroll sideways.
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'light' });
