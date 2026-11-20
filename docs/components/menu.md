@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-10
+updated: 2026-11-19
 status: published
 ---
 
@@ -204,15 +204,18 @@ Opening a menu closes any other root menu that is open, whatever opened it; that
 
 ## Accessibility
 
-- The list is a `menu`, each item a `menuitem`, a divider a `separator`; a gap keeps the
-  items in one menu. The opener has `aria-haspopup`, `aria-expanded` and `aria-controls`.
+- The list is a `menu`, a divider a `separator`, and each item a `menuitem` — or, in a menu
+  that carries a selection, a `menuitemradio`; a gap keeps the items in one menu. The opener
+  has `aria-haspopup`, `aria-expanded` and `aria-controls`.
 - `Down` and `Up` move between items, skipping disabled ones; `Home` and `End` go to the ends;
   typing a letter moves to the next item starting with it. `Enter` or `Space` chooses.
 - `Right` opens a submenu and `Left` closes it. `Escape` closes the menu and returns focus to
   the opener; `Tab` closes it and moves on.
 - Keyboard focus draws a 3dp inward `secondary` focus ring on the focused item (or on the menu
   surface when it opens empty); a pointer shows no ring.
-- Disabled items are `aria-disabled`; the selected one is `aria-selected`.
+- Disabled items are `aria-disabled`. In a menu that carries a selection the items are
+  `menuitemradio` and the selected one is `aria-checked`, updated by `setSelected`; a menu with
+  no selection keeps plain `menuitem`, and a listbox keeps `option` with `aria-selected`.
 
 ## Styling
 

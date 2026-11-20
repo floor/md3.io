@@ -1,0 +1,5 @@
+<div class="component-list">
+  <% if (!it.isCatalog) { %><h2 class="component-list__heading">Components</h2><% } %>
+  <%~ it.componentDrawer %>
+  <% if (it.isCatalog) { %><p class="catalog-note"><a href="/docs/">Browse the complete component reference <%~ it.icon('arrow_forward') %></a></p><% } %>
+</div>

@@ -98,7 +98,19 @@
 .styles-preview__toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
 .styles-preview__compare { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--fs-sm); cursor: pointer; }
 .styles-preview__compare input { accent-color: var(--accent); margin: 0; }
-.styles-preview__body { container: styles-preview / inline-size; display: flex; flex-direction: column; gap: 10px; height: min(62vh, 640px); min-height: 0; }
+.styles-preview__toggle, .styles-preview__compare, .type-card__copy, .shape-tile__token, .shape-tile__edit {
+  min-inline-size: var(--site-target-size);
+  min-block-size: var(--site-target-size);
+}
+.shape-tile__token { max-width: 100%; overflow-wrap: anywhere; }
+.styles-preview__body {
+  container: styles-preview / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: min(calc(62dvh + var(--site-target-size)), 640px, calc(100dvh - var(--header-height) - var(--site-nav-bar-space) - 80px));
+  min-height: 0;
+}
 .styles-preview[data-open="false"] .styles-preview__body { display: none; }
 .styles-preview__appearance { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .styles-preview__appearance .ui-select { flex: 1 1 auto; min-width: 0; }
@@ -202,7 +214,7 @@
 .shape-strip--extras { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); opacity: 0.85; }
 .shape-strip--extras .shape-tile__shape { background: var(--text-dim); }
 .shape-gallery { display: block; width: 100%; height: 520px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
-.shape-library { --shape-fill: var(--accent-dim); --shape-ink: var(--accent-text); }
+.shape-library { --shape-fill: var(--accent-dim); --shape-ink: var(--mtrl-sys-color-on-primary-container, var(--accent-text)); }
 .shape-library__body { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 14px; align-items: start; }
 .shape-library__grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
 .shape-library__item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); font-size: var(--fs-2xs); color: var(--text-muted); text-align: center; }

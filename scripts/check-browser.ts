@@ -3,6 +3,9 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import * as panel from './panel-driver';
+import { checkPlaygroundLayout } from './check-playground-layout';
+import { checkInputTargets } from './check-input-targets';
+import { checkPageLayout } from './check-page-layout';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const base = server.url.toString();
@@ -97,13 +100,23 @@ try {
   assert(copied === await page.locator('#generated-code').textContent(), 'Copied code differs from the highlighted source');
   assert(copied.includes('Save changes') && copied.includes('disabled: true') && copied.includes('material/themes/ocean'), 'Copied code is stale');
   // Material's component CSS stays in the frame and the elements' shadow roots. The
-  // page may load the chosen theme's sheet (one appearance for the whole site): it only
-  // sets roles under [data-theme], which only the material scopes carry.
+  // page may load the chosen theme's sheet (one appearance for the whole site): its
+  // roles land on <html data-theme> itself (layout step 8: the site's own colours
+  // follow the theme) and on the material scopes, and nowhere else.
   const leak = await page.evaluate(() => ({
     sheets: [...document.styleSheets].map(sheet => sheet.href ?? '').filter(href => href.includes('/dist/material/') && !href.includes('/dist/material/themes/')),
-    themed: [...document.querySelectorAll('[data-theme]')].filter(element => !element.matches('.playground--material, .site-material')).map(element => element.tagName),
+    themed: [...document.querySelectorAll('[data-theme]')].filter(element => element !== document.documentElement && !element.matches('.playground--material, .site-material')).map(element => element.tagName),
   }));
   assert(leak.sheets.length === 0 && leak.themed.length === 0, `Material CSS leaked into the site: ${JSON.stringify(leak)}`);
+  // Layout step 8: the site's own surfaces take the chosen theme's roles at the root.
+  await page.waitForFunction(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--mtrl-sys-color-surface)';
+    document.body.append(probe);
+    const surface = getComputedStyle(probe).color;
+    probe.remove();
+    return document.documentElement.dataset.theme === 'ocean' && getComputedStyle(document.body).backgroundColor === surface;
+  });
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Live preview' }).click();
   // The pilot has no Reset: the Scenario select's Default is the way back.
@@ -129,6 +142,82 @@ try {
     assert(code?.includes(`dataset.theme = '${theme}'`) && code.includes(`dataset.themeMode = '${mode}'`), 'Generated code lost the saved appearance');
   };
   await assertAppearance('ocean', 'dark');
+  // Filled controls and accent-tinted surfaces keep AA contrast in a dark theme
+  // and a light one: text on a role fill is that role's on-pair (white on a dark
+  // theme's light primary was 1.7:1). Covers the Styles toggles (checked and
+  // not), the primary buttons, and every surface the primary-container fill
+  // paints — the search dialog's active result, blockquotes, the Colour Lab's
+  // checked segments — plus the accent-glow wash behind the Styles "Aa".
+  for (const [theme, mode] of [['ocean', 'dark'], ['baseline', 'dark'], ['forest', 'dark'], ['forest', 'light']] as const) {
+    const themedContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await themedContext.addInitScript(([t, m]) => {
+      localStorage.setItem('md3-preview-appearance', JSON.stringify({ theme: t, mode: m }));
+      localStorage.setItem('md3-site-mode', m!);
+    }, [theme, mode]);
+    const themedPage = await themedContext.newPage();
+    for (const route of ['styles/', 'styles/color-lab/', 'docs/components/menu/', '']) {
+      await themedPage.goto(`${base}${route}`);
+      await themedPage.waitForTimeout(400);
+      if (route.startsWith('docs/')) {
+        // The search dialog's active result is an accent-dim surface too.
+        await themedPage.locator('#search-trigger').click();
+        await themedPage.locator('#search-input').fill('button');
+        await themedPage.locator('.search-dialog__result').first().waitFor();
+        await themedPage.keyboard.press('ArrowDown');
+        await themedPage.waitForTimeout(200);
+      }
+      const rows = await themedPage.evaluate(() => {
+        const luminance = (rgb: string) => {
+          const [r, g, b] = rgb.match(/[\d.]+/g)!.slice(0, 3).map(part => {
+            const value = Number(part) / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+        };
+        const backgroundOf = (element: Element): string => {
+          // Alpha backgrounds (the accent-glow wash) composite over what is under them.
+          const composite = (node: Element | null): [number, number, number] => {
+            if (!node) return [255, 255, 255];
+            const parts = getComputedStyle(node).backgroundColor.match(/[\d.]+/g)?.map(Number) ?? [];
+            const alpha = parts[3] ?? 1;
+            if (alpha >= 1) return [parts[0]!, parts[1]!, parts[2]!];
+            if (alpha <= 0) return composite(node.parentElement);
+            const under = composite(node.parentElement);
+            return [0, 1, 2].map(i => Math.round(parts[i]! * alpha + under[i]! * (1 - alpha))) as [number, number, number];
+          };
+          return `rgb(${composite(element).join(', ')})`;
+        };
+        const roleColor = (role: string) => {
+          const probe = document.createElement('span');
+          probe.style.color = `var(${role})`;
+          document.body.append(probe);
+          const color = getComputedStyle(probe).color;
+          probe.remove();
+          return color;
+        };
+        const container = roleColor('--mtrl-sys-color-primary-container');
+        // The filled controls named above, every surface painted with the
+        // primary-container fill (search's active result, blockquotes, the lab's
+        // checked segments), and the text inside those surfaces.
+        const tinted = [...document.querySelectorAll<HTMLElement>('*')].filter(element => getComputedStyle(element).backgroundColor === container);
+        const inside = tinted.flatMap(element => [element, ...element.querySelectorAll<HTMLElement>('*')]);
+        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary, .styles-card__visual--type span'), ...inside])];
+        return candidates.filter(element => element.getBoundingClientRect().width > 0
+          && ([...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) || element instanceof SVGElement)).map(element => {
+          const style = getComputedStyle(element);
+          const ratio = (Math.max(luminance(style.color), luminance(backgroundOf(element))) + 0.05) / (Math.min(luminance(style.color), luminance(backgroundOf(element))) + 0.05);
+          const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && Number(style.fontWeight) >= 700);
+          return { text: element.textContent?.trim().slice(0, 24), ratio, large, iconOnly: !element.textContent?.trim(), who: `${element.tagName.toLowerCase()}.${element.className}` };
+        });
+      });
+      assert(rows.length >= 1, `${theme}/${mode} ${route || 'home'}: no filled controls found for the contrast check`);
+      for (const row of rows) {
+        const needed = row.large || row.iconOnly ? 3 : 4.5;
+        assert(row.ratio >= needed, `${theme}/${mode} ${route || 'home'}: "${row.text}" (${row.who}) is ${row.ratio.toFixed(2)}:1 (want ${needed}:1)`);
+      }
+    }
+    await themedContext.close();
+  }
   // Hold both the iframe document and application bundles to expose loading-time flashes.
   const loadingPage = await context.newPage();
   let releaseDocument!: () => void;
@@ -142,7 +231,16 @@ try {
     await loadingPage.locator('#preview').waitFor();
     await loadingPage.waitForFunction(() => getComputedStyle(document.querySelector('#preview')!).colorScheme === 'dark');
     const background = await loadingPage.locator('#preview').evaluate(element => getComputedStyle(element).backgroundColor);
-    assert(background === 'rgb(29, 27, 32)', 'The empty iframe has a light loading background');
+    // The loading backdrop is the chosen theme's surface (ocean, dark, here), not a fixed colour.
+    const surface = await loadingPage.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--mtrl-sys-color-surface)';
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    assert(background === surface, `The empty iframe has a light loading background (${background} vs the theme surface ${surface})`);
     releaseDocument();
     const loadingFrame = loadingPage.frameLocator('#preview');
     await loadingFrame.locator('#stage').waitFor({ state: 'attached' });
@@ -168,14 +266,15 @@ try {
     releaseModules();
     await loadingPage.close();
   }
-  await page.locator('#sidebar').getByRole('link', { name: 'Icon button', exact: true }).click();
+  const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
+  await componentList.getByRole('link', { name: 'Icon button', exact: true }).click();
   await assertAppearance('ocean', 'dark');
   await page.reload();
   await assertAppearance('ocean', 'dark');
   // A subsequent choice must replace the previous preference on the next component.
   await panel.chooseTheme(page, 'Forest');
   await panel.chooseMode(page, 'light');
-  await page.locator('#sidebar').getByRole('link', { name: 'Button group', exact: true }).click();
+  await componentList.getByRole('link', { name: 'Button group', exact: true }).click();
   await assertAppearance('forest', 'light');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'The site mode and the preview mode moved apart');
   await page.evaluate(() => localStorage.setItem('md3-preview-appearance', '{invalid json'));
@@ -201,18 +300,23 @@ try {
     { name: 'colour-lab', path: 'styles/color-lab/' },
     { name: 'themes', path: 'styles/themes/' },
   ];
-  const hamburger = page.locator('.header').getByRole('button', { name: 'Open navigation', includeHidden: true });
-  const sidebar = page.locator('#sidebar');
-  const headerNav = page.locator('.header__nav');
+  const bar = page.locator('#site-primary-bar');
+  const rail = page.locator('#site-primary-rail');
+  const primary = page.getByRole('navigation', { name: 'Primary navigation', exact: true });
   const capture = resolve(output, 'breakpoints');
   await mkdir(capture, { recursive: true });
   for (const { name, path } of routes) {
     await page.goto(`${base}${path}`);
     for (const width of [360, 390, 412, 599, 600, 700, 839, 840, 1024, 1199, 1200, 1440, 1599, 1600]) {
       await page.setViewportSize({ width, height: 900 });
-      const drawer = width < 840;
+      const compact = width < 600;
       const tier = `${name} at ${width}px`;
-      await page.waitForFunction(docked => document.querySelector<HTMLElement>('#sidebar')!.inert === docked, drawer);
+      const inactive = compact ? rail : bar;
+      await page.waitForFunction(compact => {
+        const bar = document.querySelector<HTMLElement>('#site-primary-bar')!;
+        const rail = document.querySelector<HTMLElement>('#site-primary-rail')!;
+        return bar.hidden === !compact && rail.hidden === compact;
+      }, compact);
       const geometry = await page.evaluate(() => {
         const header = document.querySelector<HTMLElement>('.header')!;
         const layout = document.querySelector<HTMLElement>('.layout')!;
@@ -223,37 +327,28 @@ try {
           layoutWidth: layout.getBoundingClientRect().width,
           viewportWidth: root.clientWidth,
           documentScroll: root.scrollWidth,
-          sidebarPosition: getComputedStyle(document.querySelector('#sidebar')!).position,
           logoSize: getComputedStyle(document.querySelector('.header__logo')!).fontSize,
           padding: getComputedStyle(root).getPropertyValue('--page-padding').trim(),
         };
       });
       assert(geometry.headerScroll <= geometry.headerWidth && geometry.documentScroll <= width,
         `${tier}: horizontal overflow ${JSON.stringify(geometry)}`);
-      assert(geometry.sidebarPosition === (drawer ? 'fixed' : 'sticky'), `${tier}: wrong sidebar layout`);
       assert(geometry.logoSize === (width < 600 ? '20px' : '23px'), `${tier}: wrong shell sizing`);
       const padding = width < 600 ? '28px 18px 40px' : width < 1200 ? '32px 28px 48px' : '8px 40px 64px';
       assert(geometry.padding === padding, `${tier}: wrong page spacing`);
       const expectedLayout = width < 1600 ? Math.min(1472, geometry.viewportWidth) : Math.min(1840, geometry.viewportWidth - 128);
       assert(Math.abs(geometry.layoutWidth - expectedLayout) < 1, `${tier}: wrong shell gutter or width cap`);
-      assert(await hamburger.isVisible() === drawer && await headerNav.isVisible() === !drawer, `${tier}: wrong navigation controls`);
-
+      assert(await bar.isVisible() === compact && await rail.isVisible() === !compact
+        && await primary.count() === 1, `${tier}: wrong primary navigation`);
+      if (!compact) {
+        assert(Math.abs((await rail.boundingBox())!.width - 96) < 1, `${tier}: wrong rail width`);
+      }
       if ([390, 599, 600, 700].includes(width)) {
-        const firstHeaderLink = headerNav.locator('a').first();
-        const firstDrawerLink = sidebar.locator('.mobile-navigation a').first();
-        for (const link of [firstHeaderLink, firstDrawerLink]) {
-          const focused = await link.evaluate(node => {
-            node.focus();
-            return document.activeElement === node;
-          });
-          assert(!focused, `${tier}: hidden navigation accepted keyboard focus`);
-        }
-        await hamburger.press('Enter');
-        await firstDrawerLink.waitFor({ state: 'visible' });
-        await firstDrawerLink.focus();
-        assert(await firstDrawerLink.evaluate(node => document.activeElement === node), `${tier}: open drawer link cannot take focus`);
-        await page.keyboard.press('Escape');
-        assert(await hamburger.evaluate(node => document.activeElement === node), `${tier}: closing the drawer lost focus`);
+        const focused = await inactive.locator('a').first().evaluate(node => {
+          node.focus();
+          return document.activeElement === node;
+        });
+        assert(!focused, `${tier}: hidden navigation accepted keyboard focus`);
       }
       if ((name === 'home' || name === 'docs') && [390, 599, 600].includes(width)) {
         await page.locator('#search-trigger').click();
@@ -277,13 +372,12 @@ try {
   }
 
   await page.goto(`${base}components/button/`);
-  await page.setViewportSize({ width: 839, height: 900 });
-  await hamburger.press('Enter');
-  await sidebar.getByRole('link', { name: 'Styles', exact: true }).focus();
-  await page.setViewportSize({ width: 840, height: 900 });
-  await page.waitForFunction(() => document.activeElement === document.querySelector('.header__nav a[href="/styles/"]'));
-  await page.setViewportSize({ width: 839, height: 900 });
-  await page.waitForFunction(() => document.activeElement === document.getElementById('hamburger'));
+  await page.setViewportSize({ width: 599, height: 900 });
+  await bar.getByRole('link', { name: 'Styles', exact: true }).focus();
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-rail a[href="/styles/"]'));
+  await page.setViewportSize({ width: 599, height: 900 });
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-bar a[href="/styles/"]'));
 
   await page.setViewportSize({ width: 1200, height: 900 });
   await page.goto(`${base}docs/frameworks/`);
@@ -297,6 +391,141 @@ try {
   await page.setViewportSize({ width: 1200, height: 900 });
   assert(await page.evaluate(id => document.activeElement?.id === id, headingId), 'The heading keeps focus as the TOC returns');
 
+  // The header (logo, navigation, search, Themes and mode buttons; no section crumb any
+  // more) and the document do not overflow at 360, 599 or 600 px.
+  const breadcrumb = () => page.evaluate(() => {
+    const header = document.querySelector('.header') as HTMLElement;
+    const root = document.documentElement;
+    return {
+      headerFits: header.scrollWidth === header.clientWidth,
+      documentFits: root.scrollWidth === root.clientWidth,
+    };
+  });
+  const fits = (width: number, reading: { headerFits: boolean; documentFits: boolean }) =>
+    assert(reading.headerFits && reading.documentFits, `At ${width} px the header or the document overflows horizontally`);
+  await page.setViewportSize({ width: 360, height: 844 });
+  fits(360, await breadcrumb());
+  await page.setViewportSize({ width: 599, height: 844 });
+  fits(599, await breadcrumb());
+  await page.setViewportSize({ width: 600, height: 844 });
+  fits(600, await breadcrumb());
+
+  // Layout step 6, the reading measure: Material keeps body text between 40 and 60
+  // characters a line. Full lines only — a paragraph's last line is short by nature.
+  // Measured with the documentation's own font once fonts are ready.
+  const measureProse = () => page.evaluate(() => {
+    const md = document.querySelector('.md')!;
+    const fullLines = (paragraph: HTMLElement): number[] => {
+      const lines = new Map<number, { chars: number; width: number }>();
+      const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+      const texts: Text[] = [];
+      while (walker.nextNode()) texts.push(walker.currentNode as Text);
+      for (const node of texts) {
+        for (let i = 0; i < node.textContent!.length; i++) {
+          const range = document.createRange();
+          range.setStart(node, i);
+          range.setEnd(node, i + 1);
+          const rect = range.getBoundingClientRect();
+          if (!rect.width) continue;
+          const key = Math.round(rect.top / 4);
+          const line = lines.get(key) ?? { chars: 0, width: 0 };
+          line.chars++;
+          line.width += rect.width;
+          lines.set(key, line);
+        }
+      }
+      return [...lines.values()].filter(line => line.width > paragraph.clientWidth * 0.95).map(line => line.chars);
+    };
+    const prose = [...md.querySelectorAll<HTMLElement>('p')].filter(p => p.textContent!.trim().length > 120 && !p.closest('pre, table, .doc-example'));
+    const lines = prose.slice(0, 12).flatMap(fullLines).sort((a, b) => a - b);
+    // Long inline code and URLs wrap inside the paragraph instead of the page.
+    const overflowing = prose.filter(p => p.scrollWidth > p.clientWidth + 1).length;
+    // Wide code blocks and tables scroll inside the column, not the page.
+    const mdBox = md.getBoundingClientRect();
+    const escapees = [...md.querySelectorAll('pre, table')].filter(block => {
+      const box = block.getBoundingClientRect();
+      return box.width > 0 && (box.left < mdBox.left - 0.5 || box.right > mdBox.right + 0.5);
+    }).map(block => `${block.tagName}.${String(block.className).slice(0, 40)}${block.textContent.trim().slice(0, 30)}`);
+    const codeWidth = Math.max(0, ...[...md.querySelectorAll('pre')].map(block => block.getBoundingClientRect().width));
+    return {
+      count: lines.length,
+      median: lines[Math.floor(lines.length / 2)] ?? 0,
+      longest: lines[lines.length - 1] ?? 0,
+      codeWidth,
+      overflowing,
+      escapees,
+      fits: document.documentElement.scrollWidth <= window.innerWidth,
+      toc: (document.querySelector('.doc-toc') as HTMLElement | null)?.offsetParent !== null,
+    };
+  });
+  const measureAt = async (width: number, route: string) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${base}${route}`);
+    await page.locator('.md h1').waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    const reading = await measureProse();
+    assert(reading.count >= 2 && reading.median >= 40 && reading.median <= 60 && reading.longest <= 66,
+      `${route} at ${width}: measure is ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want 40–60)`);
+    assert(reading.overflowing === 0, `${route} at ${width}: ${reading.overflowing} paragraphs overflow their line box`);
+    assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the column (${reading.escapees.join('; ')})`);
+    // The measure caps the prose, never the column: at desktop widths a code block
+    // spans the column again, not the reading width (today's 320px capture fails this).
+    if (width === 1440) assert(reading.codeWidth >= 600, `${route} at ${width}: code blocks are ${reading.codeWidth}px wide (want the column, 600+)`);
+    // Scrollable code blocks are keyboard scrollable in every browser, not only
+    // Chromium: each is a named, focusable group (Firefox/Safari focus rule).
+    const blocks = await page.locator('.md pre').evaluateAll(pres => pres.map(pre => ({
+      focusable: pre.getAttribute('tabindex') === '0' && pre.getAttribute('role') === 'group',
+      name: pre.getAttribute('aria-label') ?? '',
+    })));
+    assert(blocks.length > 0 && blocks.every(block => block.focusable && /code$/i.test(block.name)),
+      `${route} at ${width}: a code block is not a named focusable group (${JSON.stringify(blocks.slice(0, 3))})`);
+    if (width === 360 && route.includes('button')) {
+      const first = page.locator('.md pre').first();
+      await first.focus();
+      assert(await first.evaluate(pre => document.activeElement === pre), 'A code block did not take keyboard focus');
+      const before = await first.evaluate(pre => pre.scrollLeft);
+      await page.keyboard.press('ArrowRight');
+      await page.waitForTimeout(100);
+      assert(await first.evaluate(pre => pre.scrollLeft) > before, 'A focused code block did not scroll with the keyboard');
+    }
+    return reading;
+  };
+  for (const width of [360, 390, 412, 700, 1024, 1440]) {
+    // Guide prose and API prose: Getting started reads like a guide, Button carries
+    // the API tables.
+    await measureAt(width, 'docs/getting-started/');
+    const api = await measureAt(width, 'docs/components/button/');
+    if (width === 1024) assert(api.toc === false, 'The table of contents shows below its breakpoint');
+    if (width === 1440) {
+      assert(api.toc === true, 'The table of contents is hidden at 1440 px');
+      await page.locator('.doc-toc a').first().click();
+      await page.waitForTimeout(400);
+      const landed = await page.evaluate(() => {
+        const toc = document.querySelector('.doc-toc a')!;
+        const heading = document.querySelector(toc.getAttribute('href')!)!;
+        const box = heading.getBoundingClientRect();
+        return box.top >= 0 && box.top < window.innerHeight;
+      });
+      assert(landed, 'A table-of-contents fragment no longer lands on its heading');
+    }
+    await page.screenshot({ animations: 'disabled', path: `${output}/docs-measure-${width}.png` });
+  }
+  // Enlarged text narrows the measure with it (ch grows with the font) and the page
+  // still fits; the fragment still lands and the focus ring is reachable. The table
+  // of contents is part of this, so this runs where it shows (above 1150 px).
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${base}docs/components/button/`);
+  await page.locator('.md h1').waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
+  const enlarged = await measureProse();
+  assert(enlarged.fits && enlarged.median <= 60, `Enlarged text overflows or loses the measure (${enlarged.median} characters)`);
+  assert(enlarged.median < 52, 'Enlarged text did not narrow the measure');
+  await page.locator('.doc-toc a').first().focus();
+  const focused = await page.evaluate(() => document.activeElement === document.querySelector('.doc-toc a'));
+  assert(focused && enlarged.fits, 'Focus is lost or the page overflows with enlarged text');
+  await page.screenshot({ animations: 'disabled', path: `${output}/docs-measure-enlarged.png` });
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${base}components/button/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();
@@ -306,9 +535,7 @@ try {
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile code view overflows the page');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-mobile.png`, fullPage: true });
-  await page.locator('#hamburger').click();
-  assert(await page.locator('#hamburger').getAttribute('aria-expanded') === 'true', 'Mobile menu did not open');
-  await page.locator('#sidebar .mobile-navigation').getByRole('link', { name: 'Documentation', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Documentation', exact: true }).click();
   await page.getByRole('heading', { name: 'Documentation', exact: true }).waitFor();
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });
@@ -322,6 +549,9 @@ try {
   await page.waitForURL(`${base}privacy/`);
   await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
+  await checkPlaygroundLayout(context, base, output);
+  await checkInputTargets(browser, base, output);
+  await checkPageLayout(browser, base, output);
   console.log(`Browser checks passed. Screenshots: ${output}`);
 } finally {
   await browser.close();

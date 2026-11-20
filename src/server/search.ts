@@ -9,7 +9,8 @@
 //   - Styles:     the Styles pages, with the colour roles and type scale roles they list.
 import MiniSearch, { type SearchResult as Hit } from 'minisearch';
 import { Marked, type Token } from 'marked';
-import { componentName, docGroups, docSlugs, documentSource, headingIds, docHref, FRAMEWORK_GUIDES, frameworkHref } from './content';
+import { componentFamilyOf } from './component-directory';
+import { componentName, isGuide, docSlugs, documentSource, headingIds, docHref, FRAMEWORK_GUIDES, frameworkHref } from './content';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { docsDir } from './content';
@@ -91,7 +92,7 @@ function componentDocuments(): IndexDocument[] {
     const meta = elementMeta(slug);
     const elements = meta ? [meta.name, ...(meta.children ? [meta.children.name] : [])] : [];
     return {
-      id: `components:${slug}`, section: 'Components', title: component.name, heading: '', group: component.group,
+      id: `components:${slug}`, section: 'Components', title: component.name, heading: '', group: componentFamilyOf(slug)?.name ?? 'Component',
       description: component.description,
       tags: [slug, ...elements.map(name => `m-${name}`)].join(' '),
       api: [
@@ -107,12 +108,11 @@ function componentDocuments(): IndexDocument[] {
 
 /** One entry for a document's introduction, one for each section, with its anchor. */
 function docDocuments(): IndexDocument[] {
-  const groupOf = new Map(docGroups.flatMap(group => group.items.map(item => [item.slug, group.label] as const)));
   const lexer = new Marked();
   // The documents, then the six framework guides: they are read on the Frameworks page, so
   // each lands there with its framework chosen and its section's anchor (ids prefixed).
   const sources = [
-    ...docSlugs.map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: groupOf.get(slug) ?? 'Documentation', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
+    ...docSlugs.map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: isGuide(slug) ? 'Documentation' : componentFamilyOf(slug)?.name ?? 'Component', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
     ...Object.entries(FRAMEWORK_GUIDES).map(([guide, framework]) => ({
       key: `frameworks:${framework}`, title: `${componentName(guide)} · Frameworks`, page: frameworkHref(framework), group: 'Guides',
       source: readFileSync(resolve(docsDir, `${guide}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''),

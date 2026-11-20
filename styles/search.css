@@ -7,10 +7,12 @@
 
 .header__search {
     display: flex;
+    margin-inline-start: auto;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 34px;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     padding: 0 10px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -58,14 +60,14 @@
    Escape for free. The panel inside is the visible dialog. */
 .search-overlay {
     position: fixed;
-    inset: 0;
+    inset: var(--search-viewport-top, 0px) 0 auto;
     width: 100%;
-    height: 100%;
+    height: var(--search-viewport-height, 100dvh);
     max-width: none;
     max-height: none;
     margin: 0;
     border: none;
-    padding: 20vh 0 0;
+    padding: calc(var(--search-viewport-height, 100dvh) / 5) 0 0;
     justify-content: center;
     align-items: flex-start;
     background: var(--overlay-bg);
@@ -92,14 +94,17 @@
 /* ─── Dialog ─────────────────────────────────────────────────────── */
 
 .search-dialog {
+    display: flex;
+    flex-direction: column;
     width: 90vw;
     max-width: 640px;
+    max-height: 100%;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.35),
-        0 0 1px rgba(0, 0, 0, 0.2);
+        0 8px 30px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 35%, transparent),
+        0 0 1px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 20%, transparent);
     overflow: hidden;
     transition: transform 0.15s ease-out;
 }
@@ -112,18 +117,19 @@
 
 [data-theme-mode="light"] .search-dialog {
     box-shadow:
-        0 8px 30px rgba(0, 0, 0, 0.12),
-        0 0 1px rgba(0, 0, 0, 0.08),
-        0 0 0 1px rgba(0, 0, 0, 0.04);
+        0 8px 30px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 12%, transparent),
+        0 0 1px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 8%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000000) 4%, transparent);
 }
 
 /* ─── Input Area ─────────────────────────────────────────────────── */
 
 .search-dialog__input-wrap {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
+    padding: 8px 16px;
     border-bottom: 1px solid var(--border);
 }
 
@@ -137,6 +143,7 @@
 .search-dialog__input {
     flex: 1;
     min-width: 0;
+    min-height: var(--site-target-size);
     border: none;
     outline: none;
     box-shadow: none;
@@ -152,11 +159,15 @@
 }
 
 .search-dialog__input:focus-visible {
-    outline: none;
+    outline: 2px solid var(--accent-text);
+    outline-offset: -2px;
+    border-radius: var(--radius-sm);
 }
 
 .search-dialog__input-esc {
     flex-shrink: 0;
+    min-width: var(--site-target-size);
+    min-height: var(--site-target-size);
     padding: 2px 6px;
     border: 1px solid var(--border);
     border-radius: var(--radius-xs);
@@ -177,6 +188,7 @@
 
 .search-dialog__results {
     max-height: 420px;
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 10px;
@@ -221,6 +233,7 @@
 
 .search-dialog__result {
     display: flex;
+    min-height: var(--site-target-size);
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
@@ -260,7 +273,7 @@
 }
 
 .search-dialog__result--active .search-dialog__result-title {
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
 }
 
 .search-dialog__result-snippet {
@@ -289,7 +302,7 @@
 
 .search-dialog__result--active .search-dialog__result-badge {
     background: var(--accent-dim);
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
 }
 
 .search-dialog__result-arrow {
@@ -308,7 +321,7 @@
 }
 
 .search-dialog__result--active .search-dialog__result-arrow {
-    color: var(--accent-text);
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
 }
 
 /* A component's tags and API names: the site font draws < and > as arrows. */
@@ -323,6 +336,10 @@
     background: none;
     color: var(--accent-text);
     font-weight: var(--fw-bold);
+}
+
+.search-dialog__result--active mark {
+    color: var(--mtrl-sys-color-on-primary-container, var(--accent-text));
 }
 
 /* ─── Empty State ────────────────────────────────────────────────── */
@@ -340,6 +357,7 @@
 
 .search-dialog__footer {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 16px;
     padding: 12px 20px;
@@ -373,13 +391,6 @@
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────── */
-
-/* The nav hides on narrow screens: the search button takes its place at the end. */
-@media (width < 840px) {
-    .header .header__search {
-        margin-left: auto;
-    }
-}
 
 @media (width < 600px) {
     .search-overlay {

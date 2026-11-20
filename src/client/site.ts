@@ -1,4 +1,5 @@
 import './search';
+import { containsFocus, currentFocus } from './site-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -74,6 +75,10 @@ themePicker?.addEventListener('click', async () => {
 onAppearance(({ theme, mode }) => {
   root.dataset.siteTheme = theme;
   root.dataset.themeMode = mode;
+  // The page itself follows: applyTheme switches <html data-theme> only once
+  // the new theme's sheets have loaded, so the palette on screen stays the
+  // last usable one while they load (or if they fail).
+  void applyTheme(document, theme);
   updateThemeLabel();
   if (menuMade) void loadMenu().then(module => module.markTheme(theme));
   if (!headerScope) return;
@@ -81,55 +86,41 @@ onAppearance(({ theme, mode }) => {
   applyTheme(document, theme, [headerScope]);
 });
 
-const hamburger = document.querySelector<HTMLButtonElement>('#hamburger');
-const sidebar = document.querySelector<HTMLElement>('#sidebar');
-const overlay = document.querySelector<HTMLButtonElement>('#overlay');
-const headerNav = document.querySelector<HTMLElement>('.header__nav');
-const drawerLinks = sidebar?.querySelector('.mobile-navigation');
-const drawerLayout = matchMedia('(width < 840px)');
-let lastFocused = document.activeElement;
-document.addEventListener('focusin', event => {
-  if (event.target instanceof Element) lastFocused = event.target;
-});
-const focusedElement = () => document.activeElement === document.body ? lastFocused : document.activeElement;
-function setMenu(open: boolean, restoreFocus = false) {
-  sidebar?.classList.toggle('sidebar--open', open);
-  overlay?.classList.toggle('overlay--visible', open);
-  hamburger?.setAttribute('aria-expanded', String(open));
-  if (sidebar) sidebar.inert = drawerLayout.matches && !open;
-  if (overlay) overlay.hidden = !open;
-  if (restoreFocus) hamburger?.focus();
-}
-setMenu(false);
-drawerLayout.addEventListener('change', () => {
-  const focused = focusedElement();
-  setMenu(false);
-  if (drawerLayout.matches) {
-    if (headerNav?.contains(focused) || sidebar?.contains(focused)) hamburger?.focus();
-  } else if (focused === hamburger || focused === overlay || drawerLinks?.contains(focused)
-    || (sidebar?.contains(focused) && sidebar.getClientRects().length === 0)) {
-    const links = [...(headerNav?.querySelectorAll<HTMLAnchorElement>('a') ?? [])];
-    const sameLink = focused instanceof HTMLAnchorElement ? links.find(link => link.href === focused.href) : undefined;
-    (sameLink ?? links.find(link => link.classList.contains('active')) ?? links[0])?.focus();
-  }
-});
-hamburger?.addEventListener('click', () => setMenu(hamburger.getAttribute('aria-expanded') !== 'true'));
-overlay?.addEventListener('click', () => setMenu(false, true));
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') setMenu(false, true);
-});
-
 const docToc = document.querySelector('.doc-toc');
 if (docToc) {
   const tocHidden = matchMedia('(width < 1200px)');
   tocHidden.addEventListener('change', () => {
-    const focused = focusedElement();
+    const focused = currentFocus();
     if (!tocHidden.matches || !(focused instanceof HTMLAnchorElement) || !docToc.contains(focused)) return;
     const id = focused.getAttribute('href')?.slice(1) ?? '';
     const target = document.getElementById(id) ?? document.getElementById('content');
     if (target && !target.hasAttribute('tabindex')) target.tabIndex = -1;
     target?.focus();
   });
+}
+
+const componentList = document.querySelector<HTMLElement>('.component-list-layout--detail .component-list');
+if (componentList) {
+  const detail = componentList.closest('.component-list-layout--detail');
+  const drawer = componentList.querySelector('m-drawer');
+  const expanded = matchMedia('(min-width: 840px)');
+  const keepCurrentComponentInView = () => {
+    if (!expanded.matches) return;
+    const current = drawer?.shadowRoot?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!current?.getClientRects().length) return;
+    const pane = componentList.getBoundingClientRect();
+    const row = current.getBoundingClientRect();
+    if (row.top < pane.top || row.bottom > pane.bottom) {
+      componentList.scrollTop += row.top - pane.top - (pane.height - row.height) / 2;
+    }
+  };
+  expanded.addEventListener('change', () => {
+    if (expanded.matches) keepCurrentComponentInView();
+    else if (containsFocus(componentList, currentFocus())) {
+      detail?.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
+    }
+  });
+  keepCurrentComponentInView();
 }
 
 // The documentation's framework chips (document.eta): their code loads only on a page that

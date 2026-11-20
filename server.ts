@@ -1,13 +1,15 @@
 import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
-import { root, docGroups, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
+import { root, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
-import { components, componentIcons, isComponent, playgroundGroups } from './src/shared/components';
+import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
+import { componentDirectory } from './src/server/component-directory';
+import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, frameworkChips, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -46,8 +48,10 @@ const icon = (name: string): string => {
 };
 // Every theme's two sheets as theme → [main hash, contrast hash] (theme-sheets-template.eta):
 // about a tenth of the size of the 38 <link>s it replaces in each page. '' before a build.
+// Baseline is in the map too: since the site's own colours take the theme's roles
+// at <html data-theme>, the default palette needs its sheet like any other.
 const sheetHash = (path: string) => assetManifest[path]?.match(/\.([a-f0-9]{10})\.css$/)?.[1] ?? '';
-const themeSheets = JSON.stringify(Object.fromEntries(themes.filter(theme => theme !== 'baseline')
+const themeSheets = JSON.stringify(Object.fromEntries(themes
   .map(theme => [theme, [sheetHash(`/dist/material/themes/${theme}.css`), sheetHash(`/dist/material/themes/${theme}-contrast.css`)]])))
   .replaceAll('<', '\\u003c');
 // The header's Themes control, material's own: an icon button server-rendered on every
@@ -83,36 +87,45 @@ const versionAssets = (body: string) => {
 const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
-const componentGroups = [{ label: 'Components', items: [{ name: 'Overview', href: '/components/' }] }, ...playgroundGroups.map(group => ({ label: group.label, items: group.slugs.map(slug => ({ name: components[slug].name, href: `/components/${slug}/` })) }))];
+const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
+  slug, name: components[slug].name, href: `/components/${slug}/`,
+})));
+const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug)).map(slug => ({
+  slug, name: componentName(slug), href: docHref(slug),
+})));
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
   const isExamples = path.startsWith('/showcase');
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
-  // The privacy page stands outside the sections: no sidebar and no breadcrumb (base.eta).
-  const isPrivacy = template === 'privacy';
-  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : isPrivacy ? [] : componentGroups;
-  // Previous and next, in sidebar order, as on vlist.io, and on across sections: the
-  // component docs lead to Styles, Styles to the Showcase. Not on the playgrounds, which
-  // fill the window, nor outside the sidebar's pages.
-  const chain = isDocs || isStyles || isExamples ? readingOrder : sidebarGroups.flatMap(group => group.items);
-  const pager = status === 200 && !isHome && template !== 'component' && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(chain, path, chain === readingOrder) : '';
-  const content = eta.render(template, { ...data, icon, docGroups, guideGroup, components, playgroundGroups, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isHome || isPrivacy ? '' : 'Components';
-  // Where the title already names the section, the compact header can drop the breadcrumb.
-  // On the pages it does not, the breadcrumb stays for assistive technology (base.eta).
+  const isCatalog = template === 'catalog';
+  const isComponentDetail = template === 'component';
+  const isComponents = isCatalog || isComponentDetail;
+  const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
+  // Component docs lead to Styles, and Styles to the Showcase.
+  const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
+  const componentDrawer = isComponents
+    ? renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
+    : '';
+  const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundDirectory, componentDrawer, pager });
+  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
+  const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, [
+    ...sidebarGroups.flatMap(group => [{ name: group.label }, ...group.items]),
+    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries)] : []),
+  ]) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
-  const css: StylesheetBundle = isHome ? 'home' : template === 'catalog' ? 'catalog' : isExamples ? 'examples' : template === 'component' && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
-    path, title, description, isHome, noSidebar: isPrivacy, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog: template === 'catalog', catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sidebarGroups, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    skipTarget: isComponentDetail ? 'component-content' : 'content',
+    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
-const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup, ...docGroups];
+const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** The previous and next links for a page, from the sidebar's items in order. */
 type PagerItem = { name: string; href: string; section?: string };
@@ -129,16 +142,39 @@ function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
     `<a href="${escapeHtml(item.href)}" rel="${rel}" class="page-nav__link page-nav__link--${rel}"><span class="page-nav__label">${rel === 'prev' ? `${icon('arrow_back')} Previous` : `Next ${icon('arrow_forward')}`}</span><span class="page-nav__title">${escapeHtml(title(item))}</span></a>`;
   return `<nav class="page-nav" aria-label="Previous and next">${prev ? link(prev, 'prev') : '<span></span>'}${next ? link(next, 'next') : ''}</nav>`;
 }
+// A document's framework chips row sits directly under its title and
+// description: after the first paragraph that follows the h1.
+const withFrameworkChips = (document: ReturnType<typeof renderDocument>) => {
+  if (!document?.frameworks) return document;
+  const row = frameworkChipsRow(() => true, 'docs-frameworks');
+  const at = document.html.indexOf('</p>');
+  return { ...document, html: at < 0 ? row + document.html : document.html.slice(0, at + 4) + '\n' + row + document.html.slice(at + 4) };
+};
 const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
+const primaryDestinations = [
+  { label: 'Components', href: '/components/', icon: 'tab' },
+  { label: 'Styles', href: '/styles/', icon: 'palette' },
+  { label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' },
+  { label: 'Documentation', href: '/docs/', icon: 'article' },
+];
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
-const readingOrder = [documentationGroups, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
+const documentationOrder = [...documentationGroups, {
+  label: 'Components',
+  items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
+}];
+const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.
+// material-addons' components are not material's: their light-DOM styles ship as that
+// package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
+// example using any of them links that sheet instead.
+const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete']);
+const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
   const visit = (name: string) => {
-    if (order.includes(name)) return;
+    if (order.includes(name) || ADDONS_COMPONENTS.has(name)) return;
     const module = resolve(root, 'dist/material/styles', `${name}.js`);
     const source = existsSync(module) ? readFileSync(module, 'utf8') : '';
     for (const [, dependency] of source.matchAll(/import "\.\/([a-z-]+)\.js"/g)) if (dependency !== name) visit(dependency!);
@@ -242,10 +278,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (!example || !variants) response = page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     else if (framework) {
       response = variants.some(v => v.id === framework)
-        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components) }))
+        ? internalHtml(eta.render('example-frame', { example, framework, themes, themeSheets, styles: styleClosure(example.components), addonStyles: addonsStylesheet(example.components) }))
         : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
     }
-    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworks: frameworkChips(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
+    else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworksRow: frameworkChipsRow(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
       // The address's framework when the example has it, so the first paint (frame and source)
       // is the one the address names; otherwise its first variant. The client keeps it in step.
       framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
@@ -278,7 +314,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (/^\/docs\/[a-z-]+\/$/.test(path) && isGuide(path.slice(6, -1)) && renderDocument(path.slice(6, -1))) {
     const slug = path.slice(6, -1);
     const document = renderDocument(slug)!;
-    response = page(path, `${document.title} — material`, document.description, 'document', { ...document, frameworkChips: document.frameworks ? frameworkChips(() => true) : '', playground: null });
+    response = page(path, `${document.title} — material`, document.description, 'document', { ...withFrameworkChips(document)!, playground: null });
   }
   else {
     const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
@@ -286,7 +322,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     if (match && isGuide(match[1]!)) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/${match[1]}/` } });
     const document = match ? renderDocument(match[1]!) : null;
     response = document
-      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...document, frameworkChips: document.frameworks ? frameworkChips(() => true) : '', playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
+      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...withFrameworkChips(document)!, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
       : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;

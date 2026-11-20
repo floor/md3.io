@@ -39,6 +39,16 @@ defineSnackbar();
 defineDatepicker();
 defineTimepicker();
 
+// A click in the text field's hit outset lands on the field wrapper.
+document.querySelector('#configuration')?.addEventListener('click', event => {
+  const target = event.composedPath()[0];
+  if (!(target instanceof HTMLElement) || !target.matches('[part~="field"]')) return;
+  const root = target.getRootNode();
+  if (root instanceof ShadowRoot && root.host.matches('m-text-field:not([disabled])')) {
+    target.querySelector<HTMLElement>('[part~="input"]')?.focus();
+  }
+});
+
 type GroupHost = HTMLElement & { value: string | string[] | null };
 type GroupButton = HTMLButtonElement;
 

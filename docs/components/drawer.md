@@ -1,13 +1,14 @@
 ---
 created: 2026-09-21
-updated: 2026-11-09
+updated: 2026-11-19
 status: published
 ---
 
 # Drawer
 
 A navigation drawer holds an app's top-level destinations in a vertical list along one edge,
-with dividers and section labels to group them. M3 has two: **standard**, inline in the layout
+with dividers, section labels and expandable sections to group them. A destination is a button,
+or a native link when it has an `href`. M3 has two: **standard**, inline in the layout
 of an expanded window, and **modal**, over the page behind a scrim, for compact and medium
 windows. For content rather than destinations, use a [sheet](sheet.md); for a short list of
 actions, a [menu](menu.md). See the
@@ -33,6 +34,49 @@ drawer:
 ```
 
 ## Examples
+
+### Links and expandable sections
+
+A destination with an `href` is a real `<a>`: it navigates, it can be opened in a new tab,
+and the current one carries `aria-current="page"` — server-rendered drawers expose the links
+before client JavaScript loads.
+
+```example
+drawer:
+  open: true
+  headline: Workspace
+  items:
+    - { id: home, label: Home, icon: homeIcon, href: /, active: true }
+    - { id: projects, label: Projects, icon: inboxIcon, href: /showcase/ }
+    - { id: settings, label: Settings, icon: settingsIcon, href: /styles/ }
+```
+
+A destination with an `items` list is an expandable section: its own row is the toggle, its
+children are nested destinations, and a section opens by itself to reveal the destination made
+active.
+
+```typescript
+import createDrawer from 'material/components/drawer';
+
+const drawer = createDrawer({
+  headline: 'Workspace',
+  items: [
+    { id: 'home', label: 'Home', icon: homeIcon, href: '/' },
+    {
+      id: 'projects',
+      label: 'Projects',
+      icon: inboxIcon,
+      expanded: true,
+      items: [
+        { id: 'active', label: 'Active', href: '/showcase/' },
+        { id: 'archived', label: 'Archived', href: '/docs/' },
+      ],
+    },
+  ],
+});
+drawer.expandSection('projects');
+document.body.append(drawer.element);
+```
 
 ### Modal
 
@@ -102,6 +146,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `prefix` | `string` | `'mtrl'` | Class-name prefix |
 | `componentName` | `string` | `'drawer'` | Component name used in class generation |
 | `onSelect` | `(event: DrawerSelectEvent) => void` | `undefined` | Called when a destination is chosen |
+| `onExpand` / `onCollapse` | `(event: DrawerSectionEvent) => void` | `undefined` | Called when a section opens or closes |
 | `onOpen` / `onClose` | `() => void` | `undefined` | Called when it opens or closes |
 
 #### Items
@@ -113,6 +158,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `label` | `string` | `undefined` | Destination text, and the text of a `section` |
 | `icon` | `string` | `undefined` | Leading icon, as an HTML string |
 | `activeIcon` | `string` | `undefined` | Icon shown while this destination is selected, as an HTML string. The element takes it as `selected-icon` |
+| `href` | `string` | `undefined` | Makes the destination a native `<a>` link instead of a button |
+| `items` | `DrawerItemConfig[]` | `undefined` | A non-empty list makes this destination an expandable section, its children nested destinations |
+| `expanded` | `boolean` | omitted: a child's `active` decides | Whether a section starts expanded — omitted opens the section when one of its children is `active`; an explicit `false` stays closed |
 | `badge` | `string` | `undefined` | Trailing text, such as an unread count |
 | `active` | `boolean` | `false` | Whether this destination starts selected |
 | `disabled` | `boolean` | `false` | Cannot be clicked or reached by the arrow keys, and carries `aria-disabled` |
@@ -127,6 +175,9 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `setActive(id)` / `getActive()` | `DrawerComponent` / `string \| null` | The current destination |
 | `setItems(items)` / `getItems()` | `DrawerComponent` / `DrawerItemConfig[]` | Replaces or reads the whole list |
 | `setBadge(id, badge)` | `DrawerComponent` | Sets a badge, or clears it with `''` |
+| `expandSection(id)` / `collapseSection(id)` / `toggleSection(id)` | `DrawerComponent` | Opens, closes or flips an expandable section |
+| `isSectionExpanded(id)` | `boolean` | Whether a section is open |
+| `getExpandedSections()` | `string[]` | The ids of the expanded sections |
 | `setHeadline(text)` / `getHeadline()` | `DrawerComponent` / `string` | The headline |
 | `on(event, handler)` / `off(event, handler)` | `DrawerComponent` | Events |
 | `addClass(...classes)` | `DrawerComponent` | Adds classes to the root |
@@ -138,20 +189,27 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | Event | Payload | Description |
 |-------|---------|-------------|
 | `select` | `{ id, value, label, index, originalEvent }` | A destination was chosen |
+| `expand` / `collapse` | `{ id, value, label, expanded }` | An expandable section opened or closed; the web component forwards `{ value, expanded }` |
 | `open` / `close` | none | The drawer opened or closed |
 
-`<m-drawer-item>` takes `value`, `icon`, `selected-icon`, `badge`, `label` and `disabled`, or
-`type` for a section or divider.
+`<m-drawer-item>` takes `value`, `icon`, `selected-icon`, `badge`, `label`, `href` and
+`disabled`, or `type` for a section or divider; nested `<m-drawer-item>` elements make it an
+expandable section, which the `expanded` attribute starts open.
 
 ## Accessibility
 
 - A standard drawer is a `navigation` landmark, a modal one a `dialog` with `aria-modal`; both
   are named by `ariaLabel`, or the headline, or "Navigation". Name them when a page has more
   than one navigation landmark.
-- Each destination is a button in the tab order, the current one `aria-current="page"`;
-  disabled ones are `aria-disabled` and out of the tab order. Dividers are separators.
+- Each destination is a button in the tab order — a native `<a>` when it has an `href` —
+  and the current one carries `aria-current="page"`; disabled ones are `aria-disabled` and
+  out of the tab order. Dividers are separators.
+- An expandable section's row is a toggle with `aria-expanded`; a collapsed section's
+  children are inert, out of the tab order and unreachable by the arrow keys. A section
+  opens by itself to reveal the destination made active, `setActive()` included.
 - `Up` and `Down` move between destinations and wrap, `Home` and `End` go to the ends, and
-  `Enter` or `Space` activates.
+  `Enter` or `Space` activates — on a section's row it toggles the section. `ArrowRight`
+  and `ArrowLeft` open and close sections, following the reading direction.
 - A modal drawer keeps focus inside and the page behind inert until it closes.
 
 ## Styling

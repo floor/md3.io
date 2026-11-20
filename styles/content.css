@@ -4,36 +4,6 @@
    Covers: markdown body, code blocks, tables, syntax highlighting, errors.
    ============================================================================= */
 
-/* ─── Version switcher ──────────────────────────────────────────────────── */
-
-.version-switcher {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    flex: none;
-    z-index: 1;
-    font-family: var(--font-mono);
-}
-
-.version-switcher .ui-segmented__btn {
-    padding: 3px 10px;
-    font-size: var(--fs-xs);
-    text-decoration: none;
-}
-
-.version-switcher .ui-segmented__btn {
-    padding: 3px 10px;
-    font-size: var(--fs-xs);
-    text-decoration: none;
-    border: 2px solid transparent;
-}
-
-.version-switcher .ui-segmented__btn--active {
-    background: transparent;
-    color: var(--accent);
-    border: 2px solid var(--accent);
-}
-
 /* ─── Page metadata ─────────────────────────────────────────────────────── */
 
 .meta {
@@ -84,6 +54,13 @@
     padding: 40px 48px 80px;
     overflow-wrap: break-word;
     word-wrap: break-word;
+}
+
+/* The measure is for prose, not the column: paragraphs, list items and
+   blockquotes keep 40–60 characters a line, while headings, code blocks and
+   tables keep the column's width and scroll inside themselves. */
+.md :is(p, li, blockquote) {
+    max-width: var(--measure);
 }
 
 .md h1 {
@@ -165,11 +142,15 @@
     padding: 8px 16px;
     margin-bottom: 16px;
     background: var(--accent-dim);
+    color: var(--mtrl-sys-color-on-primary-container, var(--text));
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
+.md blockquote a, .md blockquote p {
+    color: var(--mtrl-sys-color-on-primary-container, var(--text));
+}
+
 .md blockquote p {
-    color: var(--text-muted);
     margin-bottom: 0;
 }
 
@@ -402,6 +383,19 @@
 
 /* ─── Responsive: small screens ─────────────────────────────────────────── */
 
+/* At compact widths the column is the window; thin the page's own gutters so
+   prose still reaches the 40-character floor (360 − 2 × 12 − 2 × 12 = 312px
+   ≈ 40 characters). */
+@media (max-width: 412px) {
+    .page-wrap:has(> .document-layout) {
+        padding-inline: 12px;
+    }
+
+    .page-wrap > .document-layout .md {
+        padding-inline: 12px;
+    }
+}
+
 @media (width < 600px) {
     .md {
         padding: 12px 20px 60px;
@@ -430,10 +424,10 @@
         padding: 12px 14px;
     }
 
+    /* Code keeps its own bounded scroll area at every width (the plan's step 6):
+       it no longer soft-wraps mid-token on phones. */
     .md pre code {
         font-size: 14px;
-        word-break: break-all;
-        white-space: pre-wrap;
     }
 
     .md table {
@@ -478,7 +472,7 @@
 .doc-install { margin: 16px 0 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-code); overflow: hidden; }
 .doc-install__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
 .doc-install__switch { display: flex; flex-wrap: wrap; gap: 2px; }
-.doc-install__option, .doc-install__copy { border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); cursor: pointer; }
+.doc-install__option, .doc-install__copy { min-width: var(--site-target-size); min-height: var(--site-target-size); border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: var(--fs-2xs); cursor: pointer; }
 .doc-install__option:hover, .doc-install__copy:hover { color: var(--text); }
 .doc-install__option:focus-visible, .doc-install__copy:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
 .doc-install__copy { font-family: inherit; }

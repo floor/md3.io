@@ -23,10 +23,20 @@ if (dialog && input && results) {
     trigger?.setAttribute('aria-label', 'Search (CtrlK)');
   }
 
+  const viewport = window.visualViewport;
+  const resizeDialog = () => {
+    if (!dialog.open || !viewport) return;
+    dialog.style.setProperty('--search-viewport-height', `${viewport.height}px`);
+    dialog.style.setProperty('--search-viewport-top', `${viewport.offsetTop}px`);
+  };
+  viewport?.addEventListener('resize', resizeDialog);
+  viewport?.addEventListener('scroll', resizeDialog);
+
   const open = (): void => {
-    if (dialog.open) return;
+    if (dialog.open || document.querySelector('dialog:modal')) return;
     returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     dialog.showModal();
+    resizeDialog();
     input.focus();
   };
   const close = (): void => {
@@ -39,7 +49,10 @@ if (dialog && input && results) {
     input.value = '';
     show([]);
     results.replaceChildren();
-    returnFocus?.focus();
+    // The dialog normally restores focus synchronously. The queued close event
+    // must leave focus alone if the user has already tabbed to the next control.
+    const focused = document.activeElement;
+    if (!focused || focused === document.body || dialog.contains(focused)) returnFocus?.focus();
   });
 
   document.addEventListener('keydown', event => {

@@ -2,18 +2,18 @@
 // from mtrl/elements, in the playground's defaults where they fit a card. The
 // markup is rendered here; src/client/catalog.ts defines the elements.
 //
-// Dialogs, menus, snackbars, tooltips and the time picker open in the top layer
-// or as modals, which a card must not do: their cards hold a surface element
-// (`<md3-catalog-*>`) that src/client/catalog.ts builds from the same factory,
-// with mtrl's CSS in its shadow root, and shows open in place.
+// The overlay cards build theirs from the same factory in a live host
+// (src/client/catalog/<slug>.ts): a trigger inside the card, and the real
+// overlay, which opens in the top layer or as a modal and closes normally.
 import { symbols } from '../shared/icons';
 import { components, componentSlugs, type ComponentSlug } from '../shared/components';
 import { scopedTokens } from './tokens';
 
 /** The visual's class, where mtrl's tokens are set. */
 export const CATALOG_SCOPE = 'catalog-visual';
-/** mtrl's baseline tokens on the visuals: light, and dark when the site is. */
-export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`);
+/** mtrl's non-colour tokens on the visuals: their colours inherit the page's
+ * chosen theme from <html data-theme>, like every other surface. */
+export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`, undefined, false);
 
 /** The surface elements of the overlays, by component. */
 export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs' } as const;
@@ -23,7 +23,8 @@ type Attributes = Record<string, string | number | boolean | undefined>;
 const attributes = (attrs: Attributes) => Object.entries(attrs)
   .map(([name, value]) => value === true ? ` ${name}` : value === false || value === undefined ? '' : ` ${name}="${escape(String(value))}"`).join('');
 /** An mtrl element: `m('chip', { selected: true }, 'Hiking')`. `content` is markup. */
-const m = (name: string, attrs: Attributes = {}, content = '') => `<m-${name}${attributes(attrs)}>${content}</m-${name}>`;
+const m = (name: string, attrs: Attributes = {}, content = '', prefix = 'm') =>
+  `<${prefix}-${name}${attributes(attrs)}>${content}</${prefix}-${name}>`;
 const text = escape;
 const div = (className: string, content: string) => `<div class="${className}">${content}</div>`;
 
@@ -56,7 +57,7 @@ const visuals: Record<ComponentSlug, string> = {
     ['Save as…', 'Save a copy', 'Download'].map(label => m('menu-item', {}, text(label))).join('')),
   fab: m('fab', { icon: symbols.add, 'aria-label': 'Create new item' }),
   'extended-fab': m('extended-fab', { icon: symbols.edit }, 'Compose'),
-  'fab-menu': m('fab-menu', { icon: symbols.edit, 'aria-label': 'Reply options', presentation: 'list' },
+  'fab-menu': m('fab-menu', { icon: symbols.edit, 'aria-label': 'Reply options', presentation: 'menu' },
     [['reply', 'Reply'], ['forward', 'Forward']].map(([value, label]) => m('fab-menu-item', { value, icon: symbols.send }, text(label!))).join('')),
   // Selection & input
   checkbox: div('catalog-stack', m('checkbox', { 'data-indeterminate': true }, 'Additions')
@@ -79,7 +80,7 @@ const visuals: Record<ComponentSlug, string> = {
   'navigation-bar': m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail navigation' },
     destinations.map(item => m('navigation-bar-item', { value: item.value, icon: item.icon }, item.label)).join('')),
   drawer: m('drawer', { open: true, dense: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail' },
-    m('drawer-item', { type: 'section' }, 'Your mailbox') + destinations.map(item => m('drawer-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label)).join('')),
+    m('drawer-item', { type: 'section' }, 'Your mailbox', 'md3-catalog') + destinations.map(item => m('drawer-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label, 'md3-catalog')).join(''), 'md3-catalog'),
   // A surface: M3's fixed tab row, which <m-tabs> has no attribute for.
   tabs: `<${SURFACES.tabs}></${SURFACES.tabs}>`,
   menu: `<${SURFACES.menu}></${SURFACES.menu}>`,
@@ -99,8 +100,8 @@ const visuals: Record<ComponentSlug, string> = {
     places.map(place => m('carousel-item', { src: picsum(place.id), alt: `${place.title}, ${place.location}`, description: place.location }, text(place.title))).join('')),
   divider: div('catalog-divider', `<p>Ideas for today</p>${m('divider')}<p>Places to explore</p>`),
   dialog: `<${SURFACES.dialog}></${SURFACES.dialog}>`,
-  'bottom-sheet': m('bottom-sheet', { open: true, headline: 'Plan your visit', 'peek-height': 120 }, '<p>Find a new trail, take in the view, and make time for a quiet moment.</p>'),
-  'side-sheet': m('side-sheet', { open: true, headline: 'Details', width: 240 }, '<p>A place for useful context, related information, and supporting actions.</p>'),
+  'bottom-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'bottom-sheet' }, 'Show bottom sheet') + m('bottom-sheet', { headline: 'Plan your visit', 'peek-height': 120 }, '<p>Find a new trail, take in the view, and make time for a quiet moment.</p>'),
+  'side-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'side-sheet' }, 'Show side sheet') + m('side-sheet', { headline: 'Details', width: 240 }, '<p>A place for useful context, related information, and supporting actions.</p>'),
   // Communication
   badge: ['inbox', 'heart'].map((icon, index) => div('catalog-badge',
     m('icon-button', { variant: 'tonal', icon: symbols[icon as 'inbox' | 'heart'], 'aria-label': index ? 'Favorites' : 'Inbox' }) + m('badge', index ? { variant: 'small' } : { label: 8 }))).join(''),
@@ -112,11 +113,14 @@ const visuals: Record<ComponentSlug, string> = {
 };
 
 /**
- * A card's visual: decorative, so `aria-hidden` and `inert` keep the card one
- * link with one name, and nothing inside takes focus or a click.
+ * A card's visual: the live component itself, so people can use it where it
+ * stands; the card's title, not the visual, is the link to its playground.
+ * Its colours inherit the page's chosen theme from <html data-theme>:
+ * catalogTokens above carries only mtrl's non-colour tokens on the scope, so
+ * nothing here pins Baseline over the theme (layout step 8).
  */
 export function catalogVisual(slug: ComponentSlug): string {
-  return `<div class="${CATALOG_SCOPE} ${CATALOG_SCOPE}--${slug}" aria-hidden="true" inert>${visuals[slug]}</div>`;
+  return `<div class="${CATALOG_SCOPE} ${CATALOG_SCOPE}--${slug}">${visuals[slug]}</div>`;
 }
 
 /** Every visual, for the checks. */

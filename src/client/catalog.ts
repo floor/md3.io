@@ -56,14 +56,29 @@ const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
 const scope = 'catalog-visual';
 const prefix = `${scope}--`;
 const slugOf = (visual: Element) => [...visual.classList].find(name => name.startsWith(prefix))?.slice(prefix.length) as ComponentSlug | undefined;
+const pending = new Set(document.querySelectorAll(`.${scope}`));
+
+// Sheets start closed: their card's own button opens them (and they close
+// normally). The button is in the card's markup; the wiring waits for the
+// card's module, which defines both elements.
+const wireSheetTriggers = (visual: Element): void => {
+  for (const trigger of visual.querySelectorAll('[data-catalog-open]')) {
+    if ((trigger as HTMLElement).dataset.wired) continue;
+    (trigger as HTMLElement).dataset.wired = 'true';
+    trigger.addEventListener('click', () => {
+      const sheet = visual.querySelector<HTMLElement & { show?: () => void; open?: boolean }>(`m-${trigger.getAttribute('data-catalog-open')}`);
+      if (sheet) { if (typeof sheet.show === 'function') sheet.show(); else sheet.open = true; }
+    });
+  }
+};
 
 // A card a viewport away starts loading, so it is usually upgraded before it is seen.
 const observer = new IntersectionObserver(entries => {
   for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
+    if (!entry.isIntersecting || !pending.delete(entry.target)) continue;
     observer.unobserve(entry.target);
     const slug = slugOf(entry.target);
-    if (slug && Object.hasOwn(modules, slug)) modules[slug]().then(module => module.define()).catch(error => console.error(`Could not load the ${slug} card`, error));
+    if (slug && Object.hasOwn(modules, slug)) modules[slug]().then(module => { module.define(); wireSheetTriggers(entry.target); }).catch(error => console.error(`Could not load the ${slug} card`, error));
   }
 }, { rootMargin: '100% 0px' });
-for (const visual of document.querySelectorAll(`.${scope}`)) observer.observe(visual);
+for (const visual of pending) observer.observe(visual);

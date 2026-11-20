@@ -1,8 +1,9 @@
-/* The components overview's card visuals: mtrl's own elements (src/server/catalog.ts).
-   mtrl's tokens are set on .catalog-visual by the page (catalogTokens), light or dark
-   with the site; the elements' styles are in their shadow roots. The visual is a
-   containing block for fixed descendants, so a sheet or a bar pinned to the viewport
-   is pinned to the card. */
+/* The components overview's card visuals: mtrl's own live elements
+   (src/server/catalog.ts). Their colours inherit the page's chosen theme
+   from <html data-theme> (catalogTokens carries mtrl's non-colour tokens on
+   the scope); the elements' styles are in their shadow roots. The visual is
+   a containing block for fixed descendants, so a sheet or a bar pinned to
+   the viewport is pinned to the card. */
 .catalog-visual {
   position: relative;
   height: 180px;
@@ -17,9 +18,6 @@
   color: var(--mtrl-sys-color-on-surface);
   font-family: "Roboto", sans-serif;
 }
-/* Still a link: the card, not what it shows, is what a pointer targets. */
-.catalog-visual * { pointer-events: none; }
-
 .catalog-stack { display: flex; flex-direction: column; align-items: flex-start; }
 .catalog-stack--inset { padding-inline-start: 24px; }
 .catalog-stack--progress { flex-direction: row; align-items: center; gap: 32px; width: 100%; justify-content: center; }
@@ -28,15 +26,14 @@
 .catalog-visual--slider m-slider, .catalog-visual--tabs md3-catalog-tabs { width: min(100%, 320px); }
 .catalog-visual--text-field m-text-field, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
 .catalog-visual--search m-search { width: min(100%, 320px); }
-/* Three two-line rows and a dialog are taller than the card: shown at a scale that
-   leaves room around them, as the time picker is. */
+/* Three two-line rows fit the list preview at this scale. */
 .catalog-visual--list m-list { width: 320px; zoom: 0.65; }
-.catalog-visual--dialog md3-catalog-dialog { zoom: 0.6; }
 .catalog-visual--carousel m-carousel { display: block; width: 100%; height: 148px; }
 .catalog-visual--card m-card { width: min(100%, 300px); }
 
 /* Pinned to the card's edges, as they are to the window's. */
 .catalog-visual--navigation-rail, .catalog-visual--drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
+md3-catalog-drawer:not(:defined) { visibility: hidden; }
 .catalog-visual--navigation-bar { align-items: flex-end; padding: 0; }
 .catalog-visual--navigation-bar m-navigation-bar { width: 100%; }
 /* The rail's three destinations are taller than the card: scaled as the list and dialog are. */
@@ -54,12 +51,40 @@
 .catalog-divider m-divider { display: block; }
 
 /* The overlays' surfaces keep their box until they upgrade. */
-md3-catalog-dialog:not(:defined) { width: 320px; height: 176px; }
+md3-catalog-dialog:not(:defined) { width: 140px; height: 48px; }
 md3-catalog-menu:not(:defined) { width: 112px; height: 160px; }
 md3-catalog-snackbar:not(:defined) { width: 320px; height: 48px; }
 md3-catalog-tooltip:not(:defined) { width: 120px; height: 72px; }
 md3-catalog-tabs:not(:defined) { height: 64px; }
 
-/* The time picker is a dialog-sized surface: shown at a scale that fits the card. */
-md3-catalog-timepicker { zoom: 0.34; }
-md3-catalog-timepicker:not(:defined) { width: 580px; height: 380px; }
+md3-catalog-timepicker:not(:defined) { width: 160px; height: 48px; }
+.component-catalog { padding-top: 24px; container-type: inline-size; }
+.component-catalog__intro { margin-block-end: 32px; }
+.component-catalog__intro h1 { margin: 0 0 8px; }
+.component-catalog__intro p { margin: 0; color: var(--text-muted); }
+.component-catalog__section + .component-catalog__section { margin-block-start: 36px; }
+.component-catalog__section h2 { margin: 0 0 14px; }
+.component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.component-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+/* Keep the playground link first in the card's keyboard order. */
+.component-card > .catalog-visual { order: -1; flex: none; }
+.component-card__body { padding: 8px 20px 20px; border-top: 1px solid var(--border); }
+.component-card__body h3 { font-size: var(--fs-lg); margin: 0; }
+.component-card__body h3 a {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--site-target-size);
+  min-height: var(--site-target-size);
+  color: inherit;
+  text-decoration: none;
+}
+.component-card__body h3 a:hover { text-decoration: underline; }
+.component-card__body p, .catalog-note { font-size: var(--fs-ui); color: var(--text-muted); }
+.catalog-note { margin: 20px 16px 0; }
+
+@media (min-width: 840px) {
+  .component-catalog { grid-column: 2; grid-row: 1; }
+}
+@container (min-width: 580px) {
+  .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

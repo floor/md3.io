@@ -15,7 +15,7 @@ describe('stylesheets', () => {
     expect(ui).not.toContain('/*');
     expect(ui).toContain('.ui-card');
     expect(ui).toContain('viewBox="0 0 24 24"');
-    expect(ui).toContain('content:""');
+    expect(minifyCss(readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8'))).toContain("content:''");
     const search = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/search.css'), 'utf8'));
     // `[open] .search-dialog` is a descendant. Dropping the space would restyle the dialog itself.
     expect(search).toContain('.search-overlay[open] .search-dialog{transform:scale(0.98)}');
@@ -28,7 +28,8 @@ describe('stylesheets', () => {
     expect(list).toContain('.mtrl-list__item :is(button');
     const site = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/site.css'), 'utf8'));
     expect(site).toContain('@media (width < 600px)');
-    expect(site).toContain('@container component-detail (min-width:772px)');
+    const playground = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/playground-material.css'), 'utf8'));
+    expect(playground).toContain('(min-width:840px) and (min-height:860px)');
     const preview = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/preview.css'), 'utf8'));
     expect(preview).toContain('#stage> :is(.mtrl-switch,.mtrl-slider,.mtrl-text-field,.mtrl-select,.mtrl-search)');
     const tokens = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/tokens.css'), 'utf8'));
@@ -49,23 +50,27 @@ describe('stylesheets', () => {
 
     const page = bundleCss('page');
     expect(page).toContain('.header__search');
+    expect(page).toContain('.site-drawer::part(sheet)');
+    expect(page).not.toContain('.mtrl-drawer__item{display:flex');
+    expect(page).not.toContain('Roboto-latin-wght.woff2');
     // .hero__tagline also lives in site.css. .hero__frameworks is homepage.css only.
     expect(page).not.toContain('.hero__frameworks');
     expect(home).toContain('.hero__frameworks');
 
     const catalog = bundleCss('catalog');
     // "Roboto" also appears in the token font stack. The self-hosted file is roboto.css only.
-    const catalogOrder = ['.header__search', 'Roboto-latin-wght.woff2', 'mtrl.preupgrade', 'm-button:not(:defined)', '.catalog-visual'];
+    const catalogOrder = ['.site-drawer::part(sheet)', '.header__search', 'Roboto-latin-wght.woff2', 'm-button:not(:defined)', '.catalog-visual'];
     catalogOrder.reduce((prev, needle) => { const index = at(catalog, needle); expect(index).toBeGreaterThan(prev); return index; }, -1);
     expect(catalog).not.toContain('.hero__frameworks');
 
     const examples = bundleCss('examples');
     expect(at(examples, '.header__search')).toBeLessThan(at(examples, '.example-layout'));
+    expect(examples).not.toContain('Roboto-latin-wght.woff2');
     expect(examples).not.toContain('.catalog-visual');
 
     const styles = bundleCss('styles');
-    expect(at(styles, '.header__search')).toBeLessThan(at(styles, 'Roboto-latin-wght.woff2'));
-    expect(at(styles, 'Roboto-latin-wght.woff2')).toBeLessThan(at(styles, '.styles-page'));
+    expect(at(styles, '.header__search')).toBeLessThan(at(styles, '.styles-page'));
+    expect(styles).not.toContain('Roboto-latin-wght.woff2');
     expect(styles).not.toContain('.catalog-visual');
     expect(styles.split('{').length).toBe(styles.split('}').length);
   });

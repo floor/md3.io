@@ -26,7 +26,7 @@ try {
   // mode group's buttons live in its shadow root (scripts/panel-driver.ts).
   await panel.chooseTheme(page, 'Forest');
   await panel.chooseMode(page, 'dark');
-  await page.locator('#sidebar').getByRole('link', { name: 'Checkbox', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Checkbox', exact: true }).click();
   const frame = page.frameLocator('#preview');
   const boxes = frame.getByRole('checkbox');
   const parentBox = frame.getByRole('checkbox', { name: 'Additions', exact: true });
@@ -269,9 +269,9 @@ try {
   assert(await page.evaluate(() => document.documentElement.dataset.siteTheme) === 'ocean', 'Reset cleared preview preference');
   assert(await frame.locator('html').getAttribute('data-theme-mode') === 'dark', 'Reset cleared preview mode');
 
-  for (const viewport of [{ width: 1366, height: 768 }, { width: 1280, height: 640 }]) {
+  for (const viewport of [{ width: 1440, height: 1000 }, { width: 1366, height: 768 }, { width: 1280, height: 640 }]) {
     await page.setViewportSize(viewport);
-    assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight), `Checkbox playground scrolls the whole desktop page at ${viewport.width}x${viewport.height}`);
+    await panel.checkPlaygroundScroll(page, 'checkbox', viewport.height === 1000 ? 'fit' : 'page');
   }
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Checkbox mobile layout overflows');
