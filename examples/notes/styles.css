@@ -8,10 +8,31 @@
   min-width: 0;
 }
 
-/* The surface is inside the element's shadow root in the adapter variants. */
-.notes m-top-app-bar::part(top-app-bar), .notes .mtrl-top-app-bar {
+/* The factory bar sits in the page. The element keeps that same surface in its
+   shadow root, absolutely positioned against the nearest positioned ancestor,
+   so without a box of its own the surface covers the first drawer row. The
+   host reserves the small bar and contains the surface. */
+.notes .mtrl-top-app-bar {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  z-index: 3;
+  border-radius: 16px;
+  background-color: var(--mtrl-sys-color-surface-container);
+}
+.notes m-top-app-bar {
   position: relative;
   z-index: 3;
+  display: block;
+  height: 64px;
+}
+.notes m-top-app-bar::part(top-app-bar) {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  z-index: 1;
   border-radius: 16px;
   background-color: var(--mtrl-sys-color-surface-container);
 }
