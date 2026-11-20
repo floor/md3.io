@@ -58,12 +58,16 @@ function row(r: Row): HTMLDivElement {
     control.on("change", e => send({ type: "toggle", key: r.toggle!, checked: e.checked }));
     bodyControls.push(control);
   }
-  line.append(list(undefined, [{
+  const rows = list(undefined, [{
     id: r.id, headline: r.label, supportingText: r.supporting,
     leading: r.icon ? { type: "icon", content: r.icon } : undefined,
-    trailing: control ? { type: "control", content: control.element } : { type: "icon", content: ICONS.chevron },
+    trailing: control ? undefined : { type: "icon", content: ICONS.chevron },
     disabled: r.disabled,
-  }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }), !!r.toggle));
+  }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }), !!r.toggle);
+  // A factory list synchronizes checkable trailing slots during construction,
+  // even without selection. These app-owned preferences are mounted afterwards.
+  if (control) rows.querySelector('[role="listitem"]')!.append(control.element);
+  line.append(rows);
   wrapper.append(line);
   if (r.storage) {
     const usage = div("settings__storage");
