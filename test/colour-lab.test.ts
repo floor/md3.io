@@ -24,7 +24,7 @@ describe('Colour Lab', () => {
     expect(html).toMatch(/\/dist\/css\/colour-lab\.[a-f0-9]{10}\.css/);
     expect(html).not.toContain('material/styles/base.css');
     expect(html).not.toContain('id="styles-export"');
-    expect(html).not.toContain('/dist/theme-app.');
+    expect(html).not.toMatch(/<script[^>]+src="\/dist\/theme-app\.[a-f0-9]{10}\.js"/);
     expect(html.match(/data-role-copy=/g)).toHaveLength(40);
     expect(html.match(/data-seed=/g)).toHaveLength(6);
     expect(html.match(/data-sample=/g)).toHaveLength(3);

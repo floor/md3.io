@@ -4,8 +4,9 @@ import createSnackbar, { clearSnackbars } from 'material/components/snackbar';
 import type { App } from '../core/foundation';
 
 export const withCopy = () => (app: App) => {
-  app.teardown.add(() => clearSnackbars());
-  const tell = (message: string) => createSnackbar({ message, duration: 2000, queueBehavior: 'replace', position: 'center' }).show();
+  let active = true;
+  app.teardown.add(() => { active = false; clearSnackbars(); });
+  const tell = (message: string) => { if (active) createSnackbar({ message, duration: 2000, queueBehavior: 'replace', position: 'center' }).show(); };
   const write = async (text: string): Promise<boolean> => {
     try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
   };

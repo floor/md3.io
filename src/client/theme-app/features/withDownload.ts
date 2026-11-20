@@ -44,7 +44,8 @@ export const withDownload = () => (app: App) => {
     const { name, text } = file(format);
     const url = URL.createObjectURL(new Blob([text], { type: format === 'json' ? 'application/json' : 'text/plain' }));
     Object.assign(document.createElement('a'), { href: url, download: name }).click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const timer = setTimeout(() => URL.revokeObjectURL(url), 1000);
+    app.teardown.add(() => { clearTimeout(timer); URL.revokeObjectURL(url); });
     copy.tell(`Downloading ${name}`);
   };
   const menu = createMenu({

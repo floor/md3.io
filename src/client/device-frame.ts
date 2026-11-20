@@ -139,6 +139,7 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     set,
     destroy() {
       observer.disconnect();
+      group.destroy();
       removeEventListener('resize', layout);
       root.replaceWith(frame);
       for (const property of ['width', 'height', 'transform']) frame.style.removeProperty(property);

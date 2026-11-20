@@ -15,7 +15,7 @@ import { APPEARANCE_KEY, onAppearance, setAppearance } from './appearance';
 const STORAGE_KEY = 'md3-styles-theme';
 const SAVE_DELAY = 300;
 
-export const themeBase: ThemeBase = JSON.parse(document.querySelector('#theme-base')?.textContent || '{"themes":["baseline"],"shape":{}}');
+export let themeBase: ThemeBase = { themes: ['baseline'], shape: {} };
 
 type Listener = (state: ThemeState) => void;
 const listeners = new Set<Listener>();
@@ -43,10 +43,10 @@ function load(): { state: ThemeState; fromLink: boolean } {
   return { state: normalize({ ...saved, ...(appearance.theme !== undefined ? { base: appearance.theme } : {}), ...(appearance.mode !== undefined ? { mode: appearance.mode } : {}) }, themeBase), fromLink: false };
 }
 
-const loaded = load();
-let state = loaded.state;
+let initialized = false;
+let state = defaultState();
 /** Whether this page opened from a share link. */
-export const openedFromLink = loaded.fromLink;
+export let openedFromLink = false;
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 function save() {
@@ -89,21 +89,34 @@ export const themeStore = {
   },
 };
 
-// A link's base theme becomes the site's appearance once every module script has run
-// (the header listens from site.js, which may execute after this one).
-if (openedFromLink) {
-  save();
-  const share = () => setAppearance({ theme: state.base, mode: state.mode === 'dark' ? 'dark' : 'light' });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', share, { once: true }); else share();
-}
 // The header (or any other place) changed the appearance: applied here, not saved again.
 onAppearance(({ theme, mode }) => {
+  if (!initialized) return;
   if (theme === state.base && mode === state.mode) return;
   commit(normalize({ ...state, base: theme, mode }, themeBase), false);
 });
 // Another tab changed the theme, or the playground the appearance.
 addEventListener('storage', (event: StorageEvent) => {
+  if (!initialized) return;
   if (event.key !== STORAGE_KEY && event.key !== APPEARANCE_KEY) return;
   const next = load().state;
   if (serialize(next) !== serialize(state)) commit(next, false);
 });
+
+/** Re-read per-page server data and a newly opened share URL; keep the saved theme. */
+export function enterThemePage() {
+  themeBase = JSON.parse(document.querySelector('#theme-base')?.textContent || '{"themes":["baseline"],"shape":{}}');
+  if (initialized && !new URL(location.href).searchParams.has('theme')) { openedFromLink = false; return; }
+  initialized = true;
+  const next = load();
+  openedFromLink = next.fromLink;
+  commit(next.state, false);
+  if (openedFromLink) {
+    save();
+    const share = () => setAppearance({ theme: state.base, mode: state.mode === 'dark' ? 'dark' : 'light' });
+    share();
+    // The initial head's site module may still be loading; repeat after all deferred
+    // modules so the persistent header scope also follows a direct share link.
+    if (document.readyState !== 'complete') document.addEventListener('DOMContentLoaded', share, { once: true });
+  }
+}

@@ -1,241 +1,201 @@
-import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { mkdir, stat, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { chromium, type Page } from 'playwright';
 import { handleRequest } from '../server';
-import { components, componentSlugs } from '../src/shared/components';
 import * as panel from './panel-driver';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
-const output = resolve(import.meta.dir, '../analysis/browser');
-await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
-function assert(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
+const output = resolve(import.meta.dir, '../analysis/browser/client-navigation');
+await mkdir(output, { recursive: true });
+const href = (path: string) => new URL(path, server.url).href;
+const paths = ['/components/button/', '/docs/frameworks/', '/showcase/', '/showcase/settings/', '/styles/color/', '/styles/shape/', '/styles/typography/', '/styles/themes/', '/styles/color-lab/', '/components/'];
+// Compare the page's actual content; scripts, transient status and framework-generated
+// app controls are tested separately below rather than included as prose.
+async function mainText(page: Page) {
+  return page.locator('#content').evaluate(main => {
+    const clone = main.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('script, style, [role="status"], #playground-status, #styles-status, #example-status, #theme-app, #colour-lab, .device__bar, #generated-code').forEach(node => node.remove());
+    return clone.textContent?.replace(/\s+/g, ' ').trim();
+  });
+}
+async function settled(page: Page) {
+  if (await page.locator('#preview').count()) await page.frameLocator('#preview').locator('#stage > *').first().waitFor();
+  if (await page.locator('#example-frame').count()) await page.frameLocator('#example-frame').locator('body > *').first().waitFor();
+  if (await page.locator('#theme-app').count()) await page.locator('#theme-app button').first().waitFor();
+  await page.evaluate(() => document.fonts.ready);
+}
+async function listenerCount(page: Page) {
+  const session = await page.context().newCDPSession(page);
+  const counts: number[] = [];
+  for (const expression of ['window', 'document']) {
+    const { result } = await session.send('Runtime.evaluate', { expression });
+    const { listeners } = await session.send('DOMDebugger.getEventListeners', { objectId: result.objectId! });
+    counts.push(listeners.length);
+  }
+  await session.detach();
+  return counts;
+}
 try {
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', reducedMotion: 'reduce', permissions: ['clipboard-read', 'clipboard-write'] });
-  const page = await context.newPage();
-  page.setDefaultTimeout(10000);
-  const errors: string[] = [];
-  page.on('pageerror', error => errors.push(error.message));
-  page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
-  const frame = page.frameLocator('#preview');
-  // The panel's controls, by name (scripts/panel-driver.ts). The material panel has no
-  // Reset: the Scenario select's Default is the way back.
-  const choose = (key: string, value: string) => panel.choose(page, key, value);
-  const toggle = (key: string) => panel.toggle(page, key);
-  const reset = () => panel.backToDefault(page);
-  const selected = (value: string) => panel.waitForValue(page, 'active', value);
-  for (const slug of componentSlugs.filter(slug => components[slug].group === 'Navigation' && (!process.argv[2] || slug === process.argv[2]))) {
-    console.log(`Checking ${slug}`);
-    await page.goto(`${server.url}components/${slug}/`);
-    await frame.locator('#stage > *').first().waitFor();
-    await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
-    if (slug === 'navigation-rail') {
-      await frame.getByRole('button', { name: 'Favorites', exact: true }).click();
-      await selected('favorites');
-      await frame.getByRole('button', { name: 'Expand navigation', exact: true }).click();
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="expanded"]')?.checked);
-      await choose('layout', 'modal');
-      await frame.locator('dialog[open]').waitFor();
-      await frame.locator('dialog').press('Escape');
-      await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="expanded"]')?.checked);
-      await frame.getByRole('button', { name: 'Open navigation', exact: true }).click();
-      await frame.locator('dialog[open]').waitFor();
-      await reset();
-      await frame.locator('dialog[open]').waitFor({ state: 'hidden' });
-      // The collapsed clock rail used to keep the extended FAB and clip "Add timer".
-      const compactFits = async (where: string) => {
-        await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="expanded"]')?.checked);
-        await page.waitForFunction(() => {
-          const rail = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-navigation-rail');
-          return !!rail && rail.getBoundingClientRect().width <= 120;
-        });
-        await frame.getByText('Add timer', { exact: true }).waitFor({ state: 'hidden' });
-        const fit = await frame.getByRole('button', { name: 'Add timer', exact: true }).evaluate(fab => {
-          const rail = fab.closest('.mtrl-navigation-rail');
-          if (!(rail instanceof HTMLElement)) return null;
-          const railBox = rail.getBoundingClientRect();
-          const fabBox = fab.getBoundingClientRect();
-          return {
-            compact: fab.classList.contains('mtrl-fab') && !fab.classList.contains('mtrl-extended-fab'),
-            inside: fabBox.width > 0 && fabBox.left >= railBox.left - 1 && fabBox.right <= railBox.right + 1 && fabBox.top >= railBox.top - 1 && fabBox.bottom <= railBox.bottom + 1,
-          };
-        });
-        assert(fit?.compact && fit.inside, `${where}: the header is the compact FAB inside the rail`);
-      };
-      await panel.chooseScenario(page, 'expanded-clock');
-      await frame.getByText('Add timer', { exact: true }).waitFor();
-      await toggle('expanded');
-      await compactFits('expanded-clock, Expanded off');
-      await toggle('expanded');
-      await frame.getByText('Add timer', { exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
-      await compactFits('expanded-clock, menu button');
-      await frame.getByRole('button', { name: 'Expand navigation', exact: true }).click();
-      await frame.getByText('Add timer', { exact: true }).waitFor();
-    } else if (slug === 'navigation-bar') {
-      await frame.getByRole('button', { name: 'Favorites', exact: true }).click();
-      await selected('favorites');
-      const show = (id: string) => panel.chooseScenario(page, id);
-      await show('unread-nav-bar');
-      await frame.getByRole('button', { name: 'Mail, 999+', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Chat, 10', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Rooms, New notification', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Meet, 3', exact: true }).waitFor();
-      let source = await page.locator('#generated-code').textContent() ?? '';
-      assert(source.includes('"999+"') && source.includes('badge: true'), 'Unread bar: the code lost a badge');
-      await frame.getByRole('button', { name: 'Chat, 10', exact: true }).click();
-      await selected('chat');
-      await show('new-in-music');
-      await frame.getByRole('button', { name: 'Home', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Music, New notification', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Explore', exact: true }).waitFor();
-      await selected('music');
-      await show('ten-in-music');
-      await frame.getByRole('button', { name: 'Home', exact: true }).waitFor();
-      await frame.getByRole('button', { name: 'Music, 10', exact: true }).waitFor();
-      await selected('home');
-      source = await page.locator('#generated-code').textContent() ?? '';
-      assert(source.includes('"10"') && source.includes('activeIcon'), 'Ten in music: the count or the filled Home icon is not in the code');
-      await choose('itemLayout', 'horizontal');
-      source = await page.locator('#generated-code').textContent() ?? '';
-      assert(source.includes('horizontal'), 'Horizontal layout is not in the code');
-      assert(await page.locator('#configuration [name="hideOnScroll"]').count() === 0, 'Hide on scroll is a control');
-    } else if (slug === 'drawer') {
-      await frame.getByText('Albums', { exact: true }).click();
-      await selected('albums');
-      await choose('variant', 'modal');
-      await frame.locator('.mtrl-drawer--modal.mtrl-drawer--open').waitFor();
-      // Born open, the drawer marks itself open immediately, then takes the page
-      // (and focus) on the next frame. Escape dismisses it only after that.
-      await page.waitForFunction(() => {
-        const drawer = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-drawer--modal.mtrl-drawer--open');
-        const active = drawer?.ownerDocument.activeElement;
-        return !!drawer && drawer.getAttribute('aria-hidden') === 'false' && !!active && (drawer === active || drawer.contains(active));
-      });
-      await frame.getByText('Albums', { exact: true }).focus();
-      await frame.getByText('Albums', { exact: true }).press('Escape');
-      await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
-      await frame.getByRole('button', { name: 'Open drawer' }).click();
-      await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
-    } else if (slug === 'tabs') {
-      assert(await frame.getByRole('tab').evaluateAll(tabs => tabs.every(tab => Math.abs(tab.getBoundingClientRect().top - tabs[0]!.getBoundingClientRect().top) < 1)), 'Fixed tabs should share one horizontal row');
-      await frame.getByRole('tab', { name: 'Favorites', exact: true }).click();
-      await selected('favorites');
-      await frame.getByRole('tab', { name: 'Favorites', exact: true }).press('ArrowLeft');
-      await frame.getByRole('tab', { name: 'Inbox', exact: true }).press('Enter');
-      await selected('inbox');
-      await choose('count', '6');
-      await frame.getByRole('tab', { name: 'Archive', exact: true }).click();
-      await selected('archive');
-    } else if (slug === 'menu') {
-      await frame.getByRole('button', { name: 'Open menu' }).click();
-      await frame.getByRole('menuitem', { name: 'Save', exact: true }).click();
-      await page.locator('#playground-status').filter({ hasText: /Selected: Save|Menu closed/ }).waitFor();
-      await frame.locator('.mtrl-menu').first().waitFor({ state: 'hidden' });
-      await toggle('submenu');
-      await frame.getByRole('button', { name: 'Open menu' }).click();
-      await frame.getByRole('menuitem', { name: /Share/ }).press('ArrowRight');
-      await frame.getByRole('menuitem', { name: 'Copy link', exact: true }).waitFor();
-      await page.screenshot({ path: `${output}/menu-submenu.png`, fullPage: true, animations: 'disabled' });
-      await frame.getByRole('menuitem', { name: 'Copy link', exact: true }).click();
-      await page.locator('#playground-status').filter({ hasText: /Selected: Copy link|Menu closed/ }).waitFor();
-    } else if (slug === 'top-app-bar') {
-      await frame.getByRole('button', { name: 'Favorite', exact: true }).click();
-      await page.locator('#playground-status').filter({ hasText: 'Favorite clicked' }).waitFor();
-      await choose('type', 'large');
-      await toggle('scrolled');
-      await frame.locator('.mtrl-top-app-bar--scrolled').waitFor();
-    } else if (slug === 'bottom-app-bar') {
-      await frame.getByRole('button', { name: 'Compose', exact: true }).click();
-      await page.locator('#playground-status').filter({ hasText: 'Compose clicked' }).waitFor();
-      await toggle('hasFab');
-      await frame.getByRole('button', { name: 'Compose', exact: true }).waitFor({ state: 'hidden' });
-      await toggle('visible');
-      await frame.locator('.mtrl-bottom-app-bar--hidden').waitFor({ state: 'attached' });
-      await toggle('visible');
-      await frame.locator('.mtrl-bottom-app-bar--hidden').waitFor({ state: 'detached' });
-    }
-    await reset();
-    if (slug === 'menu') {
-      // An open menu does not outlive a reconfiguration: the preview rebuilds and the
-      // stale menu goes. On the material panel the way back is the Scenario select's
-      // Default, which applies options (re-picking Default when nothing changed is no
-      // edit, as Reset's forced rebuild was), so the step changes an option while the
-      // menu is open, then goes back to Default.
-      // Default is then picked with the menu closed: with it open, the first click on
-      // the Scenario select closes the preview's menu, which hands focus back to its
-      // button in the frame and so closes the select's list again (a second click
-      // opens it) — noted for the material menu, not this check's subject.
-      await frame.getByRole('button', { name: 'Open menu' }).click();
-      await frame.locator('.mtrl-menu').first().waitFor();
-      await toggle('dense');
-      await frame.locator('.mtrl-menu').waitFor({ state: 'detached' });
-      await reset();
-      assert(!await panel.isOn(page, 'dense'), 'menu: Default did not restore Dense');
-    }
-    if (components[slug].controls.some(control => control.key === 'disableSent')) {
-      await choose('active', 'sent');
-      await toggle('disableSent');
-      await selected('inbox');
-      await page.waitForFunction(() => !!document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector(':disabled, [aria-disabled="true"]'));
-    }
-    for (const key of ['variant', 'layout', 'position', 'type', 'fabPosition']) {
-      const control = components[slug].controls.find(control => control.key === key);
-      for (const option of control?.options || []) {
-        await choose(key, option);
-        await frame.locator('#stage > *').first().waitFor();
-        if (slug === 'menu' && key === 'variant') {
-          await frame.getByRole('button', { name: 'Open menu' }).click();
-          const menu = frame.locator('.mtrl-menu').first();
-          await menu.waitFor();
-          assert(await menu.evaluate(element => element.classList.contains('mtrl-menu--vertical')) === (option !== 'baseline'), `${option}: wrong menu layout`);
-          assert(await menu.evaluate(element => element.classList.contains('mtrl-menu--vibrant')) === (option === 'vibrant'), `${option}: wrong menu color`);
-          assert(await menu.locator('.mtrl-menu__group').count() === (option === 'gap' ? 2 : 0), `${option}: wrong grouping`);
-          if (option === 'gap') {
-            const groups = menu.locator('.mtrl-menu__group');
-            const first = await groups.nth(0).boundingBox();
-            const second = await groups.nth(1).boundingBox();
-            assert(first && second && second.y > first.y + first.height, 'Gap groups must have visible separation');
-            await page.screenshot({ path: `${output}/menu-gap.png`, fullPage: true, animations: 'disabled' });
-            assert((await page.locator('#generated-code').textContent())?.includes('type: "gap"'), 'Gap missing from generated code');
-          }
-          await menu.press('Escape');
-          await menu.waitFor({ state: 'hidden' });
-        }
+  // Both paths run the same navigation and widget assertions; removing the API before
+  // modules load exercises Safari/older-browser click and popstate enhancement.
+  for (const fallback of [false, true]) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', permissions: ['clipboard-read', 'clipboard-write'] });
+    if (fallback) await context.addInitScript(() => Object.defineProperty(window, 'navigation', { value: undefined }));
+    await context.addInitScript(() => {
+      (window as any).visits = [];
+      document.addEventListener('md3:navigated', event => (window as any).visits.push((event as CustomEvent).detail));
+    });
+    const page = await context.newPage();
+    page.setDefaultTimeout(12000);
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+    await page.goto(href('/components/button/'));
+    await settled(page);
+    await page.locator('m-drawer.site-drawer:defined').waitFor();
+    const drawer = await page.locator('m-drawer.site-drawer').elementHandle();
+    const header = await page.locator('header.header').elementHandle();
+    const drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
+    const go = async (path: string) => {
+      const visits = await page.evaluate(() => (window as any).visits.length);
+      await page.evaluate(path => {
+        const link = document.createElement('a'); link.href = path; document.body.append(link); link.click(); link.remove();
+      }, path);
+      await page.waitForFunction(n => (window as any).visits.length === n + 1, visits);
+      assert.equal(new URL(page.url()).pathname, new URL(path, server.url).pathname);
+      assert.equal(await drawer!.evaluate(node => node === document.querySelector('m-drawer.site-drawer')), true, `${path}: drawer stays mounted`);
+      assert.equal(await drawerInstance.evaluate(instance => instance === (document.querySelector('m-drawer.site-drawer') as any)?.component), true, `${path}: drawer component remains mounted`);
+      assert.equal(await header!.evaluate(node => node === document.querySelector('header.header')), true, `${path}: header stays mounted`);
+      await settled(page);
+      const direct = await context.newPage();
+      await direct.goto(href(path));
+      await settled(direct);
+      assert.equal(await page.title(), await direct.title(), `${path}: title`);
+      assert.equal(await page.locator('h1').first().textContent(), await direct.locator('h1').first().textContent(), `${path}: h1`);
+      for (const selector of ['meta[name="description"]', 'link[rel="canonical"]', 'meta[property="og:url"]']) {
+        const attr = selector.startsWith('link') ? 'href' : 'content';
+        assert.equal(await page.locator(selector).getAttribute(attr), await direct.locator(selector).getAttribute(attr), `${path}: ${selector}`);
       }
-    }
-    await reset();
+      assert.equal(await mainText(page), await mainText(direct), `${path}: direct and swapped main text`);
+      assert.deepEqual(await page.locator('head script[type="application/ld+json"]').allTextContents(), await direct.locator('head script[type="application/ld+json"]').allTextContents());
+      await direct.close();
+      assert.equal(await page.evaluate(() => document.activeElement?.matches('h1, #content')), true, 'focus moves to content');
+    };
+    // Start with a real drawer click (including the selected-pill API and section state).
+    await page.locator('m-drawer.site-drawer').getByRole('button', { name: 'Navigation', exact: true }).click();
+    const visits = await page.evaluate(() => (window as any).visits.length);
+    await page.locator('m-drawer.site-drawer').getByRole('link', { name: 'Icon button', exact: true }).click();
+    await page.waitForFunction(n => (window as any).visits.length === n + 1, visits);
+    assert.equal(await drawer!.evaluate(node => node === document.querySelector('m-drawer.site-drawer')), true);
+    await page.locator('m-drawer.site-drawer').getByRole('link', { name: 'Icon button', exact: true }).getAttribute('aria-current').then(value => assert.equal(value, 'page'));
+    assert.equal(await drawer!.evaluate(node => (node as any).isSectionExpanded('navigation')), true, 'other drawer sections remain open');
+    await go('/components/button/');
+    await panel.choose(page, 'variant', 'outlined');
+    await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-button--outlined'));
     await page.getByRole('tab', { name: 'View code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
-    const source = await page.evaluate(() => navigator.clipboard.readText());
-    assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
-    assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
-    await page.getByRole('tab', { name: 'Live preview' }).click();
-    await page.setViewportSize({ width: 1440, height: 1000 });
-    await panel.checkPlaygroundScroll(page, slug, 'fit');
-    await page.setViewportSize({ width: 1280, height: 640 });
-    await panel.checkPlaygroundScroll(page, slug, 'page');
-    await page.setViewportSize({ width: 390, height: 844 });
-    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
-    await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
-    if (slug === 'top-app-bar') {
-      await choose('type', 'center');
-      await choose('actions', '2');
-      await frame.getByRole('button', { name: 'Bookmark' }).waitFor();
-      await page.screenshot({ path: `${output}/${slug}-mobile-center.png`, fullPage: true, animations: 'disabled' });
+    assert.match(await page.evaluate(() => navigator.clipboard.readText()), /outlined/);
+    for (const path of paths.slice(1)) {
+      await go(path);
+      if (path === '/docs/frameworks/') {
+        await page.locator('.docs-frameworks m-chip[value="react"]').click();
+        await page.waitForFunction(() => document.documentElement.dataset.framework === 'react');
+      }
+      if (path === '/showcase/settings/') {
+        await page.locator('m-chip[value="html"]').click();
+        await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#example-frame')?.src.includes('/frame/html/'));
+      }
+      if (path === '/styles/typography/') {
+        await page.locator('#type-sample').fill('Navigation remains interactive');
+        assert.equal(await page.locator('.type-sample').first().textContent(), 'Navigation remains interactive');
+      }
     }
-    if (slug === 'bottom-app-bar') {
-      await choose('fabPosition', 'center');
-      await choose('actions', '3');
-      await frame.getByRole('button', { name: 'Share' }).waitFor();
-      await page.screenshot({ path: `${output}/${slug}-mobile-center.png`, fullPage: true, animations: 'disabled' });
-    }
-    await page.setViewportSize({ width: 1440, height: 900 });
-    assert(errors.length === 0, errors.join('\n'));
+    await go('/docs/frameworks/');
+    await page.evaluate(() => scrollTo(0, 500));
+    const scroll = await page.evaluate(() => scrollY);
+    await go('/styles/color/');
+    await page.goBack();
+    await page.waitForFunction(() => location.pathname === '/docs/frameworks/' && document.querySelector('.docs-frameworks'));
+    await page.waitForFunction(y => Math.abs(scrollY - y) < 2, scroll);
+    await page.goForward();
+    await page.waitForFunction(() => location.pathname === '/styles/color/' && document.querySelector('#color-tokens'));
+    // An anchor on a new page scrolls after its content exists.
+    await go('/docs/frameworks/#react-events');
+    await page.waitForFunction(() => (document.getElementById('react-events')?.getBoundingClientRect().top ?? Infinity) < 200);
+    await go('/components/button/');
+    const listenersBefore = await listenerCount(page);
+    for (let i = 0; i < 10; i++) await go(i % 2 ? '/components/button/' : '/docs/frameworks/');
+    assert.deepEqual(await listenerCount(page), listenersBefore, 'window/document listeners do not accumulate across ten visits');
+    const counters = await page.evaluate(() => (window as any).visits.at(-1).initializations);
+    assert.equal(counters['site-content'], await page.evaluate(() => (window as any).visits.length + 1), 'one site init per navigation');
+    assert.equal(counters.playground, counters['playground-material'], 'panel and preview each initialize once');
+    // Modifier clicks remain browser-owned and never produce a swap in this document.
+    const beforeModifier = await page.evaluate(() => (window as any).visits.length);
+    const popup = context.waitForEvent('page');
+    await page.locator('#site-primary-rail a[href="/docs/"]').click({ modifiers: ['ControlOrMeta'] });
+    const opened = await popup; await opened.waitForLoadState(); await opened.close();
+    assert.equal(await page.evaluate(() => (window as any).visits.length), beforeModifier);
+    assert.deepEqual(errors, [], `${fallback ? 'fallback' : 'Navigation API'} console errors`);
+    await context.close();
   }
-  console.log('Navigation browser checks passed.');
-} finally {
-  await browser.close();
-  server.stop(true);
-}
+  // Browser-owned exits: fetch failures, unsuitable responses, differing shells,
+  // explicit full loads and timeout all replace the document instead of leaving a
+  // half-initialized route. Exercise both interception implementations.
+  for (const fallback of [false, true]) {
+    const exits = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+    if (fallback) await exits.addInitScript(() => Object.defineProperty(window, 'navigation', { value: undefined }));
+    const exit = await exits.newPage();
+    for (const kind of ['non-html', 'error', 'timeout', 'full-load', 'shell']) {
+      await exit.goto(href('/components/button/'));
+      await settled(exit);
+      await exit.evaluate(() => { (window as any).documentToken = 'same document'; });
+      const path = kind === 'shell' ? '/preview/button/' : `/docs/?navigation-fixture=${kind}`;
+      let fetches = 0;
+      await exit.route(href(path), async route => {
+        if (route.request().resourceType() !== 'fetch') { await route.continue(); return; }
+        ++fetches;
+        if (kind === 'error') { await route.abort('failed'); return; }
+        if (kind === 'timeout') { await new Promise(resolve => setTimeout(resolve, 3400)); await route.fulfill({ body: 'late', contentType: 'text/plain' }).catch(() => {}); return; }
+        if (kind === 'non-html') { await route.fulfill({ body: 'Not HTML', contentType: 'text/plain' }); return; }
+        await route.continue();
+      });
+      await exit.evaluate(({ path, kind }) => {
+        const link = document.createElement('a'); link.href = path;
+        if (kind === 'full-load') link.dataset.fullLoad = '';
+        document.body.append(link); link.click();
+      }, { path, kind });
+      await exit.waitForFunction(() => !(window as any).documentToken);
+      assert.equal(new URL(exit.url()).pathname, new URL(path, server.url).pathname, `${kind}: full-load destination`);
+      assert.equal(fetches, kind === 'full-load' ? 0 : 1, `${kind}: expected fetch path`);
+      await exit.unrouteAll({ behavior: 'wait' });
+    }
+    await exits.close();
+  }
+  const nojs = await browser.newContext({ javaScriptEnabled: false });
+  const plain = await nojs.newPage();
+  for (const path of paths.slice(0, 5)) {
+    await plain.goto(href(path));
+    assert.ok(await plain.locator('#content h1').textContent(), `${path}: complete server page with JS off`);
+    await plain.locator('#site-primary-rail a[href="/docs/"]').click();
+    assert.equal(new URL(plain.url()).pathname, '/docs/');
+  }
+  await nojs.close();
+  // Capture with motion enabled: before, immediately after click, and settled.
+  const captureContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, recordVideo: { dir: output }, reducedMotion: 'no-preference' });
+  const capture = await captureContext.newPage();
+  await capture.goto(href('/components/button/')); await settled(capture);
+  await capture.screenshot({ path: resolve(output, '01-before.png') });
+  await capture.locator('m-drawer.site-drawer').getByRole('link', { name: 'Icon button', exact: true }).click();
+  await capture.screenshot({ path: resolve(output, '02-click.png') });
+  await capture.waitForFunction(() => location.pathname === '/components/icon-button/' && document.querySelector('h1')?.textContent === 'Icon button');
+  await settled(capture);
+  await capture.screenshot({ path: resolve(output, '03-swapped.png') });
+  const video = capture.video()!; await captureContext.close();
+  await video.saveAs(resolve(output, 'drawer-navigation.webm'));
+  const bytes = (await stat(resolve(import.meta.dir, '../dist/site.js'))).size;
+  await writeFile(resolve(output, 'result.txt'), `site.js entry bytes: ${bytes}\n`);
+  console.log('Client navigation browser checks passed (Navigation API, click fallback, history, widgets, SSR, JS off, listeners, modifier clicks).');
+} finally { await browser.close(); server.stop(true); }

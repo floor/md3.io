@@ -13,7 +13,7 @@ export const componentDrawerEntries = (entries: readonly (Link | Family)[]): rea
 /** The element uses the standard drawer when its modal attribute is absent. */
 export function renderSectionDrawer(path: string, label: string, entries: readonly Entry[]): string {
   const link = ({ name, href }: Link) =>
-    `<m-drawer-item href="${escape(href)}"${href === path ? ' value="current"' : ''}>${escape(name)}</m-drawer-item>`;
+    `<m-drawer-item href="${escape(href)}" value="${escape(href)}">${escape(name)}</m-drawer-item>`;
   const items = entries.map(entry => {
     if ('href' in entry) return link(entry);
     if ('items' in entry) {
@@ -21,7 +21,7 @@ export function renderSectionDrawer(path: string, label: string, entries: readon
     }
     return `<m-drawer-item type="section">${escape(entry.name)}</m-drawer-item>`;
   }).join('');
-  const markup = renderElement('m-drawer', { class: 'site-drawer', open: true, value: 'current', 'aria-label': label }, items, renderStyles);
+  const markup = renderElement('m-drawer', { class: 'site-drawer', open: true, value: path, 'aria-label': label }, items, renderStyles);
   // The element builds fresh interactive rows on upgrade. Native links and buttons
   // already tab in document order. CSS hides closed groups before upgrade and
   // exposes every link when scripting is unavailable.

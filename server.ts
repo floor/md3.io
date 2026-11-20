@@ -70,9 +70,13 @@ const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-la
 const headerStylesheets = linkedStylesheets(themeButton + modeButton);
 // Lazy chunks import their entry back by its plain name (`./preview.js`). The HTML
 // loads the hashed name, so the import map sends the plain name to that same file,
-// or the entry would run twice. Only the entries this page links, as before.
+// or the entry would run twice. Site pages retain this map across navigations.
 const importMap = (body: string) => {
-  const entries = [...new Set([...body.matchAll(/src="(\/dist\/[^"/?#]+\.js)"/g)].map(match => match[1]!))];
+  // A persistent document can later visit any site page. Map all site entry URLs
+  // up front so lazy chunks never evaluate a plain and hashed entry twice.
+  const entries = body.includes('data-navigation-shell="site-v1"')
+    ? Object.keys(assetManifest).filter(path => /^\/dist\/[^/]+\.js$/.test(path))
+    : [...new Set([...body.matchAll(/src="(\/dist\/[^"/?#]+\.js)"/g)].map(match => match[1]!))];
   const imports = Object.fromEntries(entries.filter(entry => assetManifest[entry]).map(entry => [entry, assetManifest[entry]!]));
   return Object.keys(imports).length ? `<script type="importmap">${JSON.stringify({ imports })}</script>` : '';
 };
@@ -82,7 +86,7 @@ const versionAssets = (body: string) => {
     const hashed = assetManifest[path];
     return hashed ? `${open}${hashed}${close}` : full;
   });
-  return mapped ? rewritten.replace('<head>', `<head>\n  ${mapped}`) : rewritten;
+  return mapped ? rewritten.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n  ${mapped}`) : rewritten;
 };
 const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
