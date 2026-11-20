@@ -18,7 +18,7 @@ html[data-theme-mode="light"] { color-scheme: light; }
 .page-heading h1 { font-size: 34px; letter-spacing: -1px; line-height: 1.2; margin: 10px 0 12px; }
 .page-heading p { color: var(--text-muted); font-size: var(--fs-base); }
 .page-heading__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 12px; }
-.page-heading__top .text-link, .doc-toolbar a, .catalog-note a, .site-footer__links a {
+.page-heading__top .text-link, .doc-toolbar a, .catalog-note a, .site-footer__links a, .not-found > .text-link {
   display: inline-flex;
   align-items: center;
   min-width: var(--site-target-size);

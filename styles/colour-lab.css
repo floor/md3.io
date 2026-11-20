@@ -115,7 +115,7 @@
 .lab-drawer-body { padding: 0 20px 20px; border-top: 1px solid var(--border); }
 .lab-copy-mode { display: inline-flex; margin: 18px 0; align-items: center; flex-wrap: wrap; gap: 0; }
 .lab-copy-mode legend { float: left; font-size: 11px; color: var(--text-muted); margin-right: 12px; padding: 10px 0; }
-.lab-copy-mode label > span { min-height: 32px; padding: 6px 12px; font-size: 11px; }
+.lab-copy-mode label > span { padding: 6px 12px; font-size: 11px; }
 .lab-role-group { margin-bottom: 18px; }
 .lab-role-group h3 { color: var(--text-muted); font-size: 12px; font-weight: 400; margin-bottom: 8px; }
 .lab-role-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 8px; }

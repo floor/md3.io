@@ -5,6 +5,7 @@ import { handleRequest } from '../server';
 import * as panel from './panel-driver';
 import { checkPlaygroundLayout } from './check-playground-layout';
 import { checkInputTargets } from './check-input-targets';
+import { checkPageLayout } from './check-page-layout';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const base = server.url.toString();
@@ -320,6 +321,7 @@ try {
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   await checkPlaygroundLayout(context, base, output);
   await checkInputTargets(browser, base, output);
+  await checkPageLayout(browser, base, output);
   console.log(`Browser checks passed. Screenshots: ${output}`);
 } finally {
   await browser.close();
