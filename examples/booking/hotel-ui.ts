@@ -30,7 +30,9 @@ export function watchStepper(host: StepperElement): () => void {
 export function focusControl(host: HTMLElement | null | undefined): void {
   if (!host) return;
   const root = host.shadowRoot ?? host;
-  (root.querySelector<HTMLElement>('input, textarea, button, [role="combobox"]') ?? host).focus();
+  const control=[...root.querySelectorAll<HTMLElement>('input:not([type="hidden"]), textarea, button, [role="combobox"]')]
+    .find(candidate=>!candidate.closest('[inert], [aria-hidden="true"]')&&!(candidate as HTMLInputElement).disabled);
+  (control ?? host).focus();
 }
 
 // Editing an earlier decision invalidates later completion, so linear header
