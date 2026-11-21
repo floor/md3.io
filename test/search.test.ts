@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { renderDocument } from '../src/server/content';
-import { SECTIONS, searchSite, tokenize } from '../src/server/search';import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { SECTIONS, searchSite, tokenize } from '../src/server/search';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 
 
 const components = (query: string) => searchSite(query).filter(result => result.section === 'Components').map(result => result.url);

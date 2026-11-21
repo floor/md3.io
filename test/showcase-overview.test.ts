@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { examples } from '../examples';
-import { exampleComponents, exampleTags, examplesUsingComponent } from '../src/server/examples';import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { exampleComponents, exampleTags, examplesUsingComponent } from '../src/server/examples';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));

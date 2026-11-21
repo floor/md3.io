@@ -133,8 +133,8 @@ try {
       await checked('visible', false);
       await page.getByRole('heading', { name: 'Tooltip', exact: true }).hover();
       // Focus leaves the preview for a parent page control first (the panel has no
-      // Reset now; the heading's Documentation link stands in).
-      await page.getByRole('main').getByRole('link', { name: 'Documentation', exact: true }).focus();
+      // Reset now; the heading's Docs link stands in).
+      await page.getByRole('main').getByRole('link', { name: 'Docs', exact: true }).focus();
       await target.focus();
       await frame.getByRole('tooltip').waitFor();
       assert(await target.getAttribute('aria-describedby') === await frame.getByRole('tooltip').getAttribute('id'), 'Tooltip is not associated with its target');

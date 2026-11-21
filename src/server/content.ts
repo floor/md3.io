@@ -5,6 +5,7 @@ import hljs from 'highlight.js';
 import { renderExample } from './example-block';
 import { FRAMEWORKS } from '../shared/frameworks';
 import { addons, addonsPublic, isAddon } from '../shared/addons';
+import { isHiddenPath } from '../shared/visibility';
 
 export const root = resolve(import.meta.dir, '../..');
 export const docsDir = resolve(root, 'docs/components');
@@ -195,10 +196,17 @@ function renderMarkdown(source: string, idPrefix = '') {
 /** Framework-specific blocks in a guide's markdown (getting-started.md): `<div data-for-framework="react">`. */
 const hasFrameworkBlocks = (source: string) => /data-for-framework=/.test(source);
 
+/** Links into a hidden section (src/shared/visibility.ts) render as their text, so the
+ * documents keep their wording and the links return when the section is published. */
+export function unlinkHidden(html: string): string {
+  return html.replace(/<a href="(\/(?:showcase|addons|docs\/addons)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (link, href: string, text: string) => isHiddenPath(href) ? text : link);
+}
 export function renderDocument(slug: string) {
   if (!slugs.has(slug)) return null;
   const source = documentSource(slug);
-  const { html, toc, examples } = renderMarkdown(source);
+  const rendered = renderMarkdown(source);
+  const { toc, examples } = rendered;
+  const html = unlinkHidden(rendered.html);
   // The metadata sits under the title
   const meta = documentMeta(slug);
   let withMeta = html.replace(/(<\/h1>\n?)/, `$1${metaHtml(meta)}`);

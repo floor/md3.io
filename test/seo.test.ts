@@ -9,7 +9,8 @@ import { addonSlugs, playgroundHref } from '../src/shared/addons';
 import { examples } from '../src/server/examples';
 import { stylePages } from '../src/server/styles';
 import { mtrlVersion } from '../src/server/tokens';
-import { gitDates, jsonForScript } from '../src/server/seo';import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { gitDates, jsonForScript } from '../src/server/seo';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));

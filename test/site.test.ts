@@ -1015,3 +1015,11 @@ test('the autocomplete preview loads the listbox sheet its popup is drawn with',
   const html = await (await handleRequest(new Request('http://localhost/preview/autocomplete/'))).text();
   expect(html).toMatch(/href="\/dist\/material\/styles\/listbox(\.[a-f0-9]{10})?\.css"/);
 });
+
+test('documents do not link into hidden sections', async () => {
+  const { showcasePublic } = await import('../src/shared/visibility');
+  for (const path of ['/docs/components/button/', '/docs/getting-started/']) {
+    const html = await (await handleRequest(new Request(`http://localhost${path}`))).text();
+    expect(/href="\/showcase\//.test(html)).toBe(showcasePublic);
+  }
+});

@@ -3,7 +3,8 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, initialComponentState } from '../src/shared/components';
 import { dialogDefaults, menuDefaults, snackbarDefaults, timepickerDefaults, tooltipDefaults } from '../src/client/catalog/defaults';
 import { catalogTokens, catalogVisuals, SURFACES } from '../src/server/catalog';
-import { baseline, scopedTokens } from '../src/server/tokens';import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { baseline, scopedTokens } from '../src/server/tokens';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 
 
 const get = async (path: string) => (await handleRequest(new Request(`http://md3.test${path}`))).text();
