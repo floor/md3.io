@@ -2,6 +2,7 @@
 // the addon's responsive label setting; changing it rebuilds the host, so retain
 // the completed steps and active value through the public declaration attributes.
 import type { StepperElement } from 'material-addons/elements';
+import { EXTRAS, STEPS, type Booking } from './shared';
 export function watchStepper(host: StepperElement): () => void {
   let pending = 0;
   const update = () => {
@@ -37,7 +38,6 @@ export function focusControl(host: HTMLElement | null | undefined): void {
 
 // Editing an earlier decision invalidates later completion, so linear header
 // navigation cannot skip a room that no longer fits the changed party.
-import { EXTRAS, STEPS, type Booking } from './shared';
 export function invalidateSteps(stepper: {completeStep(target:string,completed:boolean):unknown}|null|undefined, patch:Partial<Booking>):void {
   const keys=Object.keys(patch);
   const start=keys.some(key=>['checkIn','checkOut','adults','children','rooms'].includes(key))?1:
@@ -47,6 +47,8 @@ export function invalidateSteps(stepper: {completeStep(target:string,completed:b
   if(start)for(const step of STEPS.slice(start-1))stepper?.completeStep(step.value,false);
 }
 
+// TODO(material 3.16.x): remove this forwarding once the confirmed m-button
+// ARIA patch ships (material-team confirmation, 2026-11-21).
 // Global ARIA attributes on m-button's host do not describe its shadow button.
 // Keep the actual control's expanded state and panel reference in sync.
 export function watchSummary(root:HTMLElement):()=>void {
