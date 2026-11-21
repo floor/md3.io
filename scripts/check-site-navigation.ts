@@ -294,7 +294,8 @@ try {
         localStorage.setItem('md3-preview-appearance', JSON.stringify({ theme: name, mode: appearance }));
       }, [theme, mode]);
       const themedPage = await themed.newPage();
-      await themedPage.goto(url('/components/'));
+      // A component page: the overview has no row of its own in the list.
+      await themedPage.goto(url('/components/badge/'));
       await themedPage.locator(`html[data-theme="${theme}"][data-theme-mode="${mode}"]`).waitFor();
       const selected = themedPage.locator('main .site-drawer:defined a[aria-current="page"]');
       await selected.waitFor({ state: 'visible' });
@@ -307,6 +308,9 @@ try {
       const familyStyle = await itemStyle(family);
       for (const prop of ['height', 'padding', 'radius'] as const) assert.equal(familyStyle[prop], selectedStyle[prop], `family ${prop}`);
 
+      // The reference drawer is the catalog's live Drawer card on the overview.
+      await themedPage.goto(url('/components/'));
+      await themedPage.locator(`html[data-theme="${theme}"][data-theme-mode="${mode}"]`).waitFor();
       const materialDrawer = themedPage.locator('.catalog-visual md3-catalog-drawer');
       await materialDrawer.scrollIntoViewIfNeeded();
       await themedPage.locator('.catalog-visual md3-catalog-drawer:defined').waitFor();

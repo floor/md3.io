@@ -46,12 +46,14 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
     return row ? [row.textContent!.trim()] : [];
   }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
-  const componentsStart = rows.indexOf('Components overview');
+  // The Components pane lists components only; the docs pane keeps its overview link.
+  const overview = docs ? ['Components overview'] : [];
+  const componentsStart = docs ? rows.indexOf('Components overview') : 0;
   const componentsEnd = docs ? rows.length - addonDocs.length : rows.length;
-  equal(rows.slice(componentsStart, componentsEnd), ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
+  equal(rows.slice(componentsStart, componentsEnd), [...overview, ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
   if (docs) equal(rows.slice(componentsEnd), addonDocs.map(item => item.name), 'Add-on docs follow the Components group A–Z');
   const hrefs = await pane.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href')));
-  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
+  equal(hrefs.slice(docs ? hrefs.indexOf('/components/') : 0).sort(), [...(docs ? ['/components/'] : []), ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
   for (const family of families) {
     const toggle = pane.getByRole('button', { name: family.name, exact: true });
     const id = await toggle.getAttribute('aria-controls');
@@ -96,11 +98,11 @@ async function checkDetailFocusOrder(page: Page, width: number) {
   await page.keyboard.press('Tab');
   if (width >= 840) {
     const pane = main.getByRole('navigation', { name: 'Component list', exact: true });
-    const focused = await pane.getByRole('link', { name: 'Components overview', exact: true }).evaluate(link => (link.getRootNode() as ShadowRoot).activeElement === link);
+    const focused = await pane.getByRole('link', { name: 'Badge', exact: true }).evaluate(link => (link.getRootNode() as ShadowRoot).activeElement === link);
     assert(focused, `${width}px: Tab enters the detail before the component list`);
     const headings = main.getByRole('heading');
-    assert(await headings.nth(1).and(main.getByRole('heading', { name: 'Tooltip', level: 1, exact: true })).count() === 1,
-      `${width}px: the detail H1 must follow the component list heading`);
+    assert(await headings.nth(0).and(main.getByRole('heading', { name: 'Tooltip', level: 1, exact: true })).count() === 1,
+      `${width}px: the detail H1 is the first heading (the list has none)`);
     await pane.getByRole('link', { name: 'Top app bar', exact: true }).focus();
     await page.keyboard.press('Tab');
   }
