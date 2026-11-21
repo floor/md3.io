@@ -1,0 +1,86 @@
+{
+  "material": "3.16.0",
+  "addons": "3.2.0",
+  "measured": "2026-11-21",
+  "gzip": 9,
+  "core": {
+    "factory": 15893,
+    "element": 20076
+  },
+  "components": {
+    "autocomplete": {
+      "factory": {
+        "alone": 32268,
+        "lazy": 0,
+        "added": 23890
+      },
+      "element": {
+        "alone": 26660,
+        "lazy": 0,
+        "added": 14166
+      }
+    },
+    "avatar": {
+      "factory": {
+        "alone": 18591,
+        "lazy": 0,
+        "added": 11411
+      },
+      "element": {
+        "alone": 17759,
+        "lazy": 0,
+        "added": 6220
+      }
+    },
+    "colorpicker": {
+      "factory": {
+        "alone": 36260,
+        "lazy": 0,
+        "added": 27356
+      }
+    },
+    "expansion-panel": {
+      "factory": {
+        "alone": 21962,
+        "lazy": 0,
+        "added": 14694
+      },
+      "element": {
+        "alone": 19361,
+        "lazy": 0,
+        "added": 7866
+      }
+    },
+    "form": {
+      "factory": {
+        "alone": 31712,
+        "lazy": 0,
+        "added": 24456
+      }
+    },
+    "skeleton": {
+      "factory": {
+        "alone": 19456,
+        "lazy": 0,
+        "added": 12221
+      },
+      "element": {
+        "alone": 10093,
+        "lazy": 0,
+        "added": 2016
+      }
+    },
+    "stepper": {
+      "factory": {
+        "alone": 25297,
+        "lazy": 0,
+        "added": 17515
+      },
+      "element": {
+        "alone": 28468,
+        "lazy": 0,
+        "added": 16471
+      }
+    }
+  }
+}

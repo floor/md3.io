@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { chromium, type Locator } from 'playwright';
 import { handleRequest } from '../server';
 import { componentDirectory } from '../src/server/component-directory';
-import { docGroups, guideGroup } from '../src/server/content';
+import { addonDocGroup, docGroups, guideGroup } from '../src/server/content';
 import { examples } from '../src/server/examples';
 import { stylePages } from '../src/server/styles';
 
@@ -15,7 +15,7 @@ await mkdir(output, { recursive: true });
 const url = (path: string) => new URL(path, server.url).href;
 const showcaseLabel = 'Showcase';
 const showcasePath = '/showcase/';
-const destinations = ['Components', 'Styles', showcaseLabel, 'Documentation'];
+const destinations = ['Components', 'Add-ons', 'Styles', showcaseLabel, 'Documentation'];
 const widths = [360, 390, 412, 700, 840, 1024, 1440];
 const linkNames = (nav: Locator) => nav.getByRole('link').allTextContents();
 const focused = (locator: Locator) => locator.evaluate(node => (node.getRootNode() as Document | ShadowRoot).activeElement === node);
@@ -178,10 +178,10 @@ try {
   await newPage.waitForURL(url('/docs/'));
   await newPage.close();
 
-  const docsEntries = componentDirectory(docGroups.flatMap(group => group.items)).entries;
+  const docsEntries = componentDirectory(docGroups.filter(group => group !== addonDocGroup).flatMap(group => group.items)).entries;
   const docsLinks = docsEntries.flatMap(entry => 'items' in entry ? entry.items : [entry]);
   const sections = [
-    { label: 'Documentation', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), '/components/', ...docsLinks.map(item => item.href)] },
+    { label: 'Documentation', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), '/components/', ...docsLinks.map(item => item.href), ...addonDocGroup.items.map(item => item.href)] },
     { label: 'Styles', path: '/styles/shape/', hrefs: stylePages.map(style => style.href) },
     { label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] },
   ];
@@ -218,6 +218,36 @@ try {
       await assertClosedRail();
       await indexLinks.waitFor();
     }
+  }
+
+  for (const width of [390, 1440]) {
+    await size(width);
+    await goto('/components/button/');
+    await nav.getByRole('link', { name: 'Add-ons', exact: true }).click();
+    await page.waitForURL(url('/addons/'));
+    await page.getByRole('heading', { name: 'Add-ons', level: 1, exact: true }).waitFor();
+    await assertDestinations(`Add-ons at ${width}px`);
+    assert.equal(await nav.getByRole('link', { name: 'Add-ons', exact: true }).getAttribute('aria-current'), 'page');
+    await page.locator('.component-card').getByRole('link', { name: 'Avatar', exact: true }).click();
+    await page.waitForURL(url('/addons/avatar/'));
+    await page.getByRole('heading', { name: 'Avatar', level: 1, exact: true }).waitFor();
+    assert.equal(await nav.getByRole('link', { name: 'Add-ons', exact: true }).getAttribute('aria-current'), 'location');
+    const current = page.locator('main m-drawer.site-drawer a[aria-current="page"][href="/addons/avatar/"]');
+    await current.waitFor({ state: 'attached' });
+    await page.getByRole('link', { name: 'Documentation', exact: true }).and(page.locator('main a')).click();
+    await page.waitForURL(url('/docs/addons/avatar/'));
+    const menu = page.locator('#section-index');
+    if (width === 390) await menu.locator('summary').click();
+    const drawer = menu.getByRole('navigation', { name: 'Documentation links', exact: true });
+    const headings = await drawer.locator('[part~="section-label"]').allTextContents();
+    assert.equal(headings.at(-2), 'Components');
+    assert.equal(headings.at(-1), 'Add-ons');
+    assert.equal(await drawer.locator('a[aria-current="page"]').getAttribute('href'), '/docs/addons/avatar/');
+  }
+  for (const slug of ['colorpicker', 'form']) {
+    const response = await page.request.get(url(`/docs/components/${slug}/?ref=legacy`), { maxRedirects: 0 });
+    assert.equal(response.status(), 301);
+    assert.equal(response.headers()['location'], `/docs/addons/${slug}/?ref=legacy`);
   }
 
   const railCaptures = resolve(output, 'drawer-pane');

@@ -2,7 +2,9 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { handleRequest } from '../server';
 import { componentSlugs } from '../src/shared/components';
-import { sizes } from '../src/server/sizes';
+import { addonSizes, componentSize, sizes } from '../src/server/sizes';
+import { addonSlugs } from '../src/shared/addons';
+import { elementMeta } from '../src/server/elements-meta';
 
 // data/sizes.json is written by `bun run sizes`: re-run it when mtrl changes version.
 describe('component sizes', () => {
@@ -26,4 +28,17 @@ describe('component sizes', () => {
     expect(page).toMatch(new RegExp(`<span data-flavour="factory" [^>]*><strong>${kb(sizes.components.button!.factory.added)} KB</strong> gzip`));
     expect(page).toMatch(new RegExp(`<span data-flavour="element" hidden [^>]*><strong>${kb(sizes.components.button!.element.added)} KB</strong> gzip`));
   });
+});
+
+test('add-on sizes match the installed package and available flavours', () => {
+  const { version } = JSON.parse(readFileSync('node_modules/material-addons/package.json', 'utf8')) as { version: string };
+  expect(addonSizes?.addons).toBe(version);
+  expect(Object.keys(addonSizes?.components ?? {}).sort()).toEqual([...addonSlugs].sort());
+  for (const slug of addonSlugs) {
+    const size = componentSize(slug)!;
+    expect(size.factory.added).toBeGreaterThan(0);
+    expect(size.factory.alone).toBeGreaterThan(size.factory.added);
+    expect(Boolean(size.element)).toBe(Boolean(elementMeta(slug)));
+    if (size.element) expect(size.element.added).toBeGreaterThan(0);
+  }
 });
