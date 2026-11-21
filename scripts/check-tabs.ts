@@ -17,6 +17,7 @@ import { components, componentCode, initialComponentState, normalizeComponentSta
 import { addonSlugs, playgroundHref } from '../src/shared/addons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
+import { checkStepperWorkflow } from './stepper-driver';
 import { eligibleTabComponents } from './check-tabs-eligible';
 import { checkTabsRecycle, checkTabsSlugs } from './check-tabs-options';
 
@@ -858,6 +859,7 @@ try {
         if (missingText.length > 0 || extraText.length > 0) {
           differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
         }
+        if (slug === 'stepper') await checkStepperWorkflow(page, state.workflow === 'account');
       }
     }
     // Closing the context releases that renderer's documents. The next component

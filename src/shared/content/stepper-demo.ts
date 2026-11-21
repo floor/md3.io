@@ -1,6 +1,5 @@
 import type { StepperConfig } from 'material-addons/components/stepper';
 import type { CodeContext, Framework } from '../frameworks';
-// @ts-expect-error Bun's text loader imports the source, not the module exports.
 import runtimeSource from './stepper-demo-runtime.js' with { type: 'text' };
 
 const demoStyles = `.stepper-demo { display:grid; gap:18px; text-align:start; }
