@@ -239,10 +239,11 @@ try {
     const menu = page.locator('#section-index');
     if (width === 390) await menu.locator('summary').click();
     const drawer = menu.getByRole('navigation', { name: 'Documentation links', exact: true });
+    const selected = drawer.locator('a[aria-current="page"][href="/docs/addons/avatar/"]');
+    await selected.waitFor();
     const headings = await drawer.locator('[part~="section-label"]').allTextContents();
     assert.equal(headings.at(-2), 'Components');
     assert.equal(headings.at(-1), 'Add-ons');
-    assert.equal(await drawer.locator('a[aria-current="page"]').getAttribute('href'), '/docs/addons/avatar/');
   }
   for (const slug of ['colorpicker', 'form']) {
     const response = await page.request.get(url(`/docs/components/${slug}/?ref=legacy`), { maxRedirects: 0 });
