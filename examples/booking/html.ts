@@ -70,7 +70,10 @@ for (const room of ROOMS) {
   for (const rate of RATES) {
     const key=`${room.value}:${rate.value}`;
     const option=el('div',{class:'booking__rate',role:'radio','aria-label':`${room.label} — ${rate.label}`,'data-choice':key,'aria-describedby':reason.id});
-    const radio=control('m-radio',{'aria-hidden':'true',inert:true,tabindex:'-1'});
+    // The declaration needs its rendered radios host. It is decorative here;
+    // the surrounding combined room/rate option owns focus and keyboard behavior.
+    const radio=control('m-radios',{'aria-hidden':'true',inert:true,tabindex:'-1'});
+    radio.append(control('m-radio',{value:'selected',label:''}));
     const copy=box('booking__rate-copy');const policy=text('','mtrl-body-small');copy.append(text(rate.label,'mtrl-title-small'),policy);
     const prices=box('booking__rate-price');const night=text('','mtrl-title-small'),stay=text('','mtrl-body-small');prices.append(night,stay);
     option.append(radio,copy,prices);rates.append(option);rateNodes.set(key,{option,radio,night,stay,policy});
@@ -123,7 +126,7 @@ const render=()=>{
     for (const rate of RATES) {
       const key=`${room.value}:${rate.value}`;const node=rateNodes.get(key)!;const selected=current===key&&!reason;
       node.option.setAttribute('aria-checked',String(selected));node.option.setAttribute('aria-disabled',String(!!reason));node.option.tabIndex=key===focusable?0:-1;
-      (node.radio as unknown as {checked:boolean;disabled:boolean}).checked=selected;(node.radio as unknown as {disabled:boolean}).disabled=!!reason;
+      (node.radio as unknown as {value:string}).value=selected?'selected':'';(node.radio as unknown as {disabled:boolean}).disabled=!!reason;
       const stay={...s,room:room.value,rate:rate.value};
       node.night.textContent=`${money(nightlyRate(stay))} / night`;node.stay.textContent=`${money(roomTotal(stay))} stay total`;node.policy.textContent=rateConditions(s,rate);
     }

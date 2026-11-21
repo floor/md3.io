@@ -72,7 +72,7 @@
 .booking__rate-price { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
 .booking__rate p { margin: 0; }
 .booking__rates { display: flex; flex-direction: column; }
-.booking__rate m-radio { flex: none; }
+.booking__rate m-radios { flex: none; width: 32px; }
 @media (max-width: 600px) {
   .booking__rate { flex-wrap: wrap; }
   .booking__rate-price { width: 100%; padding-inline-start: 42px; align-items: flex-start; }
