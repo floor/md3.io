@@ -131,6 +131,9 @@ const names = [
   // The search dialog's key hints (src/server/shells/search.eta): ↓ and ↵ as icons.
   'arrow_downward',
   'keyboard_return',
+  // The Email example (examples/email/): reply on a message, the Drafts destination.
+  'reply',
+  'drafts',
 ];
 // Rounded, weight 400, grade 0, optical size 24: the Google Fonts defaults for the
 // Rounded style. Each symbol comes outlined (`name.svg`) and filled (`name-fill.svg`),

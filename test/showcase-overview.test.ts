@@ -29,12 +29,13 @@ describe('showcase overview', () => {
   });
 
   test('component pages link the examples that use them, and those links resolve', async () => {
-    expect(examplesUsingComponent('card').map(example => example.slug)).toEqual(['notes']);
-    expect(examplesUsingComponent('button').map(example => example.slug).sort()).toEqual(['booking', 'notes', 'settings']);
+    expect(examplesUsingComponent('card').map(example => example.slug).sort()).toEqual(['booking', 'notes']);
+    expect(examplesUsingComponent('button').map(example => example.slug).sort()).toEqual(['booking', 'email', 'notes', 'settings']);
     expect(examplesUsingComponent('tabs').map(example => example.slug)).toEqual([]);
     expect(examplesUsingComponent('switch').map(example => example.slug)).toEqual(['settings']);
     const card = await (await get('/components/card/')).text();
     expect(card).toContain('Used in:');
+    expect(card).toContain('href="/showcase/booking/"');
     expect(card).toContain('href="/showcase/notes/"');
     for (const example of examples) {
       expect((await get(`/showcase/${example.slug}/`)).status).toBe(200);

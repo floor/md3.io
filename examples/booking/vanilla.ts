@@ -3,17 +3,16 @@
 // validation pipeline replaces the hand-written Next checks, and its data-stepper-*
 // actions replace the wiring between Back, Next and the panels.
 import createButton from "material/components/button";
+import createCard from "material/components/card";
 import createCheckbox from "material/components/checkbox";
 import createDatePicker from "material/components/datepicker";
 import createDialog from "material/components/dialog";
-import createRadios from "material/components/radios";
 import createSelect from "material/components/select";
-import createSlider from "material/components/slider";
 import createSnackbar from "material/components/snackbar";
 import createTextField from "material/components/text-field";
 import createTimePicker from "material/components/timepicker";
 import { createStepper, type StepConfig } from "material-addons/components/stepper";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, reviewLines, roomOf, stepHeading, stepValue, summary, totalText, validateStep, withDates, withPrice, type Booking } from "./shared";
+import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, HERO_IMAGE, PROPERTY, ROOMS, TODAY, normalizeTime, priceLines, reviewLines, roomAfter, roomOf, stayText, stepHeading, stepValue, summary, totalText, validateStep, withRange, type Booking } from "./shared";
 
 let s: Booking = { ...DEFAULTS };
 const app = document.getElementById("app")!;
@@ -22,15 +21,19 @@ const div = (className: string): HTMLDivElement => Object.assign(document.create
 const text = (className: string, value: string, tag = "p"): HTMLElement => Object.assign(document.createElement(tag), { className, textContent: value });
 
 const intro = div("booking__intro");
-intro.append(text("booking__title mtrl-headline-small", "Book a stay", "h1"), text("booking__lede mtrl-body-medium", "Four steps: dates, guests and room, extras, then your details. The total updates as you go."));
+const hero = Object.assign(document.createElement("img"), { className: "booking__hero", src: HERO_IMAGE, alt: `The Dune House above the dunes in ${PROPERTY.town}`, loading: "lazy" as const });
+intro.append(
+  hero,
+  text("booking__title mtrl-headline-small", PROPERTY.name, "h1"),
+  text("booking__lede mtrl-body-medium", `${PROPERTY.town} · ${PROPERTY.rating}`),
+  text("booking__lede mtrl-body-medium", PROPERTY.lede),
+  text("booking__lede mtrl-body-medium", PROPERTY.facts),
+);
 
-// Each step's panel: a heading the stepper focuses after a move (tabindex -1, so it
-// can take focus), the fields, and the panel's own actions. Back and Next carry the
-// stepper's data attributes — its own delegated handling moves, validates the step
-// being left and puts focus on the new heading.
+// Each step's panel: a heading the stepper focuses after a move (tabindex -1), the
+// fields, and the panel's own actions, which carry the stepper's data attributes.
 const pane = (step: number): HTMLDivElement => {
   const pane = div("booking__step");
-  // A step change puts focus on the new step's heading, so screen readers announce it.
   pane.append(Object.assign(document.createElement("h2"), { className: "booking__step-title mtrl-title-large", tabIndex: -1, textContent: stepHeading(step) }));
   return pane;
 };
@@ -40,7 +43,6 @@ const action = (kind: "prev" | "next", label: string): HTMLDivElement => {
   wrap.append(createButton({ text: label, ...(kind === "prev" ? { variant: "outlined" as const } : {}) }).element);
   return wrap;
 };
-/** A plain button the stepper does not drive, wrapped to sit beside the actions. */
 const wrap = (button: HTMLElement): HTMLDivElement => {
   const el = div("booking__action");
   el.append(button);
@@ -51,22 +53,52 @@ const actions = (...buttons: HTMLDivElement[]): HTMLElement => {
   footer.append(...buttons);
   return footer;
 };
+const fieldError = (): HTMLElement => {
+  const el = text("booking__field-error mtrl-body-small", "");
+  el.hidden = true;
+  return el;
+};
 
-const totals: HTMLOutputElement[] = [];
-const makeTotal = (): HTMLOutputElement => {
-  const output = Object.assign(document.createElement("output"), { className: "booking__total mtrl-body-medium" });
-  output.setAttribute("role", "status");
-  totals.push(output);
-  return output;
+// The price summary: a material card beside the stepper on wide frames, and a
+// compact copy of the same card inside each step, just above its actions, on
+// narrow frames (styles.css shows one or the other). Both render the same lines.
+const summaryLines = div("booking__summary-lines");
+const summaryCard = createCard({ variant: "filled", header: { title: "Price summary" }, content: { children: [summaryLines] } });
+summaryCard.element.classList.add("booking__summary");
+const compactLines: HTMLDivElement[] = [];
+const makeCompact = (): HTMLElement => {
+  const lines = div("booking__summary-lines");
+  compactLines.push(lines);
+  const card = createCard({ variant: "filled", header: { title: "Price summary" }, content: { children: [lines] } });
+  card.element.classList.add("booking__summary-compact");
+  return card.element;
+};
+const summaryNodes = (): HTMLElement[] => [
+  ...priceLines(s).map((line) => {
+    const row = div("booking__price-line");
+    row.append(text("booking__price-line mtrl-body-medium", line.label, "span"), text("booking__price-line mtrl-body-medium", line.amount, "span"));
+    return row;
+  }),
+  (() => {
+    const row = div("booking__price-total");
+    row.append(text("booking__price-line mtrl-title-small", "Total", "span"), text("booking__price-line mtrl-title-small", totalText(s).replace("Estimated total ", ""), "span"));
+    return row;
+  })(),
+  text("booking__lede mtrl-body-medium", PROPERTY.policy),
+];
+const renderSummary = (): void => {
+  summaryLines.replaceChildren(...summaryNodes());
+  for (const lines of compactLines) lines.replaceChildren(...summaryNodes());
 };
 
 const step1 = pane(1);
 const grid1 = div("booking__grid");
-const checkIn = createDatePicker({ label: "Check-in", variant: "modal", closeOnSelect: true, dateFormat: "YYYY-MM-DD", value: s.checkIn });
-const checkOut = createDatePicker({ label: "Check-out", variant: "modal", closeOnSelect: true, dateFormat: "YYYY-MM-DD", value: s.checkOut, minDate: s.checkIn });
+const stay = createDatePicker({ label: "Check-in → Check-out", variant: "modal", selectionMode: "range", dateFormat: "YYYY-MM-DD", value: [s.checkIn, s.checkOut], minDate: TODAY });
 const arrival = createTextField({ label: "Arrival time", value: s.arrivalTime, supportingText: "24-hour time", trailingIcon: CLOCK_ICON, trailingIconLabel: "Choose time" });
-grid1.append(checkIn.element, checkOut.element, arrival.element);
-step1.append(grid1, makeTotal(), actions(action("next", "Next")));
+grid1.append(stay.element, arrival.element);
+const stayLine = text("booking__stay mtrl-body-medium", "");
+const datesError = fieldError();
+step1.append(grid1, stayLine, datesError, makeCompact(), actions(action("next", "Next")));
 
 const step2 = pane(2);
 const grid2 = div("booking__grid");
@@ -74,18 +106,42 @@ const adults = createSelect({ label: "Adults", value: s.adults, options: ADULT_O
 const children = createSelect({ label: "Children", value: s.children, options: CHILD_OPTIONS.map((n) => ({ id: n, text: n })) });
 grid2.append(adults.element, children.element);
 const roomGroup = div("booking__group");
-const radios = createRadios({ name: "room", value: s.room, options: ROOMS.map((room) => ({ value: room.value, label: `${room.label} — $${room.rate} a night` })) });
-radios.element.setAttribute("aria-label", "Room type");
-roomGroup.append(text("booking__label mtrl-title-small", "Room type"), radios.element);
-const priceGroup = div("booking__group");
-const slider = createSlider({ range: true, showValue: true, min: 50, max: 300, step: 10, value: s.priceMin, secondValue: s.priceMax });
-slider.element.setAttribute("aria-label", "Price range");
-slider.element.querySelectorAll('[role="slider"]').forEach((handle, index) => handle.setAttribute("aria-label", index === 0 ? "Price range minimum" : "Price range maximum"));
-const range = text("booking__range mtrl-body-medium", "");
-const roomError = text("booking__field-error mtrl-body-small", "");
-roomError.hidden = true;
-priceGroup.append(text("booking__label mtrl-title-small", "Price range"), slider.element, range, roomError);
-step2.append(grid2, roomGroup, priceGroup, makeTotal(), actions(action("prev", "Back"), action("next", "Next")));
+const roomsEl = div("booking__rooms");
+roomsEl.setAttribute("role", "radiogroup");
+roomsEl.setAttribute("aria-label", "Room type");
+const roomCards = new Map<string, HTMLElement>();
+for (const room of ROOMS) {
+  const option = div("booking__room");
+  option.setAttribute("role", "radio");
+  option.setAttribute("aria-label", `${room.label}, ${room.beds}, ${room.size}, $${room.rate} a night, ${room.features}`);
+  option.dataset.room = room.value;
+  const img = Object.assign(document.createElement("img"), { className: "booking__room-image", src: room.image, alt: "", loading: "lazy" as const });
+  const body = div("booking__room-card");
+  body.append(
+    img,
+    text("booking__room-name mtrl-title-medium", room.label),
+    text("booking__room-facts mtrl-body-medium", `${room.beds} · ${room.size}`),
+    text("booking__room-price mtrl-body-medium", `$${room.rate} a night`),
+    text("booking__room-features mtrl-body-medium", room.features),
+  );
+  option.append(createCard({ variant: "outlined", content: { children: [body] } }).element);
+  option.addEventListener("click", () => { s = { ...s, room: room.value }; render(); option.focus(); });
+  roomCards.set(room.value, option);
+  roomsEl.append(option);
+}
+roomsEl.addEventListener("keydown", (event) => {
+  const option = (event.target as HTMLElement).closest<HTMLElement>("[data-room]");
+  if (!option) return;
+  const value = option.dataset.room!;
+  const focusRoom = (next: string) => { s = { ...s, room: next }; render(); roomCards.get(next)?.focus(); };
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); focusRoom(roomAfter(value, 1)); }
+  else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); focusRoom(roomAfter(value, -1)); }
+  else if (event.key === "Home") { event.preventDefault(); focusRoom(ROOMS[0]!.value); }
+  else if (event.key === "End") { event.preventDefault(); focusRoom(ROOMS[ROOMS.length - 1]!.value); }
+  else if (event.key === " " || event.key === "Enter") { event.preventDefault(); s = { ...s, room: value }; render(); roomCards.get(value)?.focus(); }
+});
+roomGroup.append(text("booking__label mtrl-title-small", "Room type"), roomsEl);
+step2.append(grid2, roomGroup, makeCompact(), actions(action("prev", "Back"), action("next", "Next")));
 
 const step3 = pane(3);
 const extrasGroup = div("booking__group");
@@ -100,7 +156,7 @@ for (const extra of EXTRAS) {
   control.on("change", ({ checked }) => { s = { ...s, [extra.key]: checked }; render(); });
   extrasGroup.append(control.element);
 }
-step3.append(extrasGroup, makeTotal(), actions(action("prev", "Back"), action("next", "Next")));
+step3.append(extrasGroup, makeCompact(), actions(action("prev", "Back"), action("next", "Next")));
 
 const step4 = pane(4);
 const grid4 = div("booking__grid");
@@ -129,30 +185,21 @@ if (contentEl) {
   dialog.element.setAttribute("aria-describedby", "booking-summary");
 }
 
-/** A factory field's root does not take focus itself; its input does. */
 const focusField = (field: HTMLElement): void => {
   (field.querySelector<HTMLElement>("input, textarea") ?? field).focus();
 };
 const focusFirstInvalid = (step: number): void => {
-  if (step === 1) { focusField(arrival.element); return; }
-  if (step === 2) {
-    const handle = slider.element.querySelector<HTMLElement>('[role="slider"]');
-    (handle ?? slider.element).focus();
-  }
+  if (step === 1) focusField(arrival.element);
 };
-// Next validates the step it leaves through the stepper's pipeline: the hook shows the
-// message at the field, focuses it and returns false, which blocks the move and marks
-// the step's header in error. Going back never validates and never loses data.
+// Next validates the step it leaves through the stepper's pipeline.
 const hook = (step: number): Exclude<StepConfig["validate"], undefined> => () => {
   const errors = validateStep(s, step);
+  if (errors.dates) { datesError.textContent = errors.dates; datesError.hidden = false; focusField(stay.element); return false; }
+  datesError.hidden = true;
   if (errors.arrivalTime) { arrival.setError(true, errors.arrivalTime); focusFirstInvalid(step); return false; }
-  if (errors.room) { roomError.textContent = errors.room; roomError.hidden = false; focusFirstInvalid(step); return false; }
   return true;
 };
 
-// orientation "auto" turns vertical below 600px of container width: the widened
-// booking column passes that on Desktop and Tablet frames, and stays vertical
-// on Mobile; labels sit below their indicators so all four fit on Tablet.
 const stepper = createStepper({
   linear: true,
   orientation: "auto",
@@ -161,32 +208,32 @@ const stepper = createStepper({
   ariaLabel: "Booking steps",
   steps: [
     { value: stepValue(1), label: "Dates and arrival", validate: hook(1), content: step1 },
-    { value: stepValue(2), label: "Guests and room", validate: hook(2), content: step2 },
+    { value: stepValue(2), label: "Guests and room", content: step2 },
     { value: stepValue(3), label: "Extras", content: step3 },
     { value: stepValue(4), label: "Your details and review", content: step4 },
   ],
 });
 
-// Book validates the details itself: it is not a move, so the stepper has no say in it.
 const book = createButton({ text: "Book" });
 book.on("click", () => {
   const errors = validateStep(s, 4);
   nameField.setError(Boolean(errors.name), errors.name);
   emailField.setError(Boolean(errors.email), errors.email);
-  if (!errors.name && !errors.email && roomOf(s)) { render(); dialog.open(); }
+  if (!errors.name && !errors.email) { render(); dialog.open(); }
   else if (errors.name) focusField(nameField.element);
   else if (errors.email) focusField(emailField.element);
 });
-step4.append(makeTotal(), actions(action("prev", "Back"), wrap(book.element)));
+step4.append(makeCompact(), actions(action("prev", "Back"), wrap(book.element)));
 
 const render = (): void => {
-  for (const total of totals) total.textContent = totalText(s);
-  range.textContent = rangeText(s);
+  stayLine.textContent = stayText(s);
   summaryEl.textContent = summary(s);
-  const eligible = new Set(eligibleRooms(s).map((room) => room.value));
-  for (const room of ROOMS) eligible.has(room.value) ? radios.enableOption(room.value) : radios.disableOption(room.value);
-  if (radios.getValue() !== (s.room || null)) radios.setValue(s.room || null);
-  // The fourth step reviews the first three: a labelled line each, with its Edit.
+  renderSummary();
+  for (const room of ROOMS) {
+    const option = roomCards.get(room.value)!;
+    option.setAttribute("aria-checked", String(s.room === room.value));
+    option.tabIndex = s.room === room.value ? 0 : -1;
+  }
   review.replaceChildren(
     ...reviewLines(s).map((line) => {
       const row = div("booking__review-row");
@@ -201,13 +248,13 @@ const render = (): void => {
   );
 };
 
-checkIn.on("change", ({ iso }) => {
-  s = withDates(s, iso, s.checkOut);
-  checkOut.setValue(s.checkOut);
-  checkOut.setMinDate(s.checkIn);
-  render();
+stay.on("change", (detail) => {
+  const d = detail as unknown as { value?: unknown; rangeEndDate?: unknown; iso?: string };
+  const toIso = (v: unknown): string | null => v instanceof Date ? `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(v.getDate()).padStart(2, "0")}` : typeof v === "string" ? v.split("/")[0]! : null;
+  const start = Array.isArray(d.value) ? toIso(d.value[0]) : toIso(d.value);
+  const end = toIso(d.rangeEndDate) ?? (typeof d.iso === "string" ? d.iso.split("/")[1] ?? null : null) ?? (Array.isArray(d.value) ? toIso(d.value[1]) : null);
+  if (start && end) { s = withRange(s, start, end); datesError.hidden = true; render(); }
 });
-checkOut.on("change", ({ iso }) => { s = withDates(s, s.checkIn, iso); render(); });
 arrival.on("input", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setError(false); });
 arrival.on("change", ({ value }) => {
   const time = normalizeTime(value);
@@ -222,15 +269,11 @@ arrival.on("trailing", () => {
 timePicker.on("change", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setValue(value); arrival.setError(false); });
 adults.on("change", ({ value }) => { s = { ...s, adults: value ?? s.adults }; render(); });
 children.on("change", ({ value }) => { s = { ...s, children: value ?? s.children }; render(); });
-radios.on("change", ({ value }) => { s = { ...s, room: value ?? "" }; render(); });
-slider.on("input", ({ value, secondValue }) => {
-  s = withPrice(s, value, secondValue ?? s.priceMax);
-  roomError.hidden = true;
-  render();
-});
 nameField.on("input", ({ value }) => { s = { ...s, name: value }; nameField.setError(false); });
 emailField.on("input", ({ value }) => { s = { ...s, email: value }; emailField.setError(false); });
 
-section.append(intro, stepper.element, timePicker.element);
+const layout = div("booking__layout");
+layout.append(stepper.element, summaryCard.element);
+section.append(intro, layout, timePicker.element);
 app.append(section);
 render();
