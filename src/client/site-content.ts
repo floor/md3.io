@@ -39,6 +39,11 @@ registerPage('site-content', (content, life) => {
       }
     });
     keepCurrentComponentInView();
+    // The lazy drawer definition rebuilds its rows after this page initializes.
+    // Recheck the selected row once that upgrade has established its geometry.
+    void customElements.whenDefined('m-drawer').then(() => {
+      if (life.active) keepCurrentComponentInView();
+    });
   }
 
   // The package manager of the `install` blocks: one choice for every block, remembered.
