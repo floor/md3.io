@@ -206,8 +206,3 @@
    native preview-tabs sat. */
 .playground--material m-tabs::part(divider) { display: none; }
 .playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
-
-#live-panel:has(> .device) { overflow: auto; }
-#live-panel > .device[data-device="desktop"] { height: 100%; }
-#live-panel > .device[data-device="desktop"] .device__stage,
-#live-panel > .device[data-device="desktop"] .device__viewport { flex: 1; display: flex; min-height: 0; }

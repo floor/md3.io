@@ -16,7 +16,7 @@ export const stylesheetBundles = {
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
   'material-panel': materialPanel,
-  'addon-panel': [...materialPanel, 'mtrl:button', 'mtrl:button-group', 'device-frame'],
+  'addon-panel': materialPanel,
   // Add-on visuals that use factories need their light-DOM styles.
   catalog,
   'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'addons:styles'],
