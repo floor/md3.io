@@ -238,7 +238,7 @@ export function renderExample(source: string): string {
   const highlight = (text: string, language: string) => `<pre tabindex="0" role="group" aria-label="${escapeHTML(codeLabel(language))}"><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
   const vanilla = highlight(rendered.code.vanilla!, 'javascript');
   const note = addon(slug)
-    ? `<p class="framework-note">The ${addon(slug)!.name} comes from material-addons, which has no web components: its vanilla factory works in any framework.</p>`
+    ? `<p class="framework-note">The ${addon(slug)!.name} uses the material-addons factory. The same Vanilla code works in any framework.</p>`
     : `<p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the ${escapeHTML(componentName(slug).toLowerCase())} web component; the vanilla factory works in any of them today.</p>`;
   const panels = FRAMEWORKS.map(({ id, label, language }) => {
     const code = rendered.code[id];

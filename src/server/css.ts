@@ -13,7 +13,7 @@ export const stylesheetBundles = {
   home: [...shell, 'homepage', 'site', 'search'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
-  'material-panel': [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material'],
+  'material-panel': [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material', 'device-frame'],
   // The components overview adds the elements' pre-upgrade rules and the catalog.
   catalog: [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'],
   // Examples add the device chooser's Material button group and frame styles.

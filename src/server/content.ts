@@ -15,7 +15,6 @@ const groups: Record<string, string[]> = {
   'Navigation': ['navigation-rail', 'navigation-bar', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
-  'Additional references': ['form', 'colorpicker'],
 };
 /** The guides, before the components: how to start, how mtrl is built, and how to use it in each framework (one Frameworks page). */
 export const GUIDES = ['why-material', 'getting-started', 'architecture', 'frameworks', 'theming', 'server-rendering', 'events-and-overlays'];

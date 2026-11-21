@@ -58,7 +58,7 @@ import { svelteToTs, vueToTs, type Generated } from './check-docs/templates';
 
 const root = resolve(import.meta.dir, '..');
 const checkDocsPageCount = checkDocsPages(process.env.CHECK_DOCS_PAGES);
-const docsDir = resolve(root, 'docs/components');
+const docsDirs = ['components', 'addons'].map(section => resolve(root, 'docs', section));
 const preludePath = resolve(import.meta.dir, 'check-docs/prelude.ts');
 const templatesPath = resolve(import.meta.dir, 'check-docs/templates.d.ts');
 const mtrlDir = resolve(root, 'node_modules/material');
@@ -79,10 +79,12 @@ const fail = (page: string, line: number, level: string, message: string) => fai
 // Blocks, by page
 const FLAGS = new Set(['fragment', 'continued', 'react', 'solid']);
 const MARKUP = new Set(['vue', 'svelte', 'tsx', 'jsx']);
-const pages = readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)).filter(slug => only.length === 0 || only.includes(slug)).sort();
+const pages = docsDirs.flatMap(dir => readdirSync(dir).filter(name => name.endsWith('.md') && !name.startsWith('_'))
+  .map(name => ({ slug: name.slice(0, -3), path: resolve(dir, name) })))
+  .filter(({ slug }) => only.length === 0 || only.includes(slug)).sort((a, b) => a.slug.localeCompare(b.slug));
 const blocks: Block[] = [];
-for (const page of pages) {
-  const text = readFileSync(resolve(docsDir, `${page}.md`), 'utf8');
+for (const { slug: page, path } of pages) {
+  const text = readFileSync(path, 'utf8');
   for (const match of text.matchAll(/^```(\w*)([^\n]*)\n([\s\S]*?)^```[ \t]*$/gm)) {
     const [, lang = '', info = '', code = ''] = match;
     const line = text.slice(0, match.index).split('\n').length + 1;

@@ -1,5 +1,11 @@
 import { applyTheme } from './theme-sheets';
 import { createAvatar } from 'material-addons/components/avatar';
+import { createAutocomplete } from 'material-addons/components/autocomplete';
+import { createColorPicker } from 'material-addons';
+import { createExpansionPanel } from 'material-addons/components/expansion-panel';
+import { createSkeleton } from 'material-addons/components/skeleton';
+import { createStepper } from 'material-addons/components/stepper';
+import { createFormPreview } from './form-preview';
 import createBadge from 'material/components/badge';
 import createProgress from 'material/components/progress';
 import createLoadingIndicator from 'material/components/loading-indicator';
@@ -85,7 +91,13 @@ function create(state: ComponentState) {
   const message = (value: string) => { if (instance === generation) report(value); };
   const sync = (values: ComponentState) => { if (instance === generation) syncValues(values); };
   switch (slug) {
+    case 'autocomplete': return createAutocomplete({ ...components.autocomplete.config(state), onSelect: ({ text }) => message(`Selected ${text}`) });
     case 'avatar': return createAvatar(components.avatar.config(state));
+    case 'colorpicker': return createColorPicker(components.colorpicker.config(state));
+    case 'expansion-panel': return createExpansionPanel({ ...components['expansion-panel'].config(state), onChange: ({ open }) => message(open ? 'Panel expanded' : 'Panel collapsed') });
+    case 'form': return createFormPreview(components.form.config(state), message);
+    case 'skeleton': return createSkeleton(components.skeleton.config(state));
+    case 'stepper': return createStepper({ ...components.stepper.config(state), onChange: ({ value }) => message(`Step: ${value}`) });
     case 'badge': {
       const host = document.createElement('div');
       const target = createIconButton({ icon: componentIcons.inbox, ariaLabel: 'Inbox', variant: 'tonal' });

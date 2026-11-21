@@ -127,12 +127,15 @@ function page(path: string, title: string, description: string, template: string
       { name: addonDocGroup.label }, ...addonDocGroup.items] : []),
   ]) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
+  const addonCatalogStyles = isAddons && isCatalog
+    ? ['/dist/material-addons/styles.css', ...styleClosure(['text-field', 'button']).map(style => `/dist/material/styles/${style}.css`)]
+    : [];
   const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...addonCatalogStyles, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -183,7 +186,7 @@ const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(g
 // material-addons' components are not material's: their light-DOM styles ship as that
 // package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
 // example using any of them links that sheet instead.
-const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete', 'avatar']);
+const ADDONS_COMPONENTS = new Set<string>(addonSlugs);
 const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
@@ -338,7 +341,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else {
     const match = /^\/docs\/(components|addons)\/([a-z0-9-]+)\/$/.exec(path);
     const slug = match?.[2];
-    if (slug && match?.[1] === 'components' && (isGuide(slug) || docHref(slug).startsWith('/docs/addons/'))) {
+    if (slug && match?.[1] === 'components' && (isGuide(slug) || slug === 'form' || slug === 'colorpicker')) {
       return new Response(null, { status: 301, headers: { ...commonHeaders, Location: docHref(slug) + url.search } });
     }
     const document = slug && path === docHref(slug) ? renderDocument(slug) : null;

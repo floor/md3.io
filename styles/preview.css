@@ -64,3 +64,13 @@ html:is([data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stag
 #stage > :is(.mtrl-top-app-bar, .mtrl-bottom-app-bar) { position: fixed; left: 0; right: 0; width: auto; }
 #stage > .mtrl-top-app-bar { top: 0; bottom: auto; }
 #stage > .mtrl-bottom-app-bar { top: auto; bottom: 0; }
+
+html:is([data-component="autocomplete"], [data-component="colorpicker"], [data-component="expansion-panel"], [data-component="form"], [data-component="skeleton"], [data-component="stepper"]) #stage {
+  width: 100%;
+  min-width: 0;
+}
+#stage > :is(.mtrl-autocomplete, .mtrl-expansion-panel, .mtrl-form, .mtrl-stepper) {
+  width: min(100%, 460px);
+  min-width: 0;
+}
+#stage > .mtrl-skeleton--text { width: min(100%, 320px); }

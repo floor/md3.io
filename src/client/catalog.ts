@@ -13,8 +13,14 @@
 import type { ComponentSlug } from '../shared/components';
 import { registerPage } from './page-lifecycle';
 registerPage('catalog', (content, life) => {
-  const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
+  const modules: Record<ComponentSlug, () => Promise<{ define: (visual: Element) => void | (() => void) }>> = {
+    autocomplete: () => import('./catalog/autocomplete'),
     avatar: () => import('./catalog/avatar'),
+    colorpicker: () => import('./catalog/colorpicker'),
+    'expansion-panel': () => import('./catalog/expansion-panel'),
+    form: () => import('./catalog/form'),
+    skeleton: () => import('./catalog/skeleton'),
+    stepper: () => import('./catalog/stepper'),
     button: () => import('./catalog/button'),
     'icon-button': () => import('./catalog/icon-button'),
     'button-group': () => import('./catalog/button-group'),
@@ -80,7 +86,12 @@ registerPage('catalog', (content, life) => {
       if (!entry.isIntersecting || !pending.delete(entry.target)) continue;
       observer.unobserve(entry.target);
       const slug = slugOf(entry.target);
-      if (slug && Object.hasOwn(modules, slug)) modules[slug]().then(module => { if (!life.active) return; module.define(); wireSheetTriggers(entry.target); }).catch(error => console.error(`Could not load the ${slug} card`, error));
+      if (slug && Object.hasOwn(modules, slug)) modules[slug]().then(module => {
+        if (!life.active) return;
+        const cleanup = module.define(entry.target);
+        if (cleanup) life.add(cleanup);
+        wireSheetTriggers(entry.target);
+      }).catch(error => console.error(`Could not load the ${slug} card`, error));
     }
   }, { rootMargin: '100% 0px' }));
   for (const visual of pending) observer.observe(visual);
