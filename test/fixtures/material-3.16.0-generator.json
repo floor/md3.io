@@ -1,0 +1,8 @@
+{
+  "version": "3.16.0",
+  "repository": "https://github.com/floor/material",
+  "commit": "e4cd894327c9cf9a4dda1c529d29315e9ff01fef",
+  "path": "scripts/generate-themes.ts",
+  "sha256": "daa0d0882a3c788eeb3d7907b2c48dd5455fcc39dc6f60375b18ab3fc7596768",
+  "license": "material-3.16.0-LICENSE.txt"
+}

@@ -5,6 +5,7 @@ export default {
   title: "Settings",
   description: "Tabs, switches and buttons working together, the same screen in every framework.",
   components: ["tabs", "switch", "button"],
+  tags: ["Apps", "Forms"],
   about: [
     "A settings screen: two tabs, five switches and two buttons. Airplane mode disables Wi-Fi and Bluetooth; Save reads the state back, Reset restores the defaults.",
     "Every tab above runs the same components. The HTML tab uses the web components directly; React, Vue, Svelte and Solid use the generated adapters around them; Vanilla uses the factories the elements are built on.",

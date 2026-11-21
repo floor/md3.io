@@ -5,6 +5,7 @@ export default {
   title: "Booking",
   description: "Booking a stay at a fictional house, in four steps, with a live price summary on every step, the same in every framework.",
   components: ["datepicker", "timepicker", "text-field", "select", "card", "checkbox", "button", "dialog", "snackbar", "stepper"],
+  tags: ["Apps", "Forms", "Travel"],
   about: [
     "Book a stay at The Dune House, a fictional house in Alder Cove, in four steps: dates and arrival, guests and room, extras, then your details with a review of the first three. The price summary stays beside the stepper on wide frames and above it on mobile, and material-addons' stepper shows the way through. The hero and room pictures are generated SVG illustrations made for this example, so no photograph licence is needed.",
     "Every tab above runs the same components. The HTML tab uses the web components directly; React, Vue, Svelte and Solid use the generated adapters around them; Vanilla uses the factories the elements are built on. The stepper is material-addons' in every variant.",

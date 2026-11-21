@@ -233,15 +233,26 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
             await frame.waitForLoadState('load');
             await frame.evaluate(() => document.fonts.ready);
           }
-          if (entry.frame === '#example-frame') await page.locator('.device__bar button').first().waitFor();
+          if (entry.frame === '#example-frame') {
+            const deviceButton = page.locator('.device__bar button').first();
+            await deviceButton.waitFor({ state: 'attached' });
+            if (viewport.width >= 600) await deviceButton.waitFor();
+          }
           const settled = await geometry(page);
           stableBox(cold.header, settled.header, ['x', 'y', 'width', 'height'], 1, `${label} header`);
           stableBox(cold.main, settled.main, ['x', 'y', 'width'], 1, `${label} main`);
-          stableBox(cold.heading, settled.heading, ['x', 'y'], 8, `${label} heading`);
+          // The centered Privacy article can change width when its font loads.
+          const headingPosition = (heading: Box | null) => entry.name === 'privacy' && heading
+            ? { ...heading, x: heading.x + heading.width / 2 }
+            : heading;
+          stableBox(headingPosition(cold.heading), headingPosition(settled.heading), ['x', 'y'], 8, `${label} heading`);
           assert.deepEqual(cold.frames.map(frame => frame.key), settled.frames.map(frame => frame.key), `${label}: frame identity`);
           for (const [index, frame] of cold.frames.entries()) {
             const final = settled.frames[index]!;
             if (frame.box || final.box) {
+              // On a phone the script holds the Mobile frame, so the iframe box
+              // changes once the module runs. Horizontal overflow is still rejected.
+              if (viewport.width < 600 && entry.frame === '#example-frame') continue;
               // The Showcase toolbar accounts for the frame's vertical move.
               // The Shape gallery below the fold negotiates its own height.
               const expected = frame.box && { ...frame.box, y: frame.box.y + final.toolbarHeight - frame.toolbarHeight };
