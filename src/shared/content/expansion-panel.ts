@@ -6,6 +6,7 @@ export const expansionPanelComponent: ComponentDefinition<ExpansionPanelConfig> 
   description: 'Reveal details on demand. Group panels into an accordion when several sections belong together.',
   summary: 'Show or hide a section from its header.',
   styles: [],
+  previewLayout: 'fill',
   controls: [
     ...section('Content', [choose('example', 'Content', ['delivery', 'billing'], 'delivery', 'select')]),
     ...section('Behavior', [toggle('open', 'Expanded', false), toggle('divider', 'Show divider', true)]),

@@ -20,6 +20,7 @@ export const stepperComponent: ComponentDefinition<StepperConfig> = {
   description: 'Break a task into steps and show one panel at a time.',
   summary: 'Guide someone through a multi-step task.',
   styles: [],
+  previewLayout: 'fill',
   controls: [
     ...section('Content', [choose('workflow', 'Workflow', ['pickup', 'account'], 'pickup', 'select')]),
     ...section('Layout', [choose('orientation', 'Orientation', orientations, 'auto')]),
