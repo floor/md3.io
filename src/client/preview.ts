@@ -1,4 +1,5 @@
 import { applyTheme } from './theme-sheets';
+import { createAvatar } from 'material-addons/components/avatar';
 import createBadge from 'material/components/badge';
 import createProgress from 'material/components/progress';
 import createLoadingIndicator from 'material/components/loading-indicator';
@@ -84,6 +85,7 @@ function create(state: ComponentState) {
   const message = (value: string) => { if (instance === generation) report(value); };
   const sync = (values: ComponentState) => { if (instance === generation) syncValues(values); };
   switch (slug) {
+    case 'avatar': return createAvatar(components.avatar.config(state));
     case 'badge': {
       const host = document.createElement('div');
       const target = createIconButton({ icon: componentIcons.inbox, ariaLabel: 'Inbox', variant: 'tonal' });

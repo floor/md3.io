@@ -14,6 +14,7 @@ import type { ComponentSlug } from '../shared/components';
 import { registerPage } from './page-lifecycle';
 registerPage('catalog', (content, life) => {
   const modules: Record<ComponentSlug, () => Promise<{ define: () => void }>> = {
+    avatar: () => import('./catalog/avatar'),
     button: () => import('./catalog/button'),
     'icon-button': () => import('./catalog/icon-button'),
     'button-group': () => import('./catalog/button-group'),

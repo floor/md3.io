@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { renderDocument } from '../src/server/content';
-import { searchSite, tokenize } from '../src/server/search';
+import { SECTIONS, searchSite, tokenize } from '../src/server/search';
 
 const components = (query: string) => searchSite(query).filter(result => result.section === 'Components').map(result => result.url);
 
@@ -39,10 +39,10 @@ describe('site search', () => {
   test('an example is found by its name', () => {
     expect(searchSite('settings').find(result => result.section === 'Showcase')?.url).toBe('/showcase/settings/');
   });
-  test('results come one per page, grouped Components, Styles, Docs, Showcase', () => {
+  test('results come one per page, grouped Components, Add-ons, Styles, Docs, Showcase', () => {
     const results = searchSite('dialog', 50);
     expect(new Set(results.map(result => result.url.split('#')[0])).size).toBe(results.length);
-    const order = results.map(result => ['Components', 'Styles', 'Docs', 'Showcase'].indexOf(result.section));
+    const order = results.map(result => SECTIONS.indexOf(result.section));
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
   test('the Styles pages are found by what they list', () => {

@@ -48,7 +48,7 @@ export interface Scenario {
   source: string;
 }
 /** What a content module exports for its component: one entry of the `components` registry. */
-export interface ComponentDefinition {
+export interface ComponentDefinition<Config = unknown> {
   /** The playground group the component sits under (Actions, Navigation, ...). */
   group: string;
   name: string;
@@ -68,7 +68,7 @@ export interface ComponentDefinition {
   previewOnly?: readonly string[];
   scenarios: readonly Scenario[];
   controls: Control[];
-  config: (state: ComponentState) => unknown;
+  config: (state: ComponentState) => Config;
 }
 export const section = (title: NonNullable<Control['section']>, controls: Control[]): Control[] => controls.map(control => ({ ...control, section: title }));
 /** The row is hidden: `replaced` names a state key, and that key is not on. */

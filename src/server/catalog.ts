@@ -6,6 +6,7 @@
 // (src/client/catalog/<slug>.ts): a trigger inside the card, and the real
 // overlay, which opens in the top layer or as a modal and closes normally.
 import { symbols } from '../shared/icons';
+import { addonSlugs } from '../shared/addons';
 import { components, componentSlugs, type ComponentSlug } from '../shared/components';
 import { scopedTokens } from './tokens';
 
@@ -47,6 +48,7 @@ const picsum = (id: number) => `https://picsum.photos/id/${id}/400/296`;
 const card = components.card.config({ title: 'A little time outside', subtitle: 'Find your next escape', content: '', media: false, actions: true, variant: 'elevated' });
 
 const visuals: Record<ComponentSlug, string> = {
+  avatar: m('avatar', { variant: 'text', text: 'AL', label: 'Ada Lovelace', 'supporting-text': 'Editor' }),
   // Actions
   button: m('button', {}, 'Button') + m('button', { variant: 'outlined' }, 'Button'),
   'icon-button': ['standard', 'filled', 'tonal', 'outlined'].map(variant => m('icon-button', { variant, icon: symbols.heart, 'aria-label': 'Add to favorites' })).join(''),
@@ -124,4 +126,4 @@ export function catalogVisual(slug: ComponentSlug): string {
 }
 
 /** Every visual, for the checks. */
-export const catalogVisuals = Object.fromEntries(componentSlugs.map(slug => [slug, catalogVisual(slug)])) as Record<ComponentSlug, string>;
+export const catalogVisuals = Object.fromEntries([...componentSlugs, ...addonSlugs].map(slug => [slug, catalogVisual(slug)])) as Record<ComponentSlug, string>;

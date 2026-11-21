@@ -38,7 +38,10 @@
 /components/toolbar/
 /components/tooltip/
 /components/top-app-bar/
+/addons/
+/addons/avatar/
 /docs/
+/docs/addons/avatar/
 /docs/architecture/
 /docs/components/architecture/
 /docs/components/badge/

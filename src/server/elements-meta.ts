@@ -2,6 +2,8 @@
 // generators (src/shared/frameworks.ts). Read on the server from mtrl/elements,
 // which imports safely there; the browser gets JSON, not the elements.
 import { elements, declarations } from 'material/elements';
+import { avatarElement } from 'material-addons/elements/avatar';
+import { isAddon } from '../shared/addons';
 import type { ChildrenMeta, ConfigKey, ElementMeta, OpenMeta, SlottedMeta, TriggerMeta } from '../shared/frameworks';
 
 type Spec = {
@@ -15,7 +17,7 @@ type Spec = {
   form?: unknown;
 };
 
-const registry = elements as Record<string, { spec: Spec } | undefined>;
+const registry = { ...elements, avatar: avatarElement } as Record<string, { spec: Spec } | undefined>;
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 // How a playground's config array becomes declaration children: what mtrl's
@@ -290,6 +292,7 @@ export function elementMeta(slug: string): ElementMeta | null {
   const textAttributes = new Set(['label', ...[kids?.text ?? []].flat()]);
   return {
     name: spec.name,
+    ...(isAddon(slug) ? { library: 'material-addons' as const } : {}),
     attributes,
     properties: Object.fromEntries(Object.entries(spec.properties ?? {}).map(([name, p]) => [name, {
       ...(p.config ? { config: p.config } : {}),
