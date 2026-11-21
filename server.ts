@@ -6,7 +6,7 @@ import { themes } from './src/shared/button';
 import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
-import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
+import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
 import { HEADER_SCOPE, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
@@ -263,9 +263,9 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: examplesUsingComponent(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
-  else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
+  else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
   // to its /showcase/ twin, the query kept (the browser keeps the fragment).
   else if (path === '/examples/' || /^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
