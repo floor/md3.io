@@ -1,138 +1,214 @@
-// What a visitor does with this example; scripts/check-examples.ts runs it in every
-// framework and compares what each one shows afterwards.
-//
-// Locators stay with roles and names, as Settings' check does. Three of them lean on
-// DOM order, which is the same in every variant: the label filter sits above the
-// cards, and the editor's chips come after them, so the first "Work" gridcell is the
-// filter's and the last "Travel" one is the editor's. The editor's fields are the
-// only textboxes on the page, so they need no scoping.
-import type { Frame, Page } from "playwright";
+import assert from "node:assert/strict";
+import type { Frame, Locator, Page } from "playwright";
+
+const exact = { exact: true } as const;
 
 export async function checkFrame(frame: Frame): Promise<void> {
+  const openSearch = frame.getByRole("button", { name: "Search notes", ...exact });
   const search = frame.getByRole("combobox", { name: "Search notes" });
+  await openSearch.or(search).first().waitFor();
+  if (await openSearch.isVisible()) await openSearch.click();
   await search.fill("Pasta sauce");
   await frame.getByRole("status").filter({ hasText: /^Showing 1 of / }).waitFor();
-  await frame.getByRole("button", { name: "Open Pasta sauce", exact: true }).waitFor();
-  // Dismiss search to cancel its scheduled input focus before the outer page tests Tab.
-  await frame.getByRole("button", { name: "Go back", exact: true }).click();
+  await frame.getByRole("button", { name: "Pasta sauce", ...exact }).waitFor();
+  // Settle the search focus before the parent page tests footer keyboard navigation.
+  await frame.getByRole("button", { name: "Go back", ...exact }).click();
   await search.and(frame.locator('[aria-expanded="false"]')).waitFor();
 }
 
+const category = (drawer: Locator, label: string) =>
+  drawer.getByRole("button", { name: new RegExp(`^${label}(?: ?[0-9]+)?$`) });
+
+async function assertBadge(drawer: Locator, label: string, count: number): Promise<void> {
+  const badge = category(drawer, label).locator(".mtrl-drawer__item-badge");
+  if (count === 0) await badge.waitFor({ state: "hidden" });
+  else await badge.filter({ hasText: new RegExp(`^${count}$`) }).waitFor();
+}
+
 export default async function steps(page: Page): Promise<void> {
-  const exact = { exact: true } as const;
-  // A closed snackbar fades to opacity 0 but keeps its box (the component's own
-  // display rule beats the closed-popover one), so Playwright's visibility never
-  // turns — wait for the toast to settle instead. The element keeps its toast in
-  // a shadow root; the factory's toast is the root itself.
-  const snackbarSettled = () =>
-    page.waitForFunction(() => {
-      const hosts = [...document.querySelectorAll("m-snackbar, .mtrl-snackbar")];
-      return hosts.every((host) => {
-        const root = host.shadowRoot ?? host;
-        const toast = root.querySelector("[popover]") ?? host;
-        return Number.parseFloat(getComputedStyle(toast).opacity) < 0.1;
-      });
-    });
+  const button = (name: string) => page.getByRole("button", { name, ...exact });
+  const article = (name: string) => page.getByRole("article", { name, ...exact });
+  const textbox = (name: string) => page.getByRole("textbox", { name, ...exact });
+  const labelChip = (name: string) => page.getByRole("gridcell", { name, ...exact });
+  const search = page.getByRole("combobox", { name: "Search notes" });
+  const fab = button("New note");
+  const inline = page.getByRole("navigation", { name: "Categories" });
+  const modal = page.getByRole("dialog", { name: "Categories" });
+  const notesStatus = page.getByRole("status").filter({ hasText: /^Showing / });
+  const count = (shown: number, total: number) =>
+    notesStatus.filter({ hasText: `Showing ${shown} of ${total} notes.` }).waitFor();
+  const action = async (title: string, command: string) => {
+    await button(`More actions for ${title}`).click();
+    await page.getByRole("menuitem", { name: command, ...exact }).click();
+  };
 
-  // The New note FAB is the extended one in every variant: its label is visible,
-  // not only an accessible name (the Vue and Svelte adapters once drew it
-  // icon-only, and the aria snapshots could not see the difference — a rendered
-  // label is about twice an icon-only FAB's 56px). Its text sits in the host, so
-  // neither textContent nor innerText reaches it through the role query; the box
-  // is the honest measure.
-  const fab = page.getByRole("button", { name: "New note", ...exact });
-  if (((await fab.boundingBox())?.width ?? 0) < 100) throw new Error("The New note FAB lost its visible label");
+  await page.getByText("Notes", exact).waitFor();
+  await inline.waitFor();
+  await inline.getByText("Labels", exact).waitFor();
+  await assertBadge(inline, "All notes", 11);
+  await assertBadge(inline, "Pinned", 2);
+  await assertBadge(inline, "Ideas", 4);
+  await assertBadge(inline, "Shopping", 3);
+  await assertBadge(inline, "Work", 3);
+  await assertBadge(inline, "Travel", 2);
+  await category(inline, "All notes").and(page.locator('[aria-current="page"]')).waitFor();
+  assert.ok(((await fab.boundingBox())?.width ?? 0) > 100, "The extended FAB shows its label");
 
-  // Filter by Work from the row above the grid, then clear it.
-  await page.getByRole("gridcell", { name: "Work", ...exact }).first().click();
-  await page.getByRole("gridcell", { name: "Work", ...exact }).first().click();
+  assert.deepEqual(await page.locator(".notes__section h2").allTextContents(), [
+    "Pinned", "Today", "Yesterday", "Earlier this week", "Older",
+  ]);
+  const sectionTimes = await page.locator(".notes__section").evaluateAll(sections => sections.map(section =>
+    [...section.querySelectorAll("article")].map(card => card.querySelector("time")?.getAttribute("datetime") ?? ""),
+  ));
+  for (const dates of sectionTimes) {
+    assert.ok(dates.every(value => Number.isFinite(Date.parse(value))), "Every card has a valid edit date");
+    assert.deepEqual(dates, [...dates].sort().reverse(), "Cards in each section are sorted newest first");
+  }
+  await article("Pasta sauce").getByText("Edited 2 hours ago", exact).waitFor();
+  await article("Books to borrow").getByText("12 Nov", exact).waitFor();
 
-  // A card's own chips filter too: isolate the Packing list card with the search,
-  // click its Shopping chip (with only the filter row besides it, the card's is
-  // the last "Shopping"), then clear both.
-  await page.getByRole("combobox", { name: "Search notes" }).fill("packing");
-  await page.getByRole("gridcell", { name: "Shopping", ...exact }).last().click();
-  await page.getByRole("gridcell", { name: "Shopping", ...exact }).last().click();
-  await page.getByRole("combobox", { name: "Search notes" }).fill("");
+  await category(inline, "Pinned").click();
+  await count(2, 11);
+  await category(inline, "Work").click();
+  await category(inline, "Work").and(page.locator('[aria-current="page"]')).waitFor();
+  await count(3, 11);
+  await article("Meeting points").waitFor();
+  await article("Pasta sauce").waitFor({ state: "hidden" });
+  await category(inline, "All notes").click();
+  await search.fill("pasta");
+  await count(1, 11);
+  await search.fill("meeting");
+  await count(1, 11);
+  await article("Meeting points").waitFor();
+  await search.fill("xylophone");
+  await page.getByText("No notes match your search.", exact).waitFor();
+  await search.fill("");
+  await button("Go back").click();
+  await search.and(page.locator('[aria-expanded="false"]')).waitFor();
 
-  // Search narrows the grid: a hit, a pinned-only hit (no empty message while a
-  // pinned note shows), nothing at all, and back.
-  await page.getByRole("combobox", { name: "Search notes" }).fill("pasta");
-  await page.getByRole("combobox", { name: "Search notes" }).fill("meeting");
-  await page.getByRole("combobox", { name: "Search notes" }).fill("xylophone");
-  await page.getByRole("combobox", { name: "Search notes" }).fill("");
+  const sauce = article("Pasta sauce");
+  const preview = sauce.getByText(/^Fry garlic/);
+  await preview.scrollIntoViewIfNeeded();
+  const box = await preview.boundingBox();
+  assert.ok(box);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  assert.equal(await textbox("Title").inputValue(), "Pasta sauce");
+  await button("Cancel").click();
 
-  // Pin a note: it moves to the Pinned section.
-  await page.getByRole("button", { name: "Pin Pasta sauce", ...exact }).click();
+  await action("Pasta sauce", "Pin");
+  await assertBadge(inline, "Pinned", 3);
+  await page.locator(".notes__section").filter({ has: page.getByRole("heading", { name: "Pinned", ...exact }) })
+    .getByRole("article", { name: "Pasta sauce", ...exact }).waitFor();
 
-  // Edit a note: rename it and add a label in the editor.
-  await page.getByRole("button", { name: "Open Pasta sauce", ...exact }).click();
-  await page.getByRole("textbox", { name: "Title", ...exact }).fill("Pasta sauce v2");
-  await page.getByRole("gridcell", { name: "Travel", ...exact }).last().click();
-  await page.getByRole("button", { name: "Save", ...exact }).click();
+  await action("Pasta sauce", "Labels");
+  await textbox("Title").fill("Pasta sauce v2");
+  await labelChip("Travel").click();
+  await button("Save").click();
+  await assertBadge(inline, "Travel", 3);
+  await article("Pasta sauce v2").getByText("Edited just now", exact).waitFor();
 
-  // Switch to the list view.
-  await page.getByRole("button", { name: "List view", ...exact }).click();
+  await button("List view").click();
+  await page.locator(".notes__grid.list").first().waitFor();
+  await fab.click();
+  await textbox("Title").fill("Spare keys");
+  await textbox("Note").fill("Hide a set with the neighbour.");
+  await labelChip("Travel").click();
+  await button("Save").click();
+  await assertBadge(inline, "Travel", 4);
+  await action("Spare keys", "Delete");
+  await assertBadge(inline, "Travel", 3);
+  await button("Undo").click();
+  await assertBadge(inline, "Travel", 4);
+  await article("Spare keys").waitFor();
 
-  // Create a note from the FAB.
-  await page.getByRole("button", { name: "New note", ...exact }).click();
-  await page.getByRole("textbox", { name: "Title", ...exact }).fill("Spare keys");
-  await page.getByRole("textbox", { name: "Note", ...exact }).fill("Hide a set with the neighbour.");
-  await page.getByRole("gridcell", { name: "Travel", ...exact }).last().click();
-  await page.getByRole("button", { name: "Save", ...exact }).click();
+  await category(inline, "Travel").click();
+  await count(4, 12);
+  for (const title of ["Pasta sauce v2", "Packing list", "Spare keys", "City walk route"]) {
+    await action(title, "Labels");
+    await labelChip("Travel").click();
+    await button("Save").click();
+    await article(title).waitFor({ state: "hidden" });
+  }
+  await assertBadge(inline, "Travel", 0);
+  await page.getByText("No notes in Travel yet", exact).waitFor();
+  await button("Create note").click();
+  await textbox("Title").fill("Never saved");
+  await button("Delete").click();
+  await textbox("Title").waitFor({ state: "hidden" });
+  await count(0, 12);
 
-  // Delete it from its card, then undo.
-  await page.getByRole("button", { name: "Delete Spare keys", ...exact }).click();
-  await page.getByRole("button", { name: "Undo", ...exact }).click();
+  // Shrink the app inside a wide viewport to exercise the container breakpoint.
+  // An edit of an existing note stays in the field across the switch, and Cancel leaves the card as it was.
+  const app = page.locator("#app");
+  await category(inline, "All notes").click();
+  await button("Pasta sauce v2").click();
+  await textbox("Title").fill("Pasta sauce edited");
+  await app.evaluate(node => { node.style.width = "390px"; });
+  await textbox("Title").waitFor();
+  assert.equal(await textbox("Title").inputValue(), "Pasta sauce edited");
+  await app.evaluate(node => { node.style.removeProperty("width"); });
+  await textbox("Title").waitFor();
+  assert.equal(await textbox("Title").inputValue(), "Pasta sauce edited");
+  await button("Cancel").click();
+  await textbox("Title").waitFor({ state: "hidden" });
+  await article("Pasta sauce v2").getByText(/^Fry garlic/).waitFor();
+  await article("Pasta sauce edited").waitFor({ state: "hidden" });
 
-  // Delete a note from the editor. The snackbar dismisses itself on its timer;
-  // the pointer moves away first, because a hover or focus inside it pauses that
-  // timer. The toast is waited OPEN before it is waited out: a re-show can land
-  // a tick after the click (the Undo click before it closed the previous toast),
-  // and settling alone would pass on that dying toast.
-  await page.getByRole("button", { name: "Open Story prompts", ...exact }).click();
-  await page.getByRole("button", { name: "Delete", ...exact }).click();
-  await page.mouse.move(8, 8);
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll("m-snackbar, .mtrl-snackbar")].some((host) => {
-      const root = host.shadowRoot ?? host;
-      const toast = root.querySelector("[popover]") ?? host;
-      return Number.parseFloat(getComputedStyle(toast).opacity) >= 0.9;
-    }),
-  );
-  await snackbarSettled();
+  const opener = button("Open categories");
+  await app.evaluate(node => { node.style.width = "390px"; });
+  await opener.waitFor();
+  await inline.waitFor({ state: "hidden" });
+  await app.evaluate(node => { node.style.removeProperty("width"); });
+  await inline.waitFor();
 
-  // Delete in the editor of a note that was never saved discards the draft: the
-  // editor closes, no snackbar opens for it, and the grid loses nothing. The
-  // toast is checked the moment the editor closes — a deletion that was forged
-  // here would have it at full opacity for its whole timer, and a check made
-  // after a fade would let that bug through.
-  const shown = page.getByRole("status").filter({ hasText: "Showing" });
-  await page.getByRole("button", { name: "New note", ...exact }).click();
-  await page.getByRole("textbox", { name: "Title", ...exact }).fill("Never saved");
-  const shownBefore = await shown.textContent();
-  await page.getByRole("button", { name: "Delete", ...exact }).click();
-  await page.getByRole("textbox", { name: "Title", ...exact }).waitFor({ state: "hidden" });
-  const toastOpen = await page.evaluate(() =>
-    [...document.querySelectorAll("m-snackbar, .mtrl-snackbar")].some((host) => {
-      const root = host.shadowRoot ?? host;
-      const toast = root.querySelector("[popover]") ?? host;
-      return Number.parseFloat(getComputedStyle(toast).opacity) >= 0.1;
-    }),
-  );
-  if (toastOpen) throw new Error("Delete of a never-saved note opened the deletion snackbar");
-  if ((await shown.textContent()) !== shownBefore) throw new Error("Delete of a never-saved note changed the note count");
-  if ((await page.getByRole("article", { name: "Never saved", ...exact }).count()) !== 0) throw new Error("A never-saved note reached the grid");
-
-  // On a narrow frame the editor is the bottom sheet: reload narrow (the variant
-  // picks its container when it loads), create a note there, and save it.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
-  await page.waitForFunction(() => (document.getElementById("app")?.childElementCount ?? 0) > 0);
-  await page.getByRole("button", { name: "New note", ...exact }).click();
-  await page.getByRole("textbox", { name: "Title", ...exact }).fill("Narrow note");
-  await page.getByRole("textbox", { name: "Note", ...exact }).fill("Written on a phone.");
-  await page.getByRole("gridcell", { name: "Travel", ...exact }).last().click();
-  await page.getByRole("button", { name: "Save", ...exact }).click();
-  await page.getByRole("button", { name: "Delete Narrow note", ...exact }).waitFor();
+  await opener.click();
+  await modal.waitFor();
+  await category(modal, "Travel").click();
+  await modal.waitFor({ state: "hidden" });
+  await page.locator(".notes__menu").evaluate(node => {
+    if (document.activeElement === node || node.contains(document.activeElement)) return;
+    throw new Error("Closing the category drawer did not return focus to the menu button");
+  });
+  await count(2, 11);
+  await opener.click();
+  await category(modal, "Travel").and(page.locator('[aria-current="page"]')).waitFor();
+  await category(modal, "All notes").click();
+  await modal.waitFor({ state: "hidden" });
+  await search.waitFor({ state: "hidden" });
+  await button("Search notes").click();
+  await search.fill("pasta");
+  await count(1, 11);
+  await button("Go back").click();
+  await button("Close search").click();
+  await search.waitFor({ state: "hidden" });
+
+  await fab.click();
+  await textbox("Title").fill("Narrow note");
+  await textbox("Note").fill("Written on a phone.");
+  await labelChip("Travel").click();
+  await button("Save").click();
+  await article("Narrow note").waitFor();
+
+  const fabHeight = (await fab.boundingBox())?.height ?? 0;
+  const padding = await page.locator(".notes").evaluate(node => parseFloat(getComputedStyle(node).paddingBottom));
+  assert.equal(padding, fabHeight + 24, "Mobile leaves the FAB height and margin beneath the last card");
+
+  const barClears = async (width: number) => {
+    await page.setViewportSize({ width, height: 900 });
+    const bar = page.locator(".notes .mtrl-top-app-bar").first();
+    const note = page.locator(".notes article").first();
+    await note.waitFor();
+    const barBox = await bar.boundingBox();
+    const noteBox = await note.boundingBox();
+    assert.ok(barBox && noteBox, `The app bar and the first note are on screen at ${width}`);
+    assert.ok(barBox.y + barBox.height <= noteBox.y + 1, `The app bar overlaps the first note at ${width}`);
+    const fabBox = await fab.boundingBox();
+    const clearance = await page.locator(".notes").evaluate(node => parseFloat(getComputedStyle(node).paddingBottom));
+    assert.equal(clearance, (fabBox?.height ?? 0) + 24, `The FAB covers the last card at ${width}`);
+  };
+  for (const width of [390, 820, 1440]) await barClears(width);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await button("Open categories").waitFor();
 }
