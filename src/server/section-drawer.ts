@@ -21,7 +21,7 @@ export function renderSectionDrawer(path: string, label: string, entries: readon
     }
     return `<m-drawer-item type="section">${escape(entry.name)}</m-drawer-item>`;
   }).join('');
-  const markup = renderElement('m-drawer', { class: 'site-drawer', open: true, value: path, 'aria-label': label }, items, renderStyles);
+  const markup = renderElement('m-drawer', { class: 'site-drawer', open: true, dense: true, value: path, 'aria-label': label }, items, renderStyles);
   // The element builds fresh interactive rows on upgrade. Native links and buttons
   // already tab in document order. CSS hides closed groups before upgrade and
   // exposes every link when scripting is unavailable.
