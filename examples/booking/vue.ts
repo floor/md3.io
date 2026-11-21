@@ -4,8 +4,7 @@ import { MButton, MCard, MCheckbox, MDatepicker, MRadio, MRadios, MSelect, MSele
 import { MStep, MStepper } from 'material-addons/vue';
 import type { StepperElement } from 'material-addons/elements';
 import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
-import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors, type Room } from './shared';
-import { focusControl, invalidateSteps, watchHotel } from './hotel-ui';
+import { focusControl, invalidateSteps, watchHotel, DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors, type Room } from './shared';
 const HotelSummary=defineComponent({
   props:{booking:{type:Object as PropType<Booking>,required:true}},
   setup(){return {HOTEL,stayText,guestText,roomOf,rateText,priceLines,money,total,vatIncluded,cancellation,unavailable};},
@@ -32,7 +31,7 @@ export default defineComponent({
       if(event.detail.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});
       if(event.detail.value==='confirmation'){for(const step of STEPS.slice(0,4))stepperEl.value?.element.setStepState(step.value,{editable:false});stepperEl.value?.element.completeStep('confirmation');}
     };
-    const choose=(value:string,focus=false)=>{update(choicePatch(value));if(focus)requestAnimationFrame(()=>rootEl.value?.querySelector<HTMLElement>(`[data-choice="${value}"]`)?.focus());};
+    const choose=(value:string,focus=false)=>{update(choicePatch(value));if(focus)rootEl.value?.querySelector<HTMLElement>(`[data-choice="${value}"]`)?.focus();};
     const onChoiceKey=(event:KeyboardEvent,value:string)=>{
       const options=choices(s);let next:string|undefined;
       if(['ArrowRight','ArrowDown'].includes(event.key))next=choiceAfter(s,value,1);else if(['ArrowLeft','ArrowUp'].includes(event.key))next=choiceAfter(s,value,-1);

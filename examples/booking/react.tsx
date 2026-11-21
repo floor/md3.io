@@ -4,8 +4,7 @@ import { Button, Card, Checkbox, Datepicker, Radio, Radios, Select, SelectOption
 import { Step, Stepper } from 'material-addons/react';
 import type { StepperElement } from 'material-addons/elements';
 import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
-import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-import { focusControl, invalidateSteps, watchHotel } from './hotel-ui';
+import { focusControl, invalidateSteps, watchHotel, DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
 
 export default function Booking() {
   const [s,setS]=useState<Booking>({...DEFAULTS});
@@ -37,7 +36,7 @@ export default function Booking() {
   };
   const choose=(value:string,focus=false)=>{
     update(choicePatch(value));
-    if(focus)requestAnimationFrame(()=>refs.root.current?.querySelector<HTMLElement>(`[data-choice="${value}"]`)?.focus());
+    if(focus)refs.root.current?.querySelector<HTMLElement>(`[data-choice="${value}"]`)?.focus();
   };
   const onChoiceKey=(event:{key:string;preventDefault():void},value:string)=>{
     const options=choices(s);let next:string|undefined;
