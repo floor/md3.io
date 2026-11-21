@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { DEFAULTS, amend, cityTax, extraCost, extrasTotal, nightlyRate, roomAfter, roomOf, roomTotal, total, unavailable, validateStep, vatIncluded } from '../examples/booking/hotel';
+import { DEFAULTS, amend, choicePatch, cityTax, extraCost, extrasTotal, nightlyRate, roomAfter, roomOf, roomTotal, total, unavailable, validateStep, vatIncluded } from '../examples/booking/hotel';
 describe('hotel booking rules', () => {
   test('a stay totals rooms, priced extras and city tax; VAT is included', () => {
     const stay={...DEFAULTS, adults:'4', rooms:'2', breakfast:true, parking:true, lateCheckout:true, transfer:true};
@@ -42,8 +42,9 @@ describe('hotel booking rules', () => {
   });
 });
 
-test('the room summary is committed only when the room step completes', () => {
+test('the room summary waits for selection and resets when the stay changes', () => {
   expect(DEFAULTS.roomChosen).toBe(false);
+  expect(amend(DEFAULTS,choicePatch('suite:breakfast')).roomChosen).toBe(true);
   const chosen=amend(DEFAULTS,{roomChosen:true});
   expect(chosen.roomChosen).toBe(true);
   expect(amend(chosen,{adults:'3'}).roomChosen).toBe(false);
