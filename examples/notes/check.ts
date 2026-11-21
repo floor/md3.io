@@ -138,7 +138,19 @@ export default async function steps(page: Page): Promise<void> {
   await count(0, 12);
 
   // Shrink the app inside a wide viewport to exercise the container breakpoint.
+  // An edit in progress stays open in the other surface, with what was typed.
   const app = page.locator("#app");
+  await button("Create note").click();
+  await textbox("Title").fill("Kept across the breakpoint");
+  await app.evaluate(node => { node.style.width = "390px"; });
+  await textbox("Title").waitFor();
+  assert.equal(await textbox("Title").inputValue(), "Kept across the breakpoint");
+  await app.evaluate(node => { node.style.removeProperty("width"); });
+  await textbox("Title").waitFor();
+  assert.equal(await textbox("Title").inputValue(), "Kept across the breakpoint");
+  await button("Cancel").click();
+  await textbox("Title").waitFor({ state: "hidden" });
+
   const opener = button("Open categories");
   await app.evaluate(node => { node.style.width = "390px"; });
   await opener.waitFor();
@@ -179,4 +191,21 @@ export default async function steps(page: Page): Promise<void> {
   const fabHeight = (await fab.boundingBox())?.height ?? 0;
   const padding = await page.locator(".notes").evaluate(node => parseFloat(getComputedStyle(node).paddingBottom));
   assert.equal(padding, fabHeight + 24, "Mobile leaves the FAB height and margin beneath the last card");
+
+  const barClears = async (width: number) => {
+    await page.setViewportSize({ width, height: 900 });
+    const bar = page.locator(".notes .mtrl-top-app-bar").first();
+    const note = page.locator(".notes article").first();
+    await note.waitFor();
+    const barBox = await bar.boundingBox();
+    const noteBox = await note.boundingBox();
+    assert.ok(barBox && noteBox, `The app bar and the first note are on screen at ${width}`);
+    assert.ok(barBox.y + barBox.height <= noteBox.y + 1, `The app bar overlaps the first note at ${width}`);
+    const fabBox = await fab.boundingBox();
+    const clearance = await page.locator(".notes").evaluate(node => parseFloat(getComputedStyle(node).paddingBottom));
+    assert.equal(clearance, (fabBox?.height ?? 0) + 24, `The FAB covers the last card at ${width}`);
+  };
+  for (const width of [390, 820, 1440]) await barClears(width);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await button("Open categories").waitFor();
 }

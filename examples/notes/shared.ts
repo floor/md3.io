@@ -105,6 +105,12 @@ export function editedLabel(editedAt: number): string {
   return `Edited ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
 }
 
+/** A saved note with no title still has a name, so the card stays a control. */
+export function noteTitle(value: string): string {
+  const title = value.trim();
+  return title.length > 0 ? title : "Untitled note";
+}
+
 export function emptyLabel(s: State): string {
   if (s.query.trim()) return "No notes match your search.";
   if (s.category === "all") return "No notes yet.";

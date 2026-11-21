@@ -4,7 +4,7 @@
   import { defineTopAppBar } from "material/elements";
   import { BottomSheet, Button, ButtonGroup, ButtonGroupItem, Card, Chip, Chips, Dialog, Drawer, DrawerItem, ExtendedFab, IconButton, Menu, MenuItem, Search, Snackbar, TextField } from "material/svelte";
   import { DEFAULTS, LABELS, ADD_ICON, CLOSE_ICON, GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON,
-    categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, observeCompact, status, visible,
+    categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, noteTitle, observeCompact, status, visible,
     type Category, type LabelId, type Note, type State } from "./shared";
 
   defineTopAppBar();
@@ -22,15 +22,19 @@
   let compact = $state(false);
   let drawerOpen = $state(false);
   let searchOpen = $state(false);
+  let resizing = false;
   $effect(() => {
     if (shell) return observeCompact(shell, narrow => {
+      resizing = true;
       compact = narrow;
       drawerOpen = false;
       searchOpen = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => { resizing = false; }));
     });
   });
   let s = $state<State>({ ...DEFAULTS, notes: DEFAULTS.notes.map((n) => ({ ...n, labels: [...n.labels] })) });
   let draft = $state<{ note: Note | null; title: string; text: string; labels: LabelId[] } | null>(null);
+  const dismissEditor = () => { if (!resizing) draft = null; };
   let snackbar = $state<{ element?: { show: () => void } } | null>(null);
   let deleted: { note: Note; at: number } | null = null;
 
@@ -42,13 +46,13 @@
     const d = draft;
     if (!d) return;
     if (d.note) {
-      d.note.title = d.title;
+      d.note.title = noteTitle(d.title);
       d.note.text = d.text;
       d.note.labels = [...d.labels];
       d.note.editedAt = nextEdit(s.notes);
       s = { ...s };
     } else {
-      s = { ...s, notes: [...s.notes, { id: crypto.randomUUID(), title: d.title, text: d.text, labels: [...d.labels], pinned: s.category === "pinned", editedAt: nextEdit(s.notes) }] };
+      s = { ...s, notes: [...s.notes, { id: crypto.randomUUID(), title: noteTitle(d.title), text: d.text, labels: [...d.labels], pinned: s.category === "pinned", editedAt: nextEdit(s.notes) }] };
     }
     draft = null;
   };
@@ -169,7 +173,7 @@
   </div>
   <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onclick={() => open(null)}>New note</ExtendedFab>
   {#if compact}
-    <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onclose={() => (draft = null)}>
+    <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onclose={dismissEditor}>
       <div class="notes__fields">
         <TextField label="Title" value={draft?.title ?? ""} oninput={(e) => draft && (draft = { ...draft, title: e.detail.value })} />
         <TextField label="Note" type="multiline" value={draft?.text ?? ""} oninput={(e) => draft && (draft = { ...draft, text: e.detail.value })} />
@@ -186,7 +190,7 @@
       </div>
     </BottomSheet>
   {:else}
-    <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onclose={() => (draft = null)}>
+    <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onclose={dismissEditor}>
       <div class="notes__fields">
         <TextField label="Title" value={draft?.title ?? ""} oninput={(e) => draft && (draft = { ...draft, title: e.detail.value })} />
         <TextField label="Note" type="multiline" value={draft?.text ?? ""} oninput={(e) => draft && (draft = { ...draft, text: e.detail.value })} />

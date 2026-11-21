@@ -14,7 +14,7 @@ import createSearch from "material/components/search";
 import createSnackbar from "material/components/snackbar";
 import createTextField from "material/components/text-field";
 import { DEFAULTS, LABELS, ADD_ICON, CLOSE_ICON, GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON,
-  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, observeCompact, status, visible,
+  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, noteTitle, observeCompact, status, visible,
   type Category, type LabelId, type Note, type State } from "./shared";
 
 const s: State = { ...DEFAULTS, notes: DEFAULTS.notes.map((n) => ({ ...n, labels: [...n.labels] })) };
@@ -132,7 +132,7 @@ fields.append(titleField.element, textField.element, editorChips.element);
 let editing: Note | null = null;
 const save = (): void => {
   if (!editing) return;
-  editing.title = titleField.getValue();
+  editing.title = noteTitle(titleField.getValue());
   editing.text = textField.getValue();
   editing.labels = [...editorLabels];
   editing.editedAt = nextEdit(s.notes);
@@ -165,7 +165,7 @@ sheetActions.append(
   sheetButton("Cancel", "text", () => { sheet.close(); }),
   sheetButton("Save", undefined, save),
 );
-const editorOpen = (note: Note | null): void => {
+const editorOpen = (note: Note | null, headline = note ? "Edit note" : "New note"): void => {
   editing = note ?? { id: crypto.randomUUID(), title: "", text: "", labels: categoryLabels(s.category), pinned: s.category === "pinned", editedAt: nextEdit(s.notes) };
   const editor = compact ? sheet : dialog;
   if (compact) {
@@ -175,7 +175,7 @@ const editorOpen = (note: Note | null): void => {
     sheetActions.remove();
     dialog.element.querySelector(".mtrl-dialog__content")?.append(fields);
   }
-  editor.setTitle(note ? "Edit note" : "New note");
+  editor.setTitle(headline);
   titleField.setValue(editing.title);
   textField.setValue(editing.text);
   setEditorChips(editing.labels);
@@ -238,6 +238,14 @@ const render = (): void => {
 shell.append(bar.element, mobileSearch, workspace, fab.element, dialog.element, sheet.element, snackbar.element);
 app.append(shell);
 observeCompact(shell, narrow => {
+  const open = dialog.isOpen() || sheet.isOpen();
+  if (open && editing) {
+    editing.title = titleField.getValue();
+    editing.text = textField.getValue();
+    editing.labels = [...editorLabels];
+  }
+  const wasNew = Boolean(editing && !s.notes.includes(editing));
+  const carried = open ? editing : null;
   compact = narrow;
   shell.dataset.compact = String(narrow);
   if (modalDrawer.isOpen()) modalDrawer.close();
@@ -253,4 +261,5 @@ observeCompact(shell, narrow => {
   menuButton.element.hidden = !narrow;
   drawerSlot.replaceChildren((narrow ? modalDrawer : inlineDrawer).element);
   render();
+  if (carried) editorOpen(carried, wasNew ? "New note" : "Edit note");
 });

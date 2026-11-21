@@ -6,6 +6,7 @@
   flex-direction: column;
   width: 100%;
   min-width: 0;
+  padding-bottom: calc(var(--notes-fab-height) + var(--notes-fab-margin));
 }
 
 /* The factory bar sits in the page. The element keeps that same surface in its
@@ -111,6 +112,5 @@
   bottom: var(--notes-fab-margin);
 }
 
-.notes[data-compact="true"] { padding-bottom: calc(var(--notes-fab-height) + var(--notes-fab-margin)); }
 .notes[data-compact="true"] .notes__workspace { display: block; }
 .notes[data-compact="true"] .notes__drawer { position: absolute; }

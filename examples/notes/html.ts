@@ -2,7 +2,7 @@
 import "material/elements/css";
 import { defineAll } from "material/elements";
 import { DEFAULTS, LABELS, ADD_ICON, CLOSE_ICON, GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON,
-  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, observeCompact, status, visible,
+  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, noteTitle, observeCompact, status, visible,
   type Category, type LabelId, type Note, type State } from "./shared";
 
 defineAll();
@@ -190,9 +190,8 @@ let editing: Note | null = null;
 const dialog = document.createElement("m-dialog");
 const sheet = document.createElement("m-bottom-sheet");
 sheet.setAttribute("modal", "");
-const editorOpen = (note: Note | null): void => {
+const editorOpen = (note: Note | null, headline = note ? "Edit note" : "New note"): void => {
   editing = note ?? { id: crypto.randomUUID(), title: "", text: "", labels: categoryLabels(s.category), pinned: s.category === "pinned", editedAt: nextEdit(s.notes) };
-  const headline = note ? "Edit note" : "New note";
   editorActions.slot = compact ? "" : "actions";
   const editor = compact ? sheet : dialog;
   editor.setAttribute(compact ? "title" : "headline", headline);
@@ -209,7 +208,7 @@ const editorClose = (): void => {
 editorCancel.addEventListener("click", editorClose);
 editorSave.addEventListener("click", () => {
   if (!editing) return;
-  editing.title = String(titleField.value || "");
+  editing.title = noteTitle(String(titleField.value || ""));
   editing.text = String(textField.value || "");
   editing.labels = [...editorLabels];
   editing.editedAt = nextEdit(s.notes);
@@ -278,6 +277,14 @@ const render = (): void => {
 shell.append(bar, mobileSearch, workspace, fab, dialog, sheet, snackbar);
 app.append(shell);
 observeCompact(shell, narrow => {
+  const open = Boolean(dialog.open || sheet.open);
+  if (open && editing) {
+    editing.title = String(titleField.value || "");
+    editing.text = String(textField.value || "");
+    editing.labels = [...editorLabels];
+  }
+  const wasNew = Boolean(editing && !s.notes.includes(editing));
+  const carried = open ? editing : null;
   compact = narrow;
   shell.dataset.compact = String(compact);
   editorClose();
@@ -290,4 +297,5 @@ observeCompact(shell, narrow => {
   drawer = createCategories(narrow);
   drawerSlot.replaceChildren(drawer);
   render();
+  if (carried) editorOpen(carried, wasNew ? "New note" : "Edit note");
 });

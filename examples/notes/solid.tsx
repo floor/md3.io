@@ -3,7 +3,7 @@
 import { createSignal, For, Show, onCleanup, onMount } from "solid-js";
 import { BottomSheet, Button, ButtonGroup, ButtonGroupItem, Card, Chip, Chips, Dialog, Drawer, DrawerItem, ExtendedFab, IconButton, Menu, MenuItem, Search, Snackbar, TextField, TopAppBar } from "material/solid";
 import { DEFAULTS, LABELS, ADD_ICON, CLOSE_ICON, GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON,
-  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, observeCompact, status, visible,
+  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, noteTitle, observeCompact, status, visible,
   type Category, type LabelId, type Note, type State } from "./shared";
 
 interface Draft {
@@ -20,10 +20,14 @@ export default function Notes() {
   const [drawerOpen, setDrawerOpen] = createSignal(false);
   const [searchOpen, setSearchOpen] = createSignal(false);
   let shell!: HTMLElement;
+  let resizing = false;
+  const dismissEditor = () => { if (!resizing) setDraft(null); };
   onMount(() => onCleanup(observeCompact(shell, (narrow) => {
+    resizing = true;
     setCompact(narrow);
     setDrawerOpen(false);
     setSearchOpen(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => { resizing = false; }));
   })));
   const closeDrawer = () => {
     if (!compact()) return;
@@ -45,9 +49,9 @@ export default function Notes() {
     const d = draft();
     if (!d) return;
     if (d.note) {
-      setS((prev) => ({ ...prev, notes: prev.notes.map((n) => (n === d.note ? { ...n, title: d.title, text: d.text, labels: [...d.labels], editedAt: nextEdit(prev.notes) } : n)) }));
+      setS((prev) => ({ ...prev, notes: prev.notes.map((n) => (n === d.note ? { ...n, title: noteTitle(d.title), text: d.text, labels: [...d.labels], editedAt: nextEdit(prev.notes) } : n)) }));
     } else {
-      setS((prev) => ({ ...prev, notes: [...prev.notes, { id: crypto.randomUUID(), title: d.title, text: d.text, labels: [...d.labels], pinned: s().category === "pinned", editedAt: nextEdit(prev.notes) }] }));
+      setS((prev) => ({ ...prev, notes: [...prev.notes, { id: crypto.randomUUID(), title: noteTitle(d.title), text: d.text, labels: [...d.labels], pinned: s().category === "pinned", editedAt: nextEdit(prev.notes) }] }));
     }
     setDraft(null);
   };
@@ -166,7 +170,7 @@ export default function Notes() {
       <Show
         when={compact()}
         fallback={
-          <Dialog open={draft() !== null} headline={draft()?.note ? "Edit note" : "New note"} onClose={() => setDraft(null)}>
+          <Dialog open={draft() !== null} headline={draft()?.note ? "Edit note" : "New note"} onClose={dismissEditor}>
             {editorFields}
             <div slot="actions" class="notes__editor-actions">
               {editorButtons}
@@ -174,7 +178,7 @@ export default function Notes() {
           </Dialog>
         }
       >
-        <BottomSheet open={draft() !== null} title={draft()?.note ? "Edit note" : "New note"} modal onClose={() => setDraft(null)}>
+        <BottomSheet open={draft() !== null} title={draft()?.note ? "Edit note" : "New note"} modal onClose={dismissEditor}>
           {editorFields}
           <div class="notes__editor-actions">{editorButtons}</div>
         </BottomSheet>

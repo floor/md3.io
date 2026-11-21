@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { SnackbarElement } from "material/elements";
 import { BottomSheet, Button, ButtonGroup, ButtonGroupItem, Card, Chip, Chips, Dialog, Drawer, DrawerItem, ExtendedFab, IconButton, Menu, MenuItem, Search, Snackbar, TextField, TopAppBar } from "material/react";
 import { DEFAULTS, LABELS, ADD_ICON, CLOSE_ICON, GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON,
-  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, observeCompact, status, visible,
+  categoryItems, categoryLabels, editedLabel, emptyLabel, labelOf, nextEdit, noteGroups, noteTitle, observeCompact, status, visible,
   type Category, type LabelId, type Note, type State } from "./shared";
 
 type Draft = { note: Note | null; title: string; text: string; labels: LabelId[] };
@@ -14,10 +14,13 @@ export default function Notes() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const shell = useRef<HTMLElement | null>(null);
+  const resizing = useRef(false);
   useLayoutEffect(() => observeCompact(shell.current!, (narrow) => {
+    resizing.current = true;
     setCompact(narrow);
     setDrawerOpen(false);
     setSearchOpen(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => { resizing.current = false; }));
   }), []);
 
   const closeDrawer = () => {
@@ -31,6 +34,7 @@ export default function Notes() {
     else requestAnimationFrame(() => shell.current?.querySelector<HTMLElement>(".notes__search")?.focus());
   };
   const [draft, setDraft] = useState<Draft | null>(null);
+  const dismissEditor = () => { if (!resizing.current) setDraft(null); };
   const snackbar = useRef<SnackbarElement | null>(null);
   const deleted = useRef<{ note: Note; at: number } | null>(null);
 
@@ -42,10 +46,10 @@ export default function Notes() {
       const edited = draft.note;
       setS((prev) => ({
         ...prev,
-        notes: prev.notes.map((n) => (n === edited ? { ...n, title: draft.title, text: draft.text, labels: [...draft.labels], editedAt: nextEdit(prev.notes) } : n)),
+        notes: prev.notes.map((n) => (n === edited ? { ...n, title: noteTitle(draft.title), text: draft.text, labels: [...draft.labels], editedAt: nextEdit(prev.notes) } : n)),
       }));
     } else {
-      const note: Note = { id: crypto.randomUUID(), title: draft.title, text: draft.text, labels: [...draft.labels], pinned: s.category === "pinned", editedAt: nextEdit(s.notes) };
+      const note: Note = { id: crypto.randomUUID(), title: noteTitle(draft.title), text: draft.text, labels: [...draft.labels], pinned: s.category === "pinned", editedAt: nextEdit(s.notes) };
       setS((prev) => ({ ...prev, notes: [...prev.notes, note] }));
     }
     setDraft(null);
@@ -159,12 +163,12 @@ export default function Notes() {
       </div>
       <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onClick={() => open(null)}>New note</ExtendedFab>
       {compact ? (
-        <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onClose={() => setDraft(null)}>
+        <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onClose={dismissEditor}>
           {editorBody}
           {sheetActions}
         </BottomSheet>
       ) : (
-        <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onClose={() => setDraft(null)}>
+        <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onClose={dismissEditor}>
           {editorBody}
           {editorActions}
         </Dialog>
