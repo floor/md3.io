@@ -29,6 +29,8 @@ export interface DeviceFrameOptions {
   label?: string;
   /** Where the toolbar is placed. Defaults to the top of the frame's own stack. */
   barParent?: HTMLElement;
+  /** Available height for a scaled device, excluding the containing page's chrome. */
+  maxHeight?: () => number;
   /** Called after every change, with the size applied (undefined on Desktop). */
   onChange?: (choice: DeviceChoice, size?: { width: number; height: number; scale: number }) => void;
 }
@@ -113,7 +115,7 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     // scale at 0.1 and the readout sticks at 10% until the stage is shown again.
     const available = stage.clientWidth || root.clientWidth;
     if (available <= 0) return;
-    const size = fit(choice, available, Math.max(360, innerHeight - 120));
+    const size = fit(choice, available, options.maxHeight?.() ?? Math.max(360, innerHeight - 120));
     if (!size) {
       viewport.removeAttribute('style');
       frame.style.removeProperty('width');
@@ -159,6 +161,7 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     hold,
     destroy() {
       observer.disconnect();
+      group.destroy();
       removeEventListener('resize', layout);
       bar.remove();
       root.replaceWith(frame);

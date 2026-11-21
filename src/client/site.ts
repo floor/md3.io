@@ -1,5 +1,5 @@
 import './search';
-import { containsFocus, currentFocus } from './site-navigation';
+import './client-navigation';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -86,69 +86,6 @@ onAppearance(({ theme, mode }) => {
   applyTheme(document, theme, [headerScope]);
 });
 
-const docToc = document.querySelector('.doc-toc');
-if (docToc) {
-  const tocHidden = matchMedia('(width < 1200px)');
-  tocHidden.addEventListener('change', () => {
-    const focused = currentFocus();
-    if (!tocHidden.matches || !(focused instanceof HTMLAnchorElement) || !docToc.contains(focused)) return;
-    const id = focused.getAttribute('href')?.slice(1) ?? '';
-    const target = document.getElementById(id) ?? document.getElementById('content');
-    if (target && !target.hasAttribute('tabindex')) target.tabIndex = -1;
-    target?.focus();
-  });
-}
-
-const componentList = document.querySelector<HTMLElement>('.component-list-layout--detail .component-list');
-if (componentList) {
-  const detail = componentList.closest('.component-list-layout--detail');
-  const drawer = componentList.querySelector('m-drawer');
-  const expanded = matchMedia('(min-width: 840px)');
-  const keepCurrentComponentInView = () => {
-    if (!expanded.matches) return;
-    const current = drawer?.shadowRoot?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!current?.getClientRects().length) return;
-    const pane = componentList.getBoundingClientRect();
-    const row = current.getBoundingClientRect();
-    if (row.top < pane.top || row.bottom > pane.bottom) {
-      componentList.scrollTop += row.top - pane.top - (pane.height - row.height) / 2;
-    }
-  };
-  expanded.addEventListener('change', () => {
-    if (expanded.matches) keepCurrentComponentInView();
-    else if (containsFocus(componentList, currentFocus())) {
-      detail?.querySelector<HTMLElement>('.component-list-up')?.focus({ preventScroll: true });
-    }
-  });
-  keepCurrentComponentInView();
-}
-
-// The documentation's framework chips (document.eta): their code loads only on a page that
-// has them (src/client/docs-frameworks.ts).
-if (document.querySelector('.docs-frameworks')) void import('./docs-frameworks');
-
-// The package manager of the `install` blocks: one choice for every block, remembered.
-const managerOptions = [...document.querySelectorAll<HTMLButtonElement>('.doc-install__option')];
-function showManager(manager: string) {
-  root.dataset.packageManager = manager;
-  for (const option of managerOptions) option.setAttribute('aria-pressed', String(option.dataset.packageManager === manager));
-}
-if (managerOptions.length) showManager(root.dataset.packageManager ?? 'bun');
-for (const option of managerOptions) {
-  option.addEventListener('click', () => {
-    showManager(option.dataset.packageManager!);
-    try { localStorage.setItem('md3-package-manager', option.dataset.packageManager!); } catch { /* Storage may be unavailable. */ }
-  });
-}
-
-// Copy the command shown for the reader's package manager.
-for (const copy of document.querySelectorAll<HTMLButtonElement>('.doc-install__copy')) {
-  copy.addEventListener('click', async () => {
-    const shown = [...copy.closest('.doc-install')!.querySelectorAll<HTMLElement>('.doc-install__command')].find(command => getComputedStyle(command).display !== 'none');
-    copy.textContent = shown && await copyText(shown.textContent!.trim()) ? 'Copied' : 'Copy failed';
-    setTimeout(() => { copy.textContent = 'Copy'; }, 1600);
-  });
-}
 
 export async function copyText(text: string): Promise<boolean> {
   try { await navigator.clipboard.writeText(text); return true; }

@@ -128,11 +128,31 @@ try {
       await page.getByRole('link', { name: 'All components', exact: true }).click();
       await page.locator('#component-catalog-index summary').click();
       const directory = page.getByRole('navigation', { name: 'Component list', exact: true });
-      await directory.getByRole('button', { name: 'Buttons', exact: true }).click();
+      // A client visit retains the Buttons section opened on the Button page.
+      const buttons = directory.getByRole('button', { name: 'Buttons', exact: true });
+      assert.equal(await buttons.getAttribute('aria-expanded'), 'true', 'client navigation retains the open Buttons family');
       await directory.getByRole('link', { name: 'Icon button', exact: true }).click();
       await page.waitForURL(url('/components/icon-button/'));
     }
   }
+
+  // At desktop the detail drawer is visible, so verify that a card visit opens
+  // its collapsed family and exposes the current item, as on a direct load.
+  await size(1440);
+  await goto('/components/button/');
+  await page.getByRole('link', { name: 'All components', exact: true }).click();
+  await page.locator('.component-catalog').waitFor();
+  const directory = page.getByRole('navigation', { name: 'Component list', exact: true });
+  const buttons = directory.getByRole('button', { name: 'Buttons', exact: true });
+  assert.equal(await buttons.getAttribute('aria-expanded'), 'true', 'desktop client visit retains the open family');
+  await buttons.click();
+  assert.equal(await buttons.getAttribute('aria-expanded'), 'false', 'the destination family starts collapsed');
+  await page.locator('.component-card h3').getByRole('link', { name: 'Icon button', exact: true }).click();
+  await page.waitForURL(url('/components/icon-button/'));
+  const current = directory.getByRole('link', { name: 'Icon button', exact: true });
+  await current.waitFor();
+  assert.equal(await current.getAttribute('aria-current'), 'page', 'the destination item becomes current');
+  assert.equal(await buttons.getAttribute('aria-expanded'), 'true', 'client navigation opens the collapsed destination family');
 
   await size(700);
   await goto('/styles/');

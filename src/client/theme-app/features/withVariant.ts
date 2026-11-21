@@ -26,6 +26,7 @@ export const withVariant = () => (app: App) => {
   };
   let shown: ThemeData = source.current();
   let request = 0;
+  app.teardown.add(() => { ++request; });
   /** The variant and contrast state that produced `shown`. `null` is the theme's own. */
   let applied = { variant: state.get('variant') as string | null, contrast: state.get('contrast') as number | null };
   /** The scheme in effect: the theme as mtrl ships it, a built-in theme that is the same scheme, or the engine's. */

@@ -54,10 +54,10 @@ describe('the components overview', () => {
       expect(await Bun.file(new URL(`../src/client/catalog/${slug}.ts`, import.meta.url)).text(), slug).toContain('export const define = (): void =>');
     }
     // Nothing from the playground's table or mtrl's elements is in the entry itself.
-    expect(entry).not.toMatch(/^import (?!type )/m);
+    expect(entry.replace(/^import \{ registerPage \} from [^;]+;/m, '')).not.toMatch(/^import (?!type )/m);
   });
   test('the elements bundle stays off the other pages', async () => {
-    for (const path of ['/', '/components/button/', '/docs/', '/styles/']) expect(await get(path), path).not.toContain('/dist/catalog.js');
+    for (const path of ['/', '/components/button/', '/docs/', '/styles/']) expect(await get(path), path).not.toMatch(/<script[^>]+src="\/dist\/catalog(?:\.[a-f0-9]{10})?\.js"/);
   });
 });
 
