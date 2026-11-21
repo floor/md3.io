@@ -19,7 +19,7 @@ export const stylesheetBundles = {
   'addon-panel': materialPanel,
   // Add-on visuals that use factories need their light-DOM styles.
   catalog,
-  'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'addons:styles'],
+  'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'mtrl:listbox', 'addons:styles'],
   // Examples add the device chooser's Material button group and frame styles.
   examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:button-group', 'device-frame'],
   styles: [...shell, 'site', 'search', 'styles-pages'],

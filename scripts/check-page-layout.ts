@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Browser, Frame, Locator, Page } from 'playwright';
@@ -189,7 +190,8 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
     }))),
     ...stylePages.map(({ href }) => ({ name: href.replace(/^\/|\/$/g, '').replaceAll('/', '-'), path: href })),
   ];
-  const destinations = ['/components/', '/addons/', '/styles/', showcase, '/docs/'];
+  // Hidden sections (src/shared/visibility.ts) have no navigation entry.
+  const destinations = ['/components/', ...(addonsPublic ? ['/addons/'] : []), '/styles/', ...(showcasePublic ? [showcase] : []), '/docs/'];
   const measurements: { viewport: typeof viewports[number]; path: string; cold: Geometry; settled: Geometry; delayed: { fonts: number; scripts: number } }[] = [];
   const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', deviceScaleFactor: 1 });
   try {
