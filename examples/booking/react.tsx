@@ -19,7 +19,7 @@ export default function Booking() {
   };
   const focusError=(messages:BookingErrors)=>{
     const key=Object.keys(messages)[0];if(!key)return;
-    requestAnimationFrame(()=>focusControl(refs.root.current?.querySelector<HTMLElement>(key==='dates'?'#stay':key==='room'?'[data-choice][tabindex="0"]':`#${key}`)));
+    focusControl(refs.root.current?.querySelector<HTMLElement>(key==='dates'?'#stay':key==='room'?'[data-choice][tabindex="0"]':`#${key}`));
   };
   const veto=(event:CustomEvent<StepperBeforeChangeEvent>)=>{
     if(event.detail.direction!=='forward')return;

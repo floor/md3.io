@@ -12,7 +12,7 @@
   const announce=(message:string)=>{const host=rootEl.querySelector('m-snackbar') as HTMLElement & {show():void;component?:{setDuration(value:string):void}};host.setAttribute('message',message);host.component?.setDuration('short');host.show();};
   const veto=(event:CustomEvent<StepperBeforeChangeEvent>)=>{
     if(event.detail.direction!=='forward')return;const number=stepNumberOf(event.detail.previousValue??'dates');const messages=validateStep(s,number);errors=messages;
-    if(Object.keys(messages).length){event.detail.preventDefault();stepperEl?.element.setError(event.detail.previousValue!,true);const key=Object.keys(messages)[0];requestAnimationFrame(()=>focusControl(rootEl.querySelector<HTMLElement>(key==='dates'?'#stay':key==='room'?'[data-choice][tabindex="0"]':`#${key}`)));}
+    if(Object.keys(messages).length){event.detail.preventDefault();stepperEl?.element.setError(event.detail.previousValue!,true);const key=Object.keys(messages)[0];focusControl(rootEl.querySelector<HTMLElement>(key==='dates'?'#stay':key==='room'?'[data-choice][tabindex="0"]':`#${key}`));}
     else{stepperEl?.element.setError(event.detail.previousValue!,false);if(number===2)update({roomChosen:true});}
   };
   const changed=(event:CustomEvent<StepperChangeEvent>)=>{
