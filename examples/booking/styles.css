@@ -28,7 +28,7 @@
 .booking__summary-wrap { min-width: 0; align-self: start; }
 .booking__summary { position: static; }
 .booking__summary-toggle { display: none; }
-.booking__field-error[hidden] { display: none; }
+.booking__step [hidden] { display: none; }
 @media (min-width: 1100px) {
   .booking__layout { grid-template-columns: minmax(0, 1fr) 310px; }
   .booking__summary-wrap { position: sticky; top: 16px; }
