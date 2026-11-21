@@ -43,6 +43,8 @@ if (page) {
   const revealPreview = () => {
     cancelAnimationFrame(revealRequest);
     revealRequest = requestAnimationFrame(() => {
+      // Tab or a click can leave the app before this callback runs.
+      if (document.activeElement !== frame) return;
       const rect = frame.getBoundingClientRect();
       const { top, bottom } = previewBounds();
       if (!rect.height || rect.height > bottom - top + 1) return;
