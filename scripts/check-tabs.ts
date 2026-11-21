@@ -859,7 +859,7 @@ try {
         if (missingText.length > 0 || extraText.length > 0) {
           differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
         }
-        if (slug === 'stepper') await checkStepperWorkflow(page, state.workflow === 'account');
+        if (slug === 'stepper') await checkStepperWorkflow(page, (scenario?.options.workflow ?? initialComponentState(slug).workflow) === 'account');
       }
     }
     // Closing the context releases that renderer's documents. The next component
