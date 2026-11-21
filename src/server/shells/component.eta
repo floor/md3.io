@@ -46,6 +46,7 @@
       </div>
     </form>
   </section>
+  <% if (it.usedIn && it.usedIn.length) { %><p class="component-used-in">Used in: <% it.usedIn.forEach((example, index) => { %><% if (index) { %>, <% } %><a class="text-link" href="/showcase/<%= example.slug %>/"><%= example.title %></a><% }); %></p><% } %>
 </div>
 </div>
 <script type="module" src="/dist/playground-material.js"></script>

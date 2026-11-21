@@ -1,0 +1,81 @@
+/* Layout for the example only: the components bring their own styles, and the text
+   wears the mtrl typescale utility classes from the markup (typography.css). */
+.mail {
+  display: flex;
+  width: min(100%, 1120px);
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  position: relative;
+  background: var(--mtrl-sys-color-surface-container-low);
+  border-radius: 28px;
+  /* The panes and navigation split on the example's own width, so the Showcase Tablet preset (820px) gets both. */
+  container-type: inline-size;
+  container-name: mail;
+}
+/* Below 700px (Mobile), the top app bar and modal drawer replace the navigation rail. */
+.mail > :is(m-navigation-rail, .mtrl-navigation-rail) { display: none; }
+.mail__bar { position: relative; z-index: 2; flex: none; height: 64px; }
+.mail__main { display: flex; flex: 1; min-width: 0; }
+.mail__list-pane { display: flex; flex-direction: column; width: 100%; min-width: 0; }
+.mail__detail-pane { display: none; flex: 1; min-width: 0; overflow-y: auto; }
+.mail[data-reading="true"] .mail__list-pane { display: none; }
+.mail[data-reading="true"] .mail__detail-pane { display: block; }
+
+@container mail (min-width: 700px) {
+  .mail > :is(m-navigation-rail, .mtrl-navigation-rail) { display: flex; }
+  .mail__bar { display: none; }
+  .mail__list-pane { width: clamp(280px, 45%, 400px); flex: none; border-right: 1px solid var(--mtrl-sys-color-outline-variant); }
+  .mail[data-reading="true"] .mail__list-pane { display: flex; }
+  .mail__detail-pane { display: block; }
+  .mail-message__back { display: none; }
+  .mail-message { padding: 24px 28px 88px; }
+}
+
+.mail__top { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 8px; }
+.mail__selection { display: flex; align-items: center; gap: 4px; padding: 0 12px; }
+.mail__selection:empty { display: none; }
+.mail__selection-count { flex: 1; }
+
+.mail__rows { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 8px 8px 88px; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.mail__day { padding: 12px 12px 4px; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail__day:first-child { padding-top: 4px; }
+.mail__empty, .mail__placeholder { padding: 48px 24px; text-align: center; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail__placeholder { display: grid; place-items: center; height: 100%; box-sizing: border-box; }
+
+.mail-row { display: flex; align-items: center; gap: 6px; border-radius: 16px; padding: 4px 4px 4px 8px; }
+.mail-row:hover { background: var(--mtrl-sys-color-surface-container-highest); }
+.mail-row[data-open] { background: var(--mtrl-sys-color-secondary-container); }
+.mail-row__check, .mail-row__avatar { flex: none; }
+.mail-row__open {
+  flex: 1; min-width: 0; display: grid; gap: 2px 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  background: none; border: 0; padding: 8px; margin: 0; text-align: start;
+  font: inherit; color: inherit; cursor: pointer; border-radius: 12px;
+}
+.mail-row__sender, .mail-row__subject, .mail-row__time, .mail-row__attachments, .mail-row__snippet { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mail-row__sender { grid-column: 1; grid-row: 1; }
+.mail-row__time { grid-column: 2; grid-row: 1; justify-self: end; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail-row__subject { grid-column: 1 / -1; grid-row: 2; }
+.mail-row__subject:has(~ .mail-row__attachments) { grid-column: 1; }
+.mail-row__attachments { grid-column: 2; grid-row: 2; justify-self: end; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail-row__snippet { grid-column: 1 / -1; grid-row: 3; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail-row[data-unread] .mail-row__sender, .mail-row[data-unread] .mail-row__subject { font-weight: 700; }
+.mail-row__star { flex: none; }
+
+.mail-message { display: flex; flex-direction: column; gap: 12px; padding: 20px 20px 88px; }
+.mail-message__head { display: flex; align-items: center; gap: 8px; }
+.mail-message__subject { margin: 0; }
+.mail-message__sender { display: flex; align-items: center; gap: 12px; }
+.mail-message__avatar { flex: none; }
+.mail-message__from { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mail-message__meta { margin: 0; }
+.mail-message__to, .mail-message__cc, .mail-message__date { margin: 0; color: var(--mtrl-sys-color-on-surface-variant); }
+.mail-message__body { margin-top: 4px; }
+.mail-message__body p { margin: 0 0 12px; }
+.mail-message__attachments { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.mail-message__attachment { padding: 6px 12px; border-radius: 8px; background: var(--mtrl-sys-color-surface-container-high); }
+/* The actions wrap, so they fit the phone pane as well as the wide one. */
+.mail-message__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+
+.mail__compose { position: absolute; right: 24px; bottom: 24px; z-index: 1; }
+.mail-compose__fields { display: flex; flex-direction: column; gap: 12px; min-width: min(400px, 72vw); }

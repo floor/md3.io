@@ -228,6 +228,15 @@ export function materialControl(control: Control, slug: string, initial: Record<
     ' control-row', `label-${control.key}`);
 }
 
+/**
+ * Preview / Code on a Showcase example. The same `m-tabs` markup as the playground's
+ * Live preview / View code (styles/playground-material.css seats that row).
+ */
+export function exampleViewTabs(view: 'preview' | 'code'): string {
+  return renderElement('m-tabs', { value: view, 'aria-label': 'Example view' },
+    declaration('tab', 'preview', 'Preview') + declaration('tab', 'code', 'Code'), renderStyles);
+}
+
 /** The panel's markup, piece by piece, for the component template to place. */
 export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string } {
   // The framework picker above the heading: a single-select filter chip set.

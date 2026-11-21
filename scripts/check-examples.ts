@@ -99,8 +99,8 @@ try {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     for (const id of ids) {
-      await page.goto(`${server.url}showcase/${example.slug}/?framework=${id}`);
-      const source = page.locator(`.example-source[data-framework="${id}"]`);
+      await page.goto(`${server.url}showcase/${example.slug}/?framework=${id}&view=code`);
+      const source = page.locator(`#example-code .example-source[data-framework="${id}"]`);
       await source.waitFor();
       await source.getByRole("button", { name: "Copy code", exact: true }).click();
       await page.getByRole("status").filter({ hasText: "Code copied" }).waitFor();
