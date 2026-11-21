@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { DEFAULTS, amend, choicePatch, cityTax, extraCost, extrasTotal, nightlyRate, roomAfter, roomOf, roomTotal, total, unavailable, validateStep, vatIncluded } from '../examples/booking/hotel';
+import { DEFAULTS, amend, choicePatch, cityTax, extraCost, extrasTotal, nightlyRate, roomAfter, roomOf, roomTotal, total, unavailable, validateStep, vatIncluded } from '../examples/booking/shared';
 describe('hotel booking rules', () => {
   test('a stay totals rooms, priced extras and city tax; VAT is included', () => {
     const stay={...DEFAULTS, adults:'4', rooms:'2', breakfast:true, parking:true, lateCheckout:true, transfer:true};

@@ -1,279 +1,106 @@
-// Vanilla: the create* factories the elements are built on. The stepper itself is
-// material-addons': its headers replace the hand-built step header, its linear
-// validation pipeline replaces the hand-written Next checks, and its data-stepper-*
-// actions replace the wiring between Back, Next and the panels.
-import createButton from "material/components/button";
-import createCard from "material/components/card";
-import createCheckbox from "material/components/checkbox";
-import createDatePicker from "material/components/datepicker";
-import createDialog from "material/components/dialog";
-import createSelect from "material/components/select";
-import createSnackbar from "material/components/snackbar";
-import createTextField from "material/components/text-field";
-import createTimePicker from "material/components/timepicker";
-import { createStepper, type StepConfig } from "material-addons/components/stepper";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, HERO_IMAGE, PROPERTY, ROOMS, TODAY, normalizeTime, priceLines, reviewLines, roomAfter, roomOf, stayText, stepHeading, stepValue, summary, totalText, validateStep, withRange, type Booking } from "./shared";
-
-let s: Booking = { ...DEFAULTS };
-const app = document.getElementById("app")!;
-const section = Object.assign(document.createElement("section"), { className: "booking" });
-const div = (className: string): HTMLDivElement => Object.assign(document.createElement("div"), { className });
-const text = (className: string, value: string, tag = "p"): HTMLElement => Object.assign(document.createElement(tag), { className, textContent: value });
-
-const intro = div("booking__intro");
-const hero = Object.assign(document.createElement("img"), { className: "booking__hero", src: HERO_IMAGE, alt: `The Dune House above the dunes in ${PROPERTY.town}`, loading: "lazy" as const });
-intro.append(
-  hero,
-  text("booking__title mtrl-headline-small", PROPERTY.name, "h1"),
-  text("booking__lede mtrl-body-medium", `${PROPERTY.town} · ${PROPERTY.rating}`),
-  text("booking__lede mtrl-body-medium", PROPERTY.lede),
-  text("booking__lede mtrl-body-medium", PROPERTY.facts),
-);
-
-// Each step's panel: a heading the stepper focuses after a move (tabindex -1), the
-// fields, and the panel's own actions, which carry the stepper's data attributes.
-const pane = (step: number): HTMLDivElement => {
-  const pane = div("booking__step");
-  pane.append(Object.assign(document.createElement("h2"), { className: "booking__step-title mtrl-title-large", tabIndex: -1, textContent: stepHeading(step) }));
-  return pane;
+// Vanilla builds the hotel flow with the same factories used by the elements.
+import createButton from 'material/components/button';
+import createCard from 'material/components/card';
+import createCheckbox from 'material/components/checkbox';
+import createDatePicker from 'material/components/datepicker';
+import createRadios from 'material/components/radios';
+import createSelect from 'material/components/select';
+import createSnackbar from 'material/components/snackbar';
+import createTextField from 'material/components/text-field';
+import { createStepper, type StepConfig } from 'material-addons/components/stepper';
+import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
+import { focusControl } from './hotel-ui';
+let s:Booking={...DEFAULTS};let syncing=false;
+const app=document.getElementById('app')!;
+const node=(tag:string,className='',content?:string):HTMLElement=>Object.assign(document.createElement(tag),{className,...(content===undefined?{}:{textContent:content})});
+const box=(className:string)=>node('div',className);
+const text=(value:string,className='mtrl-body-medium',tag='p')=>node(tag,className,value);
+const shell=node('section','booking');
+const intro=box('booking__intro');intro.append(text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`★★★★ · ${HOTEL.address} · 4.6 (1,284 reviews)`));
+const panes=STEPS.map((_,index)=>{const pane=box('booking__step');const heading=text(stepHeading(index+1),'booking__step-title','h2');heading.tabIndex=-1;pane.append(heading);return pane;});
+const actions=(pane:HTMLElement,index:number,label='Next')=>{
+  const footer=node('footer','booking__actions');
+  if(index>0){const previous=box('booking__action');previous.setAttribute('data-stepper-prev','');previous.append(createButton({text:'Back',variant:'text'}).element);footer.append(previous);}
+  const next=box('booking__action booking__action--next');next.setAttribute('data-stepper-next','');next.append(createButton({text:label}).element);footer.append(next);pane.append(footer);
 };
-const action = (kind: "prev" | "next", label: string): HTMLDivElement => {
-  const wrap = div("booking__action");
-  wrap.setAttribute(kind === "prev" ? "data-stepper-prev" : "data-stepper-next", "");
-  wrap.append(createButton({ text: label, ...(kind === "prev" ? { variant: "outlined" as const } : {}) }).element);
-  return wrap;
-};
-const wrap = (button: HTMLElement): HTMLDivElement => {
-  const el = div("booking__action");
-  el.append(button);
-  return el;
-};
-const actions = (...buttons: HTMLDivElement[]): HTMLElement => {
-  const footer = Object.assign(document.createElement("footer"), { className: "booking__actions" });
-  footer.append(...buttons);
-  return footer;
-};
-const fieldError = (): HTMLElement => {
-  const el = text("booking__field-error mtrl-body-small", "");
-  el.hidden = true;
-  return el;
-};
-
-// The price summary: a material card beside the stepper on wide frames, and a
-// compact copy of the same card inside each step, just above its actions, on
-// narrow frames (styles.css shows one or the other). Both render the same lines.
-const summaryLines = div("booking__summary-lines");
-const summaryCard = createCard({ variant: "filled", header: { title: "Price summary" }, content: { children: [summaryLines] } });
-summaryCard.element.classList.add("booking__summary");
-const compactLines: HTMLDivElement[] = [];
-const makeCompact = (): HTMLElement => {
-  const lines = div("booking__summary-lines");
-  compactLines.push(lines);
-  const card = createCard({ variant: "filled", header: { title: "Price summary" }, content: { children: [lines] } });
-  card.element.classList.add("booking__summary-compact");
-  return card.element;
-};
-const summaryNodes = (): HTMLElement[] => [
-  ...priceLines(s).map((line) => {
-    const row = div("booking__price-line");
-    row.append(text("booking__price-line mtrl-body-medium", line.label, "span"), text("booking__price-line mtrl-body-medium", line.amount, "span"));
-    return row;
-  }),
-  (() => {
-    const row = div("booking__price-total");
-    row.append(text("booking__price-line mtrl-title-small", "Total", "span"), text("booking__price-line mtrl-title-small", totalText(s).replace("Estimated total ", ""), "span"));
-    return row;
-  })(),
-  text("booking__lede mtrl-body-medium", PROPERTY.policy),
-];
-const renderSummary = (): void => {
-  summaryLines.replaceChildren(...summaryNodes());
-  for (const lines of compactLines) lines.replaceChildren(...summaryNodes());
-};
-
-const step1 = pane(1);
-const grid1 = div("booking__grid");
-const stay = createDatePicker({ label: "Check-in → Check-out", variant: "modal", selectionMode: "range", dateFormat: "YYYY-MM-DD", value: [s.checkIn, s.checkOut], minDate: TODAY });
-const arrival = createTextField({ label: "Arrival time", value: s.arrivalTime, supportingText: "24-hour time", trailingIcon: CLOCK_ICON, trailingIconLabel: "Choose time" });
-grid1.append(stay.element, arrival.element);
-const stayLine = text("booking__stay mtrl-body-medium", "");
-const datesError = fieldError();
-step1.append(grid1, stayLine, datesError, makeCompact(), actions(action("next", "Next")));
-
-const step2 = pane(2);
-const grid2 = div("booking__grid");
-const adults = createSelect({ label: "Adults", value: s.adults, options: ADULT_OPTIONS.map((n) => ({ id: n, text: n })) });
-const children = createSelect({ label: "Children", value: s.children, options: CHILD_OPTIONS.map((n) => ({ id: n, text: n })) });
-grid2.append(adults.element, children.element);
-const roomGroup = div("booking__group");
-const roomsEl = div("booking__rooms");
-roomsEl.setAttribute("role", "radiogroup");
-roomsEl.setAttribute("aria-label", "Room type");
-const roomCards = new Map<string, HTMLElement>();
-for (const room of ROOMS) {
-  const option = div("booking__room");
-  option.setAttribute("role", "radio");
-  option.setAttribute("aria-label", `${room.label}, ${room.beds}, ${room.size}, $${room.rate} a night, ${room.features}`);
-  option.dataset.room = room.value;
-  const img = Object.assign(document.createElement("img"), { className: "booking__room-image", src: room.image, alt: "", loading: "lazy" as const });
-  const body = div("booking__room-card");
-  body.append(
-    img,
-    text("booking__room-name mtrl-title-medium", room.label),
-    text("booking__room-facts mtrl-body-medium", `${room.beds} · ${room.size}`),
-    text("booking__room-price mtrl-body-medium", `$${room.rate} a night`),
-    text("booking__room-features mtrl-body-medium", room.features),
-  );
-  option.append(createCard({ variant: "outlined", content: { children: [body] } }).element);
-  option.addEventListener("click", () => { s = { ...s, room: room.value }; render(); option.focus(); });
-  roomCards.set(room.value, option);
-  roomsEl.append(option);
+const errorLines=new Map<string,HTMLElement>();
+const errorLine=(key:string,pane:HTMLElement)=>{const item=text('','booking__field-error mtrl-body-small');item.hidden=true;errorLines.set(key,item);pane.append(item);};
+const step1=panes[0]!;step1.append(text('Plan your stay','mtrl-title-large','h3'));
+const stay=createDatePicker({label:'Check-in → Check-out',variant:'modal',selectionMode:'range',dateFormat:'D MMM YYYY',locale:'en-GB',supportingText:nightText(s),minDate:TODAY,value:[s.checkIn,s.checkOut]});stay.element.id='stay';step1.append(stay.element);errorLine('dates',step1);
+const guestGrid=box('booking__grid booking__grid--three');
+for(const field of GUEST_FIELDS){const select=createSelect({label:field.label,variant:'outlined',value:s[field.key],options:field.options.map(value=>({id:value,text:value}))});select.element.id=field.key;select.on('change',({value})=>{if(value)update({[field.key]:value});});guestGrid.append(select.element);}
+step1.append(guestGrid);errorLine('adults',step1);actions(step1,0,'Check availability');
+const step2=panes[1]!;step2.append(text('Choose your room','mtrl-title-large','h3'));
+const group=box('booking__rooms');group.setAttribute('role','radiogroup');group.setAttribute('aria-label','Room type');group.tabIndex=-1;
+const rateNodes=new Map<string,{option:HTMLElement;radio:ReturnType<typeof createRadios>;night:HTMLElement;stay:HTMLElement;policy:HTMLElement}>();
+const reasons=new Map<string,HTMLElement>();
+for(const room of ROOMS){
+ const body=box('booking__room-card');body.append(text(room.label,'mtrl-title-medium','h3'),text(`${room.beds} · ${room.size} m² · Up to ${room.capacity} guests`));
+ const amenities=box('booking__amenities');
+ for(const amenity of amenitiesOf(room)){
+  const item=node('span','booking__amenity');const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','currentColor');svg.setAttribute('aria-hidden','true');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',amenity.path);svg.append(path);item.append(svg,document.createTextNode(amenity.label));amenities.append(item);
+ }
+ const reason=text('','mtrl-body-small mtrl-text-surface-variant');reason.id=`${room.value}-availability`;reasons.set(room.value,reason);body.append(amenities,text(`from ${money(room.rate)} / night`,'mtrl-title-medium'),reason);
+ const rates=box('booking__rates');
+ for(const rate of RATES){
+  const key=`${room.value}:${rate.value}`;const option=box('booking__rate');option.setAttribute('role','radio');option.setAttribute('aria-label',`${room.label} — ${rate.label}`);option.setAttribute('aria-describedby',reason.id);option.dataset.choice=key;
+  const radio=createRadios({name:`hotel-indicator-${key}`,options:[{value:'selected',label:''}]});radio.element.setAttribute('inert','');radio.element.setAttribute('aria-hidden','true');
+  const copy=box('booking__rate-copy');const policy=text('','mtrl-body-small');copy.append(text(rate.label,'mtrl-title-small'),policy);
+  const prices=box('booking__rate-price');const night=text('','mtrl-title-small'),stayPrice=text('','mtrl-body-small');prices.append(night,stayPrice);option.append(radio.element,copy,prices);rates.append(option);rateNodes.set(key,{option,radio,night,stay:stayPrice,policy});
+ }
+ body.append(rates);const card=createCard({variant:'outlined',content:{children:[body]}});card.element.classList.add('booking__room');group.append(card.element);
 }
-roomsEl.addEventListener("keydown", (event) => {
-  const option = (event.target as HTMLElement).closest<HTMLElement>("[data-room]");
-  if (!option) return;
-  const value = option.dataset.room!;
-  const focusRoom = (next: string) => { s = { ...s, room: next }; render(); roomCards.get(next)?.focus(); };
-  if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); focusRoom(roomAfter(value, 1)); }
-  else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); focusRoom(roomAfter(value, -1)); }
-  else if (event.key === "Home") { event.preventDefault(); focusRoom(ROOMS[0]!.value); }
-  else if (event.key === "End") { event.preventDefault(); focusRoom(ROOMS[ROOMS.length - 1]!.value); }
-  else if (event.key === " " || event.key === "Enter") { event.preventDefault(); s = { ...s, room: value }; render(); roomCards.get(value)?.focus(); }
-});
-roomGroup.append(text("booking__label mtrl-title-small", "Room type"), roomsEl);
-step2.append(grid2, roomGroup, makeCompact(), actions(action("prev", "Back"), action("next", "Next")));
-
-const step3 = pane(3);
-const extrasGroup = div("booking__group");
-extrasGroup.setAttribute("role", "group");
-extrasGroup.setAttribute("aria-labelledby", "extras-label");
-const extrasLabel = text("booking__label mtrl-title-small", "Extras");
-extrasLabel.id = "extras-label";
-extrasGroup.append(extrasLabel);
-for (const extra of EXTRAS) {
-  const control = createCheckbox({ label: `${extra.label} — $${extra.price} ${extra.unit}` });
-  control.element.querySelector("svg")?.setAttribute("aria-hidden", "true");
-  control.on("change", ({ checked }) => { s = { ...s, [extra.key]: checked }; render(); });
-  extrasGroup.append(control.element);
-}
-step3.append(extrasGroup, makeCompact(), actions(action("prev", "Back"), action("next", "Next")));
-
-const step4 = pane(4);
-const grid4 = div("booking__grid");
-const nameField = createTextField({ label: "Name", supportingText: "Required" });
-const emailField = createTextField({ label: "Email", type: "email", supportingText: "Required" });
-grid4.append(nameField.element, emailField.element);
-const review = div("booking__group");
-step4.append(grid4, review);
-
-const timePicker = createTimePicker({ value: s.arrivalTime, format: "24h", title: "Arrival time" });
-const snackbar = createSnackbar({ message: "Booking confirmed" });
-const summaryEl = document.createElement("p");
-const dialog = createDialog({
-  title: "Confirm booking",
-  container: section,
-  content: "",
-  buttons: [
-    { text: "Cancel", variant: "text" },
-    { text: "Confirm booking", variant: "text", onClick: () => { section.append(snackbar.element); snackbar.show(); } },
-  ],
-});
-const contentEl = dialog.getContentElement();
-if (contentEl) {
-  contentEl.id = "booking-summary";
-  contentEl.append(summaryEl);
-  dialog.element.setAttribute("aria-describedby", "booking-summary");
-}
-
-const focusField = (field: HTMLElement): void => {
-  (field.querySelector<HTMLElement>("input, textarea") ?? field).focus();
+step2.append(group);errorLine('room',step2);actions(step2,1);
+const step3=panes[2]!;step3.append(text('Make your stay yours','mtrl-title-large','h3'));
+const extras=new Map<string,ReturnType<typeof createCheckbox>>();
+for(const extra of EXTRAS){const field=createCheckbox({label:extraLabel(s,extra)});field.element.id=extra.key;field.on('change',({checked})=>{if(!syncing)update({[extra.key]:checked});});extras.set(extra.key,field);step3.append(field.element);}
+actions(step3,2);
+const step4=panes[3]!;step4.append(text('Who is staying?','mtrl-title-large','h3'));
+const details=box('booking__grid');const detailFields=new Map<string,ReturnType<typeof createTextField>>();
+for(const field of DETAIL_FIELDS){const input=createTextField({label:field.label,variant:'outlined',type:field.type,value:s[field.key],supportingText:field.helper});input.element.id=field.key;input.on('input',({value})=>update({[field.key]:value}));detailFields.set(field.key,input);details.append(input.element);}
+const other=createCheckbox({label:"I'm booking for someone else"});other.element.id='forSomeoneElse';other.on('change',({checked})=>update({forSomeoneElse:checked}));
+const guestName=createTextField({label:'Lead guest name',variant:'outlined',supportingText:'Required when booking for someone else'});guestName.element.id='guestName';guestName.on('input',({value})=>update({guestName:value}));detailFields.set('guestName',guestName);
+const guestWrap=box('');guestWrap.append(guestName.element);
+const requests=createTextField({label:'Special requests',variant:'outlined',type:'multiline',supportingText:'Optional · Subject to availability'});requests.element.id='requests';requests.on('input',({value})=>update({requests:value}));
+const payment=createSelect({label:'Payment',variant:'outlined',value:s.payment,options:PAYMENT_OPTIONS.map(option=>({id:option.value,text:option.label}))});payment.element.id='payment';payment.on('change',({value})=>{if(value)update({payment:value});});const paymentCopy=text('');
+step4.append(details,other.element,guestWrap,requests.element,payment.element,paymentCopy);actions(step4,3,'Book');
+const step5=panes[4]!;step5.append(text('Your stay is confirmed','mtrl-title-large','h3'),text(`Booking reference ${HOTEL.reference}`,'mtrl-headline-small'),text('Demo reservation · Nothing has been charged or sent.'));
+const confirmation=box('booking__confirmation');const confirmActions=box('booking__actions');
+const snackbar=createSnackbar({message:'Demo booking action',duration:'short'});
+const announce=(message:string)=>{snackbar.setMessage(message);snackbar.setDuration('short');snackbar.show();};
+const calendar=createButton({text:'Add to calendar',variant:'outlined'}),manage=createButton({text:'Manage booking'});calendar.on('click',()=>announce('Calendar download is a demo action.'));manage.on('click',()=>announce('Manage booking is a demo action.'));confirmActions.append(calendar.element,manage.element);step5.append(confirmation,confirmActions);
+const summaryWrap=box('booking__summary-wrap');const summaryBody=box('booking__summary-lines');const summaryCard=createCard({variant:'filled',header:{title:'Your stay'},content:{children:[summaryBody]}});summaryCard.element.id='price-summary';summaryCard.element.classList.add('booking__summary');
+const summaryToggle=createButton({text:'Your stay · View details',variant:'outlined'});summaryToggle.element.classList.add('booking__summary-toggle');summaryToggle.element.setAttribute('aria-expanded','false');summaryToggle.element.setAttribute('aria-controls','price-summary');summaryToggle.on('click',()=>{const open=summaryToggle.element.getAttribute('aria-expanded')!=='true';summaryToggle.element.setAttribute('aria-expanded',String(open));summaryWrap.classList.toggle('booking__summary-wrap--open',open);});summaryWrap.append(summaryToggle.element,summaryCard.element);
+const renderSummary=(target:HTMLElement)=>{
+ target.replaceChildren(text(HOTEL.name,'mtrl-title-medium'),text(stayText(s)),text(guestText(s)));
+ if(!s.roomChosen){target.append(text(unavailable(s,roomOf(s))?'Room: choose an available room':'Room: choose in the next step'));return;}
+ target.append(text(`${roomOf(s).label} · ${rateText(s)}`),...priceLines(s).map(line=>{const row=box('booking__price-line');row.append(text(line.label,'mtrl-body-medium','span'),text(line.amount,'mtrl-body-medium','span'));return row;}),text(`Total ${money(total(s))}`,'mtrl-title-large'),text(`incl. VAT ${money(vatIncluded(s))}`,'mtrl-body-small mtrl-text-surface-variant'),text(cancellation(s),'mtrl-body-small'));
 };
-const focusFirstInvalid = (step: number): void => {
-  if (step === 1) focusField(arrival.element);
+const showErrors=(messages:BookingErrors)=>{
+ for(const [key,item] of errorLines){item.textContent=messages[key as keyof BookingErrors]??'';item.hidden=!item.textContent;}
+ for(const [key,field] of detailFields){field.setError(!!messages[key as keyof BookingErrors],messages[key as keyof BookingErrors]);}
+ const key=Object.keys(messages)[0];if(key)focusControl(shell.querySelector<HTMLElement>(key==='dates'?'#stay':key==='room'?'[data-choice][tabindex="0"]':`#${key}`));
 };
-// Next validates the step it leaves through the stepper's pipeline.
-const hook = (step: number): Exclude<StepConfig["validate"], undefined> => () => {
-  const errors = validateStep(s, step);
-  if (errors.dates) { datesError.textContent = errors.dates; datesError.hidden = false; focusField(stay.element); return false; }
-  datesError.hidden = true;
-  if (errors.arrivalTime) { arrival.setError(true, errors.arrivalTime); focusFirstInvalid(step); return false; }
-  return true;
+const hook=(index:number):Exclude<StepConfig['validate'],undefined>=>()=>{const messages=validateStep(s,index+1);showErrors(messages);if(Object.keys(messages).length)return false;if(index===1)update({roomChosen:true});return true;};
+const stepper=createStepper({orientation:'auto',labelPlacement:'end',linear:true,focusOnAction:'heading',ariaLabel:'Hotel booking steps',steps:STEPS.map((step,index)=>({value:step.value,label:step.title,content:panes[index]!,validate:hook(index)}))});
+// The factory has no label-placement setter. Apply only its existing presentation
+// modifiers after resolution; bottom labels must never reach the vertical layout.
+let labelRequest=0;const syncLabels=()=>{cancelAnimationFrame(labelRequest);labelRequest=requestAnimationFrame(()=>{const horizontal=stepper.getResolvedOrientation()==='horizontal';stepper.element.classList.toggle('mtrl-stepper--label-bottom',horizontal);stepper.element.classList.toggle('mtrl-stepper--label-end',!horizontal);});};
+stepper.on('orientationchange',syncLabels);new ResizeObserver(syncLabels).observe(stepper.element);
+stepper.on('change',event=>{if(event.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});if(event.value==='confirmation'){for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}syncLabels();});
+const render=()=>{
+ syncing=true;stay.setSupportingText(nightText(s));const available=choices(s);const current=choiceOf(s);const focusable=available.includes(current)?current:available[0];
+ for(const room of ROOMS){const reason=unavailable(s,room);reasons.get(room.value)!.textContent=reason||(room.stock===2?'Only 2 left':'');for(const rate of RATES){const key=`${room.value}:${rate.value}`;const item=rateNodes.get(key)!;const selected=current===key&&!reason;item.option.setAttribute('aria-checked',String(selected));item.option.setAttribute('aria-disabled',String(!!reason));item.option.tabIndex=key===focusable?0:-1;item.radio.setValue(selected?'selected':null);if(reason)item.radio.disable();else item.radio.enable();const value={...s,room:room.value,rate:rate.value};item.night.textContent=`${money(nightlyRate(value))} / night`;item.stay.textContent=`${money(roomTotal(value))} stay total`;item.policy.textContent=rateConditions(s,rate);}}
+ for(const extra of EXTRAS){const field=extras.get(extra.key)!;field.setLabel(extraLabel(s,extra));const checked=s[extra.key]||extraIncluded(s,extra.key);if(checked!==field.isChecked()){if(checked)field.check();else field.uncheck();}if(extraIncluded(s,extra.key))field.disable();else field.enable();}
+ guestWrap.hidden=!s.forSomeoneElse;paymentCopy.textContent=paymentNote(s);renderSummary(summaryBody);summaryToggle.setText(s.roomChosen?`Total ${money(total(s))} · View details`:'Your stay · View details');renderSummary(confirmation);confirmation.append(text(`Lead guest: ${s.forSomeoneElse?s.guestName:`${s.firstName} ${s.lastName}`}`),text(`Confirmation email: ${s.email}`),text('Check-in from 15:00 · Check-out until 11:00'),text(`Payment: ${PAYMENT_OPTIONS.find(option=>option.value===s.payment)?.label}`));syncing=false;
 };
-
-const stepper = createStepper({
-  linear: true,
-  orientation: "auto",
-  labelPlacement: "bottom",
-  focusOnAction: "heading",
-  ariaLabel: "Booking steps",
-  steps: [
-    { value: stepValue(1), label: "Dates and arrival", validate: hook(1), content: step1 },
-    { value: stepValue(2), label: "Guests and room", content: step2 },
-    { value: stepValue(3), label: "Extras", content: step3 },
-    { value: stepValue(4), label: "Your details and review", content: step4 },
-  ],
+function update(patch:Partial<Booking>){s=amend(s,patch);render();}
+stay.on('change',payload=>{
+ const detail=payload as unknown as {value?:unknown;rangeEndDate?:unknown;iso?:string};
+ const iso=(value:unknown):string|null=>value instanceof Date?`${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`:typeof value==='string'?value.split('/')[0]!:null;
+ const start=Array.isArray(detail.value)?iso(detail.value[0]):iso(detail.value);const end=iso(detail.rangeEndDate)??detail.iso?.split('/')[1]??(Array.isArray(detail.value)?iso(detail.value[1]):null);if(start&&end)update({checkIn:start,checkOut:end});
 });
-
-const book = createButton({ text: "Book" });
-book.on("click", () => {
-  const errors = validateStep(s, 4);
-  nameField.setError(Boolean(errors.name), errors.name);
-  emailField.setError(Boolean(errors.email), errors.email);
-  if (!errors.name && !errors.email) { render(); dialog.open(); }
-  else if (errors.name) focusField(nameField.element);
-  else if (errors.email) focusField(emailField.element);
-});
-step4.append(makeCompact(), actions(action("prev", "Back"), wrap(book.element)));
-
-const render = (): void => {
-  stayLine.textContent = stayText(s);
-  summaryEl.textContent = summary(s);
-  renderSummary();
-  for (const room of ROOMS) {
-    const option = roomCards.get(room.value)!;
-    option.setAttribute("aria-checked", String(s.room === room.value));
-    option.tabIndex = s.room === room.value ? 0 : -1;
-  }
-  review.replaceChildren(
-    ...reviewLines(s).map((line) => {
-      const row = div("booking__review-row");
-      const copy = div("booking__review-copy");
-      copy.append(text("booking__review-label mtrl-title-small", line.label), text("booking__review-line mtrl-body-medium", line.text));
-      const edit = div("booking__action");
-      edit.setAttribute("data-stepper-goto", stepValue(line.step));
-      edit.append(createButton({ text: "Edit", variant: "text", ariaLabel: `Edit ${line.label}` }).element);
-      row.append(copy, edit);
-      return row;
-    }),
-  );
-};
-
-stay.on("change", (detail) => {
-  const d = detail as unknown as { value?: unknown; rangeEndDate?: unknown; iso?: string };
-  const toIso = (v: unknown): string | null => v instanceof Date ? `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(v.getDate()).padStart(2, "0")}` : typeof v === "string" ? v.split("/")[0]! : null;
-  const start = Array.isArray(d.value) ? toIso(d.value[0]) : toIso(d.value);
-  const end = toIso(d.rangeEndDate) ?? (typeof d.iso === "string" ? d.iso.split("/")[1] ?? null : null) ?? (Array.isArray(d.value) ? toIso(d.value[1]) : null);
-  if (start && end) { s = withRange(s, start, end); datesError.hidden = true; render(); }
-});
-arrival.on("input", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setError(false); });
-arrival.on("change", ({ value }) => {
-  const time = normalizeTime(value);
-  if (time) { s = { ...s, arrivalTime: time }; arrival.setValue(time); arrival.setError(false); }
-  else arrival.setError(true, "Enter a valid time");
-});
-arrival.on("trailing", () => {
-  const time = normalizeTime(s.arrivalTime);
-  timePicker.setValue(time ?? "15:00");
-  timePicker.open();
-});
-timePicker.on("change", ({ value }) => { s = { ...s, arrivalTime: value }; arrival.setValue(value); arrival.setError(false); });
-adults.on("change", ({ value }) => { s = { ...s, adults: value ?? s.adults }; render(); });
-children.on("change", ({ value }) => { s = { ...s, children: value ?? s.children }; render(); });
-nameField.on("input", ({ value }) => { s = { ...s, name: value }; nameField.setError(false); });
-emailField.on("input", ({ value }) => { s = { ...s, email: value }; emailField.setError(false); });
-
-const layout = div("booking__layout");
-layout.append(stepper.element, summaryCard.element);
-section.append(intro, layout, timePicker.element);
-app.append(section);
-render();
+const choose=(key:string)=>{update(choicePatch(key));rateNodes.get(key)?.option.focus();};
+group.addEventListener('click',event=>{const target=(event.target as HTMLElement).closest<HTMLElement>('[data-choice]');if(target&&target.getAttribute('aria-disabled')!=='true')choose(target.dataset.choice!);});
+group.addEventListener('keydown',event=>{const target=(event.target as HTMLElement).closest<HTMLElement>('[data-choice]');if(!target)return;const options=choices(s);let next:string|undefined;if(['ArrowRight','ArrowDown'].includes(event.key))next=choiceAfter(s,target.dataset.choice!,1);else if(['ArrowLeft','ArrowUp'].includes(event.key))next=choiceAfter(s,target.dataset.choice!,-1);else if(event.key==='Home')next=options[0];else if(event.key==='End')next=options.at(-1);else if([' ','Enter'].includes(event.key)&&options.includes(target.dataset.choice!))next=target.dataset.choice;if(next){event.preventDefault();choose(next);}});
+const layout=box('booking__layout');layout.append(stepper.element,summaryWrap);shell.append(intro,layout,text('Fictional hotel · Demonstration rates and taxes. No payment is collected.','mtrl-body-small'),snackbar.element);app.append(shell);render();syncLabels();

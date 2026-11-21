@@ -3,7 +3,7 @@ import 'material/elements/css';
 import 'material-addons/elements/css/stepper';
 import { defineAll } from 'material/elements';
 import { defineStepper, type StepperElement } from 'material-addons/elements';
-import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, choiceAfter, choiceOf, choicePatch, choices, cancellation, extraIncluded, extraLabel, formatDay, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateOf, rateText, roomAfter, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './hotel';
+import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, choiceAfter, choiceOf, choicePatch, choices, cancellation, extraIncluded, extraLabel, formatDay, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateOf, rateText, roomAfter, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
 import { focusControl, watchStepper } from './hotel-ui';
 defineAll(); defineStepper();
 let s: Booking = { ...DEFAULTS };
