@@ -437,7 +437,8 @@ try {
       }
       return [...lines.values()].filter(line => line.width > paragraph.clientWidth * 0.95).map(line => line.chars);
     };
-    const prose = [...md.querySelectorAll<HTMLElement>('p')].filter(p => p.textContent!.trim().length > 120 && !p.closest('pre, table, .doc-example'));
+    // Visible prose only: other frameworks' variants are hidden (0px wide).
+    const prose = [...md.querySelectorAll<HTMLElement>('p')].filter(p => p.textContent!.trim().length > 120 && !p.closest('pre, table, .doc-example') && p.getClientRects().length > 0);
     const lines = prose.slice(0, 12).flatMap(fullLines).sort((a, b) => a - b);
     // Long inline code and URLs wrap inside the paragraph instead of the page.
     const overflowing = prose.filter(p => p.scrollWidth > p.clientWidth + 1).length;
