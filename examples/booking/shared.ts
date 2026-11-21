@@ -17,7 +17,7 @@ export const DEFAULTS: Booking = {
   room: 'superior', rate: 'flexible', roomChosen: false, breakfast: false, parking: false, lateCheckout: false, transfer: false,
   firstName: '', lastName: '', email: '', phone: '', arrivalTime: '15:00', requests: '', forSomeoneElse: false, guestName: '', payment: 'hotel',
 };
-export const HOTEL = { name: 'Hotel Lumen', city: 'Lisbon', address: '18 Rua da Aurora, Lisbon', stars: '★★★★ · 4-star city hotel', rating: '★ 4.6 · 1,284 reviews', reference: 'LMN-4821' } as const;
+export const HOTEL = { name: 'Hotel Lumen', city: 'Lisbon', address: '18 Rua da Aurora, Lisbon', stars: '★★★★', rating: '4.6 (1,284 reviews)', reference: 'LMN-4821' } as const;
 export const ROOMS = [
   { value: 'superior', label: 'Superior Double', beds: '1 queen bed', size: 24, capacity: 2, stock: 6, rate: 124 },
   { value: 'deluxe', label: 'Deluxe King with city view', beds: '1 king bed', size: 30, capacity: 2, stock: 4, rate: 154 },
@@ -132,7 +132,7 @@ export const validateStep = (s: Booking, step: number): BookingErrors => {
 };
 export const amend = (s: Booking, patch: Partial<Booking>): Booking => {
   const next = { ...s, ...patch };
-  if (patch.roomChosen === undefined && ['checkIn','checkOut','adults','children','rooms','room','rate'].some(key => key in patch)) next.roomChosen = false;
+  if (patch.roomChosen === undefined && ['checkIn','checkOut','adults','children','rooms'].some(key => key in patch)) next.roomChosen = false;
   if (rateOf(next).breakfast) next.breakfast = false;
   return next;
 };

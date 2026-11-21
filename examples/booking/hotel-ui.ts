@@ -14,6 +14,8 @@ export function watchStepper(host: StepperElement): () => void {
       for (const step of host.getSteps()) {
         const declaration = host.querySelector(`m-step[value="${step.value}"]`);
         declaration?.toggleAttribute('completed', step.completed);
+        declaration?.toggleAttribute('error', step.error);
+        declaration?.toggleAttribute('no-edit', !step.editable);
       }
       if (value) host.setAttribute('value', value);
       host.setAttribute('label-placement', placement);

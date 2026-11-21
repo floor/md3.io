@@ -60,7 +60,7 @@ export default function Booking() {
     <div className="booking__action booking__action--next" data-stepper-next><Button>{label}</Button></div>
   </footer>;
   return <section className="booking" ref={element=>{refs.root.current=element;}}>
-    <div className="booking__intro"><h1 className="booking__title mtrl-headline-medium">{HOTEL.name}</h1><p className="mtrl-body-medium">★★★★ · {HOTEL.address} · 4.6 (1,284 reviews)</p></div>
+    <div className="booking__intro"><h1 className="booking__title mtrl-headline-medium">{HOTEL.name}</h1><p className="mtrl-body-medium">{HOTEL.stars} · {HOTEL.address} · {HOTEL.rating}</p></div>
     <div className="booking__layout">
       <Stepper ref={element=>{refs.stepper.current=element;}} orientation="auto" labelPlacement="end" linear ariaLabel="Hotel booking steps" defaultValue="dates" onBeforechange={veto} onChange={changed}>
         {STEPS.map((step,index)=><Step key={step.value} value={step.value} label={step.title}>

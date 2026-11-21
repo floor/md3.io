@@ -7,7 +7,6 @@ import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, 
 import { focusControl, watchStepper } from './hotel-ui';
 defineAll(); defineStepper();
 let s: Booking = { ...DEFAULTS };
-let confirmed = false;
 const app = document.getElementById('app')!;
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string,string|boolean|undefined> = {}, text?: string): HTMLElementTagNameMap[K] => {
   const node = document.createElement(tag);
@@ -27,7 +26,7 @@ const select = (id: string, label: string, options: readonly {value:string;label
 const button = (label: string, variant = 'filled') => control('m-button',{variant},label);
 const shell = el('section',{class:'booking'});
 const intro = box('booking__intro');
-intro.append(text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`★★★★ · ${HOTEL.address} · 4.6 (1,284 reviews)`));
+intro.append(text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`${HOTEL.stars} · ${HOTEL.address} · ${HOTEL.rating}`));
 const layout = box('booking__layout');
 const stepper = control('m-stepper',{orientation:'auto','label-placement':'end',linear:true,'aria-label':'Hotel booking steps',value:'dates'}) as unknown as StepperElement;
 const panes: HTMLElement[] = [];
@@ -159,5 +158,5 @@ stepper.addEventListener('beforechange',event=>{
   if(Object.keys(messages).length){event.detail.preventDefault();stepper.setError(event.detail.previousValue!,true);setErrors(messages);}
   else {stepper.setError(event.detail.previousValue!,false);setErrors({});if(number===2)update({roomChosen:true});}
 });
-stepper.addEventListener('change',event=>{if(event.detail.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});if(event.detail.value==='confirmation'){confirmed=true;render();for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}});
+stepper.addEventListener('change',event=>{if(event.detail.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});if(event.detail.value==='confirmation'){render();for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}});
 layout.append(stepper,summaryWrap);shell.append(intro,layout,text('Fictional hotel · Demonstration rates and taxes. No payment is collected.','mtrl-body-small'),snackbar);app.append(shell);watchStepper(stepper);render();

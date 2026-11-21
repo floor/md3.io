@@ -16,7 +16,7 @@ const node=(tag:string,className='',content?:string):HTMLElement=>Object.assign(
 const box=(className:string)=>node('div',className);
 const text=(value:string,className='mtrl-body-medium',tag='p')=>node(tag,className,value);
 const shell=node('section','booking');
-const intro=box('booking__intro');intro.append(text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`★★★★ · ${HOTEL.address} · 4.6 (1,284 reviews)`));
+const intro=box('booking__intro');intro.append(text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`${HOTEL.stars} · ${HOTEL.address} · ${HOTEL.rating}`));
 const panes=STEPS.map((_,index)=>{const pane=box('booking__step');const heading=text(stepHeading(index+1),'booking__step-title','h2');heading.tabIndex=-1;pane.append(heading);return pane;});
 const actions=(pane:HTMLElement,index:number,label='Next')=>{
   const footer=node('footer','booking__actions');

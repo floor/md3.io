@@ -47,7 +47,7 @@ export default defineComponent({
     return {s,errors,expanded,rootEl,stepperEl,update,announce,veto,changed,choose,onChoiceKey,selected,tabFor,priceFor,setRange,paymentLabel,DEFAULTS,DETAIL_FIELDS,EXTRAS,GUEST_FIELDS,HOTEL,PAYMENT_OPTIONS,RATES,ROOMS,STEPS,TODAY,amenitiesOf,unavailable,money,nightlyRate,nightText,roomTotal,rateConditions,extraIncluded,extraLabel,paymentNote,stepHeading,total};
   },
   template:`<section ref="rootEl" class="booking">
-    <div class="booking__intro"><h1 class="booking__title mtrl-headline-medium">{{ HOTEL.name }}</h1><p class="mtrl-body-medium">★★★★ · {{ HOTEL.address }} · 4.6 (1,284 reviews)</p></div>
+    <div class="booking__intro"><h1 class="booking__title mtrl-headline-medium">{{ HOTEL.name }}</h1><p class="mtrl-body-medium">{{ HOTEL.stars }} · {{ HOTEL.address }} · {{ HOTEL.rating }}</p></div>
     <div class="booking__layout">
       <MStepper ref="stepperEl" orientation="auto" labelPlacement="end" linear ariaLabel="Hotel booking steps" defaultValue="dates" @beforechange="veto" @change="changed">
         <MStep v-for="(step,index) in STEPS" :key="step.value" :value="step.value" :label="step.title">

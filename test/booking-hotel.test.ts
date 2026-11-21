@@ -48,5 +48,5 @@ test('the room summary waits for selection and resets when the stay changes', ()
   const chosen=amend(DEFAULTS,{roomChosen:true});
   expect(chosen.roomChosen).toBe(true);
   expect(amend(chosen,{adults:'3'}).roomChosen).toBe(false);
-  expect(amend(chosen,{room:'family'}).roomChosen).toBe(false);
+  expect(amend(chosen,{room:'family'}).roomChosen).toBe(true);
 });

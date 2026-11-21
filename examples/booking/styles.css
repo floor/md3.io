@@ -42,11 +42,12 @@
 }
 @media (max-width: 600px) {
   .booking__rooms, .booking__grid, .booking__grid--three, .booking__amenities { grid-template-columns: minmax(0, 1fr); }
-  .booking__actions { flex-wrap: wrap; }
-  .booking__actions > * { flex: 1; }
-  .booking__actions > *, .booking__actions m-button, .booking__actions .mtrl-button { width: 100%; }
-  .booking__action--next { min-width: 100%; order: -1; }
-  .booking__actions m-button::part(button) { width: 100%; }
+  .booking__actions { flex-wrap: nowrap; justify-content: space-between; }
+  .booking__action--next { margin-inline-start: auto; }
+  .booking__actions > .booking__action:only-child,
+  .booking__actions > .booking__action:only-child m-button,
+  .booking__actions > .booking__action:only-child .mtrl-button { width: 100%; }
+  .booking__actions > .booking__action:only-child m-button::part(button) { width: 100%; }
   .booking__rate { flex-wrap: wrap; }
   .booking__rate-price { width: 100%; padding-inline-start: 42px; align-items: flex-start; }
 }

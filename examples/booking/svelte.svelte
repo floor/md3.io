@@ -38,7 +38,7 @@
   {:else}<p class="mtrl-body-medium">{unavailable(s,roomOf(s))?'Room: choose an available room':'Room: choose in the next step'}</p>{/if}
 {/snippet}
 <section class="booking" bind:this={rootEl}>
-  <div class="booking__intro"><h1 class="booking__title mtrl-headline-medium">{HOTEL.name}</h1><p class="mtrl-body-medium">★★★★ · {HOTEL.address} · 4.6 (1,284 reviews)</p></div>
+  <div class="booking__intro"><h1 class="booking__title mtrl-headline-medium">{HOTEL.name}</h1><p class="mtrl-body-medium">{HOTEL.stars} · {HOTEL.address} · {HOTEL.rating}</p></div>
   <div class="booking__layout">
     <Stepper bind:this={stepperEl} orientation="auto" labelPlacement="end" linear ariaLabel="Hotel booking steps" defaultValue="dates" onbeforechange={veto} onchange={changed}>
       {#each STEPS as step,index (step.value)}<Step value={step.value} label={step.title}>
