@@ -1,4 +1,4 @@
-<!doctype html><html lang="en" data-theme="baseline" data-theme-mode="light" data-component="<%= it.slug %>"><head>
+<!doctype html><html lang="en" data-theme="baseline" data-theme-mode="light" data-component="<%= it.slug %>"<% if (it.component.previewLayout) { %> data-preview-layout="<%= it.component.previewLayout %>"<% } %>><head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title><%= it.component.name %> preview</title>
   <script>
     (() => {

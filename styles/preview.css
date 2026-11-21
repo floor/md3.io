@@ -74,3 +74,7 @@ html:is([data-component="autocomplete"], [data-component="colorpicker"], [data-c
   min-width: 0;
 }
 #stage > .mtrl-skeleton--text { width: min(100%, 320px); }
+
+/* Layout components fill a bounded block instead of measuring a narrow child. */
+html[data-preview-layout="fill"] #stage { width: 100%; min-width: 0; }
+html[data-preview-layout="fill"] #stage > * { width: min(100%, 880px); min-width: 0; flex-shrink: 0; }

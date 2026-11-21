@@ -4,6 +4,9 @@ import { createAutocomplete } from 'material-addons/components/autocomplete';
 import { createColorPicker } from 'material-addons';
 import { createExpansionPanel } from 'material-addons/components/expansion-panel';
 import { createSkeleton } from 'material-addons/components/skeleton';
+import { wireStepperDemo } from '../shared/content/stepper-demo-runtime';
+import 'material/elements/css/button';
+import { defineButton } from 'material/elements';
 import { createStepper } from 'material-addons/components/stepper';
 import { createFormPreview } from './form-preview';
 import createBadge from 'material/components/badge';
@@ -65,6 +68,7 @@ import { symbols } from '../shared/icons';
 // group in that markup upgrade on the stage, the same tags the code tabs write.
 defineCheckbox();
 defineRadios();
+defineButton();
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -97,7 +101,11 @@ function create(state: ComponentState) {
     case 'expansion-panel': return createExpansionPanel({ ...components['expansion-panel'].config(state), onChange: ({ open }) => message(open ? 'Panel expanded' : 'Panel collapsed') });
     case 'form': return createFormPreview(components.form.config(state), message);
     case 'skeleton': return createSkeleton(components.skeleton.config(state));
-    case 'stepper': return createStepper({ ...components.stepper.config(state), onChange: ({ value }) => message(`Step: ${value}`) });
+    case 'stepper': {
+      const control = createStepper({ ...components.stepper.config(state), onChange: ({ value }) => message(`Step: ${value}`) });
+      const dispose = wireStepperDemo(control.element, control);
+      return { element: control.element, destroy: () => { dispose(); control.destroy(); } };
+    }
     case 'badge': {
       const host = document.createElement('div');
       const target = createIconButton({ icon: componentIcons.inbox, ariaLabel: 'Inbox', variant: 'tonal' });

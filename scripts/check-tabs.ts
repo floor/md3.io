@@ -17,6 +17,7 @@ import { components, componentCode, initialComponentState, normalizeComponentSta
 import { addonSlugs, playgroundHref } from '../src/shared/addons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
+import { checkStepperWorkflow } from './stepper-driver';
 import { eligibleTabComponents } from './check-tabs-eligible';
 import { checkTabsRecycle, checkTabsSlugs } from './check-tabs-options';
 
@@ -56,7 +57,7 @@ const vueSfc: BunPlugin = {
       const id = 'tab';
       const script = compileScript(descriptor, { id, genDefaultAs: '__sfc__' });
       const template = compileTemplate({ id, filename: path, source: descriptor.template!.content, compilerOptions: { bindingMetadata: script.bindings } });
-      return { contents: `${script.content}\n${template.code}\n__sfc__.render = render;\nexport default __sfc__;\n`, loader: 'js' };
+      return { contents: `${script.content}\n${template.code}\n__sfc__.render = render;\nexport default __sfc__;\n`, loader: 'ts' };
     });
   },
 };
@@ -857,6 +858,11 @@ try {
         if (statedText.length > 0) missingText = multisetDifference(missingText, statedText);
         if (missingText.length > 0 || extraText.length > 0) {
           differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
+        }
+        if (slug === 'stepper') {
+          try { await checkStepperWorkflow(page, (scenario?.options.workflow ?? initialComponentState(slug).workflow) === 'account'); }
+          catch (error) { throw new Error(`stepper/${scenarioId}/${tab}: workflow failed`, { cause: error }); }
+          console.log(`workflow: stepper/${scenarioId}/${tab} passed`);
         }
       }
     }
