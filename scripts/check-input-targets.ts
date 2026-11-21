@@ -148,10 +148,12 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
       if (width < 840) await page.locator('#component-catalog-index summary').click();
       await checkTargets(componentList.getByRole('button'), `${width}px component family disclosures`);
-      await edge(page, componentList.getByRole('button', { name: 'Buttons', exact: true }), 'touch');
+      // The drawer is dense (36dp rows, 48dp targets), so neighbouring targets overlap
+      // vertically by design: tap a row's side edge, not its top outset.
+      await edge(page, componentList.getByRole('button', { name: 'Buttons', exact: true }), 'touch', 'left');
       const buttonLink = componentList.getByRole('link', { name: 'Button', exact: true });
       await checkTargets(componentList.getByRole('link'), `${width}px component list rows`);
-      await edge(page, buttonLink, 'touch');
+      await edge(page, buttonLink, 'touch', 'left');
       await page.waitForURL(new URL('components/button/', base).href);
       await checkVisualControlSizes(page);
 
