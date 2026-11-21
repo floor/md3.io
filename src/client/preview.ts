@@ -4,7 +4,7 @@ import { createAutocomplete } from 'material-addons/components/autocomplete';
 import { createColorPicker } from 'material-addons';
 import { createExpansionPanel } from 'material-addons/components/expansion-panel';
 import { createSkeleton } from 'material-addons/components/skeleton';
-import { wireStepperDemo } from '../shared/content/stepper-demo-runtime.js';
+import { wireStepperDemo } from '../shared/content/stepper-demo-runtime';
 import 'material/elements/css/button';
 import { defineButton } from 'material/elements';
 import { createStepper } from 'material-addons/components/stepper';

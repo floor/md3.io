@@ -44,7 +44,7 @@ export function stepperSteps(account: boolean): NonNullable<StepperConfig['steps
 }
 
 const literal = (value: string) => '`' + value.replaceAll('`', '\\`').replaceAll('${', '\\${') + '`';
-const behavior = stepperDemoSource().replace(/^export /gm, '');
+const behaviorSources = stepperDemoSource();
 const setup = (context: CodeContext) => `import 'material/styles/base';
 import 'material-addons/styles';
 import 'material/elements/css/button';
@@ -56,6 +56,7 @@ document.documentElement.dataset.themeMode = ${JSON.stringify(context.mode ?? 'l
 `;
 
 export function stepperDemoCode(framework: Framework, config: StepperConfig, context: CodeContext): string {
+  const behavior = (framework === 'vanilla' || framework === 'html' ? behaviorSources.javascript : behaviorSources.typescript).replace(/^export /gm, '');
   const steps = config.steps ?? [];
   const account = steps[0]?.value === 'details';
   const orientation = JSON.stringify(config.orientation ?? 'auto');

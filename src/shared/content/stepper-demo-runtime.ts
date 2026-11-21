@@ -1,22 +1,26 @@
+import type { StepperBeforeChangeEvent, StepperComponent } from 'material-addons/components/stepper';
+
+type DemoStepper = { setError(value: string, error: boolean, message?: string): unknown; on?: StepperComponent['on']; off?: StepperComponent['off'] };
+
 /** Bind the same workflow to a factory instance or a framework's stepper element. */
-export function wireStepperDemo(root, stepper) {
+export function wireStepperDemo(root: HTMLElement, stepper: DemoStepper) {
   const controller = new AbortController();
-  const panels = [...root.querySelectorAll('[data-demo-step]')];
-  const value = name => root.querySelector(`[name="${name}"]:checked`)?.value
-    ?? root.querySelector(`[name="${name}"]`)?.value ?? '';
+  const panels = [...root.querySelectorAll<HTMLElement>('[data-demo-step]')];
+  const value = (name: string) => root.querySelector<HTMLInputElement>(`[name="${name}"]:checked`)?.value
+    ?? root.querySelector<HTMLInputElement>(`[name="${name}"]`)?.value ?? '';
   const summary = () => {
-    const shop = root.querySelector('[name="shop"]:checked')?.closest('label')?.innerText.trim() ?? '';
+    const shop = root.querySelector<HTMLInputElement>('[name="shop"]:checked')?.closest('label')?.innerText.trim() ?? '';
     const text = root.dataset.workflow === 'account'
       ? `${value('name')} · ${value('email')} · ${value('workspace')}`
       : `${shop} · ${value('date')} at ${value('time')}`;
     root.querySelectorAll('[data-demo-summary]').forEach(node => { node.textContent = text; });
   };
-  const beforeChange = event => {
-    const move = event.detail ?? event;
+  const beforeChange = (event: Event | StepperBeforeChangeEvent) => {
+    const move = 'detail' in event ? (event as CustomEvent<StepperBeforeChangeEvent>).detail : event as StepperBeforeChangeEvent;
     summary();
     if (move.direction !== 'forward') return;
     const panel = panels.find(node => node.dataset.demoStep === move.previousValue);
-    const invalid = [...(panel?.querySelectorAll('input') ?? [])].find(input => !input.checkValidity());
+    const invalid = [...(panel?.querySelectorAll<HTMLInputElement>('input') ?? [])].find(input => !input.checkValidity());
     if (invalid) {
       move.preventDefault();
       stepper.setError(move.previousValue, true, 'Complete the required fields');
@@ -25,7 +29,8 @@ export function wireStepperDemo(root, stepper) {
   };
   const complete = () => {
     summary();
-    const status = root.querySelector('[data-demo-confirmation]');
+    const status = root.querySelector<HTMLElement>('[data-demo-confirmation]');
+    if (!status) return;
     status.hidden = false;
     status.textContent = root.dataset.workflow === 'account' ? 'Account setup complete.' : 'Pickup confirmed.';
   };

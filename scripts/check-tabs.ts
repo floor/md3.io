@@ -57,7 +57,7 @@ const vueSfc: BunPlugin = {
       const id = 'tab';
       const script = compileScript(descriptor, { id, genDefaultAs: '__sfc__' });
       const template = compileTemplate({ id, filename: path, source: descriptor.template!.content, compilerOptions: { bindingMetadata: script.bindings } });
-      return { contents: `${script.content}\n${template.code}\n__sfc__.render = render;\nexport default __sfc__;\n`, loader: 'js' };
+      return { contents: `${script.content}\n${template.code}\n__sfc__.render = render;\nexport default __sfc__;\n`, loader: 'ts' };
     });
   },
 };
