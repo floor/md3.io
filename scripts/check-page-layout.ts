@@ -281,7 +281,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           if (entry.name === 'component-detail') {
             assert.equal(await page.getByRole('textbox', { name: 'Text', exact: true }).inputValue(), 'Phone and resize', label);
           }
-          const destination = nav.getByRole('link', { name: 'Documentation', exact: true });
+          const destination = nav.getByRole('link', { name: 'Docs', exact: true });
           await destination.click();
           await page.waitForURL(url('/docs/'));
           assert.deepEqual(errors, [], label);

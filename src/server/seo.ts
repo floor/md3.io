@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { root, docSlugs, docHref, documentFile, isGuide } from './content';
 import { componentSlugs } from '../shared/components';
 import { addonSlugs, addonsPublic, isAddonPath, playgroundHref } from '../shared/addons';
+import { showcasePublic } from '../shared/visibility';
 import { examples } from './examples';
 import { stylePages } from './styles';
 import { mtrlVersion } from './tokens';
@@ -60,8 +61,10 @@ export function sitemapPages(): SitemapPage[] {
   // Guides first, then the component references; docHref gives each its one URL.
   for (const slug of [...docSlugs].filter(slug => addonsPublic || !isAddonPath(docHref(slug))).sort((a, b) => Number(isGuide(b)) - Number(isGuide(a)))) add(docHref(slug), isGuide(slug) ? '0.8' : '0.7', documentFile(slug));
   for (const { href } of stylePages) add(href, href === '/styles/' ? '0.8' : '0.7', shell(STYLE_SHELLS[href] ?? 'styles-overview'), 'src/server/tokens.ts');
-  add('/showcase/', '0.8', shell('examples'), 'examples/index.ts');
-  for (const { slug } of examples) add(`/showcase/${slug}/`, '0.6', `examples/${slug}/`);
+  if (showcasePublic) {
+    add('/showcase/', '0.8', shell('examples'), 'examples/index.ts');
+    for (const { slug } of examples) add(`/showcase/${slug}/`, '0.6', `examples/${slug}/`);
+  }
   add('/privacy/', '0.3', shell('privacy'));
   return pages;
 }
@@ -74,7 +77,7 @@ export function sitemapXml(): string {
 export const robotsTxt = (): string =>
   `User-agent: *\nAllow: /\n${INTERNAL_PREFIXES.map(prefix => `Disallow: ${prefix}\n`).join('')}\nSitemap: ${SITE}/sitemap.xml\n`;
 
-const SECTIONS: Record<string, string> = { Components: '/components/', 'Add-ons': '/addons/', Documentation: '/docs/', Styles: '/styles/', Showcase: '/showcase/' };
+const SECTIONS: Record<string, string> = { Components: '/components/', 'Add-ons': '/addons/', Docs: '/docs/', Styles: '/styles/', Showcase: '/showcase/' };
 const author = { '@type': 'Organization', name: 'Floor IO', url: 'https://floor.io' };
 /**
  * A page's structured data: on the home page mtrl itself and the site, with the search

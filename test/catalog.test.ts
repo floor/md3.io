@@ -3,7 +3,8 @@ import { handleRequest } from '../server';
 import { componentSlugs, components, initialComponentState } from '../src/shared/components';
 import { dialogDefaults, menuDefaults, snackbarDefaults, timepickerDefaults, tooltipDefaults } from '../src/client/catalog/defaults';
 import { catalogTokens, catalogVisuals, SURFACES } from '../src/server/catalog';
-import { baseline, scopedTokens } from '../src/server/tokens';
+import { baseline, scopedTokens } from '../src/server/tokens';import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+
 
 const get = async (path: string) => (await handleRequest(new Request(`http://md3.test${path}`))).text();
 
@@ -92,8 +93,12 @@ describe('the Add-ons catalog', () => {
     expect(detail).toContain('<h1>Avatar</h1>');
     expect(detail).toContain('src="/preview/avatar/"');
     expect(detail).toContain('href="/docs/addons/avatar/"');
-    expect(detail).toContain('href="/showcase/email/"');
-    expect(detail).toContain('href="/showcase/settings/"');
+    if (showcasePublic) {
+      expect(detail).toContain('href="/showcase/email/"');
+      expect(detail).toContain('href="/showcase/settings/"');
+    }
+    // A hidden section's pages answer for review and are marked noindex.
+    if (!addonsPublic) expect(detail).toContain('<meta name="robots" content="noindex" />');
     expect(await get('/docs/addons/avatar/')).toContain('href="/addons/avatar/"');
     expect((await handleRequest(new Request('http://md3.test/components/avatar/'))).status).toBe(404);
   });

@@ -18,6 +18,7 @@ import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
 import { addonSlugs, addonsPublic, isAddon, isAddonPath, playgroundHref } from '../shared/addons';
+import { showcasePublic } from '../shared/visibility';
 import { stylePages } from './styles';
 import { colorGroups, shapeScale, typescale } from './tokens';
 import { themes } from '../shared/button';
@@ -115,7 +116,7 @@ function docDocuments(): IndexDocument[] {
   // The documents, then the six framework guides: they are read on the Frameworks page, so
   // each lands there with its framework chosen and its section's anchor (ids prefixed).
   const sources = [
-    ...docSlugs.filter(slug => addonsPublic || !isAddonPath(docHref(slug))).map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: isGuide(slug) ? 'Documentation' : isAddon(slug) ? 'Add-on' : componentFamilyOf(slug)?.name ?? 'Component', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
+    ...docSlugs.filter(slug => addonsPublic || !isAddonPath(docHref(slug))).map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: isGuide(slug) ? 'Docs' : isAddon(slug) ? 'Add-on' : componentFamilyOf(slug)?.name ?? 'Component', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
     ...Object.entries(FRAMEWORK_GUIDES).map(([guide, framework]) => ({
       key: `frameworks:${framework}`, title: `${componentName(guide)} · Frameworks`, page: frameworkHref(framework), group: 'Guides',
       source: readFileSync(resolve(docsDir, `${guide}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''),
@@ -187,7 +188,7 @@ function styleDocuments(): IndexDocument[] {
 }
 
 const started = performance.now();
-const documents = [...componentDocuments(), ...styleDocuments(), ...docDocuments(), ...exampleDocuments()];
+const documents = [...componentDocuments(), ...styleDocuments(), ...docDocuments(), ...(showcasePublic ? exampleDocuments() : [])];
 const titles = new Map(documents.filter(document => document.title).map(document => [document.page, document.title]));
 
 const index = new MiniSearch<IndexDocument>({

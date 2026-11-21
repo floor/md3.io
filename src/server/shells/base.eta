@@ -115,5 +115,5 @@
     <button type="button" class="site-icon-button site-nav-button" id="site-nav-close" aria-label="Close navigation" autofocus><%~ it.icon('close') %></button>
     <%~ include('primary-links', it) %>
   </dialog>
-  <%~ include('search', { icon: it.icon }) %>
+  <%~ include('search', { icon: it.icon, showcasePublic: it.showcasePublic }) %>
 </body></html>
