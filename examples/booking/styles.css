@@ -32,3 +32,37 @@
   .booking__summary-compact { display: block; }
 }
 @media (max-width: 520px) { .booking__grid { grid-template-columns: minmax(0, 1fr); } }
+/* Hotel layout. Components retain their own outlines, surfaces and typography. */
+.booking { width: min(100%, 1200px); }
+.booking__intro { gap: 8px; }
+.booking__intro > p { margin: 0; }
+.booking__layout { gap: 24px; }
+.booking__step > h3, .booking__step > p, .booking__room-card > *, .booking__summary-lines > p { margin: 0; }
+.booking__step-title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.booking__grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.booking__rooms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.booking__room[aria-disabled="true"] { cursor: default; }
+.booking__room-card { gap: 12px; }
+.booking__amenities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.booking__amenity { display: flex; align-items: center; gap: 6px; }
+.booking__amenity svg { flex: none; width: 18px; height: 18px; }
+.booking__summary-toggle { display: none; }
+.booking__summary-lines { gap: 12px; }
+.booking__summary-wrap { min-width: 0; }
+.booking__confirmation { display: flex; flex-direction: column; gap: 12px; }
+.booking__confirmation > p { margin: 0; }
+@media (min-width: 1100px) { .booking__layout { grid-template-columns: minmax(0, 1fr) 310px; } .booking__summary-wrap { position: sticky; top: 16px; } }
+@media (max-width: 1099px) {
+  .booking__layout { grid-template-columns: minmax(0, 1fr); }
+  .booking__summary-wrap { grid-row: 1; }
+  .booking__summary-toggle { display: block; width: 100%; }
+  .booking__summary { display: none; }
+  .booking__summary-wrap--open .booking__summary { display: block; margin-block-start: 8px; }
+}
+@media (max-width: 600px) {
+  .booking__rooms, .booking__grid, .booking__grid--three, .booking__amenities { grid-template-columns: minmax(0, 1fr); }
+  .booking__actions { display: flex; flex-wrap: wrap; }
+  .booking__actions > * { flex: 1; }
+  .booking__actions > *, .booking__actions m-button, .booking__actions .mtrl-button { width: 100%; }
+  .booking__action--next { min-width: 100%; order: -1; }
+}
