@@ -66,12 +66,22 @@ function swapBody(next: Document) {
   if (nextIndex) layout.insertBefore(document.importNode(nextIndex, true), content);
   content.append(...[...nextMain.childNodes].map(node => document.importNode(node, true)));
   const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
-  if (replacement && persistentDrawer) {
-    const nextSignature = drawerSignature(replacement);
-    if (nextSignature !== signature) {
-      persistentDrawer.replaceChildren(...[...replacement.children].map(child => child.cloneNode(true)));
-      persistentDrawer.setAttribute('aria-label', replacement.getAttribute('aria-label') ?? 'Section links');
-    }
+  const nextSignature = replacement ? drawerSignature(replacement) : '';
+  if (replacement && persistentDrawer && nextSignature !== signature) {
+    // Another section: use the destination's server-rendered drawer, exactly as a direct
+    // load does. Re-filling a live drawer with another section's items can leave its
+    // shadow list unrendered (blank Showcase drawer after Docs -> Showcase).
+    const previous = persistentDrawer;
+    persistentDrawer = replacement;
+    if (previous.closest('#navigation-drawer-parking')) previous.remove();
+    const state = drawerStates.get(nextSignature);
+    queueMicrotask(() => {
+      for (const id of state?.expanded ?? []) replacement.expandSection?.(id);
+      const pane = replacement.closest<HTMLElement>('.component-list, #sidebar');
+      if (pane) pane.scrollTop = state?.scroll ?? 0;
+    });
+  } else if (replacement && persistentDrawer) {
+    // Same section: keep the live drawer so its selection pill animates to the new item.
     move(persistentDrawer, replacement.parentElement!, replacement);
     replacement.remove();
     const selected = nextMain.querySelector('m-drawer')?.getAttribute('value') ?? nextIndex?.querySelector('m-drawer')?.getAttribute('value') ?? '';
@@ -85,7 +95,7 @@ function swapBody(next: Document) {
       const family = current?.parentElement;
       if (family?.localName === 'm-drawer-item') persistentDrawer?.expandSection?.(family.getAttribute('value')!);
       const pane = persistentDrawer?.closest<HTMLElement>('.component-list, #sidebar');
-      if (pane) pane.scrollTop = state?.scroll ?? (nextSignature === signature ? previousScroll : 0);
+      if (pane) pane.scrollTop = state?.scroll ?? previousScroll;
     });
   } else if (replacement) persistentDrawer = replacement;
   else if (persistentDrawer) {

@@ -297,7 +297,7 @@ try {
       const selected = themedPage.locator('main .site-drawer:defined a[aria-current="page"]');
       await selected.waitFor({ state: 'visible' });
       const selectedStyle = await itemStyle(selected);
-      assert.equal(selectedStyle.height, 48, 'section row matches the live sidebar density');
+      assert.equal(selectedStyle.height, 36, 'section row uses the compact (dense) drawer');
       assert.equal(selectedStyle.opacity, '1', 'active indicator fills the pill');
       assert.equal(selectedStyle.border, '0px');
       activeFills.add(selectedStyle.background);
@@ -309,12 +309,11 @@ try {
       await materialDrawer.scrollIntoViewIfNeeded();
       await themedPage.locator('.catalog-visual md3-catalog-drawer:defined').waitFor();
       await materialDrawer.evaluate(node => {
-        node.removeAttribute('dense');
-        node.style.setProperty('--mtrl-density', '-2');
+        node.setAttribute('dense', '');
       });
       const reference = materialDrawer.locator('.mtrl-drawer__item--active');
       await themedPage.waitForFunction(() => document.querySelector('.catalog-visual md3-catalog-drawer')?.shadowRoot
-        ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 48);
+        ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 36);
       const { fontFamily, ...listStyle } = selectedStyle;
       const { fontFamily: materialFont, ...drawerStyle } = await itemStyle(reference);
       assert.match(fontFamily, /DIN Alternate/);
@@ -411,7 +410,8 @@ try {
 
   // Production pages carry a host-injected third-party script (Cloudflare Web Analytics).
   // Navigation must still swap only the content, keep the shell, and match a direct load's head.
-  const hosted = await browser.newContext({ reducedMotion: 'reduce' });
+  // Full motion: the blank-drawer bug only happened inside a view transition.
+  const hosted = await browser.newContext({ reducedMotion: 'no-preference' });
   const beacon = 'https://static.cloudflareinsights.com/beacon.min.js/check';
   await hosted.route(beacon, route => route.fulfill({ contentType: 'text/javascript', body: '' }));
   await hosted.route(`${server.url}**`, async route => {
@@ -469,6 +469,21 @@ try {
     assert.equal(kept, 1, `${visit.label}: navigating with a host-injected analytics script reloads the whole page`);
     assert.equal(hostedPage.url(), url(visit.path), `${visit.label}: the address is the real path`);
     assert.deepEqual(await head(), loaded, `${visit.label}: the head after client navigation matches a direct load`);
+  }
+  // Crossing sections repeatedly must leave each section's drawer drawn (it once went
+  // blank on Showcase after Components -> Showcase -> Components -> Showcase -> Docs -> Showcase).
+  await hostedPage.goto(url('/components/button/'));
+  for (const [name, path] of [['Showcase', showcasePath], ['Components', '/components/'], ['Showcase', showcasePath], ['Documentation', '/docs/'], [showcaseLabel, showcasePath], ['Styles', '/styles/'], [showcaseLabel, showcasePath], ['Add-ons', '/addons/']] as const) {
+    await hostedNav.getByRole('link', { name, exact: true }).click();
+    await hostedPage.waitForFunction(target => location.pathname === target && document.querySelector('m-drawer.site-drawer')?.getAttribute('value') !== null, path);
+    // Judge the settled page: the drawer could draw, then blank after the view transition.
+    await hostedPage.waitForTimeout(1500);
+    const drawn = await hostedPage.evaluate(() => {
+      const drawer = document.querySelector('m-drawer.site-drawer');
+      const links = drawer?.shadowRoot?.querySelectorAll('a[href]').length ?? 0;
+      return !!drawer && drawer.checkVisibility() && drawer.getBoundingClientRect().height > 0 && links > 0;
+    });
+    assert.ok(drawn, `${name} drawer is drawn after a cross-section client navigation`);
   }
   await hosted.unrouteAll({ behavior: 'ignoreErrors' });
   await hosted.close();

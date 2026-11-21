@@ -179,9 +179,9 @@ body {
 .site-nav-dialog .site-nav-link:hover { box-shadow: inset 0 0 0 48px color-mix(in srgb, currentColor 8%, transparent); }
 .site-nav-dialog .site-nav-link .site-nav-link__icon { width: 24px; background: transparent; }
 
-/* The section pane owns sizing and scrolling. The element draws the rows. */
+/* The section pane owns sizing and scrolling. The element draws the rows; the
+   `dense` attribute gives material's compact drawer (36dp rows, 48dp targets). */
 .site-drawer {
-    --mtrl-density: -2;
     --mtrl-drawer-child-indent: 12px;
     --mtrl-ref-typeface-plain: var(--font-sans);
     --mtrl-ref-typeface-brand: var(--font-sans);
