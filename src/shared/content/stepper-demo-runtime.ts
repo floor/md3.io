@@ -21,7 +21,7 @@ export function wireStepperDemo(root: HTMLElement, stepper: DemoStepper) {
     if (move.direction !== 'forward') return;
     const panel = panels.find(node => node.dataset.demoStep === move.previousValue);
     const invalid = [...(panel?.querySelectorAll<HTMLInputElement>('input') ?? [])].find(input => !input.checkValidity());
-    if (invalid) {
+    if (invalid && move.previousValue) {
       move.preventDefault();
       stepper.setError(move.previousValue, true, 'Complete the required fields');
       invalid.reportValidity();
