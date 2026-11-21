@@ -10,6 +10,8 @@ import { examples } from '../src/server/examples';
 import { stylePages } from '../src/server/styles';
 import { mtrlVersion } from '../src/server/tokens';
 import { gitDates, jsonForScript } from '../src/server/seo';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
 const jsonLd = (html: string) => [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]!));
@@ -20,8 +22,10 @@ describe('sitemap and robots', () => {
     expect(response.headers.get('Content-Type')).toContain('application/xml');
     const xml = await response.text();
     const paths = [...xml.matchAll(/<loc>https:\/\/md3\.io([^<]*)<\/loc>/g)].map(match => match[1]!);
-    const expected = ['/', '/components/', '/addons/', '/docs/', '/showcase/', '/privacy/', ...[...componentSlugs, ...addonSlugs].map(playgroundHref), ...docSlugs.map(docHref),
-      ...stylePages.map(page => page.href), ...examples.map(example => `/showcase/${example.slug}/`)];
+    // Hidden sections (src/shared/visibility.ts) are left out of the sitemap.
+    const expected = ['/', '/components/', ...(addonsPublic ? ['/addons/'] : []), '/docs/', ...(showcasePublic ? ['/showcase/'] : []), '/privacy/',
+      ...[...componentSlugs, ...(addonsPublic ? addonSlugs : [])].map(playgroundHref), ...docSlugs.map(docHref).filter(href => addonsPublic || !href.startsWith('/docs/addons/')),
+      ...stylePages.map(page => page.href), ...(showcasePublic ? examples.map(example => `/showcase/${example.slug}/`) : [])];
     expect([...paths].sort()).toEqual([...new Set(expected)].sort());
     expect(paths.filter(path => /^\/(preview|api)\/|\/frame\//.test(path))).toEqual([]);
     expect([...xml.matchAll(/<lastmod>([^<]*)<\/lastmod>/g)].every(match => /^\d{4}-\d{2}-\d{2}$/.test(match[1]!))).toBe(true);
@@ -69,7 +73,7 @@ describe('structured data', () => {
   });
   test('every other page has its trail: Home, its section, the page', async () => {
     const trail = async (path: string) => jsonLd(await (await get(path)).text()).map(data => [data['@type'], data.itemListElement.map((item: { name: string; item: string }) => `${item.name} ${item.item}`)]);
-    expect(await trail('/docs/components/button/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Documentation https://md3.io/docs/', 'Button documentation https://md3.io/docs/components/button/']]]);
+    expect(await trail('/docs/components/button/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Docs https://md3.io/docs/', 'Button documentation https://md3.io/docs/components/button/']]]);
     expect(await trail('/components/switch/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Components https://md3.io/components/', 'Switch https://md3.io/components/switch/']]]);
     expect(await trail('/styles/color/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Styles https://md3.io/styles/', 'Color https://md3.io/styles/color/']]]);
     expect(await trail('/showcase/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Showcase https://md3.io/showcase/']]]);

@@ -2,6 +2,7 @@
 // it, results are grouped and marked, the keyboard moves and opens, Escape and
 // a click outside close it and give focus back, and it fits a phone.
 // BASE_URL checks a running server; without it the check serves the site itself.
+import { showcasePublic } from '../src/shared/visibility';
 import { chromium, type Page } from 'playwright';
 
 const server = process.env.BASE_URL ? null : Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: (await import('../server')).handleRequest });
@@ -44,7 +45,7 @@ try {
   await page.locator('#search-trigger').click();
   assert(await isOpen(), 'the header button opens the dialog');
   assert(await page.getByRole('dialog', { name: 'Search the site' }).isVisible(), 'the dialog is named');
-  assert(await page.getByRole('combobox', { name: 'Search components, docs and showcase' }).isVisible(), 'the input is a labelled combobox');
+  assert(await page.getByRole('combobox', { name: showcasePublic ? 'Search components, docs and showcase' : 'Search components and docs' }).isVisible(), 'the input is a labelled combobox');
 
   // Results: Bottom sheet under Components, the match marked.
   await typeQuery('peek', 'Bottom sheet');

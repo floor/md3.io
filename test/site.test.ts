@@ -993,9 +993,33 @@ describe('sheet filters are Material controls', () => {
   });
 });
 
+test('hidden sections are served for review but never linked or indexed', async () => {
+  const { addonsPublic, showcasePublic } = await import('../src/shared/visibility');
+  const get = async (path: string) => (await handleRequest(new Request(`http://localhost${path}`))).text();
+  const components = await get('/components/button/');
+  const rail = [...components.matchAll(/class="site-nav-link__label"[^>]*>([^<]*)</g)].map(match => match[1]);
+  expect(rail).toContain('Docs');
+  expect(rail).not.toContain('Documentation');
+  expect(rail.includes('Add-ons')).toBe(addonsPublic);
+  expect(rail.includes('Showcase')).toBe(showcasePublic);
+  for (const [hidden, path] of [[!addonsPublic, '/addons/avatar/'], [!showcasePublic, '/showcase/booking/']] as const) {
+    const html = await get(path);
+    expect(html.includes('<meta name="robots" content="noindex" />')).toBe(hidden);
+  }
+  expect(components).not.toContain('content="noindex"');
+});
+
 test('the autocomplete preview loads the listbox sheet its popup is drawn with', async () => {
   // .mtrl-listbox's sheet is optional (outside material's full stylesheet); without it the
   // popup rendered as a bare browser popover.
   const html = await (await handleRequest(new Request('http://localhost/preview/autocomplete/'))).text();
   expect(html).toMatch(/href="\/dist\/material\/styles\/listbox(\.[a-f0-9]{10})?\.css"/);
+});
+
+test('documents do not link into hidden sections', async () => {
+  const { showcasePublic } = await import('../src/shared/visibility');
+  for (const path of ['/docs/components/button/', '/docs/getting-started/']) {
+    const html = await (await handleRequest(new Request(`http://localhost${path}`))).text();
+    expect(/href="\/showcase\//.test(html)).toBe(showcasePublic);
+  }
 });

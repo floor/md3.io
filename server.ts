@@ -4,7 +4,8 @@ import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } fro
 import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
-import { addons, addonSlugs, isAddon, playgroundHref } from './src/shared/addons';
+import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
+import { isHiddenPath, showcasePublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
@@ -119,12 +120,12 @@ function page(path: string, title: string, description: string, template: string
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
       : renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
-  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, docGroups, guideGroup, components, playgroundDirectory: directory, componentDrawer, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
+  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, playgroundDirectory: directory, componentDrawer, pager });
+  const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
   const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, [
     ...sidebarGroups.flatMap(group => [{ name: group.label }, ...group.items]),
     ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries),
-      { name: addonDocGroup.label }, ...addonDocGroup.items] : []),
+      ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
   ]) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
@@ -134,13 +135,13 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
-const documentationGroups = [{ label: 'Documentation', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup];
+const documentationGroups = [{ label: 'Docs', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /** The previous and next links for a page, from the sidebar's items in order. */
 type PagerItem = { name: string; href: string; section?: string };
@@ -168,17 +169,17 @@ const withFrameworkChips = (document: ReturnType<typeof renderDocument>) => {
 const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
 const primaryDestinations = [
   { label: 'Components', href: '/components/', icon: 'tab' },
-  { label: 'Add-ons', href: '/addons/', icon: 'add' },
+  ...(addonsPublic ? [{ label: 'Add-ons', href: '/addons/', icon: 'add' }] : []),
   { label: 'Styles', href: '/styles/', icon: 'palette' },
-  { label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' },
-  { label: 'Documentation', href: '/docs/', icon: 'article' },
+  ...(showcasePublic ? [{ label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' }] : []),
+  { label: 'Docs', href: '/docs/', icon: 'article' },
 ];
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const documentationOrder = [...documentationGroups, {
   label: 'Components',
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
-}, addonDocGroup];
-const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
+}, ...(addonsPublic ? [addonDocGroup] : [])];
+const readingOrder = [documentationOrder, stylesGroups, ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.
@@ -281,7 +282,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: examplesUsingComponent(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
@@ -318,7 +319,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');
-  else if (path === '/docs/') response = page(path, 'Documentation — material', 'Configuration and API references for the material library\'s components.', 'docs');
+  else if (path === '/docs/') response = page(path, 'Docs — material', 'Configuration and API references for the material library\'s components.', 'docs');
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
   else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });

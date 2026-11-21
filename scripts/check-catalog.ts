@@ -4,6 +4,7 @@
 // overlays open and close, nothing is nested in a link), the visuals follow the site's
 // theme and mode live, and a phone has no horizontal scroll.
 // BASE_URL checks a running server; without it the check serves the site itself.
+import { addonsPublic } from '../src/shared/visibility';
 import { chromium, type Locator, type Page } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -34,7 +35,9 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
   assert(JSON.stringify(actual) === JSON.stringify(expected), message);
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
-  if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Documentation has a Components section');
+  // A hidden Add-ons section (src/shared/visibility.ts) has no docs group.
+  const addonDocs = addonsPublic ? addonDocGroup.items : [];
+  if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Docs has a Components section');
   const inventory = docs ? docGroups.filter(group => group !== addonDocGroup).flatMap(group => group.items) : componentSlugs.map(slug => ({
     slug, name: components[slug].name, href: `/components/${slug}/`,
   }));
@@ -44,11 +47,11 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
   }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
   const componentsStart = rows.indexOf('Components overview');
-  const componentsEnd = docs ? rows.length - addonDocGroup.items.length : rows.length;
+  const componentsEnd = docs ? rows.length - addonDocs.length : rows.length;
   equal(rows.slice(componentsStart, componentsEnd), ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
-  if (docs) equal(rows.slice(componentsEnd), addonDocGroup.items.map(item => item.name), 'Add-on docs follow the Components group A–Z');
+  if (docs) equal(rows.slice(componentsEnd), addonDocs.map(item => item.name), 'Add-on docs follow the Components group A–Z');
   const hrefs = await pane.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href')));
-  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href), ...(docs ? addonDocGroup.items.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
+  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
   for (const family of families) {
     const toggle = pane.getByRole('button', { name: family.name, exact: true });
     const id = await toggle.getAttribute('aria-controls');
@@ -498,7 +501,7 @@ try {
       }
       await page.goto(`${base}/docs/components/${slug}/`);
       if (width === 390) await page.locator('#section-index summary').click();
-      const docs = page.getByRole('navigation', { name: 'Documentation links' });
+      const docs = page.getByRole('navigation', { name: 'Docs links' });
       await checkDirectory(docs, new URL(page.url()).pathname, true);
       if (slug === 'button') {
         const current = docs.getByRole('link', { name: 'Button', exact: true });

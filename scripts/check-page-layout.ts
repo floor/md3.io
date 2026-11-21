@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Browser, Frame, Locator, Page } from 'playwright';
@@ -164,7 +165,7 @@ async function checkOverlays(page: Page, captures: string, width: number) {
     await open.press('Enter');
     const rail = page.getByRole('dialog', { name: 'Navigation', exact: true });
     await rail.waitFor();
-    assert.match(await rail.ariaSnapshot(), /button "Close navigation"[\s\S]*navigation "Primary navigation"[\s\S]*link "Documentation"/);
+    assert.match(await rail.ariaSnapshot(), /button "Close navigation"[\s\S]*navigation "Primary navigation"[\s\S]*link "Docs"/);
     await checkTargets(page, `${width}px rail open`);
     await capture('open-rail');
     await page.keyboard.press('Escape');
@@ -189,7 +190,8 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
     }))),
     ...stylePages.map(({ href }) => ({ name: href.replace(/^\/|\/$/g, '').replaceAll('/', '-'), path: href })),
   ];
-  const destinations = ['/components/', '/addons/', '/styles/', showcase, '/docs/'];
+  // Hidden sections (src/shared/visibility.ts) have no navigation entry.
+  const destinations = ['/components/', ...(addonsPublic ? ['/addons/'] : []), '/styles/', ...(showcasePublic ? [showcase] : []), '/docs/'];
   const measurements: { viewport: typeof viewports[number]; path: string; cold: Geometry; settled: Geometry; delayed: { fonts: number; scripts: number } }[] = [];
   const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', deviceScaleFactor: 1 });
   try {
@@ -281,7 +283,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           if (entry.name === 'component-detail') {
             assert.equal(await page.getByRole('textbox', { name: 'Text', exact: true }).inputValue(), 'Phone and resize', label);
           }
-          const destination = nav.getByRole('link', { name: 'Documentation', exact: true });
+          const destination = nav.getByRole('link', { name: 'Docs', exact: true });
           await destination.click();
           await page.waitForURL(url('/docs/'));
           assert.deepEqual(errors, [], label);

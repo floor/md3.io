@@ -4,7 +4,7 @@
   <header class="page-heading">
     <div class="page-heading__top">
       <a class="text-link component-list-up" href="<%= it.isAddons ? '/addons/' : '/components/' %>"><%~ it.icon('arrow_back') %> <%= it.isAddons ? 'All add-ons' : 'All components' %></a>
-      <a class="text-link" href="<%= it.documentationHref %>">Documentation <%~ it.icon('arrow_outward') %></a>
+      <a class="text-link" href="<%= it.documentationHref %>">Docs <%~ it.icon('arrow_outward') %></a>
     </div>
     <div class="component-page__title">
       <h1><%= it.component.name %></h1>

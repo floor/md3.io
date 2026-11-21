@@ -6,6 +6,7 @@ import { handleRequest } from '../server';
 import { componentDirectory } from '../src/server/component-directory';
 import { addonDocGroup, docGroups, guideGroup } from '../src/server/content';
 import { examples } from '../src/server/examples';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
 import { stylePages } from '../src/server/styles';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
@@ -15,7 +16,8 @@ await mkdir(output, { recursive: true });
 const url = (path: string) => new URL(path, server.url).href;
 const showcaseLabel = 'Showcase';
 const showcasePath = '/showcase/';
-const destinations = ['Components', 'Add-ons', 'Styles', showcaseLabel, 'Documentation'];
+// Hidden sections (src/shared/visibility.ts) have no navigation entry.
+const destinations = ['Components', ...(addonsPublic ? ['Add-ons'] : []), 'Styles', ...(showcasePublic ? [showcaseLabel] : []), 'Docs'];
 const widths = [360, 390, 412, 700, 840, 1024, 1440];
 const linkNames = (nav: Locator) => nav.getByRole('link').allTextContents();
 const focused = (locator: Locator) => locator.evaluate(node => (node.getRootNode() as Document | ShadowRoot).activeElement === node);
@@ -158,7 +160,7 @@ try {
   await goto('/styles/');
   assert.equal(await nav.getByRole('link', { name: 'Styles', exact: true }).getAttribute('aria-current'), 'page');
   await showRail();
-  await modal.getByRole('link', { name: 'Documentation', exact: true }).focus();
+  await modal.getByRole('link', { name: 'Docs', exact: true }).focus();
   await size(599);
   await modal.waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.activeElement?.closest('#site-primary-bar') && document.activeElement?.getAttribute('href') === '/docs/');
@@ -173,7 +175,7 @@ try {
     document.activeElement.shadowRoot?.activeElement?.matches('a[href="/styles/color/"]'));
   const [newPage] = await Promise.all([
     context.waitForEvent('page'),
-    nav.getByRole('link', { name: 'Documentation', exact: true }).click({ modifiers: ['ControlOrMeta'] }),
+    nav.getByRole('link', { name: 'Docs', exact: true }).click({ modifiers: ['ControlOrMeta'] }),
   ]);
   await newPage.waitForURL(url('/docs/'));
   await newPage.close();
@@ -181,9 +183,9 @@ try {
   const docsEntries = componentDirectory(docGroups.filter(group => group !== addonDocGroup).flatMap(group => group.items)).entries;
   const docsLinks = docsEntries.flatMap(entry => 'items' in entry ? entry.items : [entry]);
   const sections = [
-    { label: 'Documentation', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), '/components/', ...docsLinks.map(item => item.href), ...addonDocGroup.items.map(item => item.href)] },
+    { label: 'Docs', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), '/components/', ...docsLinks.map(item => item.href), ...(addonsPublic ? addonDocGroup.items.map(item => item.href) : [])] },
     { label: 'Styles', path: '/styles/shape/', hrefs: stylePages.map(style => style.href) },
-    { label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] },
+    ...(showcasePublic ? [{ label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] }] : []),
   ];
   for (const { label, path, hrefs } of sections) for (const width of [...widths, 839]) {
     await size(width);
@@ -220,7 +222,7 @@ try {
     }
   }
 
-  for (const width of [390, 1440]) {
+  if (addonsPublic) for (const width of [390, 1440]) {
     await size(width);
     await goto('/components/button/');
     await nav.getByRole('link', { name: 'Add-ons', exact: true }).click();
@@ -252,11 +254,11 @@ try {
     await page.waitForURL(url('/addons/avatar/'));
     await page.getByRole('heading', { name: 'Avatar', level: 1, exact: true }).waitFor();
     await current.waitFor({ state: 'attached' });
-    await page.getByRole('link', { name: 'Documentation', exact: true }).and(page.locator('main a')).click();
+    await page.getByRole('link', { name: 'Docs', exact: true }).and(page.locator('main a')).click();
     await page.waitForURL(url('/docs/addons/avatar/'));
     const menu = page.locator('#section-index');
     if (width === 390) await menu.locator('summary').click();
-    const drawer = menu.getByRole('navigation', { name: 'Documentation links', exact: true });
+    const drawer = menu.getByRole('navigation', { name: 'Docs links', exact: true });
     const selected = drawer.locator('a[aria-current="page"][href="/docs/addons/avatar/"]');
     await selected.waitFor();
     const headings = await drawer.locator('[part~="section-label"]').allTextContents();
@@ -364,12 +366,18 @@ try {
 
   await searchTrigger.click();
   const search = page.getByRole('dialog', { name: 'Search the site' });
-  const searchField = search.getByRole('combobox', { name: `Search components, docs and ${showcaseLabel.toLowerCase()}`, exact: true });
-  await searchField.fill(examples[0]!.title);
-  const exampleResult = search.locator(`a[href="${showcasePath}${examples[0]!.slug}/"]`);
-  await exampleResult.waitFor();
-  await exampleResult.click();
-  await page.waitForURL(url(`${showcasePath}${examples[0]!.slug}/`));
+  const searchField = search.getByRole('combobox', { name: showcasePublic ? `Search components, docs and ${showcaseLabel.toLowerCase()}` : 'Search components and docs', exact: true });
+  if (showcasePublic) {
+    await searchField.fill(examples[0]!.title);
+    const exampleResult = search.locator(`a[href="${showcasePath}${examples[0]!.slug}/"]`);
+    await exampleResult.waitFor();
+    await exampleResult.click();
+    await page.waitForURL(url(`${showcasePath}${examples[0]!.slug}/`));
+  } else {
+    await searchField.fill('Switch');
+    await search.locator('a[href="/components/switch/"]').first().click();
+    await page.waitForURL(url('/components/switch/'));
+  }
 
   await goto('/styles/');
   const stylesPreview = page.locator('#styles-preview');
@@ -397,8 +405,8 @@ try {
     const primary = staticPage.getByRole('navigation', { name: 'Primary navigation', exact: true });
     assert.equal(await primary.count(), 1);
     assert.deepEqual((await linkNames(primary)).map(name => name.trim()), destinations);
-    await primary.getByRole('link', { name: showcaseLabel, exact: true }).click();
-    await staticPage.waitForURL(url(showcasePath));
+    await primary.getByRole('link', { name: 'Styles', exact: true }).click();
+    await staticPage.waitForURL(url('/styles/'));
   }
   await staticPage.setViewportSize({ width: 1440, height: 900 });
   await staticPage.goto(url('/components/button/'));
@@ -432,10 +440,10 @@ try {
   }));
   const hostedNav = hostedPage.getByRole('navigation', { name: 'Primary navigation', exact: true });
   const visits: { label: string; click: () => Promise<void>; path: string }[] = [
-    ...['Add-ons', 'Styles', showcaseLabel, 'Documentation', 'Components'].map(name => ({
+    ...[...destinations.filter(name => name !== 'Components'), 'Components'].map(name => ({
       label: `rail ${name}`,
       click: () => hostedNav.getByRole('link', { name, exact: true }).click(),
-      path: name === showcaseLabel ? showcasePath : name === 'Documentation' ? '/docs/' : name === 'Add-ons' ? '/addons/' : `/${name.toLowerCase()}/`,
+      path: name === showcaseLabel ? showcasePath : name === 'Docs' ? '/docs/' : name === 'Add-ons' ? '/addons/' : `/${name.toLowerCase()}/`,
     })),
     { label: 'component drawer Card', click: () => hostedPage.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Card', exact: true }).click(), path: '/components/card/' },
   ];
@@ -473,7 +481,11 @@ try {
   // Crossing sections repeatedly must leave each section's drawer drawn (it once went
   // blank on Showcase after Components -> Showcase -> Components -> Showcase -> Docs -> Showcase).
   await hostedPage.goto(url('/components/button/'));
-  for (const [name, path] of [['Showcase', showcasePath], ['Components', '/components/'], ['Showcase', showcasePath], ['Documentation', '/docs/'], [showcaseLabel, showcasePath], ['Styles', '/styles/'], [showcaseLabel, showcasePath], ['Add-ons', '/addons/']] as const) {
+  const crossings: [string, string][] = showcasePublic
+    ? [['Showcase', showcasePath], ['Components', '/components/'], ['Showcase', showcasePath], ['Docs', '/docs/'], [showcaseLabel, showcasePath], ['Styles', '/styles/'], [showcaseLabel, showcasePath]]
+    : [['Styles', '/styles/'], ['Components', '/components/'], ['Styles', '/styles/'], ['Docs', '/docs/'], ['Styles', '/styles/'], ['Components', '/components/'], ['Docs', '/docs/']];
+  if (addonsPublic) crossings.push(['Add-ons', '/addons/']);
+  for (const [name, path] of crossings) {
     await hostedNav.getByRole('link', { name, exact: true }).click();
     await hostedPage.waitForFunction(target => location.pathname === target && document.querySelector('m-drawer.site-drawer')?.getAttribute('value') !== null, path);
     // Judge the settled page: the drawer could draw, then blank after the view transition.

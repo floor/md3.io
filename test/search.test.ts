@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { renderDocument } from '../src/server/content';
 import { SECTIONS, searchSite, tokenize } from '../src/server/search';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+
 
 const components = (query: string) => searchSite(query).filter(result => result.section === 'Components').map(result => result.url);
 
@@ -27,21 +29,24 @@ describe('site search', () => {
   });
   test('a docs heading links to its section, and the anchor exists', () => {
     const result = searchSite('swatches only').find(hit => hit.section === 'Docs');
+    if (!addonsPublic) { expect(result?.url.startsWith('/docs/addons/') ?? false).toBe(false); return; }
     expect(result).toMatchObject({ section: 'Docs', url: '/docs/addons/colorpicker/#swatches-only' });
     expect(renderDocument('colorpicker')!.html).toContain('id="swatches-only"');
   });
   test('component search labels name a family or Component', () => {
     expect(searchSite('peek-height').find(result => result.section === 'Components')?.group).toBe('Sheets');
     expect(searchSite('Dialog').find(result => result.url === '/components/dialog/')?.group).toBe('Component');
-    expect(searchSite('swatches only').find(result => result.section === 'Docs')?.group).toBe('Add-on');
+    if (addonsPublic) expect(searchSite('swatches only').find(result => result.section === 'Docs')?.group).toBe('Add-on');
     expect(searchSite('side sheet', 50).find(result => result.url.startsWith('/docs/components/side-sheet/'))?.group).toBe('Sheets');
   });
   test('an add-on uses its own path and result label', () => {
+    if (!addonsPublic) { expect(searchSite('createAvatar').some(result => result.url.startsWith('/addons/'))).toBe(false); return; }
     expect(searchSite('createAvatar').find(result => result.url === '/addons/avatar/')).toMatchObject({
       section: 'Add-ons', group: 'Add-on', title: 'Avatar',
     });
   });
   test('an example is found by its name', () => {
+    if (!showcasePublic) { expect(searchSite('settings').some(result => result.section === 'Showcase')).toBe(false); return; }
     expect(searchSite('settings').find(result => result.section === 'Showcase')?.url).toBe('/showcase/settings/');
   });
   test('results come one per page, grouped Components, Add-ons, Styles, Docs, Showcase', () => {

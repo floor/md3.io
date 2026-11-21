@@ -6,6 +6,7 @@
   <title><%= it.title %></title>
   <meta name="description" content="<%= it.description %>" />
   <link rel="canonical" href="https://md3.io<%= it.path %>" />
+  <% if (it.noindex) { %><meta name="robots" content="noindex" /><% } %>
   <link rel="icon" href="/favicon.ico" sizes="32x32" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -114,5 +115,5 @@
     <button type="button" class="site-icon-button site-nav-button" id="site-nav-close" aria-label="Close navigation" autofocus><%~ it.icon('close') %></button>
     <%~ include('primary-links', it) %>
   </dialog>
-  <%~ include('search', { icon: it.icon }) %>
+  <%~ include('search', { icon: it.icon, showcasePublic: it.showcasePublic }) %>
 </body></html>

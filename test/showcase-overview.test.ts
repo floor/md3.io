@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { examples } from '../examples';
 import { exampleComponents, exampleTags, examplesUsingComponent } from '../src/server/examples';
+import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
 
@@ -36,9 +38,15 @@ describe('showcase overview', () => {
     expect(examplesUsingComponent('tabs').map(example => example.slug)).toEqual([]);
     expect(examplesUsingComponent('switch').map(example => example.slug)).toEqual(['settings']);
     const card = await (await get('/components/card/')).text();
-    expect(card).toContain('Used in:');
-    expect(card).toContain('href="/showcase/booking/"');
-    expect(card).toContain('href="/showcase/notes/"');
+    if (showcasePublic) {
+      expect(card).toContain('Used in:');
+      expect(card).toContain('href="/showcase/booking/"');
+      expect(card).toContain('href="/showcase/notes/"');
+    } else {
+      // A hidden Showcase is never linked; its pages still answer for review.
+      expect(card).not.toContain('Used in:');
+      expect(card).not.toContain('href="/showcase/');
+    }
     for (const example of examples) {
       expect((await get(`/showcase/${example.slug}/`)).status).toBe(200);
     }

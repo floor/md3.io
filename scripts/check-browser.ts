@@ -535,8 +535,8 @@ try {
   await page.getByRole('tab', { name: 'View code', exact: true }).click();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile code view overflows the page');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-mobile.png`, fullPage: true });
-  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Documentation', exact: true }).click();
-  await page.getByRole('heading', { name: 'Documentation', exact: true }).waitFor();
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Docs', exact: true }).click();
+  await page.getByRole('heading', { name: 'Docs', exact: true }).waitFor();
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile landing overflows');

@@ -55,9 +55,11 @@ try {
     await page.goto(href('/components/button/'));
     await settled(page);
     await page.locator('m-drawer.site-drawer:defined').waitFor();
-    const drawer = await page.locator('m-drawer.site-drawer').elementHandle();
+    let drawer = await page.locator('m-drawer.site-drawer').elementHandle();
     const header = await page.locator('header.header').elementHandle();
-    const drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
+    let drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
+    let previous = '/components/button/';
+    const section = (path: string) => path.split('/')[1];
     const go = async (path: string) => {
       console.log(`  ${fallback ? 'click fallback' : 'Navigation API'}: ${path}`);
       const visits = await page.evaluate(() => (window as any).visits.length);
@@ -66,8 +68,22 @@ try {
       }, path);
       await page.waitForFunction(n => (window as any).visits.length === n + 1, visits);
       assert.equal(new URL(page.url()).pathname, new URL(path, server.url).pathname);
-      assert.equal(await drawer!.evaluate(node => node === document.querySelector('m-drawer.site-drawer')), true, `${path}: drawer stays mounted`);
-      assert.equal(await drawerInstance.evaluate(instance => instance === (document.querySelector('m-drawer.site-drawer') as any)?.component), true, `${path}: drawer component remains mounted`);
+      // Within a section the live drawer stays mounted (its selection pill animates). Another
+      // section adopts the destination's server-rendered drawer, as a direct load does (#134).
+      if (section(previous) === section(path)) {
+        assert.equal(await drawer!.evaluate(node => node === document.querySelector('m-drawer.site-drawer')), true, `${path}: drawer stays mounted`);
+        assert.equal(await drawerInstance.evaluate(instance => instance === (document.querySelector('m-drawer.site-drawer') as any)?.component), true, `${path}: drawer component remains mounted`);
+      } else {
+        // Pages without a section drawer (the home page) only park the live one.
+        const mounted = 'm-drawer.site-drawer:not(#navigation-drawer-parking m-drawer)';
+        if (await page.locator(mounted).count()) {
+          // Below 840px the section index starts folded, so only the wide layout must show it.
+          await page.waitForFunction(selector => { const next = document.querySelector(selector); return !!next && (innerWidth < 840 || next.checkVisibility()) && (next.shadowRoot?.querySelectorAll('a[href]').length ?? 0) > 0; }, mounted);
+          drawer = await page.locator(mounted).elementHandle();
+          drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
+        }
+      }
+      previous = path;
       assert.equal(await header!.evaluate(node => node === document.querySelector('header.header')), true, `${path}: header stays mounted`);
       await settled(page);
       const direct = await context.newPage();

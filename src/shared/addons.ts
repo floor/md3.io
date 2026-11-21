@@ -16,6 +16,8 @@ export const addons = {
   stepper: stepperComponent,
 };
 
+export { addonsPublic, isAddonPath } from './visibility';
+
 export type AddonSlug = keyof typeof addons;
 export const addonSlugs = Object.keys(addons) as AddonSlug[];
 export const isAddon = (slug: string): slug is AddonSlug => Object.hasOwn(addons, slug);
