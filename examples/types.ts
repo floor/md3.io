@@ -5,6 +5,8 @@ export interface ExampleMeta {
   description: string;
   /** mtrl components the example uses. */
   components: string[];
+  /** Gallery tags the overview filters by (Apps, Forms, and the like). */
+  tags?: string[];
   /** Paragraphs for the side panel (trusted HTML, written here). */
   about: string[];
   how: string[];
