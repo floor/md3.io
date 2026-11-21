@@ -4,7 +4,7 @@ import 'material-addons/elements/css/stepper';
 import { defineAll } from 'material/elements';
 import { defineStepper, type StepperElement } from 'material-addons/elements';
 import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, choiceAfter, choiceOf, choicePatch, choices, cancellation, extraIncluded, extraLabel, formatDay, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateOf, rateText, roomAfter, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-import { focusControl, invalidateSteps, watchStepper } from './hotel-ui';
+import { focusControl, invalidateSteps, watchHotel } from './hotel-ui';
 defineAll(); defineStepper();
 let s: Booking = { ...DEFAULTS };
 const app = document.getElementById('app')!;
@@ -159,4 +159,4 @@ stepper.addEventListener('beforechange',event=>{
   else {stepper.setError(event.detail.previousValue!,false);setErrors({});if(number===2)update({roomChosen:true});}
 });
 stepper.addEventListener('change',event=>{if(event.detail.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});if(event.detail.value==='confirmation'){render();for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}});
-layout.append(stepper,summaryWrap);shell.append(intro,layout,text('Fictional hotel · Demonstration rates and taxes. No payment is collected.','mtrl-body-small'),snackbar);app.append(shell);watchStepper(stepper);render();
+layout.append(stepper,summaryWrap);shell.append(intro,layout,text('Fictional hotel · Demonstration rates and taxes. No payment is collected.','mtrl-body-small'),snackbar);app.append(shell);watchHotel(shell,stepper);render();

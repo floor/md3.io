@@ -5,7 +5,7 @@ import { MStep, MStepper } from 'material-addons/vue';
 import type { StepperElement } from 'material-addons/elements';
 import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
 import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors, type Room } from './shared';
-import { focusControl, invalidateSteps, watchStepper } from './hotel-ui';
+import { focusControl, invalidateSteps, watchHotel } from './hotel-ui';
 const HotelSummary=defineComponent({
   props:{booking:{type:Object as PropType<Booking>,required:true}},
   setup(){return {HOTEL,stayText,guestText,roomOf,rateText,priceLines,money,total,vatIncluded,cancellation,unavailable};},
@@ -21,7 +21,7 @@ export default defineComponent({
     const s=reactive<Booking>({...DEFAULTS});const errors=ref<BookingErrors>({});const expanded=ref(false);
     const rootEl=ref<HTMLElement|null>(null);const stepperEl=ref<{element:StepperElement}|null>(null);
     const update=(patch:Partial<Booking>)=>{Object.assign(s,amend({...s},patch));invalidateSteps(stepperEl.value?.element,patch);};
-    let cleanup:(()=>void)|undefined;onMounted(()=>{if(stepperEl.value)cleanup=watchStepper(stepperEl.value.element);});onBeforeUnmount(()=>cleanup?.());
+    let cleanup:(()=>void)|undefined;onMounted(()=>{if(rootEl.value&&stepperEl.value)cleanup=watchHotel(rootEl.value,stepperEl.value.element);});onBeforeUnmount(()=>cleanup?.());
     const announce=(message:string)=>{const host=rootEl.value?.querySelector('m-snackbar') as HTMLElement & {show():void;component?:{setDuration(value:string):void}};host.setAttribute('message',message);host.component?.setDuration('short');host.show();};
     const veto=(event:CustomEvent<StepperBeforeChangeEvent>)=>{
       if(event.detail.direction!=='forward')return;const number=stepNumberOf(event.detail.previousValue??'dates');const messages=validateStep({...s},number);errors.value=messages;

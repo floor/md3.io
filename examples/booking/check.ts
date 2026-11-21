@@ -30,7 +30,7 @@ export default async function steps(page:Page):Promise<void>{
  assert.equal(await page.locator('#price-summary').getByText('Room: choose in the next step',exact).isVisible(),true);
  assert.equal(await page.locator('#price-summary').getByText(/^Total /).count(),0,'No unchosen room total on Dates');
  await page.setViewportSize({width:390,height:844});await orientation('vertical');
- const stayToggle=button('Your stay · View details');await stayToggle.click();assert.equal(await stayToggle.getAttribute('aria-expanded'),'true');assert.equal(await page.locator('#price-summary').isVisible(),true);await stayToggle.click();
+ const stayToggle=button('Your stay · View details');await stayToggle.click();await equal(()=>stayToggle.getAttribute('aria-expanded'),'true','Summary button exposes its expanded state');assert.equal(await page.locator('#price-summary').isVisible(),true);await stayToggle.click();
  assert.equal(await page.locator('#price-summary').isVisible(),false);
  await page.setViewportSize({width:1440,height:1000});await orientation('horizontal');
  const range=page.getByRole('textbox',{name:'Check-in → Check-out',...exact});

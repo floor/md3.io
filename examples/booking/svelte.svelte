@@ -5,11 +5,11 @@
   import type { StepperElement } from 'material-addons/elements';
   import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
   import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-  import { focusControl, invalidateSteps, watchStepper } from './hotel-ui';
+  import { focusControl, invalidateSteps, watchHotel } from './hotel-ui';
   let s=$state<Booking>({...DEFAULTS});let errors=$state<BookingErrors>({});let expanded=$state(false);
   let rootEl:HTMLElement;let stepperEl:{element:StepperElement}|undefined=$state();
   const update=(patch:Partial<Booking>)=>{s=amend(s,patch);invalidateSteps(stepperEl?.element,patch);};
-  onMount(()=>stepperEl?watchStepper(stepperEl.element):undefined);
+  onMount(()=>stepperEl?watchHotel(rootEl,stepperEl.element):undefined);
   const announce=(message:string)=>{const host=rootEl.querySelector('m-snackbar') as HTMLElement & {show():void;component?:{setDuration(value:string):void}};host.setAttribute('message',message);host.component?.setDuration('short');host.show();};
   const veto=(event:CustomEvent<StepperBeforeChangeEvent>)=>{
     if(event.detail.direction!=='forward')return;const number=stepNumberOf(event.detail.previousValue??'dates');const messages=validateStep(s,number);errors=messages;

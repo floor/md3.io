@@ -5,7 +5,7 @@ import { Step, Stepper } from 'material-addons/react';
 import type { StepperElement } from 'material-addons/elements';
 import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
 import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-import { focusControl, invalidateSteps, watchStepper } from './hotel-ui';
+import { focusControl, invalidateSteps, watchHotel } from './hotel-ui';
 
 export default function Booking() {
   const [s,setS]=useState<Booking>({...DEFAULTS});
@@ -13,7 +13,7 @@ export default function Booking() {
   const [expanded,setExpanded]=useState(false);
   const refs={root:useRef<HTMLElement|null>(null),stepper:useRef<StepperElement|null>(null)};
   const update=(patch:Partial<Booking>)=>{setS(previous=>amend(previous,patch));invalidateSteps(refs.stepper.current,patch);};
-  useEffect(()=>refs.stepper.current?watchStepper(refs.stepper.current):undefined,[]);
+  useEffect(()=>refs.root.current&&refs.stepper.current?watchHotel(refs.root.current,refs.stepper.current):undefined,[]);
   const announce=(message:string)=>{
     const host=refs.root.current?.querySelector('m-snackbar') as HTMLElement & {show():void;component?:{setDuration(value:string):void}};
     host.setAttribute('message',message);host.component?.setDuration('short');host.show();

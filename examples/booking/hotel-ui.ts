@@ -44,3 +44,28 @@ export function invalidateSteps(stepper: {completeStep(target:string,completed:b
     keys.some(key=>key!=='roomChosen')?4:0;
   if(start)for(const step of STEPS.slice(start-1))stepper?.completeStep(step.value,false);
 }
+
+// Global ARIA attributes on m-button's host do not describe its shadow button.
+// Keep the actual control's expanded state and panel reference in sync.
+export function watchSummary(root:HTMLElement):()=>void {
+  let pending=0;
+  const sync=()=>{
+    cancelAnimationFrame(pending);
+    pending=requestAnimationFrame(()=>{
+      const host=root.querySelector<HTMLElement>('.booking__summary-toggle');
+      const button=host?.shadowRoot?.querySelector('button')??host;
+      const panel=root.querySelector<HTMLElement>('#price-summary');
+      if(!button||!panel)return;
+      const expanded=String(root.querySelector('.booking__summary-wrap')?.classList.contains('booking__summary-wrap--open')??false);
+      if(button.getAttribute('aria-expanded')!==expanded)button.setAttribute('aria-expanded',expanded);
+      if(button.getAttribute('aria-controls')!==panel.id)button.setAttribute('aria-controls',panel.id);
+      if('ariaControlsElements' in button)(button as HTMLElement&{ariaControlsElements:Element[]}).ariaControlsElements=[panel];
+    });
+  };
+  const observer=new MutationObserver(sync);observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class','aria-expanded']});sync();
+  return ()=>{cancelAnimationFrame(pending);observer.disconnect();};
+}
+export function watchHotel(root:HTMLElement,stepper:StepperElement):()=>void {
+  const stopStepper=watchStepper(stepper),stopSummary=watchSummary(root);
+  return ()=>{stopStepper();stopSummary();};
+}
