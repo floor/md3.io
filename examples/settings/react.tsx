@@ -14,7 +14,7 @@ export default function Settings() {
     if (announces(a)) requestAnimationFrame(() => { snackbar.current?.component?.setDuration("short"); snackbar.current?.show(); });
   };
   const row = (r: Row) => <div key={r.id}>
-    <div className={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`}>
+    <div className={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`} data-checked={r.toggle ? String(s[r.toggle]) : undefined}>
       {r.account && <Avatar variant="text" size="medium" text="MV" decorative />}
       <List selection="single" onActivate={e => activate(e, () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }))}>
         <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled}>

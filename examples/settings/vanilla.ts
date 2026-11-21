@@ -47,6 +47,7 @@ function list(label: string | undefined, items: ListItem[], activate?: (id: stri
 function row(r: Row): HTMLDivElement {
   const wrapper = div("");
   const line = div(`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`);
+  if (r.toggle) line.dataset.checked = String(s[r.toggle]);
   if (r.account) {
     const avatar = createAvatar({ variant: "text", size: "medium", text: "MV", decorative: true });
     bodyControls.push(avatar);

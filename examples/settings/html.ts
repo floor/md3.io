@@ -45,6 +45,7 @@ function list(label: string | undefined, items: Record<string, string | boolean 
 function row(r: Row): HTMLDivElement {
   const wrapper = div("");
   const line = div(`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`);
+  if (r.toggle) line.dataset.checked = String(s[r.toggle]);
   if (r.account) line.append(element("m-avatar", { variant: "text", size: "medium", text: "MV", decorative: true }));
   line.append(list(undefined, [{ value: r.id, headline: r.label, "supporting-text": r.supporting, "leading-icon": r.icon || undefined, "trailing-icon": r.toggle ? undefined : ICONS.chevron, disabled: r.disabled }], () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id })));
   if (r.toggle) {

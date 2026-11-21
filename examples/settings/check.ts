@@ -39,6 +39,9 @@ export default async function steps(page: Page | Frame): Promise<void> {
     }
   };
   await assertRowStops();
+  for (const label of ["Adaptive brightness", "Allow notifications", "Notification sounds"]) {
+    await equal(() => toggle(label).isChecked(), true, `${label}: its enabled default survives mounting`);
+  }
   if (await button("Device information").isVisible()) {
     await button("Device information").click();
     await page.getByRole("alertdialog").waitFor();

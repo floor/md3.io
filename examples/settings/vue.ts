@@ -32,7 +32,7 @@ export default defineComponent({
           <section v-for="g in shown" :key="g.title" class="settings__group" :aria-label="g.title">
             <MList selection="none"><MListItem kind="subheader" :headline="g.title" /></MList>
             <div v-for="r in g.rows" :key="r.id">
-              <div class="settings__row" :class="{ 'settings__row--toggle': r.toggle, 'settings__row--account': r.account }">
+              <div class="settings__row" :class="{ 'settings__row--toggle': r.toggle, 'settings__row--account': r.account }" :data-checked="r.toggle ? String(s[r.toggle]) : undefined">
                 <MAvatar v-if="r.account" variant="text" size="medium" text="MV" decorative />
                 <MList selection="single" @activate="activate($event, () => send(r.toggle ? { type: 'toggle', key: r.toggle, checked: !s[r.toggle] } : { type: 'row', id: r.id }))">
                   <MListItem :value="r.id" :headline="r.label" :supporting-text="r.supporting" :leading-icon="r.icon || undefined" :trailing-icon="r.toggle ? undefined : ICONS.chevron" :disabled="r.disabled">
@@ -46,7 +46,7 @@ export default defineComponent({
           <p v-if="!shown.length">No settings found.</p>
         </div>
         <div v-else class="settings__wifi">
-          <div><div class="settings__row settings__row--toggle">
+          <div><div class="settings__row settings__row--toggle" :data-checked="String(s.wifi)">
             <MList selection="single" @activate="activate($event, () => send({ type: 'toggle', key: 'wifi', checked: !s.wifi }))">
               <MListItem :value="wifi.id" :headline="wifi.label" :supporting-text="wifi.supporting" :leading-icon="wifi.icon" :disabled="wifi.disabled">
             <MSwitch aria-label="Use Wi-Fi" :checked="s.wifi" :disabled="s.airplane" @change="send({ type: 'toggle', key: 'wifi', checked: $event.detail.checked })" />

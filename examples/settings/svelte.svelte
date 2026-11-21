@@ -17,7 +17,7 @@
 
 {#snippet row(r: Row)}
   <div>
-    <div class={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`}>
+    <div class={`settings__row${r.toggle ? " settings__row--toggle" : r.account ? " settings__row--account" : ""}`} data-checked={r.toggle ? String(s[r.toggle]) : undefined}>
       {#if r.account}<Avatar variant="text" size="medium" text="MV" decorative />{/if}
       <List selection="single" onactivate={e => activate(e, () => send(r.toggle ? { type: "toggle", key: r.toggle, checked: !s[r.toggle] } : { type: "row", id: r.id }))}>
         <ListItem value={r.id} headline={r.label} supportingText={r.supporting} leadingIcon={r.icon || undefined} trailingIcon={r.toggle ? undefined : ICONS.chevron} disabled={r.disabled}>

@@ -152,14 +152,14 @@ export function mountRowControls(root = document.getElementById("app")!): () => 
         control.addEventListener("click", stopClick);
         wired.add(control);
       }
-      if (!row.contains(control)) {
-        const host = control as HTMLElement & { checked?: boolean };
-        const checked = host.checked;
-        row.append(control);
-        if (checked !== undefined) host.checked = checked;
-      }
+      if (!row.contains(control)) row.append(control);
+      // A moved custom element may reconnect after its framework has already
+      // committed the live property. Restore the app's value after each refresh.
+      const host = control as HTMLElement & { checked?: boolean };
+      const checked = wrapper.dataset.checked === "true";
+      if (control.localName === "m-switch" && host.checked !== checked) host.checked = checked;
     }
-    observer.observe(root, { childList: true, subtree: true });
+    observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-checked"] });
     for (const surface of roots) observer.observe(surface, { childList: true, subtree: true });
     // Rebuilding a list must not discard keyboard focus on a live preference.
     if (focusedLabel && document.activeElement === document.body) {
