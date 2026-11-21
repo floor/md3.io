@@ -128,7 +128,9 @@ try {
       await page.getByRole('link', { name: 'All components', exact: true }).click();
       await page.locator('#component-catalog-index summary').click();
       const directory = page.getByRole('navigation', { name: 'Component list', exact: true });
-      await directory.getByRole('button', { name: 'Buttons', exact: true }).click();
+      // A client visit retains the Buttons section opened on the Button page.
+      const buttons = directory.getByRole('button', { name: 'Buttons', exact: true });
+      if (await buttons.getAttribute('aria-expanded') !== 'true') await buttons.click();
       await directory.getByRole('link', { name: 'Icon button', exact: true }).click();
       await page.waitForURL(url('/components/icon-button/'));
     }
