@@ -10,8 +10,6 @@ import { barActiveOptions } from '../shared/content/navigation-bar';
 import { railActiveOptions } from '../shared/content/navigation-rail';
 import { tabActiveOptions } from '../shared/content/tabs';
 import { applyTheme } from './theme-sheets';
-import { isAddon } from '../shared/addons';
-import { mountDeviceFrame } from './device-frame';
 import { FRAMEWORKS, frameworkCode, type ElementMeta, type Framework } from '../shared/frameworks';
 import { registerPage, replacePageURL } from './page-lifecycle';
 registerPage('playground', (content, life) => {
@@ -25,10 +23,6 @@ registerPage('playground', (content, life) => {
 
   const form = content.querySelector<HTMLFormElement>('#configuration')!;
   const frame = content.querySelector<HTMLIFrameElement>('#preview')!;
-  if (isAddon(slug)) {
-    const device = mountDeviceFrame(frame, { label: 'Preview device' });
-    life.add(() => device.destroy());
-  }
   const code = content.querySelector<HTMLElement>('#generated-code')!;
   const status = content.querySelector<HTMLElement>('#playground-status')!;
   // The panel's controls are material's own elements, server-rendered

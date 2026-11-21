@@ -547,7 +547,7 @@ try {
     await detailPane.locator('a[aria-current="page"]').waitFor({ state: 'attached' });
     assert(await detailPane.locator('a[aria-current="page"]').getAttribute('href') === '/addons/avatar/', 'Avatar is current in the detail drawer');
     await page.frameLocator('#preview').getByText('Ada Lovelace', { exact: true }).waitFor();
-    await page.getByRole('group', { name: 'Preview device', exact: true }).waitFor();
+    assert(await page.locator('.device__bar').count() === 0, 'Add-on playgrounds have no device chooser, like component playgrounds');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Add-on playground fits the viewport');
     await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({ animations: 'disabled', path: `${addonCaptures}/avatar-${width}.png` });
