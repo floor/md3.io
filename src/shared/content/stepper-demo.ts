@@ -3,7 +3,7 @@ import type { CodeContext, Framework } from '../frameworks';
 import { stepperDemoSource } from './stepper-demo-source' with { type: 'macro' };
 
 const demoStyles = `.stepper-demo { display:grid; gap:18px; text-align:start; }
-.stepper-demo h2 { margin:0; font:var(--mtrl-sys-typescale-title-large-font, 500 20px/28px sans-serif); }
+.stepper-demo h2 { margin:0; font:500 20px/28px var(--mtrl-ref-typeface-plain, sans-serif); }
 .stepper-demo p { margin:0; }
 .stepper-demo fieldset { display:grid; gap:10px; border:0; padding:0; margin:0; min-width:0; }
 .stepper-demo legend { margin-bottom:12px; font-weight:500; }
