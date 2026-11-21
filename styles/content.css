@@ -60,12 +60,9 @@
     word-wrap: break-word;
 }
 
-/* The measure is for prose, not the column: paragraphs, list items and
-   blockquotes keep 40–60 characters a line, while headings, code blocks and
-   tables keep the column's width and scroll inside themselves. */
-.md :is(p, li, blockquote) {
-    max-width: var(--measure);
-}
+/* Prose fills the document column like headings and code blocks: the column
+   itself (.md, max 820px) sets the reading width. The owner asked for wider
+   paragraphs than the 42ch measure (2026-11-21). */
 
 .md h1 {
     font-size: var(--fs-4xl);

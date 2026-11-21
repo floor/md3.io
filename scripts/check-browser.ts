@@ -410,8 +410,9 @@ try {
   await page.setViewportSize({ width: 600, height: 844 });
   fits(600, await breadcrumb());
 
-  // Layout step 6, the reading measure: Material keeps body text between 40 and 60
-  // characters a line. Full lines only — a paragraph's last line is short by nature.
+  // Layout step 6, the reading width: prose fills the document column like headings and
+  // code blocks (the owner, 2026-11-21), and the column (max 820px) keeps lines at most
+  // 80 characters. Full lines only — a paragraph's last line is short by nature.
   // Measured with the documentation's own font once fonts are ready.
   const measureProse = () => page.evaluate(() => {
     const md = document.querySelector('.md')!;
@@ -447,7 +448,11 @@ try {
       return box.width > 0 && (box.left < mdBox.left - 0.5 || box.right > mdBox.right + 0.5);
     }).map(block => `${block.tagName}.${String(block.className).slice(0, 40)}${block.textContent.trim().slice(0, 30)}`);
     const codeWidth = Math.max(0, ...[...md.querySelectorAll('pre')].map(block => block.getBoundingClientRect().width));
+    const mdStyle = getComputedStyle(md);
+    const column = md.clientWidth - parseFloat(mdStyle.paddingLeft) - parseFloat(mdStyle.paddingRight);
+    const narrow = prose.filter(p => p.getBoundingClientRect().width < column - 1).length;
     return {
+      narrow,
       count: lines.length,
       median: lines[Math.floor(lines.length / 2)] ?? 0,
       longest: lines[lines.length - 1] ?? 0,
@@ -464,8 +469,8 @@ try {
     await page.locator('.md h1').waitFor();
     await page.evaluate(() => document.fonts.ready);
     const reading = await measureProse();
-    assert(reading.count >= 2 && reading.median >= 40 && reading.median <= 60 && reading.longest <= 66,
-      `${route} at ${width}: measure is ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want 40–60)`);
+    assert(reading.count >= 2 && reading.narrow === 0 && reading.longest <= 80,
+      `${route} at ${width}: ${reading.narrow} paragraphs narrower than the column; lines ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want the column, at most 80)`);
     assert(reading.overflowing === 0, `${route} at ${width}: ${reading.overflowing} paragraphs overflow their line box`);
     assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the column (${reading.escapees.join('; ')})`);
     // The measure caps the prose, never the column: at desktop widths a code block
@@ -519,8 +524,8 @@ try {
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
   const enlarged = await measureProse();
-  assert(enlarged.fits && enlarged.median <= 60, `Enlarged text overflows or loses the measure (${enlarged.median} characters)`);
-  assert(enlarged.median < 52, 'Enlarged text did not narrow the measure');
+  assert(enlarged.fits && enlarged.longest <= 80, `Enlarged text overflows or its lines run long (${enlarged.longest} characters)`);
+  assert(enlarged.median < 73, 'Enlarged text did not shorten the lines');
   await page.locator('.doc-toc a').first().focus();
   const focused = await page.evaluate(() => document.activeElement === document.querySelector('.doc-toc a'));
   assert(focused && enlarged.fits, 'Focus is lost or the page overflows with enlarged text');

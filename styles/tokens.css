@@ -108,14 +108,6 @@
     --layout-max-width: 1472px;
     --layout-gutter: 0px;
 
-    /* The reading measure for prose only, not the column. Material's layout
-       guidance keeps body text between 40 and 60 characters a line
-       (m3.material.io/foundations/layout). Calibrated against the rendered
-       documentation prose: DIN Alternate at --fs-md has an 8.35px "0" and
-       averages ≈6.7px a character, so 42ch ≈ 351px ≈ 52 characters on a full
-       line — inside the range at every width, and narrower again when text is
-       enlarged, because ch grows with the font. */
-    --measure: 42ch;
 
     /* Radii */
     --radius: 8px;
