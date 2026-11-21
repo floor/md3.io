@@ -222,14 +222,21 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await checkPickers(page, base, width, captures);
 
       await goto('/showcase/settings/');
-      const device = page.locator('.device__bar');
-      await checkTargets(device.getByRole('button'), `${width}px device choices and Rotate`);
-      await edge(page, device.getByRole('button', { name: 'Mobile', exact: true }), 'touch', 'right');
-      await page.locator('.device[data-device="mobile"]').waitFor();
-      const rotate = device.getByRole('button', { name: 'Rotate', exact: true });
-      const rotated = await rotate.getAttribute('aria-pressed');
-      await edge(page, rotate, 'pointer', 'top');
-      assert.notEqual(await rotate.getAttribute('aria-pressed'), rotated, 'The edge of Rotate changes orientation');
+      if (width < 600) {
+        await page.locator('.example-phone-note').waitFor();
+        assert.equal(await page.locator('.device__bar').isVisible(), false, 'A phone hides the device bar');
+        await page.locator('.device[data-device="mobile"]').waitFor();
+      } else {
+        const device = page.locator('.device__bar');
+        await checkTargets(device.getByRole('button'), `${width}px device choices and Rotate`);
+        await edge(page, device.getByRole('button', { name: 'Mobile', exact: true }), 'touch', 'right');
+        await page.locator('.device[data-device="mobile"]').waitFor();
+        const rotate = device.getByRole('button', { name: 'Rotate', exact: true });
+        const rotated = await rotate.getAttribute('aria-pressed');
+        await edge(page, rotate, 'pointer', 'top');
+        assert.notEqual(await rotate.getAttribute('aria-pressed'), rotated, 'The edge of Rotate changes orientation');
+      }
+      await page.getByRole('tab', { name: 'Code', exact: true }).click();
       await checkTargets(page.getByRole('button', { name: 'Copy code', exact: true }), `${width}px example copy`);
       await goto('/docs/frameworks/');
       if (width < 840) {

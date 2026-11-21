@@ -50,6 +50,10 @@
 
 .md {
     max-width: 820px;
+    /* A definite width: main is a column flex container, and auto margins would
+       otherwise shrink this article to its content. The font swap then moves
+       the heading. Headings keep this column; prose stays on the measure. */
+    width: 100%;
     margin: 0 auto;
     padding: 40px 48px 80px;
     overflow-wrap: break-word;

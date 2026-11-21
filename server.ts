@@ -9,7 +9,7 @@ import { componentDrawerEntries, renderSectionDrawer } from './src/server/sectio
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -284,7 +284,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworksRow: frameworkChipsRow(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
       // The address's framework when the example has it, so the first paint (frame and source)
       // is the one the address names; otherwise its first variant. The client keeps it in step.
-      framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
+      // ?view=code opens Code at first paint (the fragment #code is client-only).
+      framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id,
+      view: url.searchParams.get('view') === 'code' ? 'code' : 'preview',
+      viewTabs: exampleViewTabs(url.searchParams.get('view') === 'code' ? 'code' : 'preview') });
   }
   else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, themeSheets, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
   else if (path === '/styles/') response = page(path, 'Styles — material', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
