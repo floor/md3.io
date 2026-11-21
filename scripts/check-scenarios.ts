@@ -5,6 +5,9 @@
 import { chromium } from 'playwright';
 import { handleRequest } from '../server';
 import { componentCode, componentSlugs, components, initialComponentState, normalizeComponentState } from '../src/shared/components';
+import { addonSlugs, playgroundHref } from '../src/shared/addons';
+
+const playgroundSlugs = [...componentSlugs, ...addonSlugs];
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const base = server.url.toString();
@@ -39,13 +42,14 @@ try {
       return [key, String(first instanceof HTMLSelectElement ? first.value : (first as HTMLInputElement | undefined)?.value ?? '')];
     })), [...keys]);
   }
-  for (const slug of componentSlugs) {
+  for (const slug of playgroundSlugs) {
     for (const scenario of [null, ...components[slug].scenarios]) {
       const where = `${slug}${scenario ? `/?scenario=${scenario.id}` : ''}`;
       errors.length = 0;
-      await page.goto(`${base}components/${slug}/${scenario ? `?scenario=${scenario.id}` : ''}`);
+      await page.goto(new URL(`${playgroundHref(slug)}${scenario ? `?scenario=${scenario.id}` : ''}`, base).href);
       await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
       await frame.locator('#stage > *').first().waitFor();
+      assert(await page.locator('.device__bar').count() === 0, `${where}: playgrounds must not show a device chooser`);
       assert(errors.length === 0, `${where}: ${errors.join('\n')}`);
       const state = normalizeComponentState(slug, { ...initialComponentState(slug), ...(scenario?.options ?? {}) });
       if (components[slug].scenarios.length) {
@@ -208,10 +212,10 @@ try {
   // parameter dropped from the address — and the controls are the Default ones, with no
   // console error. The page is the first component whose scenarios array is empty; when
   // every component has scenarios there is no such page, so the block prints one line.
-  const noScenario = componentSlugs.find(slug => !components[slug].scenarios?.length);
+  const noScenario = playgroundSlugs.find(slug => !components[slug].scenarios?.length);
   if (noScenario) {
     errors.length = 0;
-    await page.goto(`${base}components/${noScenario}/?scenario=x`);
+    await page.goto(new URL(`${playgroundHref(noScenario)}?scenario=x`, base).href);
     // Wait for the ready round-trip without matching a status text: a scenario message would
     // pass a "not loading" wait and must fail the assertion below, not the wait.
     await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
@@ -276,7 +280,7 @@ try {
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   assert(await page.locator('#playground-status').textContent() === 'Ready to try', 'chips/?hiking=true: status is not Ready to try');
   assert(errors.length === 0, `chips/?hiking=true: ${errors.join('\n')}`);
-  console.log(`Scenario checks passed: ${loads} loads over ${componentSlugs.length} components.`);
+  console.log(`Scenario checks passed: ${loads} loads over ${playgroundSlugs.length} components and add-ons.`);
 } finally {
   await browser.close();
   server.stop(true);
