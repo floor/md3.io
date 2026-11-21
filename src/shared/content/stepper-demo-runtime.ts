@@ -10,7 +10,8 @@ export function wireStepperDemo(root: HTMLElement, stepper: DemoStepper) {
   const value = (name: string) => root.querySelector<HTMLInputElement>(`[name="${name}"]:checked`)?.value
     ?? root.querySelector<HTMLInputElement>(`[name="${name}"]`)?.value ?? '';
   const summary = () => {
-    const shop = root.querySelector<HTMLInputElement>('[name="shop"]:checked')?.closest('label')?.innerText.trim() ?? '';
+    const selected = root.querySelector<HTMLInputElement>('[name="shop"]:checked')?.closest('label');
+    const shop = [selected?.querySelector('strong')?.textContent?.trim(), selected?.querySelector('small')?.textContent?.trim()].filter(Boolean).join(' · ');
     const text = account
       ? `${value('name')} · ${value('email')} · ${value('workspace')}`
       : `${shop} · ${value('date')} at ${value('time')}`;

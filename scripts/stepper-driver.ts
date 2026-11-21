@@ -47,7 +47,7 @@ export async function checkStepperWorkflow(scope: Page | Frame, account: boolean
     assert.equal(await scope.getByLabel('Pickup time', { exact: true }).inputValue(), '18:15');
     await next();
     await heading('Review your pickup');
-    assert.match(await scope.locator('[data-demo-summary]').innerText(), /Riverside[\s\S]*2026-12-12 at 18:15/);
+    assert.equal(await scope.locator('[data-demo-summary]').innerText(), 'Riverside · 48 River Road · Open until 19:00 · 2026-12-12 at 18:15');
   }
   await scope.getByRole('button', { name: 'Confirm', exact: true }).click();
   const status = scope.locator('[data-demo-confirmation]');
