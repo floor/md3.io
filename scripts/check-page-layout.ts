@@ -113,6 +113,9 @@ async function checkRouteFrame(page: Page, entry: RouteCase) {
     await target.waitFor();
     const frame = await loadedFrame(target);
     if (entry.frame === '#example-frame') {
+      // Show the whole app above the site's fixed mobile navigation before
+      // driving controls near the bottom of an in-frame dialog.
+      await target.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }));
       await frame.locator('#app > *').first().waitFor();
       await entry.runFrame?.(frame);
       assert(await frame.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${entry.path}: the embedded app fits its frame`);
