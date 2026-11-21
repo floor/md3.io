@@ -141,7 +141,7 @@ export default async function steps(page: Page): Promise<void> {
   // An edit of an existing note stays in the field across the switch, and Cancel leaves the card as it was.
   const app = page.locator("#app");
   await category(inline, "All notes").click();
-  await button("Pasta sauce").click();
+  await button("Pasta sauce v2").click();
   await textbox("Title").fill("Pasta sauce edited");
   await app.evaluate(node => { node.style.width = "390px"; });
   await textbox("Title").waitFor();
@@ -151,7 +151,7 @@ export default async function steps(page: Page): Promise<void> {
   assert.equal(await textbox("Title").inputValue(), "Pasta sauce edited");
   await button("Cancel").click();
   await textbox("Title").waitFor({ state: "hidden" });
-  await article("Pasta sauce").getByText(/^Fry garlic/).waitFor();
+  await article("Pasta sauce v2").getByText(/^Fry garlic/).waitFor();
   await article("Pasta sauce edited").waitFor({ state: "hidden" });
 
   const opener = button("Open categories");
