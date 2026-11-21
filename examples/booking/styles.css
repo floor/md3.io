@@ -1,15 +1,34 @@
 /* Layout for the example only: the components and material's typography utilities bring the rest. */
-.booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 880px); }
+.booking { display: flex; flex-direction: column; gap: 16px; width: min(100%, 1080px); }
 .booking__intro { display: flex; flex-direction: column; gap: 4px; }
-.booking__title, .booking__lede, .booking__label, .booking__range, .booking__step-title, .booking__review-line, .booking__review-label, .booking__field-error { margin: 0; }
-/* The author rule below would beat the UA's [hidden]; an emptied error must take no space. */
+.booking__hero { display: block; width: 100%; height: auto; aspect-ratio: 7 / 3; object-fit: cover; border-radius: 12px; }
+.booking__facts { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.booking__title, .booking__lede, .booking__label, .booking__stay, .booking__step-title, .booking__review-line, .booking__review-label, .booking__field-error, .booking__price-line, .booking__room-name, .booking__room-facts, .booking__room-price, .booking__room-features { margin: 0; }
 .booking__field-error[hidden] { display: none; }
+.booking__layout { display: grid; gap: 16px; align-items: start; }
+.booking__summary-compact { display: none; }
+.booking__summary-lines { display: flex; flex-direction: column; gap: 6px; }
+.booking__price-line, .booking__price-total { display: flex; justify-content: space-between; gap: 12px; }
 .booking__step { display: flex; flex-direction: column; gap: 16px; }
 .booking__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .booking__grid > *, .booking__group > * { display: block; width: 100%; min-width: 0; }
 .booking__group { display: flex; flex-direction: column; gap: 8px; }
+.booking__rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.booking__room { border-radius: 12px; cursor: pointer; display: flex; }
+.booking__room > * { flex: 1; }
+.booking__room[aria-checked="true"] { box-shadow: 0 0 0 2px var(--mtrl-sys-color-primary, currentColor); }
+.booking__room:focus-visible { box-shadow: 0 0 0 2px var(--mtrl-sys-color-primary, currentColor); }
+.booking__room-card { display: flex; flex-direction: column; gap: 6px; }
+.booking__room-image { display: block; width: 100%; height: 96px; object-fit: cover; border-radius: 8px; }
 .booking__review-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .booking__review-copy { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.booking__total { min-height: 1.5em; }
 .booking__actions { display: flex; justify-content: flex-end; gap: 8px; }
+@media (min-width: 900px) {
+  .booking__layout { grid-template-columns: minmax(0, 1fr) 300px; }
+  .booking__summary { position: sticky; top: 16px; }
+}
+@media (max-width: 899px) {
+  .booking__summary { display: none; }
+  .booking__summary-compact { display: block; }
+}
 @media (max-width: 520px) { .booking__grid { grid-template-columns: minmax(0, 1fr); } }

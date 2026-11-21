@@ -8,6 +8,7 @@ export default {
   title: "Notify",
   description: "A card, a switch and a button working together, the same screen in every framework.",
   components: ["card", "switch", "button"],
+  tags: ["Apps"],
   about: [
     "One card with a switch and a Save button: the smallest shape an example takes. Save reads the state back in a status line.",
     "Every tab above runs the same components. The HTML tab uses the web components directly; React, Vue, Svelte and Solid use the generated adapters around them; Vanilla uses the factories the elements are built on.",

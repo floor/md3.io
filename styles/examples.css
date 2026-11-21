@@ -1,10 +1,34 @@
 .example-page { container-type: inline-size; }
 .example-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .example-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.example-preview iframe { display: block; width: 100%; height: 440px; border: 0; background: transparent; }
-.example-code .panel-heading { gap: 16px; }
-.example-code .preview-tabs { display: flex; gap: 16px; }
-.example-file { margin: 0; max-height: 520px; overflow: auto; padding: 16px 18px; font: 13px/1.6 var(--font-mono); background: var(--bg-code); }
+/* One card: Preview / Code on the left of the header, the device bar on the right
+   (examples.ts moves `.device__bar` into the heading). The tabs use the same
+   fixed row as the component pages (playground-material.css). */
+.example-stage { container-type: inline-size; }
+.example-stage > .example-heading { gap: 4px 8px; padding: 4px 12px; flex-wrap: nowrap; }
+.example-heading .device__bar { margin-left: auto; border-bottom: 0; padding-block: 0; background: none; flex: 0 1 auto; flex-wrap: nowrap; min-width: 0; }
+.example-stage[data-view="code"] .example-heading .device__bar { display: none; }
+/* The size readout is the piece that wraps the bar onto a second row and drops the
+   frame when the script mounts it. The buttons stay; the readout returns when the card is wide. */
+@container (width < 720px) {
+  .example-heading .device__size { display: none; }
+}
+.example-stage m-tabs::part(divider) { display: none; }
+.example-stage m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
+.example-phone-note { display: none; margin: 0; max-width: 100%; color: var(--text-muted); font-size: var(--fs-xs); line-height: 1.4; }
+/* Desktop fills the column and stands close to the viewport, capped at 900px, so an
+   app fits without scrolling inside the frame. Tablet and Mobile keep the device
+   sizes device-frame.ts writes inline. 80px is the card's own header and footer. */
+.example-stage #example-frame { display: block; width: 100%; border: 0; background: transparent; height: max(640px, min(900px, calc(100dvh - var(--header-height) - 80px))); }
+.example-code { min-width: 0; }
+.example-code:focus-visible { outline-offset: -4px; }
+.example-code .panel-heading { gap: 8px 16px; flex-wrap: wrap; }
+.example-code .preview-tabs { display: flex; flex-wrap: wrap; gap: 16px; min-width: 0; }
+@media (width < 600px) {
+  .example-heading .device__bar { display: none; }
+  .example-stage[data-view="preview"] .example-phone-note { display: block; flex: 1 1 140px; margin-left: auto; text-align: right; }
+}
+.example-file { margin: 0; max-width: 100%; min-width: 0; max-height: 520px; overflow: auto; padding: 16px 18px; font: 13px/1.6 var(--font-mono); background: var(--bg-code); }
 .example-aside { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
 .example-aside p { color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.6; margin: 8px 0 0; }
 .example-aside code { font-family: var(--font-mono); font-size: .92em; background: var(--bg-code-inline); padding: 1px 4px; border-radius: 4px; }
@@ -12,12 +36,25 @@
 .example-sizes > div { display: flex; justify-content: space-between; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; }
 .example-sizes > div.is-current { color: var(--text); background: var(--bg-card-hover); }
 .example-sizes dd { margin: 0; font-family: var(--font-mono); }
-.example-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-.example-card { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); color: inherit; text-decoration: none; height: 100%; }
+.example-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.example-card { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); color: inherit; text-decoration: none; height: 100%; overflow: hidden; }
 .example-card:hover { border-color: var(--border-hover); background: var(--bg-card-hover); }
+.example-card__preview { display: block; position: relative; margin: -18px -18px 4px; aspect-ratio: 8 / 5; overflow: hidden; background: var(--bg-code); border-bottom: 1px solid var(--border); container-type: inline-size; }
+/* The preview frame renders at a real Desktop size (1024x640) and is scaled down
+   to the card, so the app lays out as it does in use (no FAB-over-chips squash). */
+.example-card__frame { display: block; position: absolute; top: 0; left: 0; width: 1024px; height: 640px; border: 0; pointer-events: none; background: transparent; transform-origin: top left; transform: scale(0.35); transform: scale(calc(100cqw / 1024)); }
 .example-card__title { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
 .example-card__description { color: var(--text-muted); font-size: var(--fs-sm); }
 .example-card__components { color: var(--text-dim); font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .6px; margin-top: auto; }
+.example-card__tags { color: var(--text-dim); font-size: var(--fs-2xs); letter-spacing: .4px; }
+.showcase-filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.showcase-filters__group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.showcase-filters__label { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .6px; color: var(--text-dim); min-width: 72px; }
+.showcase-filters__chips { min-width: 0; }
+.showcase-filters__count { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); }
+.component-used-in { color: var(--text-muted); }
+@media (min-width: 840px) { .example-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1180px) { .example-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /* Keep at least 360px for the preview and its source tabs. */
 @container (min-width: 696px) {
   .example-layout { grid-template-columns: minmax(0, 1fr) 320px; }

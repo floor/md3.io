@@ -2,7 +2,9 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import hljs from 'highlight.js';
-import { root } from './content';
+import { renderElement } from 'material/ssr';
+import { root, componentName } from './content';
+import { renderStyles } from './playground-panel';
 import { examples, FRAMEWORKS, exampleVariantIds, type ExampleMeta, type FrameworkId } from '../../examples';
 
 export { examples, FRAMEWORKS };
@@ -20,6 +22,29 @@ export interface ExampleVariant {
 
 export function exampleBySlug(slug: string): ExampleMeta | undefined {
   return examples.find(example => example.slug === slug);
+}
+
+/** Every component any registered example uses, in the order examples first use them. */
+export const exampleComponents: string[] = [...new Set(examples.flatMap(example => example.components))];
+
+/** Every tag any registered example carries, in the order examples first use them. */
+export const exampleTags: string[] = [...new Set(examples.flatMap(example => example.tags ?? []))];
+
+/** The registered examples that use a component ("Used in" on its component page). */
+export function examplesUsingComponent(slug: string): ExampleMeta[] {
+  return examples.filter(example => example.components.includes(slug));
+}
+
+const escapeChip = (value: string): string => value.replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char]!);
+
+/**
+ * A server-rendered material filter-chip set for the overview gallery: one "All"
+ * chip plus a chip per value. Single-select; picking the selected chip again (or
+ * All) clears it, which the client treats as no filter in that group.
+ */
+export function filterChips(label: string, group: string, values: string[]): string {
+  const chips = ['<m-chip value="all">All</m-chip>', ...values.map(value => `<m-chip value="${escapeChip(value)}">${escapeChip(componentName(value))}</m-chip>`)].join('');
+  return renderElement('m-chips', { class: 'showcase-filters__chips', selection: 'single', value: 'all', 'aria-label': label, 'data-filter-group': group }, chips, renderStyles);
 }
 
 /** Each framework's files, highlighted, and its bundle size. Null before the examples build ran, or for a stale build. */

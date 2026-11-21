@@ -6,10 +6,10 @@ import { themes } from './src/shared/button';
 import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
-import { examples, exampleBySlug, exampleVariants } from './src/server/examples';
+import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
 import { componentSize } from './src/server/sizes';
@@ -169,7 +169,7 @@ const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(g
 // material-addons' components are not material's: their light-DOM styles ship as that
 // package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
 // example using any of them links that sheet instead.
-const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete']);
+const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete', 'avatar']);
 const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
@@ -263,9 +263,9 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: examplesUsingComponent(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
-  else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples });
+  else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
   // to its /showcase/ twin, the query kept (the browser keeps the fragment).
   else if (path === '/examples/' || /^\/examples\/[a-z-]+\/(frame\/[a-z]+\/)?$/.test(path)) {
@@ -284,7 +284,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     else response = page(path, `${example.title} example — material`, example.description, 'example', { example, variants, themes, frameworksRow: frameworkChipsRow(id => variants.some(variant => variant.id === id)), copyButton: showcaseCopyButton(),
       // The address's framework when the example has it, so the first paint (frame and source)
       // is the one the address names; otherwise its first variant. The client keeps it in step.
-      framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id });
+      // ?view=code opens Code at first paint (the fragment #code is client-only).
+      framework: variants.some(variant => variant.id === url.searchParams.get('framework')) ? url.searchParams.get('framework')! : variants[0]!.id,
+      view: url.searchParams.get('view') === 'code' ? 'code' : 'preview',
+      viewTabs: exampleViewTabs(url.searchParams.get('view') === 'code' ? 'code' : 'preview') });
   }
   else if (path === '/styles/frame/') response = internalHtml(eta.render('styles-frame', { themes, themeSheets, styles: styleClosure(STYLES_FRAME_COMPONENTS) }));
   else if (path === '/styles/') response = page(path, 'Styles — material', styleDescription('/styles/'), 'styles-overview', { stylePages, comingStyles, themeBase });
