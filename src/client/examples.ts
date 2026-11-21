@@ -29,8 +29,39 @@ registerPage('examples', (content, life) => {
     const heading = page.querySelector<HTMLElement>('.example-heading')!;
     // Mobile, Tablet or Desktop: the frame at that device's size (src/client/device-frame.ts).
     // The toolbar sits in the card's header, to the right of Preview / Code.
-    const device = mountDeviceFrame(frame, { label: 'Example device', barParent: heading });
+    const previewBounds = () => ({
+      top: (document.querySelector('.header')?.getBoundingClientRect().bottom ?? 0) + 12,
+      bottom: (document.querySelector('#site-primary-bar')?.getBoundingClientRect().height
+        ? document.querySelector('#site-primary-bar')!.getBoundingClientRect().top : innerHeight) - 12,
+    });
+    const device = mountDeviceFrame(frame, {
+      label: 'Example device', barParent: heading,
+      maxHeight: () => { const { top, bottom } = previewBounds(); return Math.max(120, bottom - top); },
+    });
     life.add(() => device.destroy());
+    // Native scrolling inside an iframe does not account for the parent site's fixed
+    // bars. Reveal the device after activation so its dialog actions stay reachable.
+    // Wait until the click completes: moving it on pointerdown can cancel that click.
+    let revealRequest = 0;
+    life.add(() => cancelAnimationFrame(revealRequest));
+    const revealPreview = () => {
+      cancelAnimationFrame(revealRequest);
+      revealRequest = requestAnimationFrame(() => {
+        // Tab or a click can leave the app before this callback runs.
+        if (!life.active || document.activeElement !== frame) return;
+        const rect = frame.getBoundingClientRect();
+        const { top, bottom } = previewBounds();
+        if (!rect.height || rect.height > bottom - top + 1) return;
+        const delta = rect.top < top ? rect.top - top : Math.max(0, rect.bottom - bottom);
+        if (Math.abs(delta) > 1) scrollBy({ top: delta, behavior: 'instant' });
+      });
+    };
+    const bindPreview = () => {
+      life.events(frame.contentDocument)?.addEventListener('click', revealPreview, true);
+      life.events(frame.contentDocument)?.addEventListener('keydown', revealPreview, true);
+    };
+    life.events(frame).addEventListener('load', bindPreview);
+    bindPreview();
     // A phone only has room for the Mobile frame. Hold that size without overwriting
     // the device the viewer picked for a wider window.
     const phone = matchMedia('(width < 600px)');

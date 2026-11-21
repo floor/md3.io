@@ -66,11 +66,13 @@ for (const file of walk(resolve(dist, 'css'), name => name.endsWith('.css'))) {
   const logical = `/dist/css/${basename(file)}`;
   await publish(logical, readFileSync(file), dirname(file), basename(file), '/dist/css/');
 }
-for (const file of walk(resolve(dist, 'material'), name => name.endsWith('.css'))) {
-  const rel = relative(resolve(dist, 'material'), file).split('\\').join('/');
-  const logical = `/dist/material/${rel}`;
-  const minified = Buffer.from(minifyCss(readFileSync(file, 'utf8')));
-  await publish(logical, minified, dirname(file), basename(file), logical.slice(0, logical.lastIndexOf('/') + 1));
+for (const library of ['material', 'material-addons']) {
+  for (const file of walk(resolve(dist, library), name => name.endsWith('.css'))) {
+    const rel = relative(resolve(dist, library), file).split('\\').join('/');
+    const logical = `/dist/${library}/${rel}`;
+    const minified = Buffer.from(minifyCss(readFileSync(file, 'utf8')));
+    await publish(logical, minified, dirname(file), basename(file), logical.slice(0, logical.lastIndexOf('/') + 1));
+  }
 }
 
 // Stylesheets the frames link from /styles/, not from a bundle. Fonts in them are
