@@ -1,9 +1,10 @@
 import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
-import { root, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
+import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
+import { addons, addonSlugs, isAddon, playgroundHref } from './src/shared/addons';
 import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
@@ -94,7 +95,10 @@ const internalHtml = (body: string) => new Response(versionAssets(body), { heade
 const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
   slug, name: components[slug].name, href: `/components/${slug}/`,
 })));
-const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug)).map(slug => ({
+const addonEntries = addonSlugs.map(slug => ({ slug, name: addons[slug].name, href: playgroundHref(slug) }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'en'));
+const addonDirectory = { entries: addonEntries, sections: [{ id: 'addons', name: 'Add-ons', items: addonEntries }] };
+const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug) && !docHref(slug).startsWith('/docs/addons/')).map(slug => ({
   slug, name: componentName(slug), href: docHref(slug),
 })));
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
@@ -105,20 +109,27 @@ function page(path: string, title: string, description: string, template: string
   const isCatalog = template === 'catalog';
   const isComponentDetail = template === 'component';
   const isComponents = isCatalog || isComponentDetail;
+  const isAddons = path.startsWith('/addons/');
+  const directory = isAddons ? addonDirectory : playgroundDirectory;
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
   // Component docs lead to Styles, and Styles to the Showcase.
   const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
   const componentDrawer = isComponents
-    ? renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
+    ? isAddons
+      ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
+      : renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
-  const content = eta.render(template, { ...data, path, isCatalog, icon, docGroups, guideGroup, components, playgroundDirectory, componentDrawer, pager });
-  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isComponents ? 'Components' : '';
+  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, docGroups, guideGroup, components, playgroundDirectory: directory, componentDrawer, pager });
+  const section = isDocs ? 'Documentation' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
   const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, [
     ...sidebarGroups.flatMap(group => [{ name: group.label }, ...group.items]),
-    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries)] : []),
+    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries),
+      { name: addonDocGroup.label }, ...addonDocGroup.items] : []),
   ]) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
-  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? 'catalog' : isExamples ? 'examples' : isComponentDetail && data.panel ? 'material-panel' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
+  const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
+  const panelStyles = isAddons ? 'addon-panel' : 'material-panel';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
@@ -157,6 +168,7 @@ const withFrameworkChips = (document: ReturnType<typeof renderDocument>) => {
 const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/showcase/' }, ...examples.map(example => ({ name: example.title, href: `/showcase/${example.slug}/` }))] }];
 const primaryDestinations = [
   { label: 'Components', href: '/components/', icon: 'tab' },
+  { label: 'Add-ons', href: '/addons/', icon: 'add' },
   { label: 'Styles', href: '/styles/', icon: 'palette' },
   { label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' },
   { label: 'Documentation', href: '/docs/', icon: 'article' },
@@ -165,7 +177,7 @@ const primaryDestinations = [
 const documentationOrder = [...documentationGroups, {
   label: 'Components',
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
-}];
+}, addonDocGroup];
 const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
@@ -173,7 +185,7 @@ const readingOrder = [documentationOrder, stylesGroups, exampleGroups].flatMap(g
 // material-addons' components are not material's: their light-DOM styles ship as that
 // package's one stylesheet (dist/material-addons/styles.css, copied by the build), so an
 // example using any of them links that sheet instead.
-const ADDONS_COMPONENTS = new Set(['form', 'colorpicker', 'stepper', 'autocomplete', 'avatar']);
+const ADDONS_COMPONENTS = new Set<string>(addonSlugs);
 const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
@@ -259,15 +271,17 @@ export async function handleRequest(request: Request): Promise<Response> {
   }
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
-  const componentMatch = /^\/(components|preview)\/([a-z-]+)\/$/.exec(path);
+  const componentMatch = /^\/(components|addons|preview)\/([a-z-]+)\/$/.exec(path);
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogVisuals });
-  else if (componentMatch && isComponent(componentMatch[2]!)) {
+  else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogVisuals, install: renderInstall('material-addons material') });
+  else if (componentMatch && isComponent(componentMatch[2]!) &&
+    (componentMatch[1] === 'preview' || path === playgroundHref(componentMatch[2]!))) {
     const slug = componentMatch[2]!;
     const component = components[slug];
     response = componentMatch[1] === 'preview'
-      ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: examplesUsingComponent(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: examplesUsingComponent(slug), panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
@@ -324,12 +338,14 @@ export async function handleRequest(request: Request): Promise<Response> {
     response = page(path, `${document.title} — material`, document.description, 'document', { ...withFrameworkChips(document)!, playground: null });
   }
   else {
-    const match = /^\/docs\/components\/([a-z0-9-]+)\/$/.exec(path);
-    // A guide has one URL, /docs/<slug>/
-    if (match && isGuide(match[1]!)) return new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/docs/${match[1]}/` } });
-    const document = match ? renderDocument(match[1]!) : null;
+    const match = /^\/docs\/(components|addons)\/([a-z0-9-]+)\/$/.exec(path);
+    const slug = match?.[2];
+    if (slug && match?.[1] === 'components' && (isGuide(slug) || slug === 'form' || slug === 'colorpicker')) {
+      return new Response(null, { status: 301, headers: { ...commonHeaders, Location: docHref(slug) + url.search } });
+    }
+    const document = slug && path === docHref(slug) ? renderDocument(slug) : null;
     response = document
-      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for the ${document.title.toLowerCase()} component of the material library.`, 'document', { ...withFrameworkChips(document)!, playground: isComponent(match![1]!) ? `/components/${match![1]}/` : null })
+      ? page(path, `${document.title} documentation — material`, `Configuration, methods, and examples for ${document.title}.`, 'document', { ...withFrameworkChips(document)!, playground: slug && isComponent(slug) ? playgroundHref(slug) : null })
       : page(path, 'Page not found — material', 'This page could not be found.', 'not-found', {}, 404);
   }
   return request.method === 'HEAD' ? new Response(null, { status: response.status, headers: response.headers }) : response;

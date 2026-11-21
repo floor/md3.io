@@ -4,16 +4,17 @@ import { Marked, type Tokens } from 'marked';
 import hljs from 'highlight.js';
 import { renderExample } from './example-block';
 import { FRAMEWORKS } from '../shared/frameworks';
+import { addons, isAddon } from '../shared/addons';
 
 export const root = resolve(import.meta.dir, '../..');
 export const docsDir = resolve(root, 'docs/components');
+export const addonDocsDir = resolve(root, 'docs/addons');
 const groups: Record<string, string[]> = {
   'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab', 'fab-menu'],
   'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'text-field', 'select', 'search', 'datepicker', 'timepicker'],
   'Navigation': ['navigation-rail', 'navigation-bar', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
-  'Additional references': ['form', 'colorpicker'],
 };
 /** The guides, before the components: how to start, how mtrl is built, and how to use it in each framework (one Frameworks page). */
 export const GUIDES = ['why-material', 'getting-started', 'architecture', 'frameworks', 'theming', 'server-rendering', 'events-and-overlays'];
@@ -28,10 +29,16 @@ export const FRAMEWORK_GUIDES: Record<string, string> = { vanilla: 'vanilla', 'w
 export const frameworkHref = (id: string, anchor = '') => `/docs/frameworks/?framework=${id}${anchor ? `#${id}-${anchor}` : ''}`;
 const names: Record<string, string> = { frameworks: 'Frameworks', 'why-material': 'Why material', 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', 'events-and-overlays': 'Events and overlays', fab: 'FAB', 'extended-fab': 'Extended FAB', 'text-field': 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
 export const isGuide = (slug: string) => GUIDES.includes(slug);
-/** A document's URL: a guide at /docs/<slug>/, a component under /docs/components/. */
-export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/components/${slug}/`;
-export const componentName = (slug: string) => names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
-const slugs = new Set(readdirSync(docsDir).filter(name => name.endsWith('.md') && !name.startsWith('_')).map(name => name.slice(0, -3)).filter(slug => !(slug in FRAMEWORK_GUIDES)));
+const markdownSlugs = (dir: string) => readdirSync(dir)
+  .filter(name => name.endsWith('.md') && !name.startsWith('_'))
+  .map(name => name.slice(0, -3));
+export const addonDocSlugs = markdownSlugs(addonDocsDir);
+const addonDocuments = new Set(addonDocSlugs);
+/** A document's canonical URL and the markdown that backs it. */
+export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/${addonDocuments.has(slug) ? 'addons' : 'components'}/${slug}/`;
+export const documentFile = (slug: string) => `docs/${addonDocuments.has(slug) ? 'addons' : 'components'}/${slug}.md`;
+export const componentName = (slug: string) => isAddon(slug) ? addons[slug].name : names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
+const slugs = new Set([...markdownSlugs(docsDir), ...addonDocSlugs].filter(slug => !(slug in FRAMEWORK_GUIDES)));
 export const docSlugs = [...slugs];
 /** The package managers of an `install` block, in switch order, with their add commands. */
 export const PACKAGE_MANAGERS = [
@@ -91,7 +98,7 @@ export const codeLabel = (language: string): string => (language ? `${hljs.getLa
  * template makes "what the component is", as plain text.
  */
 function docSummary(slug: string): string {
-  const source = readFileSync(resolve(docsDir, `${slug}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  const source = readFileSync(resolve(root, documentFile(slug)), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
   const paragraph = source.split(/\r?\n\s*\r?\n/).map(block => block.trim()).find(block => block && !/^(#|```|<|\||>|-|\*|\d+\.)/.test(block)) ?? '';
   const text = paragraph.replace(/\s+/g, ' ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '');
   return (/^.*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text).trim();
@@ -99,13 +106,14 @@ function docSummary(slug: string): string {
 const entry = (slug: string) => ({ slug, name: componentName(slug), href: docHref(slug), summary: docSummary(slug) });
 /** The guides that exist yet, in their order. */
 export const guideGroup = { label: 'Guides', items: GUIDES.filter(slug => slugs.has(slug)).map(entry) };
-export const docGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) }));
+export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry).sort((a, b) => a.name.localeCompare(b.name, 'en')) };
+export const docGroups = [...Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) })), addonDocGroup];
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
 /** A document's markdown, without its front matter. */
 export const documentSource = (slug: string): string =>
-  readFileSync(resolve(docsDir, `${slug}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  readFileSync(resolve(root, documentFile(slug)), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
 /** One document's heading ids, in order: a slug of the title, numbered when it repeats. */
 export function headingIds(): (text: string) => { title: string; id: string } {
   const ids = new Map<string, number>();
@@ -118,7 +126,7 @@ export function headingIds(): (text: string) => { title: string; id: string } {
 }
 /** A page's front matter (created, updated, status, and an optional description), as vlist.io's docs carry it. */
 export function documentMeta(slug: string): Record<string, string> {
-  const head = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(readFileSync(resolve(docsDir, `${slug}.md`), 'utf8'))?.[1] ?? '';
+  const head = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(readFileSync(resolve(root, documentFile(slug)), 'utf8'))?.[1] ?? '';
   return Object.fromEntries(head.split(/\r?\n/).map(line => /^([a-z]+):\s*(.*)$/.exec(line.trim())).filter(Boolean).map(match => [match![1]!, match![2]!.trim()]));
 }
 const STATUS: Record<string, string> = { draft: 'Draft', review: 'In review', published: 'Published' };

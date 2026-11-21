@@ -137,6 +137,7 @@ export interface OpenMeta {
 /** What the generators need from an element's spec: plain data, no functions. */
 export interface ElementMeta {
   name: string;
+  library?: 'material-addons';
   attributes: Record<string, { type: AttributeType; config?: string }>;
   /** Live properties; those with a config key are written when the config differs from `default`. */
   properties: Record<string, { config?: string; default?: unknown }>;
@@ -1004,8 +1005,12 @@ function html(meta: ElementMeta, p: Plan, context: CodeContext): string {
     const script = triggerIcons + (hosted ? hostLine + hosted : '');
     return `${markup}${script ? `\n<script type="module">\n${script}</script>\n` : ''}`;
   }
-  return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  import 'material/elements/css';\n  import { defineAll } from 'material/elements';\n${icons ? `\n${icons}` : ''}\n` +
-    (early ? `${hostLine}${iconAttrs}\n` : '') + `  defineAll();\n` +
+  const define = `define${pascal(meta.name)}`;
+  const imports = meta.library
+    ? `import 'material-addons/elements/css/${meta.name}';\n  import { ${define} } from 'material-addons/elements/${meta.name}';`
+    : "import 'material/elements/css';\n  import { defineAll } from 'material/elements';";
+  return `<script type="module">\n  ${styleImports(context).trim().replaceAll('\n', '\n  ')}\n  ${imports}\n${icons ? `\n${icons}` : ''}\n` +
+    (early ? `${hostLine}${iconAttrs}\n` : '') + `  ${meta.library ? define : 'defineAll'}();\n` +
     `  document.documentElement.dataset.theme = '${context.theme}';\n  document.documentElement.dataset.themeMode = '${context.mode}';\n` +
     (triggerIcons ? `\n${triggerIcons}` : '') +
     host + (early ? '' : iconAttrs) + props + opening + closing + startOpen + calls +
@@ -1118,7 +1123,7 @@ function reactOrSolid(meta: ElementMeta, p: Plan, context: CodeContext, solid: b
   const hook = solid ? 'createSignal' : 'useState';
   const syntax = reactOpen(solid);
   const stateful = p.model || p.open !== undefined || p.example?.states.length;
-  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from 'material/${lib}';\n${appImport(p)}${styleImports(context)}${embeddedSetup(p)}`;
+  const imports = `${stateful ? `import { ${hook} } from '${solid ? 'solid-js' : 'react'}';\n` : ''}import { ${componentNames(meta, p, pascal).join(', ')} } from '${meta.library ?? 'material'}/${lib}';\n${appImport(p)}${styleImports(context)}${embeddedSetup(p)}`;
   // The model's event sets it; an example's handlers on that event run beside.
   const events = new Map<string, { payload: boolean; calls: string[] }>();
   const on = (name: string, payload: boolean, call: string) => {
@@ -1168,7 +1173,7 @@ function vue(meta: ElementMeta, p: Plan, context: CodeContext): string {
     ? `  ${element(p.trigger.native ? p.trigger.element : `M${pascal(p.trigger.element)}`, `${vueAttrs(p.trigger.attrs)}${clickOpens(meta, p, vueOpen, true)}`, triggerBody(meta, p, `{{ ${p.model?.name} }}`))}\n` : '';
   const state = p.model || p.open !== undefined || p.example?.states.length;
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state}.value = ${jsValue(step.value)}`), '', false)).join('');
-  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from 'material/vue';\n${appImport(p)}${styleImports(context)}${embeddedSetup(p)}` +
+  return `<script setup lang="ts">\n${state ? `import { ref } from 'vue';\n` : ''}import { ${componentNames(meta, p, name => `M${pascal(name)}`).join(', ')} } from '${meta.library ?? 'material'}/vue';\n${appImport(p)}${styleImports(context)}${embeddedSetup(p)}` +
     (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `const ${p.model.name} = ref(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `const ${state.name} = ref(${state.value});\n`).join('') +
@@ -1204,7 +1209,7 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
   const actions = (p.example?.actions ?? []).map(action => actionFunction(action.name, action.steps.map(step => `${step.state} = ${jsValue(step.value)}`), '  ', false)).join('');
   const styles = styleImports(context);
   const defined = embeddedSetup(p);
-  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from 'material/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}${defined ? `  ${defined.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
+  return `<script lang="ts">\n  import { ${componentNames(meta, p, pascal).join(', ')} } from '${meta.library ?? 'material'}/svelte';\n${appImport(p, '  ')}${styles ? `  ${styles.trim().replaceAll('\n', '\n  ')}\n` : ''}${defined ? `  ${defined.trim().replaceAll('\n', '\n  ')}\n` : ''}` +
     (state || constants || actions ? '\n' : '') + constants + (constants && state ? '\n' : '') +
     (p.model ? `  let ${p.model.name} = $state(${literal(p.model.value)});\n` : '') +
     stateValues(meta, p).map(state => `  let ${state.name} = $state(${state.value});\n`).join('') +

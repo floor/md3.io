@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-21
 status: published
 ---
 
@@ -11,9 +11,10 @@ knows when it has changed, validates it and submits it. M3 has no form component
 are `material`'s, such as [text fields](/docs/components/text-field/), and M3's guidance for them
 applies.
 
-From **material-addons**, checked against 3.0.0. material-addons has no web components, and a
-form's layout names `material`'s factories, which the neutral examples cannot, so these examples are
-plain JavaScript: the vanilla factory, which works in any framework.
+From **material-addons**, checked against 3.2.0. Form is factory-only; the package's
+Autocomplete, Avatar, Expansion panel, Skeleton and Stepper also have web components.
+A form's layout names `material`'s factories, so these examples use plain JavaScript:
+the vanilla factory, which works in any framework.
 
 ## Usage
 
@@ -122,6 +123,7 @@ hand-written: keep them in line with the code, and add no prose restating them. 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `layout` | `LayoutSchema` | `undefined` | The fields, buttons and elements |
+| `skeleton` | `boolean` | `false` | Shows layout placeholders until `reveal()` replaces them with the fields |
 | `data` | `FormData` | `undefined` | The data it starts with |
 | `container` | `HTMLElement` | `undefined` | Where it is mounted |
 | `action` | `string` | `undefined` | Where `submit()` sends the data |
@@ -148,6 +150,7 @@ hand-written: keep them in line with the code, and add no prose restating them. 
 | `getField(name)` / `getFieldNames()` | `name: string` | `FormField \| undefined` / `string[]` | The fields |
 | `isModified()` / `getDataState()` | none | `boolean` / `'pristine' \| 'dirty'` | Whether the data differs from its starting point |
 | `snapshot()` | none | `void` | Makes the current data the starting point |
+| `reveal()` | none | `void` | Replaces skeleton placeholders with the fields and clears the form's busy state |
 | `reset(force?)` / `clear(force?)` | `force?: boolean` | `boolean` | Back to the starting point, or empty; `false` when change protection stopped it |
 | `validate()` / `validateField(name)` | `name: string` | `{ valid, errors }` / `string \| undefined` | Validates, and shows the messages |
 | `getFieldError(name)` / `setFieldError(name, message)` / `clearFieldError(name)` / `clearErrors()` | `name: string, message: string` | `string \| undefined` / `FormComponent` | The errors |

@@ -189,7 +189,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
     }))),
     ...stylePages.map(({ href }) => ({ name: href.replace(/^\/|\/$/g, '').replaceAll('/', '-'), path: href })),
   ];
-  const destinations = ['/components/', '/styles/', showcase, '/docs/'];
+  const destinations = ['/components/', '/addons/', '/styles/', showcase, '/docs/'];
   const measurements: { viewport: typeof viewports[number]; path: string; cold: Geometry; settled: Geometry; delayed: { fonts: number; scripts: number } }[] = [];
   const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', deviceScaleFactor: 1 });
   try {

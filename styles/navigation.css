@@ -92,6 +92,10 @@ body {
     text-align: center;
 }
 
+.site-primary-bar .site-nav-link__label {
+    font-size: clamp(9px, 2.7vw, 11px);
+}
+
 .site-nav-link:hover .site-nav-link__icon {
     background: var(--bg-card-hover);
 }

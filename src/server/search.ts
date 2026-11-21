@@ -17,11 +17,12 @@ import { docsDir } from './content';
 import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentSlugs } from '../shared/components';
+import { addonSlugs, isAddon, playgroundHref } from '../shared/addons';
 import { stylePages } from './styles';
 import { colorGroups, shapeScale, typescale } from './tokens';
 import { themes } from '../shared/button';
 
-export const SECTIONS = ['Components', 'Styles', 'Docs', 'Showcase'] as const;
+export const SECTIONS = ['Components', 'Add-ons', 'Styles', 'Docs', 'Showcase'] as const;
 type Section = (typeof SECTIONS)[number];
 
 interface IndexDocument {
@@ -87,12 +88,14 @@ function plainText(source: string): string {
 }
 
 function componentDocuments(): IndexDocument[] {
-  return componentSlugs.map(slug => {
+  return [...componentSlugs, ...addonSlugs].map(slug => {
+    const addon = isAddon(slug);
+    const href = playgroundHref(slug);
     const component = components[slug];
     const meta = elementMeta(slug);
     const elements = meta ? [meta.name, ...(meta.children ? [meta.children.name] : [])] : [];
     return {
-      id: `components:${slug}`, section: 'Components', title: component.name, heading: '', group: componentFamilyOf(slug)?.name ?? 'Component',
+      id: `components:${slug}`, section: addon ? 'Add-ons' : 'Components', title: component.name, heading: '', group: addon ? 'Add-on' : componentFamilyOf(slug)?.name ?? 'Component',
       description: component.description,
       tags: [slug, ...elements.map(name => `m-${name}`)].join(' '),
       api: [
@@ -101,7 +104,7 @@ function componentDocuments(): IndexDocument[] {
         ...Object.keys(meta?.attributes ?? {}),
         ...(meta?.events ?? []),
       ].join(' '),
-      body: '', url: `/components/${slug}/`, page: `/components/${slug}/`,
+      body: '', url: href, page: href,
     };
   });
 }
@@ -112,7 +115,7 @@ function docDocuments(): IndexDocument[] {
   // The documents, then the six framework guides: they are read on the Frameworks page, so
   // each lands there with its framework chosen and its section's anchor (ids prefixed).
   const sources = [
-    ...docSlugs.map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: isGuide(slug) ? 'Documentation' : componentFamilyOf(slug)?.name ?? 'Component', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
+    ...docSlugs.map(slug => ({ key: slug, title: componentName(slug), page: docHref(slug), group: isGuide(slug) ? 'Documentation' : isAddon(slug) ? 'Add-on' : componentFamilyOf(slug)?.name ?? 'Component', source: documentSource(slug), url: (id: string) => id ? `${docHref(slug)}#${id}` : docHref(slug) })),
     ...Object.entries(FRAMEWORK_GUIDES).map(([guide, framework]) => ({
       key: `frameworks:${framework}`, title: `${componentName(guide)} · Frameworks`, page: frameworkHref(framework), group: 'Guides',
       source: readFileSync(resolve(docsDir, `${guide}.md`), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''),

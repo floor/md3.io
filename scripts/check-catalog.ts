@@ -7,8 +7,9 @@
 import { chromium, type Locator, type Page } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { docGroups } from '../src/server/content';
+import { addonDocGroup, docGroups } from '../src/server/content';
 import { componentSlugs, components } from '../src/shared/components';
+import { addonSlugs, addons, playgroundHref } from '../src/shared/addons';
 import { baseline, themeTokens } from '../src/server/tokens';
 
 const server = process.env.BASE_URL ? null : Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: (await import('../server')).handleRequest });
@@ -34,7 +35,7 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
   if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Documentation has a Components section');
-  const inventory = docs ? docGroups.flatMap(group => group.items) : componentSlugs.map(slug => ({
+  const inventory = docs ? docGroups.filter(group => group !== addonDocGroup).flatMap(group => group.items) : componentSlugs.map(slug => ({
     slug, name: components[slug].name, href: `/components/${slug}/`,
   }));
   const rows = await pane.locator('[part~="items"]').evaluate(items => [...items.children].flatMap(item => {
@@ -42,9 +43,12 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
     return row ? [row.textContent!.trim()] : [];
   }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
-  equal(rows.slice(rows.indexOf('Components overview')), ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
+  const componentsStart = rows.indexOf('Components overview');
+  const componentsEnd = docs ? rows.length - addonDocGroup.items.length : rows.length;
+  equal(rows.slice(componentsStart, componentsEnd), ['Components overview', ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
+  if (docs) equal(rows.slice(componentsEnd), addonDocGroup.items.map(item => item.name), 'Add-on docs follow the Components group A–Z');
   const hrefs = await pane.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href')));
-  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href)].sort(), 'Every component is a real link and appears exactly once');
+  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href), ...(docs ? addonDocGroup.items.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
   for (const family of families) {
     const toggle = pane.getByRole('button', { name: family.name, exact: true });
     const id = await toggle.getAttribute('aria-controls');
@@ -503,6 +507,50 @@ try {
         await page.screenshot({ animations: 'disabled', path: `${azCaptures}/docs-sidebar-${width}.png` });
       }
     }
+  }
+
+  const addonCaptures = resolve(output, 'addons');
+  await mkdir(addonCaptures, { recursive: true });
+  const ordered = [...addonSlugs].sort((a, b) => byName(addons[a].name, addons[b].name));
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${base}/addons/`);
+    const gallery = page.getByRole('region', { name: 'Add-on previews', exact: true });
+    equal(await gallery.locator('.component-card h3 a').evaluateAll(links => links.map(link => link.getAttribute('href'))), ordered.map(playgroundHref), `${width}px: Add-ons cards are A–Z`);
+    assert(await gallery.locator('.component-catalog__section > h2').count() === 0, 'Add-ons has no families');
+    await openCompactIndex(page);
+    const drawer = page.getByRole('navigation', { name: 'Add-ons list', exact: true });
+    equal(await drawer.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/addons/', ...ordered.map(playgroundHref)], `${width}px: Add-ons drawer is A–Z`);
+    assert(await drawer.locator('[aria-current="page"]').getAttribute('href') === '/addons/', 'The Add-ons overview is current');
+    assert(await drawer.locator('button[aria-expanded]').count() === 0, 'The Add-ons drawer has no families');
+    if (width === 390) await page.locator('#component-catalog-index summary').click();
+    await gallery.locator('m-avatar:defined').waitFor();
+    await gallery.locator('m-autocomplete:defined').waitFor();
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Add-ons overview fits the viewport');
+    await page.screenshot({ animations: 'disabled', path: `${addonCaptures}/overview-${width}.png` });
+
+    const swatch = gallery.getByRole('button', { name: 'Ocean', exact: true });
+    await swatch.scrollIntoViewIfNeeded();
+    assert((await swatch.boundingBox())!.width >= 28, 'Color picker swatches receive their light-DOM styles');
+    await swatch.click();
+
+    const expansion = gallery.getByRole('button', { name: 'Delivery details', exact: true });
+    await expansion.click();
+    assert(await expansion.getAttribute('aria-expanded') === 'true', 'The expansion card opens from its header');
+    await expansion.press('Enter');
+    assert(await expansion.getAttribute('aria-expanded') === 'false', 'The header closes the expansion card with Enter');
+
+    await gallery.locator('.component-card h3 a[href="/addons/avatar/"]').click();
+    await page.waitForURL(`${base}/addons/avatar/`);
+    await page.getByRole('heading', { name: 'Avatar', level: 1, exact: true }).waitFor();
+    const detailPane = page.locator('main m-drawer.site-drawer');
+    await detailPane.locator('a[aria-current="page"]').waitFor({ state: 'attached' });
+    assert(await detailPane.locator('a[aria-current="page"]').getAttribute('href') === '/addons/avatar/', 'Avatar is current in the detail drawer');
+    await page.frameLocator('#preview').getByText('Ada Lovelace', { exact: true }).waitFor();
+    assert(await page.locator('.device__bar').count() === 0, 'Add-on playgrounds have no device chooser, like component playgrounds');
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Add-on playground fits the viewport');
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.screenshot({ animations: 'disabled', path: `${addonCaptures}/avatar-${width}.png` });
   }
 
   assert(errors.length === 0, errors.join('\n'));

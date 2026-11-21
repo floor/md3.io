@@ -88,3 +88,12 @@ md3-catalog-timepicker:not(:defined) { width: 160px; height: 48px; }
 @container (min-width: 580px) {
   .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.catalog-visual--form { flex-direction: column; height: 220px; }
+.catalog-visual--form > .mtrl-form { width: min(100%, 280px); }
+.catalog-visual--autocomplete > m-autocomplete,
+.catalog-visual--expansion-panel > m-expansion-panel,
+.catalog-visual--skeleton > m-skeleton,
+.catalog-visual--stepper > m-stepper { width: min(100%, 320px); min-width: 0; }
+.catalog-visual--autocomplete:focus-within { contain: layout; overflow: visible; z-index: 1; }
+.component-card:has(.catalog-visual--autocomplete:focus-within) { overflow: visible; z-index: 1; }

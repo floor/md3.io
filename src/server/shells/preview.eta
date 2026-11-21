@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="/dist/material/styles/base.css" />
   <link rel="stylesheet" href="/dist/material/styles/typography.css" />
   <% [...it.component.styles, ...(it.component.previewStyles || [])].forEach(style => { %><link rel="stylesheet" href="/dist/material/styles/<%= style %>.css" /><% }); %>
+  <% it.addonStyles.forEach(style => { %><link rel="stylesheet" href="/dist/material-addons/<%= style %>.css" /><% }); %>
   <%~ include('theme-sheets', { themeSheets: it.themeSheets }) %>
   <link rel="stylesheet" href="/styles/preview.css" />
   <script type="module" src="/dist/preview.js"></script>

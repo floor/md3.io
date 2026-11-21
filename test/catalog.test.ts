@@ -81,3 +81,20 @@ describe('scoped tokens', () => {
     expect(scopedTokens('.scope', '.dark .scope', asWrapped)).toBe(scopedTokens('.scope', '.dark .scope', asWritten));
   });
 });
+
+describe('the Add-ons catalog', () => {
+  test('Avatar has a server-rendered card, playground and documentation', async () => {
+    const overview = await get('/addons/');
+    expect(overview).toContain('<h1>Add-ons</h1>');
+    expect(overview).toContain('href="/addons/avatar/"');
+    expect(overview).toContain('<m-avatar ');
+    const detail = await get('/addons/avatar/');
+    expect(detail).toContain('<h1>Avatar</h1>');
+    expect(detail).toContain('src="/preview/avatar/"');
+    expect(detail).toContain('href="/docs/addons/avatar/"');
+    expect(detail).toContain('href="/showcase/email/"');
+    expect(detail).toContain('href="/showcase/settings/"');
+    expect(await get('/docs/addons/avatar/')).toContain('href="/addons/avatar/"');
+    expect((await handleRequest(new Request('http://md3.test/components/avatar/'))).status).toBe(404);
+  });
+});

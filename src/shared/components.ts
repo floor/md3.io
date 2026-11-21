@@ -1,5 +1,7 @@
 import type { ToolbarConfig, ToolbarButtonItem } from 'material/components/toolbar';
 import { symbols } from './icons';
+import { addons, isAddon } from './addons';
+import { formSnippet } from './content/form';
 import { nameIcons } from './icon-code';
 import { icons as buttonIcons, themes } from './button';
 
@@ -89,7 +91,7 @@ export function toolbarElementConfig(state: ComponentState): Record<string, unkn
     ...(content.overflow ? { overflow: content.overflow } : {}), ...(content.overflowPosition ? { overflowPosition: content.overflowPosition } : {}),
   };
 }
-export const components = {
+const materialComponents = {
   button: buttonComponent,
   'icon-button': iconButtonComponent,
   'button-group': buttonGroupComponent,
@@ -128,8 +130,9 @@ export const components = {
   snackbar: snackbarComponent,
   tooltip: tooltipComponent,
 };
+export const components = { ...materialComponents, ...addons };
 export type ComponentSlug = keyof typeof components;
-export const componentSlugs = Object.keys(components) as ComponentSlug[];
+export const componentSlugs = Object.keys(materialComponents) as (keyof typeof materialComponents)[];
 export const isComponent = (slug: string): slug is ComponentSlug => Object.hasOwn(components, slug);
 export function normalizeComponentState(slug: ComponentSlug, input: unknown): ComponentState {
   const raw = input && typeof input === 'object' ? input as Record<string, unknown> : {};
@@ -363,6 +366,7 @@ function trailingHandler(slug: ComponentSlug, state: ComponentState): { code: st
 }
 
 function buildComponentCode(slug: ComponentSlug, state: ComponentState): string {
+  if (slug === 'form') return formSnippet(components.form.config(state));
   if (components[slug].group === 'Navigation') return navigationCode(slug, state);
   if (components[slug].group === 'Containment') return containmentCode(slug, state);
   if (components[slug].group === 'Communication') return communicationCode(slug, state);
@@ -391,7 +395,9 @@ function buildComponentCode(slug: ComponentSlug, state: ComponentState): string 
   // After the picker is in the page: a modal's dialog opens only once it is connected.
   const openAfter = slug === 'datepicker' && state.dateOpen === true ? `${component.variable}.open();\n` : '';
   const styles = component.styles.includes('full') ? "import 'material/styles';\n" : ["base", ...component.styles].map(style => `import 'material/styles/${style}';\n`).join('');
-  return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
+  const library = isAddon(slug) ? 'material-addons' : 'material';
+  const addonStyle = isAddon(slug) ? "import 'material-addons/styles';\n" : '';
+  return `import { ${component.factory}${slug === 'timepicker' ? ', createButton' : ''} } from '${library}';\n${styles}${addonStyle}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +
     `const ${component.variable} = ${component.factory}(${config});\n${calls}${setup}\ndocument.body.append(${component.variable}.element);\n${openAfter}\n// When the view is removed:\n${slug === 'timepicker' ? '// openButton.destroy();\n' : ''}// ${component.variable}.destroy();\n`;
 }

@@ -1,4 +1,4 @@
-// Every component with scenarios: for each scenario (including default), every framework tab
+// Every component and add-on with scenarios: for each scenario (including default), every offered framework tab
 // (vanilla, html/web-components, react, vue, svelte, solid) is generated, bundled, mounted in
 // a headless page, and checked against the preview frame's mtrl-* root classes and visible text.
 // CHECK_TABS unset runs every such component. A comma list runs those slugs.
@@ -14,6 +14,7 @@ import { parse, compileScript, compileTemplate } from 'vue/compiler-sfc';
 import { chromium } from 'playwright';
 import { handleRequest } from '../server';
 import { components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
+import { addonSlugs, playgroundHref } from '../src/shared/addons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
 import { eligibleTabComponents } from './check-tabs-eligible';
@@ -119,6 +120,7 @@ const fileName = (tab: Tab): string => ({
 })[tab];
 
 const ROOT_NAMES = new Set([
+  ...addonSlugs,
   'badge',
   'bottom-app-bar',
   'bottom-sheet',
@@ -506,7 +508,7 @@ const secondsSinceStart = () => ((performance.now() - startedAt) / 1000).toFixed
 
 for (const slug of targetSlugs) {
   const meta = elementMeta(slug);
-  if (!meta) continue;
+  const tabs: Tab[] = meta ? TABS : ['vanilla'];
   const scenarios = [null, ...components[slug].scenarios];
   for (const scenario of scenarios) {
     const scenarioId = scenario?.id ?? 'default';
@@ -514,8 +516,8 @@ for (const slug of targetSlugs) {
     const config = elementConfig(slug, state);
     const context = { theme: String(state.theme), mode: String(state.mode) };
 
-    for (const tab of TABS) {
-      const code = tab === 'vanilla' ? componentCode(slug, state) : frameworkCode(tab, meta, config, context);
+    for (const tab of tabs) {
+      const code = meta && tab !== 'vanilla' ? frameworkCode(tab, meta, config, context) : componentCode(slug, state);
       let scriptCode = code;
       let markup = '';
       if (tab === 'html') {
@@ -643,6 +645,7 @@ let componentIndex = 0;
 try {
   for (const slug of targetSlugs) {
     componentIndex++;
+    const tabs: Tab[] = elementMeta(slug) ? TABS : ['vanilla'];
     const scenarios = [null, ...components[slug].scenarios];
     let componentScenarios = 0;
     let componentMounts = 0;
@@ -653,7 +656,7 @@ try {
 
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
-      await previewPage.goto(`${siteServer.url}components/${slug}/${scenarioParam}`);
+      await previewPage.goto(new URL(`${playgroundHref(slug)}${scenarioParam}`, siteServer.url).href);
       await previewPage.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = previewPage.frames().find(f => f !== previewPage.mainFrame() && f.url().includes('preview')) ?? previewPage.frames()[1]!;
@@ -670,7 +673,7 @@ try {
       const previewMenuOnLoad = await settledMenuState(previewFrame);
 
       // 2. Mount each tab and compare
-      for (const tab of TABS) {
+      for (const tab of tabs) {
         const key = `${slug}/${scenarioId}/${tab}`;
         const tabInfo = tabBundles[key];
         totalMounts++;

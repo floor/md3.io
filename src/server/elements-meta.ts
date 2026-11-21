@@ -2,6 +2,12 @@
 // generators (src/shared/frameworks.ts). Read on the server from mtrl/elements,
 // which imports safely there; the browser gets JSON, not the elements.
 import { elements, declarations } from 'material/elements';
+import { avatarElement } from 'material-addons/elements/avatar';
+import { autocompleteElement, autocompleteOptionDeclaration } from 'material-addons/elements/autocomplete';
+import { expansionPanelElement } from 'material-addons/elements/expansion-panel';
+import { skeletonElement } from 'material-addons/elements/skeleton';
+import { stepperElement, stepDeclaration } from 'material-addons/elements/stepper';
+import { isAddon } from '../shared/addons';
 import type { ChildrenMeta, ConfigKey, ElementMeta, OpenMeta, SlottedMeta, TriggerMeta } from '../shared/frameworks';
 
 type Spec = {
@@ -15,7 +21,7 @@ type Spec = {
   form?: unknown;
 };
 
-const registry = elements as Record<string, { spec: Spec } | undefined>;
+const registry = { ...elements, autocomplete: autocompleteElement, avatar: avatarElement, expansionPanel: expansionPanelElement, skeleton: skeletonElement, stepper: stepperElement } as Record<string, { spec: Spec } | undefined>;
 const camel = (name: string): string => name.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
 // How a playground's config array becomes declaration children: what mtrl's
@@ -69,6 +75,7 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
 
 // Config keys the spec does not map to an attribute, or maps otherwise.
 const keys: Record<string, Record<string, ConfigKey>> = {
+  'expansion-panel': { content: { text: true } },
   chips: { multiSelect: { attribute: 'selection', values: { true: 'multi', false: 'single' } } },
   list: {
     trackSelection: { attribute: 'selection', values: { false: 'none' }, ignore: [true] },
@@ -284,12 +291,18 @@ export function elementMeta(slug: string): ElementMeta | null {
   if (!element) return null;
   const spec = element.spec;
   const attributes = Object.fromEntries(Object.entries(spec.attributes ?? {}).map(([name, a]) => [name, { type: a.type, ...(a.config ? { config: a.config } : {}) }]));
+  const addonChildren: ChildrenMeta | undefined = slug === 'autocomplete'
+    ? { name: 'autocomplete-option', from: 'options', text: 'text', attributes: Object.fromEntries(Object.entries(autocompleteOptionDeclaration.attributes).map(([name, a]) => [name, a.type])) }
+    : slug === 'stepper'
+      ? { name: 'step', from: 'steps', text: 'content', attributes: Object.fromEntries(Object.entries(stepDeclaration.attributes).map(([name, a]) => [name, a.type])) }
+      : undefined;
   const kids = children[slug];
   const declared = kids ? declarations[kids.declaration] : undefined;
   // The text is the child's label (or headline): not written again as an attribute.
   const textAttributes = new Set(['label', ...[kids?.text ?? []].flat()]);
   return {
     name: spec.name,
+    ...(isAddon(slug) ? { library: 'material-addons' as const } : {}),
     attributes,
     properties: Object.fromEntries(Object.entries(spec.properties ?? {}).map(([name, p]) => [name, {
       ...(p.config ? { config: p.config } : {}),
@@ -300,6 +313,7 @@ export function elementMeta(slug: string): ElementMeta | null {
     ...(spec.form ? { form: true } : {}),
     ...(spec.slot ? { slot: { attribute: spec.slot.attribute, config: spec.slot.config } } : {}),
     ...(spec.slots?.length ? { slots: [...spec.slots] } : {}),
+    ...(addonChildren ? { children: addonChildren } : {}),
     ...(kids && declared ? {
       children: {
         ...Object.fromEntries(Object.entries(kids).filter(([name]) => name !== 'declaration')) as Omit<ChildrenMeta, 'attributes'>,
