@@ -45,7 +45,21 @@
 .example-card__frame { display: block; position: absolute; top: 0; left: 0; width: 1024px; height: 640px; border: 0; pointer-events: none; background: transparent; transform-origin: top left; transform: scale(0.35); transform: scale(calc(100cqw / 1024)); }
 .example-card__title { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
 .example-card__description { color: var(--text-muted); font-size: var(--fs-sm); }
-.example-card__components { color: var(--text-dim); font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .6px; margin-top: auto; }
+/* Two lines, sized in lh so a font swap cannot change the row. A longer list
+   (Notes) wraps to three lines in the fallback face and two in DIN, which
+   shifts the card below it. The title carries the full list. */
+.example-card__components {
+  display: block;
+  margin-top: auto;
+  overflow: hidden;
+  color: var(--text-dim);
+  font-size: var(--fs-2xs);
+  line-height: 1.6;
+  min-height: 2lh;
+  max-height: 2lh;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
 .example-card__tags { color: var(--text-dim); font-size: var(--fs-2xs); letter-spacing: .4px; }
 .showcase-filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .showcase-filters__group { display: flex; align-items: center; gap: 10px; min-width: 0; }

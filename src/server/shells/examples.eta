@@ -13,7 +13,7 @@
       <span class="example-card__preview" aria-hidden="true"><iframe class="example-card__frame" data-src="/showcase/<%= example.slug %>/frame/html/" title="" tabindex="-1" inert></iframe></span>
       <span class="example-card__title"><%= example.title %></span>
       <span class="example-card__description"><%= example.description %></span>
-      <span class="example-card__components"><%= example.components.join(' · ') %></span>
+      <span class="example-card__components" title="<%= example.components.join(' · ') %>" aria-label="<%= example.components.join(' · ') %>"><%= example.components.join(' · ') %></span>
       <span class="example-card__tags"><%= example.tags.join(' · ') %></span>
     </a></li>
   <% }); %>
