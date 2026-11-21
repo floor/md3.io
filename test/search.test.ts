@@ -26,7 +26,7 @@ describe('site search', () => {
     expect(searchSite('createDialog')[0]!.url).toBe('/components/dialog/');
   });
   test('a docs heading links to its section, and the anchor exists', () => {
-    const [result] = searchSite('swatches only');
+    const result = searchSite('swatches only').find(hit => hit.section === 'Docs');
     expect(result).toMatchObject({ section: 'Docs', url: '/docs/addons/colorpicker/#swatches-only' });
     expect(renderDocument('colorpicker')!.html).toContain('id="swatches-only"');
   });
@@ -35,6 +35,11 @@ describe('site search', () => {
     expect(searchSite('Dialog').find(result => result.url === '/components/dialog/')?.group).toBe('Component');
     expect(searchSite('swatches only').find(result => result.section === 'Docs')?.group).toBe('Add-on');
     expect(searchSite('side sheet', 50).find(result => result.url.startsWith('/docs/components/side-sheet/'))?.group).toBe('Sheets');
+  });
+  test('an add-on uses its own path and result label', () => {
+    expect(searchSite('createAvatar').find(result => result.url === '/addons/avatar/')).toMatchObject({
+      section: 'Add-ons', group: 'Add-on', title: 'Avatar',
+    });
   });
   test('an example is found by its name', () => {
     expect(searchSite('settings').find(result => result.section === 'Showcase')?.url).toBe('/showcase/settings/');

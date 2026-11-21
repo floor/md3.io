@@ -24,14 +24,14 @@
       <div class="playground-space">
         <div id="live-panel" class="playground-view" role="tabpanel" aria-label="Live preview"><iframe id="preview" title="Interactive <%= it.component.name.toLowerCase() %> preview, from the material library" src="/preview/<%= it.slug %>/"></iframe></div>
         <div id="code-panel" class="playground-view code-panel" role="tabpanel" aria-label="View code" tabindex="0" hidden>
-          <% if (!it.element) { %><p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the <%= it.component.name.toLowerCase() %> web component; the vanilla factory works in any of them today.</p><% } %>
+          <% if (it.isAddons && !it.element) { %><p class="framework-note">Use this add-on’s Vanilla factory in any framework.</p><% } else if (!it.element) { %><p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the <%= it.component.name.toLowerCase() %> web component; the vanilla factory works in any of them today.</p><% } %>
           <pre><code id="generated-code" class="hljs language-javascript"></code></pre>
         </div>
         <% if (it.element) { %><script type="application/json" id="element-meta"><%~ JSON.stringify(it.element).replaceAll('<', '\\u003c') %></script><% } %>
       </div>
       <div class="preview-footer">
         <span id="playground-status" role="status" aria-live="polite">Loading preview…</span>
-        <% if (it.size) { const kb = n => (n / 1024).toFixed(1); %><span class="component-size"><% [['factory', it.size.factory], ...(it.element ? [['element', it.size.element]] : [])].forEach(([flavour, size]) => { %><span data-flavour="<%= flavour %>" <%= flavour === 'factory' ? '' : 'hidden' %> title="What this component adds to an app: minified JS and CSS, gzip, on top of the material library's shared core, which all components share and a page loads once.<% if (size.lazy) { %> Another <%= kb(size.lazy) %> KB loads later, only if a feature needs it.<% } %> Measured on material <%= it.size.material %>."><strong><%= kb(size.added) %> KB</strong> gzip</span><% }); %></span><% } %>
+        <% if (it.size) { const kb = n => (n / 1024).toFixed(1); %><span class="component-size"><% [['factory', it.size.factory], ...(it.element && it.size.element ? [['element', it.size.element]] : [])].forEach(([flavour, size]) => { %><span data-flavour="<%= flavour %>" <%= flavour === 'factory' ? '' : 'hidden' %> title="What this component adds to an app: minified JS and CSS, gzip, on top of the material library's shared core, which all components share and a page loads once.<% if (size.lazy) { %> Another <%= kb(size.lazy) %> KB loads later, only if a feature needs it.<% } %> Measured on material <%= it.size.material %><%= it.size.addons ? ` and material-addons ${it.size.addons}` : '' %>."><strong><%= kb(size.added) %> KB</strong> gzip</span><% }); %></span><% } %>
       </div>
     </div>
     <form class="split-panel configuration" id="configuration">

@@ -16,18 +16,29 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { gzipSync } from "node:zlib";
-import { components } from "../src/shared/components";
+import { components, componentSlugs } from "../src/shared/components";
+import { addonSlugs, isAddon } from "../src/shared/addons";
+import { elementMeta } from "../src/server/elements-meta";
 
 const root = resolve(import.meta.dir, "..");
 const work = resolve(root, "dist/sizes");
 const mtrl = resolve(root, "node_modules/material");
-const slugs = Object.keys(components);
+const measureAddons = process.argv.includes("--addons");
+const slugs = measureAddons ? addonSlugs : componentSlugs;
 
 type Flavour = "factory" | "element";
 const pascal = (slug: string): string => slug.replace(/(^|-)(\w)/g, (_, __, c: string) => c.toUpperCase());
 
 // The import a page writes: the factory's creator, or the element's define function.
 function imports(slug: string, flavour: Flavour, id: string): string {
+  if (isAddon(slug)) {
+    if (flavour === "element") {
+      const define = `define${pascal(slug)}`;
+      return `import "material-addons/elements/css/${slug}";\nimport { ${define} as ${id} } from "material-addons/elements/${slug}";\n${id}();\n`;
+    }
+    const styles = components[slug].styles.map(style => `import "material/styles/${style}";\n`).join("");
+    return `${styles}import "material-addons/styles";\nimport { ${components[slug].factory} as ${id} } from "material-addons";\nglobalThis.${id} = ${id};\n`;
+  }
   if (flavour === "element") {
     const define = `define${pascal(slug)}`;
     return `import "material/elements/css/${slug}";\nimport { ${define} as ${id} } from "material/elements";\n${id}();\n`;
@@ -73,6 +84,7 @@ const shared: Record<Flavour, number> = { factory: 0, element: 0 };
 for (const flavour of ["factory", "element"] as const) {
   shared[flavour] = (await measure(`${flavour}-core`, core(flavour) + entry([], flavour))).initial;
   for (const slug of slugs) {
+    if (measureAddons && flavour === "element" && !elementMeta(slug)) continue;
     const alone = await measure(`${flavour}-${slug}`, entry([slug], flavour));
     const withCore = await measure(`${flavour}-core-${slug}`, core(flavour) + entry([slug], flavour));
     (sizes[slug] ??= {} as never)[flavour] = { alone: alone.initial, lazy: alone.lazy, added: withCore.initial - shared[flavour] };
@@ -82,9 +94,13 @@ for (const flavour of ["factory", "element"] as const) {
 
 const { version } = JSON.parse(await readFile(resolve(mtrl, "package.json"), "utf8")) as { version: string };
 await mkdir(resolve(root, "data"), { recursive: true });
-await writeFile(resolve(root, "data/sizes.json"), `${JSON.stringify({ material: version, measured: new Date().toISOString().slice(0, 10), gzip: 9, core: shared, components: sizes }, null, 2)}\n`);
+const addonsVersion = measureAddons
+  ? (JSON.parse(await readFile(resolve(root, "node_modules/material-addons/package.json"), "utf8")) as { version: string }).version
+  : undefined;
+const filename = measureAddons ? "addon-sizes.json" : "sizes.json";
+await writeFile(resolve(root, "data", filename), `${JSON.stringify({ material: version, ...(addonsVersion ? { addons: addonsVersion } : {}), measured: new Date().toISOString().slice(0, 10), gzip: 9, core: shared, components: sizes }, null, 2)}\n`);
 for (const slug of slugs) {
   const { factory, element } = sizes[slug]!;
   const kb = (n: number): string => `${(n / 1024).toFixed(1)}`;
-  console.log(`${slug.padEnd(18)} factory ${kb(factory.alone)} (+${kb(factory.added)})  element ${kb(element.alone)} (+${kb(element.added)})${factory.lazy ? `  lazy ${kb(factory.lazy)}` : ""}`);
+  console.log(`${slug.padEnd(18)} factory ${kb(factory.alone)} (+${kb(factory.added)})  ${element ? `element ${kb(element.alone)} (+${kb(element.added)})` : "factory only"}${factory.lazy ? `  lazy ${kb(factory.lazy)}` : ""}`);
 }

@@ -42,7 +42,7 @@ describe('the example fence', () => {
     expect(Object.keys(rendered)).toEqual(['vanilla']);
     const html = renderExample('form:\n  class: signup\n');
     expect(html.match(/class="framework-note"/g)).toHaveLength(5);
-    expect(html).toContain('The form comes from material-addons, which has no web components');
+    expect(html).toContain('The form uses the material-addons factory.');
     expect(rendered.vanilla).toBe("import { createForm } from 'material-addons';\n\nconst form = createForm({ class: 'signup' });\ndocument.body.append(form.element);\n");
     expect(code('colorpicker:\n  value: red\n', 'vanilla')).toContain("import { createColorPicker } from 'material-addons';\n\nconst picker = createColorPicker({ value: 'red' });");
   });
