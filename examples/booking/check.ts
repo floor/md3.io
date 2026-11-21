@@ -39,6 +39,9 @@ export default async function steps(page:Page):Promise<void>{
  const pickRange=async(first:string,last:string)=>{await page.getByRole('button',{name:/Change date/}).click();await page.getByRole('gridcell',{name:dateName(first)}).click();await page.getByRole('gridcell',{name:dateName(last)}).click();await button('OK').click();};
  await pickRange(start,start);await button('Check availability').click();await stepIs(1,false);await equal(()=>focused(range),true,'Invalid range focuses the stay field');
  await page.getByText('Choose future dates for at least 1 night',exact).waitFor();
+ const errorMarked=()=>page.evaluate(()=>{const root=document.querySelector('m-stepper')?.shadowRoot??document;return !!root.querySelector('.mtrl-stepper__item--error');});
+ await page.setViewportSize({width:390,height:844});await orientation('vertical');await equal(errorMarked,true,'Date error survives vertical orientation');
+ await page.setViewportSize({width:1440,height:1000});await orientation('horizontal');await equal(errorMarked,true,'Date error survives horizontal orientation');
  await pickRange(start,end);assert.match(await range.inputValue(),/\d+ [A-Z][a-z]+ \d{4}/,'Dates are localized for display');
  await chooseSelect(page,'Rooms',true);await button('Check availability').click();await page.getByText('Each room needs at least one adult',exact).waitFor();await stepIs(1,false);await chooseSelect(page,'Rooms',false);
  const adults=page.getByRole('combobox',{name:'Adults',...exact});await adults.focus();await page.keyboard.press('ArrowDown');await page.keyboard.press('Home');await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
