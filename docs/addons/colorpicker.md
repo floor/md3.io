@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-09-30
+updated: 2026-11-21
 status: published
 ---
 
@@ -12,8 +12,9 @@ this one is built from M3 parts (a [text field](/docs/components/text-field/), a
 [icon button](/docs/components/icon-button/)) and the
 [M3 color system](https://m3.material.io/styles/color/system/overview).
 
-From **material-addons**, checked against 3.0.0. material-addons has no web components: the
-examples are the vanilla factory, which works in any framework.
+From **material-addons**, checked against 3.2.0. Color picker is factory-only; the package's
+Autocomplete, Avatar, Expansion panel, Skeleton and Stepper also have web components.
+These examples use the vanilla factory, which works in any framework.
 
 ## Usage
 
