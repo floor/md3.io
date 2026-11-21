@@ -49,7 +49,9 @@
    (Notes) wraps to three lines in the fallback face and two in DIN, which
    shifts the card below it. The title carries the full list. */
 .example-card__components {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   margin-top: auto;
   overflow: hidden;
   color: var(--text-dim);
