@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import type { Frame, Locator, Page } from "playwright";
+import { expect, type Frame, type Locator, type Page } from "playwright/test";
 
 const exact = { exact: true } as const;
 
@@ -196,17 +196,23 @@ export default async function steps(page: Page): Promise<void> {
   assert.equal(padding, fabHeight + 24, "Mobile leaves the FAB height and margin beneath the last card");
 
   const barClears = async (width: number) => {
+    // A resize under load can report a null box for a frame. Poll until the layout is there.
+    const boxOf = async (target: Locator, what: string) => {
+      let box = await target.boundingBox();
+      await expect.poll(async () => (box = await target.boundingBox()), {
+        timeout: 10_000,
+        message: `${what} has no box at ${width}`,
+      }).not.toBeNull();
+      assert.ok(box);
+      return box;
+    };
     await page.setViewportSize({ width, height: 900 });
-    const bar = page.locator(".notes .mtrl-top-app-bar").first();
-    const note = page.locator(".notes article").first();
-    await note.waitFor();
-    const barBox = await bar.boundingBox();
-    const noteBox = await note.boundingBox();
-    assert.ok(barBox && noteBox, `The app bar and the first note are on screen at ${width}`);
+    const barBox = await boxOf(page.locator(".notes .mtrl-top-app-bar").first(), "The app bar");
+    const noteBox = await boxOf(page.locator(".notes article").first(), "The first note");
     assert.ok(barBox.y + barBox.height <= noteBox.y + 1, `The app bar overlaps the first note at ${width}`);
-    const fabBox = await fab.boundingBox();
+    const fabBox = await boxOf(fab, "The New note FAB");
     const clearance = await page.locator(".notes").evaluate(node => parseFloat(getComputedStyle(node).paddingBottom));
-    assert.equal(clearance, (fabBox?.height ?? 0) + 24, `The FAB covers the last card at ${width}`);
+    assert.equal(clearance, fabBox.height + 24, `The FAB covers the last card at ${width}`);
   };
   for (const width of [390, 820, 1440]) await barClears(width);
   await page.setViewportSize({ width: 390, height: 844 });
