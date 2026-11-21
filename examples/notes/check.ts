@@ -138,18 +138,21 @@ export default async function steps(page: Page): Promise<void> {
   await count(0, 12);
 
   // Shrink the app inside a wide viewport to exercise the container breakpoint.
-  // An edit in progress stays open in the other surface, with what was typed.
+  // An edit of an existing note stays in the field across the switch, and Cancel leaves the card as it was.
   const app = page.locator("#app");
-  await button("Create note").click();
-  await textbox("Title").fill("Kept across the breakpoint");
+  await category(inline, "All notes").click();
+  await button("Pasta sauce").click();
+  await textbox("Title").fill("Pasta sauce edited");
   await app.evaluate(node => { node.style.width = "390px"; });
   await textbox("Title").waitFor();
-  assert.equal(await textbox("Title").inputValue(), "Kept across the breakpoint");
+  assert.equal(await textbox("Title").inputValue(), "Pasta sauce edited");
   await app.evaluate(node => { node.style.removeProperty("width"); });
   await textbox("Title").waitFor();
-  assert.equal(await textbox("Title").inputValue(), "Kept across the breakpoint");
+  assert.equal(await textbox("Title").inputValue(), "Pasta sauce edited");
   await button("Cancel").click();
   await textbox("Title").waitFor({ state: "hidden" });
+  await article("Pasta sauce").getByText(/^Fry garlic/).waitFor();
+  await article("Pasta sauce edited").waitFor({ state: "hidden" });
 
   const opener = button("Open categories");
   await app.evaluate(node => { node.style.width = "390px"; });
