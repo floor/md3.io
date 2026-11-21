@@ -75,7 +75,7 @@ const dispose = wireStepperDemo(stepper.element, stepper);
 // When the view leaves: dispose(); stepper.destroy();\n`;
   if (framework === 'html') return `<m-stepper id="stepper" orientation=${orientation} auto-breakpoint="480" linear aria-label=${ariaLabel} value=${first} style="width:100%;max-width:880px">
 ${steps.map(step => `  <m-step value="${step.value}" label="${step.label}">${step.content}</m-step>`).join('\n')}
-</m-step>
+</m-stepper>
 <script type="module">
 import 'material-addons/elements/css/stepper';
 import { defineStepper } from 'material-addons/elements';
