@@ -2,14 +2,14 @@
 // headers replace the hand-built step header and whose data-stepper-* actions replace
 // the wiring between Back, Next and the panels.
 import { defineComponent, reactive, ref } from "vue";
-import { MButton, MCheckbox, MDatepicker, MDialog, MRadio, MRadios, MSelect, MSelectOption, MSlider, MSnackbar, MTextField, MTimepicker } from "material/vue";
+import { MButton, MCard, MCheckbox, MDatepicker, MDialog, MSelect, MSelectOption, MSnackbar, MTextField, MTimepicker } from "material/vue";
 import { MStepper, MStep } from "material-addons/vue";
 import { StepperElement } from "material-addons/elements";
 import type { StepperBeforeChangeEvent } from "material-addons/components/stepper";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, reviewLines, roomOf, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withDates, withPrice, type Booking, type BookingErrors } from "./shared";
+import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, HERO_IMAGE, PROPERTY, ROOMS, TODAY, normalizeTime, priceLines, rangeParts, reviewLines, roomAfter, roomOf, stayText, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withRange, type Booking, type BookingErrors } from "./shared";
 
 export default defineComponent({
-  components: { MButton, MCheckbox, MDatepicker, MDialog, MRadio, MRadios, MSelect, MSelectOption, MSlider, MSnackbar, MStepper, MStep, MTextField, MTimepicker },
+  components: { MButton, MCard, MCheckbox, MDatepicker, MDialog, MSelect, MSelectOption, MSnackbar, MStepper, MStep, MTextField, MTimepicker },
   setup() {
     const s = reactive<Booking>({ ...DEFAULTS });
     const errors = reactive<BookingErrors>({});
@@ -18,18 +18,25 @@ export default defineComponent({
     const timeOpen = ref(false);
     const stepperEl = ref<{ element: StepperElement } | null>(null);
     const arrivalEl = ref<HTMLElement | null>(null);
-    const sliderEl = ref<HTMLElement | null>(null);
+    const stayEl = ref<HTMLElement | null>(null);
+    const roomsEl = ref<HTMLElement | null>(null);
     const nameEl = ref<HTMLElement | null>(null);
     const emailEl = ref<HTMLElement | null>(null);
-    const setDates = (checkIn: string, checkOut: string) => Object.assign(s, withDates({ ...s }, checkIn, checkOut));
+    const setRange = (value: string) => { const parts = rangeParts(value); if (parts) { Object.assign(s, withRange({ ...s }, parts[0], parts[1])); errors.dates = undefined; } };
+    const selectRoom = (value: string, focus = false) => { s.room = value; if (focus) requestAnimationFrame(() => roomsEl.value?.querySelector<HTMLElement>(`[data-room="${value}"]`)?.focus()); };
+    const onRoomKey = (event: KeyboardEvent, value: string) => {
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); selectRoom(roomAfter(value, 1), true); }
+      else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); selectRoom(roomAfter(value, -1), true); }
+      else if (event.key === "Home") { event.preventDefault(); selectRoom(ROOMS[0]!.value, true); }
+      else if (event.key === "End") { event.preventDefault(); selectRoom(ROOMS[ROOMS.length - 1]!.value, true); }
+      else if (event.key === " " || event.key === "Enter") { event.preventDefault(); selectRoom(value, true); }
+    };
     // An adapter ref is its component; the element is what takes focus.
     const elementOf = (ref: { value: unknown }) => ((ref.value as { element?: HTMLElement } | null)?.element ?? ref.value) as HTMLElement | null;
     const focusFirstInvalid = (n: number) => {
-      if (n === 1) elementOf(arrivalEl)?.focus();
-      else if (n === 2) {
-        const slider = elementOf(sliderEl);
-        const handle = (slider?.shadowRoot ?? slider)?.querySelector<HTMLElement>('[role="slider"]');
-        (handle ?? slider)?.focus();
+      if (n === 1) {
+        if (validateStep({ ...s }, 1).dates) elementOf(stayEl)?.focus();
+        else elementOf(arrivalEl)?.focus();
       }
     };
     // The adapter exposes no validator functions, so a forward move is checked in the
@@ -43,12 +50,12 @@ export default defineComponent({
       const n = stepNumberOf(previousValue);
       const stepErrors = validateStep({ ...s }, n);
       errors.arrivalTime = stepErrors.arrivalTime;
-      errors.room = stepErrors.room;
-      if (stepErrors.arrivalTime || stepErrors.room) {
+      errors.dates = stepErrors.dates;
+      if (stepErrors.dates || stepErrors.arrivalTime) {
         event.detail.preventDefault();
         stepperEl.value?.element.setError(previousValue, true);
       } else stepperEl.value?.element.setError(previousValue, false);
-      if (stepErrors.arrivalTime || stepErrors.room) focusFirstInvalid(n);
+      if (stepErrors.dates || stepErrors.arrivalTime) focusFirstInvalid(n);
     };
     // Book validates the details itself: it is not a move, so the stepper has no say in it.
     const book = () => {
@@ -70,7 +77,7 @@ export default defineComponent({
       if (time) s.arrivalTime = time;
       timeOpen.value = true;
     };
-    return { s, errors, dialogOpen, confirmed, timeOpen, stepperEl, arrivalEl, sliderEl, nameEl, emailEl, setDates, veto, book, confirm, commitTime, openPicker, stepHeading, stepValue, totalText, summary, rangeText, reviewLines, normalizeTime, eligibleRooms, withPrice, ROOMS, EXTRAS, ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON };
+    return { s, errors, dialogOpen, confirmed, timeOpen, stepperEl, arrivalEl, stayEl, roomsEl, nameEl, emailEl, setRange, selectRoom, onRoomKey, veto, book, confirm, commitTime, openPicker, stepHeading, stepValue, totalText, summary, stayText, priceLines, reviewLines, normalizeTime, PROPERTY, HERO_IMAGE, TODAY, ROOMS, EXTRAS, ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON };
   },
   // orientation "auto" turns vertical below 600px of container width: the widened
   // booking column passes that on Desktop and Tablet frames, and stays vertical
@@ -85,19 +92,36 @@ export default defineComponent({
         </template>
       </MDialog>
       <div class="booking__intro">
-        <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
-        <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
+        <img class="booking__hero" :src="HERO_IMAGE" :alt="'The Dune House above the dunes in ' + PROPERTY.town" loading="lazy">
+        <h1 class="booking__title mtrl-headline-small">{{ PROPERTY.name }}</h1>
+        <p class="booking__lede mtrl-body-medium">{{ PROPERTY.town }} · {{ PROPERTY.rating }}</p>
+        <p class="booking__lede mtrl-body-medium">{{ PROPERTY.lede }}</p>
+        <p class="booking__lede mtrl-body-medium">{{ PROPERTY.facts }}</p>
       </div>
+      <div class="booking__layout">
       <MStepper ref="stepperEl" linear orientation="auto" label-placement="bottom" aria-label="Booking steps" default-value="dates" @beforechange="veto">
         <MStep value="dates" label="Dates and arrival">
           <div class="booking__step">
             <h2 class="booking__step-title mtrl-title-large" tabindex="-1">{{ stepHeading(1) }}</h2>
             <div class="booking__grid">
-              <MDatepicker label="Check-in" variant="modal" close-on-select date-format="YYYY-MM-DD" :value="s.checkIn" @change="setDates($event.detail.value, s.checkOut)" />
-              <MDatepicker label="Check-out" variant="modal" close-on-select date-format="YYYY-MM-DD" :min="s.checkIn" :value="s.checkOut" @change="setDates(s.checkIn, $event.detail.value)" />
+              <MDatepicker ref="stayEl" label="Check-in → Check-out" variant="modal" selection-mode="range" date-format="YYYY-MM-DD" :min="TODAY" :value="s.checkIn + '/' + s.checkOut" @change="setRange($event.detail.value)" />
               <MTextField ref="arrivalEl" label="Arrival time" :value="s.arrivalTime" :trailing-icon="CLOCK_ICON" trailing-icon-label="Choose time" :supporting-text="errors.arrivalTime ?? '24-hour time'" :error="Boolean(errors.arrivalTime)" @input="s.arrivalTime = $event.detail.value; errors.arrivalTime = undefined" @change="commitTime($event.detail.value)" @trailing="openPicker" />
             </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
+            <p class="booking__stay mtrl-body-medium">{{ stayText(s) }}</p>
+            <p v-if="errors.dates" class="booking__field-error mtrl-body-small">{{ errors.dates }}</p>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -114,17 +138,33 @@ export default defineComponent({
             </div>
             <div class="booking__group">
               <p class="booking__label mtrl-title-small">Room type</p>
-              <MRadios aria-label="Room type" :value="s.room" @change="s.room = $event.detail.value ?? s.room">
-                <MRadio v-for="room in ROOMS" :key="room.value" :value="room.value" :disabled="!eligibleRooms(s).some((r) => r.value === room.value)">{{ room.label }} — \${{ room.rate }} a night</MRadio>
-              </MRadios>
+              <div class="booking__rooms" role="radiogroup" aria-label="Room type" ref="roomsEl">
+                <div v-for="room in ROOMS" :key="room.value" class="booking__room" role="radio" :aria-label="room.label + ', ' + room.beds + ', ' + room.size + ', $' + room.rate + ' a night, ' + room.features" :aria-checked="s.room === room.value" :tabindex="s.room === room.value ? 0 : -1" :data-room="room.value" @click="selectRoom(room.value, true)" @keydown="onRoomKey($event, room.value)">
+                  <MCard variant="outlined">
+                    <div class="booking__room-card">
+                      <img class="booking__room-image" :src="room.image" alt="" loading="lazy">
+                      <p class="booking__room-name mtrl-title-medium">{{ room.label }}</p>
+                      <p class="booking__room-facts mtrl-body-medium">{{ room.beds }} · {{ room.size }}</p>
+                      <p class="booking__room-price mtrl-body-medium">\${{ room.rate }} a night</p>
+                      <p class="booking__room-features mtrl-body-medium">{{ room.features }}</p>
+                    </div>
+                  </MCard>
+                </div>
+              </div>
             </div>
-            <div class="booking__group">
-              <p class="booking__label mtrl-title-small">Price range</p>
-              <MSlider ref="sliderEl" range show-value :min="50" :max="300" :step="10" :value="s.priceMin" :second-value="s.priceMax" aria-label="Price range" @input="Object.assign(s, withPrice(s, $event.detail.value, $event.detail.secondValue ?? s.priceMax)); errors.room = undefined" />
-              <p class="booking__range mtrl-body-medium">{{ rangeText(s) }}</p>
-              <p v-if="errors.room" class="booking__field-error mtrl-body-small">{{ errors.room }}</p>
-            </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -135,7 +175,19 @@ export default defineComponent({
               <p class="booking__label mtrl-title-small" id="extras-label">Extras</p>
               <MCheckbox v-for="extra in EXTRAS" :key="extra.key" :checked="s[extra.key]" @change="s[extra.key] = $event.detail.checked">{{ extra.label }} — \${{ extra.price }} {{ extra.unit }}</MCheckbox>
             </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div data-stepper-next><MButton>Next</MButton></div></footer>
           </div>
         </MStep>
@@ -157,11 +209,37 @@ export default defineComponent({
                 </div>
               </div>
             </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{{ totalText(s) }}</output>
+                        <MCard variant="filled" headline="Price summary" class="booking__summary-compact">
+              <div class="booking__summary-lines">
+                <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+                  <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+                  <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+                </div>
+                <div class="booking__price-total">
+                  <span class="booking__price-line mtrl-title-small">Total</span>
+                  <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+                </div>
+                <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+              </div>
+            </MCard>
             <footer class="booking__actions"><div data-stepper-prev><MButton variant="outlined">Back</MButton></div><div><MButton @click="book">Book</MButton></div></footer>
           </div>
         </MStep>
       </MStepper>
+      <MCard variant="filled" headline="Price summary" class="booking__summary">
+        <div class="booking__summary-lines">
+          <div v-for="line in priceLines(s)" :key="line.label" class="booking__price-line">
+            <span class="booking__price-line mtrl-body-medium">{{ line.label }}</span>
+            <span class="booking__price-line mtrl-body-medium">{{ line.amount }}</span>
+          </div>
+          <div class="booking__price-total">
+            <span class="booking__price-line mtrl-title-small">Total</span>
+            <span class="booking__price-line mtrl-title-small">{{ totalText(s).replace("Estimated total ", "") }}</span>
+          </div>
+          <p class="booking__lede mtrl-body-medium">{{ PROPERTY.policy }}</p>
+        </div>
+      </MCard>
+      </div>
       <MTimepicker label="Arrival time" format="24h" :value="normalizeTime(s.arrivalTime) ?? '15:00'" :open="timeOpen" @change="s.arrivalTime = $event.detail.value; errors.arrivalTime = undefined" @close="timeOpen = false" />
       <MSnackbar message="Booking confirmed" :open="confirmed" @close="confirmed = false" />
     </section>`,

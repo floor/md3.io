@@ -4,12 +4,12 @@
 // replace the wiring between Back, Next and the panels.
 import { createSignal, Show, For } from "solid-js";
 import { createStore } from "solid-js/store";
-import { Button, Checkbox, Datepicker, Dialog, Radio, Radios, Select, SelectOption, Slider, Snackbar, TextField, Timepicker } from "material/solid";
+import { Button, Card, Checkbox, Datepicker, Dialog, Select, SelectOption, Snackbar, TextField, Timepicker } from "material/solid";
 import { Stepper, Step } from "material-addons/solid";
 import type { StepperElement } from "material-addons/elements";
 import type { StepperBeforeChangeEvent } from "material-addons/components/stepper";
-import type { SliderElement, TextFieldElement } from "material/elements";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, ROOMS, eligibleRooms, normalizeTime, rangeText, reviewLines, roomOf, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withDates, withPrice, type Booking, type BookingErrors } from "./shared";
+import type { TextFieldElement } from "material/elements";
+import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, HERO_IMAGE, PROPERTY, ROOMS, TODAY, normalizeTime, priceLines, rangeParts, reviewLines, roomAfter, roomOf, stayText, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withRange, type Booking, type BookingErrors } from "./shared";
 
 export default function Booking() {
   const [s, setS] = createStore<Booking>({ ...DEFAULTS });
@@ -19,15 +19,14 @@ export default function Booking() {
   const [timeOpen, setTimeOpen] = createSignal(false);
   let stepperEl: StepperElement | undefined;
   let arrivalEl: TextFieldElement | undefined;
-  let sliderEl: SliderElement | undefined;
+  let roomsEl: HTMLDivElement | undefined;
+  let stayEl: HTMLElement | undefined;
   let nameEl: TextFieldElement | undefined;
   let emailEl: TextFieldElement | undefined;
 
   const focusFirstInvalid = (n: number) => {
-    if (n === 1) arrivalEl?.focus();
-    else if (n === 2) {
-      const handle = (sliderEl?.shadowRoot ?? sliderEl)?.querySelector<HTMLElement>('[role="slider"]');
-      (handle ?? sliderEl)?.focus();
+    if (n === 1) {
+      if (validateStep({ ...s }, 1).dates) stayEl?.focus(); else arrivalEl?.focus();
     }
   };
   // The adapter exposes no validator functions, so a forward move is checked in the
@@ -41,8 +40,8 @@ export default function Booking() {
     const n = stepNumberOf(previousValue);
     const stepErrors = validateStep({ ...s }, n);
     setErrors("arrivalTime", stepErrors.arrivalTime);
-    setErrors("room", stepErrors.room);
-    if (stepErrors.arrivalTime || stepErrors.room) {
+    setErrors("dates", stepErrors.dates);
+    if (stepErrors.dates || stepErrors.arrivalTime) {
       event.detail.preventDefault();
       stepperEl?.setError(previousValue, true);
       focusFirstInvalid(n);
@@ -61,6 +60,36 @@ export default function Booking() {
     if (time) { setS("arrivalTime", time); setErrors("arrivalTime", undefined); }
     else setErrors("arrivalTime", "Enter a valid time");
   };
+
+  const selectRoom = (value: string, focus = false) => {
+    setS("room", value);
+    if (focus) requestAnimationFrame(() => roomsEl?.querySelector<HTMLElement>(`[data-room="${value}"]`)?.focus());
+  };
+  const onRoomKey = (event: { key: string; preventDefault: () => void }, value: string) => {
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); selectRoom(roomAfter(value, 1), true); }
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); selectRoom(roomAfter(value, -1), true); }
+    else if (event.key === "Home") { event.preventDefault(); selectRoom(ROOMS[0]!.value, true); }
+    else if (event.key === "End") { event.preventDefault(); selectRoom(ROOMS[ROOMS.length - 1]!.value, true); }
+    else if (event.key === " " || event.key === "Enter") { event.preventDefault(); selectRoom(value, true); }
+  };
+  const summaryCard = (cls: string) => (
+    <Card variant="filled" headline="Price summary" class={cls}>
+      <div class="booking__summary-lines">
+        <For each={priceLines({ ...s })}>{(line) => (
+          <div class="booking__price-line">
+            <span class="booking__price-line mtrl-body-medium">{line.label}</span>
+            <span class="booking__price-line mtrl-body-medium">{line.amount}</span>
+          </div>
+        )}</For>
+        <div class="booking__price-total">
+          <span class="booking__price-line mtrl-title-small">Total</span>
+          <span class="booking__price-line mtrl-title-small">{totalText({ ...s }).replace("Estimated total ", "")}</span>
+        </div>
+        <p class="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
+      </div>
+    </Card>
+  );
+  const summaryPanel = summaryCard("booking__summary");
   // Each panel's heading carries tabindex -1: the stepper's focus after an action
   // reaches it first, so a step change puts focus on the new step's heading.
   const heading = (step: number) => <h2 class="booking__step-title mtrl-title-large" tabindex={-1}>{stepHeading(step)}</h2>;
@@ -83,25 +112,29 @@ export default function Booking() {
         <p>{summary({ ...s })}</p>
       </Dialog>
       <div class="booking__intro">
-        <h1 class="booking__title mtrl-headline-small">Book a stay</h1>
-        <p class="booking__lede mtrl-body-medium">Four steps: dates, guests and room, extras, then your details. The total updates as you go.</p>
+        <img class="booking__hero" src={HERO_IMAGE} alt={`The Dune House above the dunes in ${PROPERTY.town}`} loading="lazy" />
+        <h1 class="booking__title mtrl-headline-small">{PROPERTY.name}</h1>
+        <p class="booking__lede mtrl-body-medium">{PROPERTY.town} · {PROPERTY.rating}</p>
+        <p class="booking__lede mtrl-body-medium">{PROPERTY.lede}</p>
+        <p class="booking__lede mtrl-body-medium">{PROPERTY.facts}</p>
       </div>
+      <div class="booking__layout">
       <Stepper ref={(el) => (stepperEl = el)} linear orientation="auto" labelPlacement="bottom" ariaLabel="Booking steps" defaultValue="dates" onBeforechange={veto}>
         <Step value="dates" label="Dates and arrival">
           <div class="booking__step">
             {heading(1)}
             <div class="booking__grid">
-              <Datepicker label="Check-in" variant="modal" closeOnSelect dateFormat="YYYY-MM-DD" value={s.checkIn}
-                onChange={(e) => setS(withDates({ ...s }, e.detail.value, s.checkOut))} />
-              <Datepicker label="Check-out" variant="modal" closeOnSelect dateFormat="YYYY-MM-DD" min={s.checkIn} value={s.checkOut}
-                onChange={(e) => setS(withDates({ ...s }, s.checkIn, e.detail.value))} />
+              <Datepicker ref={(el) => (stayEl = el as unknown as HTMLElement)} label="Check-in → Check-out" variant="modal" selectionMode="range" dateFormat="YYYY-MM-DD" min={TODAY} value={`${s.checkIn}/${s.checkOut}`}
+                onChange={(e) => { const parts = rangeParts(e.detail.value); if (parts) { setS(withRange({ ...s }, parts[0], parts[1])); setErrors("dates", undefined); } }} />
               <TextField ref={arrivalEl} label="Arrival time" value={s.arrivalTime} trailingIcon={CLOCK_ICON} trailingIconLabel="Choose time"
                 supportingText={errors.arrivalTime ?? "24-hour time"} error={Boolean(errors.arrivalTime)}
                 onInput={(e) => { setS("arrivalTime", e.detail.value); setErrors("arrivalTime", undefined); }}
                 onChange={(e) => commitTime(e.detail.value)}
                 onTrailing={() => { const time = normalizeTime(s.arrivalTime); if (time) setS("arrivalTime", time); setTimeOpen(true); }} />
             </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
+            <p class="booking__stay mtrl-body-medium">{stayText({ ...s })}</p>
+            <Show when={errors.dates}><p class="booking__field-error mtrl-body-small">{errors.dates}</p></Show>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -118,18 +151,24 @@ export default function Booking() {
             </div>
             <div class="booking__group">
               <p class="booking__label mtrl-title-small">Room type</p>
-              <Radios aria-label="Room type" value={s.room} onChange={(e) => setS("room", e.detail.value ?? s.room)}>
-                <For each={ROOMS}>{(room) => <Radio value={room.value} disabled={!eligibleRooms({ ...s }).some((r) => r.value === room.value)}>{`${room.label} — $${room.rate} a night`}</Radio>}</For>
-              </Radios>
+              <div class="booking__rooms" role="radiogroup" aria-label="Room type" ref={roomsEl}>
+                <For each={ROOMS}>{(room) => (
+                  <div class="booking__room" role="radio" aria-label={`${room.label}, ${room.beds}, ${room.size}, $${room.rate} a night, ${room.features}`} aria-checked={s.room === room.value} tabIndex={s.room === room.value ? 0 : -1} data-room={room.value}
+                    onClick={() => selectRoom(room.value, true)} onKeyDown={(e) => onRoomKey(e, room.value)}>
+                    <Card variant="outlined">
+                      <div class="booking__room-card">
+                        <img class="booking__room-image" src={room.image} alt="" loading="lazy" />
+                        <p class="booking__room-name mtrl-title-medium">{room.label}</p>
+                        <p class="booking__room-facts mtrl-body-medium">{room.beds} · {room.size}</p>
+                        <p class="booking__room-price mtrl-body-medium">${room.rate} a night</p>
+                        <p class="booking__room-features mtrl-body-medium">{room.features}</p>
+                      </div>
+                    </Card>
+                  </div>
+                )}</For>
+              </div>
             </div>
-            <div class="booking__group">
-              <p class="booking__label mtrl-title-small">Price range</p>
-              <Slider ref={sliderEl} range showValue min={50} max={300} step={10} value={s.priceMin} secondValue={s.priceMax} aria-label="Price range"
-                onInput={(e) => { setS(withPrice({ ...s }, e.detail.value, e.detail.secondValue ?? s.priceMax)); setErrors("room", undefined); }} />
-              <p class="booking__range mtrl-body-medium">{rangeText({ ...s })}</p>
-              <Show when={errors.room}><p class="booking__field-error mtrl-body-small">{errors.room}</p></Show>
-            </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -146,7 +185,7 @@ export default function Booking() {
                 )}
               </For>
             </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
           </div>
         </Step>
@@ -174,11 +213,13 @@ export default function Booking() {
                 )}
               </For>
             </div>
-                  <output class="booking__total mtrl-body-medium" role="status">{totalText({ ...s })}</output>
+            {summaryCard("booking__summary-compact")}
             <footer class="booking__actions">{action("prev", "Back")}<div><Button onClick={book}>Book</Button></div></footer>
           </div>
         </Step>
       </Stepper>
+      {summaryPanel}
+      </div>
       <Timepicker label="Arrival time" format="24h" value={normalizeTime(s.arrivalTime) ?? "15:00"} open={timeOpen()}
         onChange={(e) => { setS("arrivalTime", e.detail.value); setErrors("arrivalTime", undefined); }} onClose={() => setTimeOpen(false)} />
       <Snackbar message="Booking confirmed" open={confirmed()} onClose={() => setConfirmed(false)} />
