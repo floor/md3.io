@@ -6,11 +6,12 @@ type DemoStepper = { setError(value: string, error: boolean, message?: string): 
 export function wireStepperDemo(root: HTMLElement, stepper: DemoStepper) {
   const controller = new AbortController();
   const panels = [...root.querySelectorAll<HTMLElement>('[data-demo-step]')];
+  const account = panels[0]?.dataset.demoStep === 'details';
   const value = (name: string) => root.querySelector<HTMLInputElement>(`[name="${name}"]:checked`)?.value
     ?? root.querySelector<HTMLInputElement>(`[name="${name}"]`)?.value ?? '';
   const summary = () => {
     const shop = root.querySelector<HTMLInputElement>('[name="shop"]:checked')?.closest('label')?.innerText.trim() ?? '';
-    const text = root.dataset.workflow === 'account'
+    const text = account
       ? `${value('name')} · ${value('email')} · ${value('workspace')}`
       : `${shop} · ${value('date')} at ${value('time')}`;
     root.querySelectorAll('[data-demo-summary]').forEach(node => { node.textContent = text; });
@@ -32,7 +33,7 @@ export function wireStepperDemo(root: HTMLElement, stepper: DemoStepper) {
     const status = root.querySelector<HTMLElement>('[data-demo-confirmation]');
     if (!status) return;
     status.hidden = false;
-    status.textContent = root.dataset.workflow === 'account' ? 'Account setup complete.' : 'Pickup confirmed.';
+    status.textContent = account ? 'Account setup complete.' : 'Pickup confirmed.';
   };
   root.addEventListener('input', summary, { signal: controller.signal });
   root.addEventListener('change', summary, { signal: controller.signal });

@@ -58,7 +58,6 @@ document.documentElement.dataset.themeMode = ${JSON.stringify(context.mode ?? 'l
 export function stepperDemoCode(framework: Framework, config: StepperConfig, context: CodeContext): string {
   const behavior = (framework === 'vanilla' || framework === 'html' ? behaviorSources.javascript : behaviorSources.typescript).replace(/^export /gm, '');
   const steps = config.steps ?? [];
-  const account = steps[0]?.value === 'details';
   const orientation = JSON.stringify(config.orientation ?? 'auto');
   const ariaLabel = JSON.stringify(config.ariaLabel);
   const first = JSON.stringify(steps[0]?.value);
@@ -70,12 +69,11 @@ const stepper = createStepper({
   orientation: ${orientation}, autoBreakpoint: 480, linear: true, ariaLabel: ${ariaLabel},
   steps: panels.map(panel => ({ value: panel.value, label: panel.label, content: panel.html })),
 });
-stepper.element.dataset.workflow = '${account ? 'account' : 'pickup'}';
 stepper.element.style.cssText = 'width:100%;max-width:880px';
 document.body.append(stepper.element);
 const dispose = wireStepperDemo(stepper.element, stepper);
 // When the view leaves: dispose(); stepper.destroy();\n`;
-  if (framework === 'html') return `<m-stepper id="stepper" orientation=${orientation} auto-breakpoint="480" linear aria-label=${ariaLabel} value=${first} data-workflow="${account ? 'account' : 'pickup'}" style="width:100%;max-width:880px">
+  if (framework === 'html') return `<m-stepper id="stepper" orientation=${orientation} auto-breakpoint="480" linear aria-label=${ariaLabel} value=${first} style="width:100%;max-width:880px">
 ${steps.map(step => `  <m-step value="${step.value}" label="${step.label}">${step.content}</m-step>`).join('\n')}
 </m-step>
 <script type="module">
@@ -95,7 +93,7 @@ ${shared}
 export function Example() {
   const ref = useRef<StepperElement | null>(null);
   useEffect(() => ref.current ? wireStepperDemo(ref.current, ref.current) : undefined, []);
-  return <Stepper ref={ref} ${props} data-workflow="${account ? 'account' : 'pickup'}" style={{ width: '100%', maxWidth: '880px' }}>
+  return <Stepper ref={ref} ${props} style={{ width: '100%', maxWidth: '880px' }}>
     {panels.map(panel => <Step key={panel.value} value={panel.value} label={panel.label}><div dangerouslySetInnerHTML={{ __html: panel.html }} /></Step>)}
   </Stepper>;
 }\n`;
@@ -106,7 +104,7 @@ ${shared}
 export function Example() {
   let ref: StepperElement | undefined;
   onMount(() => { if (ref) onCleanup(wireStepperDemo(ref, ref)); });
-  return <Stepper ref={ref} ${props} data-workflow="${account ? 'account' : 'pickup'}" style={{ width: '100%', 'max-width': '880px' }}>
+  return <Stepper ref={ref} ${props} style={{ width: '100%', 'max-width': '880px' }}>
     {panels.map(panel => <Step value={panel.value} label={panel.label}><div innerHTML={panel.html} /></Step>)}
   </Stepper>;
 }\n`;
@@ -120,7 +118,7 @@ onMounted(() => { const stepper = refStepper.value.element; dispose = wireSteppe
 onUnmounted(() => dispose?.());
 </script>
 <template>
-  <MStepper ref="refStepper" linear orientation=${orientation} :auto-breakpoint="480" aria-label=${ariaLabel} default-value=${first} data-workflow="${account ? 'account' : 'pickup'}" style="width:100%;max-width:880px">
+  <MStepper ref="refStepper" linear orientation=${orientation} :auto-breakpoint="480" aria-label=${ariaLabel} default-value=${first} style="width:100%;max-width:880px">
     <MStep v-for="panel in panels" :key="panel.value" :value="panel.value" :label="panel.label"><div v-html="panel.html" /></MStep>
   </MStepper>
 </template>\n`;
@@ -131,7 +129,7 @@ ${shared}
 let refStepper;
 onMount(() => { const stepper = refStepper.element; return wireStepperDemo(stepper, stepper); });
 </script>
-<Stepper bind:this={refStepper} linear orientation=${orientation} autoBreakpoint={480} ariaLabel=${ariaLabel} defaultValue=${first} data-workflow="${account ? 'account' : 'pickup'}" style="width:100%;max-width:880px">
+<Stepper bind:this={refStepper} linear orientation=${orientation} autoBreakpoint={480} ariaLabel=${ariaLabel} defaultValue=${first} style="width:100%;max-width:880px">
   {#each panels as panel (panel.value)}<Step value={panel.value} label={panel.label}><div>{@html panel.html}</div></Step>{/each}
 </Stepper>\n`;
 }

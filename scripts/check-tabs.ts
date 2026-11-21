@@ -859,7 +859,11 @@ try {
         if (missingText.length > 0 || extraText.length > 0) {
           differences.push(`${slug} ${scenarioId} ${tab}: text preview-only ${JSON.stringify(missingText)}, tab-only ${JSON.stringify(extraText)}`);
         }
-        if (slug === 'stepper') await checkStepperWorkflow(page, (scenario?.options.workflow ?? initialComponentState(slug).workflow) === 'account');
+        if (slug === 'stepper') {
+          try { await checkStepperWorkflow(page, (scenario?.options.workflow ?? initialComponentState(slug).workflow) === 'account'); }
+          catch (error) { throw new Error(`stepper/${scenarioId}/${tab}: workflow failed`, { cause: error }); }
+          console.log(`workflow: stepper/${scenarioId}/${tab} passed`);
+        }
       }
     }
     // Closing the context releases that renderer's documents. The next component

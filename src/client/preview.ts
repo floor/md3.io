@@ -103,7 +103,6 @@ function create(state: ComponentState) {
     case 'skeleton': return createSkeleton(components.skeleton.config(state));
     case 'stepper': {
       const control = createStepper({ ...components.stepper.config(state), onChange: ({ value }) => message(`Step: ${value}`) });
-      control.element.dataset.workflow = state.workflow === 'account' ? 'account' : 'pickup';
       const dispose = wireStepperDemo(control.element, control);
       return { element: control.element, destroy: () => { dispose(); control.destroy(); } };
     }
