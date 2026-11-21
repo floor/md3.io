@@ -61,8 +61,9 @@
 }
 
 /* The measure is for prose, not the column: paragraphs, list items and
-   blockquotes keep 40–60 characters a line, while headings, code blocks and
-   tables keep the column's width and scroll inside themselves. */
+   blockquotes stop at a comfortable reading width, while headings, code blocks
+   and tables keep the column's width. Widened from 42ch at the owner's request
+   (2026-11-21): 68ch is about 85 characters of DIN Alternate a line. */
 .md :is(p, li, blockquote) {
     max-width: var(--measure);
 }

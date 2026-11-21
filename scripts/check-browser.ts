@@ -410,7 +410,8 @@ try {
   await page.setViewportSize({ width: 600, height: 844 });
   fits(600, await breadcrumb());
 
-  // Layout step 6, the reading measure: Material keeps body text between 40 and 60
+  // Layout step 6, the reading measure: prose is as wide as the column up to the
+  // measure (68ch, widened from 42ch at the owner's request, 2026-11-21), about 75–85
   // characters a line. Full lines only — a paragraph's last line is short by nature.
   // Measured with the documentation's own font once fonts are ready.
   const measureProse = () => page.evaluate(() => {
@@ -436,7 +437,8 @@ try {
       }
       return [...lines.values()].filter(line => line.width > paragraph.clientWidth * 0.95).map(line => line.chars);
     };
-    const prose = [...md.querySelectorAll<HTMLElement>('p')].filter(p => p.textContent!.trim().length > 120 && !p.closest('pre, table, .doc-example'));
+    // Visible prose only: other frameworks' variants are hidden (0px wide).
+    const prose = [...md.querySelectorAll<HTMLElement>('p')].filter(p => p.textContent!.trim().length > 120 && !p.closest('pre, table, .doc-example') && p.getClientRects().length > 0);
     const lines = prose.slice(0, 12).flatMap(fullLines).sort((a, b) => a - b);
     // Long inline code and URLs wrap inside the paragraph instead of the page.
     const overflowing = prose.filter(p => p.scrollWidth > p.clientWidth + 1).length;
@@ -447,7 +449,12 @@ try {
       return box.width > 0 && (box.left < mdBox.left - 0.5 || box.right > mdBox.right + 0.5);
     }).map(block => `${block.tagName}.${String(block.className).slice(0, 40)}${block.textContent.trim().slice(0, 30)}`);
     const codeWidth = Math.max(0, ...[...md.querySelectorAll('pre')].map(block => block.getBoundingClientRect().width));
+    const mdStyle = getComputedStyle(md);
+    const column = md.clientWidth - parseFloat(mdStyle.paddingLeft) - parseFloat(mdStyle.paddingRight);
+    // Each paragraph is as wide as the column, up to the measure.
+    const narrow = prose.filter(p => p.getBoundingClientRect().width < Math.min(column, parseFloat(getComputedStyle(p).maxWidth) || column) - 1).length;
     return {
+      narrow,
       count: lines.length,
       median: lines[Math.floor(lines.length / 2)] ?? 0,
       longest: lines[lines.length - 1] ?? 0,
@@ -464,8 +471,8 @@ try {
     await page.locator('.md h1').waitFor();
     await page.evaluate(() => document.fonts.ready);
     const reading = await measureProse();
-    assert(reading.count >= 2 && reading.median >= 40 && reading.median <= 60 && reading.longest <= 66,
-      `${route} at ${width}: measure is ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want 40–60)`);
+    assert(reading.count >= 2 && reading.narrow === 0 && reading.longest <= 85,
+      `${route} at ${width}: ${reading.narrow} paragraphs narrower than the column; lines ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want the column up to the measure, at most 85)`);
     assert(reading.overflowing === 0, `${route} at ${width}: ${reading.overflowing} paragraphs overflow their line box`);
     assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the column (${reading.escapees.join('; ')})`);
     // The measure caps the prose, never the column: at desktop widths a code block
@@ -519,8 +526,7 @@ try {
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
   const enlarged = await measureProse();
-  assert(enlarged.fits && enlarged.median <= 60, `Enlarged text overflows or loses the measure (${enlarged.median} characters)`);
-  assert(enlarged.median < 52, 'Enlarged text did not narrow the measure');
+  assert(enlarged.fits && enlarged.longest <= 85, `Enlarged text overflows or its lines run long (${enlarged.longest} characters)`);
   await page.locator('.doc-toc a').first().focus();
   const focused = await page.evaluate(() => document.activeElement === document.querySelector('.doc-toc a'));
   assert(focused && enlarged.fits, 'Focus is lost or the page overflows with enlarged text');
