@@ -16,19 +16,15 @@ export default defineComponent({
     const compact = ref(false);
     const drawerOpen = ref(false);
     const searchOpen = ref(false);
-    let resizing = false;
     let stopObserving: (() => void) | undefined;
     onMounted(() => {
       stopObserving = observeCompact(shell.value!, narrow => {
-        resizing = true;
         compact.value = narrow;
         drawerOpen.value = false;
         searchOpen.value = false;
-        requestAnimationFrame(() => requestAnimationFrame(() => { resizing = false; }));
       });
     });
     onUnmounted(() => stopObserving?.());
-    const dismissEditor = () => { if (!resizing) draft.value = null; };
     const closeDrawer = () => {
       if (!compact.value) return;
       drawerOpen.value = false;
@@ -82,7 +78,7 @@ export default defineComponent({
     };
     const groups = () => noteGroups(visible(s.value));
     const items = () => categoryItems(s.value);
-    return { s, draft, snackbar, shell, compact, drawerOpen, searchOpen, dismissEditor, LABELS, ADD_ICON, CLOSE_ICON,
+    return { s, draft, snackbar, shell, compact, drawerOpen, searchOpen, LABELS, ADD_ICON, CLOSE_ICON,
       GRID_ICON, LIST_ICON, MENU_ICON, MORE_ICON, SEARCH_ICON, labelOf, editedLabel, emptyLabel, status,
       groups, items, open, save, remove, undo, cardAction, chooseCategory, closeDrawer, toggleSearch };
   },
@@ -145,7 +141,7 @@ export default defineComponent({
         </div>
       </div>
       <MExtendedFab :icon="ADD_ICON" ariaLabel="New note" @click="open(null)">New note</MExtendedFab>
-      <MDialog v-if="!compact" :open="draft !== null" :headline="draft && draft.note ? 'Edit note' : 'New note'" @close="dismissEditor">
+      <MDialog v-if="!compact" :open="draft !== null" :headline="draft && draft.note ? 'Edit note' : 'New note'" @close="draft = null">
         <div class="notes__fields">
           <MTextField label="Title" :value="draft ? draft.title : ''" @input="draft && (draft = { ...draft, title: $event.detail.value })" />
           <MTextField label="Note" type="multiline" :value="draft ? draft.text : ''" @input="draft && (draft = { ...draft, text: $event.detail.value })" />
@@ -159,7 +155,7 @@ export default defineComponent({
           <MButton @click="save()">Save</MButton>
         </div>
       </MDialog>
-      <MBottomSheet v-else modal :open="draft !== null" :title="draft && draft.note ? 'Edit note' : 'New note'" @close="dismissEditor">
+      <MBottomSheet v-else modal :open="draft !== null" :title="draft && draft.note ? 'Edit note' : 'New note'" @close="draft = null">
         <div class="notes__fields">
           <MTextField label="Title" :value="draft ? draft.title : ''" @input="draft && (draft = { ...draft, title: $event.detail.value })" />
           <MTextField label="Note" type="multiline" :value="draft ? draft.text : ''" @input="draft && (draft = { ...draft, text: $event.detail.value })" />

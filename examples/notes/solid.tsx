@@ -20,14 +20,10 @@ export default function Notes() {
   const [drawerOpen, setDrawerOpen] = createSignal(false);
   const [searchOpen, setSearchOpen] = createSignal(false);
   let shell!: HTMLElement;
-  let resizing = false;
-  const dismissEditor = () => { if (!resizing) setDraft(null); };
   onMount(() => onCleanup(observeCompact(shell, (narrow) => {
-    resizing = true;
     setCompact(narrow);
     setDrawerOpen(false);
     setSearchOpen(false);
-    requestAnimationFrame(() => requestAnimationFrame(() => { resizing = false; }));
   })));
   const closeDrawer = () => {
     if (!compact()) return;
@@ -170,7 +166,7 @@ export default function Notes() {
       <Show
         when={compact()}
         fallback={
-          <Dialog open={draft() !== null} headline={draft()?.note ? "Edit note" : "New note"} onClose={dismissEditor}>
+          <Dialog open={draft() !== null} headline={draft()?.note ? "Edit note" : "New note"} onClose={() => setDraft(null)}>
             {editorFields}
             <div slot="actions" class="notes__editor-actions">
               {editorButtons}
@@ -178,7 +174,7 @@ export default function Notes() {
           </Dialog>
         }
       >
-        <BottomSheet open={draft() !== null} title={draft()?.note ? "Edit note" : "New note"} modal onClose={dismissEditor}>
+        <BottomSheet open={draft() !== null} title={draft()?.note ? "Edit note" : "New note"} modal onClose={() => setDraft(null)}>
           {editorFields}
           <div class="notes__editor-actions">{editorButtons}</div>
         </BottomSheet>

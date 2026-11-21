@@ -14,13 +14,10 @@ export default function Notes() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const shell = useRef<HTMLElement | null>(null);
-  const resizing = useRef(false);
   useLayoutEffect(() => observeCompact(shell.current!, (narrow) => {
-    resizing.current = true;
     setCompact(narrow);
     setDrawerOpen(false);
     setSearchOpen(false);
-    requestAnimationFrame(() => requestAnimationFrame(() => { resizing.current = false; }));
   }), []);
 
   const closeDrawer = () => {
@@ -34,7 +31,6 @@ export default function Notes() {
     else requestAnimationFrame(() => shell.current?.querySelector<HTMLElement>(".notes__search")?.focus());
   };
   const [draft, setDraft] = useState<Draft | null>(null);
-  const dismissEditor = () => { if (!resizing.current) setDraft(null); };
   const snackbar = useRef<SnackbarElement | null>(null);
   const deleted = useRef<{ note: Note; at: number } | null>(null);
 
@@ -163,12 +159,12 @@ export default function Notes() {
       </div>
       <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onClick={() => open(null)}>New note</ExtendedFab>
       {compact ? (
-        <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onClose={dismissEditor}>
+        <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onClose={() => setDraft(null)}>
           {editorBody}
           {sheetActions}
         </BottomSheet>
       ) : (
-        <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onClose={dismissEditor}>
+        <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onClose={() => setDraft(null)}>
           {editorBody}
           {editorActions}
         </Dialog>

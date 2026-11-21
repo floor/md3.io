@@ -22,19 +22,15 @@
   let compact = $state(false);
   let drawerOpen = $state(false);
   let searchOpen = $state(false);
-  let resizing = false;
   $effect(() => {
     if (shell) return observeCompact(shell, narrow => {
-      resizing = true;
       compact = narrow;
       drawerOpen = false;
       searchOpen = false;
-      requestAnimationFrame(() => requestAnimationFrame(() => { resizing = false; }));
     });
   });
   let s = $state<State>({ ...DEFAULTS, notes: DEFAULTS.notes.map((n) => ({ ...n, labels: [...n.labels] })) });
   let draft = $state<{ note: Note | null; title: string; text: string; labels: LabelId[] } | null>(null);
-  const dismissEditor = () => { if (!resizing) draft = null; };
   let snackbar = $state<{ element?: { show: () => void } } | null>(null);
   let deleted: { note: Note; at: number } | null = null;
 
@@ -173,7 +169,7 @@
   </div>
   <ExtendedFab icon={ADD_ICON} ariaLabel="New note" onclick={() => open(null)}>New note</ExtendedFab>
   {#if compact}
-    <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onclose={dismissEditor}>
+    <BottomSheet open={draft !== null} title={draft?.note ? "Edit note" : "New note"} modal onclose={() => (draft = null)}>
       <div class="notes__fields">
         <TextField label="Title" value={draft?.title ?? ""} oninput={(e) => draft && (draft = { ...draft, title: e.detail.value })} />
         <TextField label="Note" type="multiline" value={draft?.text ?? ""} oninput={(e) => draft && (draft = { ...draft, text: e.detail.value })} />
@@ -190,7 +186,7 @@
       </div>
     </BottomSheet>
   {:else}
-    <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onclose={dismissEditor}>
+    <Dialog open={draft !== null} headline={draft?.note ? "Edit note" : "New note"} onclose={() => (draft = null)}>
       <div class="notes__fields">
         <TextField label="Title" value={draft?.title ?? ""} oninput={(e) => draft && (draft = { ...draft, title: e.detail.value })} />
         <TextField label="Note" type="multiline" value={draft?.text ?? ""} oninput={(e) => draft && (draft = { ...draft, text: e.detail.value })} />

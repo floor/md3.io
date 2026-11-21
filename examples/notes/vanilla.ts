@@ -238,14 +238,14 @@ const render = (): void => {
 shell.append(bar.element, mobileSearch, workspace, fab.element, dialog.element, sheet.element, snackbar.element);
 app.append(shell);
 observeCompact(shell, narrow => {
+  // The typed fields are a draft until Save. A saved note is not rewritten by the switch.
   const open = dialog.isOpen() || sheet.isOpen();
-  if (open && editing) {
-    editing.title = titleField.getValue();
-    editing.text = textField.getValue();
-    editing.labels = [...editorLabels];
-  }
-  const wasNew = Boolean(editing && !s.notes.includes(editing));
-  const carried = open ? editing : null;
+  const carried = open && editing ? {
+    note: s.notes.includes(editing) ? editing : null,
+    title: titleField.getValue(),
+    text: textField.getValue(),
+    labels: [...editorLabels],
+  } : null;
   compact = narrow;
   shell.dataset.compact = String(narrow);
   if (modalDrawer.isOpen()) modalDrawer.close();
@@ -261,5 +261,10 @@ observeCompact(shell, narrow => {
   menuButton.element.hidden = !narrow;
   drawerSlot.replaceChildren((narrow ? modalDrawer : inlineDrawer).element);
   render();
-  if (carried) editorOpen(carried, wasNew ? "New note" : "Edit note");
+  if (carried) {
+    editorOpen(carried.note);
+    titleField.setValue(carried.title);
+    textField.setValue(carried.text);
+    setEditorChips(carried.labels);
+  }
 });
