@@ -4,7 +4,7 @@ import { Marked, type Tokens } from 'marked';
 import hljs from 'highlight.js';
 import { renderExample } from './example-block';
 import { FRAMEWORKS } from '../shared/frameworks';
-import { addons, isAddon } from '../shared/addons';
+import { addons, addonsPublic, isAddon } from '../shared/addons';
 
 export const root = resolve(import.meta.dir, '../..');
 export const docsDir = resolve(root, 'docs/components');
@@ -107,7 +107,7 @@ const entry = (slug: string) => ({ slug, name: componentName(slug), href: docHre
 /** The guides that exist yet, in their order. */
 export const guideGroup = { label: 'Guides', items: GUIDES.filter(slug => slugs.has(slug)).map(entry) };
 export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry).sort((a, b) => a.name.localeCompare(b.name, 'en')) };
-export const docGroups = [...Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) })), addonDocGroup];
+export const docGroups = [...Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) })), ...(addonsPublic ? [addonDocGroup] : [])];
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }

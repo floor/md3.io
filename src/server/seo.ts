@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { root, docSlugs, docHref, documentFile, isGuide } from './content';
 import { componentSlugs } from '../shared/components';
-import { addonSlugs, playgroundHref } from '../shared/addons';
+import { addonSlugs, addonsPublic, isAddonPath, playgroundHref } from '../shared/addons';
 import { examples } from './examples';
 import { stylePages } from './styles';
 import { mtrlVersion } from './tokens';
@@ -52,11 +52,13 @@ export function sitemapPages(): SitemapPage[] {
   add('/', '1.0', shell('homepage'));
   add('/components/', '0.9', shell('catalog'), 'src/server/catalog.ts');
   for (const slug of componentSlugs) add(`/components/${slug}/`, '0.8', ...componentFiles(slug), shell('component'));
-  add('/addons/', '0.9', shell('catalog'), 'src/shared/addons.ts', 'src/server/catalog.ts');
-  for (const slug of addonSlugs) add(playgroundHref(slug), '0.8', `src/shared/content/${slug}.ts`, shell('component'));
+  if (addonsPublic) {
+    add('/addons/', '0.9', shell('catalog'), 'src/shared/addons.ts', 'src/server/catalog.ts');
+    for (const slug of addonSlugs) add(playgroundHref(slug), '0.8', `src/shared/content/${slug}.ts`, shell('component'));
+  }
   add('/docs/', '0.9', shell('docs'));
   // Guides first, then the component references; docHref gives each its one URL.
-  for (const slug of [...docSlugs].sort((a, b) => Number(isGuide(b)) - Number(isGuide(a)))) add(docHref(slug), isGuide(slug) ? '0.8' : '0.7', documentFile(slug));
+  for (const slug of [...docSlugs].filter(slug => addonsPublic || !isAddonPath(docHref(slug))).sort((a, b) => Number(isGuide(b)) - Number(isGuide(a)))) add(docHref(slug), isGuide(slug) ? '0.8' : '0.7', documentFile(slug));
   for (const { href } of stylePages) add(href, href === '/styles/' ? '0.8' : '0.7', shell(STYLE_SHELLS[href] ?? 'styles-overview'), 'src/server/tokens.ts');
   add('/showcase/', '0.8', shell('examples'), 'examples/index.ts');
   for (const { slug } of examples) add(`/showcase/${slug}/`, '0.6', `examples/${slug}/`);
