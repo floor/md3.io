@@ -112,6 +112,20 @@ try {
   assert(/· \d+%$/.test(scaled ?? ''), `Mobile on a phone is scaled, and says so: ${scaled}`);
   const overflow = await small.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   assert(overflow <= 0, `No horizontal scroll at 390 px, got ${overflow}px`);
+  // A dialog opened in a partly visible preview must clear the site's fixed bars,
+  // including the bottom navigation on a short phone. No test-side scrolling.
+  await small.setViewportSize({ width: 360, height: 640 });
+  await small.goto(`${base}/showcase/settings/?framework=html`);
+  const preview = small.frameLocator('#example-frame');
+  await preview.getByRole('button', { name: 'Device information', exact: true }).click();
+  await small.waitForFunction(() => {
+    const frame = document.querySelector('#example-frame')!.getBoundingClientRect();
+    const header = document.querySelector('.header')!.getBoundingClientRect();
+    const bar = document.querySelector('#site-primary-bar')!.getBoundingClientRect();
+    return frame.top >= header.bottom + 11 && frame.bottom <= bar.top - 11;
+  });
+  await preview.getByRole('button', { name: 'Done', exact: true }).click();
+  await preview.getByRole('alertdialog').waitFor({ state: 'hidden' });
   await phone.close();
   console.log(`Device chooser: Mobile 390, rotated 844, Tablet 820, Desktop fills, remembered; on a phone ${scaled}`);
 } finally {
