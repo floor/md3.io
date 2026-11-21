@@ -165,7 +165,7 @@ async function checkOverlays(page: Page, captures: string, width: number) {
     await open.press('Enter');
     const rail = page.getByRole('dialog', { name: 'Navigation', exact: true });
     await rail.waitFor();
-    assert.match(await rail.ariaSnapshot(), /button "Close navigation"[\s\S]*navigation "Primary navigation"[\s\S]*link "Documentation"/);
+    assert.match(await rail.ariaSnapshot(), /button "Close navigation"[\s\S]*navigation "Primary navigation"[\s\S]*link "Docs"/);
     await checkTargets(page, `${width}px rail open`);
     await capture('open-rail');
     await page.keyboard.press('Escape');
