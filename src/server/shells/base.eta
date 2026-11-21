@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-navigation-shell="site-v1">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -31,7 +31,7 @@
   <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
-  <% if (it.isCatalog) { %><style><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
+  <% if (it.isCatalog) { %><style data-page-head><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
   <% if (it.isExamples) { %><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>

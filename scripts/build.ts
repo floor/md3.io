@@ -7,14 +7,17 @@ import { bundleCss, stylesheetBundles } from '../src/server/css';
 const root = resolve(import.meta.dir, '..');
 const outdir = resolve(root, 'dist');
 await mkdir(outdir, { recursive: true });
-const options = { outdir, target: 'browser', splitting: true, minify: true, sourcemap: 'external' } as const;
-// The components overview is built on its own: each card's module is a chunk, and the
-// chunks the cards share are split by which cards use them, not also by which of the
-// other pages do. The Button pilot's glue builds alone for the same reason: joining
-// the shared group would move every page's site.js chunk hash, and the pages that
-// are not part of the pilot must stay byte for byte what they were.
-for (const names of [['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab'], ['playground-material'], ['catalog']]) {
-  const result = await Bun.build({ ...options, entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)) });
+const options = { outdir, naming: { entry: '[name].[ext]', chunk: 'chunk-[hash].[ext]' }, target: 'browser', splitting: true, minify: true, sourcemap: 'external' } as const;
+// A single lifecycle registry is shared even by independently bundled page entries.
+// Keeping the catalog and material-panel groups separate avoids pulling their full
+// component tables into other pages' initial chunks.
+for (const names of [['page-lifecycle'], ['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab'], ['playground-material'], ['catalog']]) {
+  const result = await Bun.build({ ...options,
+    entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)),
+    plugins: [{ name: 'page-lifecycle', setup(build) {
+      build.onResolve({ filter: /(?:^|\/)page-lifecycle$/ }, () => ({ path: '/dist/page-lifecycle.js', external: true }));
+    } }],
+  });
   if (!result.success) {
     for (const log of result.logs) console.error(log);
     process.exit(1);

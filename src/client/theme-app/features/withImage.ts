@@ -143,6 +143,7 @@ export const withImage = () => (app: App) => {
     };
   };
   let request = 0;
+  app.teardown.add(() => { ++request; });
   /** Shows the theme of a seed, with "From image" in the select, unless a newer image came first.
    *  `ticket` belongs to a load already counted; a call without one takes the next. */
   const show = async (seed: string, ticket?: number) => {

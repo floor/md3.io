@@ -24,6 +24,10 @@ The browser check uses Playwright Chromium and writes screenshots to `analysis/b
 
 `bun run docs:check` (part of `test:browser`) checks the code in `docs/components/*.md` against material, and against material-addons (a devDependency) for form and colorpicker: every JavaScript and TypeScript block type-checks and runs in Chromium, each documented event handler receives the fields it reads, and every `.mtrl-…` class a block names exists. `scripts/check-docs.ts` explains the fence annotations, and `scripts/check-docs/prelude.ts` declares what the examples take from the app. `CHECK_DOCS_PAGES` is how many Chromium pages that behaviour check opens at once: a whole number from 1 to 6, otherwise 2.
 
+Client-side navigation progressively enhances the complete server pages. `src/client/client-navigation.ts` uses the Navigation API or click/popstate fallback to fetch HTML, wait for stylesheets, update page metadata, and swap content while preserving the header, primary navigation and section drawer. Reloads, direct links and JavaScript-off visits use the same server HTML. Links with `data-full-load`, external destinations, downloads and different layout shells use browser navigation.
+
+Page entries register an initializer with `page-lifecycle.ts`. Each visit gets its content root and a lifecycle that owns event listeners, observers, subscriptions, timers and app teardown; persistent appearance and theme state stay outside that visit. Add a new page entry to `pageScripts` in the router when needed. `scripts/check-navigation.ts` exercises both routing paths and writes a 1440px drawer-navigation video and captures; `check-navigation-components.ts` retains the component-specific navigation playground checks.
+
 ## Structure
 
 - `server.ts`: routes and restricted static asset serving.

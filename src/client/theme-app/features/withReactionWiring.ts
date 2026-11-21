@@ -1,3 +1,4 @@
+import { replacePageURL } from '../../page-lifecycle';
 // State → UI and effects, one direction only. A theme, variant or contrast works out
 // the scheme (withVariant), then repaints the card, the palettes, the app's colours,
 // the controls and the address; the site's mode repaints the card and the app.
@@ -28,7 +29,7 @@ export const withReactionWiring = () => (app: App) => {
     controls();
     const url = new URL(location.href);
     url.search = variant.params().toString();
-    if (url.href !== location.href) history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+    if (url.href !== location.href) replacePageURL(url.pathname + url.search + url.hash);
   }, () => copy.tell('Could not apply this scheme'));
   state.on('theme', render);
   state.on('variant', render);

@@ -1,7 +1,11 @@
-// A page-specific entry; image quantization stays in a lazy chunk until requested.
+// A page-specific entry; image quantization stays lazy until requested.
 import { createColourLab } from './colour-lab/app';
-const root = document.querySelector<HTMLElement>('#colour-lab');
-if (root) {
-  const app = createColourLab(root);
-  window.addEventListener('pagehide', event => { if (!event.persisted) app.destroy(); });
-}
+import { registerPage } from './page-lifecycle';
+registerPage('colour-lab', (content, life) => {
+  const root = content.querySelector<HTMLElement>('#colour-lab');
+  if (root) {
+    const app = createColourLab(root);
+    life.add(() => app.destroy());
+    life.events(window).addEventListener('pagehide', event => { if (!event.persisted) app.destroy(); });
+  }
+});

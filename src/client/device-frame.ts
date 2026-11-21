@@ -161,6 +161,7 @@ export function mountDeviceFrame(frame: HTMLIFrameElement, options: DeviceFrameO
     hold,
     destroy() {
       observer.disconnect();
+      group.destroy();
       removeEventListener('resize', layout);
       bar.remove();
       root.replaceWith(frame);
