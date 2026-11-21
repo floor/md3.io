@@ -1,221 +1,123 @@
-// React: material/react wraps the same elements, and material-addons/react the
-// stepper whose headers replace the hand-built step header and whose data-stepper-*
-// actions replace the wiring between Back, Next and the panels.
-import { useRef, useState } from "react";
-import { Button, Card, Checkbox, Datepicker, Dialog, Select, SelectOption, Snackbar, TextField, Timepicker } from "material/react";
-import { Stepper, Step } from "material-addons/react";
-import type { StepperElement } from "material-addons/elements";
-import type { StepperBeforeChangeEvent } from "material-addons/components/stepper";
-import type { TextFieldElement } from "material/elements";
-import { ADULT_OPTIONS, CHILD_OPTIONS, CLOCK_ICON, DEFAULTS, EXTRAS, HERO_IMAGE, PROPERTY, ROOMS, TODAY, normalizeTime, priceLines, rangeParts, reviewLines, roomAfter, roomOf, stayText, stepHeading, stepNumberOf, stepValue, summary, totalText, validateStep, withRange, type Booking, type BookingErrors } from "./shared";
+// React renders the same hotel reservation rules through Material's adapters.
+import { useEffect, useRef, useState } from 'react';
+import { Button, Card, Checkbox, Datepicker, Radio, Radios, Select, SelectOption, Snackbar, TextField } from 'material/react';
+import { Step, Stepper } from 'material-addons/react';
+import type { StepperElement } from 'material-addons/elements';
+import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
+import { focusControl, invalidateSteps, watchHotel, DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
 
 export default function Booking() {
-  const [s, setS] = useState<Booking>(DEFAULTS);
-  const [errors, setErrors] = useState<BookingErrors>({});
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const [timeOpen, setTimeOpen] = useState(false);
-  const update = (patch: Partial<Booking>) => setS((prev) => ({ ...prev, ...patch }));
-  const stepperRef = useRef<StepperElement | null>(null);
-  const arrivalRef = useRef<TextFieldElement | null>(null);
-  const roomsRef = useRef<HTMLDivElement | null>(null);
-  const stayRef = useRef<HTMLElement | null>(null);
-  const nameRef = useRef<TextFieldElement | null>(null);
-  const emailRef = useRef<TextFieldElement | null>(null);
-
-  // An adapter exposes no validator functions, so a forward move is checked in the
-  // stepper's cancellable beforechange: an invalid step vetoes the move and the
-  // stepper's own error state is set to mirror what the factory's pipeline would do.
-  // The message shows at the field, with focus on the first one that needs fixing.
-  const veto = (event: CustomEvent<StepperBeforeChangeEvent>): void => {
-    if (event.detail.direction !== "forward" || event.detail.previousValue === null) return;
-    const { previousValue } = event.detail;
-    const stepErrors = validateStep(s, stepNumberOf(previousValue));
-    if (stepErrors.dates || stepErrors.arrivalTime) {
-      // The payload's own preventDefault is what the stepper checks.
-      event.detail.preventDefault();
-      stepperRef.current?.setError(previousValue, true);
-    } else stepperRef.current?.setError(previousValue, false);
-    setErrors((prev) => ({ ...prev, arrivalTime: stepErrors.arrivalTime, dates: stepErrors.dates }));
-    if (stepErrors.dates) (stayRef.current as unknown as HTMLElement)?.focus();
-    else if (stepErrors.arrivalTime) arrivalRef.current?.focus();
+  const [s,setS]=useState<Booking>({...DEFAULTS});
+  const [errors,setErrors]=useState<BookingErrors>({});
+  const [expanded,setExpanded]=useState(false);
+  const refs={root:useRef<HTMLElement|null>(null),stepper:useRef<StepperElement|null>(null)};
+  const update=(patch:Partial<Booking>)=>{setS(previous=>amend(previous,patch));invalidateSteps(refs.stepper.current,patch);};
+  useEffect(()=>refs.root.current&&refs.stepper.current?watchHotel(refs.root.current,refs.stepper.current):undefined,[]);
+  const announce=(message:string)=>{
+    const host=refs.root.current?.querySelector('m-snackbar') as HTMLElement & {show():void;component?:{setDuration(value:string):void}};
+    host.setAttribute('message',message);host.component?.setDuration('short');host.show();
   };
-  // Book validates the details itself: it is not a move, so the stepper has no say in it.
-  const book = () => {
-    const stepErrors = validateStep(s, 4);
-    setErrors(stepErrors);
-    if (!stepErrors.name && !stepErrors.email && roomOf(s)) setDialogOpen(true);
-    else if (stepErrors.name) nameRef.current?.focus();
-    else if (stepErrors.email) emailRef.current?.focus();
+  const focusError=(messages:BookingErrors)=>{
+    const key=Object.keys(messages)[0];if(!key)return;
+    focusControl(refs.root.current?.querySelector<HTMLElement>(key==='dates'?'#stay':key==='room'?'[data-choice][tabindex="0"]':`#${key}`));
   };
-  const commitTime = (value: string) => {
-    const time = normalizeTime(value);
-    if (time) { update({ arrivalTime: time }); setErrors((prev) => ({ ...prev, arrivalTime: undefined })); }
-    else setErrors((prev) => ({ ...prev, arrivalTime: "Enter a valid time" }));
+  const veto=(event:CustomEvent<StepperBeforeChangeEvent>)=>{
+    if(event.detail.direction!=='forward')return;
+    const step=stepNumberOf(event.detail.previousValue??'dates');const nextErrors=validateStep(s,step);setErrors(nextErrors);
+    if(Object.keys(nextErrors).length){event.detail.preventDefault();refs.stepper.current?.setError(event.detail.previousValue!,true);focusError(nextErrors);}
+    else {refs.stepper.current?.setError(event.detail.previousValue!,false);if(step===2)update({roomChosen:true});}
   };
-  const openPicker = () => {
-    const time = normalizeTime(s.arrivalTime);
-    if (time) update({ arrivalTime: time });
-    setTimeOpen(true);
+  const changed=(event:CustomEvent<StepperChangeEvent>)=>{
+    if(event.detail.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});
+    if(event.detail.value==='confirmation'){
+      for(const step of STEPS.slice(0,4))refs.stepper.current?.setStepState(step.value,{editable:false});
+      refs.stepper.current?.completeStep('confirmation');
+    }
   };
-
-  const selectRoom = (value: string, focus = false) => {
-    update({ room: value });
-    if (focus) requestAnimationFrame(() => roomsRef.current?.querySelector<HTMLElement>(`[data-room="${value}"]`)?.focus());
+  const choose=(value:string,focus=false)=>{
+    update(choicePatch(value));
+    if(focus)refs.root.current?.querySelector<HTMLElement>(`[data-choice="${value}"]`)?.focus();
   };
-  const onRoomKey = (event: { key: string; preventDefault: () => void }, value: string) => {
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") { event.preventDefault(); selectRoom(roomAfter(value, 1), true); }
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") { event.preventDefault(); selectRoom(roomAfter(value, -1), true); }
-    else if (event.key === "Home") { event.preventDefault(); selectRoom(ROOMS[0]!.value, true); }
-    else if (event.key === "End") { event.preventDefault(); selectRoom(ROOMS[ROOMS.length - 1]!.value, true); }
-    else if (event.key === " " || event.key === "Enter") { event.preventDefault(); selectRoom(value, true); }
+  const onChoiceKey=(event:{key:string;preventDefault():void},value:string)=>{
+    const options=choices(s);let next:string|undefined;
+    if(['ArrowRight','ArrowDown'].includes(event.key))next=choiceAfter(s,value,1);
+    else if(['ArrowLeft','ArrowUp'].includes(event.key))next=choiceAfter(s,value,-1);
+    else if(event.key==='Home')next=options[0];else if(event.key==='End')next=options.at(-1);
+    else if([' ','Enter'].includes(event.key)&&options.includes(value))next=value;
+    if(next){event.preventDefault();choose(next,true);}
   };
-  const summaryCard = (className: string) => (
-    <Card variant="filled" headline="Price summary" className={className}>
-      <div className="booking__summary-lines">
-        {priceLines(s).map((line) => (
-          <div key={line.label} className="booking__price-line">
-            <span className="booking__price-line mtrl-body-medium">{line.label}</span>
-            <span className="booking__price-line mtrl-body-medium">{line.amount}</span>
+  const summaryContent=()=> <>
+    <p className="mtrl-title-medium">{HOTEL.name}</p><p className="mtrl-body-medium">{stayText(s)}</p><p className="mtrl-body-medium">{guestText(s)}</p>
+    {s.roomChosen?<>
+      <p className="mtrl-body-medium">{roomOf(s).label} · {rateText(s)}</p>
+      {priceLines(s).map(line=><div className="booking__price-line" key={line.label}><span className="mtrl-body-medium">{line.label}</span><span className="mtrl-body-medium">{line.amount}</span></div>)}
+      <p className="mtrl-title-large">Total {money(total(s))}</p><p className="mtrl-body-small mtrl-text-surface-variant">incl. VAT {money(vatIncluded(s))}</p><p className="mtrl-body-small">{cancellation(s)}</p>
+    </>:<p className="mtrl-body-medium">{unavailable(s,roomOf(s))?'Room: choose an available room':'Room: choose in the next step'}</p>}
+  </>;
+  const actions=(index:number,label='Next')=><footer className="booking__actions">
+    {index>0&&<div className="booking__action" data-stepper-prev><Button variant="text">Back</Button></div>}
+    <div className="booking__action booking__action--next" data-stepper-next><Button>{label}</Button></div>
+  </footer>;
+  return <section className="booking" ref={element=>{refs.root.current=element;}}>
+    <div className="booking__intro"><h1 className="booking__title mtrl-headline-medium">{HOTEL.name}</h1><p className="mtrl-body-medium">{HOTEL.stars} · {HOTEL.address} · {HOTEL.rating}</p></div>
+    <div className="booking__layout">
+      <Stepper ref={element=>{refs.stepper.current=element;}} orientation="auto" labelPlacement="end" linear ariaLabel="Hotel booking steps" defaultValue="dates" onBeforechange={veto} onChange={changed}>
+        {STEPS.map((step,index)=><Step key={step.value} value={step.value} label={step.title}>
+          <div className="booking__step"><h2 className="booking__step-title" tabIndex={-1}>{stepHeading(index+1)}</h2>
+            {index===0&&<>
+              <h3 className="mtrl-title-large">Plan your stay</h3>
+              <Datepicker id="stay" label="Check-in → Check-out" variant="modal" selectionMode="range" dateFormat="D MMM YYYY" locale="en-GB" supportingText={nightText(s)} min={TODAY} value={`${s.checkIn}/${s.checkOut}`} onChange={event=>{const range=rangeParts(event.detail.value);if(range)update({checkIn:range[0],checkOut:range[1]});}} />
+              {errors.dates&&<p className="booking__field-error mtrl-body-small">{errors.dates}</p>}
+              <div className="booking__grid booking__grid--three">{GUEST_FIELDS.map(field=><Select key={field.key} id={field.key} label={field.label} variant="outlined" value={s[field.key]} onChange={event=>update({[field.key]:event.detail.value??s[field.key]})}>{field.options.map(value=><SelectOption key={value} value={value}>{value}</SelectOption>)}</Select>)}</div>
+              {errors.adults&&<p className="booking__field-error mtrl-body-small">{errors.adults}</p>}{actions(index,'Check availability')}
+            </>}
+            {index===1&&<>
+              <h3 className="mtrl-title-large">Choose your room</h3>
+              <div className="booking__rooms" role="radiogroup" aria-label="Room type" tabIndex={-1}>
+                {ROOMS.map(room=>{
+                  const blocked=()=>unavailable(s,room);
+                  return <Card key={room.value} variant="outlined" className="booking__room"><div className="booking__room-card">
+                    <h3 className="mtrl-title-medium">{room.label}</h3><p className="mtrl-body-medium">{room.beds} · {room.size} m² · Up to {room.capacity} guests</p>
+                    <div className="booking__amenities">{amenitiesOf(room).map(amenity=><span className="booking__amenity" key={amenity.label}><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={amenity.path}/></svg>{amenity.label}</span>)}</div>
+                    <p className="mtrl-title-medium">from {money(room.rate)} / night</p><p className="mtrl-body-small mtrl-text-surface-variant" id={`${room.value}-availability`}>{blocked()||(room.stock===2?'Only 2 left':'')}</p>
+                    <div className="booking__rates">{RATES.map(rate=>{
+                      const key=`${room.value}:${rate.value}`;const selected=()=>choiceOf(s)===key&&!blocked();const stay=()=>({...s,room:room.value,rate:rate.value});
+                      return <div key={key} className="booking__rate" role="radio" aria-label={`${room.label} — ${rate.label}`} aria-describedby={`${room.value}-availability`} aria-checked={selected()} aria-disabled={!!blocked()} data-choice={key} tabIndex={key===(choices(s).includes(choiceOf(s))?choiceOf(s):choices(s)[0])?0:-1} onClick={()=>{if(!blocked())choose(key,true);}} onKeyDown={event=>onChoiceKey(event,key)}>
+                        <span inert aria-hidden="true"><Radios value={selected()?'selected':''} disabled={!!blocked()}><Radio value="selected" label=""/></Radios></span>
+                        <div className="booking__rate-copy"><p className="mtrl-title-small">{rate.label}</p><p className="mtrl-body-small">{rateConditions(s,rate)}</p></div>
+                        <div className="booking__rate-price"><p className="mtrl-title-small">{money(nightlyRate(stay()))} / night</p><p className="mtrl-body-small">{money(roomTotal(stay()))} stay total</p></div>
+                      </div>;
+                    })}</div>
+                  </div></Card>;
+                })}
+              </div>{errors.room&&<p className="booking__field-error mtrl-body-small">{errors.room}</p>}{actions(index)}
+            </>}
+            {index===2&&<>
+              <h3 className="mtrl-title-large">Make your stay yours</h3>
+              {EXTRAS.map(extra=><Checkbox key={extra.key} id={extra.key} checked={s[extra.key]||extraIncluded(s,extra.key)} disabled={extraIncluded(s,extra.key)} onChange={event=>update({[extra.key]:event.detail.checked})}>{extraLabel(s,extra)}</Checkbox>)}{actions(index)}
+            </>}
+            {index===3&&<>
+              <h3 className="mtrl-title-large">Who is staying?</h3>
+              <div className="booking__grid">{DETAIL_FIELDS.map(field=><TextField key={field.key} id={field.key} label={field.label} variant="outlined" type={field.type} value={s[field.key]} error={!!errors[field.key]} supportingText={errors[field.key]??field.helper} onInput={event=>update({[field.key]:event.detail.value})}/>)}</div>
+              <Checkbox id="forSomeoneElse" checked={s.forSomeoneElse} onChange={event=>update({forSomeoneElse:event.detail.checked})}>I'm booking for someone else</Checkbox>
+              <div hidden={!s.forSomeoneElse}><TextField id="guestName" label="Lead guest name" variant="outlined" value={s.guestName} error={!!errors.guestName} supportingText={errors.guestName??'Required when booking for someone else'} onInput={event=>update({guestName:event.detail.value})}/></div>
+              <TextField id="requests" label="Special requests" variant="outlined" type="multiline" value={s.requests} supportingText="Optional · Subject to availability" onInput={event=>update({requests:event.detail.value})}/>
+              <Select id="payment" label="Payment" variant="outlined" value={s.payment} onChange={event=>update({payment:event.detail.value??'hotel'})}>{PAYMENT_OPTIONS.map(option=><SelectOption key={option.value} value={option.value}>{option.label}</SelectOption>)}</Select>
+              <p className="mtrl-body-medium">{paymentNote(s)}</p>{actions(index,'Book')}
+            </>}
+            {index===4&&<>
+              <h3 className="mtrl-title-large">Your stay is confirmed</h3><p className="mtrl-headline-small">Booking reference {HOTEL.reference}</p><p className="mtrl-body-medium">Demo reservation · Nothing has been charged or sent.</p>
+              <div className="booking__confirmation">{summaryContent()}<p className="mtrl-body-medium">Lead guest: {s.forSomeoneElse?s.guestName:`${s.firstName} ${s.lastName}`}</p><p className="mtrl-body-medium">Confirmation email: {s.email}</p><p className="mtrl-body-medium">Check-in from 15:00 · Check-out until 11:00</p><p className="mtrl-body-medium">Payment: {PAYMENT_OPTIONS.find(option=>option.value===s.payment)?.label}</p></div>
+              <div className="booking__actions"><Button variant="outlined" onClick={()=>announce('Calendar download is a demo action.')}>Add to calendar</Button><Button onClick={()=>announce('Manage booking is a demo action.')}>Manage booking</Button></div>
+            </>}
           </div>
-        ))}
-        <div className="booking__price-total">
-          <span className="booking__price-line mtrl-title-small">Total</span>
-          <span className="booking__price-line mtrl-title-small">{totalText(s).replace("Estimated total ", "")}</span>
-        </div>
-        <p className="booking__lede mtrl-body-medium">{PROPERTY.policy}</p>
-      </div>
-    </Card>
-  );
-  const summaryPanel = summaryCard("booking__summary");
-  // Each panel's heading carries tabindex -1: the stepper's focus after an action
-  // reaches it first, so a step change puts focus on the new step's heading.
-  const heading = (step: number) => <h2 className="booking__step-title mtrl-title-large" tabIndex={-1}>{stepHeading(step)}</h2>;
-  const action = (kind: "prev" | "next", label: string) => (
-    <div {...(kind === "prev" ? { "data-stepper-prev": true } : { "data-stepper-next": true })}>
-      <Button {...(kind === "prev" ? { variant: "outlined" as const } : {})}>{label}</Button>
-    </div>
-  );
-
-  // orientation "auto" turns vertical below 600px of container width: the widened
-  // booking column passes that on Desktop and Tablet frames, and stays vertical
-  // on Mobile; labels sit below their indicators so all four fit on Tablet.
-  return (
-    <section className="booking">
-      <Dialog headline="Confirm booking" open={dialogOpen} onClose={() => setDialogOpen(false)}
-        actions={<>
-          <Button variant="text" onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button variant="text" onClick={() => { setDialogOpen(false); setConfirmed(true); }}>Confirm booking</Button>
-        </>}>
-        <p>{summary(s)}</p>
-      </Dialog>
-      <div className="booking__intro">
-        <img className="booking__hero" src={HERO_IMAGE} alt={`The Dune House above the dunes in ${PROPERTY.town}`} loading="lazy" />
-        <h1 className="booking__title mtrl-headline-small">{PROPERTY.name}</h1>
-        <p className="booking__lede mtrl-body-medium">{PROPERTY.town} · {PROPERTY.rating}</p>
-        <p className="booking__lede mtrl-body-medium">{PROPERTY.lede}</p>
-        <p className="booking__lede mtrl-body-medium">{PROPERTY.facts}</p>
-      </div>
-      <div className="booking__layout">
-      <Stepper ref={stepperRef} linear orientation="auto" labelPlacement="bottom" ariaLabel="Booking steps" defaultValue="dates" onBeforechange={veto}>
-        <Step value="dates" label="Dates and arrival">
-          <div className="booking__step">
-            {heading(1)}
-            <div className="booking__grid">
-              <Datepicker ref={stayRef as never} label="Check-in → Check-out" variant="modal" selectionMode="range" dateFormat="YYYY-MM-DD" min={TODAY} value={`${s.checkIn}/${s.checkOut}`}
-                onChange={(e) => { const parts = rangeParts(e.detail.value); if (parts) { setS((prev) => withRange(prev, parts[0], parts[1])); setErrors((prev) => ({ ...prev, dates: undefined })); } }} />
-              <TextField ref={arrivalRef} label="Arrival time" value={s.arrivalTime} trailingIcon={CLOCK_ICON} trailingIconLabel="Choose time"
-                supportingText={errors.arrivalTime ?? "24-hour time"} error={Boolean(errors.arrivalTime)}
-                onInput={(e) => { update({ arrivalTime: e.detail.value }); setErrors((prev) => ({ ...prev, arrivalTime: undefined })); }}
-                onChange={(e) => commitTime(e.detail.value)} onTrailing={openPicker} />
-            </div>
-            <p className="booking__stay mtrl-body-medium">{stayText(s)}</p>
-            {errors.dates && <p className="booking__field-error mtrl-body-small">{errors.dates}</p>}
-            {summaryCard("booking__summary-compact")}
-            <footer className="booking__actions">{action("next", "Next")}</footer>
-          </div>
-        </Step>
-        <Step value="guests" label="Guests and room">
-          <div className="booking__step">
-            {heading(2)}
-            <div className="booking__grid">
-              <Select label="Adults" value={s.adults} onChange={(e) => update({ adults: e.detail.value ?? s.adults })}>
-                {ADULT_OPTIONS.map((n) => <SelectOption key={n} value={n}>{n}</SelectOption>)}
-              </Select>
-              <Select label="Children" value={s.children} onChange={(e) => update({ children: e.detail.value ?? s.children })}>
-                {CHILD_OPTIONS.map((n) => <SelectOption key={n} value={n}>{n}</SelectOption>)}
-              </Select>
-            </div>
-            <div className="booking__group">
-              <p className="booking__label mtrl-title-small">Room type</p>
-              <div className="booking__rooms" role="radiogroup" aria-label="Room type" ref={roomsRef}>
-                {ROOMS.map((room) => (
-                  <div key={room.value} className="booking__room" role="radio" aria-label={`${room.label}, ${room.beds}, ${room.size}, $${room.rate} a night, ${room.features}`} aria-checked={s.room === room.value} tabIndex={s.room === room.value ? 0 : -1} data-room={room.value}
-                    onClick={() => selectRoom(room.value, true)} onKeyDown={(e) => onRoomKey(e, room.value)}>
-                    <Card variant="outlined">
-                      <div className="booking__room-card">
-                        <img className="booking__room-image" src={room.image} alt="" loading="lazy" />
-                        <p className="booking__room-name mtrl-title-medium">{room.label}</p>
-                        <p className="booking__room-facts mtrl-body-medium">{room.beds} · {room.size}</p>
-                        <p className="booking__room-price mtrl-body-medium">${room.rate} a night</p>
-                        <p className="booking__room-features mtrl-body-medium">{room.features}</p>
-                      </div>
-                    </Card>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {summaryCard("booking__summary-compact")}
-            <footer className="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
-          </div>
-        </Step>
-        <Step value="extras" label="Extras">
-          <div className="booking__step">
-            {heading(3)}
-            <div className="booking__group" role="group" aria-labelledby="extras-label">
-              <p className="booking__label mtrl-title-small" id="extras-label">Extras</p>
-              {EXTRAS.map((extra) => (
-                <Checkbox key={extra.key} checked={s[extra.key]} onChange={(e) => update({ [extra.key]: e.detail.checked })}>
-                  {`${extra.label} — $${extra.price} ${extra.unit}`}
-                </Checkbox>
-              ))}
-            </div>
-            {summaryCard("booking__summary-compact")}
-            <footer className="booking__actions">{action("prev", "Back")}{action("next", "Next")}</footer>
-          </div>
-        </Step>
-        <Step value="details" label="Your details and review">
-          <div className="booking__step">
-            {heading(4)}
-            <div className="booking__grid">
-              <TextField ref={nameRef} label="Name" value={s.name} supportingText={errors.name ?? "Required"} error={Boolean(errors.name)}
-                onInput={(e) => { update({ name: e.detail.value }); setErrors((prev) => ({ ...prev, name: undefined })); }} />
-              <TextField ref={emailRef} label="Email" type="email" value={s.email} supportingText={errors.email ?? "Required"} error={Boolean(errors.email)}
-                onInput={(e) => { update({ email: e.detail.value }); setErrors((prev) => ({ ...prev, email: undefined })); }} />
-            </div>
-            <div className="booking__group">
-              {reviewLines(s).map((line) => (
-                <div key={line.step} className="booking__review-row">
-                  <div className="booking__review-copy">
-                    <p className="booking__review-label mtrl-title-small">{line.label}</p>
-                    <p className="booking__review-line mtrl-body-medium">{line.text}</p>
-                  </div>
-                  <div data-stepper-goto={stepValue(line.step)}>
-                    <Button variant="text" ariaLabel={`Edit ${line.label}`}>Edit</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {summaryCard("booking__summary-compact")}
-            <footer className="booking__actions">{action("prev", "Back")}<div><Button onClick={book}>Book</Button></div></footer>
-          </div>
-        </Step>
+        </Step>)}
       </Stepper>
-      {summaryPanel}
+      <div className={`booking__summary-wrap${expanded?' booking__summary-wrap--open':''}`}>
+        <Button variant="outlined" className="booking__summary-toggle" aria-expanded={expanded} aria-controls="price-summary" onClick={()=>setExpanded(!expanded)}>{s.roomChosen?`Total ${money(total(s))} · View details`:'Your stay · View details'}</Button>
+        <Card id="price-summary" className="booking__summary" variant="filled" headline="Your stay"><div className="booking__summary-lines">{summaryContent()}</div></Card>
       </div>
-      <Timepicker label="Arrival time" format="24h" value={normalizeTime(s.arrivalTime) ?? "15:00"} open={timeOpen}
-        onChange={(e) => { update({ arrivalTime: e.detail.value }); setErrors((prev) => ({ ...prev, arrivalTime: undefined })); }} onClose={() => setTimeOpen(false)} />
-      <Snackbar message="Booking confirmed" open={confirmed} onClose={() => setConfirmed(false)} />
-    </section>
-  );
+    </div>
+    <p className="mtrl-body-small">Fictional hotel · Demonstration rates and taxes. No payment is collected.</p><Snackbar duration="short"/>
+  </section>;
 }

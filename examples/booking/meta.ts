@@ -1,18 +1,17 @@
-import type { ExampleMeta } from "../types";
-
+import type { ExampleMeta } from '../types';
 export default {
-  slug: "booking",
-  title: "Booking",
-  description: "Booking a stay at a fictional house, in four steps, with a live price summary on every step, the same in every framework.",
-  components: ["datepicker", "timepicker", "text-field", "select", "card", "checkbox", "button", "dialog", "snackbar", "stepper"],
-  tags: ["Apps", "Forms", "Travel"],
-  about: [
-    "Book a stay at The Dune House, a fictional house in Alder Cove, in four steps: dates and arrival, guests and room, extras, then your details with a review of the first three. The price summary stays beside the stepper on wide frames and above it on mobile, and material-addons' stepper shows the way through. The hero and room pictures are generated SVG illustrations made for this example, so no photograph licence is needed.",
-    "Every tab above runs the same components. The HTML tab uses the web components directly; React, Vue, Svelte and Solid use the generated adapters around them; Vanilla uses the factories the elements are built on. The stepper is material-addons' in every variant.",
+  slug:'booking',title:'Booking',
+  description:'A fictional city hotel booking engine: dates and guests, room rates, extras, guest details and confirmation, in every framework.',
+  components:['datepicker','text-field','select','card','radios','checkbox','button','snackbar','stepper'],
+  tags:['Apps','Forms','Travel'],
+  about:[
+    'Reserve a stay at Hotel Lumen, a fictional four-star city hotel in Lisbon. Choose dates and guests, compare rooms and rate plans, add extras, enter guest details and see a confirmation. There are no hotel or room pictures.',
+    'Every framework renders the same hotel, inventory and EUR pricing rules. Material components supply the fields, cards and controls; material-addons supplies the linear stepper. The hotel, address, availability, rates and taxes are invented demonstration data.',
   ],
-  how: [
-    "The stepper runs the four steps in linear mode: its headers show each step and the completed ones behind it, each step's heading says \"Step n of 4\", and moving between steps puts focus on that heading. Next validates the step it leaves — through the stepper's validation pipeline — and focuses the first field that needs fixing; Back never validates and never loses data. From the review, each Edit jumps back to its step.",
-    "One date picker in range mode takes the stay: the first day is check-in, the second check-out, past dates cannot be chosen, and a range under one night blocks Next at the field. The arrival field's clock icon opens material's time picker: a typed time is checked and normalized, the picker reopens at it, and a confirmed time writes back to the field.",
-    "The rooms are selectable material cards in a radio group: a click or Enter and Space chooses one, the arrow keys move the choice, and Home and End jump to the ends. There is no price slider — each card shows its own rate, and the summary panel adds rate × nights, extras, taxes and the cleaning fee into the total, live on every step. Book validates the name and email and shows the message under the field that needs fixing.",
+  how:[
+    'One range picker takes check-in and check-out, with nights shown below the field. Next validates the current step and focuses the first issue; Back keeps data without validation. Moving forward puts focus on a visually hidden step heading.',
+    'Room and rate combinations form one radio group. Arrow keys move among available options, Home and End jump to the ends, and Enter or Space selects. Capacity and available room counts disable unsuitable choices and explain why.',
+    'The summary stays beside the flow on wide frames and expands from a compact row on phones. It adds room rates, nights, rooms, extras and city tax, with included VAT below the total. Breakfast included in a rate is never charged twice.',
+    'Guest details include a different lead guest and an illustrative payment choice. No card details are requested and nothing is sent or charged. Book opens a confirmation screen; Add to calendar and Manage booking only explain their demo status in a snackbar.',
   ],
 } satisfies ExampleMeta;
