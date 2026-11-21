@@ -130,9 +130,17 @@ try {
       const directory = page.getByRole('navigation', { name: 'Component list', exact: true });
       // A client visit retains the Buttons section opened on the Button page.
       const buttons = directory.getByRole('button', { name: 'Buttons', exact: true });
-      if (await buttons.getAttribute('aria-expanded') !== 'true') await buttons.click();
-      await directory.getByRole('link', { name: 'Icon button', exact: true }).click();
+      assert.equal(await buttons.getAttribute('aria-expanded'), 'true', 'client navigation retains the open Buttons family');
+      await buttons.click();
+      assert.equal(await buttons.getAttribute('aria-expanded'), 'false', 'the destination family starts collapsed');
+      // Use the catalog card while its drawer family is closed. The new current
+      // item must reopen the family through the drawer API, as on a direct load.
+      await page.locator('.component-card h3').getByRole('link', { name: 'Icon button', exact: true }).click();
       await page.waitForURL(url('/components/icon-button/'));
+      const current = directory.getByRole('link', { name: 'Icon button', exact: true });
+      await current.waitFor();
+      assert.equal(await current.getAttribute('aria-current'), 'page', 'the destination item becomes current');
+      assert.equal(await buttons.getAttribute('aria-expanded'), 'true', 'client navigation opens the collapsed destination family');
     }
   }
 
