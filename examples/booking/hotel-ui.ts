@@ -32,3 +32,15 @@ export function focusControl(host: HTMLElement | null | undefined): void {
   const root = host.shadowRoot ?? host;
   (root.querySelector<HTMLElement>('input, textarea, button, [role="combobox"]') ?? host).focus();
 }
+
+// Editing an earlier decision invalidates later completion, so linear header
+// navigation cannot skip a room that no longer fits the changed party.
+import { EXTRAS, STEPS, type Booking } from './shared';
+export function invalidateSteps(stepper: {completeStep(target:string,completed:boolean):unknown}|null|undefined, patch:Partial<Booking>):void {
+  const keys=Object.keys(patch);
+  const start=keys.some(key=>['checkIn','checkOut','adults','children','rooms'].includes(key))?1:
+    keys.some(key=>['room','rate'].includes(key))?2:
+    keys.some(key=>EXTRAS.some(extra=>extra.key===key))?3:
+    keys.some(key=>key!=='roomChosen')?4:0;
+  if(start)for(const step of STEPS.slice(start-1))stepper?.completeStep(step.value,false);
+}

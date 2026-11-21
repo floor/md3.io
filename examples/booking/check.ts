@@ -62,6 +62,10 @@ export default async function steps(page:Page):Promise<void>{
  const breakfast=page.getByRole('checkbox',{name:/^Breakfast/});assert.equal(await breakfast.isChecked(),true);assert.equal(await breakfast.isDisabled(),true,'Included breakfast cannot be added twice');
  for(const label of [/^Parking/,/^Late check-out/,/^Airport transfer/])await page.getByRole('checkbox',{name:label}).check();
  await page.locator('#price-summary').getByText('Total €827',exact).waitFor();
+ await button('Back').click();await stepIs(2);await button('Back').click();await stepIs(1);
+ await chooseSelect(page,'Adults',true);assert.equal(await page.getByRole('button',{name:/Extras/}).isDisabled(),true,'Changing guests invalidates later completed steps');
+ await adults.focus();await page.keyboard.press('ArrowDown');await page.keyboard.press('Home');await page.keyboard.press('ArrowDown');await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+ await button('Check availability').click();await stepIs(2);await button('Next').click();await stepIs(3);await page.locator('#price-summary').getByText('Total €827',exact).waitFor();
  await button('Back').click();await stepIs(2);await rate('Family Room','Flexible').click();await button('Next').click();await stepIs(3);
  assert.equal(await breakfast.isChecked(),false,'Changing to room-only leaves breakfast opt-in');assert.equal(await breakfast.isDisabled(),false);
  await breakfast.check();await page.locator('#price-summary').getByText('Total €971',exact).waitFor();await breakfast.uncheck();await page.locator('#price-summary').getByText('Total €755',exact).waitFor();

@@ -9,7 +9,7 @@ import createSnackbar from 'material/components/snackbar';
 import createTextField from 'material/components/text-field';
 import { createStepper, type StepConfig } from 'material-addons/components/stepper';
 import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-import { focusControl } from './hotel-ui';
+import { focusControl, invalidateSteps } from './hotel-ui';
 let s:Booking={...DEFAULTS};let syncing=false;
 const app=document.getElementById('app')!;
 const node=(tag:string,className='',content?:string):HTMLElement=>Object.assign(document.createElement(tag),{className,...(content===undefined?{}:{textContent:content})});
@@ -94,7 +94,7 @@ const render=()=>{
  for(const extra of EXTRAS){const field=extras.get(extra.key)!;field.setLabel(extraLabel(s,extra));const checked=s[extra.key]||extraIncluded(s,extra.key);if(checked!==field.isChecked()){if(checked)field.check();else field.uncheck();}if(extraIncluded(s,extra.key))field.disable();else field.enable();}
  guestWrap.hidden=!s.forSomeoneElse;paymentCopy.textContent=paymentNote(s);renderSummary(summaryBody);summaryToggle.setText(s.roomChosen?`Total ${money(total(s))} · View details`:'Your stay · View details');renderSummary(confirmation);confirmation.append(text(`Lead guest: ${s.forSomeoneElse?s.guestName:`${s.firstName} ${s.lastName}`}`),text(`Confirmation email: ${s.email}`),text('Check-in from 15:00 · Check-out until 11:00'),text(`Payment: ${PAYMENT_OPTIONS.find(option=>option.value===s.payment)?.label}`));syncing=false;
 };
-function update(patch:Partial<Booking>){s=amend(s,patch);render();}
+function update(patch:Partial<Booking>){s=amend(s,patch);invalidateSteps(stepper,patch);render();}
 stay.on('change',payload=>{
  const detail=payload as unknown as {value?:unknown;rangeEndDate?:unknown;iso?:string};
  const iso=(value:unknown):string|null=>value instanceof Date?`${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`:typeof value==='string'?value.split('/')[0]!:null;

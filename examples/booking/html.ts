@@ -4,7 +4,7 @@ import 'material-addons/elements/css/stepper';
 import { defineAll } from 'material/elements';
 import { defineStepper, type StepperElement } from 'material-addons/elements';
 import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, choiceAfter, choiceOf, choicePatch, choices, cancellation, extraIncluded, extraLabel, formatDay, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateOf, rateText, roomAfter, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-import { focusControl, watchStepper } from './hotel-ui';
+import { focusControl, invalidateSteps, watchStepper } from './hotel-ui';
 defineAll(); defineStepper();
 let s: Booking = { ...DEFAULTS };
 const app = document.getElementById('app')!;
@@ -135,7 +135,7 @@ const render=()=>{
   renderSummary(summaryBody);summaryToggle.textContent=s.roomChosen?`Total ${money(total(s))} · View details`:'Your stay · View details';
   renderSummary(confirmation);confirmation.append(text(`Lead guest: ${s.forSomeoneElse?s.guestName:`${s.firstName} ${s.lastName}`}`),text(`Confirmation email: ${s.email}`),text('Check-in from 15:00 · Check-out until 11:00'),text(`Payment: ${PAYMENT_OPTIONS.find(item=>item.value===s.payment)?.label}`));
 };
-const update=(patch:Partial<Booking>)=>{s=amend(s,patch);render();};
+const update=(patch:Partial<Booking>)=>{s=amend(s,patch);invalidateSteps(stepper,patch);render();};
 dates.addEventListener('change',event=>{const range=rangeParts((event as CustomEvent<{value:string}>).detail.value);if(range) update({checkIn:range[0],checkOut:range[1]});});
 for (const item of GUEST_FIELDS) shell.addEventListener('change',event=>{if(event.target===guestGrid.querySelector(`#${item.key}`)) update({[item.key]:(event as CustomEvent<{value:string}>).detail.value});});
 roomGroup.addEventListener('click',event=>{const option=(event.target as HTMLElement).closest<HTMLElement>('[data-choice]');if(option&&option.getAttribute('aria-disabled')!=='true'){update(choicePatch(option.dataset.choice!));option.focus();}});

@@ -7,14 +7,14 @@ import { Step, Stepper } from 'material-addons/solid';
 import type { StepperElement } from 'material-addons/elements';
 import type { StepperBeforeChangeEvent, StepperChangeEvent } from 'material-addons/components/stepper';
 import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, cancellation, choiceAfter, choiceOf, choicePatch, choices, extraIncluded, extraLabel, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateText, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './shared';
-import { focusControl, watchStepper } from './hotel-ui';
+import { focusControl, invalidateSteps, watchStepper } from './hotel-ui';
 
 export default function Booking() {
   const [s,setS]=createStore<Booking>({...DEFAULTS});
   const [errors,setErrors]=createSignal<BookingErrors>({});
   const [expanded,setExpanded]=createSignal(false);
   const refs={root:{current:null as HTMLElement|null},stepper:{current:null as StepperElement|null}};
-  const update=(patch:Partial<Booking>)=>setS(amend({...s},patch));
+  const update=(patch:Partial<Booking>)=>{setS(amend({...s},patch));invalidateSteps(refs.stepper.current,patch);};
   onMount(()=>{if(refs.stepper.current)onCleanup(watchStepper(refs.stepper.current));});
   const announce=(message:string)=>{
     const host=refs.root.current?.querySelector('m-snackbar') as HTMLElement & {show():void;component?:{setDuration(value:string):void}};
