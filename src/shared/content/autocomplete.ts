@@ -8,7 +8,8 @@ export const autocompleteComponent: ComponentDefinition<AutocompleteConfig> = {
   group: 'Add-ons', name: 'Autocomplete', factory: 'createAutocomplete', variable: 'autocomplete',
   description: 'Suggest matching options as someone types in a text field.',
   summary: 'Find an option by typing part of its name.',
-  styles: ['text-field', 'menu'],
+  // The popup is material's .mtrl-listbox, whose sheet is optional (not in the full stylesheet).
+  styles: ['text-field', 'menu', 'listbox'],
   controls: [
     ...section('Content', [choose('dataset', 'Suggestions', ['destinations', 'teams'], 'destinations', 'select')]),
     ...section('Behavior', [toggle('strict', 'Require a suggestion', true), toggle('openOnFocus', 'Show suggestions on focus', true)]),

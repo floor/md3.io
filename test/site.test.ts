@@ -992,3 +992,10 @@ describe('sheet filters are Material controls', () => {
     expect(details).not.toContain('<m-radio');
   });
 });
+
+test('the autocomplete preview loads the listbox sheet its popup is drawn with', async () => {
+  // .mtrl-listbox's sheet is optional (outside material's full stylesheet); without it the
+  // popup rendered as a bare browser popover.
+  const html = await (await handleRequest(new Request('http://localhost/preview/autocomplete/'))).text();
+  expect(html).toMatch(/href="\/dist\/material\/styles\/listbox(\.[a-f0-9]{10})?\.css"/);
+});
