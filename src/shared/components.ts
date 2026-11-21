@@ -1,6 +1,7 @@
 import type { ToolbarConfig, ToolbarButtonItem } from 'material/components/toolbar';
 import { symbols } from './icons';
 import { addons, isAddon } from './addons';
+import { stepperDemoCode } from './content/stepper-demo';
 import { formSnippet } from './content/form';
 import { nameIcons } from './icon-code';
 import { icons as buttonIcons, themes } from './button';
@@ -367,6 +368,7 @@ function trailingHandler(slug: ComponentSlug, state: ComponentState): { code: st
 
 function buildComponentCode(slug: ComponentSlug, state: ComponentState): string {
   if (slug === 'form') return formSnippet(components.form.config(state));
+  if (slug === 'stepper') return stepperDemoCode('vanilla', components.stepper.config(state), { theme: String(state.theme), mode: String(state.mode) });
   if (components[slug].group === 'Navigation') return navigationCode(slug, state);
   if (components[slug].group === 'Containment') return containmentCode(slug, state);
   if (components[slug].group === 'Communication') return communicationCode(slug, state);

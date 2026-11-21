@@ -61,6 +61,8 @@ export interface ComponentDefinition<Config = unknown> {
   styles: readonly string[];
   /** Styles only the preview adds beside the component's own (the carousel's remote). */
   previewStyles?: readonly string[];
+  /** Full-width layouts fill the preview's available width, capped at 880px. */
+  previewLayout?: 'fill';
   /**
    * Selectors of playground chrome beside the component. The tab check leaves
    * roots and text inside them out of the preview. Anything not named still counts.

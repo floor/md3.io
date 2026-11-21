@@ -12,6 +12,7 @@ export const formComponent: ComponentDefinition<FormDemo> = {
   description: 'Build fields from a layout, validate their values, and track edits before submission.',
   summary: 'Create a form with fields, validation, and submission.',
   styles: ['text-field', 'button'],
+  previewLayout: 'fill',
   controls: section('Content', [choose('workflow', 'Form', ['registration', 'contact'], 'registration', 'select')]),
   scenarios: [
     { id: 'event-registration', name: 'Event registration', description: 'Collect a required name and email address for an event.', options: { workflow: 'registration' }, source: 'https://github.com/floor/material-addons/tree/v3.2.0#form' },

@@ -6,6 +6,8 @@
 // The server serialises that spec (`ElementMeta`) from mtrl/elements, so the
 // browser bundle does not carry the elements themselves.
 
+import { stepperDemoCode } from './content/stepper-demo';
+import type { StepperConfig } from 'material-addons/components/stepper';
 import { createIconNamer, isMarkup } from './icon-code';
 
 export type Framework = 'html' | 'react' | 'vue' | 'svelte' | 'solid' | 'vanilla';
@@ -1220,6 +1222,7 @@ function svelte(meta: ElementMeta, p: Plan, context: CodeContext): string {
 
 /** The component's code in a framework other than vanilla. */
 export function frameworkCode(framework: Exclude<Framework, 'vanilla'>, meta: ElementMeta, config: Config, context: CodeContext): string {
+  if (meta.name === 'stepper' && !context.example) return stepperDemoCode(framework, config as StepperConfig, context);
   const p = plan(meta, config);
   if (context.example) {
     p.example = bindExample(meta, p, config, context.example);
