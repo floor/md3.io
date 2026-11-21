@@ -408,6 +408,70 @@ try {
   await staticLink.click();
   await staticPage.waitForURL(url('/components/navigation-rail/'));
   await noScript.close();
+
+  // Production pages carry a host-injected third-party script (Cloudflare Web Analytics).
+  // Navigation must still swap only the content, keep the shell, and match a direct load's head.
+  const hosted = await browser.newContext({ reducedMotion: 'reduce' });
+  const beacon = 'https://static.cloudflareinsights.com/beacon.min.js/check';
+  await hosted.route(beacon, route => route.fulfill({ contentType: 'text/javascript', body: '' }));
+  await hosted.route(`${server.url}**`, async route => {
+    const response = await route.fetch();
+    if (!response.headers()['content-type']?.includes('text/html')) return route.fulfill({ response });
+    const body = (await response.text()).replace('</body>', `<script type="module" src="${beacon}"></script></body>`);
+    await route.fulfill({ response, body });
+  });
+  const hostedPage = await hosted.newPage();
+  hostedPage.setDefaultTimeout(8000);
+  await hostedPage.setViewportSize({ width: 1440, height: 900 });
+  const head = () => hostedPage.evaluate(() => ({
+    title: document.title,
+    description: document.querySelector('meta[name="description"]')?.getAttribute('content') ?? null,
+    canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null,
+    ogUrl: document.querySelector('meta[property="og:url"]')?.getAttribute('content') ?? null,
+    h1: document.querySelector('#content h1')?.textContent?.trim() ?? null,
+  }));
+  const hostedNav = hostedPage.getByRole('navigation', { name: 'Primary navigation', exact: true });
+  const visits: { label: string; click: () => Promise<void>; path: string }[] = [
+    ...['Add-ons', 'Styles', showcaseLabel, 'Documentation', 'Components'].map(name => ({
+      label: `rail ${name}`,
+      click: () => hostedNav.getByRole('link', { name, exact: true }).click(),
+      path: name === showcaseLabel ? showcasePath : name === 'Documentation' ? '/docs/' : name === 'Add-ons' ? '/addons/' : `/${name.toLowerCase()}/`,
+    })),
+    { label: 'component drawer Card', click: () => hostedPage.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Card', exact: true }).click(), path: '/components/card/' },
+  ];
+  const directHead = async (path: string) => {
+    const direct = await hosted.newPage();
+    await direct.goto(url(path));
+    const loaded = await direct.evaluate(() => ({
+      title: document.title,
+      description: document.querySelector('meta[name="description"]')?.getAttribute('content') ?? null,
+      canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null,
+      ogUrl: document.querySelector('meta[property="og:url"]')?.getAttribute('content') ?? null,
+      h1: document.querySelector('#content h1')?.textContent?.trim() ?? null,
+    }));
+    await direct.close();
+    return loaded;
+  };
+  await hostedPage.goto(url('/components/button/'));
+  for (const visit of visits) {
+    if (visit.label.startsWith('component drawer')) await hostedPage.goto(url('/components/button/'));
+    const loaded = await directHead(visit.path);
+    let documentLoads = 0;
+    const counted = () => { documentLoads++; };
+    hostedPage.on('load', counted);
+    await hostedPage.evaluate(() => { (window as unknown as { __shell?: number }).__shell = 1; });
+    await visit.click();
+    // The URL commits before the swap; wait for the destination's own heading and title.
+    await hostedPage.waitForFunction(({ h1, title }) => document.querySelector('#content h1')?.textContent?.trim() === h1 && document.title === title, { h1: loaded.h1, title: loaded.title });
+    hostedPage.off('load', counted);
+    const kept = await hostedPage.evaluate(() => (window as unknown as { __shell?: number }).__shell ?? null);
+    assert.equal(documentLoads, 0, `${visit.label}: navigating with a host-injected analytics script loads a new document`);
+    assert.equal(kept, 1, `${visit.label}: navigating with a host-injected analytics script reloads the whole page`);
+    assert.equal(hostedPage.url(), url(visit.path), `${visit.label}: the address is the real path`);
+    assert.deepEqual(await head(), loaded, `${visit.label}: the head after client navigation matches a direct load`);
+  }
+  await hosted.unrouteAll({ behavior: 'ignoreErrors' });
+  await hosted.close();
   console.log(`Site navigation checks passed at ${widths.join(', ')}px, with 599/600 and 839/840 transitions. Captures: ${output}`);
 } finally {
   await browser.close();

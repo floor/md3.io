@@ -103,12 +103,15 @@ function swapBody(next: Document) {
     if (current) link.setAttribute('aria-current', current); else link.removeAttribute('aria-current');
   });
 }
-function pageScripts(doc: Document) {
+function pageScripts(doc: Document, origin = location.origin) {
   return [...doc.querySelectorAll<HTMLScriptElement>('script[type="module"][src]')].flatMap(script => {
-    const src = new URL(script.getAttribute('src')!, location.origin);
+    const src = new URL(script.getAttribute('src')!, origin);
+    // Third-party scripts the host injects into every page (Cloudflare Web Analytics in
+    // production) already run once in the shell; they are not page modules.
+    if (src.origin !== origin) return [];
     const match = /^\/dist\/(catalog|examples|playground-material|playground|styles|theme-app|colour-lab)(?:\.[a-f0-9]{10})?\.js$/.exec(src.pathname);
-    if (/^\/dist\/site(?:\.[a-f0-9]{10})?\.js$/.test(src.pathname) && src.origin === location.origin) return [];
-    if (!match || src.origin !== location.origin) throw new Error('Unmanaged page script');
+    if (/^\/dist\/site(?:\.[a-f0-9]{10})?\.js$/.test(src.pathname)) return [];
+    if (!match) throw new Error('Unmanaged page script');
     return [{ src, name: match[1]! }];
   });
 }
