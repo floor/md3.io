@@ -1,6 +1,6 @@
 import type { StepperConfig } from 'material-addons/components/stepper';
 import type { CodeContext, Framework } from '../frameworks';
-import runtimeSource from './stepper-demo-runtime.js' with { type: 'text' };
+import { stepperDemoSource } from './stepper-demo-source' with { type: 'macro' };
 
 const demoStyles = `.stepper-demo { display:grid; gap:18px; text-align:start; }
 .stepper-demo h2 { margin:0; font:var(--mtrl-sys-typescale-title-large-font, 500 20px/28px sans-serif); }
@@ -44,7 +44,7 @@ export function stepperSteps(account: boolean): NonNullable<StepperConfig['steps
 }
 
 const literal = (value: string) => '`' + value.replaceAll('`', '\\`').replaceAll('${', '\\${') + '`';
-const behavior = String(runtimeSource).replace(/^export /gm, '');
+const behavior = stepperDemoSource().replace(/^export /gm, '');
 const setup = (context: CodeContext) => `import 'material/styles/base';
 import 'material-addons/styles';
 import 'material/elements/css/button';
