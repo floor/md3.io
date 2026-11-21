@@ -106,7 +106,7 @@ const setErrors=(messages:BookingErrors)=>{
   for (const item of [...DETAIL_FIELDS,{key:'guestName',helper:'Required when booking for someone else'}] as const) {
     const host=shell.querySelector(`#${item.key}`)!;host.toggleAttribute('error',!!messages[item.key]);host.setAttribute('supporting-text',messages[item.key]??item.helper);
   }
-  if (Object.keys(messages).length) focusControl(shell.querySelector(Object.keys(messages)[0]==='dates'?'#stay':Object.keys(messages)[0]==='room'?'[data-room][tabindex="0"]':`#${Object.keys(messages)[0]}`));
+  if (Object.keys(messages).length) focusControl(shell.querySelector<HTMLElement>(Object.keys(messages)[0]==='dates'?'#stay':Object.keys(messages)[0]==='room'?'[data-room][tabindex="0"]':`#${Object.keys(messages)[0]}`));
 };
 const render=()=>{
   nightsLine.textContent=nightText(s);
