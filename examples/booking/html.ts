@@ -3,7 +3,7 @@ import 'material/elements/css';
 import 'material-addons/elements/css/stepper';
 import { defineAll } from 'material/elements';
 import { defineStepper, type StepperElement } from 'material-addons/elements';
-import { AMENITIES, DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amend, cancellation, extraIncluded, extraLabel, formatDay, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateOf, rateText, roomAfter, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, type Booking, type BookingErrors } from './hotel';
+import { DEFAULTS, DETAIL_FIELDS, EXTRAS, GUEST_FIELDS, HOTEL, PAYMENT_OPTIONS, RATES, ROOMS, STEPS, TODAY, amenitiesOf, amend, choiceAfter, choiceOf, choicePatch, choices, cancellation, extraIncluded, extraLabel, formatDay, guestText, money, nightlyRate, nightText, paymentNote, priceLines, rangeParts, rateConditions, rateOf, rateText, roomAfter, roomOf, roomTotal, stayText, stepHeading, stepNumberOf, total, unavailable, validateStep, vatIncluded, type Booking, type BookingErrors } from './hotel';
 import { focusControl, watchStepper } from './hotel-ui';
 defineAll(); defineStepper();
 let s: Booking = { ...DEFAULTS };
@@ -27,7 +27,7 @@ const select = (id: string, label: string, options: readonly {value:string;label
 const button = (label: string, variant = 'filled') => control('m-button',{variant},label);
 const shell = el('section',{class:'booking'});
 const intro = box('booking__intro');
-intro.append(text('HL · HOTEL LUMEN','mtrl-label-large'),text(`${HOTEL.name} · ${HOTEL.city}`,'booking__title mtrl-headline-medium','h1'),text(HOTEL.stars),text(HOTEL.address),text(HOTEL.rating));
+intro.append(text('HL','mtrl-label-large'),text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`★★★★ · ${HOTEL.address} · 4.6 (1,284 reviews)`));
 const layout = box('booking__layout');
 const stepper = control('m-stepper',{orientation:'auto','label-placement':'end',linear:true,'aria-label':'Hotel booking steps',value:'dates'}) as unknown as StepperElement;
 const panes: HTMLElement[] = [];
@@ -41,38 +41,43 @@ for (const [index,step] of STEPS.entries()) {
 const title = (pane: HTMLElement, value: string) => pane.append(text(value,'mtrl-title-large','h3'));
 const actions = (pane: HTMLElement, index: number, nextLabel='Next') => {
   const footer = el('footer',{class:'booking__actions'});
-  if (index > 0) { const previous=box('booking__action');previous.setAttribute('data-stepper-prev','');previous.append(button('Back','outlined'));footer.append(previous); }
+  if (index > 0) { const previous=box('booking__action');previous.setAttribute('data-stepper-prev','');previous.append(button('Back','text'));footer.append(previous); }
   const next=box('booking__action booking__action--next'); next.setAttribute('data-stepper-next','');next.append(button(nextLabel));footer.append(next);pane.append(footer);
 };
 const errorLine = (key: string, parent: HTMLElement) => {const node=text('','booking__field-error mtrl-body-small');node.hidden=true;errors.set(key,node);parent.append(node);};
 const step1=panes[0]!;title(step1,'Plan your stay');
-const dates=control('m-datepicker',{id:'stay',label:'Check-in → Check-out',variant:'modal','selection-mode':'range','date-format':'YYYY-MM-DD',min:TODAY,value:`${s.checkIn}/${s.checkOut}`});
-const nightsLine=text(nightText(s),'booking__stay mtrl-body-medium');
-step1.append(dates,nightsLine); errorLine('dates',step1);
+const dates=control('m-datepicker',{id:'stay',label:'Check-in → Check-out',variant:'modal','selection-mode':'range','date-format':'D MMM YYYY',locale:'en-GB','supporting-text':nightText(s),min:TODAY,value:`${s.checkIn}/${s.checkOut}`});
+step1.append(dates); errorLine('dates',step1);
 const guestGrid=box('booking__grid booking__grid--three');
 for (const item of GUEST_FIELDS) guestGrid.append(select(item.key,item.label,item.options.map(value=>({value,label:value})),s[item.key]));
 step1.append(guestGrid);errorLine('adults',step1);actions(step1,0,'Check availability');
 const step2=panes[1]!;title(step2,'Choose your room');
 const roomGroup=el('div',{class:'booking__rooms',role:'radiogroup','aria-label':'Room type'});
-const roomNodes=new Map<string,{option:HTMLElement;price:HTMLElement;reason:HTMLElement}>();
+const rateNodes=new Map<string,{option:HTMLElement;radio:HTMLElement;night:HTMLElement;stay:HTMLElement;policy:HTMLElement}>();
+const roomReasons=new Map<string,HTMLElement>();
 for (const room of ROOMS) {
-  const option=el('div',{class:'booking__room',role:'radio','aria-label':room.label,'data-room':room.value});
-  const card=control('m-card',{variant:'outlined'});const content=box('booking__room-card');
+  const card=control('m-card',{variant:'outlined',class:'booking__room'});const content=box('booking__room-card');
   content.append(text(room.label,'mtrl-title-medium','h3'),text(`${room.beds} · ${room.size} m² · Up to ${room.capacity} guests`));
   const amenities=box('booking__amenities');
-  for (const amenity of AMENITIES) {
+  for (const amenity of amenitiesOf(room)) {
     const node=el('span',{class:'booking__amenity'});
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','currentColor');svg.setAttribute('aria-hidden','true');
     const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',amenity.path);svg.append(path);node.append(svg,document.createTextNode(amenity.label));amenities.append(node);
   }
-  const price=text('','mtrl-title-medium');const reason=text('','mtrl-body-small');
-  content.append(amenities,price,reason);card.append(content);option.append(card);roomGroup.append(option);roomNodes.set(room.value,{option,price,reason});
+  const reason=text('','mtrl-body-small mtrl-text-surface-variant');reason.id=`${room.value}-availability`;roomReasons.set(room.value,reason);
+  content.append(amenities,text(`from ${money(room.rate)} / night`,'mtrl-title-medium'),reason);
+  const rates=box('booking__rates');
+  for (const rate of RATES) {
+    const key=`${room.value}:${rate.value}`;
+    const option=el('div',{class:'booking__rate',role:'radio','aria-label':`${room.label} — ${rate.label}`,'data-choice':key,'aria-describedby':reason.id});
+    const radio=control('m-radio',{'aria-hidden':'true',inert:true,tabindex:'-1'});
+    const copy=box('booking__rate-copy');const policy=text('','mtrl-body-small');copy.append(text(rate.label,'mtrl-title-small'),policy);
+    const prices=box('booking__rate-price');const night=text('','mtrl-title-small'),stay=text('','mtrl-body-small');prices.append(night,stay);
+    option.append(radio,copy,prices);rates.append(option);rateNodes.set(key,{option,radio,night,stay,policy});
+  }
+  content.append(rates);card.append(content);roomGroup.append(card);
 }
-step2.append(roomGroup);errorLine('room',step2);
-const rateTitle=text('','mtrl-title-medium','h3');
-const rate=select('rate','Rate plan',RATES.map(item=>({value:item.value,label:item.label})),s.rate);
-const ratePolicy=text(''); const rateBreakfast=text('');
-step2.append(rateTitle,rate,rateBreakfast,ratePolicy);actions(step2,1);
+step2.append(roomGroup);errorLine('room',step2);actions(step2,1);
 const step3=panes[2]!;title(step3,'Make your stay yours');
 const extraNodes=new Map<string,HTMLElement>();
 for (const extra of EXTRAS) {const node=control('m-checkbox',{id:extra.key},extraLabel(s,extra));extraNodes.set(extra.key,node);step3.append(node);}
@@ -99,46 +104,47 @@ const snackbar=control('m-snackbar',{'duration':'short'});
 const announce=(message:string)=>{snackbar.setAttribute('message',message);(snackbar as unknown as {show():void}).show();};
 calendar.addEventListener('click',()=>announce('Calendar download is a demo action.'));manage.addEventListener('click',()=>announce('Manage booking is a demo action.'));
 const renderSummary=(target:HTMLElement)=>{
-  target.replaceChildren(text(HOTEL.name,'mtrl-title-medium'),text(`${roomOf(s).label} · ${rateText(s)}`),text(stayText(s)),text(guestText(s)),...priceLines(s).map(line=>{const row=box('booking__price-line');row.append(text(line.label,'mtrl-body-medium','span'),text(line.amount,'mtrl-body-medium','span'));return row;}),text(`Total ${money(total(s))}`,'mtrl-title-large'),text(cancellation(s),'mtrl-body-small'));
+  target.replaceChildren(text(HOTEL.name,'mtrl-title-medium'),text(stayText(s)),text(guestText(s)));
+  if (!s.roomChosen) {target.append(text('Room: choose in the next step'));return;}
+  target.append(text(`${roomOf(s).label} · ${rateText(s)}`),...priceLines(s).map(line=>{const row=box('booking__price-line');row.append(text(line.label,'mtrl-body-medium','span'),text(line.amount,'mtrl-body-medium','span'));return row;}),text(`Total ${money(total(s))}`,'mtrl-title-large'),text(`incl. VAT ${money(vatIncluded(s))}`,'mtrl-body-small mtrl-text-surface-variant'),text(cancellation(s),'mtrl-body-small'));
 };
 const setErrors=(messages:BookingErrors)=>{
   for (const [key,node] of errors) {node.textContent=messages[key as keyof BookingErrors]??'';node.hidden=!node.textContent;}
   for (const item of [...DETAIL_FIELDS,{key:'guestName',helper:'Required when booking for someone else'}] as const) {
     const host=shell.querySelector(`#${item.key}`)!;host.toggleAttribute('error',!!messages[item.key]);host.setAttribute('supporting-text',messages[item.key]??item.helper);
   }
-  if (Object.keys(messages).length) focusControl(shell.querySelector<HTMLElement>(Object.keys(messages)[0]==='dates'?'#stay':Object.keys(messages)[0]==='room'?'[data-room][tabindex="0"]':`#${Object.keys(messages)[0]}`));
+  if (Object.keys(messages).length) focusControl(shell.querySelector<HTMLElement>(Object.keys(messages)[0]==='dates'?'#stay':Object.keys(messages)[0]==='room'?'[data-choice][tabindex="0"]':`#${Object.keys(messages)[0]}`));
 };
 const render=()=>{
-  nightsLine.textContent=nightText(s);
+  dates.setAttribute('supporting-text',nightText(s));
+  const available=choices(s);const current=choiceOf(s);const focusable=available.includes(current)?current:available[0];
   for (const room of ROOMS) {
-    const node=roomNodes.get(room.value)!;const reason=unavailable(s,room);const selected=s.room===room.value&&!reason;
-    node.option.setAttribute('aria-checked',String(selected));node.option.setAttribute('aria-disabled',String(!!reason));
-    const focusable=unavailable(s,roomOf(s))?ROOMS.find(item=>!unavailable(s,item))?.value:s.room;
-    node.option.tabIndex=room.value===focusable?0:-1;
-    node.price.textContent=`${money(nightlyRate(s,room))} / night · ${money(roomTotal(s,room))} for the stay`;
-    node.reason.textContent=reason||(room.stock===2?'Only 2 left':'');
+    const reason=unavailable(s,room);roomReasons.get(room.value)!.textContent=reason||(room.stock===2?'Only 2 left':'');
+    for (const rate of RATES) {
+      const key=`${room.value}:${rate.value}`;const node=rateNodes.get(key)!;const selected=current===key&&!reason;
+      node.option.setAttribute('aria-checked',String(selected));node.option.setAttribute('aria-disabled',String(!!reason));node.option.tabIndex=key===focusable?0:-1;
+      (node.radio as unknown as {checked:boolean;disabled:boolean}).checked=selected;(node.radio as unknown as {disabled:boolean}).disabled=!!reason;
+      const stay={...s,room:room.value,rate:rate.value};
+      node.night.textContent=`${money(nightlyRate(stay))} / night`;node.stay.textContent=`${money(roomTotal(stay))} stay total`;node.policy.textContent=rateConditions(s,rate);
+    }
   }
-  rateTitle.textContent=`Rate for ${roomOf(s).label}`;
-  for (const [index,item] of RATES.entries()) rate.children[index]!.textContent=`${item.label} — ${money(roomOf(s).rate+item.supplement)} / night`;
-  rateBreakfast.textContent=rateOf(s).breakfast?'Breakfast included':'Room only · Breakfast can be added next';ratePolicy.textContent=cancellation(s);
-  for (const extra of EXTRAS) {const node=extraNodes.get(extra.key)!;node.textContent=extraLabel(s,extra);node.toggleAttribute('checked',s[extra.key]||extraIncluded(s,extra.key));node.toggleAttribute('disabled',extraIncluded(s,extra.key));}
+  for (const extra of EXTRAS) {const node=extraNodes.get(extra.key)!;node.textContent=extraLabel(s,extra);(node as unknown as {checked:boolean}).checked=s[extra.key]||extraIncluded(s,extra.key);(node as unknown as {disabled:boolean}).disabled=extraIncluded(s,extra.key);}
   guestName.hidden=!s.forSomeoneElse;paymentCopy.textContent=paymentNote(s);
-  renderSummary(summaryBody);summaryToggle.textContent=`Total ${money(total(s))} · View details`;
+  renderSummary(summaryBody);summaryToggle.textContent=s.roomChosen?`Total ${money(total(s))} · View details`:'Your stay · View details';
   renderSummary(confirmation);confirmation.append(text(`Lead guest: ${s.forSomeoneElse?s.guestName:`${s.firstName} ${s.lastName}`}`),text(`Confirmation email: ${s.email}`),text('Check-in from 15:00 · Check-out until 11:00'),text(`Payment: ${PAYMENT_OPTIONS.find(item=>item.value===s.payment)?.label}`));
 };
 const update=(patch:Partial<Booking>)=>{s=amend(s,patch);render();};
 dates.addEventListener('change',event=>{const range=rangeParts((event as CustomEvent<{value:string}>).detail.value);if(range) update({checkIn:range[0],checkOut:range[1]});});
 for (const item of GUEST_FIELDS) shell.addEventListener('change',event=>{if(event.target===guestGrid.querySelector(`#${item.key}`)) update({[item.key]:(event as CustomEvent<{value:string}>).detail.value});});
-rate.addEventListener('change',event=>update({rate:(event as CustomEvent<{value:string}>).detail.value}));
-roomGroup.addEventListener('click',event=>{const option=(event.target as HTMLElement).closest<HTMLElement>('[data-room]');if(option&&option.getAttribute('aria-disabled')!=='true'){update({room:option.dataset.room!});option.focus();}});
+roomGroup.addEventListener('click',event=>{const option=(event.target as HTMLElement).closest<HTMLElement>('[data-choice]');if(option&&option.getAttribute('aria-disabled')!=='true'){update(choicePatch(option.dataset.choice!));option.focus();}});
 roomGroup.addEventListener('keydown',event=>{
- const option=(event.target as HTMLElement).closest<HTMLElement>('[data-room]');if(!option)return;
- const available=ROOMS.filter(room=>!unavailable(s,room));let value:string|undefined;
- if(['ArrowRight','ArrowDown'].includes(event.key))value=roomAfter(s,option.dataset.room!,1);
- else if(['ArrowLeft','ArrowUp'].includes(event.key))value=roomAfter(s,option.dataset.room!,-1);
- else if(event.key==='Home')value=available[0]?.value;else if(event.key==='End')value=available.at(-1)?.value;
- else if([' ','Enter'].includes(event.key)&&option.getAttribute('aria-disabled')!=='true')value=option.dataset.room;
- if(value){event.preventDefault();update({room:value});roomNodes.get(value)?.option.focus();}
+ const option=(event.target as HTMLElement).closest<HTMLElement>('[data-choice]');if(!option)return;
+ const available=choices(s);let value:string|undefined;
+ if(['ArrowRight','ArrowDown'].includes(event.key))value=choiceAfter(s,option.dataset.choice!,1);
+ else if(['ArrowLeft','ArrowUp'].includes(event.key))value=choiceAfter(s,option.dataset.choice!,-1);
+ else if(event.key==='Home')value=available[0];else if(event.key==='End')value=available.at(-1);
+ else if([' ','Enter'].includes(event.key)&&option.getAttribute('aria-disabled')!=='true')value=option.dataset.choice;
+ if(value){event.preventDefault();update(choicePatch(value));rateNodes.get(value)?.option.focus();}
 });
 for (const extra of EXTRAS) extraNodes.get(extra.key)!.addEventListener('change',event=>update({[extra.key]:(event as CustomEvent<{checked:boolean}>).detail.checked}));
 for (const key of [...DETAIL_FIELDS.map(item=>item.key),'guestName','requests'] as const) shell.addEventListener('input',event=>{if((event.target as HTMLElement).id===key)s=amend(s,{[key]:(event as CustomEvent<{value:string}>).detail.value});});
@@ -148,7 +154,7 @@ stepper.addEventListener('beforechange',event=>{
   if(event.detail.direction!=='forward')return;
   const number=stepNumberOf(event.detail.previousValue??'dates');const messages=validateStep(s,number);
   if(Object.keys(messages).length){event.detail.preventDefault();stepper.setError(event.detail.previousValue!,true);setErrors(messages);}
-  else {stepper.setError(event.detail.previousValue!,false);setErrors({});}
+  else {stepper.setError(event.detail.previousValue!,false);setErrors({});if(number===2)update({roomChosen:true});}
 });
 stepper.addEventListener('change',event=>{if(event.detail.value==='confirmation'){confirmed=true;render();for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}});
 layout.append(stepper,summaryWrap);shell.append(intro,layout,text('Fictional hotel · Demonstration rates and taxes. No payment is collected.','mtrl-body-small'),snackbar);app.append(shell);watchStepper(stepper);render();

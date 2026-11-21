@@ -66,3 +66,15 @@
   .booking__actions > *, .booking__actions m-button, .booking__actions .mtrl-button { width: 100%; }
   .booking__action--next { min-width: 100%; order: -1; }
 }
+.booking__rate { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; cursor: pointer; }
+.booking__rate[aria-disabled="true"] { cursor: default; }
+.booking__rate-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.booking__rate-price { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.booking__rate p { margin: 0; }
+.booking__rates { display: flex; flex-direction: column; }
+.booking__rate m-radio { flex: none; }
+@media (max-width: 600px) {
+  .booking__rate { flex-wrap: wrap; }
+  .booking__rate-price { width: 100%; padding-inline-start: 42px; align-items: flex-start; }
+  .booking__actions m-button::part(button), .booking__summary-toggle::part(button) { width: 100%; }
+}

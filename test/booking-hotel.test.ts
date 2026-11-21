@@ -41,3 +41,11 @@ describe('hotel booking rules', () => {
     expect(validateStep({...stay,email:'invalid',phone:'123',arrivalTime:'25:00'},4)).toEqual({email:'Enter a valid email address',phone:'Enter a valid phone number',arrivalTime:'Use 24-hour time, e.g. 15:00'});
   });
 });
+
+test('the room summary is committed only when the room step completes', () => {
+  expect(DEFAULTS.roomChosen).toBe(false);
+  const chosen=amend(DEFAULTS,{roomChosen:true});
+  expect(chosen.roomChosen).toBe(true);
+  expect(amend(chosen,{adults:'3'}).roomChosen).toBe(false);
+  expect(amend(chosen,{room:'family'}).roomChosen).toBe(false);
+});
