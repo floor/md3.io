@@ -529,6 +529,11 @@ try {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Add-ons overview fits the viewport');
     await page.screenshot({ animations: 'disabled', path: `${addonCaptures}/overview-${width}.png` });
 
+    const swatch = gallery.getByRole('button', { name: 'Ocean', exact: true });
+    await swatch.scrollIntoViewIfNeeded();
+    assert((await swatch.boundingBox())!.width >= 28, 'Color picker swatches receive their light-DOM styles');
+    await swatch.click();
+
     const expansion = gallery.getByRole('button', { name: 'Delivery details', exact: true });
     await expansion.click();
     assert(await expansion.getAttribute('aria-expanded') === 'true', 'The expansion card opens from its header');

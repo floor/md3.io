@@ -7,15 +7,19 @@ import { materialTokens } from './playground-panel';
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
 const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
+const catalog = [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'] as const;
+const materialPanel = [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material'] as const;
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
   home: [...shell, 'homepage', 'site', 'search'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
-  'material-panel': [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material', 'device-frame'],
-  // The components overview adds the elements' pre-upgrade rules and the catalog.
-  catalog: [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'],
+  'material-panel': materialPanel,
+  'addon-panel': [...materialPanel, 'mtrl:button', 'mtrl:button-group', 'device-frame'],
+  // Add-on visuals that use factories need their light-DOM styles.
+  catalog,
+  'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'addons:styles'],
   // Examples add the device chooser's Material button group and frame styles.
   examples: [...shell, 'site', 'search', 'examples', 'mtrl:button', 'mtrl:button-group', 'device-frame'],
   styles: [...shell, 'site', 'search', 'styles-pages'],
@@ -47,6 +51,7 @@ export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/materi
 const fileFor = (name: string) => name === 'preupgrade'
   ? resolve(root, 'node_modules/material/dist/elements/preupgrade.css')
   : name.startsWith('mtrl:') ? resolve(root, 'node_modules/material/dist/styles', `${name.slice(5)}.css`)
+  : name === 'addons:styles' ? resolve(root, 'node_modules/material-addons/dist/styles.css')
   : style(name);
 
 type Token = { kind: 'raw' | 'string' | 'space' | 'keep'; value: string };
