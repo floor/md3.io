@@ -485,6 +485,22 @@ try {
     });
     assert.ok(drawn, `${name} drawer is drawn after a cross-section client navigation`);
   }
+  // The wheel over a long drawer scrolls its section pane (a nested scroller inside the
+  // drawer once swallowed the gesture and the pane never moved).
+  for (const path of ['/components/button/', '/docs/components/button/']) {
+    await hostedPage.goto(url(path));
+    const drawer = hostedPage.locator('m-drawer.site-drawer');
+    await drawer.waitFor();
+    const box = (await drawer.boundingBox())!;
+    const paneTop = () => drawer.evaluate(node => node.closest<HTMLElement>('.component-list, #sidebar')!.scrollTop);
+    const start = await paneTop();
+    await hostedPage.mouse.move(box.x + box.width / 2, 400);
+    await hostedPage.mouse.wheel(0, 400);
+    await hostedPage.waitForFunction(([selector, from]) => (document.querySelector(selector)?.closest<HTMLElement>('.component-list, #sidebar')?.scrollTop ?? 0) > from + 100, ['m-drawer.site-drawer', start] as const, { timeout: 3000 }).catch(() => {});
+    assert.ok(await paneTop() > start + 100, `${path}: the wheel over the drawer scrolls the section pane`);
+    const nested = await drawer.evaluate(node => [...node.shadowRoot!.querySelectorAll('*')].filter(element => element.scrollHeight > element.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(element).overflowY)).length);
+    assert.equal(nested, 0, `${path}: no scroller inside the drawer competes with the pane`);
+  }
   await hosted.unrouteAll({ behavior: 'ignoreErrors' });
   await hosted.close();
   console.log(`Site navigation checks passed at ${widths.join(', ')}px, with 599/600 and 839/840 transitions. Captures: ${output}`);
