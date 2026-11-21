@@ -132,7 +132,7 @@ export const validateStep = (s: Booking, step: number): BookingErrors => {
 };
 export const amend = (s: Booking, patch: Partial<Booking>): Booking => {
   const next = { ...s, ...patch };
-  if (['checkIn','checkOut','adults','children','rooms','room','rate'].some(key => key in patch)) next.roomChosen = false;
+  if (patch.roomChosen === undefined && ['checkIn','checkOut','adults','children','rooms','room','rate'].some(key => key in patch)) next.roomChosen = false;
   if (rateOf(next).breakfast) next.breakfast = false;
   return next;
 };
@@ -142,9 +142,9 @@ export const rangeParts = (value: string): [string, string] | null => {
 
 export const choices = (s: Booking): string[] => ROOMS.filter(room => !unavailable(s,room)).flatMap(room=>RATES.map(rate=>`${room.value}:${rate.value}`));
 export const choiceOf = (s: Booking): string => `${s.room}:${s.rate}`;
-export const choicePatch = (choice: string): Partial<Booking> => { const [room,rate]=choice.split(':');return {room,rate}; };
+export const choicePatch = (choice: string): Partial<Booking> => { const [room,rate]=choice.split(':');return {room,rate,roomChosen:true}; };
 export const choiceAfter = (s: Booking, choice: string, offset: number): string => {
   const options=choices(s); if (!options.length) return choice;
   return options[(options.indexOf(choice)+offset+options.length)%options.length]!;
 };
-export const rateConditions = (s: Booking, rate: typeof RATES[number]): string => `${rate.breakfast?'Breakfast included':'Room only'} · ${rate.refundable?`Free cancellation until ${formatDay(addDays(s.checkIn,-2))}`:'Non-refundable'}`;
+export const rateConditions = (s: Booking, rate: typeof RATES[number]): string => [rate.breakfast?'':'Room only',rate.refundable?`Free cancellation until ${formatDay(addDays(s.checkIn,-2))}`:''].filter(Boolean).join(' · ');

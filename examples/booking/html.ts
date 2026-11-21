@@ -27,7 +27,7 @@ const select = (id: string, label: string, options: readonly {value:string;label
 const button = (label: string, variant = 'filled') => control('m-button',{variant},label);
 const shell = el('section',{class:'booking'});
 const intro = box('booking__intro');
-intro.append(text('HL','mtrl-label-large'),text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`★★★★ · ${HOTEL.address} · 4.6 (1,284 reviews)`));
+intro.append(text(HOTEL.name,'booking__title mtrl-headline-medium','h1'),text(`★★★★ · ${HOTEL.address} · 4.6 (1,284 reviews)`));
 const layout = box('booking__layout');
 const stepper = control('m-stepper',{orientation:'auto','label-placement':'end',linear:true,'aria-label':'Hotel booking steps',value:'dates'}) as unknown as StepperElement;
 const panes: HTMLElement[] = [];
@@ -108,7 +108,7 @@ const announce=(message:string)=>{snackbar.setAttribute('message',message);(snac
 calendar.addEventListener('click',()=>announce('Calendar download is a demo action.'));manage.addEventListener('click',()=>announce('Manage booking is a demo action.'));
 const renderSummary=(target:HTMLElement)=>{
   target.replaceChildren(text(HOTEL.name,'mtrl-title-medium'),text(stayText(s)),text(guestText(s)));
-  if (!s.roomChosen) {target.append(text('Room: choose in the next step'));return;}
+  if (!s.roomChosen) {target.append(text(unavailable(s,roomOf(s))?'Room: choose an available room':'Room: choose in the next step'));return;}
   target.append(text(`${roomOf(s).label} · ${rateText(s)}`),...priceLines(s).map(line=>{const row=box('booking__price-line');row.append(text(line.label,'mtrl-body-medium','span'),text(line.amount,'mtrl-body-medium','span'));return row;}),text(`Total ${money(total(s))}`,'mtrl-title-large'),text(`incl. VAT ${money(vatIncluded(s))}`,'mtrl-body-small mtrl-text-surface-variant'),text(cancellation(s),'mtrl-body-small'));
 };
 const setErrors=(messages:BookingErrors)=>{
@@ -159,5 +159,5 @@ stepper.addEventListener('beforechange',event=>{
   if(Object.keys(messages).length){event.detail.preventDefault();stepper.setError(event.detail.previousValue!,true);setErrors(messages);}
   else {stepper.setError(event.detail.previousValue!,false);setErrors({});if(number===2)update({roomChosen:true});}
 });
-stepper.addEventListener('change',event=>{if(event.detail.value==='confirmation'){confirmed=true;render();for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}});
+stepper.addEventListener('change',event=>{if(event.detail.value==='room'&&!unavailable(s,roomOf(s)))update({roomChosen:true});if(event.detail.value==='confirmation'){confirmed=true;render();for(const step of STEPS.slice(0,4))stepper.setStepState(step.value,{editable:false});stepper.completeStep('confirmation');}});
 layout.append(stepper,summaryWrap);shell.append(intro,layout,text('Fictional hotel · Demonstration rates and taxes. No payment is collected.','mtrl-body-small'),snackbar);app.append(shell);watchStepper(stepper);render();
