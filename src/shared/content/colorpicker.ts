@@ -25,6 +25,7 @@ export const colorpickerComponent: ComponentDefinition<ColorPickerConfig> = {
     value: /^#[\da-f]{6}$/i.test(string(state, 'color')) ? string(state, 'color') : '#6750A4',
     variant: 'inline',
     inputLabel: 'Hex color',
+    showPipette: false,
     showArea: state.palette === true,
     showHue: state.palette === true,
     showOpacity: state.opacity === true,
