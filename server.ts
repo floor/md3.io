@@ -93,16 +93,14 @@ const versionAssets = (body: string) => {
 const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
-// Keep the complete component label readable in the narrower Docs drawer.
-const DEPRECATED_DRAWER_BADGE = 'Depr.';
 const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
-  slug, name: components[slug].name, href: `/components/${slug}/`, ...(componentDeprecations[slug] ? { badge: DEPRECATED_DRAWER_BADGE } : {}),
+  slug, name: components[slug].name, href: `/components/${slug}/`,
 })));
 const addonEntries = addonSlugs.map(slug => ({ slug, name: addons[slug].name, href: playgroundHref(slug) }))
   .sort((a, b) => a.name.localeCompare(b.name, 'en'));
 const addonDirectory = { entries: addonEntries, sections: [{ id: 'addons', name: 'Add-ons', items: addonEntries }] };
 const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug) && !docHref(slug).startsWith('/docs/addons/')).map(slug => ({
-  slug, name: componentName(slug), href: docHref(slug), ...(isComponent(slug) && componentDeprecations[slug] ? { badge: DEPRECATED_DRAWER_BADGE } : {}),
+  slug, name: componentName(slug), href: docHref(slug),
 })));
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');

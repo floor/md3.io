@@ -94,7 +94,7 @@ describe('App bar naming and compatibility', () => {
       const response = await get(path);
       expect(response.status).toBe(200);
       const html = await response.text();
-      expect(html).toContain('badge="Depr."');
+      expect(html).not.toMatch(/<m-drawer-item[^>]*badge=/);
       expect(html).toContain('<strong>Deprecated.</strong>');
       expect(html).toContain('href="/components/toolbar/"');
       expect(sitemapPages().map(page => page.path)).toContain(path);
