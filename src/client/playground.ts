@@ -5,7 +5,7 @@ import xml from 'highlight.js/lib/languages/xml';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
 import { checkboxEditClearsCheckedSet } from '../shared/content/checkbox';
 import { controlConcealed, sectionConcealed } from '../shared/content/types';
-import { drawerActiveOptions } from '../shared/content/drawer';
+import { drawerActiveOptions } from '../shared/content/navigation-drawer';
 import { barActiveOptions } from '../shared/content/navigation-bar';
 import { railActiveOptions } from '../shared/content/navigation-rail';
 import { tabActiveOptions } from '../shared/content/tabs';
@@ -216,7 +216,7 @@ registerPage('playground', (content, life) => {
   }
   /** The Selected list names only the destinations on the stage. */
   function refreshActiveSelect(next: ComponentState) {
-    const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'navigation-bar' ? barActiveOptions(next) : slug === 'drawer' ? drawerActiveOptions(next) : slug === 'tabs' ? tabActiveOptions(next) : null;
+    const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'navigation-bar' ? barActiveOptions(next) : slug === 'navigation-drawer' ? drawerActiveOptions(next) : slug === 'tabs' ? tabActiveOptions(next) : null;
     if (!options) return;
     const select = form.querySelector<HTMLElement>('[name="active"]');
     if (!select) return;

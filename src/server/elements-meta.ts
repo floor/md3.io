@@ -45,7 +45,7 @@ const children: Record<string, Omit<ChildrenMeta, 'attributes'> & { declaration:
     keys: { id: 'value', activeIcon: 'selected-icon' },
     selected: { key: 'active', equals: true, value: 'id' },
   },
-  drawer: {
+  'navigation-drawer': {
     // A section headline's text is its `sectionLabel`.
     name: 'drawer-item', declaration: 'drawerItem', from: 'items', text: ['label', 'sectionLabel'], keys: { id: 'value' },
     selected: { key: 'active', equals: true, value: 'id' },
@@ -84,12 +84,12 @@ const keys: Record<string, Record<string, ConfigKey>> = {
   },
   'navigation-rail': { showToggle: { attribute: 'no-toggle', values: { false: true }, ignore: [true] }, ripple: { ignore: [true] } },
   'navigation-bar': { ripple: { attribute: 'no-ripple', values: { false: true }, ignore: [true] } },
-  drawer: {
+  'navigation-drawer': {
     variant: { attribute: 'modal', values: { modal: true }, ignore: ['standard'] },
     // Not dismissible: neither the scrim nor Escape closes it.
     dismissible: { attribute: ['no-close-on-scrim-click', 'no-close-on-escape'], values: { false: true }, ignore: [true] },
   },
-  'top-app-bar': {
+  'app-bar': {
     compressible: { attribute: 'no-compress', values: { false: true }, ignore: [true] },
     scrollable: { attribute: 'no-scroll', values: { false: true }, ignore: [true] },
     scrolled: { call: { method: 'setScrollState' }, ignore: [false] },
@@ -179,7 +179,7 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'media', element: 'img', native: true, slot: 'media', markupTree: true, attributes: { src: 'src', alt: 'alt' }, ignore: { position: ['top'] } },
     { from: 'buttons', element: 'button', slot: 'actions', after: true },
   ],
-  'top-app-bar': [
+  'app-bar': [
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
     { from: 'trailingButton', element: 'button', slot: 'trailing', add: 'addTrailingElement' },
@@ -225,7 +225,7 @@ const triggers: Record<string, Trigger> = {
   'bottom-sheet': { from: 'trigger', element: 'button', id: 'bottom-sheet-trigger' },
   'side-sheet': { from: 'trigger', element: 'button', id: 'side-sheet-trigger' },
   snackbar: { from: 'trigger', element: 'button', id: 'snackbar-trigger' },
-  drawer: { from: 'trigger', element: 'button', id: 'drawer-trigger' },
+  'navigation-drawer': { from: 'trigger', element: 'button', id: 'drawer-trigger' },
   'navigation-rail': { from: 'trigger', element: 'button', id: 'navigation-rail-trigger' },
   // The time picker has no field: its opener shows the time.
   timepicker: { from: 'trigger', element: 'button', id: 'timepicker-trigger', shows: ' · ' },
@@ -245,7 +245,7 @@ const open: Record<string, OpenMeta> = {
   'bottom-sheet': { config: 'initialState', values: ['partial', 'expanded'], show: 'expand', hide: 'close' },
   'side-sheet': { config: 'open', show: 'show', hide: 'close' },
   snackbar: { config: 'open', show: 'show', hide: 'hide' },
-  drawer: { config: 'open' },
+  'navigation-drawer': { config: 'open' },
   'navigation-rail': { config: 'expanded', property: 'expanded', events: ['expand', 'collapse'], show: 'expand', hide: 'collapse' },
   // `open` on the factory config starts the dialog open (`material/src/components/timepicker/timepicker.ts`).
   timepicker: { config: 'open', show: 'show', hide: 'close' },
@@ -286,7 +286,8 @@ function slottedMeta<T extends Slotted | Trigger>(entry: T): Omit<T, 'attributes
 
 export function elementMeta(slug: string): ElementMeta | null {
   // Registry keys are camelCase (`iconButton`); playground slugs are kebab-case.
-  const key = camel(slug);
+  // Site names can change before their library aliases ship.
+  const key = camel(slug === 'app-bar' ? 'top-app-bar' : slug === 'navigation-drawer' ? 'drawer' : slug);
   const element = registry[key];
   if (!element) return null;
   const spec = element.spec;

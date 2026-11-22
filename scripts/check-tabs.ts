@@ -14,12 +14,13 @@ import { parse, compileScript, compileTemplate } from 'vue/compiler-sfc';
 import { chromium } from 'playwright';
 import { handleRequest } from '../server';
 import { components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
-import { addonSlugs, playgroundHref } from '../src/shared/addons';
+import { playgroundHref } from '../src/shared/addons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
 import { checkStepperWorkflow } from './stepper-driver';
 import { eligibleTabComponents } from './check-tabs-eligible';
 import { checkTabsRecycle, checkTabsSlugs } from './check-tabs-options';
+import { assertComponentRoot, isRootClass } from './check-tabs-roots';
 
 const root = resolve(import.meta.dir, '..');
 const scratch = resolve(root, 'node_modules/.scratch-check-tabs');
@@ -120,56 +121,6 @@ const fileName = (tab: Tab): string => ({
   solid: 'solid.tsx',
 })[tab];
 
-const ROOT_NAMES = new Set([
-  ...addonSlugs,
-  'badge',
-  'bottom-app-bar',
-  'bottom-sheet',
-  'button',
-  'button-group',
-  'card',
-  'carousel',
-  'checkbox',
-  'chip',
-  'chips',
-  'datepicker',
-  'dialog',
-  'divider',
-  'drawer',
-  'extended-fab',
-  'fab',
-  'fab-menu',
-  'icon-button',
-  'list',
-  'loading-indicator',
-  'menu',
-  'navigation-bar',
-  'navigation-rail',
-  'progress',
-  'radio',
-  'radios',
-  'search',
-  'select',
-  'side-sheet',
-  'slider',
-  'snackbar',
-  'split-button',
-  'switch',
-  'tab',
-  'tabs',
-  'text-field',
-  'timepicker',
-  'toolbar',
-  'tooltip',
-  'top-app-bar',
-]);
-
-function isRootClass(className: string): boolean {
-  if (!className.startsWith('mtrl-')) return false;
-  if (className.includes('--') || className.includes('__')) return false;
-  const name = className.slice(5);
-  return ROOT_NAMES.has(name);
-}
 
 function getStatedGaps(code: string): string[] {
   const match = /Not yet exposed by the element:\s*([^\n]+)/.exec(code);
@@ -781,6 +732,7 @@ try {
         const previewOnly = 'previewOnly' in component && component.previewOnly ? [...component.previewOnly] : [];
         const previewClasses = await previewFrame.evaluate((selectors: string[]) => {
           const found = new Set<string>();
+          const all = new Set<string>();
           const hiddenByOpacity = (start: Element) => {
             let element: Element | null = start;
             while (element) {
@@ -798,19 +750,25 @@ try {
           };
           const visit = (node: Element) => {
             if (selectors.some(selector => node.matches(selector))) return;
-            if (!hiddenByOpacity(node)) for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
+            const visible = !hiddenByOpacity(node);
+            for (const cls of node.classList) if (cls.startsWith('mtrl-')) {
+              all.add(cls);
+              if (visible) found.add(cls);
+            }
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
           visit(document.body);
-          return [...found];
+          return { visible: [...found], all: [...all] };
         }, previewOnly);
-        const previewRoots = previewClasses.filter(isRootClass);
+        assertComponentRoot(slug, previewClasses.all, `${slug} ${scenarioId} preview`);
+        const previewRoots = previewClasses.visible.filter(isRootClass);
         const previewText = await previewFrame.evaluate(collectVisibleText, previewOnly);
 
         // Collect root classes from mounted tab
         const tabClasses = await page.evaluate(() => {
           const found = new Set<string>();
+          const all = new Set<string>();
           const hiddenByOpacity = (start: Element) => {
             let element: Element | null = start;
             while (element) {
@@ -827,14 +785,19 @@ try {
             return false;
           };
           const visit = (node: Element) => {
-            if (!hiddenByOpacity(node)) for (const cls of node.classList) if (cls.startsWith('mtrl-')) found.add(cls);
+            const visible = !hiddenByOpacity(node);
+            for (const cls of node.classList) if (cls.startsWith('mtrl-')) {
+              all.add(cls);
+              if (visible) found.add(cls);
+            }
             if (node.shadowRoot) [...node.shadowRoot.children].forEach(visit);
             [...node.children].forEach(visit);
           };
           visit(document.body);
-          return [...found];
+          return { visible: [...found], all: [...all] };
         });
-        const tabRoots = tabClasses.filter(isRootClass);
+        assertComponentRoot(slug, tabClasses.all, `${slug} ${scenarioId} ${tab}`);
+        const tabRoots = tabClasses.visible.filter(isRootClass);
         const tabText = await page.evaluate(collectVisibleText, [] as string[]);
 
         let missing = previewRoots.filter(c => !tabRoots.includes(c));

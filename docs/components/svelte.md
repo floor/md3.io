@@ -86,7 +86,7 @@ the browser's event.
 Every live property is `$bindable`, so `bind:` works on each of them by its own name:
 `bind:checked` on a switch or a checkbox, `bind:selected` on a toggle icon button, `bind:index`
 on a carousel, and `bind:value` on the text field, slider, select, radios, tabs, chips, list,
-search, date and time pickers, navigation rail, drawer and button group. Others, such as a
+search, date and time pickers, navigation rail, navigation drawer and button group. Others, such as a
 checkbox's `indeterminate`, bind the same way.
 
 ```svelte
@@ -133,7 +133,7 @@ step when the user closes it:
 
 A component's children are its `children` snippet, which becomes the element's content: a
 button's label, a dialog's or a card's text. A component's named regions, such as a dialog's
-`headline` and `actions`, a card's `header-action` or a top app bar's `leading` and `trailing`,
+`headline` and `actions`, a card's `header-action` or an app bar's `leading` and `trailing`,
 are named snippets: `{#snippet actions()}`, as the dialog above does. A dashed name is
 camelCase: `{#snippet headerAction()}`. A region that also has a text prop, such as `headline`
 or `subhead`, takes either: the prop for plain text, the snippet for markup.

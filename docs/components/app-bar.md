@@ -1,16 +1,16 @@
 ---
 created: 2026-09-21
-updated: 2026-11-19
+updated: 2026-11-22
 status: published
 ---
 
-# Top app bar
+# App bar
 
-A top app bar shows the current screen's title, a navigation button and the screen's most
+An app bar shows the current screen's title, a navigation button and the screen's most
 important actions. M3 has four types: **small** and **center-aligned**, one 64dp row, and
 **medium** and **large**, with the headline on a second row, which compress to the small bar
 as the page scrolls. See the
-[M3 top app bar guidelines](https://m3.material.io/components/app-bars/overview).
+[M3 app bar guidelines](https://m3.material.io/components/app-bars/overview).
 
 ## Usage
 
@@ -18,7 +18,7 @@ The leading button is the navigation icon; the actions go at the trailing end. I
 need `ariaLabel` to name them.
 
 ```example
-top-app-bar:
+app-bar:
   title: Inbox
   leading: { icon: backIcon, ariaLabel: Back }
   actions:
@@ -36,7 +36,7 @@ Past `scrollThreshold` pixels of window scroll, the bar takes its scrolled state
 height.
 
 ```example
-top-app-bar:
+app-bar:
   type: large
   title: Photos
   scrollThreshold: 8
@@ -49,7 +49,7 @@ container is driven with `setScrollState(scrolled)`; the web component follows t
 whose id `scroll-target` names.
 
 ```example
-top-app-bar:
+app-bar:
   type: medium
   title: Messages
   scrollable: false
@@ -98,8 +98,8 @@ The bar emits no events: `onScroll` reports the scrolled state, once per change.
 
 ## Accessibility
 
-- The bar is a `<header role="banner">` named "Top app bar"; the web component's `aria-label`
-  names it instead.
+- The bar is a `<header role="banner">`. Its default accessible name in the current library
+  is `Top app bar`; set `ariaLabel` (or the web component's `aria-label`) to name the app bar.
 - The headline is an `<h1>`: it is the screen's top-level heading, so the screen should not
   have another. A long headline is cut with an ellipsis and stays whole for assistive tech.
 - The bar has no keyboard behaviour of its own: its buttons are in the tab order, and each

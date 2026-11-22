@@ -32,14 +32,14 @@
 .catalog-visual--card m-card { width: min(100%, 300px); }
 
 /* Pinned to the card's edges, as they are to the window's. */
-.catalog-visual--navigation-rail, .catalog-visual--drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
+.catalog-visual--navigation-rail, .catalog-visual--navigation-drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
 md3-catalog-drawer:not(:defined) { visibility: hidden; }
 .catalog-visual--navigation-bar { align-items: flex-end; padding: 0; }
 .catalog-visual--navigation-bar m-navigation-bar { width: 100%; }
 /* The rail's three destinations are taller than the card: scaled as the list and dialog are. */
 .catalog-visual--navigation-rail m-navigation-rail { zoom: 0.6; }
-.catalog-visual--top-app-bar { align-items: flex-start; padding: 0; }
-.catalog-visual--top-app-bar m-top-app-bar { width: 100%; }
+.catalog-visual--app-bar { align-items: flex-start; padding: 0; }
+.catalog-visual--app-bar m-top-app-bar { width: 100%; }
 .catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
 
 .catalog-visual--badge { gap: 32px; }

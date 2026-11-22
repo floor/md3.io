@@ -46,9 +46,9 @@ describe('a control a named set replaces', () => {
     expect(featured.initialSlide).toBe('0');
     expect((components.carousel.config(featured) as { initialSlide: number }).initialSlide).toBe(0);
 
-    const actions = control('top-app-bar', 'actions');
+    const actions = control('app-bar', 'actions');
     expect(actions.replaced).toBeUndefined();
-    const trail = normalizeComponentState('top-app-bar', { ...initialComponentState('top-app-bar'), context: 'trail-guide', actions: '1' });
+    const trail = normalizeComponentState('app-bar', { ...initialComponentState('app-bar'), context: 'trail-guide', actions: '1' });
     expect(trail.contextDefault).toBe(false);
     expect(trail[actions.enabledWhen!] !== true).toBe(true);
     expect(controlConcealed(actions, trail)).toBe(false);

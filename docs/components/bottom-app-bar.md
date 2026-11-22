@@ -1,6 +1,6 @@
 ---
 created: 2026-09-21
-updated: 2026-11-19
+updated: 2026-11-22
 status: published
 ---
 
@@ -11,7 +11,7 @@ buttons and, often, a [FAB](fab.md). M3 Expressive replaces it with the docked t
 page describes the bar as `material` ships it today. See the
 [M3 bottom app bar guidelines](https://m3.material.io/components/bottom-app-bar/overview).
 
-> **Deprecated in 3.x:** Material Design 3 Expressive replaces the bottom app bar with the docked [toolbar](toolbar.md) (`createToolbar({ variant: 'docked', placement: 'bottom' })` or `<m-toolbar variant="docked" placement="bottom">`). `createBottomAppBar`, `<m-bottom-app-bar>`, and their React, Vue, Solid, and Svelte adapters remain available and unchanged throughout `3.x`; removal is parked until Material Design v4. Since 3.14.0 an opt-in factory builds the same bar on the docked toolbar — `material/components/bottom-app-bar-toolbar` with `material/styles/bottom-app-bar-toolbar` — for apps that want the bar's look without the legacy component; the legacy bar itself is unchanged. See [Migrating from the bottom app bar](toolbar.md#migrating-from-the-bottom-app-bar) for recipes and the feature parity table.
+> **Deprecated.** Use [Toolbar](/components/toolbar/) for new interfaces (`createToolbar({ variant: 'docked', placement: 'bottom' })` or `<m-toolbar variant="docked" placement="bottom">`). `createBottomAppBar`, `<m-bottom-app-bar>`, and their React, Vue, Solid, and Svelte adapters remain available and unchanged throughout `3.x`; removal is parked until Material Design v4. Since 3.14.0 an opt-in factory builds the same bar on the docked toolbar — `material/components/bottom-app-bar-toolbar` with `material/styles/bottom-app-bar-toolbar` — for apps that want the bar's look without the legacy component; the legacy bar itself is unchanged. See [Migrating from the bottom app bar](toolbar.md#migrating-from-the-bottom-app-bar) for recipes and the feature parity table.
 
 ## Usage
 

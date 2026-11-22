@@ -56,7 +56,7 @@ import { checkboxChildChecked, checkboxChildren, currentCheckboxChildren } from 
 import { radioAriaLabel } from '../shared/content/radios';
 import { trailingBehaviour } from '../shared/content/text-field';
 import { toolbarContent } from '../shared/content/toolbar';
-import { appBarContent } from '../shared/content/top-app-bar';
+import { appBarContent } from '../shared/content/app-bar';
 import { railHeaderForm } from '../shared/content/navigation-rail';
 import { tabsAriaLabel } from '../shared/content/tabs';
 import { menuSelectedId } from '../shared/content/menu';
@@ -275,15 +275,15 @@ function create(state: ComponentState) {
       control.on('select', event => { sync({ active: event.id }); message(`Selected: ${event.id}`); });
       return { element: host, destroy: () => control.destroy() };
     }
-    case 'drawer': {
-      const control = createDrawer(components.drawer.config(state));
+    case 'navigation-drawer': {
+      const control = createDrawer(components['navigation-drawer'].config(state));
       const host = document.createElement('div');
       host.className = 'navigation-demo';
       host.dataset.position = String(state.position);
       host.append(control.element);
       // An open standard drawer is the stage: the opener is there while it is modal or closed.
       const showsTrigger = state.variant === 'modal' || !state.open;
-      const trigger = showsTrigger ? createButton({ text: 'Open drawer', variant: 'tonal' }) : null;
+      const trigger = showsTrigger ? createButton({ text: 'Open navigation drawer', variant: 'tonal' }) : null;
       if (trigger) {
         trigger.element.classList.add('navigation-trigger');
         trigger.element.hidden = control.isOpen();
@@ -291,8 +291,8 @@ function create(state: ComponentState) {
         host.append(trigger.element);
       }
       control.on('select', (event: { id: string; label: string }) => { sync({ active: event.id }); message(`Selected: ${event.label}`); });
-      control.on('open', () => { sync({ open: true }); if (trigger) trigger.element.hidden = true; message('Drawer opened'); });
-      control.on('close', () => { sync({ open: false }); if (trigger) trigger.element.hidden = false; message('Drawer closed'); });
+      control.on('open', () => { sync({ open: true }); if (trigger) trigger.element.hidden = true; message('Navigation drawer opened'); });
+      control.on('close', () => { sync({ open: false }); if (trigger) trigger.element.hidden = false; message('Navigation drawer closed'); });
       return { element: host, destroy: () => { trigger?.destroy(); control.destroy(); } };
     }
     case 'tabs': {
@@ -323,9 +323,9 @@ function create(state: ComponentState) {
       }, 0);
       return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
     }
-    case 'top-app-bar': {
-      const control = createTopAppBar(components['top-app-bar'].config(state));
-      const content = appBarContent('top-app-bar', state);
+    case 'app-bar': {
+      const control = createTopAppBar(components['app-bar'].config(state));
+      const content = appBarContent('app-bar', state);
       const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
       const trailing = content.trailingButton ? createButton(content.trailingButton) : null;

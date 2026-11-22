@@ -58,13 +58,13 @@ later.
 
 ## Escape and stacked modals
 
-Escape is a key press for every modal: the dialog, the modal sheets and drawer, the pickers
+Escape is a key press for every modal: the dialog, the modal sheets and navigation drawer, the pickers
 and the full-screen search.
 
-- **Only the topmost modal answers.** With a dialog open over a drawer, Escape closes the
+- **Only the topmost modal answers.** With a dialog open over a navigation drawer, Escape closes the
   dialog and leaves the drawer.
 - **A refusal holds for any number of presses.** A modal refuses with `closeOnEscape: false`,
-  with a `beforeclose` listener that prevents it, or, for a drawer, with `dismissible: false`.
+  with a `beforeclose` listener that prevents it, or, for a navigation drawer, with `dismissible: false`.
 - **A close request that is not a key press can still be forced.** A back gesture, for
   example: the browser closes the modal on its third refusal.
 
@@ -85,7 +85,7 @@ The state getter is a method on every component that has one.
 
 | Getter | Components |
 |---|---|
-| `isOpen()` | Dialog, menu, select, FAB menu, bottom sheet, side sheet, drawer, snackbar, date picker, time picker |
+| `isOpen()` | Dialog, menu, select, FAB menu, bottom sheet, side sheet, navigation drawer, snackbar, date picker, time picker |
 | `isExpanded()` | Search, split button, navigation rail, card |
 | `isVisible()` | Tooltip, bottom app bar, toolbar |
 | `isHidden()` | Navigation bar |

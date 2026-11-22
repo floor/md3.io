@@ -12,7 +12,7 @@
   container-type: inline-size;
   container-name: mail;
 }
-/* Below 700px (Mobile), the top app bar and modal drawer replace the navigation rail. */
+/* Below 700px (Mobile), the app bar and modal drawer replace the navigation rail. */
 .mail > :is(m-navigation-rail, .mtrl-navigation-rail) { display: none; }
 .mail__bar { position: relative; z-index: 2; flex: none; height: 64px; }
 .mail__main { display: flex; flex: 1; min-width: 0; }

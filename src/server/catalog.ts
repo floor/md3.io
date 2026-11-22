@@ -14,7 +14,8 @@ import { scopedTokens } from './tokens';
 export const CATALOG_SCOPE = 'catalog-visual';
 /** mtrl's non-colour tokens on the visuals: their colours inherit the page's
  * chosen theme from <html data-theme>, like every other surface. */
-export const catalogTokens = scopedTokens(`.${CATALOG_SCOPE}`, `:root[data-theme-mode=dark] .${CATALOG_SCOPE}`, undefined, false);
+const tokenScope = `:is(.${CATALOG_SCOPE}, .catalog-status)`;
+export const catalogTokens = scopedTokens(tokenScope, `:root[data-theme-mode=dark] ${tokenScope}`, undefined, false);
 
 /** The surface elements of the overlays, by component. */
 export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs' } as const;
@@ -90,12 +91,12 @@ const visuals: Record<ComponentSlug, string> = {
     destinations.map(item => m('navigation-rail-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label)).join('')),
   'navigation-bar': m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail navigation' },
     destinations.map(item => m('navigation-bar-item', { value: item.value, icon: item.icon }, item.label)).join('')),
-  drawer: m('drawer', { open: true, dense: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail' },
+  'navigation-drawer': m('drawer', { open: true, dense: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail' },
     m('drawer-item', { type: 'section' }, 'Your mailbox', 'md3-catalog') + destinations.map(item => m('drawer-item', { value: item.value, icon: item.icon, ...(item.value === 'inbox' ? { badge: 8 } : {}) }, item.label, 'md3-catalog')).join(''), 'md3-catalog'),
   // A surface: M3's fixed tab row, which <m-tabs> has no attribute for.
   tabs: `<${SURFACES.tabs}></${SURFACES.tabs}>`,
   menu: `<${SURFACES.menu}></${SURFACES.menu}>`,
-  'top-app-bar': m('top-app-bar', { headline: 'My library', 'no-scroll': true },
+  'app-bar': m('top-app-bar', { headline: 'My library', 'no-scroll': true },
     m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })),
   // A surface: <m-toolbar>'s item hosts take a tabindex, which a card's link must not hold.
   toolbar: `<${SURFACES.toolbar}></${SURFACES.toolbar}>`,

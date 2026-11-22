@@ -100,7 +100,7 @@ try {
       source = await page.locator('#generated-code').textContent() ?? '';
       assert(source.includes('horizontal'), 'Horizontal layout is not in the code');
       assert(await page.locator('#configuration [name="hideOnScroll"]').count() === 0, 'Hide on scroll is a control');
-    } else if (slug === 'drawer') {
+    } else if (slug === 'navigation-drawer') {
       await frame.getByText('Albums', { exact: true }).click();
       await selected('albums');
       await choose('variant', 'modal');
@@ -115,7 +115,7 @@ try {
       await frame.getByText('Albums', { exact: true }).focus();
       await frame.getByText('Albums', { exact: true }).press('Escape');
       await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
-      await frame.getByRole('button', { name: 'Open drawer' }).click();
+      await frame.getByRole('button', { name: 'Open navigation drawer' }).click();
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
     } else if (slug === 'tabs') {
       assert(await frame.getByRole('tab').evaluateAll(tabs => tabs.every(tab => Math.abs(tab.getBoundingClientRect().top - tabs[0]!.getBoundingClientRect().top) < 1)), 'Fixed tabs should share one horizontal row');
@@ -139,7 +139,7 @@ try {
       await page.screenshot({ path: `${output}/menu-submenu.png`, fullPage: true, animations: 'disabled' });
       await frame.getByRole('menuitem', { name: 'Copy link', exact: true }).click();
       await page.locator('#playground-status').filter({ hasText: /Selected: Copy link|Menu closed/ }).waitFor();
-    } else if (slug === 'top-app-bar') {
+    } else if (slug === 'app-bar') {
       await frame.getByRole('button', { name: 'Favorite', exact: true }).click();
       await page.locator('#playground-status').filter({ hasText: 'Favorite clicked' }).waitFor();
       await choose('type', 'large');
@@ -219,7 +219,7 @@ try {
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
-    if (slug === 'top-app-bar') {
+    if (slug === 'app-bar') {
       await choose('type', 'center');
       await choose('actions', '2');
       await frame.getByRole('button', { name: 'Bookmark' }).waitFor();

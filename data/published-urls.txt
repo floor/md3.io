@@ -135,3 +135,7 @@
 /styles/shape/
 /styles/themes/
 /styles/typography/
+/components/app-bar/
+/docs/components/app-bar/
+/components/navigation-drawer/
+/docs/components/navigation-drawer/

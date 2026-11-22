@@ -71,7 +71,7 @@ select:
 ```
 
 The menu is mounted in the select's own element. In a scrolling or clipping container, such as
-a drawer or a sheet, set `menu: { container: document.body, maxHeight: '320px' }`, or
+a navigation drawer or a sheet, set `menu: { container: document.body, maxHeight: '320px' }`, or
 `layer: 'top'` to show it in the browser's top layer. `setOptions()` replaces the options, for
 a list loaded later. Validating a select in a form is planned for [Showcase](/showcase/).
 

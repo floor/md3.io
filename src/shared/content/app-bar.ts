@@ -1,4 +1,4 @@
-// The top app bar's playground content: the action buttons both app bars share, the
+// The app bar's playground content: the action buttons both app bars share, the
 // named bars, what a preview adds beside their configs, and its registry entry.
 import type { IconButtonConfig } from 'material/components/icon-button';
 import type { FabConfig } from 'material/components/fab';
@@ -51,8 +51,8 @@ const barContext = (state: ComponentState): BarContext | undefined => barContext
 export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: iconByName(icon), ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon] ?? icon, variant: 'standard' }));
 
 /** What an app bar preview adds beside its config: the icon buttons, a trailing button, the FAB, and the state it is put in. */
-export function appBarContent(slug: 'top-app-bar' | 'bottom-app-bar', state: ComponentState): { leading?: IconButtonConfig; actions: IconButtonConfig[]; trailingButton?: AppBarButton; fab?: FabConfig; scrolled?: boolean; visible?: boolean } {
-  if (slug !== 'top-app-bar') {
+export function appBarContent(slug: 'app-bar' | 'bottom-app-bar', state: ComponentState): { leading?: IconButtonConfig; actions: IconButtonConfig[]; trailingButton?: AppBarButton; fab?: FabConfig; scrolled?: boolean; visible?: boolean } {
+  if (slug !== 'app-bar') {
     const set = bottomAppBarSet(state);
     // A named set replaces the counted actions. No set: the two default actions and the add FAB stay as they were.
     if (set) return { actions: [...set.actions], ...(state.hasFab ? { fab: { icon: set.fabIcon, ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
@@ -74,11 +74,11 @@ const contextControl: Control = {
 };
 
 /**
- * The top app bar's scenarios, from m3.material.io (read 6 October 2026). Options
+ * The app bar's scenarios, from m3.material.io (read 6 October 2026). Options
  * name playground controls only. Each bar is the figure's bar: a back button, the
  * title, and the action the figure shows.
  */
-const topAppBarScenarios: readonly Scenario[] = [
+const appBarScenarios: readonly Scenario[] = [
   {
     id: 'trail-guide', name: 'Trail guide', source: 'https://m3.material.io/components/app-bars/guidelines',
     description: 'A large bar for a trail guide, with a bookmark.',
@@ -101,13 +101,13 @@ const topAppBarScenarios: readonly Scenario[] = [
   },
 ];
 
-export const topAppBarComponent = {
-  group: 'Navigation', name: 'Top app bar', factory: 'createTopAppBar', variable: 'topBar',
+export const appBarComponent = {
+  group: 'Navigation', name: 'App bar', factory: 'createTopAppBar', variable: 'topBar',
   description: 'Give a view its title and actions. Explore bar sizes and the scrolled appearance.',
   summary: 'A title, navigation, and contextual actions.', styles: ['top-app-bar', 'icon-button'],
   // The Send button's styles: the preview only. Vanilla imports them when a bar has that button.
   previewStyles: ['button'],
-  scenarios: topAppBarScenarios,
+  scenarios: appBarScenarios,
   controls: [
     ...section('Appearance', [choose('type', 'Type', ['small', 'center', 'medium', 'large'], 'small', 'select'), toggle('scrolled', 'Scrolled state'), toggle('compressible', 'Compressible', true)]),
     ...section('Content', [contextControl, text('title', 'Title', 'My library'), toggle('leading', 'Navigation button', true), { ...choose('actions', 'Action count', ['0', '1', '2'], '1'), enabledWhen: 'contextDefault' }]),

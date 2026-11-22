@@ -33,7 +33,7 @@ const app = document.getElementById("app")!;
 
 const section = Object.assign(document.createElement("section"), { className: "mail" });
 
-// The rail on wide frames, and a modal drawer opened from the top app bar on phones.
+// The rail on wide frames, and a modal drawer opened from the app bar on phones.
 const rail = createNavigationRail({
   ariaLabel: RAIL_LABEL,
   items: FOLDERS.map((f) => {

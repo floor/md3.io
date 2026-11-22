@@ -45,7 +45,7 @@ describe('site routes and documentation', () => {
     }
   });
   test('headings, relative links, and the old sheet link are routable', () => {
-    const document = renderDocument('drawer')!;
+    const document = renderDocument('navigation-drawer')!;
     expect(document.html).toContain('/docs/components/bottom-sheet/');
     expect(document.html).toContain('/docs/components/menu/');
     for (const heading of document.toc) expect(document.html).toContain(`id="${heading.id}"`);
@@ -581,7 +581,7 @@ describe('framework code for the overlay elements', () => {
     expect(code('menu', 'react')).toContain('<Menu open={open} onOpen={() => setOpen(true)} onClose={() => setOpen(false)}');
   });
   test('the modal drawer and a tooltip target are generated, not noted', () => {
-    const drawer = code('drawer', 'html', { variant: 'modal' });
+    const drawer = code('navigation-drawer', 'html', { variant: 'modal' });
     expect(drawer).toContain(' modal>');
     expect(drawer).not.toContain('Not yet exposed');
     expect(code('tooltip', 'html')).toContain('<m-icon-button id="tooltip-target" aria-label="Favorite" variant="tonal"></m-icon-button>');
@@ -729,10 +729,10 @@ test('scripts and stylesheets are the hashed files from the manifest', async () 
 
 describe('drawer files scenario', () => {
   test('Files selects Photos with 999+, and every row has its icon', () => {
-    const scenario = components.drawer.scenarios.find(item => item.id === 'files');
+    const scenario = components['navigation-drawer'].scenarios.find(item => item.id === 'files');
     if (!scenario) throw new Error('missing drawer scenario files');
-    const state = normalizeComponentState('drawer', { ...initialComponentState('drawer'), ...scenario.options });
-    const config = components.drawer.config(state);
+    const state = normalizeComponentState('navigation-drawer', { ...initialComponentState('navigation-drawer'), ...scenario.options });
+    const config = components['navigation-drawer'].config(state);
     expect(config.headline).toBe('Files');
     expect(state.active).toBe('photos');
     const items = config.items ?? [];

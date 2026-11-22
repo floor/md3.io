@@ -19,7 +19,7 @@ describe('site search', () => {
   });
   test('an attribute several elements share finds each of them', () => {
     expect(components('no-close-on-escape').slice(0, 4).sort())
-      .toEqual(['/components/bottom-sheet/', '/components/dialog/', '/components/drawer/', '/components/side-sheet/']);
+      .toEqual(['/components/bottom-sheet/', '/components/dialog/', '/components/navigation-drawer/', '/components/side-sheet/']);
   });
   test('framework component names and child tags find their component', () => {
     expect(searchSite('MDialog')[0]!.url).toBe('/components/dialog/');

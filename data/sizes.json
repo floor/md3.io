@@ -235,7 +235,7 @@
         "added": 6573
       }
     },
-    "drawer": {
+    "navigation-drawer": {
       "factory": {
         "alone": 15921,
         "lazy": 0,
@@ -271,7 +271,7 @@
         "added": 14129
       }
     },
-    "top-app-bar": {
+    "app-bar": {
       "factory": {
         "alone": 9066,
         "lazy": 0,

@@ -39,13 +39,15 @@ function imports(slug: string, flavour: Flavour, id: string): string {
     const styles = components[slug].styles.map(style => `import "material/styles/${style}";\n`).join("");
     return `${styles}import "material-addons/styles";\nimport { ${components[slug].factory} as ${id} } from "material-addons";\nglobalThis.${id} = ${id};\n`;
   }
+  // Keep the installed library module name until the renamed aliases are released.
+  const moduleSlug = slug === "app-bar" ? "top-app-bar" : slug === "navigation-drawer" ? "drawer" : slug;
   if (flavour === "element") {
-    const define = `define${pascal(slug)}`;
-    return `import "material/elements/css/${slug}";\nimport { ${define} as ${id} } from "material/elements";\n${id}();\n`;
+    const define = `define${pascal(moduleSlug)}`;
+    return `import "material/elements/css/${moduleSlug}";\nimport { ${define} as ${id} } from "material/elements";\n${id}();\n`;
   }
-  const index = readFileSync(resolve(mtrl, "dist/components", slug, "index.js"), "utf8");
-  const creator = /export default|as default\b|export \{ default(?: \}|,)/.test(index) ? `import ${id} from` : `import { create${pascal(slug)} as ${id} } from`;
-  return `import "material/styles/${slug}";\n${creator} "material/components/${slug}";\nglobalThis.${id} = ${id};\n`;
+  const index = readFileSync(resolve(mtrl, "dist/components", moduleSlug, "index.js"), "utf8");
+  const creator = /export default|as default\b|export \{ default(?: \}|,)/.test(index) ? `import ${id} from` : `import { create${pascal(moduleSlug)} as ${id} } from`;
+  return `import "material/styles/${moduleSlug}";\n${creator} "material/components/${moduleSlug}";\nglobalThis.${id} = ${id};\n`;
 }
 const entry = (list: string[], flavour: Flavour): string =>
   `import "material/styles/base";\n${list.map((slug, i) => imports(slug, flavour, `c${i}`)).join("")}`;

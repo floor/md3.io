@@ -9,6 +9,7 @@ import { chromium, type Locator, type Page } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { addonDocGroup, docGroups } from '../src/server/content';
+import { checkBottomAppBarRow } from './check-drawer-row';
 import { componentSlugs, components } from '../src/shared/components';
 import { addonSlugs, addons, playgroundHref } from '../src/shared/addons';
 import { baseline, themeTokens } from '../src/server/tokens';
@@ -24,9 +25,9 @@ const sections = [
   { name: 'Buttons', slugs: ['button', 'button-group', 'extended-fab', 'fab', 'fab-menu', 'icon-button', 'split-button'] },
   { name: 'Date & time pickers', slugs: ['datepicker', 'timepicker'] },
   { name: 'Loading & progress', slugs: ['loading-indicator', 'progress'] },
-  { name: 'Navigation', slugs: ['drawer', 'navigation-bar', 'navigation-rail'] },
+  { name: 'Navigation', slugs: ['navigation-bar', 'navigation-drawer', 'navigation-rail'] },
   { name: 'Sheets', slugs: ['bottom-sheet', 'side-sheet'] },
-  { name: 'All other components', slugs: ['badge', 'bottom-app-bar', 'card', 'carousel', 'checkbox', 'chips', 'dialog', 'divider', 'list', 'menu', 'radios', 'search', 'select', 'slider', 'snackbar', 'switch', 'tabs', 'text-field', 'toolbar', 'tooltip', 'top-app-bar'] },
+  { name: 'All other components', slugs: ['app-bar', 'badge', 'bottom-app-bar', 'card', 'carousel', 'checkbox', 'chips', 'dialog', 'divider', 'list', 'menu', 'radios', 'search', 'select', 'slider', 'snackbar', 'switch', 'tabs', 'text-field', 'toolbar', 'tooltip'] },
 ] as const;
 const catalogOrder = sections.flatMap(section => [...section.slugs]);
 const families = sections.slice(0, -1);
@@ -35,6 +36,8 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
   assert(JSON.stringify(actual) === JSON.stringify(expected), message);
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
+  // Cover the reviewed phone and desktop widths; existing breakpoint layout checks remain below.
+  if ([390, 1440].includes(pane.page().viewportSize()?.width ?? 0)) await checkBottomAppBarRow(pane);
   // A hidden Add-ons section (src/shared/visibility.ts) has no docs group.
   const addonDocs = addonsPublic ? addonDocGroup.items : [];
   if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Docs has a Components section');
@@ -43,7 +46,7 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
   }));
   const rows = await pane.locator('[part~="items"]').evaluate(items => [...items.children].flatMap(item => {
     const row = item.matches('a') ? item : item.querySelector('button[aria-expanded]');
-    return row ? [row.textContent!.trim()] : [];
+    return row ? [(row.querySelector('[part~="item-label"]')?.textContent ?? row.textContent)!.trim()] : [];
   }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
   // The Components pane lists components only; the docs pane keeps its overview link.
@@ -98,12 +101,12 @@ async function checkDetailFocusOrder(page: Page, width: number) {
   await page.keyboard.press('Tab');
   if (width >= 840) {
     const pane = main.getByRole('navigation', { name: 'Component list', exact: true });
-    const focused = await pane.getByRole('link', { name: 'Badge', exact: true }).evaluate(link => (link.getRootNode() as ShadowRoot).activeElement === link);
+    const focused = await pane.getByRole('link', { name: 'App bar', exact: true }).evaluate(link => (link.getRootNode() as ShadowRoot).activeElement === link);
     assert(focused, `${width}px: Tab enters the detail before the component list`);
     const headings = main.getByRole('heading');
     assert(await headings.nth(0).and(main.getByRole('heading', { name: 'Tooltip', level: 1, exact: true })).count() === 1,
       `${width}px: the detail H1 is the first heading (the list has none)`);
-    await pane.getByRole('link', { name: 'Top app bar', exact: true }).focus();
+    await pane.getByRole('link', { name: 'Tooltip', exact: true }).focus();
     await page.keyboard.press('Tab');
   }
   assert(await inDetail(), `${width}px: Tab did not reach the component detail`);

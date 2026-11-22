@@ -254,7 +254,7 @@ const css = preupgradeStyles('md');
 
 ## The top layer
 
-Menus, selects, split buttons, tooltips, snackbars, dialogs, modal sheets, the modal drawer and
+Menus, selects, split buttons, tooltips, snackbars, dialogs, modal sheets, the modal navigation drawer and
 rail, search's view and the pickers open in the browser's top layer from inside their shadow
 root: above every `z-index`, outside any `overflow: hidden` parent, with nothing to configure.
 The modals use `showModal()`, so the page outside is inert. A menu's `anchor` and a tooltip's

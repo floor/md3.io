@@ -7,7 +7,7 @@ status: published
 # Tabs
 
 Tabs organize related content at the same level, one view at a time. M3 has two variants:
-**primary** tabs sit at the top of the content pane, under a top app bar, and **secondary**
+**primary** tabs sit at the top of the content pane, under an app bar, and **secondary**
 tabs subdivide one of those views. Tabs are for related content, not sequential steps. See
 the [M3 tabs guidelines](https://m3.material.io/components/tabs/overview).
 
