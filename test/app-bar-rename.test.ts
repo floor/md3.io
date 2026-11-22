@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
-import { components, initialComponentState, componentCode, componentDeprecations, elementConfig } from '../src/shared/components';
+import { components, initialComponentState, componentCode, componentDeprecations, elementConfig, type ComponentState } from '../src/shared/components';
 import { elementMeta } from '../src/server/elements-meta';
 import { frameworkCode } from '../src/shared/frameworks';
 import { searchSite } from '../src/server/search';
@@ -77,7 +77,8 @@ describe('App bar naming and compatibility', () => {
   });
 
   test('modal and closed Navigation drawer samples use the same human-readable opener', () => {
-    for (const patch of [{ variant: 'modal' }, { open: false }]) {
+    const patches: ComponentState[] = [{ variant: 'modal' }, { open: false }];
+    for (const patch of patches) {
       const state = { ...initialComponentState('navigation-drawer'), ...patch };
       const code = componentCode('navigation-drawer', state);
       expect(code).toContain("text: 'Open navigation drawer'");
