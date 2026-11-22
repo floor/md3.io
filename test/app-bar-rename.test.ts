@@ -89,6 +89,9 @@ describe('App bar naming and compatibility', () => {
       expect(html).toContain('href="/components/toolbar/"');
       expect(sitemapPages().map(page => page.path)).toContain(path);
     }
+    const docs = await (await get('/docs/components/bottom-app-bar/')).text();
+    expect(docs.includes('<p><strong>Deprecated.</strong> Use')).toBe(true);
+    expect(/<blockquote>\s*<p><strong>Deprecated\.<\/strong>/.test(docs)).toBe(false);
     expect(searchSite('createBottomAppBar').find(result => result.section === 'Components')).toMatchObject({ title: 'Bottom app bar', group: 'Deprecated', url: '/components/bottom-app-bar/' });
   });
 });

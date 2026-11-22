@@ -6,7 +6,7 @@ status: published
 
 # Bottom app bar
 
-> **Deprecated.** Use [Toolbar](/components/toolbar/) for new interfaces. The existing bottom app bar remains available for compatibility.
+**Deprecated.** Use [Toolbar](/components/toolbar/) for new interfaces. The existing bottom app bar remains available for compatibility.
 
 A bottom app bar puts a screen's frequent actions within thumb reach on a phone: a row of icon
 buttons and, often, a [FAB](fab.md). M3 Expressive replaces it with the docked toolbar; this
