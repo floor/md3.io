@@ -10,6 +10,7 @@
       <h1><%= it.component.name %></h1>
       <span class="eyebrow"><%= it.component.group.toUpperCase() %></span>
     </div>
+    <% const deprecation = it.componentDeprecations[it.slug]; if (deprecation) { %><p role="note"><strong>Deprecated.</strong> Use <a href="<%= deprecation.href %>"><%= deprecation.replacement %></a> instead.</p><% } %>
     <p><%= it.component.description %></p>
   </header>
   <div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div>

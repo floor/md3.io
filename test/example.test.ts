@@ -183,7 +183,7 @@ describe('open state and bound text', () => {
 });
 
 describe('slotted children a factory takes through a method', () => {
-  const bar = 'top-app-bar:\n  title: Inbox\n  leading: { icon: backIcon, ariaLabel: Back }\n  actions:\n    - { icon: searchIcon, ariaLabel: Search }\n';
+  const bar = 'app-bar:\n  title: Inbox\n  leading: { icon: backIcon, ariaLabel: Back }\n  actions:\n    - { icon: searchIcon, ariaLabel: Search }\n';
   test('Vanilla creates each one and hands it to the method, not the config', () => {
     const vanilla = code(bar, 'vanilla');
     expect(vanilla).toContain("import { createTopAppBar, createIconButton } from 'material';");

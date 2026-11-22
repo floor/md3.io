@@ -89,7 +89,7 @@ const keys: Record<string, Record<string, ConfigKey>> = {
     // Not dismissible: neither the scrim nor Escape closes it.
     dismissible: { attribute: ['no-close-on-scrim-click', 'no-close-on-escape'], values: { false: true }, ignore: [true] },
   },
-  'top-app-bar': {
+  'app-bar': {
     compressible: { attribute: 'no-compress', values: { false: true }, ignore: [true] },
     scrollable: { attribute: 'no-scroll', values: { false: true }, ignore: [true] },
     scrolled: { call: { method: 'setScrollState' }, ignore: [false] },
@@ -179,7 +179,7 @@ const slotted: Record<string, Slotted[]> = {
     { from: 'media', element: 'img', native: true, slot: 'media', markupTree: true, attributes: { src: 'src', alt: 'alt' }, ignore: { position: ['top'] } },
     { from: 'buttons', element: 'button', slot: 'actions', after: true },
   ],
-  'top-app-bar': [
+  'app-bar': [
     { from: 'leading', element: 'icon-button', slot: 'leading', add: 'addLeadingElement' },
     { from: 'actions', element: 'icon-button', slot: 'trailing', add: 'addTrailingElement' },
     { from: 'trailingButton', element: 'button', slot: 'trailing', add: 'addTrailingElement' },
@@ -286,7 +286,8 @@ function slottedMeta<T extends Slotted | Trigger>(entry: T): Omit<T, 'attributes
 
 export function elementMeta(slug: string): ElementMeta | null {
   // Registry keys are camelCase (`iconButton`); playground slugs are kebab-case.
-  const key = camel(slug);
+  // Site name changed before the library's AppBar alias ships.
+  const key = camel(slug === 'app-bar' ? 'top-app-bar' : slug);
   const element = registry[key];
   if (!element) return null;
   const spec = element.spec;

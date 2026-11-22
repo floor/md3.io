@@ -139,7 +139,7 @@ try {
       await page.screenshot({ path: `${output}/menu-submenu.png`, fullPage: true, animations: 'disabled' });
       await frame.getByRole('menuitem', { name: 'Copy link', exact: true }).click();
       await page.locator('#playground-status').filter({ hasText: /Selected: Copy link|Menu closed/ }).waitFor();
-    } else if (slug === 'top-app-bar') {
+    } else if (slug === 'app-bar') {
       await frame.getByRole('button', { name: 'Favorite', exact: true }).click();
       await page.locator('#playground-status').filter({ hasText: 'Favorite clicked' }).waitFor();
       await choose('type', 'large');
@@ -219,7 +219,7 @@ try {
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${slug}: mobile page overflows horizontally`);
     await page.screenshot({ path: `${output}/${slug}-mobile.png`, fullPage: true, animations: 'disabled' });
-    if (slug === 'top-app-bar') {
+    if (slug === 'app-bar') {
       await choose('type', 'center');
       await choose('actions', '2');
       await frame.getByRole('button', { name: 'Bookmark' }).waitFor();

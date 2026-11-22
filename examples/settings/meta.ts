@@ -4,7 +4,7 @@ export default {
   slug: "settings",
   title: "Settings",
   description: "A device settings app with grouped rows, immediate preferences and a Wi-Fi sub-screen, in every framework.",
-  components: ["top-app-bar", "icon-button", "avatar", "button", "list", "switch", "progress", "dialog", "text-field", "snackbar"],
+  components: ["app-bar", "icon-button", "avatar", "button", "list", "switch", "progress", "dialog", "text-field", "snackbar"],
   tags: ["Apps", "Forms"],
   about: [
     "A device settings app with an account, grouped preferences, storage and version information. Open Wi-Fi to choose a saved network or add a new one, then return with Back.",

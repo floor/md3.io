@@ -154,7 +154,7 @@ const open = ref(false);
 
 The default slot becomes the element's children: a button's label, a dialog's or a card's
 content. A component's named regions, such as a dialog's `headline` and `actions`, a card's
-`header-action` or a top app bar's `leading` and `trailing`, are Vue named slots: fill them with
+`header-action` or a app bar's `leading` and `trailing`, are Vue named slots: fill them with
 `<template #actions>`, as the dialog above does. A region that also has a text prop, such as
 `headline` or `subhead`, takes either: the prop for plain text, the slot for markup.
 

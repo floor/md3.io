@@ -13,7 +13,7 @@ export const addonDocsDir = resolve(root, 'docs/addons');
 const groups: Record<string, string[]> = {
   'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab', 'fab-menu'],
   'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'text-field', 'select', 'search', 'datepicker', 'timepicker'],
-  'Navigation': ['navigation-rail', 'navigation-bar', 'drawer', 'tabs', 'menu', 'top-app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
+  'Navigation': ['navigation-rail', 'navigation-bar', 'drawer', 'tabs', 'menu', 'app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
 };
@@ -28,7 +28,7 @@ export const GUIDES = ['why-material', 'getting-started', 'architecture', 'frame
 export const FRAMEWORK_GUIDES: Record<string, string> = { vanilla: 'vanilla', 'web-components': 'html', react: 'react', vue: 'vue', svelte: 'svelte', solid: 'solid' };
 /** The Frameworks page with one framework chosen, and an anchor in its guide. */
 export const frameworkHref = (id: string, anchor = '') => `/docs/frameworks/?framework=${id}${anchor ? `#${id}-${anchor}` : ''}`;
-const names: Record<string, string> = { frameworks: 'Frameworks', 'why-material': 'Why material', 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', 'events-and-overlays': 'Events and overlays', fab: 'FAB', 'extended-fab': 'Extended FAB', 'text-field': 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'top-app-bar': 'Top app bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
+const names: Record<string, string> = { frameworks: 'Frameworks', 'why-material': 'Why material', 'getting-started': 'Getting started', 'web-components': 'Web Components', solid: 'SolidJS', 'server-rendering': 'Server rendering', 'events-and-overlays': 'Events and overlays', fab: 'FAB', 'extended-fab': 'Extended FAB', 'text-field': 'Text field', datepicker: 'Date picker', timepicker: 'Time picker', radios: 'Radio buttons', 'app-bar': 'App bar', 'bottom-app-bar': 'Bottom app bar', 'fab-menu': 'FAB menu' };
 export const isGuide = (slug: string) => GUIDES.includes(slug);
 const markdownSlugs = (dir: string) => readdirSync(dir)
   .filter(name => name.endsWith('.md') && !name.startsWith('_'))

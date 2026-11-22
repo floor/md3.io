@@ -3,7 +3,7 @@ import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
 import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
-import { components, componentIcons, componentSlugs, isComponent } from './src/shared/components';
+import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
@@ -94,13 +94,13 @@ const html = (body: string, status = 200) => new Response(versionAssets(body), {
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
 const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
-  slug, name: components[slug].name, href: `/components/${slug}/`,
+  slug, name: components[slug].name, href: `/components/${slug}/`, ...(componentDeprecations[slug] ? { badge: 'Deprecated' } : {}),
 })));
 const addonEntries = addonSlugs.map(slug => ({ slug, name: addons[slug].name, href: playgroundHref(slug) }))
   .sort((a, b) => a.name.localeCompare(b.name, 'en'));
 const addonDirectory = { entries: addonEntries, sections: [{ id: 'addons', name: 'Add-ons', items: addonEntries }] };
 const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug) && !docHref(slug).startsWith('/docs/addons/')).map(slug => ({
-  slug, name: componentName(slug), href: docHref(slug),
+  slug, name: componentName(slug), href: docHref(slug), ...(isComponent(slug) && componentDeprecations[slug] ? { badge: 'Deprecated' } : {}),
 })));
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
@@ -121,7 +121,7 @@ function page(path: string, title: string, description: string, template: string
       // The rail's Components entry and "All components" lead to the overview; the list holds components only.
       : renderSectionDrawer(path, 'Component list', playgroundDirectory.entries)
     : '';
-  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, playgroundDirectory: directory, componentDrawer, pager });
+  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
   const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, [
     ...sidebarGroups.flatMap(group => [{ name: group.label }, ...group.items]),
@@ -203,7 +203,7 @@ function styleClosure(names: string[]): string[] {
 }
 
 /** The components in the Styles frames (src/client/styles-frame.ts): the preview's screen and the Shape gallery. */
-const STYLES_FRAME_COMPONENTS = ['top-app-bar', 'icon-button', 'chips', 'card', 'text-field', 'switch', 'slider', 'button', 'fab', 'dialog', 'checkbox'];
+const STYLES_FRAME_COMPONENTS = ['app-bar', 'icon-button', 'chips', 'card', 'text-field', 'switch', 'slider', 'button', 'fab', 'dialog', 'checkbox'];
 /** The Shape page's expressive shapes, drawn by mtrl/core/shapes, and each theme's primary container to fill them. */
 const shapeLibrary = SHAPE_NAMES.map(name => ({ name, label: SHAPE_LABELS[name], path: shapePath(name) }));
 const libraryColors = Object.fromEntries(Object.entries(themeTokens).map(([theme, modes]) => [theme, Object.fromEntries((['light', 'dark'] as const).map(mode => [mode, [modes[mode]['primary-container']?.value, modes[mode]['on-primary-container']?.value]]))]));
@@ -275,6 +275,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   let response: Response;
   const componentMatch = /^\/(components|addons|preview)\/([a-z-]+)\/$/.exec(path);
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
+  else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
   else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&

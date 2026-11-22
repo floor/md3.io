@@ -167,8 +167,8 @@ export default async function steps(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Back to list", ...exact }).click();
   assert.ok(await focusWithin(page, ".mail-row__open"), "Back returns focus to the row");
 
-  // On the phone the navigation rail hides; the top app bar's menu button opens a modal drawer for the folders.
-  assert.ok(await page.locator(".mail__bar").isVisible(), "the top app bar shows on the phone");
+  // On the phone the navigation rail hides; the app bar's menu button opens a modal drawer for the folders.
+  assert.ok(await page.locator(".mail__bar").isVisible(), "the app bar shows on the phone");
   await page.getByRole("button", { name: "Open folders", ...exact }).click();
   const drawer = page.getByRole("dialog", { name: "Mail", ...exact });
   await drawer.waitFor();

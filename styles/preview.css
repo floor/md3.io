@@ -60,7 +60,7 @@ html:is([data-component="badge"], [data-component="progress"], [data-component="
 #stage > .mtrl-progress--linear { width: min(100%, 360px); }
 
 /* Top and bottom app bars: pinned to the preview's top or bottom edge. */
-html:is([data-component="top-app-bar"], [data-component="bottom-app-bar"]) #stage { display: block; width: 100%; padding: 0; }
+html:is([data-component="app-bar"], [data-component="bottom-app-bar"]) #stage { display: block; width: 100%; padding: 0; }
 #stage > :is(.mtrl-top-app-bar, .mtrl-bottom-app-bar) { position: fixed; left: 0; right: 0; width: auto; }
 #stage > .mtrl-top-app-bar { top: 0; bottom: auto; }
 #stage > .mtrl-bottom-app-bar { top: auto; bottom: 0; }

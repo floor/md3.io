@@ -43,7 +43,7 @@ registerPage('catalog', (content, life) => {
     drawer: () => import('./catalog/drawer'),
     tabs: () => import('./catalog/tabs'),
     menu: () => import('./catalog/menu'),
-    'top-app-bar': () => import('./catalog/top-app-bar'),
+    'app-bar': () => import('./catalog/app-bar'),
     'bottom-app-bar': () => import('./catalog/bottom-app-bar'),
     toolbar: () => import('./catalog/toolbar'),
     card: () => import('./catalog/card'),
@@ -59,6 +59,9 @@ registerPage('catalog', (content, life) => {
     snackbar: () => import('./catalog/snackbar'),
     tooltip: () => import('./catalog/tooltip'),
   };
+
+  // The deprecation marker is visible before its component's preview scrolls into view.
+  if (content.querySelector('.catalog-status')) void modules.badge().then(({ define }) => define(content));
 
   /** The visuals' class: CATALOG_SCOPE in src/server/catalog.ts, which is server code. */
   const scope = 'catalog-visual';

@@ -60,7 +60,7 @@ pickers are additional references for `material-addons`, outside this count.
 | [Drawer](drawer.md) | Baseline standard and modal navigation drawers. |
 | [Tabs](tabs.md) | Primary and secondary tabs with keyboard navigation. |
 | [Menu](menu.md) | Baseline and Expressive vertical menus. |
-| [Top app bar](top-app-bar.md) | Small, centre-aligned, medium and large bars; medium and large compress on scroll. |
+| [App bar](app-bar.md) | Small, centre-aligned, medium and large bars; medium and large compress on scroll. |
 | [Bottom app bar](bottom-app-bar.md) | Deprecated in 3.x for the docked [Toolbar](toolbar.md); remains available for existing designs (removal parked until Material Design v4). |
 | [Toolbar](toolbar.md) | Expressive docked and floating toolbars, horizontal or vertical layouts, colour variants and scroll behavior. |
 

@@ -19,7 +19,7 @@
         <% if (!it.isAddons) { %><h2 id="catalog-<%= section.id %>"><%= section.name %></h2><% } %>
         <div class="component-grid"><% section.items.forEach(({ slug, href }) => { const component = it.components[slug]; %>
           <article class="component-card ui-card">
-            <div class="component-card__body"><h3><a href="<%= href %>"><%= component.name %></a></h3><p><%= component.summary %></p></div>
+            <div class="component-card__body"><h3><a href="<%= href %>"><%= component.name %></a></h3><p><%= component.summary %></p><% if (it.componentDeprecations[slug]) { %><m-badge class="catalog-status" label="Deprecated" color="secondary">Deprecated</m-badge><% } %></div>
             <%~ it.catalogVisuals[slug] %>
           </article>
         <% }); %></div>

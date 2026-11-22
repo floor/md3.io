@@ -1,7 +1,7 @@
 import { renderElement } from 'material/ssr';
 import { renderStyles } from './playground-panel';
 
-type Link = { name: string; href: string };
+type Link = { name: string; href: string; badge?: string };
 type Family = { name: string; id: string; items: readonly Link[] };
 type Entry = Link | Family | { name: string };
 
@@ -12,8 +12,8 @@ export const componentDrawerEntries = (entries: readonly (Link | Family)[]): rea
 
 /** The element uses the standard drawer when its modal attribute is absent. */
 export function renderSectionDrawer(path: string, label: string, entries: readonly Entry[]): string {
-  const link = ({ name, href }: Link) =>
-    `<m-drawer-item href="${escape(href)}" value="${escape(href)}">${escape(name)}</m-drawer-item>`;
+  const link = ({ name, href, badge }: Link) =>
+    `<m-drawer-item href="${escape(href)}" value="${escape(href)}"${badge ? ` badge="${escape(badge)}"` : ''}>${escape(name)}</m-drawer-item>`;
   const items = entries.map(entry => {
     if ('href' in entry) return link(entry);
     if ('items' in entry) {

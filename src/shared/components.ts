@@ -62,7 +62,7 @@ import { navigationRailComponent, railActiveOptions, railHeaderForm } from './co
 import { barActiveOptions, navigationBarComponent } from './content/navigation-bar';
 import { tabActiveOptions, tabsAriaLabel, tabsComponent } from './content/tabs';
 import { toolbarComponent, toolbarContent } from './content/toolbar';
-import { appBarActions, appBarContent, topAppBarComponent } from './content/top-app-bar';
+import { appBarActions, appBarContent, appBarComponent } from './content/app-bar';
 import { bottomSheetComponent } from './content/bottom-sheet';
 import { cardComponent } from './content/card';
 import { carouselComponent } from './content/carousel';
@@ -115,7 +115,7 @@ const materialComponents = {
   drawer: drawerComponent,
   tabs: tabsComponent,
   menu: menuComponent,
-  'top-app-bar': topAppBarComponent,
+  'app-bar': appBarComponent,
   'bottom-app-bar': bottomAppBarComponent,
   toolbar: toolbarComponent,
   card: cardComponent,
@@ -133,6 +133,10 @@ const materialComponents = {
 };
 export const components = { ...materialComponents, ...addons };
 export type ComponentSlug = keyof typeof components;
+/** Site status, independent of the installed Material factory/module names. */
+export const componentDeprecations: Partial<Record<ComponentSlug, { replacement: string; href: string }>> = {
+  'bottom-app-bar': { replacement: 'Toolbar', href: '/components/toolbar/' },
+};
 export const componentSlugs = Object.keys(materialComponents) as (keyof typeof materialComponents)[];
 export const isComponent = (slug: string): slug is ComponentSlug => Object.hasOwn(components, slug);
 export function normalizeComponentState(slug: ComponentSlug, input: unknown): ComponentState {
@@ -239,7 +243,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
   if (slug === 'menu') state.itemsDefault = !state.menuSet || state.menuSet === 'default';
   // A named collection fixes the slides: the captions and the current-slide control are for the default's twenty-four.
   if (slug === 'carousel') state.slidesDefault = !state.carouselSet || state.carouselSet === 'default';
-  if (slug === 'top-app-bar') state.contextDefault = !state.context || state.context === 'default';
+  if (slug === 'app-bar') state.contextDefault = !state.context || state.context === 'default';
   // A named bottom-app-bar set fixes the icon buttons: the action count is for the default pair.
   if (slug === 'bottom-app-bar') state.actionSetDefault = !state.actionSet || state.actionSet === 'default';
   // A named sheet fixes the content: the title and body controls are for the default's own.
@@ -278,7 +282,7 @@ export function initialComponentState(slug: ComponentSlug): ComponentState {
 /** The configuration the framework code is generated from: the config, and what the preview adds beside it. */
 export function elementConfig(slug: ComponentSlug, state: ComponentState): Record<string, unknown> {
   const config = components[slug].config(state) as Record<string, unknown>;
-  if (slug === 'top-app-bar' || slug === 'bottom-app-bar') return { ...config, ...appBarContent(slug, state) };
+  if (slug === 'app-bar' || slug === 'bottom-app-bar') return { ...config, ...appBarContent(slug, state) };
   // The button beside an overlay that opens it: the drawer's while it is modal or closed.
   const trigger = (text: string, ariaLabel?: string) => ({ trigger: { text, variant: 'tonal', ...(ariaLabel ? { ariaLabel } : {}) } });
   switch (slug) {
@@ -471,8 +475,8 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     }
   }
   if (slug === 'tabs') after = `tabs.element.setAttribute('aria-label', '${tabsAriaLabel(state)}');\ntabs.on('change', event => console.log(event.value));\n`;
-  if (slug === 'top-app-bar' && state.context && state.context !== 'default') {
-    const content = appBarContent('top-app-bar', state);
+  if (slug === 'app-bar' && state.context && state.context !== 'default') {
+    const content = appBarContent('app-bar', state);
     if (content.actions.length || content.leading) imports.push('createIconButton');
     if (content.actions.length) {
       after = `const actions = ${literal(content.actions)}.map(config => createIconButton(config));\nactions.forEach(button => topBar.addTrailingElement(button.element));\n`;
@@ -499,11 +503,11 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
       cleanup += '// fab.destroy();\n';
     }
     if (!state.visible) after += 'bottomBar.hide();\n';
-  } else if (slug === 'top-app-bar' || slug === 'bottom-app-bar') {
+  } else if (slug === 'app-bar' || slug === 'bottom-app-bar') {
     imports.push('createIconButton');
-    after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'top-app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
+    after = `const actions = ${literal(appBarActions(state))}.map(config => createIconButton(config));\nactions.forEach(button => ${component.variable}.${slug === 'app-bar' ? 'addTrailingElement' : 'addAction'}(button.element));\n`;
     cleanup = '// actions.forEach(button => button.destroy());\n';
-    if (slug === 'top-app-bar') {
+    if (slug === 'app-bar') {
       if (state.leading) {
         after += `const navigation = createIconButton(${literal({ icon: componentIcons.menu, ariaLabel: 'Open navigation' })});\ntopBar.addLeadingElement(navigation.element);\n`;
         cleanup += '// navigation.destroy();\n';
@@ -540,7 +544,7 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
   const headerForm = slug === 'navigation-rail' ? railHeaderForm(state) : undefined;
   if (headerForm) config = config.replace(/\n\}$/, ',\n  header: header.element\n}');
   const headerStyle = headerForm?.kind === 'extended' ? 'extended-fab' : headerForm ? 'fab' : '';
-  const buttonStyle = slug === 'top-app-bar' && appBarContent('top-app-bar', state).trailingButton ? 'button' : '';
+  const buttonStyle = slug === 'app-bar' && appBarContent('app-bar', state).trailingButton ? 'button' : '';
   const styles = ['base', ...component.styles, ...(headerStyle ? [headerStyle] : []), ...(buttonStyle ? [buttonStyle] : [])].map(style => `import 'material/styles/${style}';\n`).join('');
   return `import { ${imports.join(', ')} } from 'material';\n${styles}${state.theme === 'baseline' ? '' : `import 'material/themes/${state.theme}';\n`}\n` +
     `document.documentElement.dataset.theme = '${state.theme}';\ndocument.documentElement.dataset.themeMode = '${state.mode}';\n\n` +

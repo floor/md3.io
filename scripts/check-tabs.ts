@@ -161,7 +161,7 @@ const ROOT_NAMES = new Set([
   'timepicker',
   'toolbar',
   'tooltip',
-  'top-app-bar',
+  'app-bar',
 ]);
 
 function isRootClass(className: string): boolean {

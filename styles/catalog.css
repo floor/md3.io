@@ -38,8 +38,8 @@ md3-catalog-drawer:not(:defined) { visibility: hidden; }
 .catalog-visual--navigation-bar m-navigation-bar { width: 100%; }
 /* The rail's three destinations are taller than the card: scaled as the list and dialog are. */
 .catalog-visual--navigation-rail m-navigation-rail { zoom: 0.6; }
-.catalog-visual--top-app-bar { align-items: flex-start; padding: 0; }
-.catalog-visual--top-app-bar m-top-app-bar { width: 100%; }
+.catalog-visual--app-bar { align-items: flex-start; padding: 0; }
+.catalog-visual--app-bar m-top-app-bar { width: 100%; }
 .catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
 
 .catalog-visual--badge { gap: 32px; }
