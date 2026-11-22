@@ -78,7 +78,8 @@ describe('App bar naming and compatibility', () => {
 
   test('Bottom app bar stays live, indexed, marked and points to Toolbar', async () => {
     const catalog = await (await get('/components/')).text();
-    expect(catalog).toContain('<m-badge class="catalog-status" label="Deprecated"');
+    expect(catalog).toContain('<m-badge variant="small" label="Deprecated"');
+    expect(catalog).toContain('</m-badge> Deprecated</span>');
     for (const path of ['/components/bottom-app-bar/', '/docs/components/bottom-app-bar/']) {
       const response = await get(path);
       expect(response.status).toBe(200);
