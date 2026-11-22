@@ -193,7 +193,7 @@ function styleClosure(names: string[]): string[] {
   const order: string[] = [];
   const visit = (slug: string) => {
     // Site slugs can lead a library rename; CSS still uses the installed module name.
-    const name = slug === 'app-bar' ? 'top-app-bar' : slug;
+    const name = slug === 'app-bar' ? 'top-app-bar' : slug === 'navigation-drawer' ? 'drawer' : slug;
     if (order.includes(name) || ADDONS_COMPONENTS.has(name)) return;
     const module = resolve(root, 'dist/material/styles', `${name}.js`);
     const source = existsSync(module) ? readFileSync(module, 'utf8') : '';
@@ -278,6 +278,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   const componentMatch = /^\/(components|addons|preview)\/([a-z-]+)\/$/.exec(path);
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
+  else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('/drawer/', '/navigation-drawer/') + url.search } });
   else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogVisuals });
   else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&

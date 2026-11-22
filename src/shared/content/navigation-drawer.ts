@@ -144,8 +144,8 @@ const drawerScenarios: readonly Scenario[] = [
   },
 ];
 
-export const drawerComponent = {
-  group: 'Navigation', name: 'Drawer', factory: 'createDrawer', variable: 'drawer',
+export const navigationDrawerComponent = {
+  group: 'Navigation', name: 'Navigation drawer', factory: 'createDrawer', variable: 'drawer',
   description: 'Explore a navigation drawer with destinations, section labels, and badges.',
   summary: 'Grouped destinations in a side panel.', styles: ['drawer', 'button', 'progress'],
   scenarios: drawerScenarios,

@@ -24,7 +24,7 @@ const sections = [
   { name: 'Buttons', slugs: ['button', 'button-group', 'extended-fab', 'fab', 'fab-menu', 'icon-button', 'split-button'] },
   { name: 'Date & time pickers', slugs: ['datepicker', 'timepicker'] },
   { name: 'Loading & progress', slugs: ['loading-indicator', 'progress'] },
-  { name: 'Navigation', slugs: ['drawer', 'navigation-bar', 'navigation-rail'] },
+  { name: 'Navigation', slugs: ['navigation-bar', 'navigation-drawer', 'navigation-rail'] },
   { name: 'Sheets', slugs: ['bottom-sheet', 'side-sheet'] },
   { name: 'All other components', slugs: ['app-bar', 'badge', 'bottom-app-bar', 'card', 'carousel', 'checkbox', 'chips', 'dialog', 'divider', 'list', 'menu', 'radios', 'search', 'select', 'slider', 'snackbar', 'switch', 'tabs', 'text-field', 'toolbar', 'tooltip'] },
 ] as const;

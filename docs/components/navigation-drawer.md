@@ -1,10 +1,10 @@
 ---
 created: 2026-09-21
-updated: 2026-11-19
+updated: 2026-11-22
 status: published
 ---
 
-# Drawer
+# Navigation drawer
 
 A navigation drawer holds an app's top-level destinations in a vertical list along one edge,
 with dividers, section labels and expandable sections to group them. A destination is a button,
@@ -22,7 +22,7 @@ such as an unread count. `activeIcon` is the icon shown while that destination i
 web component takes it as `selected-icon`.
 
 ```example
-drawer:
+navigation-drawer:
   headline: Mail
   open: true
   items:
@@ -42,7 +42,7 @@ and the current one carries `aria-current="page"` — server-rendered drawers ex
 before client JavaScript loads.
 
 ```example
-drawer:
+navigation-drawer:
   open: true
   headline: Workspace
   items:
@@ -84,7 +84,7 @@ A modal drawer opens over the page and locks it: the page does not scroll, and f
 the active destination. The scrim and `Escape` close it; `dismissible: false` keeps it open.
 
 ```example
-drawer:
+navigation-drawer:
   variant: modal
   headline: Mail
   items:
@@ -105,7 +105,7 @@ scale; `position: 'end'` anchors the drawer to the end edge, which is the left i
 right-to-left layouts. `width` is pixels as a number, or any CSS length.
 
 ```example
-drawer:
+navigation-drawer:
   open: true
   dense: true
   position: end

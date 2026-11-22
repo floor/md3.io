@@ -235,7 +235,7 @@
         "added": 6573
       }
     },
-    "drawer": {
+    "navigation-drawer": {
       "factory": {
         "alone": 15921,
         "lazy": 0,

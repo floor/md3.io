@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
-import { components, initialComponentState, componentCode, elementConfig } from '../src/shared/components';
+import { components, initialComponentState, componentCode, componentDeprecations, elementConfig } from '../src/shared/components';
 import { elementMeta } from '../src/server/elements-meta';
 import { frameworkCode } from '../src/shared/frameworks';
 import { searchSite } from '../src/server/search';
@@ -12,11 +12,11 @@ const get = (path: string, method = 'GET') => handleRequest(new Request(`http://
 describe('App bar naming and compatibility', () => {
   test('legacy playground, docs and preview URLs redirect once with query strings intact', async () => {
     for (const prefix of ['/components/', '/docs/components/', '/preview/']) {
-      for (const method of ['GET', 'HEAD']) {
+      for (const [oldSlug,newSlug] of [['top-app-bar','app-bar'],['drawer','navigation-drawer']]) for (const method of ['GET', 'HEAD']) {
         const query = '?framework=vue&theme=ocean&type=large&title=A%26B';
-        const response = await get(`${prefix}top-app-bar/${query}`, method);
+        const response = await get(`${prefix}${oldSlug}/${query}`, method);
         expect(response.status).toBe(301);
-        expect(response.headers.get('Location')).toBe(`${prefix}app-bar/${query}`);
+        expect(response.headers.get('Location')).toBe(`${prefix}${newSlug}/${query}`);
         expect((await get(response.headers.get('Location')!, method)).status).toBe(200);
       }
     }
@@ -57,6 +57,23 @@ describe('App bar naming and compatibility', () => {
       expect(code).toMatch(/m-top-app-bar|TopAppBar/);
       expect(code).not.toMatch(/<m-app-bar|\bcreateAppBar\b/);
     }
+  });
+
+  test('Navigation drawer is renamed without changing the installed API or deprecating it', async () => {
+    for (const prefix of ['/components/', '/docs/components/']) {
+      const response = await get(`${prefix}navigation-drawer/`);
+      expect(response.status).toBe(200);
+      expect(/<h1\b[^>]*>Navigation drawer<\/h1>/.test(await response.text())).toBe(true);
+    }
+    const meta = elementMeta('navigation-drawer')!;
+    expect(meta.name).toBe('drawer');
+    expect(meta.children?.name).toBe('drawer-item');
+    expect(components['navigation-drawer'].factory).toBe('createDrawer');
+    expect(componentCode('navigation-drawer', initialComponentState('navigation-drawer'))).toContain('createDrawer');
+    expect(componentDeprecations['navigation-drawer']).toBeUndefined();
+    expect(searchSite('createDrawer').find(result => result.section === 'Components')).toMatchObject({ title: 'Navigation drawer', url: '/components/navigation-drawer/' });
+    expect(sitemapPages().map(page => page.path)).not.toContain('/components/drawer/');
+    expect(examplesUsingComponent('navigation-drawer').map(example => example.slug).sort()).toEqual(['email','notes']);
   });
 
   test('Bottom app bar stays live, indexed, marked and points to Toolbar', async () => {

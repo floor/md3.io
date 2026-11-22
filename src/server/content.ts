@@ -13,7 +13,7 @@ export const addonDocsDir = resolve(root, 'docs/addons');
 const groups: Record<string, string[]> = {
   'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab', 'fab-menu'],
   'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'text-field', 'select', 'search', 'datepicker', 'timepicker'],
-  'Navigation': ['navigation-rail', 'navigation-bar', 'drawer', 'tabs', 'menu', 'app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
+  'Navigation': ['navigation-rail', 'navigation-bar', 'navigation-drawer', 'tabs', 'menu', 'app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
 };

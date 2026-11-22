@@ -100,7 +100,7 @@ try {
       source = await page.locator('#generated-code').textContent() ?? '';
       assert(source.includes('horizontal'), 'Horizontal layout is not in the code');
       assert(await page.locator('#configuration [name="hideOnScroll"]').count() === 0, 'Hide on scroll is a control');
-    } else if (slug === 'drawer') {
+    } else if (slug === 'navigation-drawer') {
       await frame.getByText('Albums', { exact: true }).click();
       await selected('albums');
       await choose('variant', 'modal');
@@ -115,7 +115,7 @@ try {
       await frame.getByText('Albums', { exact: true }).focus();
       await frame.getByText('Albums', { exact: true }).press('Escape');
       await page.waitForFunction(() => !document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
-      await frame.getByRole('button', { name: 'Open drawer' }).click();
+      await frame.getByRole('button', { name: 'Open navigation drawer' }).click();
       await page.waitForFunction(() => document.querySelector<HTMLInputElement>('#configuration [name="open"]')?.checked);
     } else if (slug === 'tabs') {
       assert(await frame.getByRole('tab').evaluateAll(tabs => tabs.every(tab => Math.abs(tab.getBoundingClientRect().top - tabs[0]!.getBoundingClientRect().top) < 1)), 'Fixed tabs should share one horizontal row');

@@ -57,7 +57,7 @@ pickers are additional references for `material-addons`, outside this count.
 |-----------|------------|
 | [Navigation rail](navigation-rail.md) | Expressive collapsed and expanded rails. |
 | [Navigation bar](navigation-bar.md) | Destinations with labels below or beside icons, badges and hiding on scroll. |
-| [Drawer](drawer.md) | Baseline standard and modal navigation drawers. |
+| [Navigation drawer](navigation-drawer.md) | Baseline standard and modal navigation drawers. |
 | [Tabs](tabs.md) | Primary and secondary tabs with keyboard navigation. |
 | [Menu](menu.md) | Baseline and Expressive vertical menus. |
 | [App bar](app-bar.md) | Small, centre-aligned, medium and large bars; medium and large compress on scroll. |

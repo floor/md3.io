@@ -135,7 +135,7 @@ const ROOT_NAMES = new Set([
   'datepicker',
   'dialog',
   'divider',
-  'drawer',
+  'navigation-drawer',
   'extended-fab',
   'fab',
   'fab-menu',

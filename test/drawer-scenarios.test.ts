@@ -2,15 +2,15 @@ import { describe, expect, test } from 'bun:test';
 import { components, initialComponentState, normalizeComponentState } from '../src/shared/components';
 
 const scenarioState = (id: string) => {
-  const scenario = components.drawer.scenarios.find(item => item.id === id);
+  const scenario = components['navigation-drawer'].scenarios.find(item => item.id === id);
   if (!scenario) throw new Error(`missing drawer scenario ${id}`);
-  return normalizeComponentState('drawer', { ...initialComponentState('drawer'), ...scenario.options });
+  return normalizeComponentState('navigation-drawer', { ...initialComponentState('navigation-drawer'), ...scenario.options });
 };
 
 describe('drawer scenarios', () => {
   test('mailbox pins Inbox at eight unread under Your mailbox', () => {
     const state = scenarioState('mailbox');
-    const config = components.drawer.config(state);
+    const config = components['navigation-drawer'].config(state);
     const items = config.items ?? [];
     const row = (id: string) => items.find(item => item.id === id);
     expect(items.flatMap(item => item.sectionLabel ? [item.sectionLabel] : [])).toEqual(['Your mailbox']);
@@ -21,10 +21,10 @@ describe('drawer scenarios', () => {
   });
 
   test('badges and section labels are enabled only for a named destination set', () => {
-    const control = (key: string) => components.drawer.controls.find(item => item.key === key);
+    const control = (key: string) => components['navigation-drawer'].controls.find(item => item.key === key);
     expect(control('badges')?.enabledWhen).toBe('namedDestinations');
     expect(control('sections')?.enabledWhen).toBe('namedDestinations');
-    const photos = normalizeComponentState('drawer', initialComponentState('drawer'));
+    const photos = normalizeComponentState('navigation-drawer', initialComponentState('navigation-drawer'));
     expect(photos.destinations).toBe('default');
     expect(photos.namedDestinations).toBe(false);
     expect(photos.badges).toBe(true);

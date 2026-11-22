@@ -39,8 +39,8 @@ function imports(slug: string, flavour: Flavour, id: string): string {
     const styles = components[slug].styles.map(style => `import "material/styles/${style}";\n`).join("");
     return `${styles}import "material-addons/styles";\nimport { ${components[slug].factory} as ${id} } from "material-addons";\nglobalThis.${id} = ${id};\n`;
   }
-  // Keep the installed library module name until the AppBar alias is released.
-  const moduleSlug = slug === "app-bar" ? "top-app-bar" : slug;
+  // Keep the installed library module name until the renamed aliases are released.
+  const moduleSlug = slug === "app-bar" ? "top-app-bar" : slug === "navigation-drawer" ? "drawer" : slug;
   if (flavour === "element") {
     const define = `define${pascal(moduleSlug)}`;
     return `import "material/elements/css/${moduleSlug}";\nimport { ${define} as ${id} } from "material/elements";\n${id}();\n`;

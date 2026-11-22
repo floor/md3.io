@@ -4,7 +4,7 @@ export default {
   slug: "notes",
   title: "Notes",
   description: "Browse notes by category, search them, and edit or pin them from the same app in every framework.",
-  components: ["drawer", "app-bar", "menu", "card", "chips", "icon-button", "button-group", "extended-fab", "dialog", "bottom-sheet", "text-field", "snackbar", "search", "button"],
+  components: ["navigation-drawer", "app-bar", "menu", "card", "chips", "icon-button", "button-group", "extended-fab", "dialog", "bottom-sheet", "text-field", "snackbar", "search", "button"],
   tags: ["Apps", "Productivity"],
   about: [
     "Browse pinned notes and labels in the category drawer. Cards show when they were last edited, and the New note FAB stays available while you browse.",

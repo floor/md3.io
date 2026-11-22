@@ -56,7 +56,7 @@ import { switchComponent } from './content/switch';
 import { textFieldComponent, trailingBehaviour, type TrailingBehaviour } from './content/text-field';
 import { timePickerComponent } from './content/timepicker';
 import { bottomAppBarComponent, bottomAppBarSet } from './content/bottom-app-bar';
-import { drawerActiveOptions, drawerComponent } from './content/drawer';
+import { drawerActiveOptions, navigationDrawerComponent } from './content/navigation-drawer';
 import { menuComponent, menuSelectedId } from './content/menu';
 import { navigationRailComponent, railActiveOptions, railHeaderForm } from './content/navigation-rail';
 import { barActiveOptions, navigationBarComponent } from './content/navigation-bar';
@@ -112,7 +112,7 @@ const materialComponents = {
   timepicker: timePickerComponent,
   'navigation-rail': navigationRailComponent,
   'navigation-bar': navigationBarComponent,
-  drawer: drawerComponent,
+  'navigation-drawer': navigationDrawerComponent,
   tabs: tabsComponent,
   menu: menuComponent,
   'app-bar': appBarComponent,
@@ -164,7 +164,7 @@ export function normalizeComponentState(slug: ComponentSlug, input: unknown): Co
     const allowed = barActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
   }
-  if (slug === 'drawer') {
+  if (slug === 'navigation-drawer') {
     const allowed = drawerActiveOptions(state);
     if (!allowed.some(option => option.value === state.active)) state.active = allowed[0]?.value ?? 'inbox';
     state.namedDestinations = state.destinations !== 'default';
@@ -295,7 +295,7 @@ export function elementConfig(slug: ComponentSlug, state: ComponentState): Recor
       return { ...config, items, ...trigger(String(state.text), String(state.text).trim() ? undefined : 'Open menu') };
     }
     case 'dialog': case 'bottom-sheet': case 'side-sheet': return { ...config, ...trigger(`Open ${components[slug].name.toLowerCase()}`) };
-    case 'drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open drawer') } : config;
+    case 'navigation-drawer': return state.variant === 'modal' || !state.open ? { ...config, ...trigger('Open navigation drawer') } : config;
     // The rail's while nothing else expands it, as the preview shows it.
     case 'navigation-rail': {
       const header = railHeaderForm(state);
@@ -447,17 +447,17 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     if (selected) after += `menu.setSelected('${selected}');\n`;
     cleanup = '// trigger.destroy();\n';
   }
-  if (slug === 'drawer' || slug === 'navigation-rail') {
+  if (slug === 'navigation-drawer' || slug === 'navigation-rail') {
     // The opener is on the stage only while the rail or drawer does not show itself:
     // a standard open drawer and a rail with its own toggle have none.
-    const showTrigger = slug === 'drawer'
+    const showTrigger = slug === 'navigation-drawer'
       ? state.variant === 'modal' || !state.open
       : state.layout === 'modal' || state.hideWhenCollapsed || !state.showToggle;
-    const method = slug === 'drawer' ? 'open' : 'expand';
+    const method = slug === 'navigation-drawer' ? 'open' : 'expand';
     after = `${component.variable}.on('select', event => console.log(event.id));\n`;
     if (showTrigger) {
       imports.push('createButton');
-      after = `const trigger = createButton({ text: 'Open ${slug === 'drawer' ? 'drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n` + after;
+      after = `const trigger = createButton({ text: 'Open ${slug === 'navigation-drawer' ? 'navigation-drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n` + after;
       cleanup = '// trigger.destroy();\n';
     }
   }

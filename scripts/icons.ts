@@ -116,7 +116,7 @@ const names = [
   'stop',
   // The tooltip's present-now scenario (src/shared/content/tooltip.ts).
   'present_to_all',
-  // The Files drawer (src/shared/content/drawer.ts): A in a square, and a page of lines.
+  // The Files drawer (src/shared/content/navigation-drawer.ts): A in a square, and a page of lines.
   'font_download',
   'article',
   // The bottom app bar's notes figure (src/shared/content/bottom-app-bar.ts): a checkbox and a brush.
