@@ -4,6 +4,7 @@ import type { Locator } from 'playwright';
 /** The full component name must remain readable in both directory drawers. */
 export async function checkBottomAppBarRow(pane: Locator): Promise<void> {
   await pane.evaluate(async () => { await document.fonts.ready; });
+  const context = `${await pane.getAttribute('aria-label')} at ${pane.page().viewportSize()?.width}px`;
   const row = pane.locator('a[href$="/bottom-app-bar/"]');
   const metrics = await row.evaluate(element => {
     const label = element.querySelector<HTMLElement>('[part~="item-label"]');
@@ -20,6 +21,6 @@ export async function checkBottomAppBarRow(pane: Locator): Promise<void> {
   });
   assert.equal(metrics.label, 'Bottom app bar');
   assert.equal(metrics.hasBadge, false, 'Drawer rows leave the full label space without a deprecation badge');
-  assert.equal(metrics.lines, 1, 'Bottom app bar stays on one line in the drawer');
-  assert(metrics.fits, 'The complete label fits without clipping');
+  assert.equal(metrics.lines, 1, `${context}: Bottom app bar stays on one line`);
+  assert(metrics.fits, `${context}: the complete label fits without clipping`);
 }

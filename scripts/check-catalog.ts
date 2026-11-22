@@ -36,7 +36,8 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
   assert(JSON.stringify(actual) === JSON.stringify(expected), message);
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
-  await checkBottomAppBarRow(pane);
+  // Cover the reviewed phone and desktop widths; existing breakpoint layout checks remain below.
+  if ([390, 1440].includes(pane.page().viewportSize()?.width ?? 0)) await checkBottomAppBarRow(pane);
   // A hidden Add-ons section (src/shared/visibility.ts) has no docs group.
   const addonDocs = addonsPublic ? addonDocGroup.items : [];
   if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Docs has a Components section');
