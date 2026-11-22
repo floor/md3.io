@@ -76,6 +76,15 @@ describe('App bar naming and compatibility', () => {
     expect(examplesUsingComponent('navigation-drawer').map(example => example.slug).sort()).toEqual(['email','notes']);
   });
 
+  test('modal and closed Navigation drawer samples use the same human-readable opener', () => {
+    for (const patch of [{ variant: 'modal' }, { open: false }]) {
+      const state = { ...initialComponentState('navigation-drawer'), ...patch };
+      const code = componentCode('navigation-drawer', state);
+      expect(code).toContain("text: 'Open navigation drawer'");
+      expect(code).not.toContain('Open navigation-drawer');
+    }
+  });
+
   test('Bottom app bar stays live, indexed, marked and points to Toolbar', async () => {
     const catalog = await (await get('/components/')).text();
     expect(catalog).toContain('<m-badge variant="small" label="Deprecated"');
@@ -90,8 +99,14 @@ describe('App bar naming and compatibility', () => {
       expect(sitemapPages().map(page => page.path)).toContain(path);
     }
     const docs = await (await get('/docs/components/bottom-app-bar/')).text();
-    expect(docs.includes('<p><strong>Deprecated.</strong> Use')).toBe(true);
-    expect(/<blockquote>\s*<p><strong>Deprecated\.<\/strong>/.test(docs)).toBe(false);
+    const article = docs.split('<article class="md">')[1]?.split('</article>')[0] ?? '';
+    expect((article.match(/<strong>Deprecated\.<\/strong>/g) ?? []).length).toBe(1);
+    const title = article.indexOf('<h1');
+    const description = article.indexOf('A bottom app bar puts');
+    const chips = article.indexOf('class="framework-chips-row');
+    const notice = article.indexOf('<blockquote>');
+    expect(title >= 0 && description > title && chips > description && notice > chips).toBe(true);
+    expect(article.includes('href="/components/toolbar/"')).toBe(true);
     expect(searchSite('createBottomAppBar').find(result => result.section === 'Components')).toMatchObject({ title: 'Bottom app bar', group: 'Deprecated', url: '/components/bottom-app-bar/' });
   });
 });

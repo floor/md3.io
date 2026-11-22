@@ -138,7 +138,7 @@ By default, the overlays live on `document.body` and stack by `z-index`. The `la
 option renders them in place, beside their opener or in their `container`, and shows them in the
 browser's top layer: above every `z-index`, outside any `overflow: hidden` parent, and inside the
 opener's shadow root if it has one. Menus, tooltips and snackbars open as popovers; dialogs,
-modal sheets and the modal drawer with `showModal()`, which makes the rest of the page inert and
+modal sheets and the modal navigation drawer with `showModal()`, which makes the rest of the page inert and
 turns the scrim into the dialog's `::backdrop`.
 
 ```typescript
@@ -157,7 +157,7 @@ menu.on('select', ({ itemId }) => showView(itemId));
 ```
 
 The option exists on the menu, select, split button, tooltip, snackbar, dialog, bottom and side
-sheets, and drawer. It is off by default, and where the browser has no popover or `showModal()`
+sheets, and navigation drawer. It is off by default, and where the browser has no popover or `showModal()`
 support it does nothing. The web components use it for every overlay.
 
 ## When to choose Vanilla

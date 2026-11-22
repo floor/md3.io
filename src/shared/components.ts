@@ -457,7 +457,7 @@ function navigationCode(slug: ComponentSlug, state: ComponentState): string {
     after = `${component.variable}.on('select', event => console.log(event.id));\n`;
     if (showTrigger) {
       imports.push('createButton');
-      after = `const trigger = createButton({ text: 'Open ${slug === 'navigation-drawer' ? 'navigation-drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n` + after;
+      after = `const trigger = createButton({ text: 'Open ${slug === 'navigation-drawer' ? 'navigation drawer' : 'navigation'}', variant: 'tonal' });\ntrigger.on('click', () => ${component.variable}.${method}());\ndocument.body.append(trigger.element);\n` + after;
       cleanup = '// trigger.destroy();\n';
     }
   }

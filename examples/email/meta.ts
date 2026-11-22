@@ -7,7 +7,7 @@ export default {
   components: ["navigation-rail", "app-bar", "navigation-drawer", "search", "chips", "checkbox", "avatar", "icon-button", "button", "extended-fab", "text-field", "dialog", "snackbar"],
   tags: ["Apps", "Productivity"],
   about: [
-    "A mail client: a navigation rail on wide frames and a app bar with a modal folder drawer on phones, a day-grouped message list (Today, Yesterday, Earlier) with sender avatars, attachment counts, stars and checkboxes, and a reading pane with Reply, Reply all, Archive and Delete.",
+    "A mail client: a navigation rail on wide frames and an app bar with a modal folder drawer on phones, a day-grouped message list (Today, Yesterday, Earlier) with sender avatars, attachment counts, stars and checkboxes, and a reading pane with Reply, Reply all, Archive and Delete.",
     "On wide frames the first unread message opens in the reading pane on load. Compose opens a dialog whose Send adds the message to Sent and confirms with a snackbar; Reply and Reply all pre-fill the recipients and subject.",
   ],
   how: [

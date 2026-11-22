@@ -6,7 +6,7 @@ status: published
 
 # App bar
 
-A app bar shows the current screen's title, a navigation button and the screen's most
+An app bar shows the current screen's title, a navigation button and the screen's most
 important actions. M3 has four types: **small** and **center-aligned**, one 64dp row, and
 **medium** and **large**, with the headline on a second row, which compress to the small bar
 as the page scrolls. See the
