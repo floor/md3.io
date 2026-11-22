@@ -191,7 +191,9 @@ const ADDONS_COMPONENTS = new Set<string>(addonSlugs);
 const addonsStylesheet = (names: string[]): string[] => (names.some(name => ADDONS_COMPONENTS.has(name)) ? ['styles'] : []);
 function styleClosure(names: string[]): string[] {
   const order: string[] = [];
-  const visit = (name: string) => {
+  const visit = (slug: string) => {
+    // Site slugs can lead a library rename; CSS still uses the installed module name.
+    const name = slug === 'app-bar' ? 'top-app-bar' : slug;
     if (order.includes(name) || ADDONS_COMPONENTS.has(name)) return;
     const module = resolve(root, 'dist/material/styles', `${name}.js`);
     const source = existsSync(module) ? readFileSync(module, 'utf8') : '';

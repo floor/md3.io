@@ -60,9 +60,6 @@ registerPage('catalog', (content, life) => {
     tooltip: () => import('./catalog/tooltip'),
   };
 
-  // The deprecation marker is visible before its component's preview scrolls into view.
-  if (content.querySelector('.catalog-status')) void modules.badge().then(({ define }) => define(content));
-
   /** The visuals' class: CATALOG_SCOPE in src/server/catalog.ts, which is server code. */
   const scope = 'catalog-visual';
   const prefix = `${scope}--`;

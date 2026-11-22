@@ -39,6 +39,12 @@ describe('App bar naming and compatibility', () => {
     expect(examplesUsingComponent('app-bar').map(example => example.slug).sort()).toEqual(['email', 'notes', 'settings']);
   });
 
+  test('frame styles retain the installed Material CSS name', async () => {
+    const html = await (await get('/styles/frame/')).text();
+    expect(html.includes('/styles/app-bar')).toBe(false);
+    expect(html.includes('/styles/top-app-bar')).toBe(true);
+  });
+
   test('the installed TopAppBar API remains in working framework samples', () => {
     const state = initialComponentState('app-bar');
     expect(components['app-bar'].factory).toBe('createTopAppBar');
