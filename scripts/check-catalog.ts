@@ -9,6 +9,7 @@ import { chromium, type Locator, type Page } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { addonDocGroup, docGroups } from '../src/server/content';
+import { checkBottomAppBarRow } from './check-drawer-row';
 import { componentSlugs, components } from '../src/shared/components';
 import { addonSlugs, addons, playgroundHref } from '../src/shared/addons';
 import { baseline, themeTokens } from '../src/server/tokens';
@@ -35,6 +36,7 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
   assert(JSON.stringify(actual) === JSON.stringify(expected), message);
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
+  await checkBottomAppBarRow(pane);
   // A hidden Add-ons section (src/shared/visibility.ts) has no docs group.
   const addonDocs = addonsPublic ? addonDocGroup.items : [];
   if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Docs has a Components section');
