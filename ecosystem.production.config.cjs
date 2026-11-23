@@ -1,5 +1,6 @@
-// PM2 Ecosystem Configuration — md3.io (production, on the floor.io server)
-// Serves the built site; scripts/deploy.sh builds material and md3.io before reloading it.
+// PM2 Ecosystem Configuration — md3.io (production, on floor-vps)
+// Serves the built site; scripts/deploy.sh installs published dependencies and builds md3.io.
+// pm2-admin.service owns the daemon as admin under Bun; never hand-start PM2.
 // nginx proxies md3.io to this port (deploy/nginx/md3.io.conf).
 
 module.exports = {
