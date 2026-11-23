@@ -12,6 +12,10 @@ function updateThemeLabel() {
   themeToggle?.shadowRoot?.querySelector('button')?.setAttribute('aria-label', label);
 }
 updateThemeLabel();
+// A page that defines material's app bar rebuilds its shadow root: its empty headline stays no heading.
+void customElements.whenDefined('m-top-app-bar').then(() => {
+  document.querySelector('m-top-app-bar.header')?.shadowRoot?.querySelector('h1')?.setAttribute('role', 'presentation');
+});
 // One appearance for the whole site (base.eta's head script): the material theme from
 // the Themes menu and the mode from the moon. appearance.ts is its only writer; the
 // header, like every other place, applies the `md3:appearance` event it dispatches.
@@ -25,6 +29,15 @@ themeToggle?.addEventListener('click', () => {
 // scope takes the site theme like the panel's (theme-sheets.ts).
 const themePicker = document.querySelector<HTMLElement>('#theme-picker');
 const headerScope = document.querySelector<HTMLElement>('.header__themes');
+// Theme and mode sit at the foot of the rail; a phone has no rail, so they stay in the header.
+const compactWindow = matchMedia('(width < 600px)');
+compactWindow.addEventListener('change', ({ matches }) => {
+  if (!headerScope) return;
+  headerScope.querySelector<HTMLElement & { hide?(): void }>('m-menu')?.hide?.();
+  const focused = [themePicker, themeToggle].find(host => host?.matches(':focus-within'));
+  document.querySelector(matches ? '.header__actions' : '#site-primary-rail')?.append(headerScope);
+  focused?.focus();
+});
 // The inner button is the focusable control, so it carries the popup semantics: the
 // server-rendered one now, and again after the element's definition loads, whose
 // upgrade rebuilds the shadow root with a button that only gets aria-label from the
@@ -81,9 +94,9 @@ onAppearance(({ theme, mode }) => {
   void applyTheme(document, theme);
   updateThemeLabel();
   if (menuMade) void loadMenu().then(module => module.markTheme(theme));
-  if (!headerScope) return;
-  headerScope.dataset.themeMode = mode;
-  applyTheme(document, theme, [headerScope]);
+  const scopes = [...document.querySelectorAll<HTMLElement>('.site-material')];
+  for (const scope of scopes) scope.dataset.themeMode = mode;
+  if (scopes.length) void applyTheme(document, theme, scopes);
 });
 
 

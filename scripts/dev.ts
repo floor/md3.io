@@ -4,7 +4,11 @@
 //                              restart the server
 //   src/client, src/shared,
 //   icons change             → build md3.io, then restart the server
-//   server.ts, src/server    → restart the server
+//   examples, styles         → build md3.io, then restart the server
+//   server.ts, src/server,
+//   docs                     → restart the server
+//
+// After a pass whose steps all succeeded and once the server answers, open pages reload.
 //
 // Steps run one at a time, and the server restarts only after its builds succeed. It
 // used to run under `bun --watch`, which restarted it in the middle of material's build --
@@ -24,6 +28,43 @@ const order: Step[] = ['mtrl', 'link', 'site', 'server'];
 const pending = new Set<Step>();
 let running = false;
 let server: Subprocess | null = null;
+const port = Number(process.env.PORT || 4300);
+const liveReloadPort = Number(process.env.MD3_LIVE_RELOAD_PORT || 4301);
+const encoder = new TextEncoder();
+const browsers = new Set<ReadableStreamDefaultController<Uint8Array>>();
+
+Bun.serve({
+  port: liveReloadPort,
+  hostname: '127.0.0.1',
+  idleTimeout: 0,
+  fetch() {
+    let browser: ReadableStreamDefaultController<Uint8Array>;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        browser = controller;
+        browsers.add(controller);
+        controller.enqueue(encoder.encode(': connected\n\n'));
+      },
+      cancel() { browsers.delete(browser); },
+    });
+    return new Response(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Access-Control-Allow-Origin': '*' } });
+  },
+});
+
+const reloadBrowsers = async () => {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const ready = await fetch(`http://127.0.0.1:${port}/`).then(response => response.ok, () => false);
+    if (ready) {
+      for (const browser of browsers) {
+        try { browser.enqueue(encoder.encode('data: reload\n\n')); } catch { browsers.delete(browser); }
+      }
+      console.log(`Reloaded ${browsers.size} open page(s).`);
+      return;
+    }
+    await Bun.sleep(100);
+  }
+  console.log('The server did not answer; open pages were not reloaded.');
+};
 
 const build = async (label: string, cmd: string[], cwd: string) => {
   const started = performance.now();
@@ -39,7 +80,7 @@ const restart = async () => {
     server.kill();
     await server.exited;
   }
-  server = Bun.spawn(['bun', 'server.ts'], { cwd: root, stdout: 'inherit', stderr: 'inherit' });
+  server = Bun.spawn(['bun', 'server.ts'], { cwd: root, env: { ...process.env, MD3_LIVE_RELOAD_PORT: String(liveReloadPort) }, stdout: 'inherit', stderr: 'inherit' });
   return true;
 };
 
@@ -55,6 +96,7 @@ const link = async () => {
 async function drain() {
   if (running) return;
   running = true;
+  let passed = true;
   while (pending.size) {
     const step = order.find(s => pending.has(s))!;
     pending.delete(step);
@@ -63,9 +105,14 @@ async function drain() {
       : step === 'site' ? await build('md3.io', ['bun', 'scripts/build.ts'], root)
       : await restart();
     // Nothing downstream of a failed build should pick up its result.
-    if (!ok) pending.clear();
+    if (!ok) {
+      passed = false;
+      pending.clear();
+    }
   }
+  if (passed) await reloadBrowsers();
   running = false;
+  if (pending.size) void drain();
 }
 
 // Queue a step and every step after it; a burst of changes collapses into one pass.
@@ -81,7 +128,9 @@ on(resolve(mtrlRoot, 'src'), 'mtrl');
 for (const dir of ['src/client', 'src/shared', 'icons', 'styles']) on(resolve(root, dir), 'site');
 on(resolve(root, 'src/server'), 'server');
 on(resolve(root, 'server.ts'), 'server');
-console.log(`Watching ${mtrlRoot}/src, src/client, src/shared, src/server, server.ts, styles and icons.`);
+on(resolve(root, 'docs'), 'server');
+on(resolve(root, 'examples'), 'site');
+console.log(`Watching ${mtrlRoot}/src, src/client, src/shared, src/server, server.ts, styles, icons, docs and examples. Live reload on port ${liveReloadPort}.`);
 
 schedule('site');
 

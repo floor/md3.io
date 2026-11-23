@@ -2,7 +2,7 @@
 // [factory, 'name', { options }, ...children]. Named parts land on `app.ui.<name>`.
 // mtrl's own factories for every control; the scheme card and palette strips are the
 // app's (scheme-card.ts, palette-strip.ts).
-import createTopAppBar from 'material/components/top-app-bar';
+import { createAppBar } from 'material/components/top-app-bar';
 import createSelect from 'material/components/select';
 import createTextField from 'material/components/text-field';
 import createIconButton from 'material/components/icon-button';
@@ -32,7 +32,7 @@ export const PALETTES = [['primary', 'Primary'], ['secondary', 'Secondary'], ['t
 export interface LayoutData { themes: { name: string; label: string }[]; roles: string[]; selected: string }
 
 export const layout = ({ themes, roles, selected }: LayoutData): unknown[] => [
-  [createTopAppBar, 'bar', { type: 'small', title: 'Themes', scrollable: false }],
+  [createAppBar, 'bar', { type: 'small', title: 'Themes', scrollable: false }],
   // The bar's actions: moved into its trailing slot by withSetup.
   ['actions', { class: 'theme-app__actions' },
     [createIconButton, 'image', { icon: image, ariaLabel: 'Make a theme from an image (it stays in your browser)', variant: 'standard' }],

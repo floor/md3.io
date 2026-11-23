@@ -5,49 +5,20 @@
 
 /* ─── Search Trigger Button (header) ─────────────────────────────── */
 
-.header__search {
-    display: flex;
-    margin-inline-start: auto;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-width: var(--site-target-size);
-    min-height: var(--site-target-size);
-    padding: 0 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    font-family: var(--font-sans);
-    font-size: var(--fs-sm);
-    transition:
-        color 0.15s,
-        background 0.15s,
-        border-color 0.15s;
-}
-
-.header__search:hover {
-    color: var(--text-muted);
-    background: var(--bg-card);
-    border-color: var(--border-hover);
-}
-
-.header__search-icon {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
+#search-trigger[data-quiet-focus],
+#search-trigger[data-quiet-focus]::part(button) {
+    outline: none;
 }
 
 .header__search-kbd {
     display: inline-flex;
     align-items: center;
     gap: 2px;
+    margin-inline-start: 8px;
     padding: 2px 5px;
-    border: 1px solid var(--border);
     border-radius: var(--radius-xs);
-    background: var(--surface-container);
-    color: var(--text-dim);
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    color: inherit;
     font-family: var(--font-sans);
     font-size: 11px;
     line-height: 1;
@@ -129,8 +100,15 @@
     flex-shrink: 0;
     align-items: center;
     gap: 12px;
-    padding: 8px 16px;
+    padding: 8px 12px 8px 20px;
     border-bottom: 1px solid var(--border);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* The field has no box of its own: the row's divider shows that it has focus. */
+.search-dialog__input-wrap:has(.search-dialog__input:focus-visible) {
+    border-bottom-color: var(--accent-text);
+    box-shadow: 0 1px 0 var(--accent-text);
 }
 
 .search-dialog__input-icon {
@@ -144,6 +122,7 @@
     flex: 1;
     min-width: 0;
     min-height: var(--site-target-size);
+    padding-inline: 4px;
     border: none;
     outline: none;
     box-shadow: none;
@@ -159,9 +138,7 @@
 }
 
 .search-dialog__input:focus-visible {
-    outline: 2px solid var(--accent-text);
-    outline-offset: -2px;
-    border-radius: var(--radius-sm);
+    outline: none;
 }
 
 .search-dialog__input-esc {
@@ -192,6 +169,10 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 10px;
+}
+
+.search-dialog__results:empty {
+    display: none;
 }
 
 .search-dialog__results::-webkit-scrollbar {
@@ -412,6 +393,10 @@
     }
 
     .header__search-kbd {
+        display: none;
+    }
+
+    .header__search-label {
         display: none;
     }
 

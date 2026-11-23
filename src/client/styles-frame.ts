@@ -4,7 +4,7 @@
 // mode and the overridden custom properties; they go on the root, so everything
 // inside follows, the dialog in the top layer included, without re-creating a component.
 import { applyTheme } from './theme-sheets';
-import createTopAppBar from 'material/components/top-app-bar';
+import { createAppBar } from 'material/components/top-app-bar';
 import createIconButton from 'material/components/icon-button';
 import { createChips } from 'material/components/chips';
 import createCard from 'material/components/card';
@@ -28,7 +28,7 @@ const section = (className: string, ...children: HTMLElement[]) => {
 };
 
 function buildScreen() {
-  const bar = createTopAppBar({ type: 'small', title: 'Weekend trips', scrollable: false });
+  const bar = createAppBar({ type: 'small', title: 'Weekend trips', scrollable: false });
   bar.addLeadingElement(createIconButton({ icon: symbols.menu, ariaLabel: 'Open navigation' }).element);
   bar.addTrailingElement(createIconButton({ icon: symbols.heart, ariaLabel: 'Favorites' }).element);
   bar.addTrailingElement(createIconButton({ icon: symbols.accountCircle, ariaLabel: 'Account' }).element);

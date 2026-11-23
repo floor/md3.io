@@ -101,12 +101,10 @@
     --toc-width: 240px;
     --page-padding: 28px 18px 40px;
     --document-padding: 28px 18px 48px;
-    --site-footer-height: 60px;
     --site-target-size: 48px;
     /* Widest the header and page shell grow, and the room they keep at each
        side of the window (see the window size classes below) */
-    --layout-max-width: 1472px;
-    --layout-gutter: 0px;
+    --content-max-width: 1500px;
 
     /* The reading measure for prose only, not the column. DIN Alternate at --fs-md
        has an 8.35px "0" and averages ≈6.7px a character, so 68ch ≈ 568px ≈ 85
@@ -217,8 +215,6 @@
 }
 @media (min-width: 1600px) {
     :root {
-        --layout-max-width: 1840px;
-        --layout-gutter: 64px;
         --sidebar-width: 240px;
         --toc-width: 260px;
     }

@@ -135,7 +135,7 @@ function swapHead(next: Document, url: URL) {
   // Keep runtime theme and package-manager choices. Server attributes such as lang,
   // dir and framework still follow the destination, then its URL/storage preference.
   for (const attribute of [...document.documentElement.attributes]) {
-    if (!attribute.name.startsWith('data-theme') && !['data-site-theme', 'data-preview-mode', 'data-package-manager', 'style'].includes(attribute.name)) document.documentElement.removeAttribute(attribute.name);
+    if (!attribute.name.startsWith('data-theme') && !['data-nav-drawer-leaving', 'data-site-theme', 'data-preview-mode', 'data-package-manager', 'style'].includes(attribute.name)) document.documentElement.removeAttribute(attribute.name);
   }
   for (const attribute of next.documentElement.attributes) document.documentElement.setAttribute(attribute.name, attribute.value);
   let saved: string | null = null;
@@ -174,6 +174,13 @@ function nameTransitionContent() {
   // Explicitly leave shell chrome out of snapshots, so the real drawer pill keeps
   // animating on screen while only the page-content snapshot cross-fades.
   for (const shellElement of document.querySelectorAll<HTMLElement>('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')) shellElement.style.viewTransitionName = 'none';
+  // The modal drawer leaves as part of the same transition: it slides out from its last frame
+  // while the content changes behind it, instead of vanishing when the page swaps.
+  const modalDrawer = document.querySelector<HTMLDialogElement>('#site-nav-dialog');
+  if (modalDrawer?.open) {
+    modalDrawer.style.viewTransitionName = 'site-nav-drawer';
+    document.documentElement.dataset.navDrawerLeaving = '';
+  } else if (modalDrawer) modalDrawer.style.viewTransitionName = '';
   content!.style.viewTransitionName = '';
   (content!.querySelector<HTMLElement>('#component-content, .component-catalog') ?? content!).style.viewTransitionName = 'page-content';
 }
@@ -256,6 +263,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       const transition = document.startViewTransition(swap);
       // A newer navigation can skip an in-flight animation without failing its swap.
       void transition.ready.catch(() => {});
+      void transition.finished.catch(() => {}).finally(() => { delete document.documentElement.dataset.navDrawerLeaving; });
       await transition.updateCallbackDone;
     } else await swap();
   } catch {

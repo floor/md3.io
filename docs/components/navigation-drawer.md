@@ -56,9 +56,9 @@ children are nested destinations, and a section opens by itself to reveal the de
 active.
 
 ```typescript
-import createDrawer from 'material/components/drawer';
+import { createNavigationDrawer } from 'material/components/drawer';
 
-const drawer = createDrawer({
+const drawer = createNavigationDrawer({
   headline: 'Workspace',
   items: [
     { id: 'home', label: 'Home', icon: homeIcon, href: '/' },
@@ -138,7 +138,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `layer` | `'top'` | `undefined` | A modal drawer in the top layer, as a native `<dialog>` |
 | `headline` | `string` | `undefined` | Text above the destinations |
 | `ariaLabel` | `string` | the headline, or `'Navigation'` | The drawer's accessible name |
-| `items` | `DrawerItemConfig[]` | `[]` | Destinations, dividers and section labels |
+| `items` | `NavigationDrawerItemConfig[]` | `[]` | Destinations, dividers and section labels |
 | `width` | `string \| number` | `360` | Width; a number is pixels. Set as `--mtrl-drawer-width` on the root |
 | `dense` | `boolean` | `false` | Step `-5` on the `--mtrl-density` scale (36dp item height with a 48dp hit target; type and 24dp icons stay unchanged) |
 | `ripple` | `boolean` | `true` | Press ripple on items, clipped to the item shape |
@@ -159,7 +159,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `icon` | `string` | `undefined` | Leading icon, as an HTML string |
 | `activeIcon` | `string` | `undefined` | Icon shown while this destination is selected, as an HTML string. The element takes it as `selected-icon` |
 | `href` | `string` | `undefined` | Makes the destination a native `<a>` link instead of a button |
-| `items` | `DrawerItemConfig[]` | `undefined` | A non-empty list makes this destination an expandable section, its children nested destinations |
+| `items` | `NavigationDrawerItemConfig[]` | `undefined` | A non-empty list makes this destination an expandable section, its children nested destinations |
 | `expanded` | `boolean` | omitted: a child's `active` decides | Whether a section starts expanded — omitted opens the section when one of its children is `active`; an explicit `false` stays closed |
 | `badge` | `string` | `undefined` | Trailing text, such as an unread count |
 | `active` | `boolean` | `false` | Whether this destination starts selected |
@@ -173,7 +173,7 @@ tables are hand-written: keep them in line with the code, and add no prose resta
 | `open()` / `close()` / `toggle()` | `DrawerComponent` | Opens or closes it; opening moves focus to the active destination, or the first |
 | `isOpen()` | `boolean` | Whether it is open |
 | `setActive(id)` / `getActive()` | `DrawerComponent` / `string \| null` | The current destination |
-| `setItems(items)` / `getItems()` | `DrawerComponent` / `DrawerItemConfig[]` | Replaces or reads the whole list |
+| `setItems(items)` / `getItems()` | `DrawerComponent` / `NavigationDrawerItemConfig[]` | Replaces or reads the whole list |
 | `setBadge(id, badge)` | `DrawerComponent` | Sets a badge, or clears it with `''` |
 | `expandSection(id)` / `collapseSection(id)` / `toggleSection(id)` | `DrawerComponent` | Opens, closes or flips an expandable section |
 | `isSectionExpanded(id)` | `boolean` | Whether a section is open |

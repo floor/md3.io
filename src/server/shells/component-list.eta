@@ -1,5 +1,4 @@
 <div class="component-list">
   <% if (!it.isCatalog && it.isAddons) { %><h2 class="component-list__heading"><%= it.isAddons ? 'Add-ons' : 'Components' %></h2><% } %>
   <%~ it.componentDrawer %>
-  <% if (it.isCatalog && !it.isAddons) { %><p class="catalog-note"><a href="/docs/">Browse the complete component reference <%~ it.icon('arrow_forward') %></a></p><% } %>
 </div>

@@ -93,14 +93,9 @@
     .component-page .playground {
         grid-template-columns: minmax(0, 1fr) clamp(288px, 35%, 380px);
     }
-    .layout:has(.component-page) { min-height: calc(100dvh - var(--site-footer-height, 60px)); }
+    .layout:has(.component-page) { min-height: calc(100dvh - var(--header-height)); }
     .layout:has(.component-page) .content {
-        min-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
-    }
-    .layout:has(.component-page) + .site-footer {
-        min-height: var(--site-footer-height, 60px);
-        align-items: center;
-        padding-block: 0;
+        min-height: calc(100dvh - var(--header-height));
     }
 }
 
@@ -110,7 +105,7 @@
     .component-page {
         display: flex;
         flex-direction: column;
-        min-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 60px));
+        min-height: calc(100dvh - var(--header-height));
     }
     .component-page .playground { flex: 1; align-items: stretch; }
     .playground--material .configuration { contain: size; overflow: clip; }

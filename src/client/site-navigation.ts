@@ -4,6 +4,7 @@ const rail = document.querySelector<HTMLElement>('#site-primary-rail');
 const dialog = document.querySelector<HTMLDialogElement>('#site-nav-dialog');
 const opener = document.querySelector<HTMLButtonElement>('#site-nav-open');
 const closer = document.querySelector<HTMLButtonElement>('#site-nav-close');
+const sectionOpener = document.querySelector<HTMLElement>('#site-section-open');
 
 // Resizing can hide the focused element before the media query's event fires.
 let lastFocus = document.activeElement;
@@ -45,12 +46,24 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
       if (id) drawer.shadowRoot?.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"]`)?.focus();
     });
 
+    // The phone's opener is material's icon button: its inner button carries the popup state,
+    // and an upgrade rebuilds that button.
+    const markSectionOpener = () => {
+      const button = sectionOpener?.shadowRoot?.querySelector('button');
+      button?.setAttribute('aria-haspopup', 'dialog');
+      button?.setAttribute('aria-controls', 'site-nav-dialog');
+      button?.setAttribute('aria-expanded', String(dialog.open));
+    };
+    void customElements.whenDefined('m-icon-button').then(() => { if (life.active) markSectionOpener(); });
+    const modalWindow = () => compact.matches || medium.matches;
+
     const syncModal = () => {
       if (section && section.parentNode === dialog && !dialog.open) sectionParent?.insertBefore(section, sectionNext);
       rail.inert = dialog.open;
       if (dialog.open) rail.setAttribute('aria-hidden', 'true');
       else rail.removeAttribute('aria-hidden');
       opener.setAttribute('aria-expanded', String(dialog.open));
+      markSectionOpener();
     };
 
     restoreSection = () => { dialog.close(); syncModal(); };
@@ -60,8 +73,8 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
       const focused = currentFocus();
       const target = compact.matches ? bar : rail;
       const leavingPrimary = compact.matches ? rail.contains(focused) : bar.contains(focused);
-      const leavingModal = !medium.matches && (containsFocus(dialog, focused) || focused === opener);
-      const closeForResize = !medium.matches && dialog.open;
+      const leavingModal = !modalWindow() && (containsFocus(dialog, focused) || focused === opener);
+      const closeForResize = !modalWindow() && dialog.open;
       const href = focused?.closest('a')?.getAttribute('href');
       bar.hidden = !compact.matches;
       rail.hidden = compact.matches;
@@ -84,16 +97,34 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
       else moveFocus();
     };
 
-    life.events(opener).addEventListener('click', () => {
-      if (!medium.matches || dialog.open) return;
+    const openModal = () => {
+      if (!modalWindow() || dialog.open) return;
       if (section) dialog.append(section);
       dialog.showModal();
       syncModal();
-    });
+    };
+    life.events(opener).addEventListener('click', openModal);
+    if (sectionOpener) {
+      // As for search: Escape must not draw the keyboard ring for someone who opened with the pointer.
+      life.events(sectionOpener).addEventListener('click', event => {
+        sectionOpener.toggleAttribute('data-quiet-focus', (event as MouseEvent).detail > 0);
+        openModal();
+      });
+      life.events(sectionOpener).addEventListener('focusout', () => {
+        if (!dialog.open) sectionOpener.removeAttribute('data-quiet-focus');
+      });
+    }
     life.events(closer).addEventListener('click', () => dialog.close());
+    // As on desktop, the selection moves on the click, before the next page has arrived.
+    life.events(dialog).addEventListener('click', event => {
+      const mouse = event as MouseEvent;
+      if (mouse.button !== 0 || mouse.metaKey || mouse.ctrlKey || mouse.shiftKey || mouse.altKey || !drawer) return;
+      const link = event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
+      if (link && new URL(link.href).origin === location.origin) (drawer as HTMLElement & { value: string }).value = new URL(link.href).pathname;
+    });
     life.events(dialog).addEventListener('close', () => {
       syncModal();
-      if (life.active && medium.matches && !dialog.open) opener.focus();
+      if (life.active && modalWindow() && !dialog.open) (compact.matches ? sectionOpener : opener)?.focus();
     });
     life.events(dialog).addEventListener('keydown', event => {
       if (event.key !== 'Tab') return;

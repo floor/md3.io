@@ -69,7 +69,24 @@ const themeMenu = `<template id="theme-menu-template" data-check="${checkIcon}">
 const modeIcon = (name: 'dark_mode' | 'light_mode', mode: 'dark' | 'light') =>
   readFileSync(resolve(import.meta.dir, `icons/${name}.svg`), 'utf8').trim().replace('<svg ', `<svg style="display: var(--site-mode-icon-${mode})" `);
 const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-label': 'Switch site mode', icon: modeIcon('dark_mode', 'dark') + modeIcon('light_mode', 'light') }, '', renderStyles);
-const headerStylesheets = linkedStylesheets(themeButton + modeButton);
+// The search trigger, material's button. Until its definition loads on a page, the rendered inner
+// button is the control, so it carries the popup semantics; search.ts restores them after an upgrade.
+const searchKeys = '<span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>';
+const searchButton = renderElement('m-button', { id: 'search-trigger', class: 'header__search', variant: 'tonal', 'aria-label': 'Search (⌘K)', icon: readFileSync(resolve(import.meta.dir, 'icons/search.svg'), 'utf8').trim() }, `<span class="header__search-label">Search</span>${searchKeys}`, renderStyles)
+  .replace('<button part="button"', '<button aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" part="button"');
+// The site header, material's app bar. The logo is a link in the leading slot, so the bar's empty
+// headline is not a heading: each page keeps its own single h1 (site.ts repeats this after an upgrade).
+const headerLogo = '<a slot="leading" class="header__logo" href="/" aria-label="material, home"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material</a>';
+const headerScopeScript = '<script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || \'baseline\'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script>';
+// A phone has no rail: this opens the section's list in the modal drawer (site-navigation.ts).
+const sectionMenuButton = renderElement('m-icon-button', { id: 'site-section-open', 'aria-label': 'Open section navigation', icon: readFileSync(resolve(import.meta.dir, 'icons/menu.svg'), 'utf8').trim() }, '', renderStyles)
+  .replace('<button ', '<button aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" ');
+const appBar = renderElement('m-top-app-bar', { class: 'header', 'no-scroll': true, 'aria-label': 'Site header' }, `${headerLogo}<div slot="trailing" class="header__actions ${HEADER_SCOPE}">HEADER_ACTIONS</div>`, renderStyles)
+  .replace('<h1 part="headline"', '<h1 role="presentation" part="headline"')
+  // renderElement refuses light-DOM children that already hold a shadow root, so the button goes in after.
+  .replace('HEADER_ACTIONS', () => headerScopeScript + searchButton)
+  .replace('<a slot="leading"', () => `<div slot="leading" class="header__menu ${HEADER_SCOPE}">${headerScopeScript}${sectionMenuButton}</div><a slot="leading"`);
+const headerStylesheets = linkedStylesheets(appBar + themeButton + modeButton);
 // Lazy chunks import their entry back by its plain name (`./preview.js`). The HTML
 // loads the hashed name, so the import map sends the plain name to that same file,
 // or the entry would run twice. Site pages retain this map across navigations.
@@ -90,7 +107,13 @@ const versionAssets = (body: string) => {
   });
   return mapped ? rewritten.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n  ${mapped}`) : rewritten;
 };
-const html = (body: string, status = 200) => new Response(versionAssets(body), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
+// Set only by scripts/dev.ts: reloads the page after a successful rebuild. Never set in production.
+const liveReloadPort = process.env.MD3_LIVE_RELOAD_PORT;
+const liveReloadScript = liveReloadPort
+  ? `<script>if(window===top&&!window.__md3LiveReload){window.__md3LiveReload=new EventSource('http://127.0.0.1:${liveReloadPort}/');window.__md3LiveReload.onmessage=()=>location.reload()}</script>`
+  : '';
+const withLiveReload = (body: string) => liveReloadScript ? body.replace('</head>', `${liveReloadScript}</head>`) : body;
+const html = (body: string, status = 200) => new Response(versionAssets(withLiveReload(body)), { status, headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': SHORT_CACHE } });
 // Previews and example frames are pages inside pages: never a search result of their own.
 const internalHtml = (body: string) => new Response(versionAssets(body), { headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex', 'Cache-Control': SHORT_CACHE } });
 const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
@@ -136,7 +159,7 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }

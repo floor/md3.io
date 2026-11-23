@@ -23,7 +23,7 @@
     grid-row: 1;
     position: sticky;
     top: var(--header-height);
-    max-height: calc(100dvh - var(--header-height) - var(--site-footer-height, 0px));
+    height: calc(100dvh - var(--header-height));
     border-inline-end: 1px solid var(--border);
     padding-block: 8px 16px;
     overflow-y: auto;
