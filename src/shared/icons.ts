@@ -1,6 +1,9 @@
 // The official Material Symbols (Rounded) the examples use, from icons/ — see
 // scripts/icons.ts. Keys are the names the playground state already stores; values are
 // the symbol each one shows.
+import accessibilityNew from '../../icons/accessibility_new.svg' with { type: 'text' };
+import language from '../../icons/language.svg' with { type: 'text' };
+import settings from '../../icons/settings.svg' with { type: 'text' };
 import accountCircle from '../../icons/account_circle-fill.svg' with { type: 'text' };
 import add from '../../icons/add.svg' with { type: 'text' };
 import addAPhoto from '../../icons/add_a_photo.svg' with { type: 'text' };
@@ -103,6 +106,9 @@ import stop from '../../icons/stop-fill.svg' with { type: 'text' };
 const trim = (svg: string) => svg.trim();
 export const symbols = {
   accountCircle: trim(accountCircle),
+  accessibilityNew: trim(accessibilityNew),
+  language: trim(language),
+  settings: trim(settings),
   add: trim(add),
   bold: trim(formatBold),
   bookmark: trim(bookmark),
@@ -214,6 +220,9 @@ export const symbols = {
 /** Each symbol's file in icons/, named as fonts.google.com/icons names the symbol (`-fill` when filled). */
 const files: Record<keyof typeof symbols, string> = {
   accountCircle: 'account_circle-fill',
+  accessibilityNew: 'accessibility_new',
+  language: 'language',
+  settings: 'settings',
   add: 'add',
   bold: 'format_bold',
   bookmark: 'bookmark',

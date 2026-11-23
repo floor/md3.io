@@ -6,7 +6,10 @@
    the viewport is pinned to the card. */
 .catalog-visual {
   position: relative;
-  height: 180px;
+  flex: none;
+  height: 200px;
+  box-sizing: border-box;
+  border-radius: 28px;
   display: flex;
   gap: 12px;
   align-items: center;
@@ -14,10 +17,47 @@
   padding: 16px;
   overflow: hidden;
   contain: layout paint;
-  background: var(--mtrl-sys-color-surface);
+  --catalog-stage: color-mix(in srgb, var(--mtrl-sys-color-primary) 14%, var(--mtrl-sys-color-surface));
+  background: var(--catalog-stage);
   color: var(--mtrl-sys-color-on-surface);
   font-family: "Roboto", sans-serif;
 }
+/* Tonal controls standing on the stage need a step more colour than the stage. */
+.catalog-visual:not(:has(> .catalog-frame)) {
+  --mtrl-sys-color-primary-container: color-mix(in srgb, var(--mtrl-sys-color-primary) 34%, var(--mtrl-sys-color-surface));
+  --mtrl-sys-color-secondary-container: color-mix(in srgb, var(--mtrl-sys-color-primary) 34%, var(--mtrl-sys-color-surface));
+  --mtrl-sys-color-tertiary-container: color-mix(in srgb, var(--mtrl-sys-color-tertiary) 42%, var(--mtrl-sys-color-surface));
+}
+.catalog-visual--loading-indicator, .catalog-visual--progress { --catalog-stage: var(--mtrl-sys-color-surface-container-low); }
+
+/* A device around the components that live in a screen; each kind shows one part of it. */
+.catalog-frame {
+  --frame: 6px;
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  contain: layout paint;
+  border: var(--frame) solid color-mix(in srgb, var(--mtrl-sys-color-outline) 62%, var(--catalog-stage));
+  background: var(--mtrl-sys-color-surface);
+  inset-inline: calc(50% - min(38%, 150px));
+}
+.catalog-frame__screen { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; contain: layout; }
+.catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px 2px; font-size: 12px; font-weight: 500; }
+.catalog-frame__status svg { fill: currentColor; }
+.catalog-frame--top { top: 24px; bottom: calc(var(--frame) * -1); border-bottom: 0; border-radius: 24px 24px 0 0; }
+.catalog-frame--top .catalog-frame__screen { align-items: flex-start; }
+.catalog-frame--bottom { top: calc(var(--frame) * -1); bottom: 24px; border-top: 0; border-radius: 0 0 24px 24px; }
+.catalog-frame--bottom .catalog-frame__screen { align-items: flex-end; padding: 0; }
+.catalog-frame--middle { top: calc(var(--frame) * -1); bottom: calc(var(--frame) * -1); }
+.catalog-frame--left { inset: calc(var(--frame) * -1) calc(var(--frame) * -1) calc(var(--frame) * -1) 20%; border-inline-end: 0; }
+.catalog-frame--left .catalog-frame__screen { justify-content: flex-start; padding-inline: 24px; }
+.catalog-frame--right { inset: calc(var(--frame) * -1) 20% calc(var(--frame) * -1) calc(var(--frame) * -1); border-inline-start: 0; }
+.catalog-frame--right .catalog-frame__screen { justify-content: flex-end; padding-inline: 24px; }
+.catalog-frame--drawer { inset: 28px calc(var(--frame) * -1) calc(var(--frame) * -1) 14%; border-inline-end: 0; border-bottom: 0; border-start-start-radius: 24px; }
+.catalog-frame--drawer .catalog-frame__screen { padding: 0; justify-content: flex-start; align-items: stretch; background: color-mix(in srgb, var(--mtrl-sys-color-scrim) 32%, var(--mtrl-sys-color-surface)); }
+.catalog-frame--side { inset: 28px 14% calc(var(--frame) * -1) calc(var(--frame) * -1); border-inline-start: 0; border-bottom: 0; border-start-end-radius: 24px; }
 .catalog-stack { display: flex; flex-direction: column; align-items: flex-start; }
 .catalog-stack--inset { padding-inline-start: 24px; }
 .catalog-stack--progress { flex-direction: row; align-items: center; gap: 32px; width: 100%; justify-content: center; }
@@ -25,9 +65,11 @@
 
 .catalog-visual--slider m-slider, .catalog-visual--tabs md3-catalog-tabs { width: min(100%, 320px); }
 .catalog-visual--text-field m-text-field, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
-.catalog-visual--search m-search { width: min(100%, 320px); }
+.catalog-visual--search m-search { flex: 1; width: 100%; min-width: 0; max-width: 100%; }
+.catalog-visual--search m-search::part(search) { min-width: 0; width: 100%; }
+.catalog-visual--tabs .catalog-frame__screen { padding: 4px 0 0; }
 /* Three two-line rows fit the list preview at this scale. */
-.catalog-visual--list m-list { width: 320px; zoom: 0.65; }
+.catalog-visual--list m-list { width: 320px; zoom: 0.8; border-radius: 16px; overflow: hidden; }
 .catalog-visual--carousel m-carousel { display: block; width: 100%; height: 148px; }
 .catalog-visual--card m-card { width: min(100%, 300px); }
 
@@ -35,19 +77,20 @@
 .catalog-visual--navigation-rail, .catalog-visual--navigation-drawer { justify-content: flex-start; align-items: stretch; padding: 0; }
 md3-catalog-drawer:not(:defined) { visibility: hidden; }
 .catalog-visual--navigation-bar { align-items: flex-end; padding: 0; }
-.catalog-visual--navigation-bar m-navigation-bar { width: 100%; }
+.catalog-visual--navigation-bar m-navigation-bar, .catalog-visual--badge m-navigation-bar { width: 100%; }
 /* The rail's three destinations are taller than the card: scaled as the list and dialog are. */
-.catalog-visual--navigation-rail m-navigation-rail { zoom: 0.6; }
+.catalog-visual--navigation-rail .catalog-frame__screen { padding: 0; align-items: stretch; }
+.catalog-visual--navigation-rail m-navigation-rail { zoom: 0.72; height: auto; }
 .catalog-visual--app-bar { align-items: flex-start; padding: 0; }
 .catalog-visual--app-bar m-top-app-bar { width: 100%; }
 .catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
 
-.catalog-visual--badge { gap: 32px; }
 .catalog-badge { position: relative; display: inline-flex; }
 .catalog-badge m-badge { position: absolute; top: 4px; inset-inline-end: 4px; transform: translate(40%, -40%); }
 
 .catalog-divider { width: min(100%, 280px); display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 20px; color: var(--mtrl-sys-color-on-surface-variant); }
-.catalog-divider p { margin: 0; }
+.catalog-divider p { margin: 0; display: flex; align-items: center; gap: 12px; }
+.catalog-divider i { width: 56px; height: 32px; border-radius: 8px; background: var(--mtrl-sys-color-surface-container-highest); }
 .catalog-divider m-divider { display: block; }
 
 /* The overlays' surfaces keep their box until they upgrade. */
@@ -57,42 +100,74 @@ md3-catalog-snackbar:not(:defined) { width: 320px; height: 48px; }
 md3-catalog-tooltip:not(:defined) { width: 120px; height: 72px; }
 md3-catalog-tabs:not(:defined) { height: 64px; }
 
-md3-catalog-timepicker:not(:defined) { width: 160px; height: 48px; }
+md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { width: 240px; height: 200px; }
 .component-catalog { padding-top: 24px; container-type: inline-size; }
 .component-catalog__intro { margin-block-end: 32px; }
-.component-catalog__intro h1 { margin: 0 0 8px; }
+.component-catalog__intro h1 { margin: 0 0 8px; font-size: clamp(40px, 5cqi, 57px); line-height: 1.12; font-weight: 400; }
 .component-catalog__intro p { margin: 0; color: var(--text-muted); }
 .component-catalog__section + .component-catalog__section { margin-block-start: 36px; }
-.component-catalog__section h2 { margin: 0 0 14px; }
-.component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
-.component-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-/* Keep the playground link first in the card's keyboard order. */
-.component-card > .catalog-visual { order: -1; flex: none; }
-.component-card__body { padding: 8px 20px 20px; border-top: 1px solid var(--border); }
-.component-card__body h3 { font-size: var(--fs-lg); margin: 0; }
+.component-catalog__section h2 { margin: 0 0 20px; font-size: clamp(28px, 3cqi, 36px); line-height: 1.25; font-weight: 400; }
+.component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.component-card { height: 100%; min-height: 336px; }
+.component-card::part(card) { height: 100%; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); transition: background-color 150ms ease; }
+.component-card:has(.component-card__body:hover)::part(card) { background: var(--mtrl-sys-color-surface-container-high); }
+.component-card::part(content) { flex: 1; padding: 0; }
+.component-card__body { position: relative; height: 100%; box-sizing: border-box; padding: 20px 24px 16px; }
+.component-card__body h3 { font-size: 24px; line-height: 32px; font-weight: 400; margin: 0 0 8px; }
 .component-card__body h3 a {
-  display: inline-flex;
-  align-items: center;
-  min-width: var(--site-target-size);
-  min-height: var(--site-target-size);
   color: inherit;
   text-decoration: none;
 }
-.component-card__body h3 a:hover { text-decoration: underline; }
-.component-card__body p { font-size: var(--fs-ui); color: var(--text-muted); }
+/* The text half of the card is the link; the stage stays live to try the component. */
+.component-card__body h3 a::after { content: ""; position: absolute; inset: 0; border-radius: 0 0 28px 28px; }
+.component-card__body h3 a:focus-visible { outline: none; }
+.component-card__body h3 a:focus-visible::after { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
+.component-card__body p { margin: 0; font-size: 16px; line-height: 24px; color: var(--text-muted); }
 
 @media (min-width: 840px) {
-  .component-catalog { grid-column: 2; grid-row: 1; }
+  .component-catalog { grid-column: 2; grid-row: 1; padding-inline: 20px; }
 }
 @container (min-width: 580px) {
   .component-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@container (min-width: 900px) {
+  .component-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Three 394.66px cards and their two 12px gaps. */
+@container (min-width: 1208px) {
+  .component-grid { grid-template-columns: repeat(3, 394.66px); }
+}
 
-.catalog-visual--form { flex-direction: column; height: 220px; }
+.catalog-visual--form { flex-direction: column; }
 .catalog-visual--form > .mtrl-form { width: min(100%, 280px); }
 .catalog-visual--autocomplete > m-autocomplete,
 .catalog-visual--expansion-panel > m-expansion-panel,
 .catalog-visual--skeleton > m-skeleton,
 .catalog-visual--stepper > m-stepper { width: min(100%, 320px); min-width: 0; }
 .catalog-visual--autocomplete:focus-within { contain: layout; overflow: visible; z-index: 1; }
-.component-card:has(.catalog-visual--autocomplete:focus-within) { overflow: visible; z-index: 1; }
+.component-card:has(.catalog-visual--autocomplete:focus-within) { position: relative; z-index: 1; }
+.component-card:has(.catalog-visual--autocomplete:focus-within)::part(card), .component-card:has(.catalog-visual--autocomplete:focus-within)::part(media) { overflow: visible; }
+
+.catalog-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.catalog-row--tight { gap: 6px; }
+.catalog-column { display: flex; flex-direction: column; align-items: stretch; gap: 12px; width: min(100%, 290px); }
+.catalog-column m-button-group { display: block; width: 100%; }
+.catalog-column m-button-group::part(button-group) { display: flex; width: 100%; }
+.catalog-column m-button-group::part(button) { flex: 1; min-width: 0; }
+.catalog-column .catalog-row m-button { flex: 1; }
+.catalog-column .catalog-row m-button::part(button) { width: 100%; }
+.catalog-frame--floor { inset: calc(var(--frame) * -1) calc(var(--frame) * -1) 40px; border-inline: 0; border-top: 0; }
+.catalog-gesture { position: absolute; left: 50%; bottom: 8px; width: 42%; height: 3px; translate: -50%; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+.catalog-visual--icon-button .catalog-frame__screen { justify-content: flex-end; align-items: flex-start; padding: 24px 20px; }
+.catalog-visual--fab .catalog-row { gap: 20px; }
+/* The open menu grows up from its FAB, so the FAB sits low and the list fits the stage. */
+.catalog-visual--fab-menu { align-items: flex-end; padding-block-end: 12px; }
+.catalog-visual--fab-menu m-fab-menu { zoom: 0.7; }
+.catalog-visual--navigation-drawer md3-catalog-drawer { zoom: 0.78; }
+/* The pickers: a dimmed screen, the real dialog open on it and cropped by the stage. */
+.catalog-frame--picker {
+  --mtrl-sys-color-primary-container: color-mix(in srgb, var(--mtrl-sys-color-primary) 38%, var(--mtrl-sys-color-surface));
+  --mtrl-sys-color-tertiary-container: color-mix(in srgb, var(--mtrl-sys-color-tertiary) 42%, var(--mtrl-sys-color-surface));
+  top: calc(var(--frame) * -1); bottom: calc(var(--frame) * -1); background: color-mix(in srgb, var(--mtrl-sys-color-scrim) 22%, var(--mtrl-sys-color-surface)); }
+.catalog-frame--picker .catalog-frame__screen { align-items: flex-start; padding: 16px 0 0; overflow: hidden; }
+.catalog-visual--datepicker md3-catalog-datepicker, .catalog-visual--timepicker md3-catalog-timepicker { width: auto; zoom: 0.62; }

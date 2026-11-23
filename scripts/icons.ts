@@ -8,6 +8,10 @@ import { resolve } from 'node:path';
 // Symbol names exactly as fonts.google.com/icons spells them.
 const names = [
   'account_circle',
+  // The Buttons scenes on the components overview.
+  'accessibility_new',
+  'language',
+  'settings',
   'add',
   'bookmark',
   'check',

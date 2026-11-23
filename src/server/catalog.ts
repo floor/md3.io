@@ -9,6 +9,8 @@ import { symbols } from '../shared/icons';
 import { addonSlugs } from '../shared/addons';
 import { components, componentSlugs, type ComponentSlug } from '../shared/components';
 import { scopedTokens } from './tokens';
+import { renderElement } from 'material/ssr';
+import { renderStyles } from './playground-panel';
 
 /** The visual's class, where mtrl's tokens are set. */
 export const CATALOG_SCOPE = 'catalog-visual';
@@ -18,7 +20,7 @@ const tokenScope = `:is(.${CATALOG_SCOPE}, .catalog-status)`;
 export const catalogTokens = scopedTokens(tokenScope, `:root[data-theme-mode=dark] ${tokenScope}`, undefined, false);
 
 /** The surface elements of the overlays, by component. */
-export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs' } as const;
+export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', datepicker: 'md3-catalog-datepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs' } as const;
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 type Attributes = Record<string, string | number | boolean | undefined>;
@@ -60,17 +62,26 @@ const visuals: Record<ComponentSlug, string> = {
     m('step', { value: 'store', label: 'Store' }, 'Choose a shop.') +
     m('step', { value: 'time', label: 'Pickup' }, 'Choose a time.')),
   // Actions
-  button: m('button', {}, 'Button') + m('button', { variant: 'outlined' }, 'Button'),
-  'icon-button': ['standard', 'filled', 'tonal', 'outlined'].map(variant => m('icon-button', { variant, icon: symbols.heart, 'aria-label': 'Add to favorites' })).join(''),
-  // Connected, M3's replacement for the segmented button: formatting toggles, Bold on.
-  'button-group': m('button-group', { kind: 'connected', variant: 'tonal', selection: 'multi', 'aria-label': 'Text formatting' },
-    ['Bold', 'Italic', 'Underline'].map(label => m('button-group-item', { value: label.toLowerCase(), selected: label === 'Bold' }, label)).join('')),
-  'split-button': m('split-button', { label: 'Save', 'trailing-label': 'More save options' },
-    ['Save as…', 'Save a copy', 'Download'].map(label => m('menu-item', {}, text(label))).join('')),
-  fab: m('fab', { icon: symbols.add, 'aria-label': 'Create new item' }),
-  'extended-fab': m('extended-fab', { icon: symbols.edit }, 'Compose'),
-  'fab-menu': m('fab-menu', { icon: symbols.edit, 'aria-label': 'Reply options', presentation: 'menu' },
-    [['reply', 'Reply'], ['forward', 'Forward']].map(([value, label]) => m('fab-menu-item', { value, icon: symbols.send }, text(label!))).join('')),
+  button: div('catalog-row', m('button', { variant: 'tonal', size: 's', icon: symbols.arrowBack }, 'Back')
+    + m('button', { size: 'm', icon: symbols.edit }, 'Edit')
+    + m('button', { variant: 'tonal', size: 's', icon: symbols.arrowForward }, 'Next')) + '<i class="catalog-gesture" aria-hidden="true"></i>',
+  'icon-button': div('catalog-row', m('icon-button', { variant: 'outlined', size: 'm', width: 'narrow', icon: symbols.settings, 'aria-label': 'Settings' })
+    + m('icon-button', { variant: 'tonal', size: 'm', icon: symbols.edit, 'aria-label': 'Edit' })
+    + m('icon-button', { variant: 'filled', size: 'm', width: 'wide', icon: symbols.send, 'aria-label': 'Send' })),
+  'button-group': div('catalog-column',
+    m('button-group', { kind: 'connected', variant: 'tonal', selection: 'single', size: 's', 'equal-width': true, value: '4', 'aria-label': 'Cup size' },
+      [['4', '4 oz'], ['8', '8 oz'], ['12', '12 oz']].map(([value, label]) => m('button-group-item', { value, selected: value === '4', 'selected-icon': symbols.check }, label!)).join(''))
+    + div('catalog-row catalog-row--tight', m('icon-button', { variant: 'outlined', size: 'm', width: 'narrow', icon: symbols.accessibilityNew, 'aria-label': 'Accessibility' })
+      + m('button', { size: 'm' }, 'Get started')
+      + m('icon-button', { variant: 'outlined', size: 'm', width: 'narrow', icon: symbols.language, 'aria-label': 'Language' }))),
+  'split-button': m('split-button', { label: 'Add to cart', icon: symbols.shoppingCart, size: 'm', 'trailing-label': 'More cart options' },
+    ['Buy now', 'Save for later', 'Add to list'].map(label => m('menu-item', {}, text(label))).join('')),
+  fab: div('catalog-row', m('fab', { variant: 'surface', icon: symbols.edit, 'aria-label': 'Edit, small' })
+    + m('fab', { variant: 'primary-container', size: 'large', icon: symbols.edit, 'aria-label': 'Edit, large' })
+    + m('fab', { variant: 'tertiary-container', size: 'medium', icon: symbols.edit, 'aria-label': 'Edit, medium' })),
+  'extended-fab': m('extended-fab', { variant: 'primary-container', size: 'medium', icon: symbols.add }, 'New task'),
+  'fab-menu': m('fab-menu', { open: true, icon: symbols.edit, 'aria-label': 'Create', presentation: 'list' },
+    [['first', 'First'], ['second', 'Second'], ['third', 'Third']].map(([value, label]) => m('fab-menu-item', { value, icon: symbols.star }, text(label!))).join('')),
   // Selection & input
   checkbox: div('catalog-stack', m('checkbox', { 'data-indeterminate': true }, 'Additions')
     + div('catalog-stack catalog-stack--inset', m('checkbox', {}, 'Pickles') + m('checkbox', { checked: true }, 'Tomato'))),
@@ -84,7 +95,7 @@ const visuals: Record<ComponentSlug, string> = {
   select: m('select', { variant: 'outlined', label: 'Fruit', value: 'apple', 'supporting-text': 'Choose a favorite' },
     [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']].map(([value, label]) => m('select-option', { value }, label!)).join('')),
   search: m('search', { placeholder: 'Search places', 'aria-label': 'Search places' }),
-  datepicker: m('datepicker', { variant: 'docked', label: 'Choose a date', value: '2026-09-21' }),
+  datepicker: `<${SURFACES.datepicker}></${SURFACES.datepicker}>`,
   timepicker: `<${SURFACES.timepicker}></${SURFACES.timepicker}>`,
   // Navigation
   'navigation-rail': m('navigation-rail', { value: 'inbox', 'no-toggle': true, 'aria-label': 'Mail navigation' },
@@ -110,19 +121,34 @@ const visuals: Record<ComponentSlug, string> = {
     ['Morning walk', 'Read a chapter', 'Try a new recipe'].map((headline, index) => m('list-item', { value: String(index + 1), 'leading-icon': [symbols.heart, symbols.bookmark, symbols.download][index], 'trailing-text': `${(index + 1) * 5} min` }, headline)).join('')),
   carousel: m('carousel', { 'aria-label': 'Places to explore', 'item-width': 200, gap: 8, padding: 0, 'corner-radius': 28 },
     places.map(place => m('carousel-item', { src: picsum(place.id), alt: `${place.title}, ${place.location}`, description: place.location }, text(place.title))).join('')),
-  divider: div('catalog-divider', `<p>Ideas for today</p>${m('divider')}<p>Places to explore</p>`),
+  divider: div('catalog-divider', ['Ideas for today', 'Places to explore', 'Saved for later', 'Recently viewed'].map(label => `<p><i aria-hidden="true"></i>${label}</p>`).join(m('divider'))),
   dialog: `<${SURFACES.dialog}></${SURFACES.dialog}>`,
   'bottom-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'bottom-sheet' }, 'Show bottom sheet') + m('bottom-sheet', { headline: 'Plan your visit', 'peek-height': 120 }, '<p>Find a new trail, take in the view, and make time for a quiet moment.</p>'),
   'side-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'side-sheet' }, 'Show side sheet') + m('side-sheet', { headline: 'Details', width: 240 }, '<p>A place for useful context, related information, and supporting actions.</p>'),
   // Communication
-  badge: ['inbox', 'heart'].map((icon, index) => div('catalog-badge',
-    m('icon-button', { variant: 'tonal', icon: symbols[icon as 'inbox' | 'heart'], 'aria-label': index ? 'Favorites' : 'Inbox' }) + m('badge', index ? { variant: 'small' } : { label: 8 }))).join(''),
+  badge: m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail navigation' },
+    destinations.map((item, index) => m('navigation-bar-item', { value: item.value, icon: item.icon, badge: [3, undefined, 1][index] }, item.label)).join('')),
   // Wavy and indeterminate: the M3 Expressive form, and it shows the motion.
   progress: div('catalog-stack catalog-stack--progress', m('progress', { shape: 'wavy', indeterminate: true, 'aria-label': 'Uploading files' }) + m('progress', { variant: 'circular', shape: 'wavy', indeterminate: true, 'aria-label': 'Uploading files' })),
   'loading-indicator': m('loading-indicator', { size: 72, 'aria-label': 'Loading your content' }) + m('loading-indicator', { size: 72, contained: true, 'aria-label': 'Loading your content' }),
   snackbar: `<${SURFACES.snackbar}></${SURFACES.snackbar}>`,
   tooltip: `<${SURFACES.tooltip}></${SURFACES.tooltip}>`,
 };
+
+/** Which part of a device each scene shows: components that live in a screen sit in one. */
+type FrameKind = 'picker' | 'floor' | 'top' | 'bottom' | 'middle' | 'left' | 'right' | 'drawer' | 'side';
+const frames: Partial<Record<ComponentSlug, FrameKind>> = {
+  button: 'floor', 'icon-button': 'side', datepicker: 'picker', timepicker: 'picker',
+  'app-bar': 'top', search: 'top', tabs: 'top',
+  'navigation-bar': 'bottom', badge: 'bottom', snackbar: 'bottom', toolbar: 'bottom', 'bottom-app-bar': 'bottom', 'bottom-sheet': 'bottom',
+  divider: 'middle', slider: 'middle', 'text-field': 'middle', select: 'middle',
+  checkbox: 'left', radios: 'left', chips: 'left', 'navigation-rail': 'left',
+  switch: 'right',
+  'navigation-drawer': 'drawer', 'side-sheet': 'side',
+};
+const statusBar = '<div class="catalog-frame__status" aria-hidden="true"><span>9:30</span><svg viewBox="0 0 34 12" width="34" height="12"><path d="M0 2h12L6 10zM15 10 25 1v9z"/><rect x="28" y="2" width="6" height="9" rx="1"/></svg></div>';
+const frame = (kind: FrameKind, content: string) =>
+  `<div class="catalog-frame catalog-frame--${kind}">${kind === 'top' ? statusBar : ''}<div class="catalog-frame__screen">${content}</div></div>`;
 
 /**
  * A card's visual: the live component itself, so people can use it where it
@@ -132,7 +158,17 @@ const visuals: Record<ComponentSlug, string> = {
  * nothing here pins Baseline over the theme (layout step 8).
  */
 export function catalogVisual(slug: ComponentSlug): string {
-  return `<div class="${CATALOG_SCOPE} ${CATALOG_SCOPE}--${slug}">${visuals[slug]}</div>`;
+  const kind = frames[slug];
+  const scene = kind ? frame(kind, visuals[slug]) : visuals[slug];
+  return `<div class="${CATALOG_SCOPE} ${CATALOG_SCOPE}--${slug}">${scene}</div>`;
+}
+
+/** An overview card: a real <m-card>, the live visual as its media, the text as its content. */
+export function catalogCard(slug: ComponentSlug, href: string, deprecated: boolean): string {
+  const { name, summary } = components[slug];
+  const status = deprecated ? '<span class="catalog-status"><m-badge variant="small" label="Deprecated" color="secondary" aria-hidden="true"></m-badge> Deprecated</span>' : '';
+  const body = `<div class="component-card__body"><h3><a href="${escape(href)}">${escape(name)}</a></h3><p>${escape(summary)}</p>${status}</div>`;
+  return renderElement('m-card', { variant: 'filled', class: 'component-card' }, `${catalogVisuals[slug].replace('<div class="', '<div slot="media" class="')}${body}`, renderStyles);
 }
 
 /** Every visual, for the checks. */

@@ -10,7 +10,7 @@ import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
-import { catalogTokens, catalogVisuals } from './src/server/catalog';
+import { catalogCard, catalogTokens, catalogVisuals } from './src/server/catalog';
 import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
@@ -302,8 +302,8 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('/drawer/', '/navigation-drawer/') + url.search } });
-  else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogVisuals });
-  else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogVisuals, install: renderInstall('material-addons material') });
+  else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogCard, catalogVisuals });
+  else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogCard, catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&
     (componentMatch[1] === 'preview' || path === playgroundHref(componentMatch[2]!))) {
     const slug = componentMatch[2]!;

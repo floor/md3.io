@@ -214,7 +214,8 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
   let superseded = false;
   const abortForNavigation = () => { if (!updatingPageURL) { superseded = true; controller.abort(); } };
   outerSignal?.addEventListener('abort', abortForNavigation, { once: true });
-  const timer = setTimeout(() => controller.abort('timeout'), 3000);
+  // A timeout falls back to a full page load, so it must only catch a stalled request.
+  const timer = setTimeout(() => controller.abort('timeout'), 15000);
   try {
     const response = await fetch(url, { signal, headers: { Accept: 'text/html' } });
     if (!response.ok || !response.headers.get('content-type')?.includes('text/html') || new URL(response.url).origin !== location.origin) throw new Error('Not a site page');
