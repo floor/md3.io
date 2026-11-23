@@ -25,11 +25,11 @@ describe('site routes and documentation', () => {
     // eyebrow and the sidebar's label still name the section. The logo link keeps a name.
     for (const path of ['/docs/', '/docs/getting-started/', '/components/button/']) {
       const html = await (await get(path)).text();
-      expect(html.match(/<header class="([^"]*)"/)?.[1], path).toBe('header');
+      expect(html.match(/<m-top-app-bar [^>]*class="([^"]*)"/)?.[1], path).toBe('header');
       expect(html, path).not.toContain('header__sep');
       expect(html, path).not.toContain('header__section');
       expect(html, path).not.toContain('brand-dot');
-      expect(html, path).toContain('<a class="header__logo" href="/" aria-label="material, home">');
+      expect(html, path).toContain('<a slot="leading" class="header__logo" href="/" aria-label="material, home">');
     }
   });
   test('each component reference links to its own playground', async () => {

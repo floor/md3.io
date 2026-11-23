@@ -7,7 +7,7 @@ const page = (path: string) => handleRequest(new Request(`http://localhost${path
 
 /** The opening tag of the configuration row that holds this control. */
 function rowOpen(html: string, name: string): string {
-  const at = html.indexOf(`name="${name}"`);
+  const at = html.indexOf(`name="${name}"`, html.indexOf('class="ui-row'));
   if (at < 0) throw new Error(`missing control ${name}`);
   // A native row (a switch's <label>, or a field's <div>) or the material panel's row,
   // whose switch rows are a plain <div class="ui-row">.
