@@ -5,9 +5,9 @@ import createCard from "material/components/card";
 import createChips from "material/components/chips";
 import createDialog from "material/components/dialog";
 import createBottomSheet from "material/components/bottom-sheet";
-import createDrawer from "material/components/drawer";
+import { createNavigationDrawer } from "material/components/drawer";
 import createMenu from "material/components/menu";
-import createTopAppBar from "material/components/top-app-bar";
+import { createAppBar } from "material/components/top-app-bar";
 import createExtendedFab from "material/components/extended-fab";
 import createIconButton from "material/components/icon-button";
 import createSearch from "material/components/search";
@@ -33,7 +33,7 @@ workspace.append(drawerSlot, content);
 let compact = false;
 const createCategories = (modal: boolean) => {
   const items = categoryItems(s).map(item => ({ ...item, active: item.id === s.category }));
-  const drawer = createDrawer({
+  const drawer = createNavigationDrawer({
     variant: modal ? "modal" : "standard", open: !modal, layer: modal ? "top" : undefined,
     width: 216, ariaLabel: "Categories",
     items: [...items.slice(0, 2), { type: "section", label: "Labels" }, ...items.slice(2)],
@@ -49,7 +49,7 @@ const createCategories = (modal: boolean) => {
 const inlineDrawer = createCategories(false);
 const modalDrawer = createCategories(true);
 
-const bar = createTopAppBar({ title: "Notes", scrollable: false });
+const bar = createAppBar({ title: "Notes", scrollable: false });
 const tools = Object.assign(document.createElement("div"), { className: "notes__tools" });
 const mobileSearch = Object.assign(document.createElement("div"), { className: "notes__mobile-search", hidden: true });
 const menuButton = createIconButton({ icon: MENU_ICON, ariaLabel: "Open categories" });

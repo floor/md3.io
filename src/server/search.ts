@@ -101,6 +101,7 @@ function componentDocuments(): IndexDocument[] {
       tags: [slug, ...elements.map(name => `m-${name}`)].join(' '),
       api: [
         component.factory,
+        ...(slug === 'app-bar' ? ['createTopAppBar'] : slug === 'navigation-drawer' ? ['createDrawer'] : []),
         ...elements.flatMap(name => [pascal(name), `M${pascal(name)}`]),
         ...Object.keys(meta?.attributes ?? {}),
         ...(meta?.events ?? []),

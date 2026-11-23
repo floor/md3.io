@@ -16,9 +16,9 @@ A config `on*` option (`onChange`, `onOpen`, …) is the listener registered at 
 gets the same argument as a listener passed to `on()`, and it runs before one added later.
 
 ```typescript
-import { createDrawer } from 'material';
+import { createNavigationDrawer } from 'material';
 
-const drawer = createDrawer({
+const drawer = createNavigationDrawer({
   variant: 'modal',
   items: [{ id: 'inbox', label: 'Inbox' }],
   onOpen: () => console.log('first'),

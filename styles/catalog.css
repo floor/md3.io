@@ -79,8 +79,7 @@ md3-catalog-timepicker:not(:defined) { width: 160px; height: 48px; }
   text-decoration: none;
 }
 .component-card__body h3 a:hover { text-decoration: underline; }
-.component-card__body p, .catalog-note { font-size: var(--fs-ui); color: var(--text-muted); }
-.catalog-note { margin: 20px 16px 0; }
+.component-card__body p { font-size: var(--fs-ui); color: var(--text-muted); }
 
 @media (min-width: 840px) {
   .component-catalog { grid-column: 2; grid-row: 1; }

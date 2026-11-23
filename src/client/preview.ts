@@ -25,10 +25,10 @@ import createBottomSheet from 'material/components/bottom-sheet';
 import createSideSheet from 'material/components/side-sheet';
 import createNavigationRail from 'material/components/navigation-rail';
 import createNavigationBar from 'material/components/navigation-bar';
-import createDrawer from 'material/components/drawer';
+import { createNavigationDrawer } from 'material/components/drawer';
 import createTabs from 'material/components/tabs';
 import createMenu from 'material/components/menu';
-import createTopAppBar from 'material/components/top-app-bar';
+import { createAppBar } from 'material/components/top-app-bar';
 import createBottomAppBar from 'material/components/bottom-app-bar';
 import createToolbar from 'material/components/toolbar';
 import createSwitch from 'material/components/switch';
@@ -276,7 +276,7 @@ function create(state: ComponentState) {
       return { element: host, destroy: () => control.destroy() };
     }
     case 'navigation-drawer': {
-      const control = createDrawer(components['navigation-drawer'].config(state));
+      const control = createNavigationDrawer(components['navigation-drawer'].config(state));
       const host = document.createElement('div');
       host.className = 'navigation-demo';
       host.dataset.position = String(state.position);
@@ -324,7 +324,7 @@ function create(state: ComponentState) {
       return { element: trigger.element, destroy: () => { control.destroy(); trigger.destroy(); } };
     }
     case 'app-bar': {
-      const control = createTopAppBar(components['app-bar'].config(state));
+      const control = createAppBar(components['app-bar'].config(state));
       const content = appBarContent('app-bar', state);
       const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });

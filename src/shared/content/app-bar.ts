@@ -2,7 +2,7 @@
 // named bars, what a preview adds beside their configs, and its registry entry.
 import type { IconButtonConfig } from 'material/components/icon-button';
 import type { FabConfig } from 'material/components/fab';
-import type { TopAppBarConfig } from 'material/components/top-app-bar';
+import type { AppBarConfig } from 'material/components/top-app-bar';
 import { symbols } from '../icons';
 import { bottomAppBarSet } from './bottom-app-bar';
 import { type ComponentState, type Control, type Scenario, bool, choose, iconByName, pick, section, string, text, toggle } from './types';
@@ -102,7 +102,7 @@ const appBarScenarios: readonly Scenario[] = [
 ];
 
 export const appBarComponent = {
-  group: 'Navigation', name: 'App bar', factory: 'createTopAppBar', variable: 'topBar',
+  group: 'Navigation', name: 'App bar', factory: 'createAppBar', variable: 'topBar',
   description: 'Give a view its title and actions. Explore bar sizes and the scrolled appearance.',
   summary: 'A title, navigation, and contextual actions.', styles: ['top-app-bar', 'icon-button'],
   // The Send button's styles: the preview only. Vanilla imports them when a bar has that button.
@@ -112,5 +112,5 @@ export const appBarComponent = {
     ...section('Appearance', [choose('type', 'Type', ['small', 'center', 'medium', 'large'], 'small', 'select'), toggle('scrolled', 'Scrolled state'), toggle('compressible', 'Compressible', true)]),
     ...section('Content', [contextControl, text('title', 'Title', 'My library'), toggle('leading', 'Navigation button', true), { ...choose('actions', 'Action count', ['0', '1', '2'], '1'), enabledWhen: 'contextDefault' }]),
   ],
-  config: (state: ComponentState): TopAppBarConfig => ({ type: pick(state, 'type', ['small', 'center', 'medium', 'large'], 'small'), title: string(state, 'title'), compressible: bool(state, 'compressible'), scrollable: false }),
+  config: (state: ComponentState): AppBarConfig => ({ type: pick(state, 'type', ['small', 'center', 'medium', 'large'], 'small'), title: string(state, 'title'), compressible: bool(state, 'compressible'), scrollable: false }),
 };

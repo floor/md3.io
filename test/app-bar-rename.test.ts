@@ -35,7 +35,7 @@ describe('App bar naming and compatibility', () => {
     const paths = sitemapPages().map(page => page.path);
     expect(paths).toContain('/components/app-bar/');
     expect(paths).not.toContain('/components/top-app-bar/');
-    expect(searchSite('createTopAppBar').find(result => result.section === 'Components')).toMatchObject({ title: 'App bar', url: '/components/app-bar/' });
+    expect(searchSite('createAppBar').find(result => result.section === 'Components')).toMatchObject({ title: 'App bar', url: '/components/app-bar/' });
     expect(examplesUsingComponent('app-bar').map(example => example.slug).sort()).toEqual(['email', 'notes', 'settings']);
   });
 
@@ -47,8 +47,8 @@ describe('App bar naming and compatibility', () => {
 
   test('the installed TopAppBar API remains in working framework samples', () => {
     const state = initialComponentState('app-bar');
-    expect(components['app-bar'].factory).toBe('createTopAppBar');
-    expect(componentCode('app-bar', state)).toContain('createTopAppBar');
+    expect(components['app-bar'].factory).toBe('createAppBar');
+    expect(componentCode('app-bar', state)).toContain('createAppBar');
     const meta = elementMeta('app-bar')!;
     expect(meta.name).toBe('top-app-bar');
     expect(meta.slotted?.length).toBeGreaterThan(0);
@@ -68,10 +68,10 @@ describe('App bar naming and compatibility', () => {
     const meta = elementMeta('navigation-drawer')!;
     expect(meta.name).toBe('drawer');
     expect(meta.children?.name).toBe('drawer-item');
-    expect(components['navigation-drawer'].factory).toBe('createDrawer');
-    expect(componentCode('navigation-drawer', initialComponentState('navigation-drawer'))).toContain('createDrawer');
+    expect(components['navigation-drawer'].factory).toBe('createNavigationDrawer');
+    expect(componentCode('navigation-drawer', initialComponentState('navigation-drawer'))).toContain('createNavigationDrawer');
     expect(componentDeprecations['navigation-drawer']).toBeUndefined();
-    expect(searchSite('createDrawer').find(result => result.section === 'Components')).toMatchObject({ title: 'Navigation drawer', url: '/components/navigation-drawer/' });
+    expect(searchSite('createNavigationDrawer').find(result => result.section === 'Components')).toMatchObject({ title: 'Navigation drawer', url: '/components/navigation-drawer/' });
     expect(sitemapPages().map(page => page.path)).not.toContain('/components/drawer/');
     expect(examplesUsingComponent('navigation-drawer').map(example => example.slug).sort()).toEqual(['email','notes']);
   });

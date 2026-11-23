@@ -1,7 +1,7 @@
 {
-  "material": "3.16.0",
+  "material": "3.16.1",
   "addons": "3.2.0",
-  "measured": "2026-11-21",
+  "measured": "2026-11-23",
   "gzip": 9,
   "core": {
     "factory": 15893,
@@ -10,14 +10,14 @@
   "components": {
     "autocomplete": {
       "factory": {
-        "alone": 32268,
+        "alone": 32559,
         "lazy": 0,
-        "added": 23890
+        "added": 24181
       },
       "element": {
-        "alone": 26660,
+        "alone": 26654,
         "lazy": 0,
-        "added": 14166
+        "added": 14168
       }
     },
     "avatar": {
@@ -27,16 +27,16 @@
         "added": 11411
       },
       "element": {
-        "alone": 17759,
+        "alone": 17757,
         "lazy": 0,
-        "added": 6220
+        "added": 6214
       }
     },
     "colorpicker": {
       "factory": {
-        "alone": 36260,
+        "alone": 36259,
         "lazy": 0,
-        "added": 27356
+        "added": 27355
       }
     },
     "expansion-panel": {
@@ -46,16 +46,16 @@
         "added": 14694
       },
       "element": {
-        "alone": 19361,
+        "alone": 19358,
         "lazy": 0,
-        "added": 7866
+        "added": 7864
       }
     },
     "form": {
       "factory": {
-        "alone": 31712,
+        "alone": 31711,
         "lazy": 0,
-        "added": 24456
+        "added": 24455
       }
     },
     "skeleton": {
@@ -65,7 +65,7 @@
         "added": 12221
       },
       "element": {
-        "alone": 10093,
+        "alone": 10091,
         "lazy": 0,
         "added": 2016
       }
@@ -77,9 +77,9 @@
         "added": 17515
       },
       "element": {
-        "alone": 28468,
+        "alone": 28493,
         "lazy": 0,
-        "added": 16471
+        "added": 16472
       }
     }
   }

@@ -1,8 +1,8 @@
 // Vanilla: the create* factories the elements are built on. The dialog and the snackbar
 // are the elements (they live in the top layer), created with plain DOM.
 import createNavigationRail from "material/components/navigation-rail";
-import createTopAppBar from "material/components/top-app-bar";
-import createDrawer from "material/components/drawer";
+import { createAppBar } from "material/components/top-app-bar";
+import { createNavigationDrawer } from "material/components/drawer";
 import createSearch from "material/components/search";
 import createChips from "material/components/chips";
 import createCheckbox from "material/components/checkbox";
@@ -45,7 +45,7 @@ const rail = createNavigationRail({
     };
   }),
 });
-const drawer = createDrawer({
+const drawer = createNavigationDrawer({
   variant: "modal",
   layer: "top",
   headline: RAIL_LABEL,
@@ -74,7 +74,7 @@ const main = Object.assign(document.createElement("div"), { className: "mail__ma
 const listPane = Object.assign(document.createElement("div"), { className: "mail__list-pane" });
 const detailPane = Object.assign(document.createElement("div"), { className: "mail__detail-pane" });
 
-const bar = createTopAppBar({ title: folderName(s.folder), scrollable: false, class: "mail__bar" });
+const bar = createAppBar({ title: folderName(s.folder), scrollable: false, class: "mail__bar" });
 const menuBtn = createIconButton({ icon: icons.menu, ariaLabel: MENU_LABEL, class: "mail__menu" });
 menuBtn.on("click", () => {
   openDrawer(s);

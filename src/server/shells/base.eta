@@ -81,14 +81,7 @@
 </head>
 <body class="<%= it.isHome ? 'home' : '' %>">
   <a class="skip-link" href="#<%= it.skipTarget %>">Skip to content</a>
-  <header class="header"><div class="header__inner">
-    <a class="header__logo" href="/" aria-label="material, home"><img class="header__mark" src="/assets/brand/mark.svg" width="20" height="20" alt="" aria-hidden="true">material</a>
-    <button type="button" class="header__search" id="search-trigger" aria-label="Search (⌘K)" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
-      <svg class="header__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>
-    </button>
-    <div class="header__themes <%= it.headerScope %>"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.themeButton %><%~ it.themeMenu %><%~ it.modeButton %></div>
-  </div></header>
+  <%~ it.appBar %>
   <div class="site-primary-bar" id="site-primary-bar">
     <%~ include('primary-links', it) %>
   </div>
@@ -96,6 +89,8 @@
     <div class="site-primary-rail" id="site-primary-rail">
       <button type="button" class="site-icon-button site-nav-button" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden><%~ it.icon('menu') %></button>
       <%~ include('primary-links', it) %>
+      <div class="header__themes <%= it.headerScope %>"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.themeButton %><%~ it.themeMenu %><%~ it.modeButton %></div>
+      <script>if (matchMedia('(width < 600px)').matches) document.querySelector('.header__actions').append(document.querySelector('.header__themes'));</script>
     </div>
     <div class="layout-main">
       <% if (it.sectionDrawer) { %>
@@ -110,7 +105,6 @@
       <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
     </div>
   </div>
-  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub <%~ it.icon('open_in_new') %></a><a href="/privacy/">Privacy</a></span></footer>
   <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">
     <button type="button" class="site-icon-button site-nav-button" id="site-nav-close" aria-label="Close navigation" autofocus><%~ it.icon('close') %></button>
     <%~ include('primary-links', it) %>

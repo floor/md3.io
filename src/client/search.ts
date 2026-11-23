@@ -5,7 +5,16 @@ interface Result { title: string; url: string; section: string; group: string; s
 const dialog = document.querySelector<HTMLDialogElement>('#search-dialog');
 const input = document.querySelector<HTMLInputElement>('#search-input');
 const results = document.querySelector<HTMLElement>('#search-results');
-const trigger = document.querySelector<HTMLButtonElement>('#search-trigger');
+const trigger = document.querySelector<HTMLElement>('#search-trigger');
+// A page that defines material's button rebuilds the trigger's inner button.
+const markTrigger = () => {
+  const button = trigger?.shadowRoot?.querySelector('button');
+  button?.setAttribute('aria-haspopup', 'dialog');
+  button?.setAttribute('aria-keyshortcuts', 'Meta+K Control+K');
+  const label = trigger?.getAttribute('aria-label');
+  if (label) button?.setAttribute('aria-label', label);
+};
+void customElements.whenDefined('m-button').then(markTrigger);
 
 if (dialog && input && results) {
   let current: Result[] = [];
@@ -21,6 +30,7 @@ if (dialog && input && results) {
     const kbd = trigger?.querySelector('.header__search-kbd');
     if (kbd) kbd.innerHTML = '<kbd>Ctrl</kbd><kbd>K</kbd>';
     trigger?.setAttribute('aria-label', 'Search (CtrlK)');
+    markTrigger();
   }
 
   const viewport = window.visualViewport;
@@ -61,7 +71,16 @@ if (dialog && input && results) {
       if (dialog.open) close(); else open();
     }
   });
-  trigger?.addEventListener('click', open);
+  // Focus returns to the trigger when the dialog closes. Escape is a key, so the browser would
+  // draw the keyboard ring even for someone who opened search with the pointer: only a
+  // keyboard activation (detail 0) keeps it, until focus next leaves the trigger.
+  trigger?.addEventListener('click', event => {
+    trigger.toggleAttribute('data-quiet-focus', event.detail > 0);
+    open();
+  });
+  trigger?.addEventListener('focusout', () => {
+    if (!dialog.open) trigger.removeAttribute('data-quiet-focus');
+  });
   document.querySelector('#search-esc')?.addEventListener('click', close);
   // The dialog fills the viewport; a click on it, not on the panel, is outside.
   dialog.addEventListener('click', event => { if (event.target === dialog) close(); });

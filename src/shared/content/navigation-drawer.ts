@@ -5,13 +5,13 @@
 // label text reads Recents, the accessibility label for this destination clarifies its
 // function: Recent images". The mail drawer the default used to be is the mailbox set
 // below, built from the destinations the rail and the tabs share.
-import type { DrawerConfig, DrawerItemConfig } from 'material/components/drawer';
+import type { NavigationDrawerConfig, NavigationDrawerItemConfig } from 'material/components/drawer';
 import { symbols } from '../icons';
 import { destinations } from './navigation-rail';
 import { type ComponentState, type Control, type Scenario, bool, choose, range, section, string, text, toggle } from './types';
 
 /** One row of a named drawer: a destination, a divider, or a section label. */
-type DrawerRow = DrawerItemConfig;
+type DrawerRow = NavigationDrawerItemConfig;
 
 interface DrawerSet {
   name: string;
@@ -79,7 +79,7 @@ const drawerSets: Record<string, DrawerSet> = {
 const drawerSet = (state: ComponentState): DrawerSet | undefined => drawerSets[string(state, 'destinations')];
 
 /** The rows on the stage: the photos app, or the named set with the toggles applied. */
-function drawerItems(state: ComponentState): DrawerItemConfig[] {
+function drawerItems(state: ComponentState): NavigationDrawerItemConfig[] {
   const set = drawerSet(state);
   if (!set) {
     return defaultDestinations.map(item => ({
@@ -145,7 +145,7 @@ const drawerScenarios: readonly Scenario[] = [
 ];
 
 export const navigationDrawerComponent = {
-  group: 'Navigation', name: 'Navigation drawer', factory: 'createDrawer', variable: 'drawer',
+  group: 'Navigation', name: 'Navigation drawer', factory: 'createNavigationDrawer', variable: 'drawer',
   description: 'Explore a navigation drawer with destinations, section labels, and badges.',
   summary: 'Grouped destinations in a side panel.', styles: ['drawer', 'button', 'progress'],
   scenarios: drawerScenarios,
@@ -157,6 +157,6 @@ export const navigationDrawerComponent = {
     ...section('Content', [destinationControl, text('headline', 'Headline', 'Photos'), activeControl, toggle('icons', 'Icons', true), toggle('badges', 'Badges', true, 'namedDestinations'), toggle('sections', 'Section labels', true, 'namedDestinations')]),
     ...section('Behavior', [toggle('open', 'Open', true), toggle('dismissible', 'Dismissible', true)]),
   ],
-  config: (state: ComponentState): DrawerConfig => ({ variant: string(state, 'variant'), position: string(state, 'position'), width: Number(state.width), dense: bool(state, 'dense'), headline: string(state, 'headline'), open: bool(state, 'open'), dismissible: bool(state, 'dismissible'),
+  config: (state: ComponentState): NavigationDrawerConfig => ({ variant: string(state, 'variant'), position: string(state, 'position'), width: Number(state.width), dense: bool(state, 'dense'), headline: string(state, 'headline'), open: bool(state, 'open'), dismissible: bool(state, 'dismissible'),
     items: drawerItems(state) }),
 };
