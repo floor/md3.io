@@ -63,19 +63,23 @@ pm2() {
   guard_daemon
   "$bun" --bun "$pm2_cli" "$@"
 }
+require_running_app() {
+  local app_pids app_pid
+  app_pids=$(pm2 pid md3.io) || fail 'cannot query md3.io in the systemd-owned PM2 daemon.'
+  [[ -n "$app_pids" ]] || fail 'md3.io is not a known running PM2 process; report it, do not start it.'
+  while IFS= read -r app_pid; do
+    [[ "$app_pid" =~ ^[1-9][0-9]*$ ]] || fail 'md3.io is not a known running PM2 process; report it, do not start it.'
+  done <<<"$app_pids"
+}
 
 [[ -x "$bun" ]] || fail "Bun runtime is not executable: $bun"
 [[ -f "$pm2_cli" && -x "$pm2_cli" ]] || fail "PM2 executable is missing: $pm2_cli"
 guard_daemon
 expected_daemon_pid=$daemon_pid
-app_pids=$(pm2 pid md3.io) || fail 'cannot query md3.io in the systemd-owned PM2 daemon.'
-[[ -n "$app_pids" ]] || fail 'md3.io is not a known running PM2 process; report it, do not start it.'
-while IFS= read -r app_pid; do
-  [[ "$app_pid" =~ ^[1-9][0-9]*$ ]] || fail 'md3.io is not a known running PM2 process; report it, do not start it.'
-done <<<"$app_pids"
+require_running_app
 
 echo "md3.io:"
-cd '@@DIR@@/md3.io'
+cd '@@DIR@@/md3.io' 2>/dev/null || fail 'checkout is missing or inaccessible: @@DIR@@/md3.io'
 previous_commit=$(git rev-parse --verify HEAD)
 checkout_moved=0
 report_failure() {
@@ -101,6 +105,9 @@ if ! "$bun" install --frozen-lockfile || ! "$bun" run build; then
   exit 1
 fi
 
+# A stopped app can be started by reload itself. Recheck after the build, not
+# just before fetching, so a missing/stopped process is reported instead.
+require_running_app
 if ! pm2 reload md3.io > /dev/null; then
   echo 'md3.io reload failed after checkout update; check pm2-admin. Do not hand-start a daemon or process.' >&2
   exit 1
@@ -108,6 +115,7 @@ fi
 # A successful CLI exit is insufficient if it attached to a different daemon.
 guard_daemon
 
+code=
 for attempt in $(seq 1 30); do
   code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4300/ || true)
   [ "$code" = 200 ] && { echo "md3.io answers 200."; exit 0; }

@@ -81,7 +81,16 @@ export function createDeployFixture(): DeployFixture {
   const pm2 = join(bin, 'pm2');
   writeFileSync(
     runtime,
-    '#!/bin/sh\nif [ "$1" = --bun ]; then\n  shift\n  exec "$@"\nfi\nprintf \'bun %s\\n\' "$*" >> "$DEPLOY_STUB_LOG"\nif [ "${DEPLOY_FAIL_BUILD:-}" = 1 ] && [ "$1" = run ] && [ "$2" = build ]; then\n  exit 1\nfi\nexit 0\n',
+    `#!/bin/sh
+printf 'bun %s\\n' "$*" >> "$DEPLOY_STUB_LOG"
+if [ "$1" = --bun ]; then
+  shift
+  export DEPLOY_STUB_PM2_RUNTIME=bun
+  exec "$@"
+fi
+if [ "\${DEPLOY_FAIL_BUILD:-}" = 1 ] && [ "$1" = run ] && [ "$2" = build ]; then exit 1; fi
+exit 0
+`,
     { mode: 0o755 },
   );
   writeFileSync(
@@ -89,8 +98,13 @@ export function createDeployFixture(): DeployFixture {
     `#!/bin/sh
 printf 'pm2 %s\\n' "$*" >> "$DEPLOY_STUB_LOG"
 printf 'pm2-home %s\\n' "\${PM2_HOME:-}" >> "$DEPLOY_STUB_LOG"
+[ "\${DEPLOY_STUB_PM2_RUNTIME:-}" = bun ] || { echo 'PM2 must run through Bun --bun' >&2; exit 96; }
 if [ "$1" = pid ]; then
-  echo "\${DEPLOY_PM2_PID-4242}"
+  if [ "$DEPLOY_PM2_PID_AFTER_BUILD_SET" = 1 ] && grep -q '^bun run build$' "$DEPLOY_STUB_LOG"; then
+    echo "$DEPLOY_PM2_PID_AFTER_BUILD"
+  else
+    echo "\${DEPLOY_PM2_PID-4242}"
+  fi
   exit "\${DEPLOY_FAIL_PID:-0}"
 fi
 if [ "$1" = reload ]; then
@@ -103,6 +117,7 @@ exit 99
   );
   writeFileSync(join(bin, 'curl'), '#!/bin/sh\necho 200\n', { mode: 0o755 });
   writeFileSync(join(bin, 'ssh'), '#!/bin/sh\necho SSH_INVOKED >&2\nexit 97\n', { mode: 0o755 });
+  writeFileSync(join(bin, 'seq'), '#!/bin/sh\nif [ "$DEPLOY_FAIL_SEQ" = 1 ]; then exit 1; fi\nexec "$DEPLOY_REAL_SEQ" "$@"\n', { mode: 0o755 });
   writeFileSync(join(bin, 'systemctl'), `#!/bin/sh
 printf 'systemctl %s\\n' "$*" >> "$DEPLOY_STUB_LOG"
 if [ "\${DEPLOY_FAIL_UNIT:-0}" = 1 ]; then exit 1; fi
@@ -111,6 +126,10 @@ if [ "\${DEPLOY_LOSE_DAEMON:-0}" = 1 ] && grep -q '^bun run build$' "$DEPLOY_STU
 echo "ActiveState=$state"
 pid="\${DEPLOY_UNIT_PID}"
 if [ "\${DEPLOY_CHANGE_DAEMON:-0}" = 1 ] && grep -q '^pm2 reload ' "$DEPLOY_STUB_LOG"; then pid="$DEPLOY_REPLACEMENT_PID"; fi
+if [ "$DEPLOY_CHANGE_DAEMON_BEFORE_RECHECK" = 1 ] && grep -q '^bun run build$' "$DEPLOY_STUB_LOG"; then
+  pid="$DEPLOY_REPLACEMENT_PID"
+  printf '%s' "$pid" > "$PM2_HOME/pm2.pid"
+fi
 echo "MainPID=$pid"
 `, { mode: 0o755 });
   writeFileSync(join(bin, 'git'), '#!/bin/sh\nprintf \'git %s\\n\' "$*" >> "$DEPLOY_STUB_LOG"\nexec "$DEPLOY_REAL_GIT" "$@"\n', { mode: 0o755 });
@@ -135,13 +154,15 @@ export type DeployOptions = {
   failBuild?: boolean; pm2Pid?: string | number; failPid?: boolean; failReload?: boolean;
   unitState?: string; failUnit?: boolean; unitPid?: number; changeDaemon?: boolean;
   missingRuntime?: boolean; missingPM2?: boolean; loseDaemon?: boolean;
+  pm2PidAfterBuild?: string | number; missingCheckout?: boolean; failSeq?: boolean;
+  changeDaemonBeforeRecheck?: boolean;
 };
 export function runRemote(fixture: DeployFixture, options: DeployOptions = {}): RemoteRun {
   const path = `${fixture.bin}:${process.env.PATH ?? ''}`;
   const dryEnv: Record<string, string | undefined> = {
     ...process.env,
     DRY_RUN: '1',
-    DEPLOY_DIR: fixture.dir,
+    DEPLOY_DIR: options.missingCheckout ? join(fixture.root, 'missing') : fixture.dir,
     PATH: path,
     GIT_TERMINAL_PROMPT: '0',
   };
@@ -171,15 +192,21 @@ export function runRemote(fixture: DeployFixture, options: DeployOptions = {}): 
       DEPLOY_STUB_LOG: fixture.stubLog,
       DEPLOY_FAIL_BUILD: options.failBuild ? '1' : '0',
       DEPLOY_PM2_PID: String(options.pm2Pid ?? 4242),
+      DEPLOY_STUB_PM2_RUNTIME: '',
+      DEPLOY_PM2_PID_AFTER_BUILD_SET: options.pm2PidAfterBuild === undefined ? '0' : '1',
+      DEPLOY_PM2_PID_AFTER_BUILD: String(options.pm2PidAfterBuild ?? ''),
       DEPLOY_FAIL_PID: options.failPid ? '1' : '0',
       DEPLOY_FAIL_RELOAD: options.failReload ? '1' : '0',
       DEPLOY_UNIT_STATE: options.unitState ?? 'active',
       DEPLOY_FAIL_UNIT: options.failUnit ? '1' : '0',
       DEPLOY_UNIT_PID: String(options.unitPid ?? process.pid),
       DEPLOY_CHANGE_DAEMON: options.changeDaemon ? '1' : '0',
+      DEPLOY_CHANGE_DAEMON_BEFORE_RECHECK: options.changeDaemonBeforeRecheck ? '1' : '0',
       DEPLOY_REPLACEMENT_PID: String(process.ppid),
       DEPLOY_LOSE_DAEMON: options.loseDaemon ? '1' : '0',
       DEPLOY_REAL_GIT: Bun.which('git')!,
+      DEPLOY_REAL_SEQ: Bun.which('seq')!,
+      DEPLOY_FAIL_SEQ: options.failSeq ? '1' : '0',
       GIT_TERMINAL_PROMPT: '0',
       https_proxy: 'http://127.0.0.1:9',
       http_proxy: 'http://127.0.0.1:9',

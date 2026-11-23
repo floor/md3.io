@@ -67,21 +67,22 @@ describe('deploy script', () => {
     }
   });
 
-  const failures: [string, DeployOptions, ((fixture: ReturnType<typeof createDeployFixture>) => void)?][] = [
-    ['unreadable unit', { failUnit: true }],
-    ['inactive unit', { unitState: 'inactive' }],
-    ['missing MainPID', { unitPid: 0 }],
-    ['stale socket with mismatched daemon pid', { unitPid: 2147483646 }],
-    ['dead daemon pid', { unitPid: 2147483647 }, f => writeFileSync(join(f.pm2Home, 'pm2.pid'), '2147483647')],
-    ['missing RPC socket', {}, f => f.socket.stop(true)],
-    ['missing Bun runtime', { missingRuntime: true }],
-    ['missing PM2 executable', { missingPM2: true }],
-    ['missing app', { pm2Pid: 0 }],
-    ['empty app pid', { pm2Pid: '' }],
-    ['invalid app pid', { pm2Pid: 'not-a-pid' }],
-    ['failed process lookup', { failPid: true }],
+  // These first eight cases must refuse before ANY PM2 command, including pid.
+  const failures: [string, DeployOptions, string, ((fixture: ReturnType<typeof createDeployFixture>) => void)?][] = [
+    ['unreadable unit', { failUnit: true }, 'cannot read pm2-admin.'],
+    ['inactive unit', { unitState: 'inactive' }, 'pm2-admin is not active; check the unit, do not start PM2 by hand.'],
+    ['missing MainPID', { unitPid: 0 }, 'pm2-admin has no MainPID.'],
+    ['stale socket with live mismatched daemon pid', { unitPid: process.ppid }, 'pm2.pid does not match pm2-admin MainPID (possible stale socket).'],
+    ['dead daemon pid', { unitPid: 2147483647 }, 'pm2-admin MainPID is not alive.', f => writeFileSync(join(f.pm2Home, 'pm2.pid'), '2147483647')],
+    ['missing RPC socket', {}, 'PM2 RPC socket is missing.', f => f.socket.stop(true)],
+    ['missing Bun runtime', { missingRuntime: true }, 'Bun runtime is not executable:'],
+    ['missing PM2 executable', { missingPM2: true }, 'PM2 executable is missing:'],
+    ['missing app', { pm2Pid: 0 }, 'md3.io is not a known running PM2 process; report it, do not start it.'],
+    ['empty app pid', { pm2Pid: '' }, 'md3.io is not a known running PM2 process; report it, do not start it.'],
+    ['invalid app pid', { pm2Pid: 'not-a-pid' }, 'md3.io is not a known running PM2 process; report it, do not start it.'],
+    ['failed process lookup', { failPid: true }, 'cannot query md3.io in the systemd-owned PM2 daemon.'],
   ];
-  for (const [name, options, setup] of failures) slow(`preflight: ${name} leaves git untouched and never reloads or starts`, () => {
+  for (const [index, [name, options, refusal, setup]] of failures.entries()) slow(`preflight: ${name} leaves git untouched and never reloads or starts`, () => {
     const fixture = createDeployFixture();
     try {
       setup?.(fixture);
@@ -93,7 +94,8 @@ describe('deploy script', () => {
       expect(log).not.toContain('bun install');
       expect(log).not.toContain('pm2 reload');
       expect(log).not.toContain('pm2 start');
-      expect(result.stderr).toContain('Refusing deploy:');
+      expect(result.stderr).toContain(`Refusing deploy: ${refusal}`);
+      if (index < 8) expect(log).not.toContain('pm2 ');
     } finally { trashFixture(fixture); }
   });
 
@@ -110,11 +112,56 @@ describe('deploy script', () => {
       expect(log).toContain('bun install --frozen-lockfile\n');
       expect(log).toContain('bun run build\n');
       expect(log.match(/^pm2 reload md3.io$/gm)).toHaveLength(1);
-      expect(log.match(/^pm2 /gm)).toHaveLength(2);
-      expect(log.split('\n').filter(line => line === `pm2-home ${fixture.pm2Home}`)).toHaveLength(2);
+      expect(log.match(/^pm2 /gm)).toHaveLength(3);
+      expect(log.split('\n').filter(line => line === `pm2-home ${fixture.pm2Home}`)).toHaveLength(3);
+      expect(log.split('\n').filter(line => line === `bun --bun ${fixture.pm2} pid md3.io`)).toHaveLength(2);
+      expect(log).toContain(`bun --bun ${fixture.pm2} reload md3.io\n`);
       expect(log).not.toContain('pm2 start');
       expect(log.indexOf('pm2 pid md3.io')).toBeLessThan(log.indexOf('git fetch'));
+      expect(log.lastIndexOf('pm2 pid md3.io')).toBeGreaterThan(log.indexOf('bun run build'));
+      expect(log.lastIndexOf('pm2 pid md3.io')).toBeLessThan(log.indexOf('pm2 reload'));
       expect(log.lastIndexOf('systemctl')).toBeGreaterThan(log.indexOf('pm2 reload'));
+    } finally { trashFixture(fixture); }
+  });
+
+  slow('missing checkout reports a specific refusal without touching git or reloading', () => {
+    const fixture = createDeployFixture();
+    try {
+      const result = runRemote(fixture, { missingCheckout: true });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain(`Refusing deploy: checkout is missing or inaccessible: ${fixture.root}/missing/md3.io`);
+      expect(result.stderr).not.toContain('DEPLOY FAILED AFTER CHECKOUT UPDATE');
+      expect(readStubLog(fixture)).not.toContain('git ');
+      expect(readStubLog(fixture)).not.toContain('pm2 reload');
+      expect(revision(fixture.site)).toBe(fixture.siteLocal);
+    } finally { trashFixture(fixture); }
+  });
+
+  for (const pid of [0, '', 'not-a-pid']) slow(`app pid becomes ${JSON.stringify(pid)} after build: refuse without reload`, () => {
+    const fixture = createDeployFixture();
+    try {
+      const result = runRemote(fixture, { pm2Pid: 4242, pm2PidAfterBuild: pid });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain('Refusing deploy: md3.io is not a known running PM2 process');
+      expect(result.stderr).toContain('DEPLOY FAILED AFTER CHECKOUT UPDATE');
+      expect(result.stderr).toContain(`Previous commit: ${fixture.siteLocal}`);
+      expect(result.stderr).toContain(`git -C '${fixture.site}' reset --hard '${fixture.siteLocal}'`);
+      expect(revision(fixture.site)).toBe(fixture.siteOrigin);
+      const log = readStubLog(fixture);
+      expect(log.match(/^pm2 pid md3.io$/gm)).toHaveLength(2);
+      expect(log).not.toContain('pm2 reload');
+      expect(log).not.toContain('pm2 start');
+    } finally { trashFixture(fixture); }
+  });
+
+  slow('empty health loop reports HTTP failure without an unbound code variable', () => {
+    const fixture = createDeployFixture();
+    try {
+      const result = runRemote(fixture, { failSeq: true });
+      expect(result.status).not.toBe(0);
+      expect(result.stderr).toContain('md3.io did not answer 200 on port 4300 (last: ).');
+      expect(result.stderr).not.toContain('unbound variable');
+      expect(result.stderr).toContain('DEPLOY FAILED AFTER CHECKOUT UPDATE');
     } finally { trashFixture(fixture); }
   });
 
@@ -138,6 +185,7 @@ describe('deploy script', () => {
     ['failed build', { failBuild: true }],
     ['failed reload', { failReload: true }],
     ['daemon stopped before reload', { loseDaemon: true }],
+    ['daemon changed before app recheck', { changeDaemonBeforeRecheck: true }],
     ['daemon changed after reload', { changeDaemon: true }],
   ] satisfies [string, DeployOptions][]) slow(`${name} reports the moved checkout and exact restoration command without rollback or start`, () => {
     const fixture = createDeployFixture();
@@ -152,8 +200,9 @@ describe('deploy script', () => {
       const log = readStubLog(fixture);
       expect(log).not.toContain('pm2 start');
       expect(log.match(/^git reset /gm)).toHaveLength(1);
-      expect(log.match(/^pm2 reload /gm) ?? []).toHaveLength(options.failBuild || options.loseDaemon ? 0 : 1);
-      if (options.changeDaemon) expect(result.stderr).toContain('pm2-admin daemon changed during deploy');
+      expect(log.match(/^pm2 reload /gm) ?? []).toHaveLength(options.failBuild || options.loseDaemon || options.changeDaemonBeforeRecheck ? 0 : 1);
+      if (options.changeDaemon || options.changeDaemonBeforeRecheck) expect(result.stderr).toContain('pm2-admin daemon changed during deploy');
+      if (options.changeDaemonBeforeRecheck) expect(log.match(/^pm2 pid md3.io$/gm)).toHaveLength(1);
     } finally { trashFixture(fixture); }
   });
 });
