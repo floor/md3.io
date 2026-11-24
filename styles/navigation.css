@@ -457,5 +457,9 @@ body {
 ::view-transition-group(site-rail-drawer) { z-index: 3; animation: none; }
 ::view-transition-old(site-rail-drawer) { display: none; }
 ::view-transition-new(site-rail-drawer) { animation: none; opacity: 1; }
+/* The rail stays above the drawer through a transition, so the drawer's shadow never crosses it. */
+::view-transition-group(site-rail) { z-index: 4; animation: none; }
+::view-transition-old(site-rail) { display: none; }
+::view-transition-new(site-rail) { animation: none; opacity: 1; }
 /* A page transition must not swallow clicks: the rail and drawer stay usable while it plays. */
 ::view-transition { pointer-events: none; }

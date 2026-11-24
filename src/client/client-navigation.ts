@@ -180,6 +180,10 @@ function nameTransitionContent() {
   // Explicitly leave shell chrome out of snapshots, so the real drawer pill keeps
   // animating on screen while only the page-content snapshot cross-fades.
   for (const shellElement of document.querySelectorAll<HTMLElement>('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')) shellElement.style.viewTransitionName = 'none';
+  // The rail keeps its own layer, above the floating drawer's, as it is outside a transition.
+  // A closing modal drawer covers the rail, so then the rail stays out of the snapshots.
+  const primaryRail = document.querySelector<HTMLElement>('#site-primary-rail');
+  if (primaryRail) primaryRail.style.viewTransitionName = document.querySelector<HTMLDialogElement>('#site-nav-dialog')?.open ? 'none' : 'site-rail';
   // The modal drawer leaves as part of the same transition: it slides out from its last frame
   // while the content changes behind it, instead of vanishing when the page swaps.
   const modalDrawer = document.querySelector<HTMLDialogElement>('#site-nav-dialog');
