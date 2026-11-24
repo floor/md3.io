@@ -215,7 +215,9 @@ const primaryRail = (current: string): string => {
 function sidebarEntries(groups: readonly { label: string; items: readonly { name: string; href: string }[] }[], isDocs: boolean) {
   return [
     ...groups.flatMap(group => [{ name: group.label }, ...group.items]),
-    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries),
+    // The Docs list's Components group is the reference pages alone: the components overview
+    // is the Components section's page, not a document.
+    ...(isDocs ? [{ name: 'Components' }, ...documentationDirectory.entries,
       ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
   ];
 }
