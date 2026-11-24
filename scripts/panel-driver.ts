@@ -266,13 +266,14 @@ export async function checkPlaygroundScroll(page: Page, label: string, scroll: '
     const form = document.querySelector('#configuration')!;
     const body = form.querySelector('.configuration-body')!;
     return {
-      width: innerWidth, height: innerHeight, scrollWidth: root.scrollWidth, scrollHeight: root.scrollHeight,
+      // The playground itself fits the window; the page may continue below it (previous and next).
+      width: innerWidth, height: innerHeight, scrollWidth: root.scrollWidth, playgroundBottom: Math.round(document.querySelector('.playground')!.getBoundingClientRect().bottom + scrollY),
       formOverflow: getComputedStyle(form).overflowY, bodyOverflow: getComputedStyle(body).overflowY,
     };
   });
   if (metrics.scrollWidth > metrics.width + 1) throw new Error(`${label}: playground overflows horizontally: ${JSON.stringify(metrics)}`);
   if (scroll === 'fit') {
-    if (metrics.scrollHeight > metrics.height + 1) throw new Error(`${label}: playground does not fit the tall window: ${JSON.stringify(metrics)}`);
+    if (metrics.playgroundBottom > metrics.height + 1) throw new Error(`${label}: playground does not fit the tall window: ${JSON.stringify(metrics)}`);
     return;
   }
   if (metrics.formOverflow !== 'visible' || metrics.bodyOverflow !== 'visible') {
