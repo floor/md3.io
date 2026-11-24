@@ -124,6 +124,10 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .doc-toc { display: none; width: 190px; flex-shrink: 0; position: sticky; top: 90px; max-height: calc(100vh - 110px); overflow: auto; margin: 44px 20px 0 0; align-self: flex-start; }
 .doc-toc a { display: flex; align-items: center; min-height: var(--site-target-size); color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs); padding: 3px 0; }
 .doc-toc a:hover { color: var(--accent-text); }
+/* With a mouse the list is dense; touch keeps the 48px target. */
+@media (hover: hover) and (pointer: fine) {
+  .doc-toc a { min-height: 32px; padding: 4px 0; line-height: 1.4; }
+}
 .md table { display: block; max-width: 100%; overflow-x: auto; }
 .landing { width: 100%; max-width: 1120px; margin: auto; padding: 0 22px; }
 .landing .hero { padding: 50px 0 36px; }
