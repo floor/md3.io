@@ -144,8 +144,9 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
   transition: color 150ms, border-color 150ms;
 }
 .doc-toc a:hover { color: var(--text); }
-/* The section being read: a primary bar on the track, and stronger text. */
-.doc-toc a[aria-current] { border-inline-start-color: var(--mtrl-sys-color-primary); color: var(--mtrl-sys-color-primary); font-weight: var(--fw-bold); }
+/* The section being read: a primary bar on the track, and primary text. Not bolder: a wider
+   title would wrap and move the list as the reader scrolls. */
+.doc-toc a[aria-current] { border-inline-start-color: var(--mtrl-sys-color-primary); color: var(--mtrl-sys-color-primary); }
 /* With a mouse the list is dense; touch keeps the 48px target. */
 @media (hover: hover) and (pointer: fine) {
   .doc-toc a { min-height: 32px; padding-block: 4px; line-height: 1.4; }
