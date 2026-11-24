@@ -221,6 +221,8 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
   outerSignal?.addEventListener('abort', abortForNavigation, { once: true });
   // A timeout falls back to a full page load, so it must only catch a stalled request.
   const timer = setTimeout(() => controller.abort('timeout'), 15000);
+  let swapped = false;
+  let leaving: Animation | undefined;
   try {
     const response = await fetch(url, { signal, headers: { Accept: 'text/html' } });
     if (!response.ok || !response.headers.get('content-type')?.includes('text/html') || new URL(response.url).origin !== location.origin) throw new Error('Not a site page');
@@ -250,6 +252,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     const transitionEnabled = motion && modalClosing && !!document.startViewTransition;
     const swap = async () => {
       if (signal.aborted) return;
+      swapped = true;
       closeShell();
       leavePage();
       commit();
@@ -278,9 +281,18 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       void transition.finished.catch(() => {}).finally(() => { delete document.documentElement.dataset.navDrawerLeaving; });
       await transition.updateCallbackDone;
     } else {
+      // Material's fade-through, outgoing half: once the next page is ready, the old one fades
+      // out (90ms), so the page is never blank while the next one loads.
+      if (motion) {
+        leaving = content!.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' });
+        await leaving.finished.catch(() => {});
+      }
+      if (signal.aborted) throw signal.reason;
       await swap();
-      // Material's fade-through, incoming half: the page settles in as the old one is gone.
-      if (motion && !signal.aborted) content!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(0, 0, 0.2, 1)' });
+      // Material's fade-through, incoming half: the new page fades in where the old one was.
+      leaving?.cancel();
+      leaving = undefined;
+      if (motion && swapped) content!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(0, 0, 0.2, 1)' });
     }
   } catch {
     if (request === controller && !superseded) {
@@ -289,7 +301,12 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       if (api) location.replace(url.href);
       else location.assign(url.href);
     }
-  } finally { clearTimeout(timer); outerSignal?.removeEventListener('abort', abortForNavigation); }
+  } finally {
+    clearTimeout(timer);
+    outerSignal?.removeEventListener('abort', abortForNavigation);
+    // Nothing was swapped in: the old page shows again, whatever comes next.
+    if (!swapped) leaving?.cancel();
+  }
 }
 if (shell && content && layout) {
   if (api) {
