@@ -12,7 +12,7 @@ import { surface } from './surface';
 registerStyles({
   'catalog-dialog': '.catalog-dialog{display:flex;justify-content:center}'
     // A non-modal dialog sits on a fixed overlay with a scrim: here it is in the flow, clear.
-    + '.catalog-dialog .mtrl-dialog__overlay{position:static!important;inset:auto!important;background:none!important;display:flex!important;justify-content:center;align-items:center;padding:0!important}'
+    + '.catalog-dialog .mtrl-dialog__overlay{position:static!important;inset:auto!important;background:none!important;overflow:visible!important;display:flex!important;justify-content:center;align-items:center;padding:0!important}'
     + '.catalog-dialog .mtrl-dialog{transform:none!important;translate:none!important;opacity:1!important;margin:0!important;width:300px}'
     + '.catalog-dialog .mtrl-radios{padding-block:8px}',
 });
