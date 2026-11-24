@@ -4,6 +4,7 @@ import 'material/elements/css/snackbar';
 import 'material/elements/css/button';
 import { registerStyles } from 'material/elements';
 import createSnackbar, { type SnackbarConfig } from 'material/components/snackbar';
+import { keepFocusInCard } from './card-focus';
 import { surface } from './surface';
 
 const config: SnackbarConfig = { message: 'Couldn’t send photo. Retrying in 5 seconds.', action: 'Retry', position: 'center', duration: 'indefinite' };
@@ -34,14 +35,7 @@ export const define = (): void => surface('md3-catalog-snackbar', ['progress', '
     showHere();
   };
   snackbar.on('close', () => { timer = window.setTimeout(again, 1500); });
-  // Closing, material returns focus to whatever had it when the snackbar showed (after a
-  // client navigation, the page heading), and that focus scrolls the page there. Before it
-  // closes, focus moves to this card's title instead, so the page stays where it is.
-  host.addEventListener('click', event => {
-    if (!event.composedPath().some(node => node instanceof HTMLButtonElement)) return;
-    const card = ((host.getRootNode() as ShadowRoot).host as HTMLElement | undefined)?.closest('.component-card');
-    card?.querySelector<HTMLElement>('h3 a')?.focus({ preventScroll: true });
-  }, true);
+  keepFocusInCard(host);
   // Once the card is in the page: the snackbar measures itself as it shows.
   requestAnimationFrame(showHere);
   return { element: host, destroy: () => { active = false; clearTimeout(timer); snackbar.destroy(); } };
