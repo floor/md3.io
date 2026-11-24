@@ -37,6 +37,6 @@ export const define = (): void => surface('md3-catalog-snackbar', ['progress', '
   snackbar.on('close', () => { timer = window.setTimeout(again, 1500); });
   keepFocusInCard(host);
   // Once the card is in the page: the snackbar measures itself as it shows.
-  requestAnimationFrame(showHere);
-  return { element: host, destroy: () => { active = false; clearTimeout(timer); snackbar.destroy(); } };
+  const frame = requestAnimationFrame(showHere);
+  return { element: host, destroy: () => { active = false; cancelAnimationFrame(frame); clearTimeout(timer); snackbar.destroy(); } };
 });

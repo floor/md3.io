@@ -46,6 +46,6 @@ export const define = (): void => surface('md3-catalog-dialog', ['progress', 'bu
     current = { destroy: () => { radios.destroy(); dialog.destroy(); } };
   };
   keepFocusInCard(host);
-  requestAnimationFrame(open);
-  return { element: host, destroy: () => { active = false; clearTimeout(timer); current?.destroy(); } };
+  const frame = requestAnimationFrame(open);
+  return { element: host, destroy: () => { active = false; cancelAnimationFrame(frame); clearTimeout(timer); current?.destroy(); } };
 });

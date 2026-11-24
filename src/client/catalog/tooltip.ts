@@ -37,11 +37,13 @@ export const define = (): void => surface('md3-catalog-tooltip', ['icon-button',
     return { tooltip, target };
   });
   // Once in the page: shown at once, and kept in the card.
-  requestAnimationFrame(() => {
+  // Cancelled if the card goes first: a tooltip shown after its destroy would leave its
+  // window listeners behind.
+  const frame = requestAnimationFrame(() => {
     for (const { tooltip } of parts) {
       tooltip.show(true);
       tooltip.element.style.cssText = '';
     }
   });
-  return { element: host, destroy: () => { for (const { tooltip, target } of parts) { tooltip.destroy(); target.destroy(); } } };
+  return { element: host, destroy: () => { cancelAnimationFrame(frame); for (const { tooltip, target } of parts) { tooltip.destroy(); target.destroy(); } } };
 });
