@@ -113,11 +113,24 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 }
 .page-wrap > .document-layout > .md { padding-inline: 0; }
 .page-wrap > .document-layout > .doc-toc { margin-inline-end: 0; }
-.docs-overview .docs-group:first-child { margin-top: 0; }
-.docs-group { margin-top: 30px; }
-.docs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.doc-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; font-size: var(--fs-base); }
-.doc-card > span + span { color: var(--text-dim); }
+/* The docs overview: its groups and cards follow the components overview's, without the visual. */
+.docs-group + .docs-group { margin-block-start: 36px; }
+.docs-group h2 { margin: 0 0 20px; font-size: clamp(28px, 3cqi, 36px); line-height: 1.25; font-weight: 400; }
+.docs-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@container (min-width: 580px) { .docs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (min-width: 900px) { .docs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.doc-card { display: block; height: 100%; }
+.doc-card::part(card) { height: 100%; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); transition: background-color 150ms ease; }
+.doc-card:hover::part(card) { background: var(--mtrl-sys-color-surface-container-high); }
+.doc-card::part(content) { flex: 1; padding: 0; }
+.doc-card__body { position: relative; height: 100%; box-sizing: border-box; padding: 20px 24px 24px; }
+.doc-card__body h3 { margin: 0 0 8px; font-size: 24px; line-height: 32px; font-weight: 400; }
+.doc-card__body h3 a { color: inherit; text-decoration: none; }
+/* The whole card is the link. */
+.doc-card__body h3 a::after { content: ""; position: absolute; inset: 0; border-radius: 28px; }
+.doc-card__body h3 a:focus-visible { outline: none; }
+.doc-card__body h3 a:focus-visible::after { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
+.doc-card__body p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin: 0; font-size: 16px; line-height: 24px; color: var(--text-muted); }
 .document-layout { display: flex; min-width: 0; }
 .document-layout .md { min-width: 0; flex: 1; width: 100%; padding: var(--document-padding); }
 .doc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
@@ -165,7 +178,6 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 }
 @media (min-width: 840px) {
   .header__logo { padding: 3px 12px; }
-  .docs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 1200px) {
   .doc-toc { display: block; }

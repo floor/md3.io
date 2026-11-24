@@ -168,5 +168,11 @@ export function catalogCard(slug: ComponentSlug, href: string, deprecated: boole
   return renderElement('m-card', { variant: 'filled', class: 'component-card' }, `${catalogVisuals[slug].replace('<div class="', '<div slot="media" class="')}${body}`, renderStyles);
 }
 
+/** A docs overview card: the same <m-card> as a component's, without the visual. */
+export function docCard({ name, href, summary }: { name: string; href: string; summary: string }): string {
+  const body = `<div class="doc-card__body"><h3><a href="${escape(href)}">${escape(name)}</a></h3><p>${escape(summary)}</p></div>`;
+  return renderElement('m-card', { variant: 'filled', class: 'doc-card' }, body, renderStyles);
+}
+
 /** Every visual, for the checks. */
 export const catalogVisuals = Object.fromEntries([...componentSlugs, ...addonSlugs].map(slug => [slug, catalogVisual(slug)])) as Record<ComponentSlug, string>;
