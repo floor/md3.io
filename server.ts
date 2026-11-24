@@ -158,7 +158,11 @@ function page(path: string, title: string, description: string, template: string
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
     path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
-    content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
+    // The pager takes the page's own content width: the overviews' inset body, or a component
+    // page's side padding.
+    content: template === 'document' || !pager ? content
+      : template === 'catalog' || template === 'docs' ? `${content}<div class="pager-wrap pager-wrap--overview"><div class="page-hero-body">${pager}</div></div>`
+      : `${content}<div class="page-wrap pager-wrap${isComponentDetail ? ' pager-wrap--component' : ''}">${pager}</div>`,
   }), status);
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
