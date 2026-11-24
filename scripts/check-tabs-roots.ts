@@ -39,7 +39,8 @@ const ROOT_NAMES = new Set([
   'tab',
   'tabs',
   'text-field',
-  'timepicker',
+  // material's time picker root is mtrl-time-picker (its slug here is timepicker).
+  'time-picker',
   'toolbar',
   'tooltip',
   'top-app-bar',
@@ -53,7 +54,7 @@ export function isRootClass(className: string): boolean {
 }
 
 export function componentRootClass(slug: string): string {
-  const name = slug === 'app-bar' ? 'top-app-bar' : slug === 'navigation-drawer' ? 'drawer' : slug;
+  const name = slug === 'app-bar' ? 'top-app-bar' : slug === 'navigation-drawer' ? 'drawer' : slug === 'timepicker' ? 'time-picker' : slug;
   return `mtrl-${name}`;
 }
 

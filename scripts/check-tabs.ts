@@ -761,7 +761,9 @@ try {
           visit(document.body);
           return { visible: [...found], all: [...all] };
         }, previewOnly);
-        assertComponentRoot(slug, previewClasses.all, `${slug} ${scenarioId} preview`);
+        // material mounts a snackbar when it is shown: a closed one has no root to find.
+        const mountsOnShow = slug === 'snackbar' && (scenario?.options as { visible?: boolean } | undefined)?.visible !== true;
+        if (!mountsOnShow) assertComponentRoot(slug, previewClasses.all, `${slug} ${scenarioId} preview`);
         const previewRoots = previewClasses.visible.filter(isRootClass);
         const previewText = await previewFrame.evaluate(collectVisibleText, previewOnly);
 
@@ -796,7 +798,7 @@ try {
           visit(document.body);
           return { visible: [...found], all: [...all] };
         });
-        assertComponentRoot(slug, tabClasses.all, `${slug} ${scenarioId} ${tab}`);
+        if (!mountsOnShow) assertComponentRoot(slug, tabClasses.all, `${slug} ${scenarioId} ${tab}`);
         const tabRoots = tabClasses.visible.filter(isRootClass);
         const tabText = await page.evaluate(collectVisibleText, [] as string[]);
 
