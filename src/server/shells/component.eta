@@ -23,6 +23,7 @@
         <span class="preview-dot" aria-hidden="true"></span>
         <%~ it.panel.appearance %>
         <%~ it.panel.copy %>
+        <% if (it.panel.settings) { %><%~ it.panel.settings %><% } %>
       </div>
       <div class="playground-space">
         <div id="live-panel" class="playground-view" role="tabpanel" aria-label="Preview"><iframe id="preview" title="Interactive <%= it.component.name.toLowerCase() %> preview, from the material library" src="/preview/<%= it.slug %>/"></iframe></div>

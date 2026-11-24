@@ -28,6 +28,18 @@ import 'material/elements/css/timepicker';
 import { defineButton, defineButtonGroup, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 import { registerPage } from './page-lifecycle';
 registerPage('playground-material', (content, life) => {
+  // Settings opens the configuration as a side sheet beside the preview, and closes it.
+  const playground = content.querySelector<HTMLElement>('.playground');
+  const settingsToggle = content.querySelector<HTMLElement>('#settings-toggle');
+  if (playground && settingsToggle) {
+    const setOpen = (open: boolean) => {
+      playground.toggleAttribute('data-settings-open', open);
+      settingsToggle.setAttribute('aria-expanded', String(open));
+      settingsToggle.shadowRoot?.querySelector('button')?.setAttribute('aria-expanded', String(open));
+    };
+    setOpen(false);
+    life.events(settingsToggle).addEventListener('click', () => setOpen(!playground.hasAttribute('data-settings-open')));
+  }
   defineSelect();
   defineSwitch();
   defineTextField();

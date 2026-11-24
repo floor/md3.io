@@ -43,7 +43,7 @@ export const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementC
 
 /** Every piece of a panel's element markup, for linkedStylesheets. */
 export const panelMarkup = (panel: ReturnType<typeof materialPanel>): string =>
-  [panel.frameworks, panel.tabs, panel.appearance, panel.copy, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
+  [panel.frameworks, panel.tabs, panel.appearance, panel.copy, panel.settings, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
 
 /** The stylesheets a rendered panel links from its shadow roots, for the page to preload. */
 export const linkedStylesheets = (html: string): string[] =>
@@ -238,7 +238,7 @@ export function exampleViewTabs(view: 'preview' | 'code'): string {
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string; settings: string } {
   // The framework picker above the heading: a single-select filter chip set.
   // Six choices are past the five a segmented button (now the connected button
   // group) takes, and M3 points to chips beyond that; single choice is a filter
@@ -281,5 +281,7 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // the content_copy symbol, in both views; a copy confirms with material's snackbar
   // (playground.ts), M3's brief message about something the app just did.
   const copy = renderElement('m-button', { variant: 'tonal', size: 'xs', icon: readFileSync(resolve(root, 'icons/content_copy.svg'), 'utf8').trim(), id: 'copy-code', class: 'preview-copy' }, 'Copy code', renderStyles);
-  return { frameworks, tabs, appearance, scenario, sections, copy };
+  // Settings, beside Copy code: opens the configuration as a side sheet, closed by default.
+  const settings = renderElement('m-button', { variant: 'tonal', size: 'xs', icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), id: 'settings-toggle', class: 'preview-settings', 'aria-controls': 'configuration', 'aria-expanded': 'false' }, 'Settings', renderStyles);
+  return { frameworks, tabs, appearance, scenario, sections, copy, settings };
 }

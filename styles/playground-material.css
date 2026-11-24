@@ -203,3 +203,11 @@
     .playground--material .configuration { contain: none; overflow: visible; }
     .playground--material .configuration-body { overflow-y: visible; }
 }
+
+/* The configuration is a side sheet, closed until Settings opens it: closed, the preview takes
+   the playground's width. Without scripts it stays open, as the button cannot open it. */
+@media (scripting: enabled) {
+    .playground--material:not([data-settings-open]) > .configuration { display: none; }
+    .component-page .playground:not([data-settings-open]) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (scripting: none) { .preview-settings { display: none; } }
