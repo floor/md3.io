@@ -69,11 +69,12 @@
 
 html {
     scroll-behavior: smooth;
+    /* The page canvas carries the theme surface; body stays unpainted. */
+    background: var(--bg);
 }
 
 body {
     font-family: var(--font-sans);
-    background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
