@@ -206,16 +206,14 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
     const path = event.composedPath();
     if (!path.includes(drawerPanel) && !path.includes(rail)) hide();
   });
-  const syncDock = () => document.documentElement.toggleAttribute('data-drawer-docked', docked());
   life.events(pointer).addEventListener('change', hide);
-  life.events(wide).addEventListener('change', () => { syncDock(); hide(); });
+  life.events(wide).addEventListener('change', hide);
   life.add(() => {
     clearTimeout(intent);
     clearTimeout(closing);
     // A docked drawer stays through the navigation; the next page shows its own section.
     if (!keptSection && !wide.matches) hide();
   });
-  syncDock();
   if (docked() && !keptSection) {
     // Already docked on arrival: it is simply there, with no slide.
     if (!drawerPanel.hasAttribute('data-open')) drawerPanel.setAttribute('data-instant', '');
