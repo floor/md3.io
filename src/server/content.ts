@@ -189,7 +189,10 @@ function renderMarkdown(source: string, idPrefix = '') {
       return `<a href="${escapeHTML(href)}"${token.title ? ` title="${escapeHTML(token.title)}"` : ''}>${this.parser.parseInline(token.tokens)}</a>`;
     },
   } });
-  const html = parser.parse(source) as string;
+  // Each table fills the column and scrolls sideways in its own box when it is wider.
+  const html = (parser.parse(source) as string)
+    .replaceAll('<table>', '<div class="md-table"><table>')
+    .replaceAll('</table>', '</table></div>');
   return { html, toc, examples };
 }
 

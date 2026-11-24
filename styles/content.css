@@ -302,17 +302,23 @@
 
 /* ─── Tables ─────────────────────────────────────────────────────────────── */
 
+/* Every table spans the column; its box scrolls sideways when the table is wider. */
+.md .md-table {
+    overflow-x: auto;
+    margin-bottom: 24px;
+}
+
 .md table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 16px;
     font-size: var(--fs-md);
+    line-height: 1.5;
 }
 
 .md thead th {
     text-align: left;
     font-weight: var(--fw-bold);
-    color: var(--text);
+    color: var(--text-dim);
     padding: 8px 12px;
     border-bottom: 2px solid var(--border);
     font-size: var(--fs-2xs);
@@ -320,8 +326,13 @@
     letter-spacing: 0.5px;
 }
 
+/* The name column keeps one width across tables, so descriptions line up page-wide. */
+.md :is(thead th, tbody td):first-child {
+    width: 11em;
+}
+
 .md tbody td {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border);
     color: var(--text-muted);
     vertical-align: top;
@@ -437,9 +448,6 @@
 
     .md table {
         font-size: 14px;
-        display: block;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .md thead th {
@@ -450,13 +458,6 @@
         font-size: 13px;
     }
 
-    .md table thead,
-    .md table tbody,
-    .md table tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-    }
 }
 
 /* A documentation block for one framework (the Frameworks page's guides and their tables
