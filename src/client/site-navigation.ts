@@ -328,6 +328,14 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
       });
     }
     life.events(closer).addEventListener('click', () => dialog.close());
+    // A tap on the scrim closes the modal: a click on the dialog itself, outside its box, is
+    // on its ::backdrop.
+    life.events(dialog).addEventListener('click', event => {
+      if (event.target !== dialog) return;
+      const { clientX: x, clientY: y } = event as MouseEvent;
+      const box = dialog.getBoundingClientRect();
+      if (x < box.left || x > box.right || y < box.top || y > box.bottom) dialog.close();
+    });
     // As on desktop, the selection moves on the click, before the next page has arrived.
     life.events(dialog).addEventListener('click', event => {
       const mouse = event as MouseEvent;
