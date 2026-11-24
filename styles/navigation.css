@@ -320,6 +320,12 @@ body {
     .layout .component-list-layout > .component-page,
     .layout .component-list-layout > .component-catalog { grid-column: 1; }
 }
+/* Without scripts the page's own list is the only one: it keeps its column beside the detail. */
+@media (scripting: none) and (min-width: 840px) {
+    .layout .component-list-layout.component-list-layout--detail { grid-template-columns: clamp(160px, 19vw, 256px) minmax(0, 1fr); }
+    .layout .component-list-layout--detail > .component-list { grid-column: 1; grid-row: 1; }
+    .layout .component-list-layout--detail > .component-page { grid-column: 2; grid-row: 1; }
+}
 @media (scripting: enabled) and (min-width: 840px) and (hover: none) {
     #site-nav-open { display: grid; }
     .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) { display: none; }
