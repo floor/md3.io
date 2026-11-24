@@ -252,7 +252,7 @@ try {
   // The framework tab opens the code view. The click is on the live preview, and the
   // code it checks is the vanilla panel.
   await frameworkChip('Factory').click();
-  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).click();
   await favorite.click();
   await page.waitForFunction(() => {
     const selected = document.querySelector<HTMLElement & { checked?: boolean }>('m-switch[name="selected"]');

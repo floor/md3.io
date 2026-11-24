@@ -33,8 +33,8 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
   const frame = page.frameLocator('#preview');
   const revealFrame = () => page.locator('#preview').evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
   const form = page.locator('#configuration');
-  const live = page.getByRole('tab', { name: 'Live preview', exact: true });
-  const codeTab = page.getByRole('tab', { name: 'View code', exact: true });
+  const live = page.getByRole('tab', { name: 'Preview', exact: true });
+  const codeTab = page.getByRole('tab', { name: 'Code', exact: true });
   const copy = page.getByRole('button', { name: 'Copy code', exact: true });
   const code = page.locator('#generated-code');
   const longText = 'A longer button label to check keyboard focus and horizontally scrollable code';

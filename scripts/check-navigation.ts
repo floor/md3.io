@@ -111,7 +111,7 @@ try {
     await go('/components/button/');
     await panel.choose(page, 'variant', 'outlined');
     await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-button--outlined'));
-    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     assert.match(await page.evaluate(() => navigator.clipboard.readText()), /outlined/);

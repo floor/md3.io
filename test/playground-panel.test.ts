@@ -16,7 +16,7 @@ describe('the material playground panel', () => {
     // panel is styled before any script runs.
     expect(html).toContain('shadowrootmode');
     expect(html).toContain('data-mtrl-ssr');
-    // Live preview / View code in the heading; the theme and mode come from the site
+    // Preview / Code in the heading; the theme and mode come from the site
     // header (one appearance for the whole site), the heading keeps the form's copy.
     expect(html).toMatch(/<m-tabs[^>]*aria-label="Playground view"/);
     expect(html).not.toContain('id="preview-theme"');

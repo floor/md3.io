@@ -98,10 +98,10 @@ try {
       await panel.chooseMode(page, 'dark');
       await frame.locator('html[data-theme-mode="dark"]').waitFor({ state: 'attached' });
       await page.screenshot({ path: `${output}/list-anatomy-dark.png`, fullPage: true, animations: 'disabled' });
-      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      await page.getByRole('tab', { name: 'Code', exact: true }).click();
       const configuredCode = await page.locator('#generated-code').textContent();
       assert(configuredCode?.includes('headline:') && configuredCode.includes('supportingText:') && configuredCode.includes('overline:') && configuredCode.includes('onListAction') && configuredCode.includes('kind: "divider"'), 'Code is missing configured list anatomy');
-      await page.getByRole('tab', { name: 'Live preview' }).click();
+      await page.getByRole('tab', { name: 'Preview', exact: true }).click();
       // The Variant control: two values, standard by default; segmented reaches the config,
       // the rendered class and both code panels, while standard keeps it out of the code.
       // The Variant row is material's button group: its items are the values it offers.
@@ -109,22 +109,22 @@ try {
       assert(await panel.valueOf(page, 'variant') === 'standard', 'The list does not start at the standard variant');
       await choose('variant', 'segmented');
       await frame.locator('.mtrl-list--segmented').waitFor();
-      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      await page.getByRole('tab', { name: 'Code', exact: true }).click();
       assert((await page.locator('#generated-code').textContent())?.includes('variant: "segmented"') === true, 'The list code misses variant: "segmented"');
       await panel.chooseFramework(page, 'html');
       assert((await page.locator('#generated-code').textContent())?.includes('variant="segmented"') === true, 'The list element snippet misses variant="segmented"');
       await panel.chooseFramework(page, 'vanilla');
-      await page.getByRole('tab', { name: 'Live preview' }).click();
+      await page.getByRole('tab', { name: 'Preview', exact: true }).click();
       await choose('variant', 'standard');
       await frame.locator('.mtrl-list--standard').waitFor();
-      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      await page.getByRole('tab', { name: 'Code', exact: true }).click();
       const standardCode = await page.locator('#generated-code').textContent();
       assert(standardCode !== null && !standardCode.includes('variant:'), 'The standard list code carries a variant');
       await panel.chooseFramework(page, 'html');
       const standardElement = await page.locator('#generated-code').textContent();
       assert(standardElement !== null && !standardElement.includes('variant='), 'The standard list element snippet carries a variant');
       await panel.chooseFramework(page, 'vanilla');
-      await page.getByRole('tab', { name: 'Live preview' }).click();
+      await page.getByRole('tab', { name: 'Preview', exact: true }).click();
     } else if (slug === 'carousel') {
       // The keyboard drives the carousel (the docs: Left and Right, Up and Down full
       // screen, Home and End to the ends); the Current slide control follows every
@@ -211,13 +211,13 @@ try {
       }
     }
     await reset();
-    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
-    await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.getByRole('tab', { name: 'Preview', exact: true }).click();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await panel.checkPlaygroundScroll(page, slug, 'fit');
     await page.setViewportSize({ width: 1280, height: 640 });

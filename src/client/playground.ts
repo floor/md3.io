@@ -61,7 +61,7 @@ registerPage('playground', (content, life) => {
     const next = String(Array.isArray(value) ? value[0] ?? '' : value ?? '');
     if (!FRAMEWORKS.some(f => f.id === next) || next === framework) return;
     selectFramework(next as Framework, false, true);
-    switchView('code', true);
+    switchView('code');
   });
   const FRAMEWORK_KEY = 'md3-example-framework';
   let framework: Framework = 'vanilla';
@@ -119,14 +119,13 @@ registerPage('playground', (content, life) => {
   }
   applyAppearance(document.documentElement.dataset.siteTheme ?? 'baseline', document.documentElement.dataset.themeMode === 'dark' ? 'dark' : 'light');
 
-  const VIEW_KEY = 'md3-playground-view';
   /** The panels and the controls that belong to the showing view. */
   function showPanel(showingCode: boolean) {
     content.querySelector<HTMLElement>('#live-panel')!.hidden = showingCode;
     content.querySelector<HTMLElement>('#code-panel')!.hidden = !showingCode;
     previewDot.hidden = showingCode;
   }
-  function selectTab(selected: HTMLButtonElement, save = false) {
+  function selectTab(selected: HTMLButtonElement) {
     for (const tab of tabs) {
       const active = tab === selected;
       tab.setAttribute('aria-selected', String(active));
@@ -135,24 +134,18 @@ registerPage('playground', (content, life) => {
     }
     const showingCode = selected.id === 'code-tab';
     previewDot.hidden = showingCode;
-    if (save) {
-      try { localStorage.setItem(VIEW_KEY, showingCode ? 'code' : 'preview'); } catch { /* Storage may be unavailable. */ }
-    }
   }
   // The tabs select by value; the element keeps its own roving focus and
   // arrow keys, and reports a choice with `change`.
-  function selectView(view: 'live' | 'code', save = false) {
+  function selectView(view: 'live' | 'code') {
     if (defined(viewTabs)) viewTabs!.value = view;
     showPanel(view === 'code');
-    if (save) {
-      try { localStorage.setItem(VIEW_KEY, view === 'code' ? 'code' : 'preview'); } catch { /* Storage may be unavailable. */ }
-    }
   }
   /** Shows a view on either panel: the branch every caller takes. */
-  const switchView = (view: 'live' | 'code', save = false) => (viewTabs ? selectView(view, save) : selectTab(content.querySelector<HTMLButtonElement>(view === 'code' ? '#code-tab' : '#live-tab')!, save));
-  life.events(viewTabs)?.addEventListener('change', () => selectView(String(viewTabs!.value) === 'code' ? 'code' : 'live', true));
+  const switchView = (view: 'live' | 'code') => (viewTabs ? selectView(view) : selectTab(content.querySelector<HTMLButtonElement>(view === 'code' ? '#code-tab' : '#live-tab')!));
+  life.events(viewTabs)?.addEventListener('change', () => selectView(String(viewTabs!.value) === 'code' ? 'code' : 'live'));
   for (const tab of tabs) {
-    life.events(tab).addEventListener('click', () => selectTab(tab, true));
+    life.events(tab).addEventListener('click', () => selectTab(tab));
     life.events(tab).addEventListener('keydown', event => {
       const index = tabs.indexOf(tab);
       const target = event.key === 'ArrowRight' ? tabs[(index + 1) % tabs.length]
@@ -160,7 +153,7 @@ registerPage('playground', (content, life) => {
         : event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs.at(-1) : undefined;
       if (!target) return;
       event.preventDefault();
-      selectTab(target, true);
+      selectTab(target);
       target.focus();
     });
   }
@@ -451,7 +444,6 @@ registerPage('playground', (content, life) => {
     }
   });
   selectFramework(framework);
-  try { if (localStorage.getItem(VIEW_KEY) === 'code') switchView('code'); } catch { /* Storage may be unavailable. */ }
   // `?scenario=` is the only configuration parameter a load reads: a known id applies over
   // any control-key parameter, an unknown one falls back to Default and says so. A page
   // without a Scenario section does not read it at all, so the parameter is left as it is.

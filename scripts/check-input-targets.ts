@@ -171,11 +171,11 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
 
       const tabs = page.getByRole('tablist', { name: 'Playground view' });
       await checkTargets(tabs.getByRole('tab'), `${width}px preview tabs`);
-      const liveTab = tabs.getByRole('tab', { name: 'Live preview', exact: true });
-      await tabs.getByRole('tab', { name: 'View code', exact: true }).press('ArrowLeft');
+      const liveTab = tabs.getByRole('tab', { name: 'Preview', exact: true });
+      await tabs.getByRole('tab', { name: 'Code', exact: true }).press('ArrowLeft');
       assert(await liveTab.evaluate(node => (node.getRootNode() as ShadowRoot).activeElement === node), 'ArrowLeft moves focus to the live tab');
       await liveTab.press('Enter');
-      await page.getByRole('tabpanel', { name: 'Live preview', exact: true }).waitFor();
+      await page.getByRole('tabpanel', { name: 'Preview', exact: true }).waitFor();
       await checkTargets(page.getByRole('button', { name: 'Copy code', exact: true }), `${width}px copy control`);
 
       const config = page.locator('#configuration');

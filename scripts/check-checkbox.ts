@@ -90,13 +90,13 @@ try {
     assert(source.includes(`checked: ${state === 'checked'}`) && source.includes(`indeterminate: ${state === 'indeterminate'}`), `${what}: generated code does not match ${state}`);
   };
   const copyCode = async () => {
-    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.evaluate(() => navigator.clipboard.writeText(''));
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     assert(copied && copied === await code(), 'Copied checkbox code differs from displayed code');
-    await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.getByRole('tab', { name: 'Preview', exact: true }).click();
     return copied;
   };
 
@@ -116,9 +116,9 @@ try {
 
   // A theme or tab change restyles the preview without recreating it.
   const originalParent = await parentBox.elementHandle();
-  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
   assert(await page.locator('#generated-code .hljs-keyword').count() > 0, 'Checkbox code is not highlighted');
-  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).click();
   await panel.chooseTheme(page, 'Ocean');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
   assert(await originalParent!.evaluate(element => element.isConnected), 'Theme or tab change recreated the checkboxes');
@@ -257,10 +257,10 @@ try {
     !copied.includes('required') && !copied.includes('error'), 'Copied checkbox code is incomplete');
 
   // Reset: back to the parent and children, in the viewer's preview appearance.
-  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
   // The material panel's way back is the Scenario select's Default (it has no Reset).
   await panel.backToDefault(page);
-  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).click();
   await parentBox.waitFor();
   await assertFamily('indeterminate', ['Tomato'], 'Reset');
   await assertFamilyCode('indeterminate');

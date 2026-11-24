@@ -196,13 +196,13 @@ try {
       }
     }
     await reset();
-    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
-    await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.getByRole('tab', { name: 'Preview', exact: true }).click();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await panel.checkPlaygroundScroll(page, slug, 'fit');
     await page.setViewportSize({ width: 1280, height: 640 });
