@@ -178,6 +178,35 @@ type ComponentTab = 'overview' | 'develop' | 'accessibility';
 const componentTabLabels: Record<ComponentTab, string> = { overview: 'Overview', develop: 'Develop', accessibility: 'Accessibility' };
 const componentTabIcons: Record<ComponentTab, string> = { overview: 'explore', develop: 'article', accessibility: 'accessibility_new' };
 const componentTabHref = (slug: string, tab: ComponentTab) => tab === 'overview' ? `/components/${slug}/` : `/components/${slug}/${tab}/`;
+/**
+ * The API reference tables (options, methods, events, properties, fields) as entries: a
+ * name, its type values as chips, its default, then its description, its parameters and
+ * return value, or its payload. Other tables (keys, tokens) stay tables.
+ */
+function apiEntries(html: string): string {
+  const cells = (row: string, tag: 'th' | 'td') => [...row.matchAll(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'g'))].map(match => match[1]!.trim());
+  return html.replace(/<div class="md-table"><table>([\s\S]*?)<\/table><\/div>/g, (table, body: string) => {
+    const head = cells(/<thead>([\s\S]*?)<\/thead>/.exec(body)?.[1] ?? '', 'th').map(text => text.replace(/<[^>]+>/g, '').trim());
+    if (!['Option', 'Method', 'Event', 'Property', 'Field'].includes(head[0] ?? '')) return table;
+    const kind = head[0]!.toLowerCase();
+    const rows = [...(/<tbody>([\s\S]*?)<\/tbody>/.exec(body)?.[1] ?? '').matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map(match => cells(match[1]!, 'td'));
+    const column = (row: string[], name: string) => { const index = head.indexOf(name); return index < 0 ? '' : row[index] ?? ''; };
+    const blank = (value: string) => !value || value === '—' || value === '-';
+    const entries = rows.map(row => {
+      const type = column(row, 'Type'), fallback = column(row, 'Default'), parameters = column(row, 'Parameters'), returns = column(row, 'Returns'), payload = column(row, 'Data') || column(row, 'Payload');
+      const facts = [
+        blank(type) ? '' : `<div class="api-entry__fact"><span class="api-entry__key">Type</span><span class="api-entry__type">${type}</span></div>`,
+        blank(fallback) ? '' : `<div class="api-entry__fact"><span class="api-entry__key">Default</span><span>${fallback}</span></div>`,
+        blank(parameters) ? '' : `<div class="api-entry__fact"><span class="api-entry__key">Parameters</span><span class="api-entry__type">${parameters}</span></div>`,
+        blank(returns) ? '' : `<div class="api-entry__fact"><span class="api-entry__key">Returns</span><span class="api-entry__type">${returns}</span></div>`,
+        blank(payload) ? '' : `<div class="api-entry__fact"><span class="api-entry__key">Payload</span><span class="api-entry__type">${payload}</span></div>`,
+      ].join('');
+      return `<div class="api-entry api-entry--${kind}"><div class="api-entry__name">${row[0] ?? ''}</div>${blank(column(row, 'Description')) ? '' : `<p class="api-entry__description">${column(row, 'Description')}</p>`}${facts ? `<div class="api-entry__facts">${facts}</div>` : ''}</div>`;
+    }).join('');
+    return `<div class="api-list" role="list">${entries.replaceAll('<div class="api-entry ', '<div role="listitem" class="api-entry ')}</div>`;
+  });
+}
+
 /** The developer documentation split at its Accessibility section: the Develop and Accessibility tabs. */
 function componentDocument(slug: string) {
   const document = renderDocument(slug);
@@ -189,7 +218,7 @@ function componentDocument(slug: string) {
   const accessibility = start < 0 ? '' : html.slice(start, end < 0 ? undefined : end);
   return {
     ...document,
-    develop: start < 0 ? html : html.slice(0, start) + (end < 0 ? '' : html.slice(end)),
+    develop: apiEntries(start < 0 ? html : html.slice(0, start) + (end < 0 ? '' : html.slice(end))),
     developToc: document.toc.filter(item => item.id !== 'accessibility'),
     accessibility: accessibility.replace(/<h2 id="accessibility">[\s\S]*?<\/h2>\n?/, ''),
   };
