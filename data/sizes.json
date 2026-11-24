@@ -283,18 +283,6 @@
         "added": 2826
       }
     },
-    "bottom-app-bar": {
-      "factory": {
-        "alone": 8039,
-        "lazy": 0,
-        "added": 1247
-      },
-      "element": {
-        "alone": 12499,
-        "lazy": 0,
-        "added": 1348
-      }
-    },
     "toolbar": {
       "factory": {
         "alone": 18464,

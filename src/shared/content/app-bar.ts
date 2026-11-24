@@ -4,7 +4,6 @@ import type { IconButtonConfig } from 'material/components/icon-button';
 import type { FabConfig } from 'material/components/fab';
 import type { AppBarConfig } from 'material/components/top-app-bar';
 import { symbols } from '../icons';
-import { bottomAppBarSet } from './bottom-app-bar';
 import { type ComponentState, type Control, type Scenario, bool, choose, iconByName, pick, section, string, text, toggle } from './types';
 
 /** A filled button a named bar puts in the trailing slot. The bar's title is its only text line. */
@@ -51,13 +50,7 @@ const barContext = (state: ComponentState): BarContext | undefined => barContext
 export const appBarActions = (state: ComponentState): IconButtonConfig[] => ['heart', 'bookmark', 'send'].slice(0, Number(state.actions)).map(icon => ({ icon: iconByName(icon), ariaLabel: { heart: 'Favorite', bookmark: 'Bookmark', send: 'Share' }[icon] ?? icon, variant: 'standard' }));
 
 /** What an app bar preview adds beside its config: the icon buttons, a trailing button, the FAB, and the state it is put in. */
-export function appBarContent(slug: 'app-bar' | 'bottom-app-bar', state: ComponentState): { leading?: IconButtonConfig; actions: IconButtonConfig[]; trailingButton?: AppBarButton; fab?: FabConfig; scrolled?: boolean; visible?: boolean } {
-  if (slug !== 'app-bar') {
-    const set = bottomAppBarSet(state);
-    // A named set replaces the counted actions. No set: the two default actions and the add FAB stay as they were.
-    if (set) return { actions: [...set.actions], ...(state.hasFab ? { fab: { icon: set.fabIcon, ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
-    return { actions: appBarActions(state), ...(state.hasFab ? { fab: { icon: iconByName('add'), ariaLabel: String(state.fabLabel).trim() || 'Compose' } } : {}), visible: state.visible === true };
-  }
+export function appBarContent(state: ComponentState): { leading?: IconButtonConfig; actions: IconButtonConfig[]; trailingButton?: AppBarButton; fab?: FabConfig; scrolled?: boolean; visible?: boolean } {
   const named = barContext(state);
   if (!named) return { ...(state.leading ? { leading: { icon: iconByName('menu'), ariaLabel: 'Open navigation' } } : {}), actions: appBarActions(state), scrolled: state.scrolled === true };
   return {

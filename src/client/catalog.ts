@@ -44,7 +44,6 @@ registerPage('catalog', (content, life) => {
     tabs: () => import('./catalog/tabs'),
     menu: () => import('./catalog/menu'),
     'app-bar': () => import('./catalog/app-bar'),
-    'bottom-app-bar': () => import('./catalog/bottom-app-bar'),
     toolbar: () => import('./catalog/toolbar'),
     card: () => import('./catalog/card'),
     list: () => import('./catalog/list'),

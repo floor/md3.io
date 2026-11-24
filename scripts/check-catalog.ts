@@ -9,7 +9,6 @@ import { chromium, type Locator, type Page } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { addonDocGroup, docGroups } from '../src/server/content';
-import { checkBottomAppBarRow } from './check-drawer-row';
 import { componentSlugs, components } from '../src/shared/components';
 import { addonSlugs, addons, playgroundHref } from '../src/shared/addons';
 import { baseline, themeTokens } from '../src/server/tokens';
@@ -27,7 +26,7 @@ const sections = [
   { name: 'Loading & progress', slugs: ['loading-indicator', 'progress'] },
   { name: 'Navigation', slugs: ['navigation-bar', 'navigation-drawer', 'navigation-rail'] },
   { name: 'Sheets', slugs: ['bottom-sheet', 'side-sheet'] },
-  { name: 'All other components', slugs: ['app-bar', 'badge', 'bottom-app-bar', 'card', 'carousel', 'checkbox', 'chips', 'dialog', 'divider', 'list', 'menu', 'radios', 'search', 'select', 'slider', 'snackbar', 'switch', 'tabs', 'text-field', 'toolbar', 'tooltip'] },
+  { name: 'All other components', slugs: ['app-bar', 'badge', 'card', 'carousel', 'checkbox', 'chips', 'dialog', 'divider', 'list', 'menu', 'radios', 'search', 'select', 'slider', 'snackbar', 'switch', 'tabs', 'text-field', 'toolbar', 'tooltip'] },
 ] as const;
 const catalogOrder = sections.flatMap(section => [...section.slugs]);
 const families = sections.slice(0, -1);
@@ -37,7 +36,6 @@ const equal = (actual: unknown, expected: unknown, message: string) =>
 
 async function checkDirectory(pane: Locator, path: string, docs = false) {
   // Cover the reviewed phone and desktop widths; existing breakpoint layout checks remain below.
-  if ([390, 1440].includes(pane.page().viewportSize()?.width ?? 0)) await checkBottomAppBarRow(pane);
   // A hidden Add-ons section (src/shared/visibility.ts) has no docs group.
   const addonDocs = addonsPublic ? addonDocGroup.items : [];
   if (docs) assert(await pane.locator('[part~="section-label"]').filter({ hasText: /^Components$/ }).count() === 1, 'Docs has a Components section');
@@ -49,14 +47,14 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
     return row ? [(row.querySelector('[part~="item-label"]')?.textContent ?? row.textContent)!.trim()] : [];
   }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
-  // The Components pane lists components only; the docs pane keeps its overview link.
-  const overview = docs ? ['Components overview'] : [];
-  const componentsStart = docs ? rows.indexOf('Components overview') : 0;
+  // Both panes open with the overview link.
+  const overview = ['Components overview'];
+  const componentsStart = rows.indexOf('Components overview');
   const componentsEnd = docs ? rows.length - addonDocs.length : rows.length;
   equal(rows.slice(componentsStart, componentsEnd), [...overview, ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
   if (docs) equal(rows.slice(componentsEnd), addonDocs.map(item => item.name), 'Add-on docs follow the Components group A–Z');
   const hrefs = await pane.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href')));
-  equal(hrefs.slice(docs ? hrefs.indexOf('/components/') : 0).sort(), [...(docs ? ['/components/'] : []), ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
+  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
   for (const family of families) {
     const toggle = pane.getByRole('button', { name: family.name, exact: true });
     const id = await toggle.getAttribute('aria-controls');

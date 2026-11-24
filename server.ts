@@ -141,8 +141,7 @@ function page(path: string, title: string, description: string, template: string
   const componentDrawer = isComponents
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
-      // The rail's Components entry and "All components" lead to the overview; the list holds components only.
-      : renderSectionDrawer(path, 'Component list', playgroundDirectory.entries)
+      : renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
   const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
@@ -302,6 +301,8 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('/drawer/', '/navigation-drawer/') + url.search } });
+  // Bottom app bar left the site for Toolbar; its published URLs keep working.
+  else if (path === '/components/bottom-app-bar/' || path === '/docs/components/bottom-app-bar/' || path === '/preview/bottom-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('bottom-app-bar', 'toolbar') + url.search } });
   else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogCard, catalogVisuals });
   else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogCard, catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&

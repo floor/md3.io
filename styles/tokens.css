@@ -97,7 +97,7 @@
 
     /* Spacing */
     --header-height: 56px;
-    --sidebar-width: 220px;
+    --sidebar-width: 240px;
     --toc-width: 240px;
     --page-padding: 28px 18px 40px;
     --document-padding: 28px 18px 48px;
@@ -215,7 +215,6 @@
 }
 @media (min-width: 1600px) {
     :root {
-        --sidebar-width: 240px;
         --toc-width: 260px;
     }
 }

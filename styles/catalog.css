@@ -83,7 +83,7 @@ md3-catalog-drawer:not(:defined) { visibility: hidden; }
 .catalog-visual--navigation-rail m-navigation-rail { zoom: 0.72; height: auto; }
 .catalog-visual--app-bar { align-items: flex-start; padding: 0; }
 .catalog-visual--app-bar m-top-app-bar { width: 100%; }
-.catalog-visual--bottom-app-bar, .catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
+.catalog-visual--bottom-sheet, .catalog-visual--side-sheet { padding: 0; }
 
 .catalog-badge { position: relative; display: inline-flex; }
 .catalog-badge m-badge { position: absolute; top: 4px; inset-inline-end: 4px; transform: translate(40%, -40%); }

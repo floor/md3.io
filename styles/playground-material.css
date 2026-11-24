@@ -84,12 +84,6 @@
 }
 
 @media (min-width: 840px) {
-    /* At 840px, the 96px rail and 160px list leave 584px. After 40px
-       padding and a 16px gap, the frame and controls have 240px and 288px.
-       The widest five-segment group measures 258px before section padding. */
-    .component-list-layout.component-list-layout--detail {
-        grid-template-columns: clamp(160px, 19vw, 256px) minmax(0, 1fr);
-    }
     .component-page .playground {
         grid-template-columns: minmax(0, 1fr) clamp(288px, 35%, 380px);
     }
@@ -201,3 +195,11 @@
    native preview-tabs sat. */
 .playground--material m-tabs::part(divider) { display: none; }
 .playground--material m-tabs::part(scroll) { overflow: visible; padding-inline: 0; }
+
+/* Beside the fixed drawer, two columns would leave the preview too narrow to show a component. */
+@media (840px <= width < 1040px) {
+    .component-page .playground { grid-template-columns: minmax(0, 1fr); flex: none; }
+    /* Stacked, the controls grow with the page instead of filling a window-high column. */
+    .playground--material .configuration { contain: none; overflow: visible; }
+    .playground--material .configuration-body { overflow-y: visible; }
+}

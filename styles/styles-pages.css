@@ -142,7 +142,6 @@
 }
 @media (840px <= width < 1200px) {
   /* Leave room for both the Styles prose and the full sample at expanded. */
-  .layout:has(.styles-layout) { --sidebar-width: 176px; }
 }
 @media (min-width: 1600px) {
   .styles-layout:has(.styles-preview--compare) { --styles-preview-width: 780px; }

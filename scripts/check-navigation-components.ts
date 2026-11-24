@@ -145,15 +145,6 @@ try {
       await choose('type', 'large');
       await toggle('scrolled');
       await frame.locator('.mtrl-top-app-bar--scrolled').waitFor();
-    } else if (slug === 'bottom-app-bar') {
-      await frame.getByRole('button', { name: 'Compose', exact: true }).click();
-      await page.locator('#playground-status').filter({ hasText: 'Compose clicked' }).waitFor();
-      await toggle('hasFab');
-      await frame.getByRole('button', { name: 'Compose', exact: true }).waitFor({ state: 'hidden' });
-      await toggle('visible');
-      await frame.locator('.mtrl-bottom-app-bar--hidden').waitFor({ state: 'attached' });
-      await toggle('visible');
-      await frame.locator('.mtrl-bottom-app-bar--hidden').waitFor({ state: 'detached' });
     }
     await reset();
     if (slug === 'menu') {
@@ -223,12 +214,6 @@ try {
       await choose('type', 'center');
       await choose('actions', '2');
       await frame.getByRole('button', { name: 'Bookmark' }).waitFor();
-      await page.screenshot({ path: `${output}/${slug}-mobile-center.png`, fullPage: true, animations: 'disabled' });
-    }
-    if (slug === 'bottom-app-bar') {
-      await choose('fabPosition', 'center');
-      await choose('actions', '3');
-      await frame.getByRole('button', { name: 'Share' }).waitFor();
       await page.screenshot({ path: `${output}/${slug}-mobile-center.png`, fullPage: true, animations: 'disabled' });
     }
     await page.setViewportSize({ width: 1440, height: 900 });

@@ -87,5 +87,5 @@ The state getter is a method on every component that has one.
 |---|---|
 | `isOpen()` | Dialog, menu, select, FAB menu, bottom sheet, side sheet, navigation drawer, snackbar, date picker, time picker |
 | `isExpanded()` | Search, split button, navigation rail, card |
-| `isVisible()` | Tooltip, bottom app bar, toolbar |
+| `isVisible()` | Tooltip, toolbar |
 | `isHidden()` | Navigation bar |

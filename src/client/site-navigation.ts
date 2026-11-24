@@ -29,10 +29,76 @@ export function closeSiteNavigation() {
   restoreSection();
 }
 
+/**
+ * Between 840px and 1200px, with a pointer, the section drawer floats over the page: it opens
+ * from the current rail destination and closes when the pointer or focus leaves it. It is not
+ * modal, so there is no scrim and the page stays usable.
+ */
+function initFloatingDrawer(rail: HTMLElement, life: PageLifecycle) {
+  const layout = document.querySelector<HTMLElement>('.layout');
+  const pane = document.querySelector<HTMLElement>('#section-index, #component-catalog-index, .component-list-layout--detail > .component-list');
+  const current = rail.querySelector<HTMLAnchorElement>('a[aria-current]');
+  if (!layout || !pane || !current) return;
+  const floating = matchMedia('(840px <= width < 1200px) and (hover: hover)');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const isOpen = () => layout.hasAttribute('data-section-drawer');
+  // Closed, it must neither take focus nor catch the pointer over the rail it slides behind.
+  const syncInert = () => { pane.inert = floating.matches && !isOpen(); };
+  const open = () => {
+    clearTimeout(timer);
+    if (floating.matches) layout.setAttribute('data-section-drawer', '');
+    syncInert();
+  };
+  const close = () => {
+    clearTimeout(timer);
+    layout.removeAttribute('data-section-drawer');
+    syncInert();
+  };
+  // A moment's grace, so crossing from the rail into the drawer does not close it.
+  const closeSoon = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { if (!containsFocus(pane, currentFocus()) || !pane.matches(':focus-within')) close(); }, 160);
+  };
+  for (const target of [current, pane]) {
+    life.events(target).addEventListener('pointerenter', open);
+    life.events(target).addEventListener('pointerleave', closeSoon);
+  }
+  life.events(current).addEventListener('focus', () => { if (current.matches(':focus-visible')) open(); });
+  for (const target of [current, pane]) life.events(target).addEventListener('focusout', event => {
+    const next = (event as FocusEvent).relatedTarget as Element | null;
+    if (next !== current && !(next && containsFocus(pane, next))) closeSoon();
+  });
+  for (const link of rail.querySelectorAll('a')) {
+    if (link !== current) life.events(link).addEventListener('pointerenter', close);
+  }
+  life.events(document).addEventListener('keydown', event => {
+    if ((event as KeyboardEvent).key !== 'Escape' || !isOpen()) return;
+    const inside = containsFocus(pane, currentFocus());
+    close();
+    if (inside) current.focus();
+  });
+  life.events(document).addEventListener('pointerdown', event => {
+    const path = event.composedPath();
+    if (isOpen() && !path.includes(pane) && !path.includes(current)) close();
+  });
+  // Choosing a destination closes it, as a modal drawer does, and the row is selected at once.
+  life.events(pane).addEventListener('click', event => {
+    const link = event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
+    if (!link || !floating.matches) return;
+    const drawer = pane.querySelector<HTMLElement & { value: string }>('m-drawer');
+    if (drawer && new URL(link.href).origin === location.origin) drawer.value = new URL(link.href).pathname;
+    close();
+  });
+  life.events(floating).addEventListener('change', close);
+  life.add(() => { close(); pane.inert = false; });
+  syncInert();
+}
+
 export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
   if (bar && rail && dialog && opener && closer) {
     const compact = matchMedia('(width < 600px)');
-    const medium = matchMedia('(600px <= width < 840px)');
+    // Touch screens have no hover to open the floating drawer, so they keep the modal one longer.
+    const medium = matchMedia('(600px <= width < 840px), (840px <= width < 1200px) and (hover: none)');
     // Move the server-rendered section list so its links and disclosure state serve both layouts.
     const section = document.querySelector('.component-list, #sidebar');
     const drawer = section?.querySelector('m-drawer');
@@ -140,6 +206,7 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
         (event.shiftKey ? last : closer).focus();
       }
     });
+    initFloatingDrawer(rail, life);
     life.events(compact).addEventListener('change', syncNavigation);
     life.events(medium).addEventListener('change', syncNavigation);
     syncNavigation();

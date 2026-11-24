@@ -111,9 +111,6 @@ const visuals: Record<ComponentSlug, string> = {
     m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })),
   // A surface: <m-toolbar>'s item hosts take a tabindex, which a card's link must not hold.
   toolbar: `<${SURFACES.toolbar}></${SURFACES.toolbar}>`,
-  'bottom-app-bar': m('bottom-app-bar', {},
-    m('icon-button', { icon: symbols.heart, 'aria-label': 'Favorite' }) + m('icon-button', { icon: symbols.bookmark, 'aria-label': 'Bookmark' })
-    + m('fab', { slot: 'fab', icon: symbols.add, 'aria-label': 'Compose' })),
   // Containment
   card: m('card', { variant: 'elevated', headline: card.header?.title, subhead: card.header?.subtitle },
     (card.buttons ?? []).map(button => m('button', { slot: 'actions', variant: button.variant }, text(String(button.text)))).join('')),
@@ -140,7 +137,7 @@ type FrameKind = 'picker' | 'floor' | 'top' | 'bottom' | 'middle' | 'left' | 'ri
 const frames: Partial<Record<ComponentSlug, FrameKind>> = {
   button: 'floor', 'icon-button': 'side', datepicker: 'picker', timepicker: 'picker',
   'app-bar': 'top', search: 'top', tabs: 'top',
-  'navigation-bar': 'bottom', badge: 'bottom', snackbar: 'bottom', toolbar: 'bottom', 'bottom-app-bar': 'bottom', 'bottom-sheet': 'bottom',
+  'navigation-bar': 'bottom', badge: 'bottom', snackbar: 'bottom', toolbar: 'bottom', 'bottom-sheet': 'bottom',
   divider: 'middle', slider: 'middle', 'text-field': 'middle', select: 'middle',
   checkbox: 'left', radios: 'left', chips: 'left', 'navigation-rail': 'left',
   switch: 'right',
