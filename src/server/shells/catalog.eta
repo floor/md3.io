@@ -15,16 +15,7 @@
         <p>Every Material 3 component, built for the web: plain JavaScript, web components, React, Vue, Svelte and SolidJS. Try one live, adjust the details, and copy what works.</p>
         <% } %>
       </div>
-      <!-- Our own composition of Material shapes, in the current theme colours. -->
-      <div class="catalog-hero__art" aria-hidden="true">
-        <svg viewBox="0 0 480 360" preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect class="catalog-hero__pill" x="-40" y="34" width="300" height="112" rx="56" transform="rotate(-18 110 90)"/>
-          <g class="catalog-hero__clover"><circle cx="318" cy="142" r="70"/><circle cx="406" cy="142" r="70"/><circle cx="318" cy="230" r="70"/><circle cx="406" cy="230" r="70"/></g>
-          <rect class="catalog-hero__square" x="150" y="186" width="118" height="118" rx="36" transform="rotate(14 209 245)"/>
-          <circle class="catalog-hero__dot" cx="70" cy="292" r="58"/>
-          <path class="catalog-hero__arch" d="M372 360a64 64 0 0 1 128 0z"/>
-        </svg>
-      </div>
+      <div class="catalog-hero__art" aria-hidden="true"></div>
     </header>
     <div class="component-catalog__body">
     <% it.playgroundDirectory.sections.forEach(section => { %>

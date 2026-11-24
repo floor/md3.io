@@ -113,13 +113,8 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-hero__text { container-type: inline-size; }
 .catalog-hero__text h1 { margin: 0; font-size: clamp(40px, 18cqi, 112px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
 .catalog-hero__text p { margin: 0; max-width: 34em; font-size: clamp(18px, 4.2cqi, 24px); line-height: 1.45; color: var(--mtrl-sys-color-on-surface); }
-.catalog-hero__art { min-height: 200px; overflow: hidden; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); }
-.catalog-hero__art svg { display: block; width: 100%; height: 100%; }
-.catalog-hero__pill { fill: var(--mtrl-sys-color-tertiary); }
-.catalog-hero__clover { fill: var(--mtrl-sys-color-primary); }
-.catalog-hero__square { fill: var(--mtrl-sys-color-secondary-container); }
-.catalog-hero__dot { fill: var(--mtrl-sys-color-tertiary-container); }
-.catalog-hero__arch { fill: var(--mtrl-sys-color-secondary); }
+/* For now a plain field of the theme's primary container colour. */
+.catalog-hero__art { min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); }
 @container (min-width: 760px) {
   .catalog-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
   .catalog-hero__text { min-height: 420px; padding: 56px 48px; }
