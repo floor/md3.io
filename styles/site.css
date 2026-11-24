@@ -122,11 +122,18 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .document-layout .md { min-width: 0; flex: 1; width: 100%; padding: var(--document-padding); }
 .doc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
 .doc-toc { display: none; width: 190px; flex-shrink: 0; position: sticky; top: 90px; max-height: calc(100vh - 110px); overflow: auto; margin: 44px 20px 0 0; align-self: flex-start; }
-.doc-toc a { display: flex; align-items: center; min-height: var(--site-target-size); color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs); padding: 3px 0; }
-.doc-toc a:hover { color: var(--accent-text); }
+.doc-toc a {
+  display: flex; align-items: center; min-height: var(--site-target-size); padding: 3px 0 3px 16px;
+  border-inline-start: 2px solid var(--mtrl-sys-color-outline-variant);
+  color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs);
+  transition: color 150ms, border-color 150ms;
+}
+.doc-toc a:hover { color: var(--text); }
+/* The section being read: a primary bar on the track, and stronger text. */
+.doc-toc a[aria-current] { border-inline-start-color: var(--mtrl-sys-color-primary); color: var(--mtrl-sys-color-primary); font-weight: var(--fw-bold); }
 /* With a mouse the list is dense; touch keeps the 48px target. */
 @media (hover: hover) and (pointer: fine) {
-  .doc-toc a { min-height: 32px; padding: 4px 0; line-height: 1.4; }
+  .doc-toc a { min-height: 32px; padding-block: 4px; line-height: 1.4; }
 }
 .md table { display: block; max-width: 100%; overflow-x: auto; }
 .landing { width: 100%; max-width: 1120px; margin: auto; padding: 0 22px; }

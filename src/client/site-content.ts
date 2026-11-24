@@ -15,6 +15,35 @@ registerPage('site-content', (content, life) => {
       if (target && !target.hasAttribute('tabindex')) target.tabIndex = -1;
       target?.focus();
     });
+
+    // The section being read is marked in the list: the last heading that has
+    // reached the top fifth of the window, or the last one at the page's end.
+    const links = [...docToc.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];
+    let frame = 0;
+    const markCurrent = () => {
+      frame = 0;
+      const shown = links.filter(link => link.getClientRects().length);
+      const line = innerHeight / 5;
+      let current = shown[0];
+      for (const link of shown) {
+        const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+        if (heading && heading.getBoundingClientRect().top <= line) current = link;
+      }
+      if (innerHeight + scrollY >= document.documentElement.scrollHeight - 2) current = shown.at(-1);
+      for (const link of links) {
+        if (link === current) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
+    };
+    const schedule = () => { frame ||= requestAnimationFrame(markCurrent); };
+    life.events(window).addEventListener('scroll', schedule, { passive: true });
+    life.events(window).addEventListener('resize', schedule);
+    life.add(() => cancelAnimationFrame(frame));
+    // A framework switch changes which headings are shown.
+    const observer = new MutationObserver(schedule);
+    observer.observe(root, { attributes: true, attributeFilter: ['data-framework'] });
+    life.add(() => observer.disconnect());
+    markCurrent();
   }
 
   const componentList = content.querySelector<HTMLElement>('.component-list-layout--detail .component-list');
