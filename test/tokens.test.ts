@@ -37,8 +37,10 @@ describe('mtrl tokens', () => {
     }
   });
   test('a role a theme leaves out is inherited and marked so', () => {
-    const ocean = themeTokens.ocean!.light;
-    expect(ocean.scrim).toEqual({ value: baseline.light.get('scrim')!, inherited: true, from: 'baseline' });
+    // material 3.16.2 fills shadow and scrim in every theme; ocean's dark block still
+    // leaves out the fixed roles, which come from its light block.
+    const ocean = themeTokens.ocean!;
+    expect(ocean.dark['primary-fixed']).toEqual({ value: ocean.light['primary-fixed']!.value, inherited: true, from: 'ocean light' });
   });
   test('every role the color page lists exists in the CSS', () => {
     const listed = colorGroups.flatMap(group => group.roles);

@@ -8,7 +8,7 @@ status: draft
 
 A toolbar holds the actions for the current page or the current selection: icon buttons, a
 few buttons, a text field. M3 Expressive has two. The **docked** toolbar spans the bottom of
-the window and holds global actions; it replaces the [bottom app bar](bottom-app-bar.md). The
+the window and holds global actions; it replaces the bottom app bar. The
 **floating** toolbar is a pill above the content and holds contextual actions, such as
 formatting, and can pair with a [FAB](fab.md). Don't show a toolbar and a navigation bar at the
 same time. See the [M3 toolbar guidelines](https://m3.material.io/components/toolbars/overview).

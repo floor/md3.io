@@ -47,12 +47,12 @@ try {
       const buttons = document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelectorAll<HTMLButtonElement>('#stage button');
       return buttons?.length && [...buttons].every(button => button.disabled);
     });
-    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source.includes('disabled: true'), `${slug}: copied code does not reflect controls`);
-    await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.getByRole('tab', { name: 'Preview', exact: true }).click();
     await panel.backToDefault(page);
     await root.waitFor();
 
@@ -62,9 +62,9 @@ try {
       await frame.getByRole('button', { name: 'Add to favorites' }).click();
       await page.waitForFunction(() => document.querySelector<HTMLElement & { checked?: boolean }>('#configuration m-switch[name="selected"]')?.checked === true);
       assert(await panel.isOn(page, 'selected'), 'Icon selection did not synchronize');
-      await page.getByRole('tab', { name: 'View code', exact: true }).click();
+      await page.getByRole('tab', { name: 'Code', exact: true }).click();
       assert((await page.locator('#generated-code').textContent())?.includes('selected: true'), 'Code lost icon toggle state');
-      await page.getByRole('tab', { name: 'Live preview' }).click();
+      await page.getByRole('tab', { name: 'Preview', exact: true }).click();
       assert(await frame.getByRole('button').getAttribute('aria-pressed') === 'true', 'Icon selection lost on view switch');
     } else if (slug === 'button-group') {
       await choose('kind', 'connected');
@@ -151,7 +151,7 @@ try {
   await choose('placement', 'bottom-end');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('#stage > .mtrl-fab-menu')?.classList.contains('mtrl-fab-menu--bottom-end'));
   const codeText = async () => page.locator('#generated-code').innerText();
-  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
   await panel.chooseFramework(page, 'vanilla');
   assert((await codeText()).includes('placement: "bottom-end"'), 'fab-menu: the code panel omits placement: "bottom-end"');
   await panel.chooseFramework(page, 'html');
@@ -163,7 +163,7 @@ try {
     return !!element && !element.className.includes('mtrl-fab-menu--bottom');
   });
   assert(!(await codeText()).includes('placement'), 'fab-menu: none puts placement back in the code panel');
-  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).click();
   await page.goto(`${server.url}components/`);
   assert(await page.locator('.component-card').count() === componentSlugs.length, 'Catalog is missing a component');
   await page.screenshot({ animations: 'disabled', path: `${output}/actions-catalog.png`, fullPage: true });

@@ -10,17 +10,22 @@ const escape = (value: string) => value.replace(/[&<>"]/g, char => ({ '&': '&amp
 export const componentDrawerEntries = (entries: readonly (Link | Family)[]): readonly Entry[] =>
   [{ name: 'Components overview', href: '/components/' }, ...entries];
 
-/** The element uses the standard drawer when its modal attribute is absent. */
-export function renderSectionDrawer(path: string, label: string, entries: readonly Entry[]): string {
+/** A drawer's declaration children: links, families and section headings. */
+export function drawerItems(entries: readonly Entry[]): string {
   const link = ({ name, href, badge }: Link) =>
     `<m-drawer-item href="${escape(href)}" value="${escape(href)}"${badge ? ` badge="${escape(badge)}"` : ''}>${escape(name)}</m-drawer-item>`;
-  const items = entries.map(entry => {
+  return entries.map(entry => {
     if ('href' in entry) return link(entry);
     if ('items' in entry) {
       return `<m-drawer-item value="${escape(entry.id)}">${escape(entry.name)}${entry.items.map(link).join('')}</m-drawer-item>`;
     }
     return `<m-drawer-item type="section">${escape(entry.name)}</m-drawer-item>`;
   }).join('');
+}
+
+/** The element uses the standard drawer when its modal attribute is absent. */
+export function renderSectionDrawer(path: string, label: string, entries: readonly Entry[]): string {
+  const items = drawerItems(entries);
   const markup = renderElement('m-drawer', { class: 'site-drawer', open: true, dense: true, value: path, 'aria-label': label }, items, renderStyles);
   // The element builds fresh interactive rows on upgrade. Native links and buttons
   // already tab in document order. CSS hides closed groups before upgrade and

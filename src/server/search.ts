@@ -18,7 +18,7 @@ import { elementMeta } from './elements-meta';
 import { examples } from './examples';
 import { components, componentDeprecations, componentSlugs, isComponent } from '../shared/components';
 import { addonSlugs, addonsPublic, isAddon, isAddonPath, playgroundHref } from '../shared/addons';
-import { showcasePublic } from '../shared/visibility';
+import { showcasePublic, stylesPublic } from '../shared/visibility';
 import { stylePages } from './styles';
 import { colorGroups, shapeScale, typescale } from './tokens';
 import { themes } from '../shared/button';
@@ -189,7 +189,7 @@ function styleDocuments(): IndexDocument[] {
 }
 
 const started = performance.now();
-const documents = [...componentDocuments(), ...styleDocuments(), ...docDocuments(), ...(showcasePublic ? exampleDocuments() : [])];
+const documents = [...componentDocuments(), ...(stylesPublic ? styleDocuments() : []), ...docDocuments(), ...(showcasePublic ? exampleDocuments() : [])];
 const titles = new Map(documents.filter(document => document.title).map(document => [document.page, document.title]));
 
 const index = new MiniSearch<IndexDocument>({

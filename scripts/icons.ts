@@ -8,6 +8,10 @@ import { resolve } from 'node:path';
 // Symbol names exactly as fonts.google.com/icons spells them.
 const names = [
   'account_circle',
+  // The Buttons scenes on the components overview.
+  'accessibility_new',
+  'language',
+  'settings',
   'add',
   'bookmark',
   'check',
@@ -119,7 +123,7 @@ const names = [
   // The Files drawer (src/shared/content/navigation-drawer.ts): A in a square, and a page of lines.
   'font_download',
   'article',
-  // The bottom app bar's notes figure (src/shared/content/bottom-app-bar.ts): a checkbox and a brush.
+  // A checkbox and a brush, for note-taking actions.
   'check_box',
   'brush',
   // The site header's Themes and mode buttons (src/server/shells/base.eta).

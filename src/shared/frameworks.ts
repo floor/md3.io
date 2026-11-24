@@ -7,6 +7,7 @@
 // browser bundle does not carry the elements themselves.
 
 import { stepperDemoCode } from './content/stepper-demo';
+import { embeddedImports, embeddedIn } from './embedded-elements';
 import type { StepperConfig } from 'material-addons/components/stepper';
 import { createIconNamer, isMarkup } from './icon-code';
 
@@ -212,23 +213,21 @@ type NestedChild = { element: string; attrs: Attr[]; text: string; native?: bool
 /** A declaration child, with its own children (a submenu). */
 type Child = { attrs: Attr[]; text: string; children: Child[] };
 
-/** Checkbox and radio tags embedded in sheet markup, which a tab must define before it mounts. */
-function embeddedElements(p: Plan): { checkbox: boolean; radios: boolean } {
+/** Material tags embedded in sheet markup, which a tab must define before it mounts. */
+function embeddedTags(p: Plan): Set<string> {
   const tags = new Set<string>();
   const walk = (node: { element: string; children?: { element: string; children?: NestedChild[] }[] }) => {
     tags.add(node.element);
     for (const child of node.children ?? []) walk(child);
   };
   for (const slot of p.slotted) if (slot.native) walk(slot);
-  return { checkbox: tags.has('m-checkbox'), radios: tags.has('m-radios') || tags.has('m-radio') };
+  return tags;
 }
 
 /** Imports and calls that define those elements. The HTML tab's defineAll() already does. */
 function embeddedSetup(p: Plan): string {
-  const { checkbox, radios } = embeddedElements(p);
-  const lines: string[] = [];
-  if (checkbox) lines.push(`import 'material/elements/css/checkbox';`, `import { defineCheckbox } from 'material/elements';`, `defineCheckbox();`);
-  if (radios) lines.push(`import 'material/elements/css/radios';`, `import { defineRadios } from 'material/elements';`, `defineRadios();`);
+  const tags = embeddedTags(p);
+  const lines = embeddedIn(tag => tags.has(tag)).flatMap(entry => [...embeddedImports(entry), `${entry.define}();`]);
   return lines.length ? `${lines.join('\n')}\n` : '';
 }
 
@@ -348,7 +347,7 @@ function parseNativeTree(markup: string): NestedChild | null {
       if (!open || open.children?.length || open.text) return null;
       open.text = run.trim();
     } else if (match[1]) {
-      const attrs: Attr[] = [...(match[2] ?? '').matchAll(/([\w:-]+)="([^"]*)"/g)].map((attribute) => ({ name: attribute[1]!, value: attribute[2]! }));
+      const attrs: Attr[] = [...(match[2] ?? '').matchAll(/([\w:-]+)="([^"]*)"/g)].map((attribute) => ({ name: attribute[1]!, value: decodeEntities(attribute[2]!) }));
       const opened: NestedChild = { element: match[1], attrs, text: '', native: true };
       if (match[3]) {
         if (!place(opened)) return null;
@@ -755,13 +754,16 @@ const jsxName = (name: string): string => (/^(aria|data)-/.test(name) ? name : c
 
 /** JSX / Svelte props: camelCase, booleans bare, numbers in braces. React takes `style` as an object.
  * A component's props are its adapter's (camelCase); a native node's names are the DOM's own. */
-const jsxAttrs = (attrs: Attr[], react = false, native = false): string =>
+const jsxAttrs = (attrs: Attr[], react = false, native = false, tag = ''): string =>
   attrs.map(a => {
     // A checkbox's initial state, as React writes it: `checked` alone is the controlled
     // spelling, which warns without an onChange handler a static tab does not have.
     if (react && a.name === 'checked') return ' defaultChecked';
-    const name = native ? jsxName(a.name) : camel(a.name);
-    if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
+    // Solid sets a raw custom element's camelCase names as properties its declaration does
+    // not read (an <m-list-item>'s supportingText): there it keeps the attribute's own name.
+    const name = native && !react && tag.includes('-') ? a.name : native ? jsxName(a.name) : camel(a.name);
+    // A custom property keeps its name, quoted: React sets it with setProperty.
+    if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${p.startsWith('--') ? `'${p}'` : camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
     if (a.ref) return ` ${name}={${a.ref}}`;
     if (a.value === true) return ` ${name}`;
     // A string attribute takes no escapes, and Svelte reads braces in it: such a value is an expression.
@@ -824,7 +826,7 @@ const htmlNode = (nested: NestedChild): string => nested.native
 /** A nested node in React or Solid: an mtrl component, or a native tree recursing. */
 const jsxNode = (nested: NestedChild, react: boolean): string => element(
   nested.native ? nested.element : pascal(nested.element),
-  jsxAttrs(nested.attrs, react, nested.native),
+  jsxAttrs(nested.attrs, react, nested.native, nested.element),
   nested.native && nested.children?.length ? nativeBody(nested.children, child => jsxNode(child, react)) : escapeText(nested.text),
 );
 

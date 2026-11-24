@@ -29,7 +29,6 @@ import { createNavigationDrawer } from 'material/components/drawer';
 import createTabs from 'material/components/tabs';
 import createMenu from 'material/components/menu';
 import { createAppBar } from 'material/components/top-app-bar';
-import createBottomAppBar from 'material/components/bottom-app-bar';
 import createToolbar from 'material/components/toolbar';
 import createSwitch from 'material/components/switch';
 import createRadios from 'material/components/radios';
@@ -41,9 +40,16 @@ import createDatePicker from 'material/components/datepicker';
 import createTimePicker from 'material/components/timepicker';
 import { createChips, type ChipComponent } from 'material/components/chips';
 import createCheckbox from 'material/components/checkbox';
+import 'material/elements/css/button';
 import 'material/elements/css/checkbox';
+import 'material/elements/css/chips';
+import 'material/elements/css/divider';
+import 'material/elements/css/icon-button';
+import 'material/elements/css/list';
+import 'material/elements/css/progress';
 import 'material/elements/css/radios';
-import { defineCheckbox, defineRadios } from 'material/elements';
+import 'material/elements/css/slider';
+import { defineCheckbox, defineChips, defineDivider, defineIconButton, defineList, defineProgress, defineRadios, defineSlider } from 'material/elements';
 import createButton from 'material/components/button';
 import createIconButton from 'material/components/icon-button';
 import createButtonGroup from 'material/components/button-group';
@@ -64,11 +70,17 @@ import { artElement } from '../shared/content/types';
 import { tooltipTarget } from '../shared/content/tooltip';
 import { symbols } from '../shared/icons';
 
-// Sheet content is markup. Defining the elements here lets a checkbox or a radio
-// group in that markup upgrade on the stage, the same tags the code tabs write.
+// Sheet content is markup. Defining the elements here lets the material components in
+// that markup upgrade on the stage, the same tags the code tabs write.
 defineCheckbox();
 defineRadios();
 defineButton();
+defineIconButton();
+defineChips();
+defineList();
+defineDivider();
+defineSlider();
+defineProgress();
 
 const componentSlug = document.documentElement.dataset.component!;
 if (!isComponent(componentSlug)) throw new Error('Unknown component');
@@ -325,7 +337,7 @@ function create(state: ComponentState) {
     }
     case 'app-bar': {
       const control = createAppBar(components['app-bar'].config(state));
-      const content = appBarContent('app-bar', state);
+      const content = appBarContent(state);
       const buttons = content.actions.map(config => createIconButton(config));
       buttons.forEach(button => { control.addTrailingElement(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
       const trailing = content.trailingButton ? createButton(content.trailingButton) : null;
@@ -338,16 +350,6 @@ function create(state: ComponentState) {
       }
       control.setScrollState(content.scrolled === true);
       return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); trailing?.destroy(); control.destroy(); } };
-    }
-    case 'bottom-app-bar': {
-      const control = createBottomAppBar(components['bottom-app-bar'].config(state));
-      const content = appBarContent('bottom-app-bar', state);
-      const buttons = content.actions.map(config => createIconButton(config));
-      buttons.forEach(button => { control.addAction(button.element); button.on('click', () => message(`${button.element.getAttribute('aria-label')} clicked`)); });
-      const fab = content.fab ? createFab(content.fab) : null;
-      if (fab) { control.addFab(fab.element); fab.on('click', () => message(`${String(state.fabLabel) || 'Compose'} clicked`)); }
-      if (!content.visible) control.hide();
-      return { element: control.element, destroy: () => { buttons.forEach(button => button.destroy()); fab?.destroy(); control.destroy(); } };
     }
     case 'toolbar': {
       const content = toolbarContent(state);

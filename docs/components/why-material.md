@@ -61,7 +61,6 @@ pickers are additional references for `material-addons`, outside this count.
 | [Tabs](tabs.md) | Primary and secondary tabs with keyboard navigation. |
 | [Menu](menu.md) | Baseline and Expressive vertical menus. |
 | [App bar](app-bar.md) | Small, centre-aligned, medium and large bars; medium and large compress on scroll. |
-| [Bottom app bar](bottom-app-bar.md) | Deprecated in 3.x for the docked [Toolbar](toolbar.md); remains available for existing designs (removal parked until Material Design v4). |
 | [Toolbar](toolbar.md) | Expressive docked and floating toolbars, horizontal or vertical layouts, colour variants and scroll behavior. |
 
 Google's [toolbar overview](https://m3.material.io/components/toolbars/overview) recommends the
@@ -98,25 +97,17 @@ implementation serves the different bindings.
 
 ## Measured bundle sizes
 
-The following is the published **material 3.7.2** size table, taken from its
-[README's CI-measured rows](https://github.com/floor/material/blob/v3.7.2/README.md#sizes).
+The following is the published **material {{material.version}}** size table, taken from its
+[README's CI-measured rows](https://github.com/floor/material/blob/v{{material.version}}/README.md#sizes).
 These are minified, gzipped outputs measured from the packed package, not estimates or the
-size of an entire app. Here, kB means 1,000 bytes. New releases can change these figures.
+size of an entire app. Here, kB means 1,000 bytes. The table comes from the installed
+package when this site is built, so it follows each release.
 
-| Import | gzip |
-|--------|-----:|
-| `createButton` from `material`, with code splitting: the initial chunks (the progress indicator loads on demand) | 7.6 kB |
-| `createButton`, without code splitting (the progress indicator included) | 13.9 kB |
-| `createButton`, `createTextField` and `createCheckbox`, without code splitting | 20.4 kB |
-| Everything the root exports (`export * from 'material'`), without code splitting | 127.1 kB |
-| `material/styles/base` | 2.9 kB |
-| `material/styles/base-lite` | 1.6 kB |
-| `material/styles/base` and `material/styles/button` | 5.1 kB |
-| `material/styles`, the full stylesheet | 58.7 kB |
+{{material.sizes}}
 
-The full stylesheet is **about 59 kB gzip**, against a **63.75 kB** gzip
-[CI budget](https://github.com/floor/material/blob/v3.7.2/scripts/budgets.ts#L33).
-The [release changelog](https://github.com/floor/material/blob/v3.7.2/CHANGELOG.md#372---2026-11-05)
+The full stylesheet is **about {{material.stylesheet}} kB gzip**, against a **63.75 kB** gzip
+[CI budget](https://github.com/floor/material/blob/v{{material.version}}/scripts/budgets.ts#L33).
+The [release changelog](https://github.com/floor/material/blob/v{{material.version}}/CHANGELOG.md)
 records the underlying package measurements.
 
 A page pays only for what it imports when its bundler tree-shakes the JavaScript and it uses

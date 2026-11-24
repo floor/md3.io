@@ -1,5 +1,5 @@
-<div class="document-layout"><article class="md">
+<div class="page-wrap"><div class="document-layout"><article class="md">
   <div class="doc-toolbar"><a href="/docs/"><%~ it.icon('arrow_back') %> Docs</a><% if (it.playground) { %><a href="<%= it.playground %>">Open playground <%~ it.icon('arrow_outward') %></a><% } %></div>
   <%~ it.html %>
   <%~ it.pager %>
-</article><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %><% (it.tocs || []).forEach(guide => { %><div class="doc-toc__framework" data-for-framework="<%= guide.framework %>"><% guide.items.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></div><% }); %></aside></div>
+</article><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %><% (it.tocs || []).forEach(guide => { %><div class="doc-toc__framework" data-for-framework="<%= guide.framework %>"><% guide.items.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></div><% }); %></aside></div></div>

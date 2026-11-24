@@ -65,7 +65,7 @@ function swapBody(next: Document) {
   // old content. moveBefore preserves its custom-element instance and pill animation.
   if (nextIndex) layout.insertBefore(document.importNode(nextIndex, true), content);
   content.append(...[...nextMain.childNodes].map(node => document.importNode(node, true)));
-  const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
+  const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer:not(.site-rail-drawer m-drawer)')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
   const nextSignature = replacement ? drawerSignature(replacement) : '';
   if (replacement && persistentDrawer && nextSignature !== signature) {
     // Another section: use the destination's server-rendered drawer, exactly as a direct
@@ -112,6 +112,12 @@ function swapBody(next: Document) {
     const current = nextLinks[index]?.getAttribute('aria-current');
     if (current) link.setAttribute('aria-current', current); else link.removeAttribute('aria-current');
   });
+  const railSelector = '#site-primary-rail m-navigation-rail';
+  const railValue = next.querySelector(railSelector)?.getAttribute('value');
+  const rail = document.querySelector<HTMLElement & { value: string | null }>(railSelector);
+  if (railValue) rail?.setAttribute('value', railValue); else rail?.removeAttribute('value');
+  // After a click the element follows its property, not the attribute: Back needs both.
+  if (rail && customElements.get('m-navigation-rail')) rail.value = railValue ?? null;
 }
 function pageScripts(doc: Document, origin = location.origin) {
   return [...doc.querySelectorAll<HTMLScriptElement>('script[type="module"][src]')].flatMap(script => {
@@ -168,11 +174,11 @@ async function styles(next: Document, signal: AbortSignal) {
     });
   }));
 }
-// Snapshot the changing content, leaving the mounted drawer's own animation live.
+// Only the closing modal drawer is snapshotted: it slides out while the page changes live
+// behind it. Nothing else is captured, so nothing can be stretched between two pages.
 function nameTransitionContent() {
   document.documentElement.style.viewTransitionName = 'none';
-  // Explicitly leave shell chrome out of snapshots, so the real drawer pill keeps
-  // animating on screen while only the page-content snapshot cross-fades.
+  // Shell chrome stays out of snapshots, so the real drawer pill keeps animating on screen.
   for (const shellElement of document.querySelectorAll<HTMLElement>('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')) shellElement.style.viewTransitionName = 'none';
   // The modal drawer leaves as part of the same transition: it slides out from its last frame
   // while the content changes behind it, instead of vanishing when the page swaps.
@@ -182,7 +188,6 @@ function nameTransitionContent() {
     document.documentElement.dataset.navDrawerLeaving = '';
   } else if (modalDrawer) modalDrawer.style.viewTransitionName = '';
   content!.style.viewTransitionName = '';
-  (content!.querySelector<HTMLElement>('#component-content, .component-catalog') ?? content!).style.viewTransitionName = 'page-content';
 }
 function hashTarget(url: URL) {
   let id: string;
@@ -214,7 +219,10 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
   let superseded = false;
   const abortForNavigation = () => { if (!updatingPageURL) { superseded = true; controller.abort(); } };
   outerSignal?.addEventListener('abort', abortForNavigation, { once: true });
-  const timer = setTimeout(() => controller.abort('timeout'), 3000);
+  // A timeout falls back to a full page load, so it must only catch a stalled request.
+  const timer = setTimeout(() => controller.abort('timeout'), 15000);
+  let swapped = false;
+  let leaving: Animation | undefined;
   try {
     const response = await fetch(url, { signal, headers: { Accept: 'text/html' } });
     if (!response.ok || !response.headers.get('content-type')?.includes('text/html') || new URL(response.url).origin !== location.origin) throw new Error('Not a site page');
@@ -235,9 +243,16 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     if (next.querySelector('.docs-frameworks')) await abortable(import('./docs-frameworks'), signal);
     if (next.querySelector('m-drawer.site-drawer')) await abortable(import('./catalog/drawer').then(module => module.defineSiteDrawer()), signal);
     if (signal.aborted) throw signal.reason;
-    const transitionEnabled = !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // The new page fades in where the old one was: no snapshots, so nothing to stretch between
+    // two pages of different heights, nothing for the browser to abort, and the rail and the
+    // drawer stay live throughout. Only a closing modal drawer uses a view transition, to slide
+    // out over the whole window while the page changes behind it.
+    const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const modalClosing = !!document.querySelector<HTMLDialogElement>('#site-nav-dialog')?.open;
+    const transitionEnabled = motion && modalClosing && !!document.startViewTransition;
     const swap = async () => {
       if (signal.aborted) return;
+      swapped = true;
       closeShell();
       leavePage();
       commit();
@@ -265,7 +280,20 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       void transition.ready.catch(() => {});
       void transition.finished.catch(() => {}).finally(() => { delete document.documentElement.dataset.navDrawerLeaving; });
       await transition.updateCallbackDone;
-    } else await swap();
+    } else {
+      // Material's fade-through, outgoing half: once the next page is ready, the old one fades
+      // out (90ms), so the page is never blank while the next one loads.
+      if (motion) {
+        leaving = content!.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' });
+        await leaving.finished.catch(() => {});
+      }
+      if (signal.aborted) throw signal.reason;
+      await swap();
+      // Material's fade-through, incoming half: the new page fades in where the old one was.
+      leaving?.cancel();
+      leaving = undefined;
+      if (motion && swapped) content!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(0, 0, 0.2, 1)' });
+    }
   } catch {
     if (request === controller && !superseded) {
       // The API has already committed the destination entry; reload that entry.
@@ -273,7 +301,14 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       if (api) location.replace(url.href);
       else location.assign(url.href);
     }
-  } finally { clearTimeout(timer); outerSignal?.removeEventListener('abort', abortForNavigation); }
+  } finally {
+    clearTimeout(timer);
+    outerSignal?.removeEventListener('abort', abortForNavigation);
+    // An outgoing fade never outlives its navigation: nothing swapped in, the old page shows
+    // again; swapped in and then superseded (slow theme CSS), the new page must not stay at
+    // opacity 0 under a later navigation that does not fade (the modal's view transition).
+    leaving?.cancel();
+  }
 }
 if (shell && content && layout) {
   if (api) {

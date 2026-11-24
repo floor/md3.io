@@ -33,7 +33,8 @@ body {
     height: calc(100dvh - var(--header-height));
     overflow: auto;
     padding: 12px 4px;
-    border-right: 1px solid var(--border);
+    /* A hairline that separates without drawing the eye. */
+    border-right: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
     background: var(--bg-sidebar);
 }
 
@@ -297,4 +298,110 @@ body {
     .layout:has(.component-page) .section-index__links {
         max-height: calc(100dvh - var(--header-height));
     }
+}
+
+/* The rail and the drawer are fixed to the window: the page scrolls beside them. Below
+   1600px the drawer floats over the page from the rail, as M3's does: no scrim, nothing
+   pushed. Touch screens, with no hover, keep the rail's button and the modal drawer. */
+@media (min-width: 600px) {
+    .site-primary-rail {
+        position: fixed;
+        inset: var(--header-height) auto 0 0;
+        z-index: 1001;
+        align-self: stretch;
+        height: auto;
+        box-sizing: border-box;
+        background: var(--bg-sidebar);
+    }
+    .layout-main { margin-inline-start: var(--site-nav-rail-width); }
+}
+@media (min-width: 840px) {
+    .layout .component-list-layout { grid-template-columns: minmax(0, 1fr); }
+    .layout .component-list-layout > .component-page,
+    .layout .component-list-layout > .component-catalog { grid-column: 1; }
+}
+/* Without scripts the page's own list is the only one: it keeps its column beside the detail. */
+@media (scripting: none) and (min-width: 840px) {
+    .layout .component-list-layout.component-list-layout--detail { grid-template-columns: clamp(160px, 19vw, 256px) minmax(0, 1fr); }
+    .layout .component-list-layout--detail > .component-list { grid-column: 1; grid-row: 1; }
+    .layout .component-list-layout--detail > .component-page { grid-column: 2; grid-row: 1; }
+}
+@media (scripting: enabled) and (min-width: 840px) and (hover: none) {
+    #site-nav-open { display: grid; }
+    .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) { display: none; }
+}
+@media (scripting: enabled) and (min-width: 840px) and (hover: hover) {
+    /* The shell's one drawer (.site-rail-drawer) shows these rows. */
+    .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) { display: none; }
+}
+
+/* The site's one drawer: a rail destination's rows, shown on hover over the page. */
+.site-rail-drawer { display: none; }
+@media (scripting: enabled) and (min-width: 840px) and (hover: hover) {
+    .site-rail-drawer {
+        position: fixed;
+        z-index: 1000;
+        inset: var(--header-height) auto 0 var(--site-nav-rail-width);
+        display: block;
+        box-sizing: border-box;
+        width: var(--sidebar-width);
+        padding-block: 8px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border-radius: 0 var(--mtrl-sys-shape-corner-large, 16px) var(--mtrl-sys-shape-corner-large, 16px) 0;
+        background: var(--mtrl-sys-color-surface-container-low);
+        box-shadow: 0 1px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 30%, transparent), 0 2px 6px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 15%, transparent);
+        visibility: hidden;
+        transform: translateX(-100%);
+        transition: transform 200ms cubic-bezier(0.3, 0, 0.8, 0.15), visibility 0s linear 200ms;
+    }
+    .site-rail-drawer .site-drawer::part(drawer),
+    .site-rail-drawer .site-drawer::part(sheet) { visibility: inherit; }
+    .site-rail-drawer[data-open] {
+        visibility: visible;
+        transform: none;
+        transition: transform 280ms cubic-bezier(0.05, 0.7, 0.1, 1), visibility 0s;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .site-rail-drawer { transition: none !important; }
+}
+/* From 1600px a page with a section keeps its drawer docked open, and the page sits beside it. */
+@media (scripting: enabled) and (min-width: 1600px) and (hover: hover) {
+    body:has(:is(.component-list, #sidebar) m-drawer) .layout-main {
+        margin-inline-start: calc(var(--site-nav-rail-width) + var(--sidebar-width));
+        transition: margin-inline-start 280ms cubic-bezier(0.05, 0.7, 0.1, 1);
+    }
+}
+.site-rail-drawer[data-instant] { transition: none !important; }
+/* The page follows the drawer: in as it docks, out as it leaves, with the drawer's own timing. */
+@media (scripting: enabled) and (min-width: 840px) and (hover: hover) {
+    .layout-main { transition: margin-inline-start 200ms cubic-bezier(0.3, 0, 0.8, 0.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .layout-main { transition: none !important; }
+}
+
+/* From tablet up there is no top bar: search leads the rail. Phones keep the bar. */
+@media (min-width: 600px) {
+    :root:root { --header-height: 0px; }
+    .header { display: none; }
+    .site-rail-top { display: flex; flex-direction: column; align-items: center; gap: 12px; flex: none; padding-block: 4px 12px; }
+}
+@media (min-width: 840px) {
+    .layout .component-list-layout > .component-catalog { box-sizing: border-box; width: 100%; }
+}
+
+/* Material's navigation rail, in the site's fixed rail column with theme and mode below it. */
+@media (min-width: 600px) {
+    #site-primary-rail { padding: 0 0 12px; overflow: hidden; }
+    #site-primary-rail m-navigation-rail { flex: 1; min-height: 0; width: 100%; }
+    #site-primary-rail m-navigation-rail::part(navigation-rail) { inline-size: 100%; padding-block: 12px 8px; border: 0; background: transparent; }
+    #site-primary-rail .header__themes { flex: none; align-items: center; }
+    #site-primary-rail m-navigation-rail::part(header) { display: flex; justify-content: center; width: 100%; min-height: 0; margin: 0 0 4px; padding: 0; }
+    #site-primary-rail m-navigation-rail::part(items) { width: 100%; align-items: stretch; }
+    #site-primary-rail m-navigation-rail::part(item) { width: 100%; max-width: none; margin-inline: 0; }
+    #site-primary-rail m-navigation-rail::part(content) { width: 100%; padding-inline: 0; align-items: center; }
+    #site-primary-rail m-navigation-rail::part(label) { inset-inline: 50% auto; width: max-content; max-width: none; translate: -50% 0; overflow: visible; text-overflow: clip; text-align: center; white-space: nowrap; }
+    #site-primary-rail .site-rail-top { width: 100%; }
 }

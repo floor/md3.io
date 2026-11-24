@@ -1,6 +1,6 @@
 {
-  "material": "3.16.1",
-  "measured": "2026-11-23",
+  "material": "3.16.2",
+  "measured": "2026-11-24",
   "gzip": 9,
   "core": {
     "factory": 15893,
@@ -45,14 +45,14 @@
     },
     "split-button": {
       "factory": {
-        "alone": 17889,
+        "alone": 17757,
         "lazy": 18652,
-        "added": 10149
+        "added": 10015
       },
       "element": {
-        "alone": 34273,
+        "alone": 34106,
         "lazy": 9232,
-        "added": 23129
+        "added": 22965
       }
     },
     "fab": {
@@ -62,7 +62,7 @@
         "added": 1706
       },
       "element": {
-        "alone": 14476,
+        "alone": 14475,
         "lazy": 0,
         "added": 2141
       }
@@ -136,7 +136,7 @@
       "element": {
         "alone": 20157,
         "lazy": 0,
-        "added": 8548
+        "added": 8547
       }
     },
     "slider": {
@@ -148,7 +148,7 @@
       "element": {
         "alone": 22253,
         "lazy": 0,
-        "added": 10522
+        "added": 10523
       }
     },
     "text-field": {
@@ -172,7 +172,7 @@
       "element": {
         "alone": 27234,
         "lazy": 11693,
-        "added": 15398
+        "added": 15395
       }
     },
     "search": {
@@ -196,7 +196,7 @@
       "element": {
         "alone": 23963,
         "lazy": 0,
-        "added": 12436
+        "added": 12435
       }
     },
     "timepicker": {
@@ -220,7 +220,7 @@
       "element": {
         "alone": 17220,
         "lazy": 0,
-        "added": 5973
+        "added": 5971
       }
     },
     "navigation-bar": {
@@ -232,19 +232,19 @@
       "element": {
         "alone": 17789,
         "lazy": 0,
-        "added": 6573
+        "added": 6571
       }
     },
     "navigation-drawer": {
       "factory": {
-        "alone": 15921,
+        "alone": 15880,
         "lazy": 0,
-        "added": 7975
+        "added": 7934
       },
       "element": {
-        "alone": 21482,
+        "alone": 21435,
         "lazy": 0,
-        "added": 9613
+        "added": 9565
       }
     },
     "tabs": {
@@ -266,7 +266,7 @@
         "added": 11147
       },
       "element": {
-        "alone": 24703,
+        "alone": 24701,
         "lazy": 2218,
         "added": 14240
       }
@@ -283,18 +283,6 @@
         "added": 2826
       }
     },
-    "bottom-app-bar": {
-      "factory": {
-        "alone": 8039,
-        "lazy": 0,
-        "added": 1247
-      },
-      "element": {
-        "alone": 12499,
-        "lazy": 0,
-        "added": 1348
-      }
-    },
     "toolbar": {
       "factory": {
         "alone": 18464,
@@ -302,7 +290,7 @@
         "added": 10013
       },
       "element": {
-        "alone": 24584,
+        "alone": 24582,
         "lazy": 7014,
         "added": 13160
       }
@@ -314,7 +302,7 @@
         "added": 6527
       },
       "element": {
-        "alone": 18962,
+        "alone": 18965,
         "lazy": 10429,
         "added": 7797
       }
@@ -333,14 +321,14 @@
     },
     "carousel": {
       "factory": {
-        "alone": 15494,
+        "alone": 15788,
         "lazy": 0,
-        "added": 8458
+        "added": 8747
       },
       "element": {
-        "alone": 20702,
+        "alone": 21009,
         "lazy": 0,
-        "added": 9399
+        "added": 9715
       }
     },
     "divider": {
@@ -364,19 +352,19 @@
       "element": {
         "alone": 25962,
         "lazy": 7023,
-        "added": 14836
+        "added": 14834
       }
     },
     "bottom-sheet": {
       "factory": {
-        "alone": 11685,
+        "alone": 12539,
         "lazy": 0,
-        "added": 4172
+        "added": 4991
       },
       "element": {
-        "alone": 16994,
+        "alone": 17848,
         "lazy": 0,
-        "added": 5310
+        "added": 6146
       }
     },
     "side-sheet": {
@@ -436,7 +424,7 @@
       "element": {
         "alone": 25226,
         "lazy": 7024,
-        "added": 14103
+        "added": 14104
       }
     },
     "tooltip": {

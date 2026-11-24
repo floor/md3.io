@@ -1,7 +1,7 @@
 {
-  "material": "3.16.1",
+  "material": "3.16.2",
   "addons": "3.2.0",
-  "measured": "2026-11-23",
+  "measured": "2026-11-24",
   "gzip": 9,
   "core": {
     "factory": 15893,
@@ -34,9 +34,9 @@
     },
     "colorpicker": {
       "factory": {
-        "alone": 36259,
+        "alone": 36261,
         "lazy": 0,
-        "added": 27355
+        "added": 27357
       }
     },
     "expansion-panel": {
@@ -53,9 +53,9 @@
     },
     "form": {
       "factory": {
-        "alone": 31711,
+        "alone": 31712,
         "lazy": 0,
-        "added": 24455
+        "added": 24456
       }
     },
     "skeleton": {
@@ -77,7 +77,7 @@
         "added": 17515
       },
       "element": {
-        "alone": 28493,
+        "alone": 28486,
         "lazy": 0,
         "added": 16472
       }

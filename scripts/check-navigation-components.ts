@@ -145,15 +145,6 @@ try {
       await choose('type', 'large');
       await toggle('scrolled');
       await frame.locator('.mtrl-top-app-bar--scrolled').waitFor();
-    } else if (slug === 'bottom-app-bar') {
-      await frame.getByRole('button', { name: 'Compose', exact: true }).click();
-      await page.locator('#playground-status').filter({ hasText: 'Compose clicked' }).waitFor();
-      await toggle('hasFab');
-      await frame.getByRole('button', { name: 'Compose', exact: true }).waitFor({ state: 'hidden' });
-      await toggle('visible');
-      await frame.locator('.mtrl-bottom-app-bar--hidden').waitFor({ state: 'attached' });
-      await toggle('visible');
-      await frame.locator('.mtrl-bottom-app-bar--hidden').waitFor({ state: 'detached' });
     }
     await reset();
     if (slug === 'menu') {
@@ -205,13 +196,13 @@ try {
       }
     }
     await reset();
-    await page.getByRole('tab', { name: 'View code', exact: true }).click();
+    await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
     const source = await page.evaluate(() => navigator.clipboard.readText());
     assert(source.includes(components[slug].factory) && source === await page.locator('#generated-code').textContent(), `${slug}: copied code is stale`);
     assert(await page.locator('#generated-code .hljs-keyword').count() > 0, `${slug}: no syntax highlighting`);
-    await page.getByRole('tab', { name: 'Live preview' }).click();
+    await page.getByRole('tab', { name: 'Preview', exact: true }).click();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await panel.checkPlaygroundScroll(page, slug, 'fit');
     await page.setViewportSize({ width: 1280, height: 640 });
@@ -223,12 +214,6 @@ try {
       await choose('type', 'center');
       await choose('actions', '2');
       await frame.getByRole('button', { name: 'Bookmark' }).waitFor();
-      await page.screenshot({ path: `${output}/${slug}-mobile-center.png`, fullPage: true, animations: 'disabled' });
-    }
-    if (slug === 'bottom-app-bar') {
-      await choose('fabPosition', 'center');
-      await choose('actions', '3');
-      await frame.getByRole('button', { name: 'Share' }).waitFor();
       await page.screenshot({ path: `${output}/${slug}-mobile-center.png`, fullPage: true, animations: 'disabled' });
     }
     await page.setViewportSize({ width: 1440, height: 900 });

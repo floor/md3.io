@@ -63,7 +63,7 @@
 /* The measure is for prose, not the column: paragraphs, list items and
    blockquotes stop at a comfortable reading width, while headings, code blocks
    and tables keep the column's width. Widened from 42ch at the owner's request
-   (2026-11-21): 68ch is about 85 characters of DIN Alternate a line. */
+   (2026-11-21), then 80ch and 100ch (2026-11-24). */
 .md :is(p, li, blockquote) {
     max-width: var(--measure);
 }
@@ -302,17 +302,23 @@
 
 /* ─── Tables ─────────────────────────────────────────────────────────────── */
 
+/* Every table spans the column; its box scrolls sideways when the table is wider. */
+.md .md-table {
+    overflow-x: auto;
+    margin-bottom: 24px;
+}
+
 .md table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 16px;
     font-size: var(--fs-md);
+    line-height: 1.5;
 }
 
 .md thead th {
     text-align: left;
     font-weight: var(--fw-bold);
-    color: var(--text);
+    color: var(--text-dim);
     padding: 8px 12px;
     border-bottom: 2px solid var(--border);
     font-size: var(--fs-2xs);
@@ -320,8 +326,21 @@
     letter-spacing: 0.5px;
 }
 
+/* The name column keeps one width across tables, so descriptions line up page-wide. */
+.md table:not(:has([align="right"])) :is(thead th, tbody td):first-child {
+    width: 11em;
+}
+
+/* A right-aligned column (|---:|) holds figures: its header aligns with them, and it
+   takes only its widest figure, leaving the free width to the text. */
+.md :is(th, td)[align="right"] {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+}
+
 .md tbody td {
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border);
     color: var(--text-muted);
     vertical-align: top;
@@ -437,9 +456,6 @@
 
     .md table {
         font-size: 14px;
-        display: block;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .md thead th {
@@ -450,13 +466,6 @@
         font-size: 13px;
     }
 
-    .md table thead,
-    .md table tbody,
-    .md table tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-    }
 }
 
 /* A documentation block for one framework (the Frameworks page's guides and their tables
@@ -504,11 +513,6 @@ pre.doc-install__command[data-package-manager="bun"],
 .page-nav__label { color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .5px; text-transform: uppercase; }
 .page-nav__title { color: var(--accent-text); font-size: var(--fs-md); font-weight: var(--fw-bold); overflow-wrap: anywhere; }
 @media (width < 600px) { .page-nav { grid-template-columns: 1fr; } .page-nav__link--next { grid-column: 1; } }
-
-/* The documentation overview: each page's name and its opening sentence, the whole card a link. */
-.doc-entry { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 18px; text-decoration: none; }
-.doc-entry__name { color: var(--text); font-size: var(--fs-base); font-weight: var(--fw-bold); }
-.doc-entry__summary { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; color: var(--text-muted); font-size: var(--fs-sm); line-height: 1.5; }
 
 /* Documentation pages use the whole column between the sidebar and the table of contents. */
 .document-layout .md { max-width: none; margin: 0; padding: 32px 48px 80px; }

@@ -37,7 +37,7 @@ describe('the components overview', () => {
     expect(html).not.toContain('/dist/material/elements/preupgrade.css');
     expect(html).toContain(catalogTokens);
     expect(html).not.toContain('material/styles/base.css');
-    const cards = html.split('class="component-card ').slice(1);
+    const cards = html.split('class="component-card"').slice(1);
     expect(cards.length).toBe(componentSlugs.length);
     for (const card of cards) expect(card.split('</a>')[0]).not.toContain('↗');
   });

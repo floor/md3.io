@@ -230,7 +230,7 @@ export function materialControl(control: Control, slug: string, initial: Record<
 
 /**
  * Preview / Code on a Showcase example. The same `m-tabs` markup as the playground's
- * Live preview / View code (styles/playground-material.css seats that row).
+ * Preview / Code (styles/playground-material.css seats that row).
  */
 export function exampleViewTabs(view: 'preview' | 'code'): string {
   return renderElement('m-tabs', { value: view, 'aria-label': 'Example view' },
@@ -254,9 +254,9 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // factories (createButton()), the size readout's own word for it. Its id stays
   // 'vanilla', so a choice saved on another page still applies.
   const frameworks = frameworkChips(id => hasElement || id === 'vanilla');
-  // Live preview / View code.
+  // Preview / Code.
   const tabs = renderElement('m-tabs', { value: 'live', 'aria-label': 'Playground view' },
-    declaration('tab', 'live', 'Live preview') + declaration('tab', 'code', 'View code'), renderStyles);
+    declaration('tab', 'live', 'Preview') + declaration('tab', 'code', 'Code'), renderStyles);
   // Theme and mode come from the site header (one appearance for the whole site,
   // site.ts): the heading keeps only the form's copy of them, for the state and the
   // generated code. playground.ts sets them from the site and on md3:appearance.

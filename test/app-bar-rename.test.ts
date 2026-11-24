@@ -86,28 +86,14 @@ describe('App bar naming and compatibility', () => {
     }
   });
 
-  test('Bottom app bar stays live, indexed, marked and points to Toolbar', async () => {
-    const catalog = await (await get('/components/')).text();
-    expect(catalog).toContain('<m-badge variant="small" label="Deprecated"');
-    expect(catalog).toContain('</m-badge> Deprecated</span>');
-    for (const path of ['/components/bottom-app-bar/', '/docs/components/bottom-app-bar/']) {
-      const response = await get(path);
-      expect(response.status).toBe(200);
-      const html = await response.text();
-      expect(html).not.toMatch(/<m-drawer-item[^>]*badge=/);
-      expect(html).toContain('<strong>Deprecated.</strong>');
-      expect(html).toContain('href="/components/toolbar/"');
-      expect(sitemapPages().map(page => page.path)).toContain(path);
+  test('Bottom app bar is gone: its URLs redirect to Toolbar, query kept', async () => {
+    for (const [from, to] of [['/components/bottom-app-bar/?x=1', '/components/toolbar/?x=1'], ['/docs/components/bottom-app-bar/', '/docs/components/toolbar/'], ['/preview/bottom-app-bar/', '/preview/toolbar/']] as const) {
+      const response = await get(from);
+      expect(response.status).toBe(301);
+      expect(response.headers.get('location')).toBe(to);
     }
-    const docs = await (await get('/docs/components/bottom-app-bar/')).text();
-    const article = docs.split('<article class="md">')[1]?.split('</article>')[0] ?? '';
-    expect((article.match(/<strong>Deprecated\.<\/strong>/g) ?? []).length).toBe(1);
-    const title = article.indexOf('<h1');
-    const description = article.indexOf('A bottom app bar puts');
-    const chips = article.indexOf('class="framework-chips-row');
-    const notice = article.indexOf('<blockquote>');
-    expect(title >= 0 && description > title && chips > description && notice > chips).toBe(true);
-    expect(article.includes('href="/components/toolbar/"')).toBe(true);
-    expect(searchSite('createBottomAppBar').find(result => result.section === 'Components')).toMatchObject({ title: 'Bottom app bar', group: 'Deprecated', url: '/components/bottom-app-bar/' });
+    expect(await (await get('/components/')).text()).not.toContain('/components/bottom-app-bar/');
+    expect(sitemapPages().map(page => page.path)).not.toContain('/components/bottom-app-bar/');
+    expect(searchSite('createBottomAppBar').filter(result => result.title === 'Bottom app bar')).toEqual([]);
   });
 });

@@ -5,12 +5,12 @@ import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guide
 import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
-import { isHiddenPath, showcasePublic } from './src/shared/visibility';
+import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
-import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
+import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
-import { catalogTokens, catalogVisuals } from './src/server/catalog';
+import { catalogCard, docCard, catalogTokens, catalogVisuals } from './src/server/catalog';
 import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
@@ -65,10 +65,10 @@ const checkIcon = readFileSync(resolve(import.meta.dir, 'icons/check.svg'), 'utf
 const themeMenu = `<template id="theme-menu-template" data-check="${checkIcon}"><m-menu anchor="theme-picker" position="bottom-end" aria-label="Theme">${themes.map(theme => `<m-menu-item value="${theme}">${themeLabel(theme)}</m-menu-item>`).join('')}</m-menu></template>`;
 // The mode button, material's icon button too: both Material Symbols in its icon slot,
 // each shown by a root variable the mode sets (shell.css), so it is right at first
-// paint; site.ts keeps its label ("Switch site to … mode") in step.
+// paint. It shows where a click goes: the moon in light mode, the sun in dark; site.ts keeps its label ("Switch site to … mode") in step.
 const modeIcon = (name: 'dark_mode' | 'light_mode', mode: 'dark' | 'light') =>
   readFileSync(resolve(import.meta.dir, `icons/${name}.svg`), 'utf8').trim().replace('<svg ', `<svg style="display: var(--site-mode-icon-${mode})" `);
-const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-label': 'Switch site mode', icon: modeIcon('dark_mode', 'dark') + modeIcon('light_mode', 'light') }, '', renderStyles);
+const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-label': 'Switch site mode', icon: modeIcon('dark_mode', 'light') + modeIcon('light_mode', 'dark') }, '', renderStyles);
 // The search trigger, material's button. Until its definition loads on a page, the rendered inner
 // button is the control, so it carries the popup semantics; search.ts restores them after an upgrade.
 const searchKeys = '<span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>';
@@ -141,16 +141,11 @@ function page(path: string, title: string, description: string, template: string
   const componentDrawer = isComponents
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
-      // The rail's Components entry and "All components" lead to the overview; the list holds components only.
-      : renderSectionDrawer(path, 'Component list', playgroundDirectory.entries)
+      : renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
   const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
-  const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, [
-    ...sidebarGroups.flatMap(group => [{ name: group.label }, ...group.items]),
-    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries),
-      ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
-  ]) : '';
+  const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, sidebarEntries(sidebarGroups, isDocs)) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
   const panelStyles = isAddons ? 'addon-panel' : 'material-panel';
@@ -159,7 +154,7 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -194,16 +189,58 @@ const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/
 const primaryDestinations = [
   { label: 'Components', href: '/components/', icon: 'tab' },
   ...(addonsPublic ? [{ label: 'Add-ons', href: '/addons/', icon: 'add' }] : []),
-  { label: 'Styles', href: '/styles/', icon: 'palette' },
+  ...(stylesPublic ? [{ label: 'Styles', href: '/styles/', icon: 'palette' }] : []),
   ...(showcasePublic ? [{ label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' }] : []),
   { label: 'Docs', href: '/docs/', icon: 'article' },
 ];
+// The site's rail is material's navigation rail. The header slot holds search, which the
+// page moves in from the phone's bar, and the button that opens the modal drawer on a tablet.
+const railAttr = (value: string) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+const railMark = '<img src="/assets/brand/mark.svg" width="24" height="24" alt="">';
+const railMoveSearch = "<script>if (matchMedia('(width >= 600px)').matches) document.currentScript.parentElement.append(document.querySelector('#search-trigger'));</script>";
+const railCache = new Map<string, string>();
+const primaryRail = (current: string): string => {
+  let markup = railCache.get(current);
+  if (!markup) {
+    const items = [{ label: 'Material', href: '/', markup: railMark }, ...primaryDestinations.map(item => ({ label: item.label, href: item.href, markup: icon(item.icon) }))]
+      .map(item => `<m-navigation-rail-item value="${item.href}" href="${item.href}" icon="${railAttr(item.markup)}">${item.label}</m-navigation-rail-item>`).join('');
+    const opener = `<button type="button" class="site-icon-button site-nav-button" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden>${icon('menu')}</button>`;
+    markup = renderElement('m-navigation-rail', { ...(current ? { value: current } : {}), 'no-toggle': true, 'aria-label': 'Primary navigation' }, `<div slot="header" class="site-rail-top ${HEADER_SCOPE}">RAIL_HEADER</div>${items}`, renderStyles)
+      .replace('RAIL_HEADER', () => headerScopeScript + opener + railMoveSearch);
+    railCache.set(current, markup);
+  }
+  return markup;
+};
+/** A section page's own drawer: its groups, and on Docs every component's reference. */
+function sidebarEntries(groups: readonly { label: string; items: readonly { name: string; href: string }[] }[], isDocs: boolean) {
+  return [
+    ...groups.flatMap(group => [{ name: group.label }, ...group.items]),
+    // The Docs list's Components group is the reference pages alone: the components overview
+    // is the Components section's page, not a document.
+    ...(isDocs ? [{ name: 'Components' }, ...documentationDirectory.entries,
+      ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
+  ];
+}
+/** Each rail destination's drawer rows, in the page, so resting on the rail fills the drawer at once. */
+let railSectionsJson = '';
+function railSections(): string {
+  if (railSectionsJson) return railSectionsJson;
+  const sections: Record<string, { label: string; rows: string }> = {
+    '/components/': { label: 'Component list', rows: drawerItems(componentDrawerEntries(playgroundDirectory.entries)) },
+    ...(stylesPublic ? { '/styles/': { label: 'Styles links', rows: drawerItems(sidebarEntries(stylesGroups, false)) } } : {}),
+    '/docs/': { label: 'Docs links', rows: drawerItems(sidebarEntries(documentationGroups, true)) },
+  };
+  if (addonsPublic) sections['/addons/'] = { label: 'Add-ons list', rows: drawerItems([{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries]) };
+  if (showcasePublic) sections['/showcase/'] = { label: 'Showcase links', rows: drawerItems(sidebarEntries(exampleGroups, false)) };
+  // Safe inside a script element: no "</script" can survive the escape.
+  return railSectionsJson = JSON.stringify(sections).replaceAll('<', '\\u003c');
+}
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const documentationOrder = [...documentationGroups, {
   label: 'Components',
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
 }, ...(addonsPublic ? [addonDocGroup] : [])];
-const readingOrder = [documentationOrder, stylesGroups, ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
+const readingOrder = [documentationOrder, ...(stylesPublic ? [stylesGroups] : []), ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.
@@ -302,8 +339,10 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('/drawer/', '/navigation-drawer/') + url.search } });
-  else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogVisuals });
-  else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogVisuals, install: renderInstall('material-addons material') });
+  // Bottom app bar left the site for Toolbar; its published URLs keep working.
+  else if (path === '/components/bottom-app-bar/' || path === '/docs/components/bottom-app-bar/' || path === '/preview/bottom-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('bottom-app-bar', 'toolbar') + url.search } });
+  else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogCard, catalogVisuals });
+  else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogCard, catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&
     (componentMatch[1] === 'preview' || path === playgroundHref(componentMatch[2]!))) {
     const slug = componentMatch[2]!;
@@ -347,7 +386,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');
-  else if (path === '/docs/') response = page(path, 'Docs — material', 'Configuration and API references for the material library\'s components.', 'docs');
+  else if (path === '/docs/') response = page(path, 'Docs — material', 'Configuration and API references for the material library\'s components.', 'docs', { docCard });
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
   else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
   else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });

@@ -82,17 +82,72 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .preview-footer #playground-status { overflow-wrap: anywhere; }
 .catalog-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px; }
 .architecture-link { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; font-size: var(--fs-base); }
-.docs-group { margin-top: 30px; }
-.docs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.doc-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; font-size: var(--fs-base); }
-.doc-card > span + span { color: var(--text-dim); }
+/* Overview pages (Components, Docs): a hero that spans the column, close to its edges,
+   and a body set further in. The page is the container that sizes both. */
+.page-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.page-hero__text {
+  display: flex; flex-direction: column; justify-content: center; gap: 24px;
+  min-height: 280px; box-sizing: border-box; padding: 40px 24px;
+  border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low);
+}
+/* The title fills its tile and never overflows it: sized from the tile's own width. */
+.page-hero__text { container-type: inline-size; }
+.page-hero__text h1 { margin: 0; font-size: clamp(40px, 18cqi, 112px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
+.page-hero__text p { margin: 0; max-width: 34em; font-size: clamp(18px, 4.2cqi, 24px); line-height: 1.45; color: var(--mtrl-sys-color-on-surface); }
+/* For now a plain field of the theme's primary container colour. */
+.page-hero__art { min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); }
+@container (min-width: 760px) {
+  .page-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .page-hero__text { min-height: 420px; padding: 56px 48px; }
+}
+.page-hero-body {
+  box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto;
+  padding: clamp(48px, 7cqi, 96px) clamp(12px, 5cqi, 64px) 0;
+}
+.docs-overview { padding: 8px 8px 64px; container-type: inline-size; }
+/* A documentation page keeps the overview body's side inset and width. */
+.page-wrap:has(> .document-layout) { padding: 8px 8px 64px; container-type: inline-size; }
+.page-wrap > .document-layout {
+  box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto;
+  padding-inline: clamp(12px, 5cqi, 64px); gap: 48px;
+}
+.page-wrap > .document-layout > .md { padding-inline: 0; }
+.page-wrap > .document-layout > .doc-toc { margin-inline-end: 0; }
+/* The docs overview: its groups and cards follow the components overview's, without the visual. */
+.docs-group + .docs-group { margin-block-start: 36px; }
+.docs-group h2 { margin: 0 0 20px; font-size: clamp(28px, 3cqi, 36px); line-height: 1.25; font-weight: 400; }
+.docs-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@container (min-width: 580px) { .docs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (min-width: 900px) { .docs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.doc-card { display: block; height: 100%; }
+.doc-card::part(card) { height: 100%; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); transition: background-color 150ms ease; }
+.doc-card:hover::part(card) { background: var(--mtrl-sys-color-surface-container-high); }
+.doc-card::part(content) { flex: 1; padding: 0; }
+.doc-card__body { position: relative; height: 100%; box-sizing: border-box; padding: 20px 24px 24px; }
+.doc-card__body h3 { margin: 0 0 8px; font-size: 24px; line-height: 32px; font-weight: 400; }
+.doc-card__body h3 a { color: inherit; text-decoration: none; }
+/* The whole card is the link. */
+.doc-card__body h3 a::after { content: ""; position: absolute; inset: 0; border-radius: 28px; }
+.doc-card__body h3 a:focus-visible { outline: none; }
+.doc-card__body h3 a:focus-visible::after { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
+.doc-card__body p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin: 0; font-size: 16px; line-height: 24px; color: var(--text-muted); }
 .document-layout { display: flex; min-width: 0; }
 .document-layout .md { min-width: 0; flex: 1; width: 100%; padding: var(--document-padding); }
 .doc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
 .doc-toc { display: none; width: 190px; flex-shrink: 0; position: sticky; top: 90px; max-height: calc(100vh - 110px); overflow: auto; margin: 44px 20px 0 0; align-self: flex-start; }
-.doc-toc a { display: flex; align-items: center; min-height: var(--site-target-size); color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs); padding: 3px 0; }
-.doc-toc a:hover { color: var(--accent-text); }
-.md table { display: block; max-width: 100%; overflow-x: auto; }
+.doc-toc a {
+  display: flex; align-items: center; min-height: var(--site-target-size); padding: 3px 0 3px 16px;
+  border-inline-start: 2px solid var(--mtrl-sys-color-outline-variant);
+  color: var(--text-dim); text-decoration: none; font-size: var(--fs-xs);
+  transition: color 150ms, border-color 150ms;
+}
+.doc-toc a:hover { color: var(--text); }
+/* The section being read: a primary bar on the track, and stronger text. */
+.doc-toc a[aria-current] { border-inline-start-color: var(--mtrl-sys-color-primary); color: var(--mtrl-sys-color-primary); font-weight: var(--fw-bold); }
+/* With a mouse the list is dense; touch keeps the 48px target. */
+@media (hover: hover) and (pointer: fine) {
+  .doc-toc a { min-height: 32px; padding-block: 4px; line-height: 1.4; }
+}
 .landing { width: 100%; max-width: 1120px; margin: auto; padding: 0 22px; }
 .landing .hero { padding: 50px 0 36px; }
 .landing .hero__name { font-size: clamp(44px, 6vw, 72px); line-height: 1.08; margin: 24px 0; }
@@ -123,7 +178,6 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 }
 @media (min-width: 840px) {
   .header__logo { padding: 3px 12px; }
-  .docs-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 1200px) {
   .doc-toc { display: block; }

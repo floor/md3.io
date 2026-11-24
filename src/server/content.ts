@@ -13,7 +13,7 @@ export const addonDocsDir = resolve(root, 'docs/addons');
 const groups: Record<string, string[]> = {
   'Actions': ['button', 'icon-button', 'button-group', 'split-button', 'fab', 'extended-fab', 'fab-menu'],
   'Selection & input': ['checkbox', 'switch', 'radios', 'chips', 'slider', 'text-field', 'select', 'search', 'datepicker', 'timepicker'],
-  'Navigation': ['navigation-rail', 'navigation-bar', 'navigation-drawer', 'tabs', 'menu', 'app-bar', 'bottom-app-bar', 'toolbar', 'navigation'],
+  'Navigation': ['navigation-rail', 'navigation-bar', 'navigation-drawer', 'tabs', 'menu', 'app-bar', 'toolbar', 'navigation'],
   'Containment': ['card', 'list', 'carousel', 'divider', 'dialog', 'bottom-sheet', 'side-sheet'],
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
 };
@@ -112,9 +112,32 @@ export const docGroups = [...Object.entries(groups).map(([label, items]) => ({ l
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
-/** A document's markdown, without its front matter. */
+/**
+ * Facts a document quotes from the installed material package, so a release cannot leave the
+ * page behind: `{{material.version}}`, `{{material.sizes}}` (the README's CI-measured size
+ * table, between its `<!-- sizes -->` markers) and `{{material.stylesheet}}` (the full
+ * stylesheet's gzip size from that table, in whole kB). A missing table fails the build.
+ */
+let facts: Record<string, string> | undefined;
+const libraryFacts = (): Record<string, string> => {
+  if (facts) return facts;
+  const readme = readFileSync(resolve(root, 'node_modules/material/README.md'), 'utf8');
+  const sizes = /<!-- sizes -->\r?\n([\s\S]*?)\r?\n<!-- \/sizes -->/.exec(readme)?.[1]?.trim();
+  if (!sizes) throw new Error('node_modules/material/README.md has no <!-- sizes --> table');
+  const stylesheet = /^\|\s*`material\/styles`, the full stylesheet\s*\|\s*([\d.]+) kB\s*\|$/m.exec(sizes)?.[1];
+  if (!stylesheet) throw new Error('The material README size table has no full stylesheet row');
+  return facts = { version: libraryVersion(), sizes, stylesheet: String(Math.round(Number(stylesheet))) };
+};
+const withLibraryFacts = (source: string): string => source.includes('{{material.')
+  ? source.replace(/\{\{material\.(\w+)\}\}/g, (token, name: string) => {
+    const value = libraryFacts()[name];
+    if (value === undefined) throw new Error(`Unknown document fact ${token}`);
+    return value;
+  })
+  : source;
+/** A document's markdown, without its front matter, with the library's facts filled in. */
 export const documentSource = (slug: string): string =>
-  readFileSync(resolve(root, documentFile(slug)), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  withLibraryFacts(readFileSync(resolve(root, documentFile(slug)), 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ''));
 /** One document's heading ids, in order: a slug of the title, numbered when it repeats. */
 export function headingIds(): (text: string) => { title: string; id: string } {
   const ids = new Map<string, number>();
@@ -189,7 +212,10 @@ function renderMarkdown(source: string, idPrefix = '') {
       return `<a href="${escapeHTML(href)}"${token.title ? ` title="${escapeHTML(token.title)}"` : ''}>${this.parser.parseInline(token.tokens)}</a>`;
     },
   } });
-  const html = parser.parse(source) as string;
+  // Each table fills the column and scrolls sideways in its own box when it is wider.
+  const html = (parser.parse(source) as string)
+    .replaceAll('<table>', '<div class="md-table"><table>')
+    .replaceAll('</table>', '</table></div>');
   return { html, toc, examples };
 }
 
@@ -199,7 +225,7 @@ const hasFrameworkBlocks = (source: string) => /data-for-framework=/.test(source
 /** Links into a hidden section (src/shared/visibility.ts) render as their text, so the
  * documents keep their wording and the links return when the section is published. */
 export function unlinkHidden(html: string): string {
-  return html.replace(/<a href="(\/(?:showcase|addons|docs\/addons)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (link, href: string, text: string) => isHiddenPath(href) ? text : link);
+  return html.replace(/<a href="(\/(?:showcase|addons|docs\/addons|styles)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (link, href: string, text: string) => isHiddenPath(href) ? text : link);
 }
 export function renderDocument(slug: string) {
   if (!slugs.has(slug)) return null;

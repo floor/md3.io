@@ -5,25 +5,27 @@
     <%~ include('component-list', it) %>
   </details>
   <section class="page-wrap component-catalog" aria-label="<%= it.isAddons ? 'Add-on previews' : 'Component previews' %>">
-    <header class="component-catalog__intro">
-      <h1><%= it.isAddons ? 'Add-ons' : 'Components' %></h1>
-      <% if (it.isAddons) { %>
-      <p><code>material-addons</code> extends Material with components that use the same design tokens.</p>
-      <%~ it.install %>
-      <% } else { %>
-      <p>Try a component. Adjust the details. Copy what works.</p>
-      <% } %>
+    <header class="page-hero">
+      <div class="page-hero__text">
+        <h1><%= it.isAddons ? 'Add-ons' : 'Components' %></h1>
+        <% if (it.isAddons) { %>
+        <p><code>material-addons</code> extends Material with components that use the same design tokens.</p>
+        <%~ it.install %>
+        <% } else { %>
+        <p>Every Material 3 component, built for the web: plain JavaScript, web components, React, Vue, Svelte and SolidJS. Try one live, adjust the details, and copy what works.</p>
+        <% } %>
+      </div>
+      <div class="page-hero__art" aria-hidden="true"></div>
     </header>
+    <div class="page-hero-body">
     <% it.playgroundDirectory.sections.forEach(section => { %>
       <section class="component-catalog__section"<% if (!it.isAddons) { %> aria-labelledby="catalog-<%= section.id %>"<% } %>>
         <% if (!it.isAddons) { %><h2 id="catalog-<%= section.id %>"><%= section.name %></h2><% } %>
-        <div class="component-grid"><% section.items.forEach(({ slug, href }) => { const component = it.components[slug]; %>
-          <article class="component-card ui-card">
-            <div class="component-card__body"><h3><a href="<%= href %>"><%= component.name %></a></h3><p><%= component.summary %></p><% if (it.componentDeprecations[slug]) { %><span class="catalog-status"><m-badge variant="small" label="Deprecated" color="secondary" aria-hidden="true"></m-badge> Deprecated</span><% } %></div>
-            <%~ it.catalogVisuals[slug] %>
-          </article>
+        <div class="component-grid"><% section.items.forEach(({ slug, href }) => { %>
+          <%~ it.catalogCard(slug, href, Boolean(it.componentDeprecations[slug])) %>
         <% }); %></div>
       </section>
     <% }); %>
+    </div>
   </section>
 </div>

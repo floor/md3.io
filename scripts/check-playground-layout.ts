@@ -33,8 +33,8 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
   const frame = page.frameLocator('#preview');
   const revealFrame = () => page.locator('#preview').evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
   const form = page.locator('#configuration');
-  const live = page.getByRole('tab', { name: 'Live preview', exact: true });
-  const codeTab = page.getByRole('tab', { name: 'View code', exact: true });
+  const live = page.getByRole('tab', { name: 'Preview', exact: true });
+  const codeTab = page.getByRole('tab', { name: 'Code', exact: true });
   const copy = page.getByRole('button', { name: 'Copy code', exact: true });
   const code = page.locator('#generated-code');
   const longText = 'A longer button label to check keyboard focus and horizontally scrollable code';
@@ -56,7 +56,9 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         const previewBox = await preview.boundingBox();
         const formBox = await form.boundingBox();
         assert(previewBox && formBox, `${label}: missing preview or configuration`);
-        if (width < 840) {
+        // The panes stack below 1040px (styles/playground-material.css): two columns there
+        // would leave the preview too narrow to show a component.
+        if (width < 1040) {
           assert(previewBox.y + previewBox.height <= formBox.y && Math.abs(formBox.width - previewBox.width) < 1, `${label}: preview and configuration must stack`);
         } else {
           assert(previewBox.x + previewBox.width <= formBox.x && Math.abs(formBox.y - previewBox.y) < 1, `${label}: the panes must sit side by side`);
@@ -64,10 +66,10 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         }
         assert(await page.locator('.framework-chips-row').count() === 1 && await page.locator('.preview-panel .framework-chips-row').count() === 0, `${label}: framework chips are not the one row under the heading`);
         if (width === 840) {
-          const list = await page.locator('.component-list').boundingBox();
-          assert(list && Math.abs(list.width - 160) < 1, `${label}: the component list must reserve 160px`);
+          // The component list is the rail's drawer, over the page: nothing reserves room for it.
+          assert(!await page.locator('main .component-list').isVisible(), `${label}: the page's own list takes room`);
           const used = await preview.evaluate(element => element.getBoundingClientRect().left);
-          assert(Math.abs(used - 276) < 1, `${label}: expected 96px rail, 160px list and 20px padding before the preview, got ${used}px`);
+          assert(Math.abs(used - 116) < 1, `${label}: expected the 96px rail and 20px padding before the preview, got ${used}px`);
         }
         await panel.checkPlaygroundScroll(page, label, height < 860 ? 'page' : 'fit');
 
@@ -162,7 +164,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(new URL(path, base).href);
-        await page.locator('h1').waitFor();
+        await page.locator('#content h1').waitFor();
         const place = await page.evaluate(() => {
           const rows = [...document.querySelectorAll('.framework-chips-row')];
           const h1 = document.querySelector('h1')!.getBoundingClientRect();
@@ -193,7 +195,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
     assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'documentation: the framework chips are not reachable right after the heading');
     await page.goto(new URL('showcase/settings/', base).href);
     await page.evaluate(() => (document.querySelector('h1') as HTMLElement).setAttribute('tabindex', '-1'));
-    await page.locator('h1').focus();
+    await page.locator('#content h1').focus();
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press('Tab');
       if (await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null)) break;

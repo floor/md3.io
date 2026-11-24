@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { addonsPublic, showcasePublic, stylesPublic } from '../src/shared/visibility';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { Browser, Frame, Locator, Page } from 'playwright';
@@ -45,7 +45,8 @@ async function geometry(page: Page) {
       return { x: x + scrollX, y: y + scrollY, width, height };
     };
     return {
-      header: box(document.querySelector('.header')),
+      // The phone's app bar, or from 600px (no app bar) the rail: the shell's own chrome.
+      header: box(document.querySelector('.header')) ?? box(document.getElementById('site-primary-rail')),
       main: box(document.querySelector('main')),
       heading: box(document.querySelector('main h1')),
       frames: [...document.querySelectorAll('main iframe[title]')].map(frame => ({
@@ -71,7 +72,8 @@ async function checkChrome(page: Page, destinations: string[], width: number, la
   assert(dimensions.root <= dimensions.viewport, `${label}: document is ${dimensions.root}px in a ${dimensions.viewport}px viewport`);
   const nav = page.getByRole('navigation', { name: 'Primary navigation', exact: true });
   assert.equal(await nav.count(), 1, `${label}: one primary navigation landmark`);
-  assert.deepEqual(await nav.getByRole('link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), destinations, label);
+  // The rail (from 600px) leads with the home page; the phone's bar does not.
+  assert.deepEqual(await nav.getByRole('link').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), width < 600 ? destinations : ['/', ...destinations], label);
   return nav;
 }
 
@@ -159,7 +161,8 @@ async function checkOverlays(page: Page, captures: string, width: number) {
   await page.setViewportSize({ width, height });
   await input.press('Escape');
   await dialog.waitFor({ state: 'hidden' });
-  await page.locator('#search-trigger:focus-visible').waitFor();
+  // material's search button: focus returns to its inner button.
+  await page.locator('#search-trigger button.mtrl-button:focus-visible').waitFor();
   if (width >= 600 && width < 840) {
     const open = page.locator('#site-nav-open');
     await open.press('Enter');
@@ -191,7 +194,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
     ...stylePages.map(({ href }) => ({ name: href.replace(/^\/|\/$/g, '').replaceAll('/', '-'), path: href })),
   ];
   // Hidden sections (src/shared/visibility.ts) have no navigation entry.
-  const destinations = ['/components/', ...(addonsPublic ? ['/addons/'] : []), '/styles/', ...(showcasePublic ? [showcase] : []), '/docs/'];
+  const destinations = ['/components/', ...(addonsPublic ? ['/addons/'] : []), ...(stylesPublic ? ['/styles/'] : []), ...(showcasePublic ? [showcase] : []), '/docs/'];
   const measurements: { viewport: typeof viewports[number]; path: string; cold: Geometry; settled: Geometry; delayed: { fonts: number; scripts: number } }[] = [];
   const context = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', deviceScaleFactor: 1 });
   try {
@@ -276,7 +279,8 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
             await page.frameLocator('#preview').getByRole('button', { name: 'Phone and resize', exact: true }).waitFor();
             await page.screenshot({ path: `${captures}/configured-playground-${viewport.width}.png`, animations: 'disabled' });
           }
-          await checkFooter(page, label);
+          // The site's one footer is at the end of the home page.
+          if (entry.name === 'home') await checkFooter(page, label);
           const resized = viewports[(index + 1) % viewports.length]!;
           await page.setViewportSize(resized);
           await checkChrome(page, destinations, resized.width, `${label} resized to ${resized.width}px`);

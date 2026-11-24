@@ -2,7 +2,7 @@ import type { ComponentSlug } from '../shared/components';
 
 // Family labels follow https://m3.material.io/components. Their members use md3.io slugs.
 const families = [
-  { id: 'buttons', name: 'Buttons', slugs: ['button', 'button-group', 'extended-fab', 'fab', 'fab-menu', 'icon-button', 'split-button'] },
+  { id: 'buttons', name: 'Buttons', slugs: ['button-group', 'button', 'extended-fab', 'fab-menu', 'fab', 'icon-button', 'split-button'] },
   { id: 'date-time-pickers', name: 'Date & time pickers', slugs: ['datepicker', 'timepicker'] },
   { id: 'loading-progress', name: 'Loading & progress', slugs: ['loading-indicator', 'progress'] },
   { id: 'navigation', name: 'Navigation', slugs: ['navigation-drawer', 'navigation-bar', 'navigation-rail'] },
@@ -14,11 +14,14 @@ const familyBySlug = new Map<string, (typeof families)[number]>(
 );
 export const componentFamilyOf = (slug: string) => familyBySlug.get(slug);
 
+const buttonOrder: readonly string[] = families[0].slugs;
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'en');
 export function componentDirectory<T extends { slug: string; name: string; href: string }>(items: readonly T[]) {
   const sorted = [...items].sort(byName);
   const sections = families.map(({ id, name }) => ({
-    id, name, items: sorted.filter(item => componentFamilyOf(item.slug)?.id === id),
+    id, name, items: sorted.filter(item => componentFamilyOf(item.slug)?.id === id)
+      // Buttons follow the family's own order, as the M3 overview lists them.
+      .sort((a, b) => id === 'buttons' ? buttonOrder.indexOf(a.slug) - buttonOrder.indexOf(b.slug) : 0),
   })).filter(section => section.items.length);
   const others = sorted.filter(item => !componentFamilyOf(item.slug));
   return {

@@ -26,7 +26,7 @@ export async function checkTargets(targets: Locator, description: string, allowE
     const target = field ?? label ?? node;
     const bounds = target.getBoundingClientRect();
     const hitPart = target.matches('.mtrl-chip__action') ? '::before'
-      : target.matches('.mtrl-button, .mtrl-icon-button, .site-icon-button, .mtrl-drawer__item, .mtrl-menu__item, .mtrl-select, [part~="field"], .mtrl-slider__container, [part~="toggle-type"], [part~="cancel"], [part~="confirm"], .mtrl-text-field__trailing-icon')
+      : target.matches('.component-card h3 a, .doc-card h3 a, .mtrl-button, .mtrl-icon-button, .site-icon-button, .mtrl-drawer__item, .mtrl-menu__item, .mtrl-select, [part~="field"], .mtrl-slider__container, [part~="toggle-type"], [part~="cancel"], [part~="confirm"], .mtrl-text-field__trailing-icon')
         ? '::after' : null;
     const hit = hitPart && getComputedStyle(target, hitPart);
     const expanded = hit && hit.content !== 'none' && hit.pointerEvents !== 'none';
@@ -100,7 +100,8 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       page.setDefaultTimeout(10000);
       page.on('pageerror', error => errors.push(error.message));
       const goto = (path: string) => page.goto(new URL(path, base).href);
-      const search = page.locator('#search-trigger');
+      // The search button is material's: its inner button carries the 48px touch area (::after).
+      const search = page.locator('#search-trigger button.mtrl-button');
       const theme = page.locator('#theme-picker button[part~="icon-button"]');
       const mode = page.locator('#theme-toggle button[part~="icon-button"]');
       const searchDialog = page.getByRole('dialog', { name: 'Search the site' });
@@ -122,8 +123,13 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await searchDialog.waitFor({ state: 'hidden' });
       assert(await search.evaluate(node => node.matches(':focus-visible')), 'Search returns visible keyboard focus');
 
-      await page.keyboard.press('Tab');
-      await page.locator('#theme-picker:defined button[part~="icon-button"]:focus-visible').waitFor();
+      // From 600px the search tops the rail and the theme buttons end it: Tab passes the
+      // destinations on the way.
+      const onTheme = () => page.evaluate(() => !!document.activeElement?.closest('#theme-picker'));
+      for (let step = 0; step < 8 && !await onTheme(); step++) await page.keyboard.press('Tab');
+      assert(await onTheme(), `${width}px: Tab does not reach the theme button`);
+      // The search dialog's close releases the page a moment later: measure once nothing is inert.
+      await page.waitForFunction(() => !document.querySelector('#theme-picker')?.closest('[inert]'));
       await checkTargets(theme, `${width}px upgraded theme trigger`);
       await page.keyboard.press('Enter');
       const menu = page.locator('.header__themes m-menu [part~="menu"]');
@@ -132,7 +138,8 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await menu.waitFor({ state: 'hidden' });
       assert(await theme.evaluate(node => node.matches(':focus-visible')), 'Theme menu returns visible focus');
       await page.keyboard.press('Shift+Tab');
-      assert(await search.evaluate(node => document.activeElement === node), 'Shift+Tab returns to the search button');
+      assert(await page.evaluate(() => document.activeElement !== document.body && !document.activeElement?.closest('#theme-picker')), 'Shift+Tab moves back from the theme button');
+      await search.focus();
 
       await search.press('Enter');
       await query.fill('dialog');
@@ -146,7 +153,11 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await edge(page, nav.getByRole('link', { name: 'Components', exact: true }), 'touch', 'right');
       await page.waitForURL(new URL('components/', base).href);
       const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
-      if (width < 840) await page.locator('#component-catalog-index summary').click();
+      // On a touchscreen the section list opens from the navigation button at every width.
+      const sectionOpener = page.getByRole('button', { name: width < 600 ? 'Open section navigation' : 'Expand navigation', exact: true });
+      await checkTargets(sectionOpener, `${width}px section navigation button`);
+      await edge(page, sectionOpener, 'touch');
+      await componentList.waitFor();
       await checkTargets(componentList.getByRole('button'), `${width}px component family disclosures`);
       // The drawer is dense (36dp rows, 48dp targets), so neighbouring targets overlap
       // vertically by design: tap a row's side edge, not its top outset.
@@ -171,11 +182,11 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
 
       const tabs = page.getByRole('tablist', { name: 'Playground view' });
       await checkTargets(tabs.getByRole('tab'), `${width}px preview tabs`);
-      const liveTab = tabs.getByRole('tab', { name: 'Live preview', exact: true });
-      await tabs.getByRole('tab', { name: 'View code', exact: true }).press('ArrowLeft');
+      const liveTab = tabs.getByRole('tab', { name: 'Preview', exact: true });
+      await tabs.getByRole('tab', { name: 'Code', exact: true }).press('ArrowLeft');
       assert(await liveTab.evaluate(node => (node.getRootNode() as ShadowRoot).activeElement === node), 'ArrowLeft moves focus to the live tab');
       await liveTab.press('Enter');
-      await page.getByRole('tabpanel', { name: 'Live preview', exact: true }).waitFor();
+      await page.getByRole('tabpanel', { name: 'Preview', exact: true }).waitFor();
       await checkTargets(page.getByRole('button', { name: 'Copy code', exact: true }), `${width}px copy control`);
 
       const config = page.locator('#configuration');
@@ -241,12 +252,12 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await page.getByRole('tab', { name: 'Code', exact: true }).click();
       await checkTargets(page.getByRole('button', { name: 'Copy code', exact: true }), `${width}px example copy`);
       await goto('/docs/frameworks/');
-      if (width < 840) {
-        const index = page.locator('#section-index summary');
-        await checkTargets(index, `${width}px documentation index toggle`);
-        await edge(page, index, 'touch');
-      }
-      await checkTargets(page.locator('#sidebar m-drawer a[part~="item"]'), `${width}px documentation list links`);
+      await page.getByRole('button', { name: width < 600 ? 'Open section navigation' : 'Expand navigation', exact: true }).click();
+      const docsList = page.getByRole('navigation', { name: 'Docs links', exact: true });
+      await docsList.waitFor();
+      await checkTargets(docsList.locator('a[part~="item"]'), `${width}px documentation list links`);
+      await page.keyboard.press('Escape');
+      await docsList.waitFor({ state: 'hidden' });
       await goto('/styles/');
       const previewToggle = page.locator('#styles-preview-toggle');
       if (width < 840) {
@@ -282,8 +293,10 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
     for (const width of [360, 1440]) {
       await staticPage.setViewportSize({ width, height: 900 });
       await staticPage.goto(new URL('components/datepicker/', base).href);
+      // Without scripts a phone shows none of these (the theme buttons sit in the hidden rail
+      // until a script moves them): check the size of whichever are shown.
       await checkTargets(staticPage.locator('#theme-picker button, #theme-toggle button, m-text-field[data-picker] button'),
-        `${width}px server-rendered controls`);
+        `${width}px server-rendered controls`, width < 600);
     }
   } finally {
     await staticContext.close();
