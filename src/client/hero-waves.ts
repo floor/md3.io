@@ -10,7 +10,7 @@
 //   data-points="4-8"                   points per wave, a range
 //   data-amplitude="32-64"              how far a point strays from its line, a range
 //   data-seed="md3"                     the same drawing on every visit (otherwise new each time)
-//   data-gradient="off"                 flat fills of the theme's colours instead of gradients
+//   data-gradient="on"                  gradients between two roles instead of flat fills (off by default)
 //   data-shape="rings"                  waves (diagonal bands), swell (rolling hills), blobs, dunes,
 //                                       rings, petals, ribbons or pebbles
 // The page address overrides any of them with a hero- prefix: ?hero-shape=blobs&hero-seed=7.
@@ -40,7 +40,7 @@ export const WAVES_DEFAULTS: WavesOptions = {
   depth: 3,
   points: [4, 8],
   amplitude: [32, 64],
-  gradient: true,
+  gradient: false,
 };
 
 type Point = { x: number; y: number };
