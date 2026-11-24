@@ -10,7 +10,7 @@
 //   data-points="4-8"                   points per wave, a range
 //   data-amplitude="32-64"              how far a point strays from its line, a range
 //   data-seed="md3"                     the same drawing on every visit (otherwise new each time)
-//   data-shape="swell"                  waves (diagonal bands), swell (rolling hills), blobs, dunes,
+//   data-shape="rings"                  waves (diagonal bands), swell (rolling hills), blobs, dunes,
 //                                       rings, petals, ribbons or pebbles
 // The page address overrides any of them with a hero- prefix: ?hero-shape=blobs&hero-seed=7.
 const SVG = 'http://www.w3.org/2000/svg';
@@ -30,7 +30,7 @@ export interface WavesOptions {
 }
 
 export const WAVES_DEFAULTS: WavesOptions = {
-  shape: 'swell',
+  shape: 'rings',
   waves: 7,
   // The theme's accents, and their containers.
   roles: ['primary', 'secondary', 'tertiary', 'primary-container', 'secondary-container', 'tertiary-container'],
