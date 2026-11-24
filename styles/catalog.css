@@ -67,13 +67,6 @@
 .catalog-visual--text-field m-text-field, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
 .catalog-visual--search m-search { flex: 1; width: 100%; min-width: 0; max-width: 100%; }
 .catalog-visual--search m-search::part(search) { min-width: 0; width: 100%; }
-/* The screen is drawn small, so the frame reads as a whole phone, not a close-up. */
-.catalog-visual--search .catalog-frame__status { zoom: 0.6; }
-.catalog-visual--search .catalog-frame__screen { padding: 7px; justify-content: flex-start; }
-/* The bar is scaled with a transform, not zoom: its expanded view opens in the top layer,
-   placed from the bar's on-screen box, and an inherited zoom would shrink that placement
-   a second time (material 3.16.2's search place() reads the box but not the zoom). */
-.catalog-visual--search m-search { flex: none; width: calc(100% / 0.6); max-width: none; transform: scale(0.6); transform-origin: top left; }
 .catalog-visual--tabs .catalog-frame__screen { padding: 4px 0 0; }
 /* Three two-line rows fit the list preview at this scale. */
 .catalog-visual--list m-list { width: 320px; zoom: 0.8; border-radius: 16px; overflow: hidden; }

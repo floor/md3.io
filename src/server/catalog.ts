@@ -95,7 +95,7 @@ const visuals: Record<ComponentSlug, string> = {
   select: m('select', { variant: 'outlined', label: 'Fruit', value: 'apple', 'supporting-text': 'Choose a favorite' },
     [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']].map(([value, label]) => m('select-option', { value }, label!)).join('')),
   // The expanded view opens in the page's top layer, never inside the phone: the card keeps the bar.
-  search: m('search', { placeholder: 'Search places', 'aria-label': 'Search places', 'no-expand-on-focus': true }),
+  search: m('search', { placeholder: 'Search places', 'aria-label': 'Search places', 'no-expand-on-focus': true, 'trailing-icon': symbols.mic, 'trailing-label': 'Search by voice' }),
   datepicker: `<${SURFACES.datepicker}></${SURFACES.datepicker}>`,
   timepicker: `<${SURFACES.timepicker}></${SURFACES.timepicker}>`,
   // Navigation
