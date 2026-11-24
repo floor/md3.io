@@ -754,12 +754,14 @@ const jsxName = (name: string): string => (/^(aria|data)-/.test(name) ? name : c
 
 /** JSX / Svelte props: camelCase, booleans bare, numbers in braces. React takes `style` as an object.
  * A component's props are its adapter's (camelCase); a native node's names are the DOM's own. */
-const jsxAttrs = (attrs: Attr[], react = false, native = false): string =>
+const jsxAttrs = (attrs: Attr[], react = false, native = false, tag = ''): string =>
   attrs.map(a => {
     // A checkbox's initial state, as React writes it: `checked` alone is the controlled
     // spelling, which warns without an onChange handler a static tab does not have.
     if (react && a.name === 'checked') return ' defaultChecked';
-    const name = native ? jsxName(a.name) : camel(a.name);
+    // Solid sets a raw custom element's camelCase names as properties its declaration does
+    // not read (an <m-list-item>'s supportingText): there it keeps the attribute's own name.
+    const name = native && !react && tag.includes('-') ? a.name : native ? jsxName(a.name) : camel(a.name);
     // A custom property keeps its name, quoted: React sets it with setProperty.
     if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${p.startsWith('--') ? `'${p}'` : camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
     if (a.ref) return ` ${name}={${a.ref}}`;
@@ -824,7 +826,7 @@ const htmlNode = (nested: NestedChild): string => nested.native
 /** A nested node in React or Solid: an mtrl component, or a native tree recursing. */
 const jsxNode = (nested: NestedChild, react: boolean): string => element(
   nested.native ? nested.element : pascal(nested.element),
-  jsxAttrs(nested.attrs, react, nested.native),
+  jsxAttrs(nested.attrs, react, nested.native, nested.element),
   nested.native && nested.children?.length ? nativeBody(nested.children, child => jsxNode(child, react)) : escapeText(nested.text),
 );
 
