@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { handleRequest } from '../server';
 import { renderDocument } from '../src/server/content';
 import { SECTIONS, searchSite, tokenize } from '../src/server/search';
-import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { addonsPublic, showcasePublic, stylesPublic } from '../src/shared/visibility';
 
 
 const components = (query: string) => searchSite(query).filter(result => result.section === 'Components').map(result => result.url);
@@ -56,6 +56,7 @@ describe('site search', () => {
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
   test('the Styles pages are found by what they list', () => {
+    if (!stylesPublic) { expect(searchSite('typography').some(result => result.section === 'Styles')).toBe(false); return; }
     expect(searchSite('typography')[0]).toMatchObject({ section: 'Styles', url: '/styles/typography/' });
     expect(searchSite('primary container').find(result => result.section === 'Styles')?.url).toBe('/styles/color/');
   });

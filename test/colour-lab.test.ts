@@ -5,6 +5,7 @@ import { LAB_DEFAULT, LAB_ROLES, LAB_VARIANTS, contrastGrade, labCss, labJavaScr
 import { contrastRatio } from '../src/shared/color';
 import { handleRequest } from '../server';
 import { searchSite } from '../src/server/search';
+import { stylesPublic } from '../src/shared/visibility';
 
 const factories = { tonalSpot, vibrant, expressive, fidelity, content, neutral, monochrome };
 const tokensFor = (scheme: ReturnType<typeof createScheme>) => {
@@ -28,8 +29,9 @@ describe('Colour Lab', () => {
     expect(html.match(/data-role-copy=/g)).toHaveLength(40);
     expect(html.match(/data-seed=/g)).toHaveLength(6);
     expect(html.match(/data-sample=/g)).toHaveLength(3);
-    expect(await (await handleRequest(new Request('http://localhost/sitemap.xml'))).text()).toContain('https://md3.io/styles/color-lab/');
-    expect(searchSite('sourceColorFromImage').some(item => item.url === '/styles/color-lab/')).toBe(true);
+    // A hidden Styles section (src/shared/visibility.ts) is served but neither in the sitemap nor in search.
+    expect(await (await handleRequest(new Request('http://localhost/sitemap.xml'))).text()).toContain(stylesPublic ? 'https://md3.io/styles/color-lab/' : '<urlset');
+    expect(searchSite('sourceColorFromImage').some(item => item.url === '/styles/color-lab/')).toBe(stylesPublic);
     const overview = await (await handleRequest(new Request('http://localhost/styles/'))).text();
     expect(overview).toContain('Open Colour Lab');
   });

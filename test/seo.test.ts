@@ -10,7 +10,7 @@ import { examples } from '../src/server/examples';
 import { stylePages } from '../src/server/styles';
 import { mtrlVersion } from '../src/server/tokens';
 import { gitDates, jsonForScript } from '../src/server/seo';
-import { addonsPublic, showcasePublic } from '../src/shared/visibility';
+import { addonsPublic, showcasePublic, stylesPublic } from '../src/shared/visibility';
 
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
@@ -25,7 +25,7 @@ describe('sitemap and robots', () => {
     // Hidden sections (src/shared/visibility.ts) are left out of the sitemap.
     const expected = ['/', '/components/', ...(addonsPublic ? ['/addons/'] : []), '/docs/', ...(showcasePublic ? ['/showcase/'] : []), '/privacy/',
       ...[...componentSlugs, ...(addonsPublic ? addonSlugs : [])].map(playgroundHref), ...docSlugs.map(docHref).filter(href => addonsPublic || !href.startsWith('/docs/addons/')),
-      ...stylePages.map(page => page.href), ...(showcasePublic ? examples.map(example => `/showcase/${example.slug}/`) : [])];
+      ...(stylesPublic ? stylePages.map(page => page.href) : []), ...(showcasePublic ? examples.map(example => `/showcase/${example.slug}/`) : [])];
     expect([...paths].sort()).toEqual([...new Set(expected)].sort());
     expect(paths.filter(path => /^\/(preview|api)\/|\/frame\//.test(path))).toEqual([]);
     expect([...xml.matchAll(/<lastmod>([^<]*)<\/lastmod>/g)].every(match => /^\d{4}-\d{2}-\d{2}$/.test(match[1]!))).toBe(true);

@@ -5,6 +5,7 @@ import { baseline, shapeScale, shapeUsage, themeBase } from '../src/server/token
 import { M3_CORNER_SCALE, M3_SHAPE_COUNT } from '../src/shared/m3-shape';
 import { SHAPE_GALLERY } from '../src/shared/shape-gallery';
 import { SHAPE_NAMES } from '../src/shared/shape-library';
+import { stylesPublic } from '../src/shared/visibility';
 
 const get = (path: string) => handleRequest(new Request(`http://localhost${path}`));
 
@@ -15,7 +16,8 @@ describe('Styles pages', () => {
       expect(response.status).toBe(200);
       const html = await response.text();
       expect(html).toContain(`<h1>${heading}</h1>`);
-      expect(html).toContain(`<a class="site-nav-link" href="/styles/" aria-current="${path === '/styles/' ? 'page' : 'location'}">`);
+      if (stylesPublic) expect(html).toContain(`<a class="site-nav-link" href="/styles/" aria-current="${path === '/styles/' ? 'page' : 'location'}">`);
+      else expect(html).toContain('<meta name="robots" content="noindex" />');
       expect(html).toMatch(new RegExp(`<a(?=[^>]*part="item")(?=[^>]*href="${path}")(?=[^>]*aria-current="page")[^>]*>`));
       expect(html).toMatch(/\/dist\/css\/styles\.[a-f0-9]{10}\.css/);
       expect(html).not.toContain('/styles/styles-pages.css');
@@ -80,7 +82,7 @@ describe('Styles pages', () => {
     expect(html).toMatch(/\/dist\/styles-frame\.[a-f0-9]{10}\.js/);
   });
   test('the shape page is in the sitemap and the sidebar', async () => {
-    expect(await (await get('/sitemap.xml')).text()).toContain('<loc>https://md3.io/styles/shape/</loc>');
+    expect((await (await get('/sitemap.xml')).text()).includes('<loc>https://md3.io/styles/shape/</loc>')).toBe(stylesPublic);
     expect(await (await get('/styles/color/')).text()).toMatch(/<a[^>]*part="item"[^>]*href="\/styles\/shape\//);
   });
   test('Styles is not active on other sections, and the stylesheet stays off them', async () => {

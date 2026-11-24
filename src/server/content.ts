@@ -225,7 +225,7 @@ const hasFrameworkBlocks = (source: string) => /data-for-framework=/.test(source
 /** Links into a hidden section (src/shared/visibility.ts) render as their text, so the
  * documents keep their wording and the links return when the section is published. */
 export function unlinkHidden(html: string): string {
-  return html.replace(/<a href="(\/(?:showcase|addons|docs\/addons)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (link, href: string, text: string) => isHiddenPath(href) ? text : link);
+  return html.replace(/<a href="(\/(?:showcase|addons|docs\/addons|styles)\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (link, href: string, text: string) => isHiddenPath(href) ? text : link);
 }
 export function renderDocument(slug: string) {
   if (!slugs.has(slug)) return null;

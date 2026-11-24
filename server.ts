@@ -5,7 +5,7 @@ import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guide
 import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
-import { isHiddenPath, showcasePublic } from './src/shared/visibility';
+import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
@@ -189,7 +189,7 @@ const exampleGroups = [{ label: 'Showcase', items: [{ name: 'Overview', href: '/
 const primaryDestinations = [
   { label: 'Components', href: '/components/', icon: 'tab' },
   ...(addonsPublic ? [{ label: 'Add-ons', href: '/addons/', icon: 'add' }] : []),
-  { label: 'Styles', href: '/styles/', icon: 'palette' },
+  ...(stylesPublic ? [{ label: 'Styles', href: '/styles/', icon: 'palette' }] : []),
   ...(showcasePublic ? [{ label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' }] : []),
   { label: 'Docs', href: '/docs/', icon: 'article' },
 ];
@@ -225,7 +225,7 @@ function railSections(): string {
   if (railSectionsJson) return railSectionsJson;
   const sections: Record<string, { label: string; rows: string }> = {
     '/components/': { label: 'Component list', rows: drawerItems(componentDrawerEntries(playgroundDirectory.entries)) },
-    '/styles/': { label: 'Styles links', rows: drawerItems(sidebarEntries(stylesGroups, false)) },
+    ...(stylesPublic ? { '/styles/': { label: 'Styles links', rows: drawerItems(sidebarEntries(stylesGroups, false)) } } : {}),
     '/docs/': { label: 'Docs links', rows: drawerItems(sidebarEntries(documentationGroups, true)) },
   };
   if (addonsPublic) sections['/addons/'] = { label: 'Add-ons list', rows: drawerItems([{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries]) };
@@ -238,7 +238,7 @@ const documentationOrder = [...documentationGroups, {
   label: 'Components',
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
 }, ...(addonsPublic ? [addonDocGroup] : [])];
-const readingOrder = [documentationOrder, stylesGroups, ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
+const readingOrder = [documentationOrder, ...(stylesPublic ? [stylesGroups] : []), ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
 // dist/material/styles/<name>.js imports the stylesheets its component needs.
