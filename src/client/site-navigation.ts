@@ -205,6 +205,9 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
   life.events(drawerPanel).addEventListener('click', event => {
     const link = event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
     if (!link) return;
+    // A modified click opens the page elsewhere (a new tab or window): this page stays current.
+    const mouse = event as MouseEvent;
+    if (mouse.button !== 0 || mouse.metaKey || mouse.ctrlKey || mouse.shiftKey || mouse.altKey) return;
     const drawer = drawerPanel.querySelector<HTMLElement & { value: string }>('m-drawer');
     if (drawer && new URL(link.href).origin === location.origin) drawer.value = new URL(link.href).pathname;
     if (!docked()) hide();
