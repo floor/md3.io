@@ -115,10 +115,15 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
       drawerPanel.dataset.section = href;
       drawerPanel.scrollTop = 0;
     }
-    if (drawer.value !== location.pathname) {
+    // The row this page belongs to: its own, or the closest one above it (a component's
+    // Develop tab marks the component).
+    const here = location.pathname;
+    const rowsHrefs = [...section.rows.matchAll(/href="([^"]+)"/g)].map(match => match[1]!);
+    const marked = rowsHrefs.includes(here) ? here : rowsHrefs.filter(href => href !== '/' && here.startsWith(href)).sort((a, b) => b.length - a.length)[0] ?? here;
+    if (drawer.value !== marked) {
       // Moving the selection must not move the list the person is looking at.
       const top = drawerPanel.scrollTop;
-      drawer.value = location.pathname;
+      drawer.value = marked;
       if (sameSection) {
         drawerPanel.scrollTop = top;
         requestAnimationFrame(() => { drawerPanel.scrollTop = top; });
@@ -129,7 +134,7 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
     if (!sameSection) {
       const current = drawer;
       requestAnimationFrame(() => {
-        if (current.value !== location.pathname) current.value = location.pathname;
+        if (current.value !== marked) current.value = marked;
         const row = current.shadowRoot?.querySelector<HTMLElement>('[aria-current="page"]');
         if (!row?.getClientRects().length) return;
         const pane = drawerPanel.getBoundingClientRect();
