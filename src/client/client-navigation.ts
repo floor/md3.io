@@ -65,6 +65,8 @@ function swapBody(next: Document) {
   // old content. moveBefore preserves its custom-element instance and pill animation.
   // Adopted, not imported: an import copies nodes without their shadow roots, so the
   // server-rendered material elements (cards, drawers) arrived empty and unstyled.
+  // The destination drawer's selection, read before adoption empties the parsed page.
+  const destinationValue = nextMain.querySelector('m-drawer')?.getAttribute('value') ?? nextIndex?.querySelector('m-drawer')?.getAttribute('value') ?? '';
   if (nextIndex) layout.insertBefore(document.adoptNode(nextIndex), content);
   content.append(...[...nextMain.childNodes].map(node => document.adoptNode(node)));
   const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer:not(.site-rail-drawer m-drawer)')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
@@ -86,8 +88,9 @@ function swapBody(next: Document) {
     // Same section: keep the live drawer so its selection pill animates to the new item.
     move(persistentDrawer, replacement.parentElement!, replacement);
     replacement.remove();
-    const selected = nextMain.querySelector('m-drawer')?.getAttribute('value') ?? nextIndex?.querySelector('m-drawer')?.getAttribute('value') ?? '';
+    const selected = destinationValue;
     persistentDrawer.value = selected;
+    persistentDrawer.setAttribute('value', selected);
     // Declarative changes are observed in a microtask; expand through the public API.
     queueMicrotask(() => {
       if (persistentDrawer) persistentDrawer.value = selected;
