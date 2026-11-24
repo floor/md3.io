@@ -69,7 +69,7 @@
 .catalog-visual--search m-search::part(search) { min-width: 0; width: 100%; }
 /* The screen is drawn small, so the frame reads as a whole phone, not a close-up. */
 .catalog-visual--search .catalog-frame__status { zoom: 0.6; }
-.catalog-visual--search .catalog-frame__screen { padding: 7px; }
+.catalog-visual--search .catalog-frame__screen { padding: 7px; justify-content: flex-start; }
 /* The bar is scaled with a transform, not zoom: its expanded view opens in the top layer,
    placed from the bar's on-screen box, and an inherited zoom would shrink that placement
    a second time (material 3.16.2's search place() reads the box but not the zoom). */

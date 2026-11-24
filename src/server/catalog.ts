@@ -94,7 +94,8 @@ const visuals: Record<ComponentSlug, string> = {
   'text-field': m('text-field', { variant: 'outlined', label: 'Name', placeholder: 'Enter your name', 'supporting-text': 'As you would like it displayed' }),
   select: m('select', { variant: 'outlined', label: 'Fruit', value: 'apple', 'supporting-text': 'Choose a favorite' },
     [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']].map(([value, label]) => m('select-option', { value }, label!)).join('')),
-  search: m('search', { placeholder: 'Search places', 'aria-label': 'Search places' }),
+  // The expanded view opens in the page's top layer, never inside the phone: the card keeps the bar.
+  search: m('search', { placeholder: 'Search places', 'aria-label': 'Search places', 'no-expand-on-focus': true }),
   datepicker: `<${SURFACES.datepicker}></${SURFACES.datepicker}>`,
   timepicker: `<${SURFACES.timepicker}></${SURFACES.timepicker}>`,
   // Navigation
