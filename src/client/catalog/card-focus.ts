@@ -11,14 +11,28 @@ export function keepFocusInCard(host: HTMLElement): void {
   const dismissing = () => {
     const x = scrollX, y = scrollY;
     title()?.focus({ preventScroll: true });
+    // Only material's own return is undone: once, and never after the person moves on
+    // (a key or the pointer), whose Tab or click goes where they send it.
+    const stop = () => {
+      clearTimeout(timer);
+      document.removeEventListener('focusin', away, true);
+      document.removeEventListener('keydown', stop, true);
+      document.removeEventListener('pointerdown', stop, true);
+    };
     const away = (event: FocusEvent) => {
       const card = title()?.closest('.component-card');
       if (card?.contains(event.target as Node)) return;
+      stop();
       scrollTo(x, y);
       title()?.focus({ preventScroll: true });
     };
+    const timer = setTimeout(stop, 1000);
     document.addEventListener('focusin', away, true);
-    setTimeout(() => document.removeEventListener('focusin', away, true), 1000);
+    // After the dismissing event itself has passed.
+    setTimeout(() => {
+      document.addEventListener('keydown', stop, true);
+      document.addEventListener('pointerdown', stop, true);
+    });
   };
   host.addEventListener('click', event => {
     if (event.composedPath().some(node => node instanceof HTMLButtonElement)) dismissing();
