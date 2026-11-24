@@ -174,11 +174,11 @@ async function styles(next: Document, signal: AbortSignal) {
     });
   }));
 }
-// Snapshot the changing content, leaving the mounted drawer's own animation live.
+// Only the closing modal drawer is snapshotted: it slides out while the page changes live
+// behind it. Nothing else is captured, so nothing can be stretched between two pages.
 function nameTransitionContent() {
   document.documentElement.style.viewTransitionName = 'none';
-  // Explicitly leave shell chrome out of snapshots, so the real drawer pill keeps
-  // animating on screen while only the page-content snapshot cross-fades.
+  // Shell chrome stays out of snapshots, so the real drawer pill keeps animating on screen.
   for (const shellElement of document.querySelectorAll<HTMLElement>('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')) shellElement.style.viewTransitionName = 'none';
   // The modal drawer leaves as part of the same transition: it slides out from its last frame
   // while the content changes behind it, instead of vanishing when the page swaps.
@@ -188,7 +188,6 @@ function nameTransitionContent() {
     document.documentElement.dataset.navDrawerLeaving = '';
   } else if (modalDrawer) modalDrawer.style.viewTransitionName = '';
   content!.style.viewTransitionName = '';
-  (content!.querySelector<HTMLElement>('#component-content, .component-catalog') ?? content!).style.viewTransitionName = 'page-content';
 }
 function hashTarget(url: URL) {
   let id: string;
@@ -242,14 +241,13 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     if (next.querySelector('.docs-frameworks')) await abortable(import('./docs-frameworks'), signal);
     if (next.querySelector('m-drawer.site-drawer')) await abortable(import('./catalog/drawer').then(module => module.defineSiteDrawer()), signal);
     if (signal.aborted) throw signal.reason;
-    // The page changes inside its own column: a transition scoped there never covers the rail
-    // or the drawer, which stay live and above it. Only a closing modal drawer animates over
-    // the whole window. Without scoped transitions the page swaps at once.
+    // The new page fades in where the old one was: no snapshots, so nothing to stretch between
+    // two pages of different heights, nothing for the browser to abort, and the rail and the
+    // drawer stay live throughout. Only a closing modal drawer uses a view transition, to slide
+    // out over the whole window while the page changes behind it.
     const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
     const modalClosing = !!document.querySelector<HTMLDialogElement>('#site-nav-dialog')?.open;
-    const scope = layout as (Element & { startViewTransition?: Document['startViewTransition'] }) | null;
-    const scoped = motion && !modalClosing && typeof scope?.startViewTransition === 'function';
-    const transitionEnabled = motion && (scoped || (modalClosing && !!document.startViewTransition));
+    const transitionEnabled = motion && modalClosing && !!document.startViewTransition;
     const swap = async () => {
       if (signal.aborted) return;
       closeShell();
@@ -274,22 +272,16 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     };
     if (transitionEnabled) {
       nameTransitionContent();
-      // A scoped transition needs layout containment on its scope. Only while it runs:
-      // containment would otherwise anchor the page's fixed elements to the column.
-      if (scoped) {
-        document.documentElement.toggleAttribute('data-page-transition', true);
-        // Apply the containment now: a transition started before style recalc is aborted.
-        void getComputedStyle(scope!).contain;
-      }
-      const transition = scoped ? scope!.startViewTransition!(swap) : document.startViewTransition(swap);
-      if (scoped) void transition.finished.catch(() => {}).finally(() => {
-        if (!scope!.matches(':active-view-transition')) document.documentElement.removeAttribute('data-page-transition');
-      });
+      const transition = document.startViewTransition(swap);
       // A newer navigation can skip an in-flight animation without failing its swap.
       void transition.ready.catch(() => {});
       void transition.finished.catch(() => {}).finally(() => { delete document.documentElement.dataset.navDrawerLeaving; });
       await transition.updateCallbackDone;
-    } else await swap();
+    } else {
+      await swap();
+      // Material's fade-through, incoming half: the page settles in as the old one is gone.
+      if (motion && !signal.aborted) content!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(0, 0, 0.2, 1)' });
+    }
   } catch {
     if (request === controller && !superseded) {
       // The API has already committed the destination entry; reload that entry.
