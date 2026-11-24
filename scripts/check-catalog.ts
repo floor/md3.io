@@ -310,9 +310,14 @@ try {
   assert(await visual('fab-menu').getByRole('menuitem').count() === 3, 'fab-menu: the open menu does not list its three items');
   await fabItem.click();
   await staysOnOverview('fab-menu');
-  await openClose('snackbar', 'Show snackbar',
-    async () => { await page.getByText('Your changes have been saved.').waitFor(); },
-    async () => { await page.getByRole('button', { name: 'Dismiss' }).click().catch(() => page.keyboard.press('Escape')); await page.waitForTimeout(200); });
+  // The snackbar card shows the snackbar in its phone: Undo closes it, and a fresh one returns.
+  await visual('snackbar').scrollIntoViewIfNeeded();
+  const snack = visual('snackbar').getByText('Your changes have been saved.');
+  await snack.waitFor();
+  await visual('snackbar').getByRole('button', { name: 'Undo', exact: true }).click();
+  await snack.waitFor({ state: 'hidden' });
+  await snack.waitFor();
+  await staysOnOverview('snackbar');
   // The time picker card shows the picker itself: an hour on its dial is chosen in place.
   await visual('timepicker').scrollIntoViewIfNeeded();
   await visual('timepicker').getByRole('option', { name: "3 o'clock", exact: true }).click();
