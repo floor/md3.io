@@ -87,10 +87,15 @@ function element<K extends keyof SVGElementTagNameMap>(name: K, attributes: Reco
   return node;
 }
 
-const range = (value: string | undefined, fallback: readonly [number, number]): [number, number] => {
+const range = (value: string | undefined, fallback: readonly [number, number], limits: readonly [number, number]): [number, number] => {
   const [min, max] = (value ?? '').split('-').map(Number);
-  return Number.isFinite(min) && Number.isFinite(max) ? [min!, max!] : [...fallback] as [number, number];
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [...fallback] as [number, number];
+  const clamp = (n: number) => Math.min(limits[1], Math.max(limits[0], n));
+  return [clamp(min!), clamp(max!)];
 };
+// The page address can set these, so they are bounded: a shared link cannot make the
+// drawing loop run for ever (Infinity) or for minutes (a billion points).
+const WAVES_LIMIT = 24, POINTS_LIMITS = [2, 32] as const, AMPLITUDE_LIMITS = [0, 400] as const;
 
 /**
  * The tile's options: its data attributes over the defaults, and the page address over
@@ -102,11 +107,11 @@ export function wavesOptions(tile: HTMLElement): WavesOptions {
   const [shape, waves, roles, depth, points, amplitude, seed, gradient] = ['shape', 'waves', 'roles', 'depth', 'points', 'amplitude', 'seed', 'gradient'].map(read);
   return {
     shape: (WAVES_SHAPES as readonly string[]).includes(shape ?? '') ? shape as WavesShape : WAVES_DEFAULTS.shape,
-    waves: Number(waves) > 0 ? Number(waves) : WAVES_DEFAULTS.waves,
+    waves: Number.isFinite(Number(waves)) && Number(waves) >= 1 ? Math.min(WAVES_LIMIT, Math.round(Number(waves))) : WAVES_DEFAULTS.waves,
     roles: roles ? roles.split(',').map(name => name.trim()).filter(Boolean) : WAVES_DEFAULTS.roles,
-    depth: depth !== undefined && Number.isFinite(Number(depth)) ? Number(depth) : WAVES_DEFAULTS.depth,
-    points: range(points, WAVES_DEFAULTS.points),
-    amplitude: range(amplitude, WAVES_DEFAULTS.amplitude),
+    depth: depth !== undefined && Number.isFinite(Number(depth)) ? Math.min(WAVES_LIMIT, Math.max(0, Number(depth))) : WAVES_DEFAULTS.depth,
+    points: range(points, WAVES_DEFAULTS.points, POINTS_LIMITS).map(Math.round) as [number, number],
+    amplitude: range(amplitude, WAVES_DEFAULTS.amplitude, AMPLITUDE_LIMITS),
     seed,
     gradient: gradient === undefined ? WAVES_DEFAULTS.gradient : !['off', 'false', 'no', '0', 'none'].includes(gradient.trim().toLowerCase()),
   };
