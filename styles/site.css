@@ -243,3 +243,6 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 @media (width < 600px) { .component-tabs__tab .inline-icon { display: none; } }
 /* The Develop and Accessibility pages: the article starts under the tabs. */
 .component-tab-page > .document-layout { margin-block-start: 40px; }
+/* A tab page keeps the component list for the shell (it docks the rail's drawer, which is
+   the list a person uses), out of sight. */
+.component-tab-layout > .component-list { display: none; }

@@ -144,7 +144,8 @@ function page(path: string, title: string, description: string, template: string
   const componentDrawer = isComponents
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
-      : renderSectionDrawer(path, 'Component list', componentDrawerEntries(playgroundDirectory.entries))
+      // A component's Develop or Accessibility tab marks the component itself.
+      : renderSectionDrawer(path.replace(/(?:develop|accessibility)\/$/, ''), 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
   const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';

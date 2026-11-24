@@ -1,5 +1,8 @@
+<div class="component-tab-layout">
+<%~ include('component-list', it) %>
 <div class="page-wrap component-tab-page" data-component="<%= it.slug %>"><%~ it.componentHeader %>
 <div class="document-layout"><article class="md">
   <%~ it.html %>
   <%~ it.pager %>
 </article><% if (it.toc.length) { %><aside class="doc-toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></aside><% } %></div></div>
+</div>
