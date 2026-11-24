@@ -10,6 +10,7 @@
 //   data-points="4-8"                   points per wave, a range
 //   data-amplitude="32-64"              how far a point strays from its line, a range
 //   data-seed="md3"                     the same drawing on every visit (otherwise new each time)
+//   data-gradient="off"                 flat fills of the theme's colours instead of gradients
 //   data-shape="rings"                  waves (diagonal bands), swell (rolling hills), blobs, dunes,
 //                                       rings, petals, ribbons or pebbles
 // The page address overrides any of them with a hero- prefix: ?hero-shape=blobs&hero-seed=7.
@@ -27,6 +28,8 @@ export interface WavesOptions {
   points: readonly [number, number];
   amplitude: readonly [number, number];
   seed?: string;
+  /** Each layer a gradient between two roles; off, a flat fill of its role. */
+  gradient: boolean;
 }
 
 export const WAVES_DEFAULTS: WavesOptions = {
@@ -37,6 +40,7 @@ export const WAVES_DEFAULTS: WavesOptions = {
   depth: 3,
   points: [4, 8],
   amplitude: [32, 64],
+  gradient: true,
 };
 
 type Point = { x: number; y: number };
@@ -95,7 +99,7 @@ const range = (value: string | undefined, fallback: readonly [number, number]): 
 export function wavesOptions(tile: HTMLElement): WavesOptions {
   const query = new URLSearchParams(location.search);
   const read = (name: string) => query.get(`hero-${name}`) ?? tile.dataset[name];
-  const [shape, waves, roles, depth, points, amplitude, seed] = ['shape', 'waves', 'roles', 'depth', 'points', 'amplitude', 'seed'].map(read);
+  const [shape, waves, roles, depth, points, amplitude, seed, gradient] = ['shape', 'waves', 'roles', 'depth', 'points', 'amplitude', 'seed', 'gradient'].map(read);
   return {
     shape: (WAVES_SHAPES as readonly string[]).includes(shape ?? '') ? shape as WavesShape : WAVES_DEFAULTS.shape,
     waves: Number(waves) > 0 ? Number(waves) : WAVES_DEFAULTS.waves,
@@ -104,6 +108,7 @@ export function wavesOptions(tile: HTMLElement): WavesOptions {
     points: range(points, WAVES_DEFAULTS.points),
     amplitude: range(amplitude, WAVES_DEFAULTS.amplitude),
     seed,
+    gradient: gradient === undefined ? WAVES_DEFAULTS.gradient : !['off', 'false', 'no', '0', 'none'].includes(gradient.trim().toLowerCase()),
   };
 }
 
@@ -236,6 +241,10 @@ export function drawWaves(tile: HTMLElement, options: WavesOptions = wavesOption
     const back = i < options.depth;
     const from = back ? darker(role(accent)) : role(accent);
     const to = back ? darker(role(turn(accent))) : role(turn(accent));
+    if (!options.gradient) {
+      svg.append(element('path', { d, style: `fill: ${from}` }));
+      continue;
+    }
     const gradient = element('linearGradient', { id: `${id}-${i}`, x1: 0.5, y1: 0, x2: 0, y2: 1 });
     gradient.append(
       element('stop', { offset: 0, style: `stop-color: color-mix(in srgb, ${from} 60%, white)` }),
