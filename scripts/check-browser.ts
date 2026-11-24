@@ -23,6 +23,8 @@ try {
   await page.getByRole('heading', { level: 1 }).waitFor();
   await page.screenshot({ animations: 'disabled', path: `${output}/home-desktop.png`, fullPage: true });
   await page.getByRole('link', { name: 'Explore components' }).click();
+  await page.waitForURL(url => url.pathname === '/components/');
+  await page.goto(new URL('/components/button/', base).href);
   const preview = page.frameLocator('#preview');
   const button = preview.getByRole('button', { name: 'Button', exact: true });
   await button.waitFor();
@@ -33,26 +35,26 @@ try {
   const originalButton = await button.elementHandle();
   const previewHeight = (await page.locator('.preview-panel').boundingBox())!.height;
   assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Live preview did not show Copy code in the preview heading');
-  await page.getByRole('tab', { name: 'View code', exact: true }).click();
-  assert(await page.getByRole('tabpanel', { name: 'View code' }).isVisible(), 'Code did not open in the playground');
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
+  assert(await page.getByRole('tabpanel', { name: 'Code', exact: true }).isVisible(), 'Code did not open in the playground');
   assert(await page.locator('#generated-code .hljs-keyword').count() > 0 && await page.locator('#generated-code .hljs-string').count() > 0, 'JavaScript syntax highlighting is missing');
   const darkKeywordColor = await page.locator('#generated-code .hljs-keyword').first().evaluate(element => getComputedStyle(element).color);
   // Copy code sits in the preview heading, material's xs button, in both views.
   assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Code view did not show Copy code in the preview heading');
   assert(!await page.locator('#preview').isVisible(), 'Preview remains visible in code view');
   assert(Math.abs((await page.locator('.preview-panel').boundingBox())!.height - previewHeight) < 1, 'Switching views changes playground height');
-  await page.getByRole('tab', { name: 'Live preview' }).focus();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).focus();
   await page.keyboard.press('Enter');
-  assert(await page.getByRole('tab', { name: 'Live preview' }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
+  assert(await page.getByRole('tab', { name: 'Preview', exact: true }).getAttribute('aria-selected') === 'true', 'Keyboard tab switching failed');
   // Copy code stays in the heading in Live preview too: copying needs no view switch.
   assert(await page.locator('.preview-heading > #copy-code').isVisible(), 'Live preview lost Copy code from the heading');
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
-  await page.getByRole('tab', { name: 'View code' }).focus();
+  await page.getByRole('tab', { name: 'Code', exact: true }).focus();
   await page.keyboard.press('Enter');
   await page.getByRole('textbox', { name: 'Text', exact: true }).fill('Code view update');
   assert((await page.locator('#generated-code').textContent())?.includes('Code view update'), 'Code view does not update with the configuration');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-desktop.png`, fullPage: true });
-  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).click();
   await preview.getByRole('button', { name: 'Code view update', exact: true }).waitFor();
   await page.getByRole('textbox', { name: 'Text', exact: true }).fill('<img src=x onerror=alert(1)>');
   assert((await page.locator('#generated-code').textContent())?.includes('<img src=x onerror=alert(1)>'), 'Highlighting changed literal code content');
@@ -93,7 +95,7 @@ try {
   assert(await preview.locator('html').getAttribute('data-theme-mode') === 'light', "The site's mode did not reach the preview");
   await page.locator('#theme-toggle').click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.themeMode === 'dark');
-  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
   await page.getByRole('button', { name: 'Copy code', exact: true }).click();
   await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
@@ -118,7 +120,7 @@ try {
     return document.documentElement.dataset.theme === 'ocean' && getComputedStyle(document.body).backgroundColor === surface;
   });
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
-  await page.getByRole('tab', { name: 'Live preview' }).click();
+  await page.getByRole('tab', { name: 'Preview', exact: true }).click();
   // The pilot has no Reset: the Scenario select's Default is the way back.
   assert(await page.getByRole('button', { name: 'Reset', exact: true }).count() === 0, 'The material panel still shows Reset');
   await page.locator('#scenario').click();
@@ -538,7 +540,7 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/button-mobile.png`, fullPage: true });
   const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].map(element => ({ tag: element.tagName, class: element.className, width: element.getBoundingClientRect().width, right: element.getBoundingClientRect().right })).filter(item => item.right > innerWidth + 1));
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `Mobile page overflows horizontally: ${JSON.stringify(overflow)}`);
-  await page.getByRole('tab', { name: 'View code', exact: true }).click();
+  await page.getByRole('tab', { name: 'Code', exact: true }).click();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile code view overflows the page');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-mobile.png`, fullPage: true });
   await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Docs', exact: true }).click();
