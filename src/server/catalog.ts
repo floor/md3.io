@@ -94,7 +94,7 @@ const visuals: Record<ComponentSlug, string> = {
   // A settings screen: Sound, with a slider for each volume beside its icon.
   slider: div('catalog-sound', `<div class="catalog-sound__bar" aria-hidden="true">${symbols.arrowBack}<span>Sound</span></div>`
     + ([[symbols.musicNote, 'Media volume', 60], [symbols.alarm, 'Alarm volume', 25]] as const).map(([icon, label, value]) =>
-      `<div class="catalog-sound__row"><span class="catalog-sound__icon" aria-hidden="true">${icon}</span><div class="catalog-sound__control"><span class="catalog-sound__label" aria-hidden="true">${label}</span>${m('slider', { value, min: 0, max: 100, 'aria-label': label })}</div></div>`).join('')),
+      `<div class="catalog-sound__row"><span class="catalog-sound__icon" aria-hidden="true">${icon}</span><div class="catalog-sound__control"><span class="catalog-sound__label" aria-hidden="true">${label}</span>${m('slider', { value, min: 0, max: 100, 'aria-label': label, 'show-value': label === 'Media volume' })}</div></div>`).join('')),
   'text-field': m('text-field', { variant: 'outlined', label: 'Name', placeholder: 'Enter your name', 'supporting-text': 'As you would like it displayed' }),
   select: m('select', { variant: 'outlined', label: 'Fruit', value: 'apple', 'supporting-text': 'Choose a favorite' },
     [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']].map(([value, label]) => m('select-option', { value }, label!)).join('')),

@@ -211,3 +211,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* The radio card: a settings group, its heading over two choices. */
 .catalog-choice { display: flex; flex-direction: column; gap: 4px; color: var(--mtrl-sys-color-on-surface); }
 .catalog-choice__title { font-size: 16px; line-height: 24px; padding-inline-start: 4px; }
+/* The value bubble shows at rest on the slider that asks for it, as it does while dragged. */
+.catalog-visual--slider m-slider[show-value]::part(value) { visibility: visible; opacity: 1; scale: 1; }
