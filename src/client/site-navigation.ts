@@ -124,6 +124,11 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
         requestAnimationFrame(() => { drawerPanel.scrollTop = top; });
       }
     }
+    // New rows are built a frame later, from an empty value: mark the current page again then.
+    if (!sameSection) {
+      const current = drawer;
+      requestAnimationFrame(() => { if (current.value !== location.pathname) current.value = location.pathname; });
+    }
     drawerPanel.inert = false;
     drawerPanel.setAttribute('data-open', '');
     return true;
