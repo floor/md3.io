@@ -33,6 +33,25 @@ export function closeSiteNavigation() {
 const RAIL_HOVER_DELAY = 140;
 /** The section whose rail item was just clicked: its drawer stays open through the navigation. */
 let keptSection = '';
+/** Where the pointer last was. After a page transition :hover reads false until the pointer leaves. */
+const lastPointer = { x: -1, y: -1 };
+document.addEventListener('pointermove', (event: PointerEvent) => { lastPointer.x = event.clientX; lastPointer.y = event.clientY; }, { capture: true, passive: true });
+/** A page transition is playing: hit tests and :hover see its overlay, not the page. */
+const inTransition = () => {
+  try { return document.documentElement.matches(':active-view-transition'); } catch { return false; }
+};
+/** What is under the pointer now: a rail link (read inside the rail's shadow root), the rail, or the drawer. */
+const underPointer = (railBox: HTMLElement, panel: HTMLElement) => {
+  if (lastPointer.x < 0) return { link: undefined, inRail: false, inPanel: false };
+  const hit = document.elementFromPoint(lastPointer.x, lastPointer.y);
+  const host = railBox.querySelector('m-navigation-rail');
+  const inner = host?.shadowRoot?.elementFromPoint(lastPointer.x, lastPointer.y);
+  return {
+    link: inner?.closest('a') ?? undefined,
+    inRail: !!hit && railBox.contains(hit),
+    inPanel: !!hit && panel.contains(hit),
+  };
+};
 
 /** Each destination's drawer rows, read once from its own page. */
 const sectionRows = new Map<string, Promise<{ rows: string; label: string } | null>>();
@@ -93,14 +112,19 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
   };
   const hideSoon = () => {
     // The page's transition takes the pointer off the rail for a moment after a rail click.
-    if (keptSection) return;
+    if (keptSection || inTransition()) return;
     clearTimeout(closing);
-    closing = setTimeout(hide, 160);
+    closing = setTimeout(() => { if (!inTransition()) hide(); }, 160);
   };
   const show = async (href: string) => {
     clearTimeout(closing);
     if (!pointer.matches) return false;
     wanted = href;
+    // Rows already there: open in this frame, so the page and the drawer move together.
+    if (drawerPanel.dataset.section === href && drawerPanel.querySelector('m-drawer')) {
+      drawerPanel.inert = false;
+      drawerPanel.setAttribute('data-open', '');
+    }
     const [section, { defineSiteDrawer }] = await Promise.all([rowsFor(href), import('./catalog/drawer')]);
     if (!life.active || wanted !== href) return false;
     if (!section) { if (href !== homeSection()) hide(); return false; }
@@ -213,7 +237,7 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
   });
   life.events(document).addEventListener('pointerdown', event => {
     const path = event.composedPath();
-    if (!path.includes(drawerPanel) && !path.includes(rail)) hide();
+    if (!inTransition() && !path.includes(drawerPanel) && !path.includes(rail)) hide();
   });
   const syncDock = () => document.documentElement.toggleAttribute('data-drawer-docked', docked());
   life.events(pointer).addEventListener('change', hide);
@@ -236,10 +260,23 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
   // the pointer can be read again, it closes if the pointer has left.
   if (keptSection) {
     void show(keptSection);
-    settling = setTimeout(() => {
+    const settle = () => {
+      // Read the pointer only once the transition is over; until then it sees the overlay.
+      if (inTransition()) { settling = setTimeout(settle, 60); return; }
       keptSection = '';
-      if (!rail.matches(':hover') && !drawerPanel.matches(':hover')) hide();
-    }, 450);
+      const at = underPointer(rail, drawerPanel);
+      if (at.inPanel) return;
+      if (at.inRail && at.link) {
+        // Resting on a rail item: the drawer shows that item's section, as a hover would.
+        overLink = at.link;
+        const href = pathOf(at.link);
+        if (href === '/') hide();
+        else if (href !== drawerPanel.dataset.section) void show(href);
+        return;
+      }
+      if (!at.inRail) hide();
+    };
+    settling = setTimeout(settle, 450);
   }
 }
 

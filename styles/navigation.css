@@ -413,10 +413,20 @@ body {
 }
 /* From 1600px a page with a section keeps its drawer docked open, and the page sits beside it. */
 @media (scripting: enabled) and (min-width: 1600px) and (hover: hover) {
-    body:has(:is(.component-list, #sidebar) m-drawer) .layout-main { margin-inline-start: calc(var(--site-nav-rail-width) + var(--sidebar-width)); }
+    body:has(:is(.component-list, #sidebar) m-drawer) .layout-main {
+        margin-inline-start: calc(var(--site-nav-rail-width) + var(--sidebar-width));
+        transition: margin-inline-start 280ms cubic-bezier(0.05, 0.7, 0.1, 1);
+    }
     :root[data-drawer-docked] .site-rail-drawer { box-shadow: none; }
 }
 .site-rail-drawer[data-instant] { transition: none !important; }
+/* The page follows the drawer: in as it docks, out as it leaves, with the drawer's own timing. */
+@media (scripting: enabled) and (min-width: 840px) and (hover: hover) {
+    .layout-main { transition: margin-inline-start 200ms cubic-bezier(0.3, 0, 0.8, 0.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .layout-main { transition: none !important; }
+}
 
 /* From tablet up there is no top bar: search leads the rail. Phones keep the bar. */
 @media (min-width: 600px) {
@@ -446,3 +456,5 @@ body {
 ::view-transition-group(site-rail-drawer) { z-index: 3; animation: none; }
 ::view-transition-old(site-rail-drawer) { display: none; }
 ::view-transition-new(site-rail-drawer) { animation: none; opacity: 1; }
+/* A page transition must not swallow clicks: the rail and drawer stay usable while it plays. */
+::view-transition { pointer-events: none; }
