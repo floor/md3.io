@@ -300,10 +300,9 @@ body {
     }
 }
 
-/* The section drawer never pushes the page. Closed at rest; with a pointer it opens over the
-   page from the rail, as M3's does: no scrim, the page stays usable.
-   Touch screens, with no hover, keep the rail's button and the modal drawer. */
-/* The rail and the drawer are fixed to the window: the page scrolls beside them. */
+/* The rail and the drawer are fixed to the window: the page scrolls beside them. Below
+   1600px the drawer floats over the page from the rail, as M3's does: no scrim, nothing
+   pushed. Touch screens, with no hover, keep the rail's button and the modal drawer. */
 @media (min-width: 600px) {
     .site-primary-rail {
         position: fixed;
@@ -328,56 +327,6 @@ body {
 @media (scripting: enabled) and (min-width: 840px) and (hover: hover) {
     /* The shell's one drawer (.site-rail-drawer) shows these rows. */
     .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) { display: none; }
-}
-/* The rail and the drawer are fixed to the window: the page scrolls beside them. */
-@media (min-width: 600px) {
-    .site-primary-rail {
-        position: fixed;
-        inset: var(--header-height) auto 0 0;
-        z-index: 1001;
-        align-self: stretch;
-        height: auto;
-        box-sizing: border-box;
-        background: var(--bg-sidebar);
-    }
-    .layout-main { margin-inline-start: var(--site-nav-rail-width); }
-}
-@media (min-width: 840px) {
-    .layout .component-list-layout { grid-template-columns: minmax(0, 1fr); }
-    .layout .component-list-layout > .component-page,
-    .layout .component-list-layout > .component-catalog { grid-column: 1; }
-}
-@media (scripting: enabled) and (min-width: 840px) and (hover: none) {
-    #site-nav-open { display: grid; }
-    .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) { display: none; }
-}
-@media (scripting: enabled) and (min-width: 840px) and (hover: hover) {
-    .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) {
-        position: fixed;
-        z-index: 89;
-        inset: var(--header-height) auto 0 var(--site-nav-rail-width);
-        display: block;
-        box-sizing: border-box;
-        width: var(--sidebar-width);
-        height: auto;
-        padding-block: 8px;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        border: 0;
-        border-radius: 0 var(--mtrl-sys-shape-corner-large, 16px) var(--mtrl-sys-shape-corner-large, 16px) 0;
-        background: var(--mtrl-sys-color-surface-container-low);
-        box-shadow: 0 1px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 30%, transparent), 0 2px 6px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 15%, transparent);
-        visibility: hidden;
-        transform: translateX(-100%);
-        transition: transform 200ms cubic-bezier(0.3, 0, 0.8, 0.15), visibility 0s linear 200ms;
-    }
-    .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) .site-drawer::part(drawer),
-    .layout :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) .site-drawer::part(sheet) { visibility: inherit; }
-    .layout[data-section-drawer] :is(#section-index, #component-catalog-index, .component-list-layout--detail > .component-list) {
-        visibility: visible;
-        transform: none;
-        transition: transform 280ms cubic-bezier(0.05, 0.7, 0.1, 1), visibility 0s;
-    }
 }
 
 /* The site's one drawer: a rail destination's rows, shown on hover over the page. */
