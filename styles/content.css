@@ -327,8 +327,16 @@
 }
 
 /* The name column keeps one width across tables, so descriptions line up page-wide. */
-.md :is(thead th, tbody td):first-child {
+.md table:not(:has([align="right"])) :is(thead th, tbody td):first-child {
     width: 11em;
+}
+
+/* A right-aligned column (|---:|) holds figures: its header aligns with them, and it
+   takes only its widest figure, leaving the free width to the text. */
+.md :is(th, td)[align="right"] {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
 }
 
 .md tbody td {
