@@ -63,7 +63,7 @@
 /* The measure is for prose, not the column: paragraphs, list items and
    blockquotes stop at a comfortable reading width, while headings, code blocks
    and tables keep the column's width. Widened from 42ch at the owner's request
-   (2026-11-21): 68ch is about 85 characters of DIN Alternate a line. */
+   (2026-11-21), and again to 80ch (2026-11-24). */
 .md :is(p, li, blockquote) {
     max-width: var(--measure);
 }
