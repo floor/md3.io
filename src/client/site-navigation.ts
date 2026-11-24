@@ -29,82 +29,232 @@ export function closeSiteNavigation() {
   restoreSection();
 }
 
+/** A pointer passing over the rail changes nothing: a destination opens once it rests there. */
+const RAIL_HOVER_DELAY = 140;
+/** The section whose rail item was just clicked: its drawer stays open through the navigation. */
+let keptSection = '';
+
+/** Each destination's drawer rows, read once from its own page. */
+const sectionRows = new Map<string, Promise<{ rows: string; label: string } | null>>();
+const rowsFor = (href: string) => {
+  let rows = sectionRows.get(href);
+  if (!rows) {
+    rows = fetch(href, { headers: { Accept: 'text/html' } })
+      .then(response => response.ok ? response.text() : '')
+      .then(html => {
+        const source = new DOMParser().parseFromString(html, 'text/html').querySelector('.component-list m-drawer, #sidebar m-drawer');
+        if (!source) return null;
+        return {
+          rows: [...source.children].filter(child => child.localName === 'm-drawer-item').map(child => child.outerHTML).join(''),
+          label: source.getAttribute('aria-label') ?? 'Section links',
+        };
+      })
+      .catch(() => null);
+    rows.then(result => { if (!result) sectionRows.delete(href); });
+    sectionRows.set(href, rows);
+  }
+  return rows;
+};
+
 /**
- * Between 840px and 1200px, with a pointer, the section drawer floats over the page: it opens
- * from the current rail destination and closes when the pointer or focus leaves it. It is not
- * modal, so there is no scrim and the page stays usable.
+ * The site's one drawer, from 840px with a pointer. It stays in the shell across pages, and
+ * resting on a rail destination puts that section's rows in it. It floats over the page, as
+ * M3's does: no scrim, nothing pushed, and the page stays usable.
  */
-function initFloatingDrawer(rail: HTMLElement, life: PageLifecycle) {
-  const layout = document.querySelector<HTMLElement>('.layout');
-  const pane = document.querySelector<HTMLElement>('#section-index, #component-catalog-index, .component-list-layout--detail > .component-list');
-  const current = rail.querySelector<HTMLAnchorElement>('a[aria-current]');
-  if (!layout || !pane || !current) return;
-  const floating = matchMedia('(840px <= width < 1200px) and (hover: hover)');
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const isOpen = () => layout.hasAttribute('data-section-drawer');
-  // Closed, it must neither take focus nor catch the pointer over the rail it slides behind.
-  const syncInert = () => { pane.inert = floating.matches && !isOpen(); };
-  const open = () => {
-    clearTimeout(timer);
-    if (floating.matches) layout.setAttribute('data-section-drawer', '');
-    syncInert();
-  };
-  const close = () => {
-    clearTimeout(timer);
-    layout.removeAttribute('data-section-drawer');
-    syncInert();
-  };
-  // A moment's grace, so crossing from the rail into the drawer does not close it.
-  const closeSoon = () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { if (!containsFocus(pane, currentFocus()) || !pane.matches(':focus-within')) close(); }, 160);
-  };
-  for (const target of [current, pane]) {
-    life.events(target).addEventListener('pointerenter', open);
-    life.events(target).addEventListener('pointerleave', closeSoon);
+function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
+  const pointer = matchMedia('(min-width: 840px) and (hover: hover)');
+  // From 1600px the drawer is docked: the page's own section stays open beside the rail.
+  const wide = matchMedia('(min-width: 1600px) and (hover: hover)');
+  const homeSection = () => document.querySelector('.component-list m-drawer, #sidebar m-drawer')
+    ? rail.querySelector('m-navigation-rail')?.getAttribute('value') ?? ''
+    : '';
+  const docked = () => wide.matches && homeSection() !== '';
+  let panel = document.querySelector<HTMLElement>('.site-rail-drawer');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.className = 'site-rail-drawer';
+    panel.inert = true;
+    rail.after(panel);
   }
-  life.events(current).addEventListener('focus', () => { if (current.matches(':focus-visible')) open(); });
-  for (const target of [current, pane]) life.events(target).addEventListener('focusout', event => {
-    const next = (event as FocusEvent).relatedTarget as Element | null;
-    if (next !== current && !(next && containsFocus(pane, next))) closeSoon();
+  const drawerPanel = panel;
+  let intent: ReturnType<typeof setTimeout> | undefined;
+  let closing: ReturnType<typeof setTimeout> | undefined;
+  let wanted = '';
+  let opener: HTMLElement | null = null;
+  const hide = () => {
+    clearTimeout(intent);
+    clearTimeout(closing);
+    keptSection = '';
+    // Docked, the drawer never closes: it goes back to the page's own section.
+    if (docked()) { void show(homeSection()); return; }
+    wanted = '';
+    drawerPanel.removeAttribute('data-open');
+    drawerPanel.inert = true;
+  };
+  const hideSoon = () => {
+    // The page's transition takes the pointer off the rail for a moment after a rail click.
+    if (keptSection) return;
+    clearTimeout(closing);
+    closing = setTimeout(hide, 160);
+  };
+  const show = async (href: string) => {
+    clearTimeout(closing);
+    if (!pointer.matches) return false;
+    wanted = href;
+    const [section, { defineSiteDrawer }] = await Promise.all([rowsFor(href), import('./catalog/drawer')]);
+    if (!life.active || wanted !== href) return false;
+    if (!section) { if (href !== homeSection()) hide(); return false; }
+    defineSiteDrawer();
+    let drawer = drawerPanel.querySelector<HTMLElement & { value: string }>('m-drawer');
+    if (!drawer) {
+      drawer = document.createElement('m-drawer') as HTMLElement & { value: string };
+      drawer.className = 'site-drawer';
+      drawer.toggleAttribute('open', true);
+      drawer.toggleAttribute('dense', true);
+      drawerPanel.append(drawer);
+    }
+    const sameSection = drawerPanel.dataset.section === href;
+    if (!sameSection) {
+      const rows = document.createElement('template');
+      rows.innerHTML = section.rows;
+      drawer.setAttribute('aria-label', section.label);
+      drawer.replaceChildren(rows.content);
+      drawerPanel.dataset.section = href;
+      drawerPanel.scrollTop = 0;
+    }
+    if (drawer.value !== location.pathname) {
+      // Moving the selection must not move the list the person is looking at.
+      const top = drawerPanel.scrollTop;
+      drawer.value = location.pathname;
+      if (sameSection) {
+        drawerPanel.scrollTop = top;
+        requestAnimationFrame(() => { drawerPanel.scrollTop = top; });
+      }
+    }
+    drawerPanel.inert = false;
+    drawerPanel.setAttribute('data-open', '');
+    return true;
+  };
+  // The rail's items live in its shadow root and an upgrade rebuilds them, so the rail listens.
+  const railLink = (event: Event) => event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
+  const pathOf = (link: HTMLAnchorElement) => new URL(link.href).pathname;
+  let overLink: HTMLAnchorElement | undefined;
+  // Moves as well as overs: after a page transition the browser sends no pointerover
+  // until the pointer leaves the rail, though it still reports each move.
+  const trackPointer = (event: Event) => {
+    const link = railLink(event);
+    if (link === overLink) return;
+    overLink = link;
+    clearTimeout(intent);
+    if (!link) { hideSoon(); return; }
+    clearTimeout(closing);
+    const href = pathOf(link);
+    // Home has no section, so resting on it just closes the drawer.
+    if (href === '/') {
+      intent = setTimeout(hide, RAIL_HOVER_DELAY);
+      return;
+    }
+    // Fetched during the delay, so the rows are ready when it ends.
+    if (pointer.matches) void rowsFor(href);
+    intent = setTimeout(() => void show(href), RAIL_HOVER_DELAY);
+  };
+  life.events(rail).addEventListener('pointerover', trackPointer);
+  life.events(rail).addEventListener('pointermove', trackPointer);
+  life.events(rail).addEventListener('pointerleave', () => { overLink = undefined; clearTimeout(intent); hideSoon(); });
+  life.events(rail).addEventListener('click', event => {
+    const link = railLink(event);
+    const mouse = event as MouseEvent;
+    if (!link || mouse.button !== 0 || mouse.metaKey || mouse.ctrlKey || mouse.shiftKey || mouse.altKey) return;
+    // Already there: a repeated click does nothing, and the drawer stays as it is.
+    if (pathOf(link) === location.pathname) {
+      event.preventDefault();
+      return;
+    }
+    if (pathOf(link) === '/' || !pointer.matches) return;
+    // The click changes the page only: the drawer keeps its rows, scroll and open groups.
+    clearTimeout(intent);
+    keptSection = pathOf(link);
   });
-  for (const link of rail.querySelectorAll('a')) {
-    if (link !== current) life.events(link).addEventListener('pointerenter', close);
-  }
+  life.events(rail).addEventListener('focusin', event => {
+    const link = railLink(event);
+    if (link && pathOf(link) !== '/' && link.matches(':focus-visible')) void show(pathOf(link));
+  });
+  life.events(rail).addEventListener('keydown', event => {
+    const link = railLink(event);
+    if ((event as KeyboardEvent).key !== 'ArrowRight' || !link || pathOf(link) === '/') return;
+    event.preventDefault();
+    opener = link;
+    void show(pathOf(link)).then(shown => {
+      if (shown) requestAnimationFrame(() => drawerPanel.querySelector('m-drawer')?.shadowRoot?.querySelector<HTMLElement>('a, button')?.focus());
+    });
+  });
+  life.events(rail).addEventListener('focusout', event => {
+    const next = (event as FocusEvent).relatedTarget as Element | null;
+    if (!(next && (containsFocus(drawerPanel, next) || rail.contains(next)))) hideSoon();
+  });
+  life.events(drawerPanel).addEventListener('pointerenter', () => clearTimeout(closing));
+  life.events(drawerPanel).addEventListener('pointerleave', () => { if (!containsFocus(drawerPanel, currentFocus())) hideSoon(); });
+  life.events(drawerPanel).addEventListener('focusout', event => {
+    const next = (event as FocusEvent).relatedTarget as Element | null;
+    if (!(next && (containsFocus(drawerPanel, next) || rail.contains(next)))) hideSoon();
+  });
+  life.events(drawerPanel).addEventListener('click', event => {
+    const link = event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
+    if (!link) return;
+    const drawer = drawerPanel.querySelector<HTMLElement & { value: string }>('m-drawer');
+    if (drawer && new URL(link.href).origin === location.origin) drawer.value = new URL(link.href).pathname;
+    if (!docked()) hide();
+  });
   life.events(document).addEventListener('keydown', event => {
-    if ((event as KeyboardEvent).key !== 'Escape' || !isOpen()) return;
-    const inside = containsFocus(pane, currentFocus());
-    close();
-    if (inside) current.focus();
+    if ((event as KeyboardEvent).key !== 'Escape' || !drawerPanel.hasAttribute('data-open')) return;
+    const inside = containsFocus(drawerPanel, currentFocus());
+    hide();
+    if (inside) opener?.focus();
   });
   life.events(document).addEventListener('pointerdown', event => {
     const path = event.composedPath();
-    if (isOpen() && !path.includes(pane) && !path.includes(current)) close();
+    if (!path.includes(drawerPanel) && !path.includes(rail)) hide();
   });
-  // Choosing a destination closes it, as a modal drawer does, and the row is selected at once.
-  life.events(pane).addEventListener('click', event => {
-    const link = event.composedPath().find(node => node instanceof HTMLAnchorElement) as HTMLAnchorElement | undefined;
-    if (!link || !floating.matches) return;
-    const drawer = pane.querySelector<HTMLElement & { value: string }>('m-drawer');
-    if (drawer && new URL(link.href).origin === location.origin) drawer.value = new URL(link.href).pathname;
-    close();
+  const syncDock = () => document.documentElement.toggleAttribute('data-drawer-docked', docked());
+  life.events(pointer).addEventListener('change', hide);
+  life.events(wide).addEventListener('change', () => { syncDock(); hide(); });
+  let settling: ReturnType<typeof setTimeout> | undefined;
+  life.add(() => {
+    clearTimeout(intent);
+    clearTimeout(closing);
+    clearTimeout(settling);
+    // A docked drawer stays through the navigation; the next page shows its own section.
+    if (!keptSection && !wide.matches) hide();
   });
-  life.events(floating).addEventListener('change', close);
-  life.add(() => { close(); pane.inert = false; });
-  syncInert();
+  syncDock();
+  if (docked() && !keptSection) {
+    // Already docked on arrival: it is simply there, with no slide.
+    if (!drawerPanel.hasAttribute('data-open')) drawerPanel.setAttribute('data-instant', '');
+    void show(homeSection()).then(() => requestAnimationFrame(() => drawerPanel.removeAttribute('data-instant')));
+  } else if (wide.matches && !keptSection) hide();
+  // Arrived from a rail click: the drawer stays. Once the page's transition has ended and
+  // the pointer can be read again, it closes if the pointer has left.
+  if (keptSection) {
+    void show(keptSection);
+    settling = setTimeout(() => {
+      keptSection = '';
+      if (!rail.matches(':hover') && !drawerPanel.matches(':hover')) hide();
+    }, 450);
+  }
 }
 
 export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
   if (bar && rail && dialog && opener && closer) {
     const compact = matchMedia('(width < 600px)');
     // Touch screens have no hover to open the floating drawer, so they keep the modal one longer.
-    const medium = matchMedia('(600px <= width < 840px), (840px <= width < 1200px) and (hover: none)');
+    const medium = matchMedia('(600px <= width < 840px), (min-width: 840px) and (hover: none)');
     // Move the server-rendered section list so its links and disclosure state serve both layouts.
     const section = document.querySelector('.component-list, #sidebar');
     const drawer = section?.querySelector('m-drawer');
     const sectionParent = section?.parentNode;
     const sectionNext = section?.nextSibling ?? null;
 
+    void import('./catalog/navigation-rail').then(({ define }) => { if (life.active) define(); });
     if (drawer) void import('./catalog/drawer').then(({ defineSiteDrawer }) => {
       const id = drawer.shadowRoot?.activeElement?.getAttribute('data-id');
       if (!life.active) return;
@@ -138,7 +288,7 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
     const syncNavigation = () => {
       const focused = currentFocus();
       const target = compact.matches ? bar : rail;
-      const leavingPrimary = compact.matches ? rail.contains(focused) : bar.contains(focused);
+      const leavingPrimary = compact.matches ? containsFocus(rail, focused) : bar.contains(focused);
       const leavingModal = !modalWindow() && (containsFocus(dialog, focused) || focused === opener);
       const closeForResize = !modalWindow() && dialog.open;
       const href = focused?.closest('a')?.getAttribute('href');
@@ -152,7 +302,7 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
       if (!leavingPrimary && !leavingModal) return;
       const moveFocus = () => {
         if (target.hidden) return;
-        const links = Array.from(target.querySelectorAll('a'));
+        const links = [...target.querySelectorAll('a'), ...(target.querySelector('m-navigation-rail')?.shadowRoot?.querySelectorAll('a') ?? [])];
         const sectionFocus = !compact.matches && focused instanceof HTMLElement && section && containsFocus(section, focused)
           && focused.getClientRects().length ? focused : null;
         (sectionFocus ?? links.find(link => href && link.getAttribute('href') === href)
@@ -206,7 +356,7 @@ export function initSiteNavigation(content: HTMLElement, life: PageLifecycle) {
         (event.shiftKey ? last : closer).focus();
       }
     });
-    initFloatingDrawer(rail, life);
+    initRailDrawer(rail, life);
     life.events(compact).addEventListener('change', syncNavigation);
     life.events(medium).addEventListener('change', syncNavigation);
     syncNavigation();

@@ -87,8 +87,7 @@
   </div>
   <div class="layout">
     <div class="site-primary-rail" id="site-primary-rail">
-      <button type="button" class="site-icon-button site-nav-button" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden><%~ it.icon('menu') %></button>
-      <%~ include('primary-links', it) %>
+      <%~ it.primaryRail %>
       <div class="header__themes <%= it.headerScope %>"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.themeButton %><%~ it.themeMenu %><%~ it.modeButton %></div>
       <script>if (matchMedia('(width < 600px)').matches) document.querySelector('.header__actions').append(document.querySelector('.header__themes'));</script>
     </div>
@@ -107,7 +106,7 @@
   </div>
   <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">
     <button type="button" class="site-icon-button site-nav-button" id="site-nav-close" aria-label="Close navigation" autofocus><%~ it.icon('close') %></button>
-    <%~ include('primary-links', it) %>
+    <%~ include('primary-links', { ...it, withHome: true }) %>
   </dialog>
   <%~ include('search', { icon: it.icon, showcasePublic: it.showcasePublic }) %>
 </body></html>

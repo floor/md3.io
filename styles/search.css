@@ -405,3 +405,11 @@
         gap: 8px 14px;
     }
 }
+
+/* In the rail, search is an icon button, with Material's 24px icon (the button's own is 20px). */
+@media (min-width: 600px) {
+    #site-primary-rail #search-trigger::part(icon) { zoom: 1.2; margin: 0; }
+    #site-primary-rail #search-trigger::part(text) { display: none; }
+    #site-primary-rail #search-trigger :is(.header__search-label, .header__search-kbd) { display: none; }
+    #site-primary-rail #search-trigger::part(button) { width: 56px; min-width: 56px; height: 56px; padding: 0; gap: 0; justify-content: center; border-radius: var(--mtrl-sys-shape-corner-large, 16px); }
+}

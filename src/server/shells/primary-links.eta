@@ -1,4 +1,10 @@
 <nav class="site-nav-links" aria-label="Primary navigation">
+  <% if (it.withHome) { %>
+    <a class="site-nav-link" href="/"<% if (it.path === '/') { %> aria-current="page"<% } %>>
+      <span class="site-nav-link__icon"><img src="/assets/brand/mark.svg" width="24" height="24" alt=""></span>
+      <span class="site-nav-link__label">Material</span>
+    </a>
+  <% } %>
   <% it.primaryDestinations.forEach(destination => { %>
     <% const current = it.path === destination.href ? 'page' : it.section === destination.label ? 'location' : ''; %>
     <a class="site-nav-link" href="<%= destination.href %>"<% if (current) { %> aria-current="<%= current %>"<% } %>>

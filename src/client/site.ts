@@ -32,6 +32,14 @@ const headerScope = document.querySelector<HTMLElement>('.header__themes');
 // Theme and mode sit at the foot of the rail; a phone has no rail, so they stay in the header.
 const compactWindow = matchMedia('(width < 600px)');
 compactWindow.addEventListener('change', ({ matches }) => {
+  // Search leads the rail, or the phone's bar.
+  const search = document.querySelector<HTMLElement>('#search-trigger');
+  const searchFocused = search?.matches(':focus-within');
+  if (search) {
+    if (matches) document.querySelector('.header__actions')?.prepend(search);
+    else document.querySelector('.site-rail-top')?.append(search);
+    if (searchFocused) search.focus();
+  }
   if (!headerScope) return;
   headerScope.querySelector<HTMLElement & { hide?(): void }>('m-menu')?.hide?.();
   const focused = [themePicker, themeToggle].find(host => host?.matches(':focus-within'));

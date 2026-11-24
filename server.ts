@@ -65,10 +65,10 @@ const checkIcon = readFileSync(resolve(import.meta.dir, 'icons/check.svg'), 'utf
 const themeMenu = `<template id="theme-menu-template" data-check="${checkIcon}"><m-menu anchor="theme-picker" position="bottom-end" aria-label="Theme">${themes.map(theme => `<m-menu-item value="${theme}">${themeLabel(theme)}</m-menu-item>`).join('')}</m-menu></template>`;
 // The mode button, material's icon button too: both Material Symbols in its icon slot,
 // each shown by a root variable the mode sets (shell.css), so it is right at first
-// paint; site.ts keeps its label ("Switch site to … mode") in step.
+// paint. It shows where a click goes: the moon in light mode, the sun in dark; site.ts keeps its label ("Switch site to … mode") in step.
 const modeIcon = (name: 'dark_mode' | 'light_mode', mode: 'dark' | 'light') =>
   readFileSync(resolve(import.meta.dir, `icons/${name}.svg`), 'utf8').trim().replace('<svg ', `<svg style="display: var(--site-mode-icon-${mode})" `);
-const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-label': 'Switch site mode', icon: modeIcon('dark_mode', 'dark') + modeIcon('light_mode', 'light') }, '', renderStyles);
+const modeButton = renderElement('m-icon-button', { id: 'theme-toggle', 'aria-label': 'Switch site mode', icon: modeIcon('dark_mode', 'light') + modeIcon('light_mode', 'dark') }, '', renderStyles);
 // The search trigger, material's button. Until its definition loads on a page, the rendered inner
 // button is the control, so it carries the popup semantics; search.ts restores them after an upgrade.
 const searchKeys = '<span class="header__search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></span>';
@@ -158,7 +158,7 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...headerStylesheets, ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -197,6 +197,24 @@ const primaryDestinations = [
   ...(showcasePublic ? [{ label: exampleGroups[0]!.label, href: exampleGroups[0]!.items[0]!.href, icon: 'desktop_windows' }] : []),
   { label: 'Docs', href: '/docs/', icon: 'article' },
 ];
+// The site's rail is material's navigation rail. The header slot holds search, which the
+// page moves in from the phone's bar, and the button that opens the modal drawer on a tablet.
+const railAttr = (value: string) => value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+const railMark = '<img src="/assets/brand/mark.svg" width="24" height="24" alt="">';
+const railMoveSearch = "<script>if (matchMedia('(width >= 600px)').matches) document.currentScript.parentElement.append(document.querySelector('#search-trigger'));</script>";
+const railCache = new Map<string, string>();
+const primaryRail = (current: string): string => {
+  let markup = railCache.get(current);
+  if (!markup) {
+    const items = [{ label: 'Material', href: '/', markup: railMark }, ...primaryDestinations.map(item => ({ label: item.label, href: item.href, markup: icon(item.icon) }))]
+      .map(item => `<m-navigation-rail-item value="${item.href}" href="${item.href}" icon="${railAttr(item.markup)}">${item.label}</m-navigation-rail-item>`).join('');
+    const opener = `<button type="button" class="site-icon-button site-nav-button" id="site-nav-open" aria-label="Expand navigation" aria-haspopup="dialog" aria-expanded="false" aria-controls="site-nav-dialog" hidden>${icon('menu')}</button>`;
+    markup = renderElement('m-navigation-rail', { ...(current ? { value: current } : {}), 'no-toggle': true, 'aria-label': 'Primary navigation' }, `<div slot="header" class="site-rail-top ${HEADER_SCOPE}">RAIL_HEADER</div>${items}`, renderStyles)
+      .replace('RAIL_HEADER', () => headerScopeScript + opener + railMoveSearch);
+    railCache.set(current, markup);
+  }
+  return markup;
+};
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const documentationOrder = [...documentationGroups, {
   label: 'Components',

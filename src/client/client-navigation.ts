@@ -65,7 +65,7 @@ function swapBody(next: Document) {
   // old content. moveBefore preserves its custom-element instance and pill animation.
   if (nextIndex) layout.insertBefore(document.importNode(nextIndex, true), content);
   content.append(...[...nextMain.childNodes].map(node => document.importNode(node, true)));
-  const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
+  const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer:not(.site-rail-drawer m-drawer)')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
   const nextSignature = replacement ? drawerSignature(replacement) : '';
   if (replacement && persistentDrawer && nextSignature !== signature) {
     // Another section: use the destination's server-rendered drawer, exactly as a direct
@@ -112,6 +112,12 @@ function swapBody(next: Document) {
     const current = nextLinks[index]?.getAttribute('aria-current');
     if (current) link.setAttribute('aria-current', current); else link.removeAttribute('aria-current');
   });
+  const railSelector = '#site-primary-rail m-navigation-rail';
+  const railValue = next.querySelector(railSelector)?.getAttribute('value');
+  const rail = document.querySelector<HTMLElement & { value: string | null }>(railSelector);
+  if (railValue) rail?.setAttribute('value', railValue); else rail?.removeAttribute('value');
+  // After a click the element follows its property, not the attribute: Back needs both.
+  if (rail && customElements.get('m-navigation-rail')) rail.value = railValue ?? null;
 }
 function pageScripts(doc: Document, origin = location.origin) {
   return [...doc.querySelectorAll<HTMLScriptElement>('script[type="module"][src]')].flatMap(script => {
