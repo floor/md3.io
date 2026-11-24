@@ -203,13 +203,13 @@
    at 1600px (1600 - 2 × 64 = 1472) so the shell grows without a jump. */
 @media (min-width: 600px) {
     :root {
-        --page-padding: 32px 28px 48px;
+        /* One page padding from 600px up: crossing 1200px does not move the page. */
+        --page-padding: 32px 40px 64px;
         --document-padding: 32px 32px 60px;
     }
 }
 @media (min-width: 1200px) {
     :root {
-        --page-padding: 8px 40px 64px;
         --document-padding: 32px 48px 80px;
     }
 }
