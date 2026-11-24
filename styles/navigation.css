@@ -402,3 +402,9 @@ body {
 
 /* The page column hosts its own transition: the rail and drawer stay live above it. */
 :root[data-page-transition] .layout-main { contain: layout; }
+/* The page cross-fades and never morphs: two pages of different heights (the overview is
+   several screens tall, a component one) would otherwise squeeze the old one into the new
+   one's box. Each snapshot keeps its own size, top-aligned. */
+::view-transition-group(page-content) { animation: none; }
+::view-transition-old(page-content),
+::view-transition-new(page-content) { block-size: auto; object-fit: none; object-position: top; }

@@ -276,7 +276,11 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       nameTransitionContent();
       // A scoped transition needs layout containment on its scope. Only while it runs:
       // containment would otherwise anchor the page's fixed elements to the column.
-      if (scoped) document.documentElement.toggleAttribute('data-page-transition', true);
+      if (scoped) {
+        document.documentElement.toggleAttribute('data-page-transition', true);
+        // Apply the containment now: a transition started before style recalc is aborted.
+        void getComputedStyle(scope!).contain;
+      }
       const transition = scoped ? scope!.startViewTransition!(swap) : document.startViewTransition(swap);
       if (scoped) void transition.finished.catch(() => {}).finally(() => {
         if (!scope!.matches(':active-view-transition')) document.documentElement.removeAttribute('data-page-transition');
