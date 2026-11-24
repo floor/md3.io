@@ -403,7 +403,6 @@ body {
     .site-rail-drawer .site-drawer::part(drawer),
     .site-rail-drawer .site-drawer::part(sheet) { visibility: inherit; }
     .site-rail-drawer[data-open] {
-        view-transition-name: site-rail-drawer;
         visibility: visible;
         transform: none;
         transition: transform 280ms cubic-bezier(0.05, 0.7, 0.1, 1), visibility 0s;
@@ -453,13 +452,5 @@ body {
     #site-primary-rail .site-rail-top { width: 100%; }
 }
 
-/* A page transition paints above the page: the open drawer stays above that, unanimated. */
-::view-transition-group(site-rail-drawer) { z-index: 3; animation: none; }
-::view-transition-old(site-rail-drawer) { display: none; }
-::view-transition-new(site-rail-drawer) { animation: none; opacity: 1; }
-/* The rail stays above the drawer through a transition, so the drawer's shadow never crosses it. */
-::view-transition-group(site-rail) { z-index: 4; animation: none; }
-::view-transition-old(site-rail) { display: none; }
-::view-transition-new(site-rail) { animation: none; opacity: 1; }
-/* A page transition must not swallow clicks: the rail and drawer stay usable while it plays. */
-::view-transition { pointer-events: none; }
+/* The page column hosts its own transition: the rail and drawer stay live above it. */
+:root[data-page-transition] .layout-main { contain: layout; }

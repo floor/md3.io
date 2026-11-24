@@ -180,10 +180,6 @@ function nameTransitionContent() {
   // Explicitly leave shell chrome out of snapshots, so the real drawer pill keeps
   // animating on screen while only the page-content snapshot cross-fades.
   for (const shellElement of document.querySelectorAll<HTMLElement>('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')) shellElement.style.viewTransitionName = 'none';
-  // The rail keeps its own layer, above the floating drawer's, as it is outside a transition.
-  // A closing modal drawer covers the rail, so then the rail stays out of the snapshots.
-  const primaryRail = document.querySelector<HTMLElement>('#site-primary-rail');
-  if (primaryRail) primaryRail.style.viewTransitionName = document.querySelector<HTMLDialogElement>('#site-nav-dialog')?.open ? 'none' : 'site-rail';
   // The modal drawer leaves as part of the same transition: it slides out from its last frame
   // while the content changes behind it, instead of vanishing when the page swaps.
   const modalDrawer = document.querySelector<HTMLDialogElement>('#site-nav-dialog');
@@ -246,7 +242,14 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     if (next.querySelector('.docs-frameworks')) await abortable(import('./docs-frameworks'), signal);
     if (next.querySelector('m-drawer.site-drawer')) await abortable(import('./catalog/drawer').then(module => module.defineSiteDrawer()), signal);
     if (signal.aborted) throw signal.reason;
-    const transitionEnabled = !!document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // The page changes inside its own column: a transition scoped there never covers the rail
+    // or the drawer, which stay live and above it. Only a closing modal drawer animates over
+    // the whole window. Without scoped transitions the page swaps at once.
+    const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const modalClosing = !!document.querySelector<HTMLDialogElement>('#site-nav-dialog')?.open;
+    const scope = layout as (Element & { startViewTransition?: Document['startViewTransition'] }) | null;
+    const scoped = motion && !modalClosing && typeof scope?.startViewTransition === 'function';
+    const transitionEnabled = motion && (scoped || (modalClosing && !!document.startViewTransition));
     const swap = async () => {
       if (signal.aborted) return;
       closeShell();
@@ -271,7 +274,13 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     };
     if (transitionEnabled) {
       nameTransitionContent();
-      const transition = document.startViewTransition(swap);
+      // A scoped transition needs layout containment on its scope. Only while it runs:
+      // containment would otherwise anchor the page's fixed elements to the column.
+      if (scoped) document.documentElement.toggleAttribute('data-page-transition', true);
+      const transition = scoped ? scope!.startViewTransition!(swap) : document.startViewTransition(swap);
+      if (scoped) void transition.finished.catch(() => {}).finally(() => {
+        if (!scope!.matches(':active-view-transition')) document.documentElement.removeAttribute('data-page-transition');
+      });
       // A newer navigation can skip an in-flight animation without failing its swap.
       void transition.ready.catch(() => {});
       void transition.finished.catch(() => {}).finally(() => { delete document.documentElement.dataset.navDrawerLeaving; });
