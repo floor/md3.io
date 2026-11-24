@@ -106,10 +106,6 @@
        side of the window (see the window size classes below) */
     --content-max-width: 1500px;
 
-    /* The reading measure for prose only, not the column. DIN Alternate at --fs-md
-       has an 8.35px "0" and averages ≈6.7px a character, so 80ch ≈ 668px ≈ 100
-       characters on a full line; narrower columns (phones) simply fill. */
-    --measure: 80ch;
 
 
     /* Radii */
