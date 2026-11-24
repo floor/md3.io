@@ -167,7 +167,10 @@ export function catalogCard(slug: ComponentSlug, href: string, deprecated: boole
   const { name, summary } = components[slug];
   const status = deprecated ? '<span class="catalog-status"><m-badge variant="small" label="Deprecated" color="secondary" aria-hidden="true"></m-badge> Deprecated</span>' : '';
   const body = `<div class="component-card__body"><h3><a href="${escape(href)}">${escape(name)}</a></h3><p>${escape(summary)}</p>${status}</div>`;
-  return renderElement('m-card', { variant: 'filled', class: 'component-card' }, `${catalogVisuals[slug].replace('<div class="', '<div slot="media" class="')}${body}`, renderStyles);
+  // Rendering the card renders the elements in its scene. A demo app bar's headline is not
+  // the page's title, so it is not a heading (src/client/catalog/app-bar.ts, once upgraded).
+  return renderElement('m-card', { variant: 'filled', class: 'component-card' }, `${catalogVisuals[slug].replace('<div class="', '<div slot="media" class="')}${body}`, renderStyles)
+    .replaceAll('<h1 part="headline"', '<h1 part="headline" role="presentation"');
 }
 
 /** A docs overview card: the same <m-card> as a component's, without the visual. */
