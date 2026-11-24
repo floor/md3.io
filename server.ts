@@ -137,7 +137,10 @@ function page(path: string, title: string, description: string, template: string
   const directory = isAddons ? addonDirectory : playgroundDirectory;
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
   // Component docs lead to Styles, and Styles to the Showcase.
-  const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
+  const pager = status !== 200 ? ''
+    // Components read in their drawer's order, the overview first (add-ons stay apart).
+    : isComponents && !isAddons ? pagerHtml(componentsOrder, path, true)
+    : sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
   const componentDrawer = isComponents
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
@@ -240,6 +243,9 @@ const documentationOrder = [...documentationGroups, {
   label: 'Components',
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
 }, ...(addonsPublic ? [addonDocGroup] : [])];
+/** The components overview, then every component in the drawer's order: a loop. */
+const componentsOrder: PagerItem[] = [{ name: 'Components overview', href: '/components/' }, ...playgroundDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry])]
+  .map(({ name, href }) => ({ name, href, section: 'Components' }));
 const readingOrder = [documentationOrder, ...(stylesPublic ? [stylesGroups] : []), ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each
