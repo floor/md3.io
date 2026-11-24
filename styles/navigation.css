@@ -383,7 +383,7 @@ body {
     .site-rail-top { display: flex; flex-direction: column; align-items: center; gap: 12px; flex: none; padding-block: 4px 12px; }
 }
 @media (min-width: 840px) {
-    .layout .component-list-layout > .component-catalog { box-sizing: border-box; width: 100%; max-width: 1248px; margin-inline: auto; }
+    .layout .component-list-layout > .component-catalog { box-sizing: border-box; width: 100%; }
 }
 
 /* Material's navigation rail, in the site's fixed rail column with theme and mode below it. */
