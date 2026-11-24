@@ -193,3 +193,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
     var(--tile);
 }
 .catalog-visual--snackbar md3-catalog-snackbar { width: 100%; zoom: 0.7; }
+
+/* The dialog open in its card, drawn small. Zoom is safe here: it is not in the top layer. */
+.catalog-visual--dialog md3-catalog-dialog { zoom: 0.46; }
