@@ -30,7 +30,8 @@ export const define = (): void => surface('md3-catalog-dialog', ['progress', 'bu
     current?.destroy();
     const dialog = createDialog({
       title: 'Alarm sound', ariaLabel: 'Alarm sound', size: 'small', divider: true, closeButton: false,
-      modal: false, autofocus: false, closeOnOverlayClick: false, container: host,
+      // Always open in the page, so keyboard users Tab on past it: no focus trap.
+      modal: false, autofocus: false, trapFocus: false, closeOnOverlayClick: false, container: host,
       buttons: [{ text: 'Cancel', variant: 'text', closeDialog: true }, { text: 'OK', variant: 'text', closeDialog: true, attributes: { disabled: true } }],
     });
     const radios = createRadios({ name: 'alarm-sound', options: choices, direction: 'vertical' });
