@@ -52,12 +52,20 @@
     max-width: 820px;
     /* A definite width: main is a column flex container, and auto margins would
        otherwise shrink this article to its content. The font swap then moves
-       the heading. Prose, headings, code and tables all fill this column. */
+       the heading. Headings keep this column; prose stays on the measure. */
     width: 100%;
     margin: 0 auto;
     padding: 40px 48px 80px;
     overflow-wrap: break-word;
     word-wrap: break-word;
+}
+
+/* The measure is for prose, not the column: paragraphs, list items and
+   blockquotes stop at a comfortable reading width, while headings, code blocks
+   and tables keep the column's width. Widened from 42ch at the owner's request
+   (2026-11-21), then 80ch and 100ch (2026-11-24). */
+.md :is(p, li, blockquote) {
+    max-width: var(--measure);
 }
 
 .md h1 {
