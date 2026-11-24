@@ -101,28 +101,8 @@ md3-catalog-tooltip:not(:defined) { width: 120px; height: 72px; }
 md3-catalog-tabs:not(:defined) { height: 64px; }
 
 md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { width: 240px; height: 200px; }
+/* The hero and its body come from site.css (.page-hero). */
 .component-catalog { padding: 8px 8px 64px; container-type: inline-size; }
-/* The hero spans the column, close to its edges; the sections below sit further in. */
-.catalog-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.catalog-hero__text {
-  display: flex; flex-direction: column; justify-content: center; gap: 24px;
-  min-height: 280px; box-sizing: border-box; padding: 40px 24px;
-  border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low);
-}
-/* The title fills its tile and never overflows it: sized from the tile's own width. */
-.catalog-hero__text { container-type: inline-size; }
-.catalog-hero__text h1 { margin: 0; font-size: clamp(40px, 18cqi, 112px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
-.catalog-hero__text p { margin: 0; max-width: 34em; font-size: clamp(18px, 4.2cqi, 24px); line-height: 1.45; color: var(--mtrl-sys-color-on-surface); }
-/* For now a plain field of the theme's primary container colour. */
-.catalog-hero__art { min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); }
-@container (min-width: 760px) {
-  .catalog-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-  .catalog-hero__text { min-height: 420px; padding: 56px 48px; }
-}
-.component-catalog__body {
-  box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto;
-  padding: clamp(48px, 7cqi, 96px) clamp(12px, 5cqi, 64px) 0;
-}
 .component-catalog__section + .component-catalog__section { margin-block-start: 36px; }
 .component-catalog__section h2 { margin: 0 0 20px; font-size: clamp(28px, 3cqi, 36px); line-height: 1.25; font-weight: 400; }
 .component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }

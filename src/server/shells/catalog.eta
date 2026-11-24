@@ -5,8 +5,8 @@
     <%~ include('component-list', it) %>
   </details>
   <section class="page-wrap component-catalog" aria-label="<%= it.isAddons ? 'Add-on previews' : 'Component previews' %>">
-    <header class="catalog-hero">
-      <div class="catalog-hero__text">
+    <header class="page-hero">
+      <div class="page-hero__text">
         <h1><%= it.isAddons ? 'Add-ons' : 'Components' %></h1>
         <% if (it.isAddons) { %>
         <p><code>material-addons</code> extends Material with components that use the same design tokens.</p>
@@ -15,9 +15,9 @@
         <p>Every Material 3 component, built for the web: plain JavaScript, web components, React, Vue, Svelte and SolidJS. Try one live, adjust the details, and copy what works.</p>
         <% } %>
       </div>
-      <div class="catalog-hero__art" aria-hidden="true"></div>
+      <div class="page-hero__art" aria-hidden="true"></div>
     </header>
-    <div class="component-catalog__body">
+    <div class="page-hero-body">
     <% it.playgroundDirectory.sections.forEach(section => { %>
       <section class="component-catalog__section"<% if (!it.isAddons) { %> aria-labelledby="catalog-<%= section.id %>"<% } %>>
         <% if (!it.isAddons) { %><h2 id="catalog-<%= section.id %>"><%= section.name %></h2><% } %>

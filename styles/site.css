@@ -82,6 +82,30 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .preview-footer #playground-status { overflow-wrap: anywhere; }
 .catalog-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 16px; }
 .architecture-link { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; font-size: var(--fs-base); }
+/* Overview pages (Components, Docs): a hero that spans the column, close to its edges,
+   and a body set further in. The page is the container that sizes both. */
+.page-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.page-hero__text {
+  display: flex; flex-direction: column; justify-content: center; gap: 24px;
+  min-height: 280px; box-sizing: border-box; padding: 40px 24px;
+  border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low);
+}
+/* The title fills its tile and never overflows it: sized from the tile's own width. */
+.page-hero__text { container-type: inline-size; }
+.page-hero__text h1 { margin: 0; font-size: clamp(40px, 18cqi, 112px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
+.page-hero__text p { margin: 0; max-width: 34em; font-size: clamp(18px, 4.2cqi, 24px); line-height: 1.45; color: var(--mtrl-sys-color-on-surface); }
+/* For now a plain field of the theme's primary container colour. */
+.page-hero__art { min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); }
+@container (min-width: 760px) {
+  .page-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .page-hero__text { min-height: 420px; padding: 56px 48px; }
+}
+.page-hero-body {
+  box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto;
+  padding: clamp(48px, 7cqi, 96px) clamp(12px, 5cqi, 64px) 0;
+}
+.docs-overview { padding: 8px 8px 64px; container-type: inline-size; }
+.docs-overview .docs-group:first-child { margin-top: 0; }
 .docs-group { margin-top: 30px; }
 .docs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .doc-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; font-size: var(--fs-base); }
