@@ -304,8 +304,10 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
   } finally {
     clearTimeout(timer);
     outerSignal?.removeEventListener('abort', abortForNavigation);
-    // Nothing was swapped in: the old page shows again, whatever comes next.
-    if (!swapped) leaving?.cancel();
+    // An outgoing fade never outlives its navigation: nothing swapped in, the old page shows
+    // again; swapped in and then superseded (slow theme CSS), the new page must not stay at
+    // opacity 0 under a later navigation that does not fade (the modal's view transition).
+    leaving?.cancel();
   }
 }
 if (shell && content && layout) {
