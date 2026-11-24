@@ -179,9 +179,11 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
     clearTimeout(intent);
     keptSection = pathOf(link);
   });
+  // Escape hands focus back to the rail: that focus does not open the drawer again.
+  let returningFocus = false;
   life.events(rail).addEventListener('focusin', event => {
     const link = railLink(event);
-    if (link && pathOf(link) !== '/' && link.matches(':focus-visible')) void show(pathOf(link));
+    if (!returningFocus && link && pathOf(link) !== '/' && link.matches(':focus-visible')) void show(pathOf(link));
   });
   life.events(rail).addEventListener('keydown', event => {
     const link = railLink(event);
@@ -215,8 +217,14 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
   life.events(document).addEventListener('keydown', event => {
     if ((event as KeyboardEvent).key !== 'Escape' || !drawerPanel.hasAttribute('data-open')) return;
     const inside = containsFocus(drawerPanel, currentFocus());
+    const section = drawerPanel.dataset.section ?? '';
     hide();
-    if (inside) opener?.focus();
+    if (!inside || drawerPanel.hasAttribute('data-open')) return;
+    // Back to the rail destination that opened the drawer (the modal opener is hidden here).
+    const destination = rail?.querySelector('m-navigation-rail')?.shadowRoot?.querySelector<HTMLElement>(`a[href="${CSS.escape(section)}"]`);
+    returningFocus = true;
+    (destination ?? opener)?.focus();
+    returningFocus = false;
   });
   life.events(document).addEventListener('pointerdown', event => {
     const path = event.composedPath();
