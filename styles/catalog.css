@@ -56,7 +56,7 @@
 .catalog-frame--right { inset: calc(var(--frame) * -1) 20% calc(var(--frame) * -1) calc(var(--frame) * -1); border-inline-start: 0; }
 .catalog-frame--right .catalog-frame__screen { justify-content: flex-end; padding-inline: 24px; }
 .catalog-frame--drawer { inset: 28px calc(var(--frame) * -1) calc(var(--frame) * -1) 14%; border-inline-end: 0; border-bottom: 0; border-start-start-radius: 24px; }
-.catalog-frame--drawer .catalog-frame__screen { padding: 0; justify-content: flex-start; align-items: stretch; background: color-mix(in srgb, var(--mtrl-sys-color-scrim) 32%, var(--mtrl-sys-color-surface)); }
+.catalog-frame--drawer .catalog-frame__screen { padding: 0; justify-content: flex-start; align-items: stretch; background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 32%, var(--mtrl-sys-color-surface)); }
 .catalog-frame--side { inset: 28px 14% calc(var(--frame) * -1) calc(var(--frame) * -1); border-inline-start: 0; border-bottom: 0; border-start-end-radius: 24px; }
 .catalog-stack { display: flex; flex-direction: column; align-items: flex-start; }
 .catalog-stack--inset { padding-inline-start: 24px; }
@@ -168,6 +168,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-frame--picker {
   --mtrl-sys-color-primary-container: color-mix(in srgb, var(--mtrl-sys-color-primary) 38%, var(--mtrl-sys-color-surface));
   --mtrl-sys-color-tertiary-container: color-mix(in srgb, var(--mtrl-sys-color-tertiary) 42%, var(--mtrl-sys-color-surface));
-  top: calc(var(--frame) * -1); bottom: calc(var(--frame) * -1); background: color-mix(in srgb, var(--mtrl-sys-color-scrim) 22%, var(--mtrl-sys-color-surface)); }
+  top: calc(var(--frame) * -1); bottom: calc(var(--frame) * -1); background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 22%, var(--mtrl-sys-color-surface)); }
 .catalog-frame--picker .catalog-frame__screen { align-items: flex-start; padding: 16px 0 0; overflow: hidden; }
 .catalog-visual--datepicker md3-catalog-datepicker, .catalog-visual--timepicker md3-catalog-timepicker { width: auto; zoom: 0.62; }
