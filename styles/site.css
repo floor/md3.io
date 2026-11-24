@@ -105,6 +105,14 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
   padding: clamp(48px, 7cqi, 96px) clamp(12px, 5cqi, 64px) 0;
 }
 .docs-overview { padding: 8px 8px 64px; container-type: inline-size; }
+/* A documentation page keeps the overview body's side inset and width. */
+.page-wrap:has(> .document-layout) { padding: 8px 8px 64px; container-type: inline-size; }
+.page-wrap > .document-layout {
+  box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto;
+  padding-inline: clamp(12px, 5cqi, 64px); gap: 48px;
+}
+.page-wrap > .document-layout > .md { padding-inline: 0; }
+.page-wrap > .document-layout > .doc-toc { margin-inline-end: 0; }
 .docs-overview .docs-group:first-child { margin-top: 0; }
 .docs-group { margin-top: 30px; }
 .docs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
