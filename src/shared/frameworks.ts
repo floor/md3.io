@@ -760,7 +760,8 @@ const jsxAttrs = (attrs: Attr[], react = false, native = false): string =>
     // spelling, which warns without an onChange handler a static tab does not have.
     if (react && a.name === 'checked') return ' defaultChecked';
     const name = native ? jsxName(a.name) : camel(a.name);
-    if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
+    // A custom property keeps its name, quoted: React sets it with setProperty.
+    if (react && a.name === 'style') return ` style={{ ${String(a.value).split('; ').map(rule => rule.replace(/^([\w-]+): (.*)$/, (_, p: string, v: string) => `${p.startsWith('--') ? `'${p}'` : camel(p)}: ${quoteJs(v).replaceAll('"', "'")}`)).join(', ')} }}`;
     if (a.ref) return ` ${name}={${a.ref}}`;
     if (a.value === true) return ` ${name}`;
     // A string attribute takes no escapes, and Svelte reads braces in it: such a value is an expression.
