@@ -175,7 +175,21 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-visual--toolbar .catalog-frame__screen { padding-bottom: 22px; container-type: inline-size; }
 .catalog-visual--toolbar md3-catalog-toolbar { flex: none; scale: 0.7; transform-origin: 50% 100%; }
 @container (width < 260px) { .catalog-visual--toolbar md3-catalog-toolbar { scale: 0.6; } }
-.catalog-visual--toolbar .catalog-frame__screen::after {
+.catalog-visual:is(.catalog-visual--toolbar, .catalog-visual--snackbar) .catalog-frame__screen::after {
   content: ""; position: absolute; bottom: 10px; left: 50%; translate: -50% 0;
   width: 96px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface);
 }
+
+/* The snackbar over a photo grid, drawn at phone scale above the gesture bar: three
+   thumbnails in a row, then two tall photos, on the surface's gaps. */
+.catalog-visual--snackbar .catalog-frame__screen {
+  padding: 0 0 26px;
+  --tile: var(--mtrl-sys-color-surface-container-highest);
+  --gap: var(--mtrl-sys-color-surface);
+  background:
+    linear-gradient(90deg, transparent calc(33.3% - 2px), var(--gap) 0 calc(33.3% + 2px), transparent 0 calc(66.6% - 2px), var(--gap) 0 calc(66.6% + 2px), transparent 0) 0 0 / 100% 34px no-repeat,
+    linear-gradient(transparent 34px, var(--gap) 0 38px, transparent 0),
+    linear-gradient(90deg, transparent calc(50% - 2px), var(--gap) 0 calc(50% + 2px), transparent 0) 0 38px / 100% 100% no-repeat,
+    var(--tile);
+}
+.catalog-visual--snackbar md3-catalog-snackbar { width: 100%; zoom: 0.7; }

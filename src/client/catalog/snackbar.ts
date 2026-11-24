@@ -1,23 +1,24 @@
-// The snackbar card: the real snackbar, shown in the card's phone. Undo and Dismiss work;
-// a fresh one comes back a moment after it closes.
+// The snackbar card: the real snackbar, shown in the card's phone over a photo grid. Retry
+// works; a fresh one comes back a moment after it closes.
 import 'material/elements/css/snackbar';
 import 'material/elements/css/button';
 import { registerStyles } from 'material/elements';
-import createSnackbar from 'material/components/snackbar';
-import { snackbarDefaults } from './defaults';
+import createSnackbar, { type SnackbarConfig } from 'material/components/snackbar';
 import { surface } from './surface';
+
+const config: SnackbarConfig = { message: 'Couldn’t send photo. Retrying in 5 seconds.', action: 'Retry', position: 'center', duration: 'indefinite' };
 
 // Shown, material puts the snackbar on <body>, fixed to the window. Here it is set back in
 // the card, at the foot of the phone's screen.
 registerStyles({
-  'catalog-snackbar': '.catalog-snackbar{display:flex;align-items:flex-end;justify-content:center;width:100%;padding:0 8px 12px}'
+  'catalog-snackbar': '.catalog-snackbar{display:flex;align-items:flex-end;justify-content:center;width:100%;padding:0 12px}'
     + '.catalog-snackbar .mtrl-snackbar{position:relative!important;inset:auto!important;transform:none!important;translate:none!important;margin:0!important;width:100%;max-width:100%;min-width:0}',
 });
 
 export const define = (): void => surface('md3-catalog-snackbar', ['progress', 'button', 'icon-button', 'snackbar', 'catalog-snackbar'], () => {
   const host = document.createElement('div');
   host.className = 'catalog-snackbar';
-  let snackbar = createSnackbar(snackbarDefaults);
+  let snackbar = createSnackbar(config);
   let timer = 0;
   let active = true;
   const showHere = () => {
@@ -28,11 +29,19 @@ export const define = (): void => surface('md3-catalog-snackbar', ['progress', '
   const again = () => {
     if (!active) return;
     snackbar.destroy();
-    snackbar = createSnackbar(snackbarDefaults);
+    snackbar = createSnackbar(config);
     snackbar.on('close', () => { timer = window.setTimeout(again, 1500); });
     showHere();
   };
   snackbar.on('close', () => { timer = window.setTimeout(again, 1500); });
+  // Closing, material returns focus to whatever had it when the snackbar showed (after a
+  // client navigation, the page heading), and that focus scrolls the page there. Before it
+  // closes, focus moves to this card's title instead, so the page stays where it is.
+  host.addEventListener('click', event => {
+    if (!event.composedPath().some(node => node instanceof HTMLButtonElement)) return;
+    const card = ((host.getRootNode() as ShadowRoot).host as HTMLElement | undefined)?.closest('.component-card');
+    card?.querySelector<HTMLElement>('h3 a')?.focus({ preventScroll: true });
+  }, true);
   // Once the card is in the page: the snackbar measures itself as it shows.
   requestAnimationFrame(showHere);
   return { element: host, destroy: () => { active = false; clearTimeout(timer); snackbar.destroy(); } };
