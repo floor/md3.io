@@ -95,7 +95,9 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .page-hero__text h1 { margin: 0; font-size: clamp(40px, 18cqi, 112px); line-height: 1; font-weight: 400; letter-spacing: -0.02em; }
 .page-hero__text p { margin: 0; max-width: 34em; font-size: clamp(18px, 4.2cqi, 24px); line-height: 1.45; color: var(--mtrl-sys-color-on-surface); }
 /* For now a plain field of the theme's primary container colour. */
-.page-hero__art { min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); }
+.page-hero__art { position: relative; min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); overflow: hidden; }
+/* Waves drawn in the theme's colours (src/client/hero-waves.ts) cover the tile without sizing it. */
+.page-hero__waves { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 @container (min-width: 760px) {
   .page-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
   .page-hero__text { min-height: 420px; padding: 56px 48px; }
