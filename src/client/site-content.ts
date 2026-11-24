@@ -24,7 +24,7 @@ registerPage('site-content', (content, life) => {
       frame = 0;
       const shown = links.filter(link => link.getClientRects().length);
       const line = innerHeight / 5;
-      let current = shown[0];
+      let current: HTMLAnchorElement | undefined = shown[0];
       for (const link of shown) {
         const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
         if (heading && heading.getBoundingClientRect().top <= line) current = link;
