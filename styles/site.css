@@ -224,3 +224,22 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* The Showcase source panels' Copy code (material's button in its own small scope,
    playground-panel.ts showcaseCopyButton): at the panel header's right end. */
 .showcase-copy { margin-left: auto; display: inline-flex; align-items: center; flex-shrink: 0; }
+
+/* A component's pages share the overviews' hero and a tab bar under it: Overview (the
+   playground), Develop and Accessibility, each its own page. */
+.component-page, .page-wrap.component-tab-page { container-type: inline-size; }
+.page-wrap.component-tab-page { padding: 8px 8px 64px; }
+.component-hero { margin-block-end: 8px; }
+.component-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; border-radius: 999px; background: var(--mtrl-sys-color-surface-container-low); }
+.component-tabs__tab {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; min-width: 0; padding-inline: 12px;
+  border-radius: 999px; color: var(--mtrl-sys-color-on-surface-variant); font-size: var(--fs-md); text-decoration: none; white-space: nowrap;
+  transition: background-color 150ms ease;
+}
+.component-tabs__tab:hover { background: var(--mtrl-sys-color-surface-container-high); }
+.component-tabs__tab[aria-current] { background: var(--mtrl-sys-color-secondary-container); color: var(--mtrl-sys-color-on-secondary-container); }
+.component-tabs__tab:focus-visible { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
+.component-tabs__tab .inline-icon { width: 20px; height: 20px; flex: none; }
+@media (width < 600px) { .component-tabs__tab .inline-icon { display: none; } }
+/* The Develop and Accessibility pages: the article starts under the tabs. */
+.component-tab-page > .document-layout { margin-block-start: 40px; }

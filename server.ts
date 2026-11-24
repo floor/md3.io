@@ -131,7 +131,7 @@ function page(path: string, title: string, description: string, template: string
   const isStyles = path.startsWith('/styles/');
   const isHome = path === '/';
   const isCatalog = template === 'catalog';
-  const isComponentDetail = template === 'component';
+  const isComponentDetail = template === 'component' || template === 'component-tab';
   const isComponents = isCatalog || isComponentDetail;
   const isAddons = path.startsWith('/addons/');
   const directory = isAddons ? addonDirectory : playgroundDirectory;
@@ -160,7 +160,7 @@ function page(path: string, title: string, description: string, template: string
     path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     // The pager takes the page's own content width: the overviews' inset body, or a component
     // page's side padding.
-    content: template === 'document' || !pager ? content
+    content: template === 'document' || template === 'component-tab' || !pager ? content
       : template === 'catalog' || template === 'docs' ? `${content}<div class="pager-wrap pager-wrap--overview"><div class="page-hero-body">${pager}</div></div>`
       : `${content}<div class="page-wrap pager-wrap${isComponentDetail ? ' pager-wrap--component' : ''}">${pager}</div>`,
   }), status);
@@ -169,6 +169,42 @@ const styleDescription = (href: string) => stylePages.find(entry => entry.href =
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
 const documentationGroups = [{ label: 'Docs', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+/**
+ * A component's pages, as tabs under one header: the overview (the playground), its
+ * developer documentation, and its accessibility notes, each its own page.
+ */
+type ComponentTab = 'overview' | 'develop' | 'accessibility';
+const componentTabLabels: Record<ComponentTab, string> = { overview: 'Overview', develop: 'Develop', accessibility: 'Accessibility' };
+const componentTabIcons: Record<ComponentTab, string> = { overview: 'explore', develop: 'article', accessibility: 'accessibility_new' };
+const componentTabHref = (slug: string, tab: ComponentTab) => tab === 'overview' ? `/components/${slug}/` : `/components/${slug}/${tab}/`;
+/** The developer documentation split at its Accessibility section: the Develop and Accessibility tabs. */
+function componentDocument(slug: string) {
+  const document = renderDocument(slug);
+  if (!document) return null;
+  // The tab's header carries the title: the document's own h1 goes.
+  const html = document.html.replace(/<h1 id="[^"]*">[\s\S]*?<\/h1>\n?/, '');
+  const start = html.indexOf('<h2 id="accessibility">');
+  const end = start < 0 ? -1 : html.indexOf('<h2 ', start + 1);
+  const accessibility = start < 0 ? '' : html.slice(start, end < 0 ? undefined : end);
+  return {
+    ...document,
+    develop: start < 0 ? html : html.slice(0, start) + (end < 0 ? '' : html.slice(end)),
+    developToc: document.toc.filter(item => item.id !== 'accessibility'),
+    accessibility: accessibility.replace(/<h2 id="accessibility">[\s\S]*?<\/h2>\n?/, ''),
+  };
+}
+const componentTabs = (slug: string): ComponentTab[] => ['overview', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
+/** The header every tab of a component shares: the overview's hero, then the tab bar. */
+function componentHeader(slug: string, current: ComponentTab): string {
+  const component = components[slug as keyof typeof components];
+  const deprecation = componentDeprecations[slug as keyof typeof componentDeprecations];
+  const note = deprecation ? `<p role="note"><strong>Deprecated.</strong> Use <a class="text-link" href="${escapeHtml(deprecation.href)}">${escapeHtml(deprecation.replacement)}</a> instead.</p>` : '';
+  const tabs = componentTabs(slug).map(tab => `<a class="component-tabs__tab" href="${componentTabHref(slug, tab)}"${tab === current ? ' aria-current="page"' : ''}>${icon(componentTabIcons[tab])}<span>${componentTabLabels[tab]}</span></a>`).join('');
+  return `<header class="page-hero component-hero"><div class="page-hero__text"><h1>${escapeHtml(component.name)}</h1><p>${escapeHtml(component.description)}</p>${note}</div>`
+    + `<div class="page-hero__art" aria-hidden="true" data-seed="${escapeHtml(slug)}"></div></header>`
+    + `<nav class="component-tabs" aria-label="${escapeHtml(component.name)} pages">${tabs}</nav>`;
+}
+
 /** The previous and next links for a page, from the sidebar's items in order. */
 type PagerItem = { name: string; href: string; section?: string };
 function pagerHtml(items: PagerItem[], path: string, cycle = false): string {
@@ -248,7 +284,9 @@ const documentationOrder = [...documentationGroups, {
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
 }, ...(addonsPublic ? [addonDocGroup] : [])];
 /** The components overview, then every component in the drawer's order: a loop. */
-const componentsOrder: PagerItem[] = [{ name: 'Components overview', href: '/components/' }, ...playgroundDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry])]
+const componentsOrder: PagerItem[] = [{ name: 'Components overview', href: '/components/' }, ...playgroundDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry])
+  // Each component's tabs in turn: "Button: Develop".
+  .flatMap(({ name, slug }) => componentTabs(slug).map(tab => ({ name: tab === 'overview' ? name : `${name}: ${componentTabLabels[tab]}`, href: componentTabHref(slug, tab) })))]
   .map(({ name, href }) => ({ name, href, section: 'Components' }));
 const readingOrder = [documentationOrder, ...(stylesPublic ? [stylesGroups] : []), ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
@@ -346,6 +384,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
   const componentMatch = /^\/(components|addons|preview)\/([a-z-]+)\/$/.exec(path);
+  const componentTabMatch = /^\/components\/([a-z-]+)\/(develop|accessibility)\/$/.exec(path);
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('/drawer/', '/navigation-drawer/') + url.search } });
@@ -359,7 +398,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'overview'), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
@@ -402,6 +441,17 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });
   // The six framework guides are one Frameworks page: their URLs, and the guides' older
   // /docs/components/<slug>/ ones, answer 301 to it with that framework chosen.
+  else if (componentTabMatch && isComponent(componentTabMatch[1]!) && !isAddon(componentTabMatch[1]!) && componentTabs(componentTabMatch[1]!).includes(componentTabMatch[2] as ComponentTab)) {
+    const slug = componentTabMatch[1]!;
+    const tab = componentTabMatch[2] as 'develop' | 'accessibility';
+    const document = componentDocument(slug)!;
+    const component = components[slug];
+    response = page(path, `${component.name} ${componentTabLabels[tab].toLowerCase()} — material`, tab === 'develop' ? `Usage, examples and the API of the material library's ${component.name.toLowerCase()}.` : `Accessibility of the material library's ${component.name.toLowerCase()}.`, 'component-tab', {
+      slug, componentHeader: componentHeader(slug, tab),
+      html: tab === 'develop' ? withFrameworkChips({ ...document, html: document.develop })!.html : document.accessibility,
+      toc: tab === 'develop' ? document.developToc : [], frameworks: tab === 'develop' && document.frameworks,
+    });
+  }
   else if (/^\/docs\/(?:components\/)?[a-z-]+\/$/.test(path) && path.split('/').at(-2)! in FRAMEWORK_GUIDES) {
     // The request's other query parameters carry over; the fragment stays with the browser
     // (a Location without one keeps the request's), and the Frameworks page maps an old
