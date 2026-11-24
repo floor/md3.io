@@ -124,10 +124,18 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
         requestAnimationFrame(() => { drawerPanel.scrollTop = top; });
       }
     }
-    // New rows are built a frame later, from an empty value: mark the current page again then.
+    // New rows are built a frame later, from an empty value: mark the current page again
+    // then, and bring its row into view when the list is longer than the panel.
     if (!sameSection) {
       const current = drawer;
-      requestAnimationFrame(() => { if (current.value !== location.pathname) current.value = location.pathname; });
+      requestAnimationFrame(() => {
+        if (current.value !== location.pathname) current.value = location.pathname;
+        const row = current.shadowRoot?.querySelector<HTMLElement>('[aria-current="page"]');
+        if (!row?.getClientRects().length) return;
+        const pane = drawerPanel.getBoundingClientRect();
+        const box = row.getBoundingClientRect();
+        if (box.top < pane.top || box.bottom > pane.bottom) drawerPanel.scrollTop += box.top - pane.top - (pane.height - box.height) / 2;
+      });
     }
     drawerPanel.inert = false;
     drawerPanel.setAttribute('data-open', '');
