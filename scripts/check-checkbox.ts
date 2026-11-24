@@ -26,6 +26,8 @@ try {
   // mode group's buttons live in its shadow root (scripts/panel-driver.ts).
   await panel.chooseTheme(page, 'Forest');
   await panel.chooseMode(page, 'dark');
+  // At 1440px the component list is the rail's drawer: it opens on resting on Components.
+  await page.locator('m-navigation-rail a[href="/components/"]').hover();
   await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Checkbox', exact: true }).click();
   const frame = page.frameLocator('#preview');
   const boxes = frame.getByRole('checkbox');

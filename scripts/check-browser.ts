@@ -80,10 +80,11 @@ try {
   await page.getByRole('switch', { name: 'Square shape', exact: true }).click();
   await page.getByRole('switch', { name: 'Disabled', exact: true }).click();
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector<HTMLButtonElement>('button')?.disabled);
-  // One appearance for the whole site: the theme and mode live in the site header,
-  // not the playground heading, and reach the preview and the panel together.
+  // One appearance for the whole site: the theme and mode live in the shell (the rail from
+  // 600px, the phone's bar below), not the playground heading, and reach the preview and
+  // the panel together.
   assert(await page.locator('.preview-heading #preview-theme').count() === 0, 'The playground heading still has its own theme select');
-  assert(await page.locator('header #theme-picker').isVisible(), 'The site header has no Themes button');
+  assert(await page.locator('#site-primary-rail .header__themes #theme-picker, .header .header__themes #theme-picker').first().isVisible(), 'The shell has no Themes button');
   await panel.chooseTheme(page, 'Ocean');
   await panel.chooseMode(page, 'dark');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.theme === 'ocean');
@@ -117,7 +118,8 @@ try {
     document.body.append(probe);
     const surface = getComputedStyle(probe).color;
     probe.remove();
-    return document.documentElement.dataset.theme === 'ocean' && getComputedStyle(document.body).backgroundColor === surface;
+    // The page's background is on <html> (styles/shell.css); the body is transparent over it.
+    return document.documentElement.dataset.theme === 'ocean' && getComputedStyle(document.documentElement).backgroundColor === surface;
   });
   await page.screenshot({ animations: 'disabled', path: `${output}/button-configured.png`, fullPage: true });
   await page.getByRole('tab', { name: 'Preview', exact: true }).click();
@@ -269,6 +271,9 @@ try {
     await loadingPage.close();
   }
   const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
+  // At 1440px the component list is the rail's drawer: it opens on resting on Components.
+  const openComponentList = () => page.locator('m-navigation-rail a[href="/components/"]').hover();
+  await openComponentList();
   await componentList.getByRole('link', { name: 'Icon button', exact: true }).click();
   await assertAppearance('ocean', 'dark');
   await page.reload();
@@ -276,6 +281,7 @@ try {
   // A subsequent choice must replace the previous preference on the next component.
   await panel.chooseTheme(page, 'Forest');
   await panel.chooseMode(page, 'light');
+  await openComponentList();
   await componentList.getByRole('link', { name: 'Button group', exact: true }).click();
   await assertAppearance('forest', 'light');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'The site mode and the preview mode moved apart');
@@ -336,10 +342,12 @@ try {
       assert(geometry.headerScroll <= geometry.headerWidth && geometry.documentScroll <= width,
         `${tier}: horizontal overflow ${JSON.stringify(geometry)}`);
       assert(geometry.logoSize === (width < 600 ? '20px' : '23px'), `${tier}: wrong shell sizing`);
-      const padding = width < 600 ? '28px 18px 40px' : width < 1200 ? '32px 28px 48px' : '8px 40px 64px';
+      // One padding from 600px: the page no longer jumps at 1200px (styles/tokens.css).
+      const padding = width < 600 ? '28px 18px 40px' : '32px 40px 64px';
       assert(geometry.padding === padding, `${tier}: wrong page spacing`);
-      const expectedLayout = width < 1600 ? Math.min(1472, geometry.viewportWidth) : Math.min(1840, geometry.viewportWidth - 128);
-      assert(Math.abs(geometry.layoutWidth - expectedLayout) < 1, `${tier}: wrong shell gutter or width cap`);
+      // The shell spans the window: the rail and drawer stay at its left edge, and the
+      // page's content keeps its own readable width (styles/shell.css).
+      assert(Math.abs(geometry.layoutWidth - geometry.viewportWidth) < 1, `${tier}: the shell does not span the window`);
       assert(await bar.isVisible() === compact && await rail.isVisible() === !compact
         && await primary.count() === 1, `${tier}: wrong primary navigation`);
       if (!compact) {
@@ -375,11 +383,16 @@ try {
 
   await page.goto(`${base}components/button/`);
   await page.setViewportSize({ width: 599, height: 900 });
-  await bar.getByRole('link', { name: 'Styles', exact: true }).focus();
+  await bar.getByRole('link', { name: 'Docs', exact: true }).focus();
   await page.setViewportSize({ width: 600, height: 900 });
-  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-rail a[href="/styles/"]'));
+  // The rail's links live in m-navigation-rail's shadow root: follow focus into it.
+  await page.waitForFunction(() => {
+    let active = document.activeElement;
+    while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+    return !!active?.closest('a[href="/docs/"]') && !!document.getElementById('site-primary-rail')?.contains((active.getRootNode() as ShadowRoot).host ?? active);
+  });
   await page.setViewportSize({ width: 599, height: 900 });
-  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-bar a[href="/styles/"]'));
+  await page.waitForFunction(() => document.activeElement === document.querySelector('#site-primary-bar a[href="/docs/"]'));
 
   await page.setViewportSize({ width: 1200, height: 900 });
   await page.goto(`${base}docs/frameworks/`);
@@ -413,7 +426,7 @@ try {
   fits(600, await breadcrumb());
 
   // Layout step 6, the reading measure: prose is as wide as the column up to the
-  // measure (68ch, widened from 42ch at the owner's request, 2026-11-21), about 75–85
+  // measure (100ch: widened from 42ch at the owner's request on 2026-11-21, then to 80ch and 100ch on 2026-11-24), up to about 125
   // characters a line. Full lines only — a paragraph's last line is short by nature.
   // Measured with the documentation's own font once fonts are ready.
   const measureProse = () => page.evaluate(() => {
@@ -446,7 +459,7 @@ try {
     const overflowing = prose.filter(p => p.scrollWidth > p.clientWidth + 1).length;
     // Wide code blocks and tables scroll inside the column, not the page.
     const mdBox = md.getBoundingClientRect();
-    const escapees = [...md.querySelectorAll('pre, table')].filter(block => {
+    const escapees = [...md.querySelectorAll('pre, .md-table')].filter(block => {
       const box = block.getBoundingClientRect();
       return box.width > 0 && (box.left < mdBox.left - 0.5 || box.right > mdBox.right + 0.5);
     }).map(block => `${block.tagName}.${String(block.className).slice(0, 40)}${block.textContent.trim().slice(0, 30)}`);
@@ -473,8 +486,8 @@ try {
     await page.locator('.md h1').waitFor();
     await page.evaluate(() => document.fonts.ready);
     const reading = await measureProse();
-    assert(reading.count >= 2 && reading.narrow === 0 && reading.longest <= 85,
-      `${route} at ${width}: ${reading.narrow} paragraphs narrower than the column; lines ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want the column up to the measure, at most 85)`);
+    assert(reading.count >= 2 && reading.narrow === 0 && reading.longest <= 125,
+      `${route} at ${width}: ${reading.narrow} paragraphs narrower than the column; lines ${reading.median}–${reading.longest} characters over ${reading.count} full lines (want the column up to the measure, at most 125)`);
     assert(reading.overflowing === 0, `${route} at ${width}: ${reading.overflowing} paragraphs overflow their line box`);
     assert(reading.escapees.length === 0 && reading.fits, `${route} at ${width}: a code block or table escapes the column (${reading.escapees.join('; ')})`);
     // The measure caps the prose, never the column: at desktop widths a code block
@@ -528,7 +541,7 @@ try {
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
   const enlarged = await measureProse();
-  assert(enlarged.fits && enlarged.longest <= 85, `Enlarged text overflows or its lines run long (${enlarged.longest} characters)`);
+  assert(enlarged.fits && enlarged.longest <= 125, `Enlarged text overflows or its lines run long (${enlarged.longest} characters)`);
   await page.locator('.doc-toc a').first().focus();
   const focused = await page.evaluate(() => document.activeElement === document.querySelector('.doc-toc a'));
   assert(focused && enlarged.fits, 'Focus is lost or the page overflows with enlarged text');
@@ -548,14 +561,12 @@ try {
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile landing overflows');
-  // The privacy page: the footer link reaches it from the home page and from a component page.
+  // The privacy page: the home page's footer links to it (the site's only footer).
   await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
   await page.waitForURL(`${base}privacy/`);
   await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
   await page.goto(`${base}components/button/`);
-  await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
-  await page.waitForURL(`${base}privacy/`);
-  await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
+  assert(await page.locator('.site-footer').count() === 0, 'Only the home page has the footer');
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   await checkPlaygroundLayout(context, base, output);
   await checkInputTargets(browser, base, output);

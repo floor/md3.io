@@ -21,7 +21,8 @@ const browser = await chromium.launch();
 function assert(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
 
 const sections = [
-  { name: 'Buttons', slugs: ['button', 'button-group', 'extended-fab', 'fab', 'fab-menu', 'icon-button', 'split-button'] },
+  // The Buttons family keeps M3's own order (src/server/component-directory.ts).
+  { name: 'Buttons', slugs: ['button-group', 'button', 'extended-fab', 'fab-menu', 'fab', 'icon-button', 'split-button'] },
   { name: 'Date & time pickers', slugs: ['datepicker', 'timepicker'] },
   { name: 'Loading & progress', slugs: ['loading-indicator', 'progress'] },
   { name: 'Navigation', slugs: ['navigation-bar', 'navigation-drawer', 'navigation-rail'] },
@@ -47,14 +48,16 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
     return row ? [(row.querySelector('[part~="item-label"]')?.textContent ?? row.textContent)!.trim()] : [];
   }));
   const labels = inventory.filter(item => !families.some(family => family.slugs.some(slug => slug === item.slug))).map(item => item.name);
-  // Both panes open with the overview link.
-  const overview = ['Components overview'];
-  const componentsStart = rows.indexOf('Components overview');
+  // The component list opens with the overview link; the Docs list's Components group is
+  // the reference pages alone.
+  const overview = docs ? [] : ['Components overview'];
   const componentsEnd = docs ? rows.length - addonDocs.length : rows.length;
+  const componentsStart = docs ? componentsEnd - labels.length - families.length : rows.indexOf('Components overview');
   equal(rows.slice(componentsStart, componentsEnd), [...overview, ...[...labels, ...families.map(family => family.name)].sort(byName)], 'The directory rows follow A–Z');
   if (docs) equal(rows.slice(componentsEnd), addonDocs.map(item => item.name), 'Add-on docs follow the Components group A–Z');
   const hrefs = await pane.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href')));
-  equal(hrefs.slice(hrefs.indexOf('/components/')).sort(), ['/components/', ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
+  const firstComponent = docs ? hrefs.findIndex(href => inventory.some(item => item.href === href)) : hrefs.indexOf('/components/');
+  equal(hrefs.slice(firstComponent).sort(), [...(docs ? [] : ['/components/']), ...inventory.map(item => item.href), ...(docs ? addonDocs.map(item => item.href) : [])].sort(), 'Every component is a real link and appears exactly once');
   for (const family of families) {
     const toggle = pane.getByRole('button', { name: family.name, exact: true });
     const id = await toggle.getAttribute('aria-controls');
@@ -74,8 +77,33 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
   if (currentHref) assert(await current.getAttribute('href') === currentHref && await current.isVisible(), 'The current link is visible and matches the route');
 }
 
+/**
+ * A section's list lives in the rail's drawer: docked open from 1600px, opened by resting on
+ * the rail's destination from 840px, and from the navigation button below that.
+ */
+async function revealSectionList(page: Page, name: string, href: string) {
+  const pane = page.getByRole('navigation', { name, exact: true });
+  if (await pane.isVisible()) return pane;
+  const width = page.viewportSize()!.width;
+  if (width >= 840) await page.locator(`m-navigation-rail a[href="${href}"]`).hover();
+  else await page.getByRole('button', { name: width < 600 ? 'Open section navigation' : 'Expand navigation', exact: true }).click();
+  await pane.waitFor();
+  return pane;
+}
+
+/** Closes a list revealSectionList opened: Escape for the modal, the pointer away for the floating drawer. */
+async function dismissSectionList(page: Page) {
+  const width = page.viewportSize()!.width;
+  if (width >= 1600) return;
+  if (width < 840) { await page.keyboard.press('Escape'); return; }
+  await page.mouse.move(width - 10, 450);
+  await page.locator('.site-rail-drawer[data-open]').waitFor({ state: 'detached' }).catch(async () => {
+    await page.waitForFunction(() => !document.querySelector('.site-rail-drawer')?.hasAttribute('data-open'));
+  });
+}
+
 async function checkComponentList(page: Page) {
-  const pane = page.getByRole('navigation', { name: 'Component list', exact: true });
+  const pane = await revealSectionList(page, 'Component list', '/components/');
   assert(await pane.count() === 1, 'Expected one accessible component list pane');
   // Live examples can expose their own headings inside their shadow roots.
   const pageHeadings = await page.locator('main').evaluate(main => [...main.querySelectorAll('h1')]
@@ -85,29 +113,15 @@ async function checkComponentList(page: Page) {
   return pane;
 }
 
-async function openCompactIndex(page: Page) {
-  const index = page.locator('#component-catalog-index');
-  const summary = index.locator('summary');
-  if (await summary.isVisible() && (await index.getAttribute('open')) === null) await summary.click();
-}
-
 async function checkDetailFocusOrder(page: Page, width: number) {
   const main = page.getByRole('main');
   const detail = '#component-content';
   const inDetail = () => page.evaluate(selector => !!document.activeElement?.closest(selector), detail);
+  // The component list is in the rail's drawer, outside main: Tab from main enters the detail.
   await main.focus();
   await page.keyboard.press('Tab');
-  if (width >= 840) {
-    const pane = main.getByRole('navigation', { name: 'Component list', exact: true });
-    const focused = await pane.getByRole('link', { name: 'App bar', exact: true }).evaluate(link => (link.getRootNode() as ShadowRoot).activeElement === link);
-    assert(focused, `${width}px: Tab enters the detail before the component list`);
-    const headings = main.getByRole('heading');
-    assert(await headings.nth(0).and(main.getByRole('heading', { name: 'Tooltip', level: 1, exact: true })).count() === 1,
-      `${width}px: the detail H1 is the first heading (the list has none)`);
-    await pane.getByRole('link', { name: 'Tooltip', exact: true }).focus();
-    await page.keyboard.press('Tab');
-  }
   assert(await inDetail(), `${width}px: Tab did not reach the component detail`);
+  assert(await main.getByRole('heading', { level: 1 }).first().textContent() === 'Tooltip', `${width}px: the detail H1 is not the first heading`);
 
   await page.getByRole('link', { name: 'Skip to content', exact: true }).press('Enter');
   assert(await page.locator(detail).evaluate(node => document.activeElement === node), `${width}px: Skip to content did not focus the detail`);
@@ -154,7 +168,11 @@ try {
   page.setDefaultTimeout(10000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') errors.push(message.text()); });
+  // Known: the shell's rail and buttons are material elements from the site bundle, and the
+  // cards' lazy chunks carry their own copy (a separate build group, kept so the other pages
+  // do not load the cards' code). The second copy cannot register; the first serves both.
+  const duplicateDefinition = /^<m-[a-z-]+> is already defined by another script; keeping the first definition\.$/;
+  page.on('console', message => { if ((message.type() === 'error' || message.type() === 'warning') && !duplicateDefinition.test(message.text())) errors.push(message.text()); });
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
 
   // Before the script: the pre-upgrade rules and the fixed visual keep every card's box.
@@ -183,6 +201,8 @@ try {
   await page.waitForFunction(() => document.querySelector('.catalog-visual')?.querySelector(':not(:defined)') === null);
   const far = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.catalog-visual')]
     .filter(visual => visual.getBoundingClientRect().top > innerHeight * 2.5)
+    // The site's own rail is an <m-navigation-rail>: that element is defined on every page.
+    .filter(visual => !visual.classList.contains('catalog-visual--navigation-rail'))
     // Its own element is still undefined (the icon buttons some cards share may be defined).
     .map(visual => ({ slug: visual.className, loaded: visual.querySelector(':not(:defined)') === null })));
   assert(far.length > 0, 'No card is far enough down the overview to check it loads lazily');
@@ -192,7 +212,7 @@ try {
   assert(state.cards.length === componentSlugs.length, `The overview shows ${state.cards.length} cards, not ${componentSlugs.length}`);
   for (const [index, card] of state.cards.entries()) {
     const slug = catalogOrder[index]!;
-    assert(card.tag === 'article' && card.links === 1 && card.href === `/components/${slug}/` && card.name === components[slug].name, `${slug}: the card's one link is not its title to the playground`);
+    assert(card.tag === 'm-card' && card.links === 1 && card.href === `/components/${slug}/` && card.name === components[slug].name, `${slug}: the card's one link is not its title to the playground`);
     assert(card.elements.some(name => name.startsWith('m-') || name.startsWith('md3-catalog-')), `${slug}: no mtrl element in the card`);
     assert(card.undefined.length === 0, `${slug}: not upgraded: ${card.undefined.join(', ')}`);
     assert(card.empty.length === 0, `${slug}: renders nothing: ${card.empty.join(', ')}`);
@@ -205,23 +225,24 @@ try {
   assert(state.popovers === 0, 'A popover is open in the top layer before anyone opens one');
   assert(JSON.stringify(await boxes()) === JSON.stringify(before), 'The cards moved when the elements upgraded');
 
-  // One link per card, named by the component's name; the preview's controls
-  // follow it in the tab order, and a person can tab past a card.
+  // One link per card, named by the component's name. Focus follows what is seen: a
+  // card's preview (its media, on top) comes before its title, and a person can tab past
+  // a card's controls to its title.
   for (const slug of ['button', 'dialog', 'menu', 'tooltip'] as const) {
     assert(await page.getByRole('region', { name: 'Component previews' }).getByRole('link', { name: components[slug].name, exact: true }).count() === 1, `${slug}: the card's link is not named by its name`);
   }
   const titleLink = (slug: string) => page.locator(`.component-card:has(.catalog-visual--${slug})`).getByRole('link', { name: components[slug as keyof typeof components].name, exact: true });
-  await titleLink('button').focus();
+  await titleLink('button-group').focus();
   await page.keyboard.press('Tab');
   const firstControl = page.locator('.catalog-visual--button m-button').first();
   assert(await firstControl.evaluate(host => document.activeElement === host && !!host.shadowRoot?.activeElement),
-    'Tab from the title enters the first preview control');
+    'Tab from a title enters the next card\'s first preview control');
   let pastCard = false;
   for (let i = 0; i < 80 && !pastCard; i++) {
     await page.keyboard.press('Tab');
-    pastCard = await titleLink('button-group').evaluate(link => document.activeElement === link).catch(() => false);
+    pastCard = await titleLink('button').evaluate(link => document.activeElement === link).catch(() => false);
   }
-  assert(pastCard, 'Tab could not get past the first card to the next title link');
+  assert(pastCard, 'Tab could not get past the Button card\'s preview to its title link');
 
   // Live previews: the control in the card responds where it stands, and the
   // page does not navigate. Overlays open from their card and close normally.
@@ -266,7 +287,8 @@ try {
   await openClose('dialog', 'Show dialog',
     async () => { await visual('dialog').locator('dialog:modal').waitFor(); },
     async () => {
-      await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+      // The pickers' cards show their own Cancel: this one is the dialog's.
+      await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click();
       await page.getByRole('alertdialog').waitFor({ state: 'hidden' });
     });
   await openClose('menu', 'Show menu',
@@ -278,23 +300,23 @@ try {
       assert(viewport, 'menu: the open item does not intersect the viewport');
     },
     async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(200); });
-  // FAB menu likewise opens in the top layer (the menu presentation): the open
-  // item's box is inside the viewport, not clipped by the card (a layout-box
-  // height check cannot see clipping).
+  // The FAB menu card shows its menu open, as a list in the card: its items are there
+  // to use where they stand.
   await visual('fab-menu').scrollIntoViewIfNeeded();
-  await visual('fab-menu').getByRole('button', { name: 'Reply options' }).click();
-  const fabItem = page.getByRole('menuitem').first();
+  const fabItem = visual('fab-menu').getByRole('menuitem', { name: 'First', exact: true });
+  // It closes on a click elsewhere, as a menu does; Create opens it again.
+  if (!await fabItem.isVisible()) await visual('fab-menu').getByRole('button', { name: 'Create', exact: true }).click();
   await fabItem.waitFor();
-  assert(await fabItem.evaluate(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth; }), 'fab-menu: the open item does not intersect the viewport');
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(200);
+  assert(await visual('fab-menu').getByRole('menuitem').count() === 3, 'fab-menu: the open menu does not list its three items');
+  await fabItem.click();
   await staysOnOverview('fab-menu');
   await openClose('snackbar', 'Show snackbar',
     async () => { await page.getByText('Your changes have been saved.').waitFor(); },
     async () => { await page.getByRole('button', { name: 'Dismiss' }).click().catch(() => page.keyboard.press('Escape')); await page.waitForTimeout(200); });
-  await openClose('timepicker', 'Show time picker',
-    async () => { await page.getByRole('button', { name: 'OK', exact: true }).waitFor(); },
-    async () => { await page.getByRole('button', { name: 'Cancel', exact: true }).click(); await page.waitForTimeout(200); });
+  // The time picker card shows the picker itself: an hour on its dial is chosen in place.
+  await visual('timepicker').scrollIntoViewIfNeeded();
+  await visual('timepicker').getByRole('option', { name: "3 o'clock", exact: true }).click();
+  await staysOnOverview('timepicker');
   await openClose('bottom-sheet', 'Show bottom sheet',
     async () => { await page.getByText('Plan your visit').waitFor({ state: 'visible' }); },
     async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(200); });
@@ -302,24 +324,33 @@ try {
     async () => { await page.getByText('Details', { exact: true }).waitFor({ state: 'visible' }); },
     async () => { await page.keyboard.press('Escape'); await page.waitForTimeout(200); });
   await visual('datepicker').scrollIntoViewIfNeeded();
-  await visual('datepicker').getByRole('button').first().click();
+  // The card shows the calendar itself: a day is chosen in place.
   await visual('datepicker').getByRole('gridcell').nth(12).click();
   await staysOnOverview('datepicker');
 
   // Light and dark follow the site, from mtrl's baseline.
   const surface = () => page.locator('.catalog-visual--button').evaluate(element => getComputedStyle(element).backgroundColor);
-  const filled = () => page.locator('.catalog-visual--button m-button').first().evaluate(element => getComputedStyle(element.shadowRoot!.querySelector('button')!).backgroundColor);
+  // The stage is the surface tinted with 14% of the primary (styles/catalog.css --catalog-stage).
+  const stage = (mode: 'light' | 'dark') => page.evaluate(([primary, base]) => {
+    const probe = document.body.appendChild(document.createElement('div'));
+    probe.style.background = `color-mix(in srgb, ${primary} 14%, ${base})`;
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  }, [baseline[mode].get('primary')!, baseline[mode].get('surface')!] as const);
+  // The filled button (no variant): the card's first button is tonal.
+  const filled = () => page.locator('.catalog-visual--button m-button:not([variant])').first().evaluate(element => getComputedStyle(element.shadowRoot!.querySelector('button')!).backgroundColor);
   const rgb = (hex: string) => `rgb(${hex.slice(1).match(/../g)!.map(part => parseInt(part, 16)).join(', ')})`;
   const setMode = async (mode: 'light' | 'dark') => {
     if (await page.locator('html').getAttribute('data-theme-mode') !== mode) await page.locator('#theme-toggle').click();
     // The button's colour transitions to the new mode.
-    await page.locator('.catalog-visual--button m-button').first().evaluate(element => Promise.all(element.shadowRoot!.getAnimations().map(animation => animation.finished)));
+    await page.locator('.catalog-visual--button m-button').first().evaluate(element => Promise.all(element.shadowRoot!.getAnimations().map(animation => animation.finished.catch(() => undefined))));
   };
   await setMode('light');
-  assert(await surface() === rgb(baseline.light.get('surface')!) && await filled() === rgb(baseline.light.get('primary')!), 'Light site: the visuals are not mtrl baseline light');
+  assert(await surface() === await stage('light') && await filled() === rgb(baseline.light.get('primary')!), 'Light site: the visuals are not mtrl baseline light');
   await page.screenshot({ animations: 'disabled', path: `${output}/catalog-light.png`, fullPage: true });
   await setMode('dark');
-  assert(await surface() === rgb(baseline.dark.get('surface')!) && await filled() === rgb(baseline.dark.get('primary')!), 'Dark site: the visuals are not mtrl baseline dark');
+  assert(await surface() === await stage('dark') && await filled() === rgb(baseline.dark.get('primary')!), 'Dark site: the visuals are not mtrl baseline dark');
   await page.screenshot({ animations: 'disabled', path: `${output}/catalog-dark.png`, fullPage: true });
   // The page around them takes the same roles at the root (layout step 8): the
   // site's own colours follow the chosen theme from <html data-theme>.
@@ -337,7 +368,7 @@ try {
     await themedPage.goto(`${base}/components/`);
     await themedPage.locator('.catalog-visual--button m-button').first().waitFor();
     const want = rgb(hex);
-    const got = await themedPage.locator('.catalog-visual--button m-button').first().evaluate(el => getComputedStyle(el.shadowRoot!.querySelector('button')!).backgroundColor);
+    const got = await themedPage.locator('.catalog-visual--button m-button:not([variant])').first().evaluate(el => getComputedStyle(el.shadowRoot!.querySelector('button')!).backgroundColor);
     assert(got === want, `${theme}/${mode}: the preview fill is ${got}, want the theme primary ${want}`);
     if (theme === 'ocean') await themedPage.screenshot({ animations: 'disabled', path: `${output}/catalog-ocean-dark.png`, fullPage: true });
     await themedContext.close();
@@ -372,7 +403,7 @@ try {
     const { left, right, top, bottom } = dialog.getBoundingClientRect();
     return left >= 0 && right <= innerWidth && top >= 0 && bottom <= innerHeight;
   }), 'The compact catalog dialog fits the viewport');
-  await narrow.getByRole('button', { name: 'Cancel', exact: true }).tap();
+  await narrow.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).tap();
   await narrow.getByRole('alertdialog').waitFor({ state: 'hidden' });
   assert(narrow.url() === `${base}/components/`, 'The compact preview navigated away when opened');
   const lastLink = compactGallery.getByRole('link', { name: 'Tooltip', exact: true });
@@ -388,11 +419,12 @@ try {
   // At each tier the index and detail expose the expected panes and headings.
   const captures = resolve(output, 'component-list-detail');
   await mkdir(captures, { recursive: true });
-  for (const width of [360, 390, 412, 700, 1024, 1440]) {
+  for (const width of [360, 390, 412, 700, 1024, 1440, 1700]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${base}/components/`);
-    await openCompactIndex(page);
     const index = await checkComponentList(page);
+    // Close the list before reading the page behind it.
+    await dismissSectionList(page);
     const gallery = page.getByRole('region', { name: 'Component previews' });
     const sectionHeadings = gallery.getByRole('heading', { level: 2 }).and(gallery.locator('.component-catalog__section > h2'));
     equal(await sectionHeadings.allTextContents(), sections.map(section => section.name),
@@ -406,7 +438,8 @@ try {
     assert(await titles.count() === componentSlugs.length, `${width}px: every card has an H3 title`);
     assert(await page.getByText('Browse components', { exact: true }).count() === 0, `${width}px: temporary component picker on the overview`);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: the index overflows`);
-    if (width >= 840) {
+    if (width >= 1600) {
+      // Docked: the list and the previews sit side by side.
       const previewBox = await gallery.boundingBox();
       const listBox = await index.boundingBox();
       assert(previewBox && listBox && listBox.x + listBox.width <= previewBox.x, `${width}px: the previews and list do not sit side by side`);
@@ -418,50 +451,23 @@ try {
     assert(await up.getAttribute('href') === '/components/', `${width}px: missing up link`);
     assert(await page.getByText('Browse components', { exact: true }).count() === 0, `${width}px: temporary component picker on the detail`);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: the detail overflows`);
-    if (width < 840) {
-      const inactivePane = page.locator('.component-list');
-      assert(!await inactivePane.isVisible() && await inactivePane.getByRole('link').count() === 0, `${width}px: detail exposes list links`);
-      await inactivePane.locator('a[aria-current="page"]').evaluate(a => (a as HTMLElement).focus());
-      assert(await page.evaluate(() => !document.activeElement?.closest('.component-list')), `${width}px: a hidden list link took focus`);
-    } else {
-      const pane = await checkComponentList(page);
-      const wrapper = page.locator('main .component-list');
-      const paneBox = await wrapper.boundingBox();
+    // The page's own copy of the list stays hidden: the rail's drawer is the list.
+    const inPage = page.locator('main .component-list');
+    assert(!await inPage.isVisible() && await inPage.getByRole('link').count() === 0, `${width}px: the page's own list is exposed`);
+    const pane = await checkComponentList(page);
+    const current = pane.getByRole('link', { name: 'Tooltip', exact: true });
+    assert(await current.isVisible() && await page.evaluate(() => scrollY === 0), `${width}px: the current link is not in view, or the page scrolled to show it`);
+    if (width >= 1600) {
+      const paneBox = await page.locator('.site-rail-drawer').boundingBox();
       const detailBox = await page.locator('.component-page').boundingBox();
-      const currentBox = await pane.getByRole('link', { name: 'Tooltip', exact: true }).boundingBox();
       assert(paneBox && detailBox && paneBox.x + paneBox.width <= detailBox.x, `${width}px: the list and detail do not sit side by side`);
-      assert(currentBox && currentBox.y >= paneBox.y && currentBox.y + currentBox.height <= paneBox.y + paneBox.height, `${width}px: the current link is outside the list viewport`);
-      assert(await wrapper.evaluate(list => list.scrollTop > 0 && list.scrollHeight > list.clientHeight) && await page.evaluate(() => scrollY === 0),
-        `${width}px: showing the current link did not scroll only the list`);
     }
+    await dismissSectionList(page);
     await page.screenshot({ animations: 'disabled', path: `${captures}/detail-${width}.png` });
     await checkDetailFocusOrder(page, width);
     await up.click();
     await page.waitForURL(`${base}/components/`);
   }
-
-  await page.setViewportSize({ width: 839, height: 900 });
-  await page.goto(`${base}/components/tooltip/`);
-  assert(!await page.locator('.component-list').isVisible(), '839px: the detail list is visible');
-  await page.screenshot({ animations: 'disabled', path: `${captures}/detail-839.png` });
-  await page.setViewportSize({ width: 840, height: 900 });
-  const expandedList = await checkComponentList(page);
-  await checkDetailFocusOrder(page, 840);
-  await expandedList.getByRole('link', { name: 'Tooltip', exact: true }).focus();
-  await page.screenshot({ animations: 'disabled', path: `${captures}/detail-840.png` });
-  await page.setViewportSize({ width: 839, height: 900 });
-  await page.waitForFunction(() => document.activeElement?.matches('.component-list-up'));
-  await page.goto(`${base}/components/`);
-  await openCompactIndex(page);
-  await checkComponentList(page);
-  await page.screenshot({ animations: 'disabled', path: `${captures}/overview-839.png` });
-  await page.setViewportSize({ width: 840, height: 900 });
-  const firstCard = page.locator('.component-card').first();
-  await firstCard.waitFor({ state: 'visible' });
-  await firstCard.getByRole('link', { name: 'Button', exact: true }).focus();
-  await page.screenshot({ animations: 'disabled', path: `${captures}/overview-840.png` });
-  await page.setViewportSize({ width: 839, height: 900 });
-  await page.waitForFunction(() => document.activeElement?.matches('.component-card h3 a[href="/components/button/"]'));
 
   // A phone: no horizontal scroll, in either mode.
   await page.setViewportSize({ width: 390, height: 844 });
@@ -480,7 +486,6 @@ try {
     await page.goto(`${base}/components/`);
     await loadAll();
     await page.screenshot({ animations: 'disabled', path: `${azCaptures}/overview-${width}.png`, fullPage: true });
-    await openCompactIndex(page);
     const pane = await checkComponentList(page);
     const toggle = pane.getByRole('button', { name: 'Buttons', exact: true });
     const button = pane.getByRole('link', { name: 'Button', exact: true });
@@ -496,18 +501,12 @@ try {
       if (width === 1440) {
         await page.goto(`${base}/components/${slug}/`);
         await checkComponentList(page);
-        const activeToggle = page.getByRole('navigation', { name: 'Component list' }).getByRole('button', { name: family.name, exact: true });
-        await activeToggle.focus();
-        await page.setViewportSize({ width: 839, height: 900 });
-        await page.waitForFunction(() => document.activeElement?.matches('.component-list-up'));
-        await page.setViewportSize({ width, height: 900 });
       }
       await page.goto(`${base}/docs/components/${slug}/`);
-      if (width === 390) await page.locator('#section-index summary').click();
-      const docs = page.getByRole('navigation', { name: 'Docs links' });
+      const docs = await revealSectionList(page, 'Docs links', '/docs/');
       await checkDirectory(docs, new URL(page.url()).pathname, true);
-      if (slug === 'button') {
-        const current = docs.getByRole('link', { name: 'Button', exact: true });
+      if (slug === 'button-group') {
+        const current = docs.getByRole('link', { name: 'Button group', exact: true });
         if (width === 390) await current.evaluate(link => link.scrollIntoView({ block: 'center', behavior: 'instant' }));
         else await current.scrollIntoViewIfNeeded();
         await page.screenshot({ animations: 'disabled', path: `${azCaptures}/docs-sidebar-${width}.png` });
@@ -524,12 +523,14 @@ try {
     const gallery = page.getByRole('region', { name: 'Add-on previews', exact: true });
     equal(await gallery.locator('.component-card h3 a').evaluateAll(links => links.map(link => link.getAttribute('href'))), ordered.map(playgroundHref), `${width}px: Add-ons cards are A–Z`);
     assert(await gallery.locator('.component-catalog__section > h2').count() === 0, 'Add-ons has no families');
-    await openCompactIndex(page);
-    const drawer = page.getByRole('navigation', { name: 'Add-ons list', exact: true });
-    equal(await drawer.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/addons/', ...ordered.map(playgroundHref)], `${width}px: Add-ons drawer is A–Z`);
-    assert(await drawer.locator('[aria-current="page"]').getAttribute('href') === '/addons/', 'The Add-ons overview is current');
-    assert(await drawer.locator('button[aria-expanded]').count() === 0, 'The Add-ons drawer has no families');
-    if (width === 390) await page.locator('#component-catalog-index summary').click();
+    // A hidden Add-ons section has no rail destination, so no list to open.
+    if (addonsPublic) {
+      const drawer = await revealSectionList(page, 'Add-ons list', '/addons/');
+      equal(await drawer.locator('a[part~="item"]').evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/addons/', ...ordered.map(playgroundHref)], `${width}px: Add-ons drawer is A–Z`);
+      assert(await drawer.locator('[aria-current="page"]').getAttribute('href') === '/addons/', 'The Add-ons overview is current');
+      assert(await drawer.locator('button[aria-expanded]').count() === 0, 'The Add-ons drawer has no families');
+      await dismissSectionList(page);
+    }
     await gallery.locator('m-avatar:defined').waitFor();
     await gallery.locator('m-autocomplete:defined').waitFor();
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Add-ons overview fits the viewport');
@@ -549,9 +550,11 @@ try {
     await gallery.locator('.component-card h3 a[href="/addons/avatar/"]').click();
     await page.waitForURL(`${base}/addons/avatar/`);
     await page.getByRole('heading', { name: 'Avatar', level: 1, exact: true }).waitFor();
-    const detailPane = page.locator('main m-drawer.site-drawer');
-    await detailPane.locator('a[aria-current="page"]').waitFor({ state: 'attached' });
-    assert(await detailPane.locator('a[aria-current="page"]').getAttribute('href') === '/addons/avatar/', 'Avatar is current in the detail drawer');
+    if (addonsPublic) {
+      const detailPane = await revealSectionList(page, 'Add-ons list', '/addons/');
+      assert(await detailPane.locator('a[aria-current="page"]').getAttribute('href') === '/addons/avatar/', 'Avatar is current in the detail drawer');
+      await dismissSectionList(page);
+    }
     await page.frameLocator('#preview').getByText('Ada Lovelace', { exact: true }).waitFor();
     assert(await page.locator('.device__bar').count() === 0, 'Add-on playgrounds have no device chooser, like component playgrounds');
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Add-on playground fits the viewport');

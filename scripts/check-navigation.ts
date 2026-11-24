@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { chromium, type Page } from 'playwright';
 import { handleRequest } from '../server';
 import * as panel from './panel-driver';
+import { addonsPublic, showcasePublic, stylesPublic } from '../src/shared/visibility';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const browser = await chromium.launch();
@@ -37,11 +38,16 @@ async function listenerCount(page: Page) {
   await session.detach();
   return counts;
 }
+// The shell's one section drawer, beside the rail.
+const RAIL_DRAWER = '.site-rail-drawer m-drawer';
+// The sections with a drawer: a hidden section (src/shared/visibility.ts) has none.
+const drawerSections = ['components', 'docs', ...(stylesPublic ? ['styles'] : []), ...(showcasePublic ? ['showcase'] : []), ...(addonsPublic ? ['addons'] : [])];
 try {
   // Both paths run the same navigation and widget assertions; removing the API before
   // modules load exercises Safari/older-browser click and popstate enhancement.
   for (const fallback of [false, true]) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', permissions: ['clipboard-read', 'clipboard-write'] });
+    // From 1600px the rail's drawer is docked open: the section list a person sees.
+    const context = await browser.newContext({ viewport: { width: 1700, height: 900 }, reducedMotion: 'reduce', permissions: ['clipboard-read', 'clipboard-write'] });
     if (fallback) await context.addInitScript(() => Object.defineProperty(window, 'navigation', { value: undefined }));
     await context.addInitScript(() => {
       (window as any).visits = [];
@@ -54,10 +60,10 @@ try {
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
     await page.goto(href('/components/button/'));
     await settled(page);
-    await page.locator('m-drawer.site-drawer:defined').waitFor();
-    let drawer = await page.locator('m-drawer.site-drawer').elementHandle();
-    const header = await page.locator('header.header').elementHandle();
-    let drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
+    await page.locator(RAIL_DRAWER + ':defined').waitFor();
+    const drawer = await page.locator(RAIL_DRAWER).elementHandle();
+    const header = await page.locator('#site-primary-rail').elementHandle();
+    const drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
     let previous = '/components/button/';
     const section = (path: string) => path.split('/')[1];
     const go = async (path: string) => {
@@ -68,23 +74,22 @@ try {
       }, path);
       await page.waitForFunction(n => (window as any).visits.length === n + 1, visits);
       assert.equal(new URL(page.url()).pathname, new URL(path, server.url).pathname);
-      // Within a section the live drawer stays mounted (its selection pill animates). Another
-      // section adopts the destination's server-rendered drawer, as a direct load does (#134).
-      if (section(previous) === section(path)) {
-        assert.equal(await drawer!.evaluate(node => node === document.querySelector('m-drawer.site-drawer')), true, `${path}: drawer stays mounted`);
-        assert.equal(await drawerInstance.evaluate(instance => instance === (document.querySelector('m-drawer.site-drawer') as any)?.component), true, `${path}: drawer component remains mounted`);
-      } else {
-        // Pages without a section drawer (the home page) only park the live one.
-        const mounted = 'm-drawer.site-drawer:not(#navigation-drawer-parking m-drawer)';
-        if (await page.locator(mounted).count()) {
-          // Below 840px the section index starts folded, so only the wide layout must show it.
-          await page.waitForFunction(selector => { const next = document.querySelector(selector); return !!next && (innerWidth < 840 || next.checkVisibility()) && (next.shadowRoot?.querySelectorAll('a[href]').length ?? 0) > 0; }, mounted);
-          drawer = await page.locator(mounted).elementHandle();
-          drawerInstance = await drawer!.evaluateHandle(node => (node as any).component);
-        }
+      // The rail's drawer belongs to the shell: it stays mounted on every navigation (its
+      // selection pill animates within a section; another section's rows replace its own).
+      assert.equal(await drawer!.evaluate((node, selector) => node === document.querySelector(selector), RAIL_DRAWER), true, `${path}: drawer stays mounted`);
+      assert.equal(await drawerInstance.evaluate((instance, selector) => instance === (document.querySelector(selector) as any)?.component, RAIL_DRAWER), true, `${path}: drawer component remains mounted`);
+      // Docked (from 1600px), a page with a section shows that section's rows, the page current.
+      if (drawerSections.includes(section(path)!) && page.viewportSize()!.width >= 1600) {
+        await page.waitForFunction(([selector, current]) => {
+          const next = document.querySelector(selector);
+          return !!next?.checkVisibility() && next.shadowRoot?.querySelector('a[aria-current="page"]')?.getAttribute('href') === current;
+        }, [RAIL_DRAWER, new URL(path, server.url).pathname] as const).catch(async error => {
+          const state = await page.evaluate(selector => { const next = document.querySelector(selector) as any; const panel = next?.parentElement as HTMLElement | null; return { visible: next?.checkVisibility(), open: panel?.hasAttribute('data-open'), section: panel?.dataset.section, value: next?.value, current: next?.shadowRoot?.querySelector('a[aria-current="page"]')?.getAttribute('href') ?? null }; }, RAIL_DRAWER);
+          throw new Error(`${path}: the docked drawer does not show the page: ${JSON.stringify(state)}`, { cause: error });
+        });
       }
       previous = path;
-      assert.equal(await header!.evaluate(node => node === document.querySelector('header.header')), true, `${path}: header stays mounted`);
+      assert.equal(await header!.evaluate(node => node === document.querySelector('#site-primary-rail')), true, `${path}: the rail stays mounted`);
       await settled(page);
       const direct = await context.newPage();
       await direct.goto(href(path));
@@ -101,12 +106,12 @@ try {
       assert.equal(await page.evaluate(() => document.activeElement?.matches('h1, #content')), true, `focus moves to content (active: ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 250))})`);
     };
     // Start with a real drawer click (including the selected-pill API and section state).
-    await page.locator('m-drawer.site-drawer').getByRole('button', { name: 'Navigation', exact: true }).click();
+    await page.locator(RAIL_DRAWER).getByRole('button', { name: 'Navigation', exact: true }).click();
     const visits = await page.evaluate(() => (window as any).visits.length);
-    await page.locator('m-drawer.site-drawer').getByRole('link', { name: 'Icon button', exact: true }).click();
+    await page.locator(RAIL_DRAWER).getByRole('link', { name: 'Icon button', exact: true }).click();
     await page.waitForFunction(n => (window as any).visits.length === n + 1, visits);
-    assert.equal(await drawer!.evaluate(node => node === document.querySelector('m-drawer.site-drawer')), true);
-    await page.locator('m-drawer.site-drawer').getByRole('link', { name: 'Icon button', exact: true }).getAttribute('aria-current').then(value => assert.equal(value, 'page'));
+    assert.equal(await drawer!.evaluate((node, selector) => node === document.querySelector(selector), RAIL_DRAWER), true);
+    await page.locator(RAIL_DRAWER).getByRole('link', { name: 'Icon button', exact: true }).getAttribute('aria-current').then(value => assert.equal(value, 'page'));
     assert.equal(await drawer!.evaluate(node => (node as any).isSectionExpanded('navigation')), true, 'other drawer sections remain open');
     await go('/components/button/');
     await panel.choose(page, 'variant', 'outlined');
@@ -160,10 +165,12 @@ try {
     assert.equal(await page.locator('#site-nav-dialog').getAttribute('open'), null);
     assert.equal(await page.locator('#site-primary-rail').getAttribute('inert'), null);
     await go('/components/');
-    assert.equal(await page.locator('#component-catalog-index').evaluate(index => (index as HTMLDetailsElement).open), false, 'mobile catalog starts closed, like a direct load');
-    await page.locator('#component-catalog-index summary').click();
+    // Below 840px the section list opens with the rail, from the navigation button.
+    await page.locator('#site-nav-open').click();
     await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('button', { name: 'Buttons', exact: true }).waitFor();
-    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.keyboard.press('Escape');
+    await page.locator('#site-nav-dialog[open]').waitFor({ state: 'detached' });
+    await page.setViewportSize({ width: 1700, height: 900 });
     await page.locator('#search-trigger').click();
     await page.locator('#search-dialog[open]').waitFor();
     await go('/components/button/');
@@ -236,32 +243,26 @@ try {
   }
   await nojs.close();
   // Capture with motion enabled: before, immediately after click, and settled.
-  const captureContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, recordVideo: { dir: output }, reducedMotion: 'no-preference' });
+  const captureContext = await browser.newContext({ viewport: { width: 1700, height: 900 }, recordVideo: { dir: output }, reducedMotion: 'no-preference' });
   await captureContext.addInitScript(() => {
+    // A page change fades the content (src/client/client-navigation.ts); only a closing modal
+    // drawer uses a document view transition. Count any that start.
+    (window as any).viewTransitions = 0;
     if (!document.startViewTransition) return;
     const start = document.startViewTransition.bind(document);
-    document.startViewTransition = update => {
-      (window as any).transitionNames = {
-        root: getComputedStyle(document.documentElement).viewTransitionName,
-        shell: [...document.querySelectorAll('.header, #site-primary-rail, #site-primary-bar, m-drawer.site-drawer')].map(node => getComputedStyle(node).viewTransitionName),
-      };
-      const transition = start(update);
-      (window as any).navigationAnimation = transition.finished;
-      return transition;
-    };
+    document.startViewTransition = update => { (window as any).viewTransitions++; return start(update); };
   });
   const capture = await captureContext.newPage();
   await capture.goto(href('/components/button/')); await settled(capture);
   await capture.screenshot({ path: resolve(output, '01-before.png') });
-  await capture.locator('m-drawer.site-drawer').getByRole('link', { name: 'Icon button', exact: true }).click();
+  const liveDrawer = await capture.locator(RAIL_DRAWER).elementHandle();
+  await capture.locator(RAIL_DRAWER).getByRole('link', { name: 'Icon button', exact: true }).click();
   await capture.screenshot({ path: resolve(output, '02-click.png') });
   await capture.waitForFunction(() => location.pathname === '/components/icon-button/' && document.querySelector('h1')?.textContent === 'Icon button');
   await settled(capture);
-  await capture.evaluate(() => (window as any).navigationAnimation);
-  const transitionNames = await capture.evaluate(() => (window as any).transitionNames);
-  assert.equal(transitionNames.root, 'none', 'the whole document is not snapshotted');
-  assert.ok(transitionNames.shell.length >= 4 && transitionNames.shell.every((name: string) => name === 'none'), 'header, rail, bar and drawer remain live during the content transition');
-  assert.equal(await capture.locator('#component-content').evaluate(node => getComputedStyle(node).viewTransitionName), 'page-content');
+  await capture.waitForFunction(() => !document.getAnimations().some(animation => animation.playState === 'running'));
+  assert.equal(await capture.evaluate(() => (window as any).viewTransitions), 0, 'a page change fades the content, without a document view transition');
+  assert.equal(await liveDrawer!.evaluate((node, selector) => node === document.querySelector(selector), RAIL_DRAWER), true, 'the drawer stays live through the page change');
   await capture.screenshot({ path: resolve(output, '03-swapped.png') });
   const video = capture.video()!; await captureContext.close();
   await video.saveAs(resolve(output, 'drawer-navigation.webm'));
