@@ -169,3 +169,13 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
   top: calc(var(--frame) * -1); bottom: calc(var(--frame) * -1); background: color-mix(in srgb, var(--mtrl-sys-color-scrim) 22%, var(--mtrl-sys-color-surface)); }
 .catalog-frame--picker .catalog-frame__screen { align-items: flex-start; padding: 16px 0 0; overflow: hidden; }
 .catalog-visual--datepicker md3-catalog-datepicker, .catalog-visual--timepicker md3-catalog-timepicker { width: auto; zoom: 0.62; }
+
+/* The toolbar floats above the phone's gesture bar, drawn at phone scale. A transform,
+   not zoom: its overflow menu opens in the top layer, placed from the opener's box. */
+.catalog-visual--toolbar .catalog-frame__screen { padding-bottom: 22px; container-type: inline-size; }
+.catalog-visual--toolbar md3-catalog-toolbar { flex: none; scale: 0.7; transform-origin: 50% 100%; }
+@container (width < 260px) { .catalog-visual--toolbar md3-catalog-toolbar { scale: 0.6; } }
+.catalog-visual--toolbar .catalog-frame__screen::after {
+  content: ""; position: absolute; bottom: 10px; left: 50%; translate: -50% 0;
+  width: 96px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface);
+}

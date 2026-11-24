@@ -42,6 +42,7 @@ import restaurant from '../../icons/restaurant.svg' with { type: 'text' };
 import search from '../../icons/search.svg' with { type: 'text' };
 import send from '../../icons/send.svg' with { type: 'text' };
 import snooze from '../../icons/snooze.svg' with { type: 'text' };
+import reply from '../../icons/reply.svg' with { type: 'text' };
 import star from '../../icons/star.svg' with { type: 'text' };
 import tab from '../../icons/tab.svg' with { type: 'text' };
 import undo from '../../icons/undo.svg' with { type: 'text' };
@@ -154,6 +155,7 @@ export const symbols = {
   mic: trim(mic),
   redo: trim(redo),
   snooze: trim(snooze),
+  reply: trim(reply),
   star: trim(star),
   tab: trim(tab),
   undo: trim(undo),
@@ -268,6 +270,7 @@ const files: Record<keyof typeof symbols, string> = {
   mic: 'mic',
   redo: 'redo',
   snooze: 'snooze',
+  reply: 'reply',
   star: 'star',
   tab: 'tab',
   undo: 'undo',
