@@ -1,7 +1,7 @@
 <div class="component-list-layout component-list-layout--detail">
 <%~ include('component-list', it) %>
 <div class="page-wrap component-page" id="component-content" tabindex="-1" data-component="<%= it.slug %>">
-  <% if (it.componentHeader) { %><%~ it.componentHeader %><% } else { %>
+  <% if (it.componentHeader) { %><%~ it.componentHeader %><% if (it.intro) { %><div class="component-intro"><%~ it.intro %></div><% } %><% } else { %>
   <header class="page-heading">
     <div class="page-heading__top">
       <a class="text-link component-list-up" href="<%= it.isAddons ? '/addons/' : '/components/' %>"><%~ it.icon('arrow_back') %> <%= it.isAddons ? 'All add-ons' : 'All components' %></a>
@@ -50,6 +50,7 @@
       </div>
     </form>
   </section>
+  <% if (it.references) { %><%~ it.references %><% } %>
   <% if (it.usedIn && it.usedIn.length) { %><p class="component-used-in">Used in: <% it.usedIn.forEach((example, index) => { %><% if (index) { %>, <% } %><a class="text-link" href="/showcase/<%= example.slug %>/"><%= example.title %></a><% }); %></p><% } %>
 </div>
 </div>
