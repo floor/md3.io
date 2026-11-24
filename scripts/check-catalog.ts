@@ -221,7 +221,8 @@ try {
     assert(!card.arrow, `${slug}: the card still has its ↗`);
   }
   assert(state.modal === 0 && state.dialogs === 0, 'A modal dialog is open on the overview before anyone opens one');
-  assert(await page.getByRole('alertdialog').count() === 0, 'The closed catalog dialog is visible on the overview');
+  // The dialog card shows its dialog open in place; no other dialog is open on the overview.
+  assert(await page.getByRole('alertdialog').and(page.locator(':not(.catalog-visual--dialog *)')).count() === 0, 'A catalog dialog is open outside its card');
   assert(state.popovers === 0, 'A popover is open in the top layer before anyone opens one');
   assert(JSON.stringify(await boxes()) === JSON.stringify(before), 'The cards moved when the elements upgraded');
 
@@ -284,13 +285,17 @@ try {
     await close();
     await staysOnOverview(slug);
   };
-  await openClose('dialog', 'Show dialog',
-    async () => { await visual('dialog').locator('dialog:modal').waitFor(); },
-    async () => {
-      // The pickers' cards show their own Cancel: this one is the dialog's.
-      await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).click();
-      await page.getByRole('alertdialog').waitFor({ state: 'hidden' });
-    });
+  // The dialog card shows the dialog open in place: OK waits for a choice, then closes
+  // it, and a fresh one opens again.
+  await visual('dialog').scrollIntoViewIfNeeded();
+  const dialogOk = visual('dialog').getByRole('button', { name: 'OK', exact: true });
+  await dialogOk.waitFor();
+  assert(await dialogOk.isDisabled(), 'dialog: OK is on before a choice is made');
+  await visual('dialog').getByText('Chimes', { exact: true }).click();
+  await dialogOk.click();
+  await visual('dialog').getByText('Alarm sound').waitFor({ state: 'hidden' });
+  await visual('dialog').getByText('Alarm sound').waitFor();
+  await staysOnOverview('dialog');
   await openClose('menu', 'Show menu',
     async () => {
       const item = page.getByRole('menuitem').first();
@@ -310,11 +315,11 @@ try {
   assert(await visual('fab-menu').getByRole('menuitem').count() === 3, 'fab-menu: the open menu does not list its three items');
   await fabItem.click();
   await staysOnOverview('fab-menu');
-  // The snackbar card shows the snackbar in its phone: Undo closes it, and a fresh one returns.
+  // The snackbar card shows the snackbar in its phone: Retry closes it, and a fresh one returns.
   await visual('snackbar').scrollIntoViewIfNeeded();
-  const snack = visual('snackbar').getByText('Your changes have been saved.');
+  const snack = visual('snackbar').getByText('Retrying in 5 seconds', { exact: false });
   await snack.waitFor();
-  await visual('snackbar').getByRole('button', { name: 'Undo', exact: true }).click();
+  await visual('snackbar').getByRole('button', { name: 'Retry', exact: true }).click();
   await snack.waitFor({ state: 'hidden' });
   await snack.waitFor();
   await staysOnOverview('snackbar');
@@ -399,18 +404,19 @@ try {
   assert(cardModules.length >= componentSlugs.length, 'Could not find the lazy card modules in the catalog entry');
   const requested = cardModules.filter(url => requests.has(url));
   assert(requested.length > 0 && requested.length < componentSlugs.length, 'The compact overview did not load the preview chunks lazily');
+  // On a phone the dialog card's open dialog fits its card, and Cancel works by touch.
   const compactDialog = narrow.locator('.catalog-visual--dialog');
   await compactDialog.scrollIntoViewIfNeeded();
-  await compactDialog.getByRole('button', { name: 'Show dialog', exact: true }).tap();
-  const phoneModal = compactDialog.locator('dialog:modal');
-  await phoneModal.waitFor();
-  assert(await phoneModal.evaluate(dialog => {
-    const { left, right, top, bottom } = dialog.getBoundingClientRect();
-    return left >= 0 && right <= innerWidth && top >= 0 && bottom <= innerHeight;
-  }), 'The compact catalog dialog fits the viewport');
-  await narrow.getByRole('alertdialog').getByRole('button', { name: 'Cancel', exact: true }).tap();
-  await narrow.getByRole('alertdialog').waitFor({ state: 'hidden' });
-  assert(narrow.url() === `${base}/components/`, 'The compact preview navigated away when opened');
+  const phoneDialog = compactDialog.getByText('Alarm sound');
+  await phoneDialog.waitFor();
+  assert(await compactDialog.evaluate(visual => {
+    const card = visual.getBoundingClientRect();
+    const dialog = visual.querySelector('md3-catalog-dialog')!.shadowRoot!.querySelector('.mtrl-dialog')!.getBoundingClientRect();
+    return dialog.left >= card.left && dialog.right <= card.right && dialog.top >= card.top && dialog.bottom <= card.bottom;
+  }), 'The compact catalog dialog fits its card');
+  await compactDialog.getByRole('button', { name: 'Cancel', exact: true }).tap();
+  await phoneDialog.waitFor({ state: 'hidden' });
+  assert(narrow.url() === `${base}/components/`, 'The compact preview navigated away when used');
   const lastLink = compactGallery.getByRole('link', { name: 'Tooltip', exact: true });
   await lastLink.scrollIntoViewIfNeeded();
   const listPosition = await narrow.evaluate(() => scrollY);
