@@ -264,9 +264,10 @@ try {
     (chip.querySelector('button') ?? chip).click();
   });
   assert(JSON.stringify(await prop('chips', 'm-chips', 'value')).includes('music'), 'chips: the preview did not select');
+  const sliderBefore = Number(await prop('slider', 'm-slider[aria-label="Media volume"]', 'value'));
   await visual('slider').getByRole('slider').first().focus();
   await page.keyboard.press('ArrowRight');
-  assert(await prop('slider', 'm-slider', 'value') === 50, 'slider: the preview did not move');
+  assert(Number(await prop('slider', 'm-slider[aria-label="Media volume"]', 'value')) > sliderBefore, 'slider: the preview did not move');
   await visual('text-field').getByRole('textbox').fill('Ada');
   assert(await visual('text-field').getByRole('textbox').inputValue() === 'Ada', 'text-field: typing did not land');
   await visual('select').scrollIntoViewIfNeeded();
@@ -323,6 +324,10 @@ try {
   await snack.waitFor({ state: 'hidden' });
   await snack.waitFor();
   await staysOnOverview('snackbar');
+  // The tooltip card shows a plain and a rich tooltip, in place.
+  await visual('tooltip').scrollIntoViewIfNeeded();
+  await visual('tooltip').getByText('Add to playlist', { exact: true }).waitFor();
+  await visual('tooltip').getByText('Photos upload in full quality', { exact: false }).waitFor();
   // The time picker card shows the picker itself: an hour on its dial is chosen in place.
   await visual('timepicker').scrollIntoViewIfNeeded();
   await visual('timepicker').getByRole('option', { name: "3 o'clock", exact: true }).click();

@@ -86,11 +86,15 @@ const visuals: Record<ComponentSlug, string> = {
   checkbox: div('catalog-stack', m('checkbox', { 'data-indeterminate': true }, 'Additions')
     + div('catalog-stack catalog-stack--inset', m('checkbox', {}, 'Pickles') + m('checkbox', { checked: true }, 'Tomato'))),
   switch: m('switch', { checked: true, icon: symbols.check, 'supporting-text': 'Stay up to date' }, 'Notifications'),
-  radios: m('radios', { value: 'standard', 'aria-label': 'Delivery method' },
-    [['standard', 'Standard'], ['express', 'Express'], ['pickup', 'Pick up']].map(([value, label]) => m('radio', { value }, label!)).join('')),
+  // A settings group: its heading, and two choices.
+  radios: div('catalog-choice', `<span class="catalog-choice__title" aria-hidden="true">Delivery</span>`
+    + m('radios', { value: 'standard', 'aria-label': 'Delivery' }, [['standard', 'Standard'], ['express', 'Express']].map(([value, label]) => m('radio', { value }, label!)).join(''))),
   chips: m('chips', { selection: 'multi', 'aria-label': 'Interests' },
     [['hiking', 'Hiking', true], ['music', 'Music', false], ['food', 'Food', false]].map(([value, label, selected]) => m('chip', { value: String(value), variant: 'filter', selected: selected === true }, String(label))).join('')),
-  slider: m('slider', { value: 40, min: 0, max: 100, step: 10, ticks: true, label: 'Volume', 'aria-label': 'Volume' }),
+  // A settings screen: Sound, with a slider for each volume beside its icon.
+  slider: div('catalog-sound', `<div class="catalog-sound__bar" aria-hidden="true">${symbols.arrowBack}<span>Sound</span></div>`
+    + ([[symbols.musicNote, 'Media volume', 60], [symbols.alarm, 'Alarm volume', 25]] as const).map(([icon, label, value]) =>
+      `<div class="catalog-sound__row"><span class="catalog-sound__icon" aria-hidden="true">${icon}</span><div class="catalog-sound__control"><span class="catalog-sound__label" aria-hidden="true">${label}</span>${m('slider', { value, min: 0, max: 100, 'aria-label': label })}</div></div>`).join('')),
   'text-field': m('text-field', { variant: 'outlined', label: 'Name', placeholder: 'Enter your name', 'supporting-text': 'As you would like it displayed' }),
   select: m('select', { variant: 'outlined', label: 'Fruit', value: 'apple', 'supporting-text': 'Choose a favorite' },
     [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']].map(([value, label]) => m('select-option', { value }, label!)).join('')),
