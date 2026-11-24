@@ -88,6 +88,7 @@
   <div class="layout">
     <div class="site-primary-rail" id="site-primary-rail">
       <%~ it.primaryRail %>
+      <script type="application/json" id="site-rail-sections"><%~ it.railSections %></script>
       <div class="header__themes <%= it.headerScope %>"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.themeButton %><%~ it.themeMenu %><%~ it.modeButton %></div>
       <script>if (matchMedia('(width < 600px)').matches) document.querySelector('.header__actions').append(document.querySelector('.header__themes'));</script>
     </div>

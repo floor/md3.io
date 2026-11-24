@@ -7,7 +7,7 @@ import { components, componentDeprecations, componentIcons, componentSlugs, isCo
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
-import { componentDrawerEntries, renderSectionDrawer } from './src/server/section-drawer';
+import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogCard, catalogTokens, catalogVisuals } from './src/server/catalog';
@@ -145,11 +145,7 @@ function page(path: string, title: string, description: string, template: string
     : '';
   const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
-  const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, [
-    ...sidebarGroups.flatMap(group => [{ name: group.label }, ...group.items]),
-    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries),
-      ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
-  ]) : '';
+  const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, sidebarEntries(sidebarGroups, isDocs)) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
   const panelStyles = isAddons ? 'addon-panel' : 'material-panel';
@@ -158,7 +154,7 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
   }), status);
 }
@@ -215,6 +211,28 @@ const primaryRail = (current: string): string => {
   }
   return markup;
 };
+/** A section page's own drawer: its groups, and on Docs every component's reference. */
+function sidebarEntries(groups: readonly { label: string; items: readonly { name: string; href: string }[] }[], isDocs: boolean) {
+  return [
+    ...groups.flatMap(group => [{ name: group.label }, ...group.items]),
+    ...(isDocs ? [{ name: 'Components' }, ...componentDrawerEntries(documentationDirectory.entries),
+      ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
+  ];
+}
+/** Each rail destination's drawer rows, in the page, so resting on the rail fills the drawer at once. */
+let railSectionsJson = '';
+function railSections(): string {
+  if (railSectionsJson) return railSectionsJson;
+  const sections: Record<string, { label: string; rows: string }> = {
+    '/components/': { label: 'Component list', rows: drawerItems(componentDrawerEntries(playgroundDirectory.entries)) },
+    '/styles/': { label: 'Styles links', rows: drawerItems(sidebarEntries(stylesGroups, false)) },
+    '/docs/': { label: 'Docs links', rows: drawerItems(sidebarEntries(documentationGroups, true)) },
+  };
+  if (addonsPublic) sections['/addons/'] = { label: 'Add-ons list', rows: drawerItems([{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries]) };
+  if (showcasePublic) sections['/showcase/'] = { label: 'Showcase links', rows: drawerItems(sidebarEntries(exampleGroups, false)) };
+  // Safe inside a script element: no "</script" can survive the escape.
+  return railSectionsJson = JSON.stringify(sections).replaceAll('<', '\\u003c');
+}
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
 const documentationOrder = [...documentationGroups, {
   label: 'Components',

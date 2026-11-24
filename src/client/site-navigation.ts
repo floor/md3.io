@@ -34,26 +34,14 @@ const RAIL_HOVER_DELAY = 140;
 /** The section whose rail item was just clicked: its drawer stays open through the navigation. */
 let keptSection = '';
 
-/** Each destination's drawer rows, read once from its own page. */
-const sectionRows = new Map<string, Promise<{ rows: string; label: string } | null>>();
-const rowsFor = (href: string) => {
-  let rows = sectionRows.get(href);
-  if (!rows) {
-    rows = fetch(href, { headers: { Accept: 'text/html' } })
-      .then(response => response.ok ? response.text() : '')
-      .then(html => {
-        const source = new DOMParser().parseFromString(html, 'text/html').querySelector('.component-list m-drawer, #sidebar m-drawer');
-        if (!source) return null;
-        return {
-          rows: [...source.children].filter(child => child.localName === 'm-drawer-item').map(child => child.outerHTML).join(''),
-          label: source.getAttribute('aria-label') ?? 'Section links',
-        };
-      })
-      .catch(() => null);
-    rows.then(result => { if (!result) sectionRows.delete(href); });
-    sectionRows.set(href, rows);
+/** Each destination's drawer rows, rendered by the server into the shell beside the rail. */
+type SectionRows = { rows: string; label: string };
+let railSections: Record<string, SectionRows> | undefined;
+const rowsFor = (href: string): SectionRows | null => {
+  if (!railSections) {
+    try { railSections = JSON.parse(document.getElementById('site-rail-sections')?.textContent || '{}'); } catch { railSections = {}; }
   }
-  return rows;
+  return railSections?.[href] ?? null;
 };
 
 /**
@@ -105,7 +93,8 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
       drawerPanel.inert = false;
       drawerPanel.setAttribute('data-open', '');
     }
-    const [section, { defineSiteDrawer }] = await Promise.all([rowsFor(href), import('./catalog/drawer')]);
+    const section = rowsFor(href);
+    const { defineSiteDrawer } = await import('./catalog/drawer');
     if (!life.active || wanted !== href) return false;
     if (!section) { if (href !== homeSection()) hide(); return false; }
     defineSiteDrawer();
@@ -156,8 +145,6 @@ function initRailDrawer(rail: HTMLElement, life: PageLifecycle) {
       intent = setTimeout(hide, RAIL_HOVER_DELAY);
       return;
     }
-    // Fetched during the delay, so the rows are ready when it ends.
-    if (pointer.matches) void rowsFor(href);
     intent = setTimeout(() => void show(href), RAIL_HOVER_DELAY);
   };
   // Moves as well as overs: after a page transition Chrome sends no pointerover until the
