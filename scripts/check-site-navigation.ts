@@ -414,6 +414,10 @@ try {
   await staticPage.setViewportSize({ width: 1440, height: 900 });
   await staticPage.goto(url('/components/button/'));
   const staticDrawer = staticPage.getByRole('navigation', { name: 'Component list', exact: true });
+  // Without scripts the page's own list is the only one: it sits beside the detail, not over it.
+  const staticList = (await staticPage.locator('main .component-list').boundingBox())!;
+  const staticDetail = (await staticPage.locator('.component-page').boundingBox())!;
+  assert.ok(staticList.x + staticList.width <= staticDetail.x + 1, 'without scripts the component list and the detail sit side by side');
   const staticLink = staticDrawer.getByRole('link', { name: 'Navigation rail', exact: true });
   await staticLink.click();
   await staticPage.waitForURL(url('/components/navigation-rail/'));
