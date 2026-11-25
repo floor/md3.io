@@ -276,3 +276,7 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* Six icon chips fit any width: shown whole, not in a scroller that clips the last. */
 :is(.component-lede, .component-tab-page) .framework-chips::part(container) { overflow: visible; }
 .component-lede > .framework-chips-row, .component-tab-page .component-frameworks { max-width: 100%; min-width: 0; }
+/* A component's Overview: its sections, and "On this page" at the right, as on Develop. */
+.component-overview { display: flex; gap: 32px; min-width: 0; }
+.component-overview__main { flex: 1; min-width: 0; }
+.component-overview__toc { margin: 32px 0 0; }
