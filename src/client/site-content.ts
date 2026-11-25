@@ -7,6 +7,22 @@ registerPage('site-content', (content, life) => {
   initSiteNavigation(content, life);
   // The overview heroes' art tile: a fresh drawing in the theme's colours on each visit.
   for (const tile of content.querySelectorAll<HTMLElement>('.page-hero__art')) drawWaves(tile);
+  // A component's tab bar sticks under the header; stuck, it narrows (site.css).
+  const tabBar = content.querySelector<HTMLElement>('.component-tabs');
+  if (tabBar) {
+    let frame = 0;
+    const mark = () => {
+      frame = 0;
+      const top = parseFloat(getComputedStyle(tabBar).top) || 0;
+      const stuck = tabBar.getBoundingClientRect().top <= top + 0.5 && scrollY > 0;
+      tabBar.toggleAttribute('data-stuck', stuck);
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(mark); };
+    life.events(window).addEventListener('scroll', schedule, { passive: true });
+    life.events(window).addEventListener('resize', schedule, { passive: true });
+    life.add(() => cancelAnimationFrame(frame));
+    mark();
+  }
   // An old link to a component's accessibility notes (/docs/components/<slug>/#accessibility,
   // redirected to Develop with its anchor) goes on to the Accessibility tab.
   const developTab = /^\/components\/([a-z-]+)\/develop\/$/.exec(location.pathname);

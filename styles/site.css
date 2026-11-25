@@ -322,3 +322,18 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* The drawers' section headers (Guides, Add-ons…) stand apart from their rows: the primary
    colour, weight 600. */
 m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weight: 600; }
+
+/* A component's tabs stay in reach, as on m3.material.io: the bar sticks under the header,
+   and once stuck it narrows to the body's width with a shadow (site-content.ts marks it). */
+.component-tabs {
+  position: sticky; top: calc(var(--header-height) + 8px); z-index: 20;
+  box-sizing: border-box; width: 100%; margin-inline: auto;
+  transition: width 200ms cubic-bezier(0.2, 0, 0, 1), box-shadow 200ms linear;
+}
+.component-tabs[data-stuck] {
+  width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 30%, transparent), 0 2px 6px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 15%, transparent);
+}
+@media (prefers-reduced-motion: reduce) { .component-tabs { transition: none; } }
+/* A section reached from On this page lands below the stuck tabs. */
+:is(.component-page, .component-tab-page) :is(h2, h3)[id], .component-page #playground { scroll-margin-top: calc(var(--header-height) + 96px); }
