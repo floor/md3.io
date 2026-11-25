@@ -15,10 +15,17 @@ const inPanel = (page: Page, selector: string) => page.locator(`#configuration $
  * reaching for a control (once open it stays so for the page).
  */
 export async function openSettings(page: Page): Promise<void> {
+  // After a client navigation the address changes before the page arrives: wait for its form.
+  await page.locator('#configuration').waitFor({ state: 'attached' });
   const toggle = page.locator('#settings-toggle');
   if (!await toggle.count()) return;
-  if (await page.locator('.playground[data-settings-open]').count()) return;
-  await toggle.click();
+  // After a client navigation the page's script may not have wired the button yet: press
+  // again until the sheet is open.
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (await page.locator('.playground[data-settings-open]').count()) return;
+    if (attempt % 4 === 0) await toggle.click();
+    await page.waitForTimeout(100);
+  }
   await page.locator('.playground[data-settings-open]').waitFor();
 }
 
@@ -286,13 +293,14 @@ export async function checkPlaygroundScroll(page: Page, label: string, scroll: '
     const body = form.querySelector('.configuration-body')!;
     return {
       // The playground itself fits the window; the page may continue below it (previous and next).
-      width: innerWidth, height: innerHeight, scrollWidth: root.scrollWidth, playgroundBottom: Math.round(document.querySelector('.playground')!.getBoundingClientRect().bottom + scrollY),
+      width: innerWidth, height: innerHeight, scrollWidth: root.scrollWidth, playgroundHeight: Math.round(document.querySelector('.playground')!.getBoundingClientRect().height),
       formOverflow: getComputedStyle(form).overflowY, bodyOverflow: getComputedStyle(body).overflowY,
     };
   });
   if (metrics.scrollWidth > metrics.width + 1) throw new Error(`${label}: playground overflows horizontally: ${JSON.stringify(metrics)}`);
   if (scroll === 'fit') {
-    if (metrics.playgroundBottom > metrics.height + 1) throw new Error(`${label}: playground does not fit the tall window: ${JSON.stringify(metrics)}`);
+    // The playground starts below the page's hero and tabs: scrolled to, it is seen whole.
+    if (metrics.playgroundHeight > metrics.height + 1) throw new Error(`${label}: playground does not fit the tall window: ${JSON.stringify(metrics)}`);
     return;
   }
   if (metrics.formOverflow !== 'visible' || metrics.bodyOverflow !== 'visible') {

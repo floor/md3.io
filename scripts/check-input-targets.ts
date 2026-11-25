@@ -52,6 +52,7 @@ async function edge(page: Page, target: Locator, input: 'touch' | 'pointer', sid
 }
 
 export async function checkVisualControlSizes(page: Page) {
+  await panel.openSettings(page);
   const config = page.locator('#configuration');
   const scenario = config.getByRole('combobox', { name: 'Scenario', exact: true });
   const size = config.locator('m-button-group[data-group-for="size"]');
@@ -99,7 +100,11 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       const errors: string[] = [];
       page.setDefaultTimeout(10000);
       page.on('pageerror', error => errors.push(error.message));
-      const goto = (path: string) => page.goto(new URL(path, base).href);
+      // A component page opens with its settings closed: they are opened to reach the controls.
+      const goto = async (path: string) => {
+        await page.goto(new URL(path, base).href);
+        if (/^\/components\/[a-z-]+\/$/.test(path)) await panel.openSettings(page);
+      };
       // The search button is material's: its inner button carries the 48px touch area (::after).
       const search = page.locator('#search-trigger button.mtrl-button');
       const theme = page.locator('#theme-picker button[part~="icon-button"]');
