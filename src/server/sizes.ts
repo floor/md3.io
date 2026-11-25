@@ -11,6 +11,17 @@ interface SizesFile { material: string; measured: string; gzip: number; core: Re
 
 export const sizes: SizesFile = JSON.parse(readFileSync(resolve(root, 'data/sizes.json'), 'utf8'));
 
+/** The home page's tree-shaking figures: what a page that imports one component loads (JS + CSS, gzip). */
+export function treeShaking(names: Record<string, string>, picks: readonly string[]) {
+  const kb = (bytes: number) => (bytes / 1024).toFixed(1);
+  const alone = Object.values(sizes.components).map(size => size.factory.alone);
+  return {
+    version: sizes.material, measured: sizes.measured, count: alone.length,
+    min: kb(Math.min(...alone)), max: kb(Math.max(...alone)),
+    rows: picks.filter(slug => sizes.components[slug]).map(slug => ({ name: names[slug] ?? slug, kb: kb(sizes.components[slug]!.factory.alone), share: sizes.components[slug]!.factory.alone / Math.max(...alone) })),
+  };
+}
+
 type AddonSizesFile = Omit<SizesFile, 'components'> & {
   addons: string;
   components: Record<string, Omit<ComponentSize, 'material' | 'addons'>>;

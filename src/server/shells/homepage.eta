@@ -8,12 +8,27 @@
      without scripts. */%>
     <div class="hero__actions"><a class="mtrl-button mtrl-button--filled mtrl-button--m mtrl-button--icon mtrl-button--round" href="/components/"><span class="mtrl-button__text">Explore components</span><span class="mtrl-icon mtrl-button__icon mtrl-button__icon--end" aria-hidden="true"><%~ it.icon('arrow_forward') %></span></a><a class="mtrl-button mtrl-button--outlined mtrl-button--m mtrl-button--round" href="/docs/"><span class="mtrl-button__text">Read the docs</span></a><a class="mtrl-button mtrl-button--outlined mtrl-button--m mtrl-button--icon mtrl-button--round" href="https://github.com/floor/material" target="_blank" rel="noopener"><span class="mtrl-button__text">Source on GitHub</span><span class="mtrl-icon mtrl-button__icon mtrl-button__icon--end" aria-hidden="true"><%~ it.icon('open_in_new') %></span></a></div>
     <div class="hero__install"><%~ it.install %></div>
-    <div class="hero__notes"><span>Material Design 3</span><span>Zero runtime dependencies</span><span>Open source</span></div>
+    <div class="hero__notes"><span>Material Design 3</span><span>Tree-shakable</span><span>Zero runtime dependencies</span><span>Open source</span></div>
   </section>
   <div class="landing-features">
     <div><span class="feature-index">01 / EXPLORE</span><h2>Find the right expression.</h2><p>Try variants, sizes, and shapes in a live component playground.</p></div>
     <div><span class="feature-index">02 / CUSTOMIZE</span><h2>Make it feel like you.</h2><p>Switch Material themes and light or dark mode. See every change as you make it.</p></div>
     <div><span class="feature-index">03 / BUILD</span><h2>Take it from here.</h2><p>Copy your configuration and bring the component to your project. No framework required.</p></div>
   </div>
+  <%/* Tree-shaking: the measured cost of one component (data/sizes.json, scripts/sizes.ts). */%>
+  <section class="shaking" aria-labelledby="shaking-title">
+    <div class="shaking__text">
+      <span class="feature-index">TREE-SHAKABLE</span>
+      <h2 id="shaking-title">Ship only what you use.</h2>
+      <p>Every component is its own module, with its own stylesheet. Import a button and your bundler keeps the button: the other components never reach your users.</p>
+      <pre class="shaking__code"><code>import { createButton } from 'material';
+import 'material/styles/base';
+import 'material/styles/button';</code></pre>
+      <p class="shaking__note">A page that uses one component loads <strong><%= it.shaking.min %>–<%= it.shaking.max %> KB</strong>, JavaScript and CSS, gzip, across all <%= it.shaking.count %> components. Measured on material <%= it.shaking.version %>, <%= it.shaking.measured %>. <a class="text-link" href="/docs/why-material/">How we measure</a></p>
+    </div>
+    <ul class="shaking__bars" aria-label="A page with only this component, gzip">
+      <% it.shaking.rows.forEach(row => { %><li><span class="shaking__name"><%= row.name %></span><span class="shaking__bar" style="--share: <%= row.share.toFixed(3) %>"></span><span class="shaking__kb"><%= row.kb %> KB</span></li><% }) %>
+    </ul>
+  </section>
   <%~ include('footer', it) %>
 </div>

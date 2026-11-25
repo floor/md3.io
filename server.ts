@@ -16,7 +16,7 @@ import { catalogCard, docCard, catalogTokens, catalogVisuals } from './src/serve
 import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
-import { componentSize } from './src/server/sizes';
+import { componentSize, treeShaking } from './src/server/sizes';
 import { LAB_SEEDS, LAB_VARIANTS, LAB_SAMPLES, LAB_ROLE_GROUPS } from './src/shared/colour-lab';
 import { comingStyles, stylePages } from './src/server/styles';
 import { builtInThemes } from './src/server/themes';
@@ -441,7 +441,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   const componentTabMatch = /^\/components\/([a-z-]+)\/(develop|accessibility)\/$/.exec(path);
   // A renamed component's old documentation address goes straight to its Develop tab, in one redirect.
   const movedDoc = (to: string) => to.startsWith('/docs/components/') ? `/components/${to.slice(17, -1)}/develop/` : to;
-  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
+  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)), shaking: treeShaking(Object.fromEntries(componentSlugs.map(slug => [slug, components[slug].name])), ['divider', 'checkbox', 'button', 'slider', 'dialog', 'select']) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('top-app-bar', 'app-bar')) + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('/drawer/', '/navigation-drawer/')) + url.search } });
   // Bottom app bar left the site for Toolbar; its published URLs keep working.

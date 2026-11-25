@@ -165,6 +165,18 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .landing-features { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; border-top: 1px solid var(--border); padding: 28px 0; }
 .landing-features h2 { font-size: var(--fs-lg); margin: 6px 0 8px; }
 .landing-features p { font-size: var(--fs-base); color: var(--text-muted); }
+/* Tree-shaking: text and code, then the measured bars. */
+.shaking { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; border-top: 1px solid var(--border); padding: 40px 0 48px; }
+.shaking > * { min-width: 0; }
+.shaking h2 { font-size: var(--fs-xl); margin: 6px 0 12px; }
+.shaking p { font-size: var(--fs-base); color: var(--text-muted); max-width: 56ch; }
+.shaking__code { margin: 20px 0; padding: 16px 18px; background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--fs-ui); overflow-x: auto; }
+.shaking__note { font-size: var(--fs-ui) !important; }
+.shaking__note strong { color: var(--text); }
+.shaking__bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; align-content: center; }
+.shaking__bars li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 4.5em; align-items: center; gap: 12px; font-size: var(--fs-ui); }
+.shaking__bar { height: 12px; border-radius: 6px; background: var(--accent, var(--mtrl-sys-color-primary)); width: calc(var(--share) * 100%); min-width: 6px; }
+.shaking__kb { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
 
 @media (min-width: 600px) {
   .header__logo { font-size: 23px; }
@@ -178,6 +190,7 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
   .hero__notes { gap: 22px; }
   .landing-features { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 38px; padding: 32px 0 40px; }
   .landing-features h2 { margin-top: 12px; }
+  .shaking { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; padding: 56px 0 64px; }
 }
 @media (width < 600px) {
   .page-heading__top .text-link { font-size: var(--fs-xs); }
