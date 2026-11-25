@@ -49,7 +49,17 @@ function move(node: Element, parent: Element, before: Node | null = null) {
 function drawerSignature(drawer: Element) {
   return [...drawer.querySelectorAll('m-drawer-item[href]')].map(item => item.getAttribute('href')).join('|');
 }
-function swapBody(next: Document) {
+/**
+ * Another tab of the same component (Overview, Develop, Accessibility): the pages share their
+ * hero and tab bar, so those stay as they are (the live scene keeps running) and only the
+ * body under them changes.
+ */
+function sameComponentTabs(next: Document): boolean {
+  const seed = (doc: Document | Element) => doc.querySelector<HTMLElement>('.component-hero .page-hero__art')?.dataset.seed;
+  const here = content ? seed(content) : undefined;
+  return !!here && here === seed(next) && !!content?.querySelector('.component-tabs') && !!next.querySelector('.component-tabs');
+}
+function swapBody(next: Document, keepHeader = false) {
   if (!content || !layout) throw new Error('Missing site shell');
   const nextMain = next.getElementById('content')!;
   const oldChildren = [...content.childNodes];
@@ -69,6 +79,21 @@ function swapBody(next: Document) {
   const destinationValue = nextMain.querySelector('m-drawer')?.getAttribute('value') ?? nextIndex?.querySelector('m-drawer')?.getAttribute('value') ?? '';
   if (nextIndex) layout.insertBefore(document.adoptNode(nextIndex), content);
   content.append(...[...nextMain.childNodes].map(node => document.adoptNode(node)));
+  if (keepHeader) {
+    const fresh = (selector: string) => [...content.querySelectorAll<HTMLElement>(selector)].find(node => !oldChildren.some(old => old.contains(node)));
+    const kept = (selector: string) => [...content.querySelectorAll<HTMLElement>(selector)].find(node => oldChildren.some(old => old.contains(node)));
+    for (const selector of ['.component-hero', '.component-tabs']) {
+      const old = kept(selector), incoming = fresh(selector);
+      if (!old || !incoming) continue;
+      // The destination's current tab, on the bar that stays.
+      if (selector === '.component-tabs') for (const link of old.querySelectorAll('a')) {
+        const current = incoming.querySelector(`a[href="${CSS.escape(link.getAttribute('href') ?? '')}"]`)?.getAttribute('aria-current');
+        if (current) link.setAttribute('aria-current', current); else link.removeAttribute('aria-current');
+      }
+      move(old, incoming.parentElement!, incoming);
+      incoming.remove();
+    }
+  }
   const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer:not(.site-rail-drawer m-drawer)')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
   const nextSignature = replacement ? drawerSignature(replacement) : '';
   if (replacement && persistentDrawer && nextSignature !== signature) {
@@ -199,12 +224,31 @@ function hashTarget(url: URL) {
   try { id = decodeURIComponent(url.hash.slice(1)); } catch { id = url.hash.slice(1); }
   return document.getElementById(id) ?? document.getElementById(`${document.documentElement.dataset.framework}-${id}`);
 }
+/**
+ * After a tab switch the tabs stay where they were: stuck at the top, the new body starts
+ * under them; not yet stuck, the page does not move. Focus goes to the page's title, as on
+ * any navigation, without scrolling.
+ */
+function keepTabs(scrolled: number) {
+  const tabs = content?.querySelector<HTMLElement>('.component-tabs');
+  const hero = content?.querySelector<HTMLElement>('.component-hero');
+  const title = content?.querySelector<HTMLElement>('h1');
+  if (title) { if (!title.hasAttribute('tabindex')) title.tabIndex = -1; title.focus({ preventScroll: true }); }
+  if (!tabs || !hero) return;
+  // The bar's place in the flow: under the hero, 8px apart (.component-hero's margin).
+  const natural = hero.getBoundingClientRect().bottom + scrollY + 8;
+  const stickyTop = parseFloat(getComputedStyle(tabs).top) || 0;
+  scrollTo({ left: 0, top: Math.min(scrolled, Math.max(0, natural - stickyTop)), behavior: 'instant' });
+  status.textContent = document.title;
+}
 function restore(url: URL, position?: [number, number]) {
   const target = content?.querySelector<HTMLElement>('h1') ?? content;
   if (target) { if (!target.hasAttribute('tabindex')) target.tabIndex = -1; target.focus({ preventScroll: true }); }
-  if (position) scrollTo(...position);
-  else if (url.hash) hashTarget(url)?.scrollIntoView();
-  else scrollTo(0, 0);
+  // A new page starts where it lands, at once: the site's smooth scrolling (shell.css) is for
+  // moving within a page, not for arriving on another.
+  if (position) scrollTo({ left: position[0], top: position[1], behavior: 'instant' });
+  else if (url.hash) hashTarget(url)?.scrollIntoView({ behavior: 'instant' });
+  else scrollTo({ left: 0, top: 0, behavior: 'instant' });
   status.textContent = document.title;
 }
 /** Dynamic imports cannot be cancelled; stop waiting on them when a visit expires. */
@@ -253,6 +297,8 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     // drawer stay live throughout. Only a closing modal drawer uses a view transition, to slide
     // out over the whole window while the page changes behind it.
     const motion = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tabSwitch = sameComponentTabs(next);
+    const scrolled = scrollY;
     const modalClosing = !!document.querySelector<HTMLDialogElement>('#site-nav-dialog')?.open;
     const transitionEnabled = motion && modalClosing && !!document.startViewTransition;
     const swap = async () => {
@@ -262,7 +308,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       leavePage();
       commit();
       swapHead(next, url);
-      swapBody(next);
+      swapBody(next, tabSwitch);
       if (transitionEnabled) nameTransitionContent();
       for (const link of pageStyles(document)) {
         const wanted = pageStyles(next).find(sheet => new URL(sheet.getAttribute('href')!, location.origin).href === link.href);
@@ -275,7 +321,8 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       enterPage(['site-content', ...(content!.querySelector('#styles-preview') ? ['styles-panel'] : []), ...scripts.map(script => script.name), ...(content!.querySelector('.docs-frameworks') ? ['docs-frameworks'] : [])]);
       await abortable(applyTheme(document, currentAppearance().theme, scopes), signal);
       renderedURL = location.href;
-      restore(new URL(location.href), position);
+      if (tabSwitch && !position && !url.hash) keepTabs(scrolled);
+      else restore(new URL(location.href), position);
       document.dispatchEvent(new CustomEvent('md3:navigated', { detail: { url: renderedURL, initializations: { ...pageInitializations } } }));
     };
     if (transitionEnabled) {
@@ -288,7 +335,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     } else {
       // Material's fade-through, outgoing half: once the next page is ready, the old one fades
       // out (90ms), so the page is never blank while the next one loads.
-      if (motion) {
+      if (motion && !tabSwitch) {
         leaving = content!.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' });
         await leaving.finished.catch(() => {});
       }
@@ -297,7 +344,9 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
       // Material's fade-through, incoming half: the new page fades in where the old one was.
       leaving?.cancel();
       leaving = undefined;
-      if (motion && swapped) content!.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(0, 0, 0.2, 1)' });
+      // A tab switch fades in only the body under the tabs; any other page fades in whole.
+      const incoming = tabSwitch ? [...content!.querySelectorAll<HTMLElement>('.component-tabs ~ *')] : [content!];
+      if (motion && swapped) for (const element of incoming) element.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 210, easing: 'cubic-bezier(0, 0, 0.2, 1)' });
     }
   } catch {
     if (request === controller && !superseded) {

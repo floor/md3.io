@@ -7,6 +7,44 @@ registerPage('site-content', (content, life) => {
   initSiteNavigation(content, life);
   // The overview heroes' art tile: a fresh drawing in the theme's colours on each visit.
   for (const tile of content.querySelectorAll<HTMLElement>('.page-hero__art')) drawWaves(tile);
+  // A component's tab bar sticks under the header; stuck, it narrows (site.css).
+  const tabBar = content.querySelector<HTMLElement>('.component-tabs');
+  if (tabBar) {
+    let frame = 0;
+    const mark = () => {
+      frame = 0;
+      const top = parseFloat(getComputedStyle(tabBar).top) || 0;
+      const stuck = tabBar.getBoundingClientRect().top <= top + 0.5 && scrollY > 0;
+      tabBar.toggleAttribute('data-stuck', stuck);
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(mark); };
+    life.events(window).addEventListener('scroll', schedule, { passive: true });
+    life.events(window).addEventListener('resize', schedule, { passive: true });
+    life.add(() => cancelAnimationFrame(frame));
+    mark();
+  }
+  // An old link to a component's accessibility notes (/docs/components/<slug>/#accessibility,
+  // redirected to Develop with its anchor) goes on to the Accessibility tab.
+  const developTab = /^\/components\/([a-z-]+)\/develop\/$/.exec(location.pathname);
+  if (developTab && location.hash === '#accessibility' && !document.getElementById('accessibility')) location.replace(`/components/${developTab[1]}/accessibility/`);
+  // A component's hero scene keeps its overview card's layout (420px wide, the frames drawn
+  // for it) and is scaled whole to fill its tile exactly: CSS cannot divide the tile's
+  // width by 420px, so its size is read here.
+  const SCENE_WIDTH = 420;
+  const stages = content.querySelectorAll<HTMLElement>('.component-hero__visual');
+  if (stages.length) {
+    const fit = (stage: HTMLElement) => {
+      const { width, height } = stage.getBoundingClientRect();
+      if (!width || !height) return;
+      const base = Math.min(SCENE_WIDTH, width);
+      const scale = width / base;
+      stage.style.setProperty('--scene-width', `${base}px`);
+      stage.style.setProperty('--scene-height', `${height / scale}px`);
+      stage.style.setProperty('--scene-scale', String(scale));
+    };
+    const resize = life.observer(new ResizeObserver(entries => { for (const entry of entries) fit(entry.target as HTMLElement); }));
+    for (const stage of stages) { fit(stage); resize.observe(stage); }
+  }
   const docToc = content.querySelector('.doc-toc');
   if (docToc) {
     const tocHidden = matchMedia('(width < 1200px)');

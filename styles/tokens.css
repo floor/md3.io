@@ -3,35 +3,22 @@
    Loaded first by every page. No component styles — only custom properties.
    ================================================================= */
 
+/* Google Sans and Google Sans Code, the fonts of m3.material.io, now open (SIL OFL 1.1,
+   fonts/GoogleSans-OFL.txt and fonts/GoogleSansCode-OFL.txt): the Latin subset of each
+   variable font, self-hosted, weights 400 to 700. */
 @font-face {
-    font-family: "DIN Alternate";
-    src: url("/fonts/DIN-Alternate-Regular.woff2") format("woff2");
-    font-weight: 400;
+    font-family: "Google Sans";
+    src: url("/fonts/GoogleSans-latin-wght.woff2") format("woff2");
+    font-weight: 400 700;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-    font-family: "DIN Alternate";
-    src: url("/fonts/DIN-Alternate-Bold.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-/* Latin, punctuation, arrows and box drawing: what code shows (the full font is 480 KB). */
-@font-face {
-    font-family: "Ioskeley Mono";
-    src: url("/fonts/IoskeleyMono-Regular.latin.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Ioskeley Mono";
-    src: url("/fonts/IoskeleyMono-Bold.latin.woff2") format("woff2");
-    font-weight: 700;
+    font-family: "Google Sans Code";
+    src: url("/fonts/GoogleSansCode-latin-wght.woff2") format("woff2");
+    font-weight: 400 700;
     font-style: normal;
     font-display: swap;
 }
@@ -106,10 +93,9 @@
        side of the window (see the window size classes below) */
     --content-max-width: 1500px;
 
-    /* The reading measure for prose only, not the column. DIN Alternate at --fs-md
-       has an 8.35px "0" and averages ≈6.7px a character, so 100ch ≈ 835px ≈ 125
-       characters on a full line; narrower columns (phones) simply fill. */
-    --measure: 100ch;
+    /* The reading measure for prose only, not the column: 100ch in the body font at
+       --fs-md; narrower columns (phones) simply fill. */
+    --measure: 84ch;
 
 
     /* Radii */
@@ -122,9 +108,9 @@
     --fw-bold: 700;
 
     /* Typography: Font families */
-    --font-sans: "DIN Alternate", Helvetica Neue, Helvetica, Arial, sans-serif;
+    --font-sans: "Google Sans", Helvetica Neue, Helvetica, Arial, sans-serif;
     --font-vlist: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
-    --font-mono: "Ioskeley Mono", monospace;
+    --font-mono: "Google Sans Code", monospace;
 
     /* Typography: Font-size scale */
     --fs-2xs: 11px;

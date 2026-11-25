@@ -67,12 +67,14 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
       `${family.name}: a native button controls the following list`);
     equal(await list.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href'))), expected.map(item => item.href),
       `${family.name}: the members follow the expected A–Z order`);
-    const active = expected.some(item => item.href === path);
+    // A component's Develop or Accessibility tab belongs to the component.
+    const active = expected.some(item => item.href === path.replace(/(?:develop|accessibility)\/$/, ''));
     assert(await toggle.getAttribute('aria-expanded') === String(active) && await list.isVisible() === active,
       `${family.name}: only the current family is open on load`);
   }
   const current = pane.locator('a[aria-current="page"]');
-  const currentHref = hrefs.includes(path) ? path : null;
+  const route = path.replace(/(?:develop|accessibility)\/$/, '');
+  const currentHref = hrefs.includes(route) ? route : null;
   assert(await current.count() === Number(currentHref !== null), 'Current link count matches the route');
   if (currentHref) assert(await current.getAttribute('href') === currentHref && await current.isVisible(), 'The current link is visible and matches the route');
 }
@@ -463,8 +465,9 @@ try {
     await page.screenshot({ animations: 'disabled', path: `${captures}/overview-${width}.png` });
     await page.goto(`${base}/components/tooltip/`);
     assert(await page.getByRole('heading', { name: 'Tooltip', level: 1, exact: true }).count() === 1, `${width}px: the detail heading is missing`);
-    const up = page.getByRole('link', { name: 'All components', exact: true });
-    assert(await up.getAttribute('href') === '/components/', `${width}px: missing up link`);
+    // A component page's tabs: its Overview is the page itself.
+    const overviewTab = page.locator('.component-tabs a[aria-current="page"]');
+    assert(await overviewTab.getAttribute('href') === '/components/tooltip/', `${width}px: missing the Overview tab`);
     assert(await page.getByText('Browse components', { exact: true }).count() === 0, `${width}px: temporary component picker on the detail`);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: the detail overflows`);
     // The page's own copy of the list stays hidden: the rail's drawer is the list.
@@ -481,7 +484,7 @@ try {
     await dismissSectionList(page);
     await page.screenshot({ animations: 'disabled', path: `${captures}/detail-${width}.png` });
     await checkDetailFocusOrder(page, width);
-    await up.click();
+    await page.getByRole('navigation', { name: 'Primary navigation', exact: true }).getByRole('link', { name: 'Components', exact: true }).click();
     await page.waitForURL(`${base}/components/`);
   }
 
@@ -518,15 +521,11 @@ try {
         await page.goto(`${base}/components/${slug}/`);
         await checkComponentList(page);
       }
+      // A component's documentation is its Develop tab: the old Docs address lands there, and
+      // the tab keeps the component list, as its Overview does.
       await page.goto(`${base}/docs/components/${slug}/`);
-      const docs = await revealSectionList(page, 'Docs links', '/docs/');
-      await checkDirectory(docs, new URL(page.url()).pathname, true);
-      if (slug === 'button-group') {
-        const current = docs.getByRole('link', { name: 'Button group', exact: true });
-        if (width === 390) await current.evaluate(link => link.scrollIntoView({ block: 'center', behavior: 'instant' }));
-        else await current.scrollIntoViewIfNeeded();
-        await page.screenshot({ animations: 'disabled', path: `${azCaptures}/docs-sidebar-${width}.png` });
-      }
+      assert(new URL(page.url()).pathname === `/components/${slug}/develop/`, `${slug}: the old documentation address lands on the Develop tab`);
+      if (width === 1440) await checkComponentList(page);
     }
   }
 

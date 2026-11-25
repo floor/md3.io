@@ -16,14 +16,15 @@ describe('App bar naming and compatibility', () => {
         const query = '?framework=vue&theme=ocean&type=large&title=A%26B';
         const response = await get(`${prefix}${oldSlug}/${query}`, method);
         expect(response.status).toBe(301);
-        expect(response.headers.get('Location')).toBe(`${prefix}${newSlug}/${query}`);
+        // A component's documentation is its Develop tab now: the old docs address goes there.
+        expect(response.headers.get('Location')).toBe(prefix === '/docs/components/' ? `/components/${newSlug}/develop/${query}` : `${prefix}${newSlug}/${query}`);
         expect((await get(response.headers.get('Location')!, method)).status).toBe(200);
       }
     }
   });
 
   test('canonical pages, sitemap, search and showcase links use App bar', async () => {
-    for (const path of ['/components/app-bar/', '/docs/components/app-bar/']) {
+    for (const path of ['/components/app-bar/', '/components/app-bar/develop/']) {
       const response = await get(path);
       expect(response.status).toBe(200);
       const html = await response.text();
@@ -60,8 +61,8 @@ describe('App bar naming and compatibility', () => {
   });
 
   test('Navigation drawer is renamed without changing the installed API or deprecating it', async () => {
-    for (const prefix of ['/components/', '/docs/components/']) {
-      const response = await get(`${prefix}navigation-drawer/`);
+    for (const path of ['/components/navigation-drawer/', '/components/navigation-drawer/develop/']) {
+      const response = await get(path);
       expect(response.status).toBe(200);
       expect(/<h1\b[^>]*>Navigation drawer<\/h1>/.test(await response.text())).toBe(true);
     }
@@ -87,7 +88,7 @@ describe('App bar naming and compatibility', () => {
   });
 
   test('Bottom app bar is gone: its URLs redirect to Toolbar, query kept', async () => {
-    for (const [from, to] of [['/components/bottom-app-bar/?x=1', '/components/toolbar/?x=1'], ['/docs/components/bottom-app-bar/', '/docs/components/toolbar/'], ['/preview/bottom-app-bar/', '/preview/toolbar/']] as const) {
+    for (const [from, to] of [['/components/bottom-app-bar/?x=1', '/components/toolbar/?x=1'], ['/docs/components/bottom-app-bar/', '/components/toolbar/develop/'], ['/preview/bottom-app-bar/', '/preview/toolbar/']] as const) {
       const response = await get(from);
       expect(response.status).toBe(301);
       expect(response.headers.get('location')).toBe(to);

@@ -56,9 +56,9 @@ describe('the example fence', () => {
     expect(document.frameworks).toBe(true);
     expect(renderDocument('architecture')!.frameworks).toBe(false);
     expect(document.html).not.toContain('doc-example__error');
-    const page = await (await handleRequest(new Request('http://localhost/docs/components/slider/'))).text();
+    const page = await (await handleRequest(new Request('http://localhost/components/slider/develop/'))).text();
     expect(page.match(/<m-chip value="(?:vanilla|html|react|vue|svelte|solid)"/g)).toHaveLength(6);
-    expect(page).toContain('class="framework-chips-row playground--material docs-frameworks"');
+    expect(page).toContain('class="framework-chips-row playground--material docs-frameworks component-frameworks"');
     expect(page).not.toContain('framework-switch');
     const architecture = await (await handleRequest(new Request('http://localhost/docs/architecture/'))).text();
     expect(architecture).not.toContain('docs-frameworks');

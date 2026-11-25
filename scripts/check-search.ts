@@ -26,7 +26,7 @@ try {
     await page.locator('.search-dialog__result').first().filter({ hasText: first }).waitFor();
   };
 
-  for (const path of ['/components/dialog/', '/docs/components/dialog/', '/showcase/settings/']) {
+  for (const path of ['/components/dialog/', '/components/dialog/develop/', '/showcase/settings/']) {
     console.log(`Checking ${path}`);
     await page.goto(`${base}${path}`);
     await page.waitForLoadState('networkidle');
@@ -82,7 +82,7 @@ try {
 
   // A phone: the button is in the header, the panel fits.
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${base}/docs/components/bottom-sheet/`);
+  await page.goto(`${base}/components/bottom-sheet/develop/`);
   const button = await page.locator('#search-trigger').boundingBox();
   assert(button && button.x + button.width <= 390, 'the search button fits the header at 390px');
   await page.locator('#search-trigger').click();

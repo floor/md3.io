@@ -51,6 +51,7 @@ try {
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
   await page.getByRole('tab', { name: 'Code', exact: true }).focus();
   await page.keyboard.press('Enter');
+  await panel.openSettings(page);
   await page.getByRole('textbox', { name: 'Text', exact: true }).fill('Code view update');
   assert((await page.locator('#generated-code').textContent())?.includes('Code view update'), 'Code view does not update with the configuration');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-desktop.png`, fullPage: true });
@@ -159,10 +160,10 @@ try {
       localStorage.setItem('md3-site-mode', m!);
     }, [theme, mode]);
     const themedPage = await themedContext.newPage();
-    for (const route of ['styles/', 'styles/color-lab/', 'docs/components/menu/', '']) {
+    for (const route of ['styles/', 'styles/color-lab/', 'components/menu/develop/', '']) {
       await themedPage.goto(`${base}${route}`);
       await themedPage.waitForTimeout(400);
-      if (route.startsWith('docs/')) {
+      if (route.endsWith('/develop/')) {
         // The search dialog's active result is an accent-dim surface too.
         await themedPage.locator('#search-trigger').click();
         await themedPage.locator('#search-input').fill('button');
@@ -205,7 +206,7 @@ try {
         // checked segments), and the text inside those surfaces.
         const tinted = [...document.querySelectorAll<HTMLElement>('*')].filter(element => getComputedStyle(element).backgroundColor === container);
         const inside = tinted.flatMap(element => [element, ...element.querySelectorAll<HTMLElement>('*')]);
-        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary, .styles-card__visual--type span'), ...inside])];
+        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .hero__actions .mtrl-button__text, .styles-card__visual--type span'), ...inside])];
         return candidates.filter(element => element.getBoundingClientRect().width > 0
           && ([...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) || element instanceof SVGElement)).map(element => {
           const style = getComputedStyle(element);
@@ -289,8 +290,8 @@ try {
   await page.reload();
   await assertAppearance('baseline', 'light');
 
-  await page.goto(`${base}docs/components/button/`);
-  await page.locator('.md h1').waitFor();
+  await page.goto(`${base}components/button/develop/`);
+  await page.locator('.component-hero h1').waitFor();
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-desktop.png`, fullPage: false });
   const tocHref = await page.locator('.doc-toc a').first().getAttribute('href');
   assert(tocHref && await page.locator(tocHref).count() === 1, 'TOC target is missing');
@@ -483,7 +484,8 @@ try {
   const measureAt = async (width: number, route: string) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${base}${route}`);
-    await page.locator('.md h1').waitFor();
+    // A guide's title is in its article; a component's Develop tab carries it in its header.
+    await page.locator(':is(.md, .component-hero) h1').first().waitFor();
     await page.evaluate(() => document.fonts.ready);
     const reading = await measureProse();
     assert(reading.count >= 2 && reading.narrow === 0 && reading.longest <= 125,
@@ -516,7 +518,7 @@ try {
     // Guide prose and API prose: Getting started reads like a guide, Button carries
     // the API tables.
     await measureAt(width, 'docs/getting-started/');
-    const api = await measureAt(width, 'docs/components/button/');
+    const api = await measureAt(width, 'components/button/develop/');
     if (width === 1024) assert(api.toc === false, 'The table of contents shows below its breakpoint');
     if (width === 1440) {
       assert(api.toc === true, 'The table of contents is hidden at 1440 px');
@@ -536,8 +538,8 @@ try {
   // still fits; the fragment still lands and the focus ring is reachable. The table
   // of contents is part of this, so this runs where it shows (above 1150 px).
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${base}docs/components/button/`);
-  await page.locator('.md h1').waitFor();
+  await page.goto(`${base}components/button/develop/`);
+  await page.locator('.component-hero h1').waitFor();
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
   const enlarged = await measureProse();
@@ -561,12 +563,12 @@ try {
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile landing overflows');
-  // The privacy page: the home page's footer links to it (the site's only footer).
+  // The privacy page: the footer links to it, on every page.
   await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
   await page.waitForURL(`${base}privacy/`);
   await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
   await page.goto(`${base}components/button/`);
-  assert(await page.locator('.site-footer').count() === 0, 'Only the home page has the footer');
+  assert(await page.locator('.site-footer').count() === 1, 'A component page has the footer once');
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   await checkPlaygroundLayout(context, base, output);
   await checkInputTargets(browser, base, output);

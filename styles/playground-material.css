@@ -203,3 +203,40 @@
     .playground--material .configuration { contain: none; overflow: visible; }
     .playground--material .configuration-body { overflow-y: visible; }
 }
+
+/* The configuration is a side sheet, closed until Settings opens it: closed, the preview takes
+   the playground's width. Without scripts it stays open, as the button cannot open it. */
+@media (scripting: enabled) {
+    .playground--material:not([data-settings-open]) > .configuration { display: none; }
+    .component-page .playground:not([data-settings-open]) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (scripting: none) { .preview-settings { display: none; } }
+
+/* A component page with the overviews' hero: the hero spans the page as on the overviews,
+   and what follows keeps the overview body's width and side inset. */
+.component-page:has(> .component-hero) { padding: 8px 8px 64px; }
+.component-page:has(> .component-hero) > :not(.component-hero, .component-tabs, script) {
+    box-sizing: border-box;
+    width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px);
+    margin-inline: auto;
+}
+/* The playground is one surface, as the overviews' cards: no border, no rules between its
+   controls, the preview and its status. The controls stay in the surface's top margin and
+   the status in its bottom one, so they never cover the component. */
+.component-page:has(> .component-hero) .playground--material :is(.preview-panel, .configuration) {
+    border: none;
+    border-radius: 28px;
+    background: var(--mtrl-sys-color-surface-container-low);
+}
+.component-page:has(> .component-hero) .playground--material .preview-heading { border-bottom: none; padding: 8px 16px 0; }
+.component-page:has(> .component-hero) .playground--material .preview-footer { border-top: none; padding: 4px 24px 16px; }
+.component-page:has(> .component-hero) > .component-intro { max-width: none; }
+.component-page:has(> .component-hero) > .component-intro p { max-width: var(--measure, 100ch); }
+/* Previous and next, under a component page with the hero: the body's width and inset. */
+.component-list-layout--detail:has(.component-hero) ~ .page-wrap.pager-wrap--component { container-type: inline-size; padding-inline: 8px; }
+.component-list-layout--detail:has(.component-hero) ~ .pager-wrap--component > * {
+    box-sizing: border-box;
+    width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px);
+    margin-inline: auto;
+}
+

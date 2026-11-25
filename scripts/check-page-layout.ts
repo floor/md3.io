@@ -6,6 +6,7 @@ import type { Browser, Frame, Locator, Page } from 'playwright';
 import { examples } from '../examples';
 import { stylePages } from '../src/server/styles';
 import { checkTargets as checkTargetAreas } from './check-input-targets';
+import { openSettings } from './panel-driver';
 
 const viewports = [
   { width: 360, height: 640 },
@@ -22,8 +23,9 @@ const fixedRoutes = [
   ['component-detail', '/components/button/', '#preview'],
   ['documentation', '/docs/'],
   ['guide', '/docs/frameworks/'],
-  ['api-reference', '/docs/components/button/'],
+  ['api-reference', '/components/button/develop/'],
   ['privacy', '/privacy/'],
+  ['credits', '/credits/'],
   ['not-found', '/layout-check-missing-page/'],
 ] as const;
 
@@ -81,7 +83,7 @@ async function checkTargets(page: Page, label: string) {
   const selector = [
     'button', 'summary', 'select', 'textarea', 'input:not([type="hidden"])',
     '.header__logo', '.site-nav-link', '.mtrl-drawer__item', '.doc-toc a', '.site-footer__links a',
-    '.component-card h3 a', 'a.styles-card', 'a.doc-card', 'a.example-card', 'a.btn', '.page-nav__link', '.not-found > a',
+    '.component-card h3 a', 'a.styles-card', 'a.doc-card', 'a.example-card', '.hero__actions a.mtrl-button', '.page-nav__link', '.not-found > a',
     '.page-heading__top a', '.doc-toolbar a', '.catalog-note a', '.lab-api-link', '.lab-upload', '.search-dialog__result',
     '[part~="container"].mtrl-slider__container',
   ].join(', ');
@@ -90,7 +92,7 @@ async function checkTargets(page: Page, label: string) {
 
 async function checkFooter(page: Page, label: string) {
   const footer = page.locator('.site-footer');
-  await footer.getByRole('link', { name: 'Source on GitHub' }).focus();
+  await footer.getByRole('link', { name: 'Credits', exact: true }).focus();
   await page.keyboard.press('Tab');
   const privacy = footer.getByRole('link', { name: 'Privacy', exact: true });
   assert(await privacy.evaluate(node => document.activeElement === node && node.matches(':focus-visible')), `${label}: the final site link receives visible keyboard focus`);
@@ -246,8 +248,8 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           const settled = await geometry(page);
           stableBox(cold.header, settled.header, ['x', 'y', 'width', 'height'], 1, `${label} header`);
           stableBox(cold.main, settled.main, ['x', 'y', 'width'], 1, `${label} main`);
-          // The centered Privacy article can change width when its font loads.
-          const headingPosition = (heading: Box | null) => entry.name === 'privacy' && heading
+          // The centered Privacy and Credits articles can change width when their font loads.
+          const headingPosition = (heading: Box | null) => (entry.name === 'privacy' || entry.name === 'credits') && heading
             ? { ...heading, x: heading.x + heading.width / 2 }
             : heading;
           stableBox(headingPosition(cold.heading), headingPosition(settled.heading), ['x', 'y'], 8, `${label} heading`);
@@ -274,6 +276,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           await checkRouteFrame(page, entry);
           if (entry.name === 'home') await checkOverlays(page, captures, viewport.width);
           if (entry.name === 'component-detail') {
+            await openSettings(page);
             const field = page.getByRole('textbox', { name: 'Text', exact: true });
             await field.fill('Phone and resize');
             await page.frameLocator('#preview').getByRole('button', { name: 'Phone and resize', exact: true }).waitFor();

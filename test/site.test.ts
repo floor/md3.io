@@ -32,9 +32,11 @@ describe('site routes and documentation', () => {
       expect(html, path).toContain('<a slot="leading" class="header__logo" href="/" aria-label="material, home">');
     }
   });
-  test('each component reference links to its own playground', async () => {
+  test('each component reference is its Develop tab, linked to its playground', async () => {
     for (const slug of componentSlugs) {
-      expect(await (await get(`/docs/components/${slug}/`)).text()).toContain(`href="/components/${slug}/">Open playground`);
+      const old = await get(`/docs/components/${slug}/`);
+      expect([slug, old.status, old.headers.get('Location')]).toEqual([slug, 301, `/components/${slug}/develop/`]);
+      expect(await (await get(`/components/${slug}/develop/`)).text()).toContain(`href="/components/${slug}/"`);
     }
   });
   test('every listed document renders', async () => {
@@ -46,8 +48,8 @@ describe('site routes and documentation', () => {
   });
   test('headings, relative links, and the old sheet link are routable', () => {
     const document = renderDocument('navigation-drawer')!;
-    expect(document.html).toContain('/docs/components/bottom-sheet/');
-    expect(document.html).toContain('/docs/components/menu/');
+    expect(document.html).toContain('/components/bottom-sheet/develop/');
+    expect(document.html).toContain('/components/menu/develop/');
     for (const heading of document.toc) expect(document.html).toContain(`id="${heading.id}"`);
   });
   test('installSpecifier names the next dist-tag for a prerelease', () => {
@@ -684,8 +686,9 @@ describe('documentation front matter', () => {
     }
   });
   test('the badge and the date sit under the title', async () => {
-    const html = await (await handleRequest(new Request('http://localhost/docs/components/button/'))).text();
-    expect(html).toMatch(/<\/h1>\n?<div class="meta"><span class="meta__badge meta__badge--published">Published<\/span><span class="meta__item">Updated <time datetime="\d{4}-\d{2}-\d{2}">/);
+    // A component's tab header carries the title; the document starts with its meta line.
+    const html = await (await handleRequest(new Request('http://localhost/components/button/develop/'))).text();
+    expect(html).toMatch(/<article class="md">\s*(?:<div class="framework-chips-row[\s\S]*?<\/div>\s*)?<div class="meta"><span class="meta__badge meta__badge--published">Published<\/span><span class="meta__item">Updated <time datetime="\d{4}-\d{2}-\d{2}">/);
   });
 });
 

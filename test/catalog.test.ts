@@ -58,8 +58,9 @@ describe('the components overview', () => {
     // Nothing from the playground's table or mtrl's elements is in the entry itself.
     expect(entry.replace(/^import \{ registerPage \} from [^;]+;/m, '')).not.toMatch(/^import (?!type )/m);
   });
+  // A component's pages load it too, for the live scene in their hero.
   test('the elements bundle stays off the other pages', async () => {
-    for (const path of ['/', '/components/button/', '/docs/', '/styles/']) expect(await get(path), path).not.toMatch(/<script[^>]+src="\/dist\/catalog(?:\.[a-f0-9]{10})?\.js"/);
+    for (const path of ['/', '/docs/', '/docs/theming/', '/styles/']) expect(await get(path), path).not.toMatch(/<script[^>]+src="\/dist\/catalog(?:\.[a-f0-9]{10})?\.js"/);
   });
 });
 

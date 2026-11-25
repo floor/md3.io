@@ -3,8 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium, type Locator } from 'playwright';
 import { handleRequest } from '../server';
-import { componentDirectory } from '../src/server/component-directory';
-import { addonDocGroup, docGroups, guideGroup } from '../src/server/content';
+import { addonDocGroup, guideGroups } from '../src/server/content';
 import { examples } from '../src/server/examples';
 import { addonsPublic, showcasePublic, stylesPublic } from '../src/shared/visibility';
 import { stylePages } from '../src/server/styles';
@@ -139,7 +138,8 @@ try {
     }
 
     if (width < 840) {
-      await page.getByRole('link', { name: 'All components', exact: true }).click();
+      // The rail's Components destination (the component page's own up link went with its tabs).
+      await page.getByRole('navigation', { name: 'Primary navigation', exact: true }).getByRole('link', { name: 'Components', exact: true }).click();
       await page.waitForURL(url('/components/'));
       // Below 840px the section list opens from the navigation button, with the rail.
       await page.getByRole('button', { name: compact ? 'Open section navigation' : 'Expand navigation', exact: true }).click();
@@ -158,7 +158,7 @@ try {
   const desk = await deskContext.newPage();
   desk.setDefaultTimeout(8000);
   await desk.goto(url('/components/button/'));
-  await desk.getByRole('link', { name: 'All components', exact: true }).click();
+  await desk.getByRole('navigation', { name: 'Primary navigation', exact: true }).getByRole('link', { name: 'Components', exact: true }).click();
   await desk.locator('.component-catalog').waitFor();
   const directory = desk.getByRole('navigation', { name: 'Component list', exact: true });
   const buttons = directory.getByRole('button', { name: 'Buttons', exact: true });
@@ -188,10 +188,9 @@ try {
   await newPage.waitForURL(url('/docs/'));
   await newPage.close();
 
-  const docsEntries = componentDirectory(docGroups.filter(group => group !== addonDocGroup).flatMap(group => group.items)).entries;
-  const docsLinks = docsEntries.flatMap(entry => 'items' in entry ? entry.items : [entry]);
+  // Docs is the guides (and the add-ons while public): a component's documentation is its Develop tab.
   const sections = [
-    { label: 'Docs', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), ...docsLinks.map(item => item.href), ...(addonsPublic ? addonDocGroup.items.map(item => item.href) : [])] },
+    { label: 'Docs', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroups.flatMap(group => group.items).map(item => item.href), ...(addonsPublic ? addonDocGroup.items.map(item => item.href) : [])] },
     ...(stylesPublic ? [{ label: 'Styles', path: '/styles/shape/', hrefs: stylePages.map(style => style.href) }] : []),
     ...(showcasePublic ? [{ label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] }] : []),
   ];
@@ -256,7 +255,7 @@ try {
     const selected = drawer.locator('a[aria-current="page"][href="/docs/addons/avatar/"]');
     await selected.waitFor();
     const headings = await drawer.locator('[part~="section-label"]').allTextContents();
-    assert.equal(headings.at(-2), 'Components');
+    assert.equal(headings.at(-2), 'How it works');
     assert.equal(headings.at(-1), 'Add-ons');
   }
   for (const slug of ['colorpicker', 'form']) {
@@ -319,12 +318,12 @@ try {
         ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 36);
       const { fontFamily, ...listStyle } = selectedStyle;
       const { fontFamily: materialFont, ...drawerStyle } = await itemStyle(reference);
-      assert.match(fontFamily, /DIN Alternate/);
+      assert.match(fontFamily, /Google Sans/);
       assert.match(materialFont, /Roboto/);
       assert.deepEqual(drawerStyle, listStyle, `${theme} ${mode} matches the real drawer geometry, typescale and colours`);
 
       if (theme === 'spring') continue;
-      for (const width of [700, 1700]) for (const [name, path] of [['component-button', '/components/button/'], ['docs-button', '/docs/components/button/']]) {
+      for (const width of [700, 1700]) for (const [name, path] of [['component-button', '/components/button/'], ['docs-theming', '/docs/theming/']]) {
         await themedPage.setViewportSize({ width, height: 900 });
         await themedPage.goto(url(path!));
         await themedPage.evaluate(() => document.fonts.ready);
@@ -507,7 +506,7 @@ try {
   }
   // The wheel over a long drawer scrolls its section pane (a nested scroller inside the
   // drawer once swallowed the gesture and the pane never moved).
-  for (const path of ['/components/button/', '/docs/components/button/']) {
+  for (const path of ['/components/button/', '/components/button/develop/']) {
     await hostedPage.goto(url(path));
     const drawer = hostedPage.locator('.site-rail-drawer m-drawer');
     await drawer.waitFor();

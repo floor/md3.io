@@ -28,11 +28,10 @@
   <meta name="twitter:image" content="https://md3.io/og-image.png" />
   <% (it.jsonLd || []).forEach(json => { %><script type="application/ld+json"><%~ json %></script>
   <% }); %>
-  <link rel="preload" href="/fonts/DIN-Alternate-Regular.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/fonts/DIN-Alternate-Bold.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/fonts/IoskeleyMono-Regular.latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/GoogleSans-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/GoogleSansCode-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/dist/css/<%= it.css %>.css" />
-  <% if (it.isCatalog) { %><style data-page-head><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
+  <% if (it.isCatalog || it.heroScene) { %><style data-page-head><%~ it.catalogTokens %></style><script type="module" src="/dist/catalog.js"></script><% } %><% (it.panelStylesheets || []).forEach(href => { %><link rel="preload" as="style" href="<%= href %>"><% }); %>
   <% if (it.isExamples) { %><script type="module" src="/dist/examples.js"></script><% } %>
   <% if (it.section === 'Styles') { %><script type="module" src="/dist/<%= it.script || 'styles' %>.js"></script><% } %>
   <script>
@@ -102,7 +101,7 @@
           </div>
         </details>
       <% } %>
-      <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
+      <main class="content" id="content" tabindex="-1"><%~ it.content %><% if (!it.isHome) { %><%~ include('footer', it) %><% } %></main>
     </div>
   </div>
   <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">

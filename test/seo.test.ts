@@ -23,7 +23,7 @@ describe('sitemap and robots', () => {
     const xml = await response.text();
     const paths = [...xml.matchAll(/<loc>https:\/\/md3\.io([^<]*)<\/loc>/g)].map(match => match[1]!);
     // Hidden sections (src/shared/visibility.ts) are left out of the sitemap.
-    const expected = ['/', '/components/', ...(addonsPublic ? ['/addons/'] : []), '/docs/', ...(showcasePublic ? ['/showcase/'] : []), '/privacy/',
+    const expected = ['/', '/components/', ...(addonsPublic ? ['/addons/'] : []), '/docs/', ...(showcasePublic ? ['/showcase/'] : []), '/privacy/', '/credits/',
       ...[...componentSlugs, ...(addonsPublic ? addonSlugs : [])].map(playgroundHref), ...docSlugs.map(docHref).filter(href => addonsPublic || !href.startsWith('/docs/addons/')),
       ...(stylesPublic ? stylePages.map(page => page.href) : []), ...(showcasePublic ? examples.map(example => `/showcase/${example.slug}/`) : [])];
     expect([...paths].sort()).toEqual([...new Set(expected)].sort());
@@ -34,7 +34,7 @@ describe('sitemap and robots', () => {
   test('a page\'s lastmod is its source file\'s last commit, and no git means no dates, not an error', async () => {
     const dates = gitDates();
     const xml = await (await get('/sitemap.xml')).text();
-    expect(xml).toContain(`<loc>https://md3.io/docs/components/button/</loc><lastmod>${dates.get('docs/components/button.md')}</lastmod>`);
+    expect(xml).toContain(`<loc>https://md3.io/components/button/develop/</loc><lastmod>${dates.get('docs/components/button.md')}</lastmod>`);
     expect(gitDates(mkdtempSync(join(tmpdir(), 'md3-seo-'))).size).toBe(0);
   });
   test('robots.txt allows the site, keeps crawlers out of the internal routes, and names the sitemap', async () => {
@@ -44,16 +44,16 @@ describe('sitemap and robots', () => {
 
 describe('page head', () => {
   test('a documentation page has its canonical, preview, icon and theme tags', async () => {
-    const html = await (await get('/docs/components/button/')).text();
+    const html = await (await get('/components/button/develop/')).text();
     for (const tag of [
-      '<link rel="canonical" href="https://md3.io/docs/components/button/" />',
-      '<meta property="og:url" content="https://md3.io/docs/components/button/" />',
+      '<link rel="canonical" href="https://md3.io/components/button/develop/" />',
+      '<meta property="og:url" content="https://md3.io/components/button/develop/" />',
       '<meta property="og:site_name" content="md3.io" />',
       '<meta property="og:image" content="https://md3.io/og-image.png" />',
       '<meta property="og:image:width" content="1200" />',
       '<meta name="twitter:card" content="summary_large_image" />',
       '<meta name="twitter:image" content="https://md3.io/og-image.png" />',
-      '<meta name="twitter:title" content="Button documentation — material" />',
+      '<meta name="twitter:title" content="Button: Develop — material" />',
       '<link rel="icon" href="/favicon.svg" type="image/svg+xml" />',
       '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />',
       '<meta name="theme-color" content="#0c0c10" media="(prefers-color-scheme: dark)" />',
@@ -73,7 +73,8 @@ describe('structured data', () => {
   });
   test('every other page has its trail: Home, its section, the page', async () => {
     const trail = async (path: string) => jsonLd(await (await get(path)).text()).map(data => [data['@type'], data.itemListElement.map((item: { name: string; item: string }) => `${item.name} ${item.item}`)]);
-    expect(await trail('/docs/components/button/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Docs https://md3.io/docs/', 'Button documentation https://md3.io/docs/components/button/']]]);
+    expect(await trail('/components/button/develop/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Components https://md3.io/components/', 'Button: Develop https://md3.io/components/button/develop/']]]);
+    expect(await trail('/docs/theming/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Docs https://md3.io/docs/', 'Theming https://md3.io/docs/theming/']]]);
     expect(await trail('/components/switch/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Components https://md3.io/components/', 'Switch https://md3.io/components/switch/']]]);
     expect(await trail('/styles/color/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Styles https://md3.io/styles/', 'Color https://md3.io/styles/color/']]]);
     expect(await trail('/showcase/')).toEqual([['BreadcrumbList', ['Home https://md3.io/', 'Showcase https://md3.io/showcase/']]]);

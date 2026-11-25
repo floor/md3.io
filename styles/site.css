@@ -98,6 +98,9 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .page-hero__art { position: relative; min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); overflow: hidden; }
 /* Waves drawn in the theme's colours (src/client/hero-waves.ts) cover the tile without sizing it. */
 .page-hero__waves { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+/* On a phone the title holds the tile's top: centred, it moved as the description rewrapped
+   when the site font arrived. */
+@container (max-width: 759px) { .page-hero__text { justify-content: flex-start; } }
 @container (min-width: 760px) {
   .page-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
   .page-hero__text { min-height: 420px; padding: 56px 48px; }
@@ -224,3 +227,116 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* The Showcase source panels' Copy code (material's button in its own small scope,
    playground-panel.ts showcaseCopyButton): at the panel header's right end. */
 .showcase-copy { margin-left: auto; display: inline-flex; align-items: center; flex-shrink: 0; }
+
+/* A component's pages share the overviews' hero and a tab bar under it: Overview (the
+   playground), Develop and Accessibility, each its own page. */
+.component-page, .page-wrap.component-tab-page { container-type: inline-size; }
+.page-wrap.component-tab-page { padding: 8px 8px 64px; }
+.component-hero { margin-block-end: 8px; }
+.component-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; border-radius: 999px; background: var(--mtrl-sys-color-surface-container-low); }
+.component-tabs__tab {
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; min-width: 0; padding-inline: 12px;
+  border-radius: 999px; color: var(--mtrl-sys-color-on-surface-variant); font-size: var(--fs-md); text-decoration: none; white-space: nowrap;
+  transition: background-color 150ms ease;
+}
+.component-tabs__tab:hover { background: var(--mtrl-sys-color-surface-container-high); }
+.component-tabs__tab[aria-current] { background: var(--mtrl-sys-color-secondary-container); color: var(--mtrl-sys-color-on-secondary-container); }
+.component-tabs__tab:focus-visible { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
+.component-tabs__tab .inline-icon { width: 20px; height: 20px; flex: none; }
+@media (width < 600px) { .component-tabs__tab .inline-icon { display: none; } }
+/* The Develop and Accessibility pages: the article starts under the tabs. */
+/* The tab pages' body: the Overview's width and inset, under the tabs. */
+.component-tab-page > .component-overview {
+  box-sizing: border-box; width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px);
+  margin: 40px auto 0;
+}
+.component-tab-page .component-overview__main > .md { max-width: none; margin: 0; padding: 0; }
+/* A tab page keeps the component list for the shell (it docks the rail's drawer, which is
+   the list a person uses), out of sight. */
+.component-tab-layout > .component-list { display: none; }
+/* A component's overview: its presentation under the tabs. */
+.component-intro { max-width: var(--measure, 100ch); margin: 32px 0 24px; font-size: var(--fs-md); line-height: 1.7; color: var(--text-muted); }
+.component-intro p { margin: 0; }
+.component-intro a { color: var(--accent-text); }
+/* Under a component's tabs: the presentation, and at its right the framework switcher,
+   icons only (each chip keeps its name as its accessible label). It
+   heads every tab of a component. */
+.component-lede { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px 32px; margin-block: 32px 24px; }
+.component-lede > .component-intro { flex: 1 1 auto; min-width: 0; margin: 0; }
+.component-lede > .framework-chips-row { flex: none; margin: 0; }
+@container (max-width: 700px) { .component-lede { flex-direction: column-reverse; } }
+/* At the top right of Develop and Accessibility, the text beside it; on a phone, on its own
+   line above the text, which then keeps the column's full width. */
+.component-tab-page .component-frameworks { margin: 0 0 16px; }
+@media (width >= 840px) { .component-tab-page .component-frameworks { float: right; margin: 0 0 16px 24px; } }
+:is(.component-lede, .component-tab-page) .framework-chips::part(label),
+:is(.component-lede, .component-tab-page) .framework-chips::part(checkmark) { display: none; }
+/* Selected, the chip keeps its logo (material swaps it for the checkmark). */
+:is(.component-lede, .component-tab-page) .framework-chips::part(leading-icon) { display: inline-flex !important; width: 18px !important; opacity: 1 !important; margin: 0 !important; }
+:is(.component-lede, .component-tab-page) .framework-chips::part(action) { padding-inline: 11px; gap: 0; }
+/* Six icon chips fit any width: shown whole, not in a scroller that clips the last. */
+:is(.component-lede, .component-tab-page) .framework-chips::part(container) { overflow: visible; }
+.component-lede > .framework-chips-row, .component-tab-page .component-frameworks { max-width: 100%; min-width: 0; }
+/* A component's Overview: its sections, and "On this page" at the right, as on Develop. */
+.component-overview { display: flex; gap: 32px; min-width: 0; }
+.component-overview__main { flex: 1; min-width: 0; }
+.component-overview__toc { margin: 32px 0 0; }
+/* On Develop and Accessibility the article starts at the top: the list starts with it. */
+.component-tab-page .component-overview__toc { margin-top: 0; }
+
+/* 92px between a component's tabs and its content, on every tab. */
+.component-page > .component-overview > .component-overview__main > .component-lede { margin-block-start: 92px; }
+.component-page > .component-overview > .component-overview__toc { margin-top: 92px; }
+.component-tab-page > .component-overview { margin-top: 92px; }
+/* A section's title on the Overview (Playground), as More on <component>. */
+.component-section-title { margin: 48px 0 20px; font-size: clamp(24px, 3cqi, 32px); line-height: 1.25; font-weight: 400; }
+
+/* The site's footer, at the end of every page: who builds it, the source, npm, credits and
+   privacy (shells/footer.eta). */
+.site-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px; padding: 8px 0 24px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: var(--fs-xs); }
+.site-footer a { color: inherit; }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 0 8px; }
+.site-footer__links a { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: var(--site-target-size); min-width: var(--site-target-size); padding-inline: 4px; text-decoration: none; }
+.site-footer__links a:hover { color: var(--text); text-decoration: underline; }
+.site-footer__links .inline-icon { width: 14px; height: 14px; }
+/* On every page but the home (whose footer sits in its own column), the footer closes the
+   main column, inside its side margins. */
+/* The overviews' body width and inset (page-wrap's 8px, then clamp(12px, 5cqi, 64px), at
+   most 1208px), the width previous and next take. */
+.content > .site-footer {
+  --footer-inset: calc(8px + clamp(12px, (100% - 16px) * 0.05, 64px));
+  box-sizing: border-box; width: min(100% - 2 * var(--footer-inset), 1208px);
+  margin: 32px auto 0;
+}
+/* Previous and next under a page with On this page span the body, not the text column: the
+   width of the footer below and of the overviews' pager. */
+.page-wrap > .doc-pager { box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto; padding-inline: clamp(12px, 5cqi, 64px); }
+.component-tab-page > .component-tab-pager { box-sizing: border-box; width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px); margin-inline: auto; }
+/* The page body ends with previous and next: no bottom padding before the footer (its own
+   32px top margin is the gap). */
+.content > :is(.page-wrap, .pager-wrap, .docs-overview, .component-list-layout, .component-tab-layout) { padding-bottom: 0; }
+.content > :is(.component-list-layout, .component-tab-layout) > .page-wrap { padding-bottom: 0; }
+/* An icon-only chip is 40px wide: its touch area (material's ::before, 48px tall) widens to
+   48px around it, so the row keeps its width on a phone. */
+:is(.component-lede, .component-tab-page) .framework-chips::part(action)::before { inset-inline: -4px; }
+/* The drawers' section headers (Guides, Add-ons…) stand apart from their rows: the primary
+   colour, weight 600. */
+m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weight: 600; }
+
+/* A component's tabs stay in reach, as on m3.material.io: the bar sticks under the header,
+   and once stuck it narrows to the body's width with a shadow (site-content.ts marks it). */
+.component-tabs {
+  position: sticky; top: calc(var(--header-height) + 8px); z-index: 20;
+  box-sizing: border-box; width: 100%; margin-inline: auto;
+  transition: width 200ms cubic-bezier(0.2, 0, 0, 1), box-shadow 200ms linear;
+}
+.component-tabs[data-stuck] {
+  width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 30%, transparent), 0 2px 6px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 15%, transparent);
+}
+@media (prefers-reduced-motion: reduce) { .component-tabs { transition: none; } }
+/* A section reached from On this page lands below the stuck tabs. */
+:is(.component-page, .component-tab-page) :is(h2, h3)[id], .component-page #playground { scroll-margin-top: calc(var(--header-height) + 96px); }
+/* A tab's body is at least the window's height, so a short tab (Accessibility) still lets the
+   bar stay at the top after a switch. */
+:is(.component-page, .component-tab-page) > .component-overview { min-height: calc(100dvh - var(--header-height)); }

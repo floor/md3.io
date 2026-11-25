@@ -20,20 +20,67 @@ import 'material/elements/css/text-field';
 import 'material/elements/css/tabs';
 import 'material/elements/css/button-group';
 import 'material/elements/css/button';
+import 'material/elements/css/icon-button';
 import 'material/elements/css/chips';
 import 'material/elements/css/slider';
 import 'material/elements/css/snackbar';
 import 'material/elements/css/datepicker';
 import 'material/elements/css/timepicker';
-import { defineButton, defineButtonGroup, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
+import { defineButton, defineButtonGroup, defineIconButton, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 import { registerPage } from './page-lifecycle';
 registerPage('playground-material', (content, life) => {
+  // A settings select's menu is fixed to the window, placed when it opens. material moves it
+  // with the window's scroll, but only from 20ms after opening, and not with a layout shift:
+  // a field moved meanwhile left its menu hanging (Radio buttons' Selected, now and then).
+  // While a menu is open, a moved field re-places it (material repositions on scroll).
+  const settings = content.querySelector<HTMLElement>('#configuration');
+  if (settings) {
+    let frame = 0;
+    const openSelect = () => [...settings.querySelectorAll('m-select')].find(select => select.shadowRoot?.querySelector('.mtrl-menu--visible'));
+    const watch = () => {
+      if (frame) return;
+      let last = '';
+      let waiting = 30;
+      const tick = () => {
+        const select = openSelect();
+        if (!select) { frame = waiting-- > 0 && !last ? requestAnimationFrame(tick) : 0; return; }
+        const { top, left } = select.getBoundingClientRect();
+        const at = `${Math.round(top)},${Math.round(left)}`;
+        if (at !== last) window.dispatchEvent(new Event('scroll'));
+        last = at;
+        frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    };
+    life.events(settings).addEventListener('click', watch);
+    life.events(settings).addEventListener('keydown', watch);
+    life.add(() => cancelAnimationFrame(frame));
+  }
+  // Settings opens the configuration as a side sheet beside the preview, and closes it.
+  const playground = content.querySelector<HTMLElement>('.playground');
+  const settingsToggle = content.querySelector<HTMLElement>('#settings-toggle');
+  if (playground && settingsToggle) {
+    // A toggle icon button: its own pressed state (aria-pressed) says whether the sheet is open.
+    const toggle = settingsToggle as HTMLElement & { selected?: boolean };
+    // Closed until a person opens it; their choice is kept for the next component page.
+    const KEY = 'md3-playground-settings';
+    const setOpen = (open: boolean, remember = false) => {
+      playground.toggleAttribute('data-settings-open', open);
+      if (toggle.selected !== open) toggle.selected = open;
+      if (remember) try { if (open) localStorage.setItem(KEY, 'open'); else localStorage.removeItem(KEY); } catch { /* Storage may be unavailable. */ }
+    };
+    let saved = false;
+    try { saved = localStorage.getItem(KEY) === 'open'; } catch { /* Storage may be unavailable. */ }
+    setOpen(saved);
+    life.events(settingsToggle).addEventListener('change', () => setOpen(Boolean(toggle.selected), true));
+  }
   defineSelect();
   defineSwitch();
   defineTextField();
   defineTabs();
   defineButtonGroup();
   defineButton();
+  defineIconButton();
   defineChips();
   defineSlider();
   defineSnackbar();

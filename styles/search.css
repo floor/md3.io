@@ -41,9 +41,8 @@
     padding: calc(var(--search-viewport-height, 100dvh) / 5) 0 0;
     justify-content: center;
     align-items: flex-start;
-    background: var(--overlay-bg);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    /* material's scrim, as under its dialogs: the scrim colour at 32%, no blur. */
+    background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 32%, transparent);
     color: var(--text);
     transition: opacity 0.15s ease-out;
 }

@@ -101,44 +101,14 @@
     gap: 12px;
     flex-wrap: wrap;
 }
+/* material's buttons in the site's type (Roboto is the components' own; m3.material.io's
+   buttons are in Google Sans too). */
+.hero__actions .mtrl-button { font-family: var(--font-sans); text-decoration: none; }
+/* material's sheet is layered: the site's unlayered reset (padding 0) wins over its M
+   button's 24px sides and 8px gap, so they are restated. */
+.hero__actions .mtrl-button--m { padding: 0 24px; gap: 8px; }
+.hero__actions .mtrl-button .inline-icon { width: 20px; height: 20px; }
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--site-target-size);
-    gap: 8px;
-    padding: 10px 22px;
-    border-radius: var(--radius-sm);
-    font-size: var(--fs-lg);
-    font-weight: var(--fw-bold);
-    font-family: inherit;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    transition: all 0.2s ease;
-}
-
-.btn--primary {
-    background: var(--accent);
-    color: var(--mtrl-sys-color-on-primary, #ffffff);
-    border-color: var(--accent);
-}
-
-.btn--primary:hover {
-    background: color-mix(in oklch, var(--accent) 85%, black);
-    border-color: color-mix(in oklch, var(--accent) 85%, black);
-}
-
-.btn--ghost {
-    background: transparent;
-    color: var(--text-muted);
-}
-
-.btn--ghost:hover {
-    background: var(--bg-card);
-    border-color: var(--border-hover);
-    color: var(--text);
-}
 
 /* ============================================================
    Install
@@ -572,11 +542,6 @@ footer a:hover {
         margin-bottom: 28px;
     }
 
-    .btn {
-        font-size: 14px;
-        padding: 8px 16px;
-    }
-
     .install__cmd {
         font-size: 14px;
         padding: 8px 14px;
@@ -653,10 +618,3 @@ footer a:hover {
 .hero__install { width: min(100%, 440px); margin: 28px auto 0; text-align: left; }
 .hero__install .doc-install { margin: 0; }
 
-/* The site's one footer, at the end of the home page: who builds it, the source, privacy. */
-.site-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px; padding: 8px 0 24px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: var(--fs-xs); }
-.site-footer a { color: inherit; }
-.site-footer__links { display: flex; flex-wrap: wrap; gap: 0 8px; }
-.site-footer__links a { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: var(--site-target-size); min-width: var(--site-target-size); padding-inline: 4px; text-decoration: none; }
-.site-footer__links a:hover { color: var(--text); text-decoration: underline; }
-.site-footer__links .inline-icon { width: 14px; height: 14px; }

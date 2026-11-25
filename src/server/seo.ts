@@ -66,6 +66,7 @@ export function sitemapPages(): SitemapPage[] {
     for (const { slug } of examples) add(`/showcase/${slug}/`, '0.6', `examples/${slug}/`);
   }
   add('/privacy/', '0.3', shell('privacy'));
+  add('/credits/', '0.3', shell('credits'));
   return pages;
 }
 

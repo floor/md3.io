@@ -49,11 +49,10 @@ function ico(images: { size: number; png: Buffer }[]): Buffer {
 const pills = [`${componentSlugs.length} components`, 'zero dependencies', 'React · Vue · Svelte · Solid'];
 // The visual is Material 3's dark baseline scheme: primary, containers, outline.
 const card = `<!doctype html><html><head><style>
-  @font-face { font-family: DIN; font-weight: 400; src: ${font('DIN-Alternate-Regular.woff2')}; }
-  @font-face { font-family: DIN; font-weight: 700; src: ${font('DIN-Alternate-Bold.woff2')}; }
+  @font-face { font-family: "Google Sans"; font-weight: 400 700; src: ${font('GoogleSans-latin-wght.woff2')}; }
   @font-face { font-family: Roboto; font-weight: 100 900; src: ${font('Roboto-latin-wght.woff2')}; }
   * { box-sizing: border-box; margin: 0; }
-  body { width: 1200px; height: 630px; overflow: hidden; font-family: DIN, sans-serif; color: #f3f3f7;
+  body { width: 1200px; height: 630px; overflow: hidden; font-family: "Google Sans", sans-serif; color: #f3f3f7;
     background: radial-gradient(ellipse 900px 700px at 12% 0%, #1b2042 0%, #0f1020 45%, #09090c 100%); position: relative; }
   .text { position: absolute; left: 90px; top: 80px; }
   .eyebrow { font-size: 28px; letter-spacing: 4px; color: #8a8fa8; white-space: nowrap; }

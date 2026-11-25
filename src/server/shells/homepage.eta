@@ -3,7 +3,10 @@
     <span class="eyebrow">THE MATERIAL COMPONENT LIBRARY</span>
     <h1 class="hero__name" id="hero-title">Material Design.<br><span class="hero__accent">Made for the web.</span></h1>
     <p class="hero__tagline">Expressive components. Your framework.<br>A little TypeScript, a lot of possibility.</p>
-    <div class="hero__actions"><a class="btn btn--primary" href="/components/">Explore components <%~ it.icon('arrow_forward') %></a><a class="btn btn--ghost" href="/docs/">Read the docs</a></div>
+    <%/* material's buttons, as links: the same classes and parts as an m-button's own <button>
+     (material/styles/button.css), so they stay links that open in a new tab and work
+     without scripts. */%>
+    <div class="hero__actions"><a class="mtrl-button mtrl-button--filled mtrl-button--m mtrl-button--icon mtrl-button--round" href="/components/"><span class="mtrl-button__text">Explore components</span><span class="mtrl-icon mtrl-button__icon mtrl-button__icon--end" aria-hidden="true"><%~ it.icon('arrow_forward') %></span></a><a class="mtrl-button mtrl-button--outlined mtrl-button--m mtrl-button--round" href="/docs/"><span class="mtrl-button__text">Read the docs</span></a><a class="mtrl-button mtrl-button--outlined mtrl-button--m mtrl-button--icon mtrl-button--round" href="https://github.com/floor/material" target="_blank" rel="noopener"><span class="mtrl-button__text">Source on GitHub</span><span class="mtrl-icon mtrl-button__icon mtrl-button__icon--end" aria-hidden="true"><%~ it.icon('open_in_new') %></span></a></div>
     <div class="hero__install"><%~ it.install %></div>
     <div class="hero__notes"><span>Material Design 3</span><span>Zero runtime dependencies</span><span>Open source</span></div>
   </section>
@@ -12,6 +15,5 @@
     <div><span class="feature-index">02 / CUSTOMIZE</span><h2>Make it feel like you.</h2><p>Switch Material themes and light or dark mode. See every change as you make it.</p></div>
     <div><span class="feature-index">03 / BUILD</span><h2>Take it from here.</h2><p>Copy your configuration and bring the component to your project. No framework required.</p></div>
   </div>
-  <!-- The site's one footer: the home page only (the owner, 2026-11-24). -->
-  <footer class="site-footer"><span>material · Built by <a href="https://floor.io">Floor IO</a></span><span class="site-footer__links"><a href="https://github.com/floor/material">Source on GitHub <%~ it.icon('open_in_new') %></a><a href="/privacy/">Privacy</a></span></footer>
+  <%~ include('footer', it) %>
 </div>

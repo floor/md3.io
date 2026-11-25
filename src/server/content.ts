@@ -36,7 +36,14 @@ const markdownSlugs = (dir: string) => readdirSync(dir)
 export const addonDocSlugs = markdownSlugs(addonDocsDir);
 const addonDocuments = new Set(addonDocSlugs);
 /** A document's canonical URL and the markdown that backs it. */
-export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : `/docs/${addonDocuments.has(slug) ? 'addons' : 'components'}/${slug}/`;
+// A component's documentation is its Develop tab (and its Accessibility tab): Docs holds the
+// guides, and add-ons until their section has tabs of its own. /docs/components/<slug>/
+// redirects to the tab (server.ts).
+export const docHref = (slug: string) => isGuide(slug) ? `/docs/${slug}/` : addonDocuments.has(slug) ? `/docs/addons/${slug}/` : `/components/${slug}/develop/`;
+/** Where a link into a document's section goes: a component's Accessibility section is its own tab. */
+export const docAnchorHref = (slug: string, anchor = '') => !isGuide(slug) && !addonDocuments.has(slug) && anchor === 'accessibility'
+  ? `/components/${slug}/accessibility/`
+  : `${docHref(slug)}${anchor ? `#${anchor}` : ''}`;
 export const documentFile = (slug: string) => `docs/${addonDocuments.has(slug) ? 'addons' : 'components'}/${slug}.md`;
 export const componentName = (slug: string) => isAddon(slug) ? addons[slug].name : names[slug] ?? slug.charAt(0).toUpperCase() + slug.slice(1).replaceAll('-', ' ');
 const slugs = new Set([...markdownSlugs(docsDir), ...addonDocSlugs].filter(slug => !(slug in FRAMEWORK_GUIDES)));
@@ -107,8 +114,18 @@ function docSummary(slug: string): string {
 const entry = (slug: string) => ({ slug, name: componentName(slug), href: docHref(slug), summary: docSummary(slug) });
 /** The guides that exist yet, in their order. */
 export const guideGroup = { label: 'Guides', items: GUIDES.filter(slug => slugs.has(slug)).map(entry) };
+/** The guides as Docs shows them (the owner, 2026-11-25): starting, building, how it works. */
+const GUIDE_GROUPS: [string, string[]][] = [
+  ['Get started', ['why-material', 'getting-started']],
+  ['Build', ['frameworks', 'theming', 'server-rendering']],
+  ['How it works', ['architecture', 'events-and-overlays']],
+];
+export const guideGroups = GUIDE_GROUPS.map(([label, guides]) => ({ label, items: guides.filter(slug => slugs.has(slug)).map(entry) }));
 export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry).sort((a, b) => a.name.localeCompare(b.name, 'en')) };
-export const docGroups = [...Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) })), ...(addonsPublic ? [addonDocGroup] : [])];
+/** The components' documents, by group: their Develop tabs now, no longer Docs pages. */
+export const componentDocGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) }));
+/** Docs' own groups after the guides: the add-ons, while they are public and have no tabs. */
+export const docGroups = addonsPublic ? [addonDocGroup] : [];
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
@@ -204,7 +221,7 @@ function renderMarkdown(source: string, idPrefix = '') {
         const target = local[1] === 'sheet' ? 'bottom-sheet' : local[1]!;
         const framework = FRAMEWORK_GUIDES[target];
         if (framework) href = frameworkHref(framework, local[2] ?? '');
-        else if (href.endsWith('.md') || href.includes('.md#')) href = `${docHref(target)}${local[2] ? `#${local[2]}` : ''}`;
+        else if (href.endsWith('.md') || href.includes('.md#')) href = docAnchorHref(target, local[2] ?? '');
       }
       // An anchor in this document follows its ids.
       else if (idPrefix && href.startsWith('#')) href = `#${idPrefix}${href.slice(1)}`;

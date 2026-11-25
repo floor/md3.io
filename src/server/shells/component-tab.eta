@@ -1,0 +1,11 @@
+<div class="component-tab-layout">
+<%~ include('component-list', it) %>
+<div class="page-wrap component-tab-page" data-component="<%= it.slug %>"><%~ it.componentHeader %>
+<%/* The same layout as the Overview: the sections, then On this page at the right. */%>
+<div class="component-overview"><div class="component-overview__main">
+  <article class="md">
+    <%~ it.frameworksRow %>
+    <%~ it.html %>
+  </article>
+</div><aside class="doc-toc component-overview__toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></aside></div><% if (it.pager) { %><div class="component-tab-pager"><%~ it.pager %></div><% } %></div>
+</div>
