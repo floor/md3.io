@@ -368,7 +368,4 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .shaking--carousel { grid-template-columns: minmax(0, 1fr) !important; }
 .shaking--carousel .shaking__text { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 56px; }
 @media (min-width: 900px) { .shaking--carousel .shaking__text { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shaking--carousel .shaking__text > :is(.feature-index, h2, p:not(.shaking__note)) { grid-column: 1; } .shaking--carousel .shaking__code { grid-column: 2; grid-row: 1 / span 3; align-self: end; margin: 0; } }
-.expressive-carousel { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 0; padding-bottom: 12px; overscroll-behavior-x: contain; }
-.expressive-carousel:focus-visible { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: 4px; border-radius: 28px; }
-.expressive-carousel__item { flex: 0 0 min(360px, 82%); scroll-snap-align: start; }
-.expressive-carousel__item > * { height: 100%; }
+.landing .component-grid.expressive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 16px; }
