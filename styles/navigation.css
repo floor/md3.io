@@ -33,8 +33,7 @@ body {
     height: calc(100dvh - var(--header-height));
     overflow: auto;
     padding: 12px 4px;
-    /* A hairline that separates without drawing the eye. */
-    border-right: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+    /* No edge of its own: the section drawer beside it draws the hairline. */
     background: var(--bg-sidebar);
 }
 
@@ -349,6 +348,8 @@ body {
         overflow-y: auto;
         overscroll-behavior: contain;
         border-radius: 0 var(--mtrl-sys-shape-corner-large, 16px) var(--mtrl-sys-shape-corner-large, 16px) 0;
+        /* A hairline that separates it from the rail without drawing the eye. */
+        border-left: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
         background: var(--mtrl-sys-color-surface-container-low);
         box-shadow: 0 1px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 30%, transparent), 0 2px 6px 2px color-mix(in srgb, var(--mtrl-sys-color-shadow) 15%, transparent);
         visibility: hidden;
