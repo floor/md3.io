@@ -653,10 +653,3 @@ footer a:hover {
 .hero__install { width: min(100%, 440px); margin: 28px auto 0; text-align: left; }
 .hero__install .doc-install { margin: 0; }
 
-/* The site's one footer, at the end of the home page: who builds it, the source, privacy. */
-.site-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px; padding: 8px 0 24px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: var(--fs-xs); }
-.site-footer a { color: inherit; }
-.site-footer__links { display: flex; flex-wrap: wrap; gap: 0 8px; }
-.site-footer__links a { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: var(--site-target-size); min-width: var(--site-target-size); padding-inline: 4px; text-decoration: none; }
-.site-footer__links a:hover { color: var(--text); text-decoration: underline; }
-.site-footer__links .inline-icon { width: 14px; height: 14px; }

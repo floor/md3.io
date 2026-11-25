@@ -101,7 +101,7 @@
           </div>
         </details>
       <% } %>
-      <main class="content" id="content" tabindex="-1"><%~ it.content %></main>
+      <main class="content" id="content" tabindex="-1"><%~ it.content %><% if (!it.isHome) { %><%~ include('footer', it) %><% } %></main>
     </div>
   </div>
   <dialog class="site-nav-dialog" id="site-nav-dialog" aria-label="Navigation">

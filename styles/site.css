@@ -284,3 +284,15 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-tab-page > .component-overview { margin-top: 92px; }
 /* A section's title on the Overview (Playground), as More on <component>. */
 .component-section-title { margin: 48px 0 20px; font-size: clamp(24px, 3cqi, 32px); line-height: 1.25; font-weight: 400; }
+
+/* The site's footer, at the end of every page: who builds it, the source, npm, credits and
+   privacy (shells/footer.eta). */
+.site-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 24px; padding: 8px 0 24px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: var(--fs-xs); }
+.site-footer a { color: inherit; }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: 0 8px; }
+.site-footer__links a { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: var(--site-target-size); min-width: var(--site-target-size); padding-inline: 4px; text-decoration: none; }
+.site-footer__links a:hover { color: var(--text); text-decoration: underline; }
+.site-footer__links .inline-icon { width: 14px; height: 14px; }
+/* On every page but the home (whose footer sits in its own column), the footer closes the
+   main column, inside its side margins. */
+.content > .site-footer { margin: 32px clamp(16px, 4vw, 48px) 0; }
