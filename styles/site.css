@@ -405,5 +405,3 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 /* The JS mark fills less of its box than the other logos: a little larger to match. */
 .compat__tile--vanilla .compat__logo svg { width: 56px; height: 56px; }
 @media (max-width: 599px) { .compat__tile--vanilla .compat__logo svg { width: 46px; height: 46px; } }
-/* Compatible: the cards' column a little wider than the text's. */
-@media (min-width: 600px) { .shaking.compat { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
