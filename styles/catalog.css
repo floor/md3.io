@@ -108,7 +108,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .component-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .component-card { height: 100%; min-height: 336px; }
 .component-card::part(card) { height: 100%; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); transition: background-color 150ms ease; }
-.component-card:has(.component-card__body:hover)::part(card) { background: var(--mtrl-sys-color-surface-container-high); }
 .component-card::part(content) { flex: 1; padding: 0; }
 .component-card__body { position: relative; height: 100%; box-sizing: border-box; padding: 20px 24px 16px; }
 .component-card__body h3 { font-size: 24px; line-height: 32px; font-weight: 400; margin: 0 0 8px; }
@@ -116,10 +115,12 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
   color: inherit;
   text-decoration: none;
 }
-/* The text half of the card is the link; the stage stays live to try the component. */
-.component-card__body h3 a::after { content: ""; position: absolute; inset: 0; border-radius: 0 0 28px 28px; }
-.component-card__body h3 a:focus-visible { outline: none; }
-.component-card__body h3 a:focus-visible::after { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
+/* The card is not a link: its title and its actions are, and its stage stays live to try. */
+.component-card__body h3 a:hover { text-decoration: underline; }
+.component-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.component-card__actions .mtrl-button { font-family: var(--font-sans); text-decoration: none; }
+/* material's sheet is layered: the site's unlayered reset wins over its S button's sides. */
+.component-card__actions .mtrl-button--s { padding: 0 16px; }
 .component-card__body p { margin: 0; font-size: 16px; line-height: 24px; color: var(--text-muted); }
 
 @media (min-width: 840px) {

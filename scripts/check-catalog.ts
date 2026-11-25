@@ -214,7 +214,7 @@ try {
   assert(state.cards.length === componentSlugs.length, `The overview shows ${state.cards.length} cards, not ${componentSlugs.length}`);
   for (const [index, card] of state.cards.entries()) {
     const slug = catalogOrder[index]!;
-    assert(card.tag === 'm-card' && card.links === 1 && card.href === `/components/${slug}/` && card.name === components[slug].name, `${slug}: the card's one link is not its title to the playground`);
+    assert(card.tag === 'm-card' && (card.links === 3 || card.links === 4) && card.href === `/components/${slug}/` && card.name === components[slug].name, `${slug}: the card's links are not its title to the playground and its Playground, Develop (and Accessibility) actions`);
     assert(card.elements.some(name => name.startsWith('m-') || name.startsWith('md3-catalog-')), `${slug}: no mtrl element in the card`);
     assert(card.undefined.length === 0, `${slug}: not upgraded: ${card.undefined.join(', ')}`);
     assert(card.empty.length === 0, `${slug}: renders nothing: ${card.empty.join(', ')}`);
@@ -235,7 +235,14 @@ try {
     assert(await page.getByRole('region', { name: 'Component previews' }).getByRole('link', { name: components[slug].name, exact: true }).count() === 1, `${slug}: the card's link is not named by its name`);
   }
   const titleLink = (slug: string) => page.locator(`.component-card:has(.catalog-visual--${slug})`).getByRole('link', { name: components[slug as keyof typeof components].name, exact: true });
+  // From a title, Tab goes through that card's actions (Playground, Develop, Accessibility),
+  // then into the next card's preview.
   await titleLink('button-group').focus();
+  const actions = await page.locator('.component-card:has(.catalog-visual--button-group) .component-card__actions a').count();
+  for (let index = 0; index < actions; index++) {
+    await page.keyboard.press('Tab');
+    assert(await page.evaluate(() => !!document.activeElement?.closest('.component-card__actions')), 'Tab from a title reaches its card\'s actions first');
+  }
   await page.keyboard.press('Tab');
   const firstControl = page.locator('.catalog-visual--button m-button').first();
   assert(await firstControl.evaluate(host => document.activeElement === host && !!host.shadowRoot?.activeElement),
