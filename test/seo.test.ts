@@ -37,8 +37,10 @@ describe('sitemap and robots', () => {
     expect(xml).toContain(`<loc>https://md3.io/components/button/develop/</loc><lastmod>${dates.get('docs/components/button.md')}</lastmod>`);
     expect(gitDates(mkdtempSync(join(tmpdir(), 'md3-seo-'))).size).toBe(0);
   });
-  test('robots.txt allows the site, keeps crawlers out of the internal routes, and names the sitemap', async () => {
-    expect(await (await get('/robots.txt')).text()).toBe('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /preview/\n\nSitemap: https://md3.io/sitemap.xml\n');
+  test('robots.txt allows everything and names the sitemap; the internal routes answer noindex', async () => {
+    // Nothing is blocked: the internal routes answer noindex, which a crawler must fetch to see.
+    expect(await (await get('/robots.txt')).text()).toBe('User-agent: *\nAllow: /\n\nSitemap: https://md3.io/sitemap.xml\n');
+    for (const path of ['/preview/button/', '/api/search?q=button']) expect((await get(path)).headers.get('X-Robots-Tag'), path).toBe('noindex');
   });
 });
 

@@ -416,7 +416,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const q = url.searchParams.get('q') ?? '';
     const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 10));
     const body = request.method === 'HEAD' ? null : JSON.stringify({ query: q, results: searchSite(q, limit) });
-    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' } });
+    return new Response(body, { headers: { ...commonHeaders, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache', 'X-Robots-Tag': 'noindex' } });
   }
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;

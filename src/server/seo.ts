@@ -13,7 +13,11 @@ import { stylePages } from './styles';
 import { mtrlVersion } from './tokens';
 
 export const SITE = 'https://md3.io';
-/** Routes for the site's own use, never a page to index: robots.txt disallows them. */
+/**
+ * Routes for the site's own use, never a page to index. robots.txt does not block them: a
+ * blocked URL that pages link to (the playground's /preview/ frame) gets indexed unseen, as
+ * "Indexed, though blocked by robots.txt". Crawled, they answer X-Robots-Tag: noindex.
+ */
 export const INTERNAL_PREFIXES = ['/api/', '/preview/'];
 
 const today = new Date().toISOString().slice(0, 10);
@@ -76,7 +80,7 @@ export function sitemapXml(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }
 export const robotsTxt = (): string =>
-  `User-agent: *\nAllow: /\n${INTERNAL_PREFIXES.map(prefix => `Disallow: ${prefix}\n`).join('')}\nSitemap: ${SITE}/sitemap.xml\n`;
+  `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`;
 
 const SECTIONS: Record<string, string> = { Components: '/components/', 'Add-ons': '/addons/', Docs: '/docs/', Styles: '/styles/', Showcase: '/showcase/' };
 const author = { '@type': 'Organization', name: 'Floor IO', url: 'https://floor.io' };
