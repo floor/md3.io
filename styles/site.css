@@ -306,3 +306,7 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
    width of the footer below and of the overviews' pager. */
 .page-wrap > .doc-pager { box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto; padding-inline: clamp(12px, 5cqi, 64px); }
 .component-tab-page > .component-tab-pager { box-sizing: border-box; width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px); margin-inline: auto; }
+/* The page body ends with previous and next: no bottom padding before the footer (its own
+   32px top margin is the gap). */
+.content > :is(.page-wrap, .pager-wrap, .docs-overview, .component-list-layout, .component-tab-layout) { padding-bottom: 0; }
+.content > :is(.component-list-layout, .component-tab-layout) > .page-wrap { padding-bottom: 0; }
