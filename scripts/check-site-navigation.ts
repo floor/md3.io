@@ -415,7 +415,7 @@ try {
   const staticDrawer = staticPage.getByRole('navigation', { name: 'Component list', exact: true });
   // Without scripts the page's own list is the only one: it sits beside the detail, not over it.
   const staticList = (await staticPage.locator('main .component-list').boundingBox())!;
-  const staticDetail = (await staticPage.locator('.component-page').boundingBox())!;
+  const staticDetail = (await staticPage.locator('.component-page, .component-tab-page').boundingBox())!;
   assert.ok(staticList.x + staticList.width <= staticDetail.x + 1, 'without scripts the component list and the detail sit side by side');
   const staticLink = staticDrawer.getByRole('link', { name: 'Navigation rail', exact: true });
   await staticLink.click();

@@ -20,7 +20,9 @@ const viewports = [
 const fixedRoutes = [
   ['home', '/'],
   ['component-overview', '/components/'],
-  ['component-detail', '/components/button/', '#preview'],
+  // A component's Overview tab (its scenarios) and its Playground tab (the playground).
+  ['component-detail', '/components/button/'],
+  ['component-playground', '/components/button/playground/', '#preview'],
   ['documentation', '/docs/'],
   ['guide', '/docs/frameworks/'],
   ['api-reference', '/components/button/develop/'],
@@ -275,7 +277,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           await page.screenshot({ path: `${captures}/${entry.name}-${viewport.width}-full.png`, animations: 'disabled', fullPage: true });
           await checkRouteFrame(page, entry);
           if (entry.name === 'home') await checkOverlays(page, captures, viewport.width);
-          if (entry.name === 'component-detail') {
+          if (entry.name === 'component-playground') {
             await openSettings(page);
             const field = page.getByRole('textbox', { name: 'Text', exact: true });
             await field.fill('Phone and resize');
@@ -287,7 +289,7 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           const resized = viewports[(index + 1) % viewports.length]!;
           await page.setViewportSize(resized);
           await checkChrome(page, destinations, resized.width, `${label} resized to ${resized.width}px`);
-          if (entry.name === 'component-detail') {
+          if (entry.name === 'component-playground') {
             assert.equal(await page.getByRole('textbox', { name: 'Text', exact: true }).inputValue(), 'Phone and resize', label);
           }
           const destination = nav.getByRole('link', { name: 'Docs', exact: true });

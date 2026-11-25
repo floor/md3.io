@@ -485,7 +485,7 @@ try {
     assert(await current.isVisible() && await page.evaluate(() => scrollY === 0), `${width}px: the current link is not in view, or the page scrolled to show it`);
     if (width >= 1600) {
       const paneBox = await page.locator('.site-rail-drawer').boundingBox();
-      const detailBox = await page.locator('.component-page').boundingBox();
+      const detailBox = await page.locator('.component-page, .component-tab-page').boundingBox();
       assert(paneBox && detailBox && paneBox.x + paneBox.width <= detailBox.x, `${width}px: the list and detail do not sit side by side`);
     }
     await dismissSectionList(page);

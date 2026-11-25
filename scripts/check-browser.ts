@@ -274,8 +274,19 @@ try {
   const componentList = page.getByRole('navigation', { name: 'Component list', exact: true });
   // At 1440px the component list is the rail's drawer: it opens on resting on Components.
   const openComponentList = () => page.locator('m-navigation-rail a[href="/components/"]').hover();
+  // The list opens a component's Overview; its Playground tab holds the playground.
+  const openPlayground = async (slug: string) => {
+    await page.waitForURL(url => url.pathname === `/components/${slug}/`, { waitUntil: "commit" });
+    // The Overview's own content, swapped in by client navigation, before its tab is clicked.
+    await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).waitFor();
+    await page.locator('.scenarios').waitFor();
+    await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).click();
+    await page.waitForURL(url => url.pathname === `/components/${slug}/playground/`, { waitUntil: "commit" });
+    await page.locator("#preview").waitFor();
+  };
   await openComponentList();
   await componentList.getByRole('link', { name: 'Icon button', exact: true }).click();
+  await openPlayground('icon-button');
   await assertAppearance('ocean', 'dark');
   await page.reload();
   await assertAppearance('ocean', 'dark');
@@ -284,6 +295,7 @@ try {
   await panel.chooseMode(page, 'light');
   await openComponentList();
   await componentList.getByRole('link', { name: 'Button group', exact: true }).click();
+  await openPlayground('button-group');
   await assertAppearance('forest', 'light');
   assert(await page.locator('html').getAttribute('data-theme-mode') === 'light', 'The site mode and the preview mode moved apart');
   await page.evaluate(() => localStorage.setItem('md3-preview-appearance', '{invalid json'));

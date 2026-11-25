@@ -260,3 +260,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .component-overview--playground { display: block; }
 .component-overview--playground .component-lede { justify-content: flex-end; }
 .component-intro--overview { margin-bottom: 40px; font-size: var(--fs-lg, 18px); max-width: 70ch; }
+/* A card's title link is a 48dp target (M3's minimum) though its text is shorter. */
+.component-card__body h3 a { display: inline-flex; align-items: center; min-height: 48px; min-width: 48px; margin: -10px 0; }
