@@ -2,6 +2,7 @@ import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
+import { radioOptionSets } from '../shared/content/radios';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
 import { checkboxEditClearsCheckedSet } from '../shared/content/checkbox';
 import { controlConcealed, sectionConcealed } from '../shared/content/types';
@@ -207,11 +208,15 @@ registerPage('playground', (content, life) => {
     const checkedChildrenInput = form.querySelector<HTMLInputElement>('[name="checkedChildren"]');
     if (checkedChildrenInput) checkedChildrenInput.value = next.checkedChildren !== undefined ? String(next.checkedChildren) : '';
   }
-  /** The Selected list names only the destinations on the stage. */
+  /** The radio buttons' Selected list: the choices of the option set on the stage. */
+  const radioValueOptions = (next: ComponentState) =>
+    (radioOptionSets[String(next.optionSet ?? '')] ?? radioOptionSets['express-delivery']!).options.map(({ value, label }) => ({ value, label }));
+  /** The Selected list names only the destinations (or choices) on the stage. */
   function refreshActiveSelect(next: ComponentState) {
-    const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'navigation-bar' ? barActiveOptions(next) : slug === 'navigation-drawer' ? drawerActiveOptions(next) : slug === 'tabs' ? tabActiveOptions(next) : null;
+    const options = slug === 'navigation-rail' ? railActiveOptions(next) : slug === 'navigation-bar' ? barActiveOptions(next) : slug === 'navigation-drawer' ? drawerActiveOptions(next) : slug === 'tabs' ? tabActiveOptions(next) : slug === 'radios' ? radioValueOptions(next) : null;
     if (!options) return;
-    const select = form.querySelector<HTMLElement>('[name="active"]');
+    const key = slug === 'radios' ? 'value' : 'active';
+    const select = form.querySelector<HTMLElement>(`[name="${key}"]`);
     if (!select) return;
     // The material panel's select declares its options as <m-select-option> children,
     // which the element observes; a native select has <option>s.
@@ -231,7 +236,7 @@ registerPage('playground', (content, life) => {
     // the wanted value (or the first option, a native select's fallback) and update
     // again if the state moved. This microtask is queued after the observer's.
     if (tag === 'm-select-option') {
-      const wanted = String(next.active ?? '');
+      const wanted = String(next[key] ?? '');
       queueMicrotask(() => {
         const host = select as HTMLElement & { value?: unknown };
         const target = options.some(option => option.value === wanted) ? wanted : options[0]?.value;
