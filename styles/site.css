@@ -174,8 +174,7 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .shaking__note { font-size: var(--fs-ui) !important; }
 .shaking__note strong { color: var(--text); }
 .shaking__bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; align-content: center; }
-.shaking__bars li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) 4.5em; align-items: center; gap: 12px; font-size: var(--fs-ui); }
-.shaking__bar { height: 12px; border-radius: 6px; background: var(--accent, var(--mtrl-sys-color-primary)); width: calc(var(--share) * 100%); min-width: 6px; }
+.shaking__bars li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: var(--fs-ui); }
 .shaking__kb { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); }
 
 @media (min-width: 600px) {
@@ -353,3 +352,6 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 /* A tab's body is at least the window's height, so a short tab (Accessibility) still lets the
    bar stay at the top after a switch. */
 :is(.component-page, .component-tab-page) > .component-overview { min-height: calc(100dvh - var(--header-height)); }
+.shaking__core { padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
+.shaking__bars .shaking__group { display: block; margin-top: 8px; font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
+.shaking__bars { gap: 10px; }

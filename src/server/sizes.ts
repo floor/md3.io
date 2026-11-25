@@ -12,19 +12,21 @@ interface SizesFile { material: string; measured: string; gzip: number; core: Re
 
 export const sizes: SizesFile = JSON.parse(readFileSync(resolve(root, 'data/sizes.json'), 'utf8'));
 
-/** The home page's tree-shaking figures: material's own measurement (material-sizes.ts),
- * a page importing only one component, JavaScript, gzip. */
-export function treeShaking(names: Record<string, string>, picks: readonly string[]) {
+/** The home page's tree-shaking figures, from material's own measurement (material-sizes.ts),
+ * JavaScript, gzip: the core a page loads once, then what each component adds over it. */
+export function treeShaking(names: Record<string, string>, groups: readonly (readonly [string, readonly string[]])[]) {
   const { version, date, rows } = materialSizes(sizes.material);
-  const kb = (cell: string) => Number.parseFloat(cell);
+  const kb = (cell: string) => Math.abs(Number.parseFloat(cell));
   // The components the site shows (material also measures bottom-app-bar, which it does not).
   const measured = rows.filter(row => row.slug);
-  const max = Math.max(...measured.map(row => kb(row.gzip)));
+  const added = measured.map(row => kb(row.vsCore));
+  const max = Math.max(...added);
   return {
-    version, measured: date, count: measured.length,
-    min: Math.min(...measured.map(row => kb(row.gzip))).toFixed(1), max: max.toFixed(1),
-    rows: picks.flatMap(slug => measured.filter(row => row.slug === slug))
-      .map(row => ({ name: names[row.slug!] ?? row.name, kb: kb(row.gzip).toFixed(1), share: kb(row.gzip) / max })),
+    version, measured: date, count: measured.length, core: kb(rows.find(row => row.name === 'core')!.gzip).toFixed(1),
+    min: Math.min(...added).toFixed(1), max: max.toFixed(1),
+    // Two components per category, each bar what it adds over the core.
+    groups: groups.map(([label, picks]) => ({ label, rows: picks.flatMap(slug => measured.filter(row => row.slug === slug))
+      .map(row => ({ name: names[row.slug!] ?? row.name, kb: kb(row.vsCore).toFixed(1), share: kb(row.vsCore) / max })) })),
   };
 }
 
