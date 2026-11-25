@@ -117,18 +117,20 @@ export const jsonForScript = (value: unknown): string =>
 
 /**
  * The title a search result shows: the page's name with the words people search for
- * ("Material Design 3", "web", "md3"), under 65 characters. The name alone stays the
+ * ("Material 3 Expressive" where a reader lands, "Material Design 3" on the reference
+ * tabs, "web", "md3"), under 65 characters. Google names the evolution "Material 3
+ * Expressive" / "M3 Expressive" (m3.material.io and its blog, read 2026-11-25). The name alone stays the
  * breadcrumb's (structuredData).
  */
 export function documentTitle(path: string, name: string): string {
-  if (path === '/') return 'md3.io – Material Design 3 components for the web';
-  if (path === '/components/') return 'Material Design 3 components for the web | md3.io';
+  if (path === '/') return 'md3.io – Material 3 Expressive components for the web';
+  if (path === '/components/') return 'Material 3 Expressive components for the web | md3.io';
   if (path === '/docs/') return 'Material Design 3 for the web: guides | md3.io';
   const tab = /^\/components\/[a-z-]+\/(develop|accessibility)\/$/.exec(path)?.[1];
   const component = name.replace(/: (Develop|Accessibility)$/, '');
   if (tab === 'develop') return `${component} API and examples – Material Design 3 | md3.io`;
   if (tab === 'accessibility') return `${component} accessibility – Material Design 3 | md3.io`;
-  if (/^\/components\/[a-z-]+\/$/.test(path)) return `${component} – Material Design 3 web component | md3.io`;
+  if (/^\/components\/[a-z-]+\/$/.test(path)) return `${component} – Material 3 Expressive web component | md3.io`;
   if (/^\/docs\/[a-z-]+\/$/.test(path)) return `${name} – Material Design 3 for the web | md3.io`;
   return `${name} | md3.io`;
 }
