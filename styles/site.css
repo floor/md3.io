@@ -376,19 +376,15 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .compat__code { display: grid; }
 .compat__snippet { grid-area: 1 / 1; visibility: hidden; margin: 20px 0; }
 .compat__logos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; border: 0; margin: 0; padding: 0; align-content: center; }
-.compat__tile { display: grid; justify-items: center; gap: 10px; padding: 20px 12px; border-radius: 24px; background: var(--mtrl-sys-color-surface-container-low, var(--bg-code)); border: 1px solid var(--border); cursor: pointer; transition: background .15s, border-color .15s; }
+.compat__tile { display: grid; justify-items: center; gap: 10px; padding: 20px 12px; cursor: pointer; }
 .compat__logo svg { width: 48px; height: 48px; display: block; }
 .compat__name { font-size: var(--fs-ui); color: var(--text-muted); text-align: center; }
-.compat__tile:hover, .compat__tile:has(input:checked) { border-color: var(--accent-text, var(--mtrl-sys-color-primary)); background: var(--mtrl-sys-color-surface-container, var(--bg-code)); }
+/* The chosen framework's card: M3's selected container. */
+.compat__tile.mtrl-card:has(input:checked) { background-color: var(--mtrl-sys-color-secondary-container); border-color: transparent; }
+.compat__tile.mtrl-card:has(input:checked) .compat__name { color: var(--mtrl-sys-color-on-secondary-container); }
 .compat__tile:has(input:focus-visible) { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: 2px; }
 :root[data-theme-mode="dark"] .compat__logo { --brand-ink: #e6e1e5; }
 @media (max-width: 599px) { .compat__logo svg { width: 36px; height: 36px; } .compat__tile { padding: 14px 8px; } }
-.compat:has(.compat__tile--vanilla input:checked):not(:has(.compat__tile:hover)) .compat__snippet--vanilla, .compat:has(.compat__tile--vanilla:hover) .compat__snippet--vanilla { visibility: visible; }
-.compat:has(.compat__tile--html input:checked):not(:has(.compat__tile:hover)) .compat__snippet--html, .compat:has(.compat__tile--html:hover) .compat__snippet--html { visibility: visible; }
-.compat:has(.compat__tile--react input:checked):not(:has(.compat__tile:hover)) .compat__snippet--react, .compat:has(.compat__tile--react:hover) .compat__snippet--react { visibility: visible; }
-.compat:has(.compat__tile--vue input:checked):not(:has(.compat__tile:hover)) .compat__snippet--vue, .compat:has(.compat__tile--vue:hover) .compat__snippet--vue { visibility: visible; }
-.compat:has(.compat__tile--svelte input:checked):not(:has(.compat__tile:hover)) .compat__snippet--svelte, .compat:has(.compat__tile--svelte:hover) .compat__snippet--svelte { visibility: visible; }
-.compat:has(.compat__tile--solid input:checked):not(:has(.compat__tile:hover)) .compat__snippet--solid, .compat:has(.compat__tile--solid:hover) .compat__snippet--solid { visibility: visible; }
 /* The logos fill the column beside the text: taller tiles, larger marks. */
 .compat__logos { align-content: stretch; grid-auto-rows: 1fr; gap: 16px; }
 .compat__tile { align-content: center; padding: 28px 16px; gap: 14px; }
@@ -397,3 +393,10 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 @media (max-width: 599px) { .compat__logo svg { width: 40px; height: 40px; } .compat__tile { padding: 16px 8px; } .compat__name { font-size: var(--fs-ui); } }
 /* Code blocks: M3 corner large (16px), after the rules above that set smaller corners. */
 .md pre, .doc-install, .shaking__code, .install { border-radius: var(--mtrl-sys-shape-corner-large, 16px); }
+/* Only the chosen framework's code shows. */
+.compat:has(.compat__tile--vanilla input:checked) .compat__snippet--vanilla { visibility: visible; }
+.compat:has(.compat__tile--html input:checked) .compat__snippet--html { visibility: visible; }
+.compat:has(.compat__tile--react input:checked) .compat__snippet--react { visibility: visible; }
+.compat:has(.compat__tile--vue input:checked) .compat__snippet--vue { visibility: visible; }
+.compat:has(.compat__tile--svelte input:checked) .compat__snippet--svelte { visibility: visible; }
+.compat:has(.compat__tile--solid input:checked) .compat__snippet--solid { visibility: visible; }

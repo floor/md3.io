@@ -29,7 +29,8 @@
     <%/* The Expressive components, live: the catalog's own cards, in its grid. */%>
     <div class="component-grid expressive-grid"><% it.expressiveCards.forEach(card => { %><%~ card %><% }) %></div>
   </section>
-  <%/* Compatible: each framework's logo; hovering, focusing or choosing one shows its code.
+  <%/* Compatible: each framework's logo, as material's outlined card; choosing one (a click,
+     or the arrow keys) shows its code.
      The snippets follow the framework guides (docs/components/<framework>.md). A radio group,
      so it works with the keyboard and by touch, without a script. */%>
   <section class="shaking compat" aria-labelledby="compatible-title">
@@ -40,7 +41,7 @@
       <div class="compat__code"><% it.homeCode.frameworks.forEach(({ id, name, html }) => { %><pre class="shaking__code compat__snippet compat__snippet--<%= id %>" aria-label="<%= name %>"><%~ html %></pre><% }) %></div>
       <p class="shaking__note"><a class="text-link" href="/docs/frameworks/">Frameworks guide</a> · <a class="text-link" href="/docs/server-rendering/">Server rendering</a></p>
     </div>
-    <fieldset class="compat__logos"><legend class="sr-only">Show the code for</legend><% it.homeCode.frameworks.forEach(({ id, name }, index) => { %><label class="compat__tile compat__tile--<%= id %>"><input class="sr-only" type="radio" name="compat-framework" value="<%= id %>"<%= index === 0 ? ' checked' : '' %>><span class="compat__logo"><%~ it.frameworkLogos[id] %></span><span class="compat__name"><%= name %></span></label><% }) %></fieldset>
+    <fieldset class="compat__logos"><legend class="sr-only">Show the code for</legend><% it.homeCode.frameworks.forEach(({ id, name }, index) => { %><label class="mtrl-card mtrl-card--outlined mtrl-card--interactive compat__tile compat__tile--<%= id %>"><input class="sr-only" type="radio" name="compat-framework" value="<%= id %>"<%= index === 0 ? ' checked' : '' %>><span class="compat__logo"><%~ it.frameworkLogos[id] %></span><span class="compat__name"><%= name %></span></label><% }) %></fieldset>
   </section>
   <%/* Tree-shaking: the measured cost of one component (data/sizes.json, scripts/sizes.ts). */%>
   <section class="shaking" aria-labelledby="shaking-title">
