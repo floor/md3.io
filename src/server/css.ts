@@ -7,7 +7,8 @@ import { materialTokens } from './playground-panel';
 const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
 const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
-const catalog = [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'] as const;
+// The overview cards' actions are material's buttons (links with its button classes).
+const catalog = [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button'] as const;
 // A component page's hero shows its overview card's scene: the catalog's pre-upgrade and
 // visual rules come too.
 const materialPanel = [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material', 'preupgrade', 'catalog'] as const;
@@ -15,12 +16,13 @@ const materialPanel = [...shell, 'site', 'search', 'roboto', 'component-list', '
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
   // The home's calls to action are material's buttons (links with its button classes).
-  home: [...shell, 'homepage', 'site', 'search', 'mtrl:button'],
+  // The Expressive carousel's cards are the catalog's (catalog.css, their live visuals).
+  home: [...shell, 'homepage', 'site', 'search', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:card'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
   'material-panel': materialPanel,
   'addon-panel': materialPanel,
-  'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog'],
+  'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button'],
   // Add-on visuals that use factories need their light-DOM styles.
   catalog,
   'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'mtrl:listbox', 'addons:styles'],

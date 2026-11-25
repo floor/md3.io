@@ -14,7 +14,7 @@ import { parse, compileScript, compileTemplate } from 'vue/compiler-sfc';
 import { chromium } from 'playwright';
 import { handleRequest } from '../server';
 import { components, componentCode, initialComponentState, normalizeComponentState, elementConfig } from '../src/shared/components';
-import { playgroundHref } from '../src/shared/addons';
+import { componentPlaygroundHref } from '../src/shared/addons';
 import { frameworkCode } from '../src/shared/frameworks';
 import { elementMeta } from '../src/server/elements-meta';
 import { checkStepperWorkflow } from './stepper-driver';
@@ -608,7 +608,7 @@ try {
 
       // 1. Load the preview frame for this scenario
       const scenarioParam = scenario ? `?scenario=${scenario.id}` : '';
-      await previewPage.goto(new URL(`${playgroundHref(slug)}${scenarioParam}`, siteServer.url).href);
+      await previewPage.goto(new URL(`${componentPlaygroundHref(slug)}${scenarioParam}`, siteServer.url).href);
       await previewPage.frameLocator('#preview').locator('#stage > *').first().waitFor();
 
       const previewFrame = previewPage.frames().find(f => f !== previewPage.mainFrame() && f.url().includes('preview')) ?? previewPage.frames()[1]!;

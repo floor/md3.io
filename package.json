@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "sizes:sync": "bun scripts/sync-sizes.ts",
     "dev": "bun scripts/dev.ts",
     "start": "bun server.ts",
     "build": "bun scripts/build.ts",

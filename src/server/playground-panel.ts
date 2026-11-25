@@ -74,7 +74,7 @@ const pickerIcons = {
  */
 const LOGO_FILES: Record<string, string> = { vanilla: 'javascript', html: 'webcomponent', react: 'react', vue: 'vue', svelte: 'svelte', solid: 'solidjs' };
 const logoCache = new Map<string, string>();
-function frameworkLogo(id: string): string {
+export function frameworkLogo(id: string): string {
   let svg = logoCache.get(id);
   if (svg === undefined) {
     const file = LOGO_FILES[id];

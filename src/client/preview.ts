@@ -636,8 +636,11 @@ window.addEventListener('message', event => {
 });
 window.addEventListener('pagehide', () => component?.destroy());
 // Preserve the appearance applied before paint instead of briefly rendering the light defaults.
+// `?scenario=` opens on a scenario's options (the Overview's sections, component-overview.ts).
+const scenarioOptions = components[slug].scenarios.find(scenario => scenario.id === new URLSearchParams(location.search).get('scenario'))?.options ?? {};
 render(normalizeComponentState(slug, {
   ...initialComponentState(slug),
+  ...scenarioOptions,
   theme: document.documentElement.dataset.theme,
   mode: document.documentElement.dataset.themeMode,
 }));

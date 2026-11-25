@@ -60,7 +60,8 @@ describe('the components overview', () => {
   });
   // A component's pages load it too, for the live scene in their hero.
   test('the elements bundle stays off the other pages', async () => {
-    for (const path of ['/', '/docs/', '/docs/theming/', '/styles/']) expect(await get(path), path).not.toMatch(/<script[^>]+src="\/dist\/catalog(?:\.[a-f0-9]{10})?\.js"/);
+    // The home loads it for its Expressive cards; the docs and styles pages do not.
+    for (const path of ['/docs/', '/docs/theming/', '/styles/']) expect(await get(path), path).not.toMatch(/<script[^>]+src="\/dist\/catalog(?:\.[a-f0-9]{10})?\.js"/);
   });
 });
 

@@ -34,7 +34,7 @@ try {
   };
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Communication' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
-    await page.goto(`${server.url}components/${slug}/`);
+    await page.goto(`${server.url}components/${slug}/playground/`);
     await frame.locator('#stage > *').first().waitFor();
     if (slug === 'badge') {
       await frame.getByRole('status').filter({ hasText: '8' }).waitFor();
@@ -122,7 +122,7 @@ try {
       await hoverKeeps(null, 'Favorite');
       await hoverKeeps('upload', 'Upload');
       await hoverKeeps('present-now', 'Present now');
-      await page.goto(`${server.url}components/tooltip/`);
+      await page.goto(`${server.url}components/tooltip/playground/`);
       await frame.locator('#stage > *').first().waitFor();
       const target = frame.getByRole('button', { name: 'Favorite', exact: true });
       await target.hover();

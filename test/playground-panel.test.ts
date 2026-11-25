@@ -10,7 +10,7 @@ const get = (path: string) => handleRequest(new Request(`http://localhost${path}
 
 describe('the material playground panel', () => {
   test('the Button page renders the panel as material elements', async () => {
-    const html = await (await get('/components/button/')).text();
+    const html = await (await get('/components/button/playground/')).text();
     expect(html).toContain('playground--material');
     // Every element ships its shadow root and its styles in the markup, so the
     // panel is styled before any script runs.
@@ -80,7 +80,7 @@ describe('the material playground panel', () => {
 
   test('every component page renders the material panel, native rows only where no element is used yet', async () => {
     for (const slug of componentSlugs) {
-      const html = await (await get(`/components/${slug}/`)).text();
+      const html = await (await get(`/components/${slug}/playground/`)).text();
       expect(html, slug).toContain('playground--material');
       expect(html, slug).toContain('id="configuration"');
       expect(html, slug).toContain('"/dist/playground-material.js":');

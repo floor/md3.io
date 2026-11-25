@@ -1,4 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
+import { materialSizes, sizeTableMarkdown } from './material-sizes';
 import { resolve } from 'node:path';
 import { Marked, type Tokens } from 'marked';
 import hljs from 'highlight.js';
@@ -18,7 +19,7 @@ const groups: Record<string, string[]> = {
   'Communication': ['badge', 'progress', 'loading-indicator', 'snackbar', 'tooltip'],
 };
 /** The guides, before the components: how to start, how mtrl is built, and how to use it in each framework (one Frameworks page). */
-export const GUIDES = ['why-material', 'getting-started', 'architecture', 'frameworks', 'theming', 'server-rendering', 'events-and-overlays'];
+export const GUIDES = ['why-material', 'getting-started', 'architecture', 'frameworks', 'theming', 'server-rendering', 'events-and-overlays', 'bundle-size'];
 /**
  * The six framework guides, now one Frameworks page (/docs/frameworks/) that shows the
  * reader's framework: each guide's source stays in docs/components/<slug>.md (docs:check
@@ -118,7 +119,7 @@ export const guideGroup = { label: 'Guides', items: GUIDES.filter(slug => slugs.
 const GUIDE_GROUPS: [string, string[]][] = [
   ['Get started', ['why-material', 'getting-started']],
   ['Build', ['frameworks', 'theming', 'server-rendering']],
-  ['How it works', ['architecture', 'events-and-overlays']],
+  ['How it works', ['architecture', 'events-and-overlays', 'bundle-size']],
 ];
 export const guideGroups = GUIDE_GROUPS.map(([label, guides]) => ({ label, items: guides.filter(slug => slugs.has(slug)).map(entry) }));
 export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry).sort((a, b) => a.name.localeCompare(b.name, 'en')) };
@@ -126,6 +127,9 @@ export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry)
 export const componentDocGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) }));
 /** Docs' own groups after the guides: the add-ons, while they are public and have no tabs. */
 export const docGroups = addonsPublic ? [addonDocGroup] : [];
+/** Code, highlighted as the docs highlight it (highlight.js, the site's syntax.css colours). */
+export const highlightCode = (code: string, language: string): string =>
+  `<code class="hljs language-${language}">${hljs.highlight(code, { language }).value}</code>`;
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
@@ -143,7 +147,12 @@ const libraryFacts = (): Record<string, string> => {
   if (!sizes) throw new Error('node_modules/material/README.md has no <!-- sizes --> table');
   const stylesheet = /^\|\s*`material\/styles`, the full stylesheet\s*\|\s*([\d.]+) kB\s*\|$/m.exec(sizes)?.[1];
   if (!stylesheet) throw new Error('The material README size table has no full stylesheet row');
-  return facts = { version: libraryVersion(), sizes, stylesheet: String(Math.round(Number(stylesheet))) };
+  // material's per-component measurement (src/server/material-sizes.ts): the Bundle size guide.
+  const measured = materialSizes(libraryVersion());
+  const row = (name: string) => measured.rows.find(entry => entry.name === name)!;
+  return facts = { version: libraryVersion(), sizes, stylesheet: String(Math.round(Number(stylesheet))),
+    sizeTable: sizeTableMarkdown(libraryVersion()), sizeCommit: measured.commit, sizeDate: measured.date,
+    sizeCore: row('core').gzip, sizeAll: row('all').gzip, sizeButton: row('button').gzip, sizeButtonCore: row('button').vsCore, sizeCount: String(measured.rows.filter(entry => entry.name !== 'core' && entry.name !== 'all').length) };
 };
 const withLibraryFacts = (source: string): string => source.includes('{{material.')
   ? source.replace(/\{\{material\.(\w+)\}\}/g, (token, name: string) => {

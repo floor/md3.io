@@ -8,7 +8,55 @@
      without scripts. */%>
     <div class="hero__actions"><a class="mtrl-button mtrl-button--filled mtrl-button--m mtrl-button--icon mtrl-button--round" href="/components/"><span class="mtrl-button__text">Explore components</span><span class="mtrl-icon mtrl-button__icon mtrl-button__icon--end" aria-hidden="true"><%~ it.icon('arrow_forward') %></span></a><a class="mtrl-button mtrl-button--outlined mtrl-button--m mtrl-button--round" href="/docs/"><span class="mtrl-button__text">Read the docs</span></a><a class="mtrl-button mtrl-button--outlined mtrl-button--m mtrl-button--icon mtrl-button--round" href="https://github.com/floor/material" target="_blank" rel="noopener"><span class="mtrl-button__text">Source on GitHub</span><span class="mtrl-icon mtrl-button__icon mtrl-button__icon--end" aria-hidden="true"><%~ it.icon('open_in_new') %></span></a></div>
     <div class="hero__install"><%~ it.install %></div>
-    <div class="hero__notes"><span>Material Design 3</span><span>Zero runtime dependencies</span><span>Open source</span></div>
+    <div class="hero__notes"><span>Material Design 3</span><span>Tree-shakable</span><span>Zero runtime dependencies</span><span>Open source</span></div>
+  </section>
+  <%/* Why material: three reasons, right after the hero (the owner, 2026-11-25). */%>
+  <div class="landing-features landing-features--reasons">
+    <div><span class="feature-index">01 / EXPRESSIVE</span><h2>Material 3 Expressive, today.</h2><p>Google's latest Material Design, built for the web: the new shapes, motion and components, in <%= it.shaking.count %> components.</p></div>
+    <div><span class="feature-index">02 / COMPATIBLE</span><h2>One library, every stack.</h2><p>Plain JavaScript factories, web components, and React, Vue, Svelte and SolidJS components, with server rendering. In TypeScript.</p></div>
+    <div><span class="feature-index">03 / LIGHTWEIGHT</span><h2>Small by design.</h2><p>Tree-shakable, with zero runtime dependencies: a <%= it.shaking.core %> KB core, then each component adds from <%= it.shaking.min %> KB gzip. <a class="text-link" href="/docs/bundle-size/">See every size</a></p></div>
+  </div>
+  <%/* Expressive: what M3 Expressive brings, as material ships it. Google's description from
+     https://m3.material.io/blog/building-with-m3-expressive (read 2026-11-25); the components'
+     notes from the Why material guide's coverage table. */%>
+  <section class="shaking shaking--carousel" aria-labelledby="expressive-title">
+    <div class="shaking__text">
+      <span class="feature-index">EXPRESSIVE</span>
+      <h2 id="expressive-title">Material 3 Expressive, built for the web.</h2>
+      <p>M3 Expressive is <a class="text-link" href="https://m3.material.io/blog/building-with-m3-expressive">Google's evolution of Material 3</a>: new and updated components, spring motion, and new shapes, colour and type. material brings it to the web.</p>
+      <p class="shaking__note"><a class="text-link" href="/docs/why-material/#material-3-and-expressive-coverage">What material ships of M3 Expressive</a></p>
+    </div>
+    <%/* The Expressive components, live: the catalog's own cards, in its grid. */%>
+    <div class="component-grid expressive-grid"><% it.expressiveCards.forEach(card => { %><%~ card %><% }) %></div>
+  </section>
+  <%/* Compatible: each framework's logo, as material's outlined card; choosing one (a click,
+     or the arrow keys) shows its code.
+     The snippets follow the framework guides (docs/components/<framework>.md). A radio group,
+     so it works with the keyboard and by touch, without a script. */%>
+  <section class="shaking compat" aria-labelledby="compatible-title">
+    <div class="shaking__text">
+      <span class="feature-index">COMPATIBLE</span>
+      <h2 id="compatible-title">One library, every stack.</h2>
+      <p>The same components, the way you build: plain JavaScript factories, web components for any page, and components for React, Vue, Svelte and SolidJS. They render on the server too, and every API is typed.</p>
+      <div class="compat__code"><% it.homeCode.frameworks.forEach(({ id, name, html }) => { %><pre class="shaking__code compat__snippet compat__snippet--<%= id %>" aria-label="<%= name %>"><%~ html %></pre><% }) %></div>
+      <p class="shaking__note"><a class="text-link" href="/docs/frameworks/">Frameworks guide</a> · <a class="text-link" href="/docs/server-rendering/">Server rendering</a></p>
+    </div>
+    <fieldset class="compat__logos"><legend class="sr-only">Show the code for</legend><% it.homeCode.frameworks.forEach(({ id, name, note }, index) => { %><label class="mtrl-card mtrl-card--filled mtrl-card--interactive compat__tile compat__tile--<%= id %>"><input class="sr-only" type="radio" name="compat-framework" value="<%= id %>"<%= index === 0 ? ' checked' : '' %>><div class="mtrl-card__media compat__logo"><%~ it.frameworkLogos[id] %></div><div class="mtrl-card__content"><div class="compat__name"><%= name %></div></div></label><% }) %></fieldset>
+  </section>
+  <%/* Tree-shaking: the measured cost of one component (data/sizes.json, scripts/sizes.ts). */%>
+  <section class="shaking" aria-labelledby="shaking-title">
+    <div class="shaking__text">
+      <span class="feature-index">LIGHTWEIGHT</span>
+      <h2 id="shaking-title">Ship only what you use.</h2>
+      <p>Every component is its own module, with its own stylesheet. Import a button and your bundler keeps the button: the other components never reach your users.</p>
+      <pre class="shaking__code"><%~ it.homeCode.lightweight %></pre>
+      <p class="shaking__note">material's core, <strong><%= it.shaking.core %> KB</strong>, loads once; each component then adds <strong><%= it.shaking.min %>–<%= it.shaking.max %> KB</strong> of JavaScript, gzip, across all <%= it.shaking.count %> components. material's own measurement, on material <%= it.shaking.version %>. <a class="text-link" href="/docs/bundle-size/">Every component's size</a></p>
+    </div>
+    <table class="shaking__table">
+      <caption class="sr-only">What each component adds over material's core, JavaScript, gzip</caption>
+      <thead><tr><th scope="col">Category</th><th scope="col">Components</th></tr></thead>
+      <tbody><% it.shaking.groups.forEach(group => { %><tr><th scope="row"><%= group.label %></th><td><%= group.rows.map(row => `${row.name} +${row.kb} KB`).join(', ') %></td></tr><% }) %></tbody>
+    </table>
   </section>
   <div class="landing-features">
     <div><span class="feature-index">01 / EXPLORE</span><h2>Find the right expression.</h2><p>Try variants, sizes, and shapes in a live component playground.</p></div>

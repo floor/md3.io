@@ -26,7 +26,7 @@ try {
   const selected = (value: string) => panel.waitForValue(page, 'active', value);
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Navigation' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
-    await page.goto(`${server.url}components/${slug}/`);
+    await page.goto(`${server.url}components/${slug}/playground/`);
     await frame.locator('#stage > *').first().waitFor();
     await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
     if (slug === 'navigation-rail') {

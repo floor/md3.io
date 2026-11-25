@@ -1,3 +1,4 @@
+import { FRAMEWORKS } from './src/shared/frameworks';
 import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
@@ -7,15 +8,17 @@ import { components, componentDeprecations, componentIcons, componentSlugs, isCo
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
+import { componentOverview } from './src/server/component-overview';
+import { homeCode } from './src/server/home-code';
 import { componentTabMarkdown, documentMarkdown, llmsFullTxt, llmsTxt } from './src/server/markdown-docs';
 import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
 import { catalogCard, docCard, catalogTokens, catalogVisuals } from './src/server/catalog';
-import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles } from './src/server/playground-panel';
+import { HEADER_SCOPE, exampleViewTabs, frameworkChipsRow, linkedStylesheets, materialPanel, showcaseCopyButton, panelMarkup, renderStyles, frameworkLogo } from './src/server/playground-panel';
 import { renderElement } from 'material/ssr';
 import { searchSite } from './src/server/search';
-import { componentSize } from './src/server/sizes';
+import { componentSize, treeShaking } from './src/server/sizes';
 import { LAB_SEEDS, LAB_VARIANTS, LAB_SAMPLES, LAB_ROLE_GROUPS } from './src/shared/colour-lab';
 import { comingStyles, stylePages } from './src/server/styles';
 import { builtInThemes } from './src/server/themes';
@@ -159,7 +162,7 @@ function page(path: string, title: string, description: string, template: string
     skipTarget: isComponentDetail ? 'component-content' : 'content',
     // The page's Markdown twin, for AI tools (a guide, or a component's Develop or Accessibility tab).
     markdown: /^\/docs\/([a-z-]+)\/$/.exec(path) && isGuide(path.slice(6, -1)) ? `/docs/${path.slice(6, -1)}.md` : /^\/components\/[a-z-]+\/(develop|accessibility)\/$/.test(path) ? `${path.slice(0, -1)}.md` : null,
-    path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: isComponentDetail && !isAddons, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: (isComponentDetail && !isAddons) || isHome, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     // The pager takes the page's own content width: the overviews' inset body, or a component
     // page's side padding.
     content: template === 'document' || template === 'component-tab' || !pager ? content
@@ -175,9 +178,9 @@ const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;
  * A component's pages, as tabs under one header: the overview (the playground), its
  * developer documentation, and its accessibility notes, each its own page.
  */
-type ComponentTab = 'overview' | 'develop' | 'accessibility';
-const componentTabLabels: Record<ComponentTab, string> = { overview: 'Overview', develop: 'Develop', accessibility: 'Accessibility' };
-const componentTabIcons: Record<ComponentTab, string> = { overview: 'explore', develop: 'article', accessibility: 'accessibility_new' };
+type ComponentTab = 'overview' | 'playground' | 'develop' | 'accessibility';
+const componentTabLabels: Record<ComponentTab, string> = { overview: 'Overview', playground: 'Playground', develop: 'Develop', accessibility: 'Accessibility' };
+const componentTabIcons: Record<ComponentTab, string> = { overview: 'explore', playground: 'play_circle', develop: 'article', accessibility: 'accessibility_new' };
 const componentTabHref = (slug: string, tab: ComponentTab) => tab === 'overview' ? `/components/${slug}/` : `/components/${slug}/${tab}/`;
 /**
  * The API reference tables (options, methods, events, properties, fields) as entries: a
@@ -234,7 +237,7 @@ function componentDocument(slug: string) {
 }
 /** A component's presentation: its document's opening paragraph. */
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
-const componentTabs = (slug: string): ComponentTab[] => ['overview', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
+const componentTabs = (slug: string): ComponentTab[] => ['overview', 'playground', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
 /** The header every tab of a component shares: the overview's hero, then the tab bar. */
 function componentHeader(slug: string, current: ComponentTab): string {
   const component = components[slug as keyof typeof components];
@@ -435,23 +438,33 @@ export async function handleRequest(request: Request): Promise<Response> {
   if (!path.endsWith('/') && !extname(path)) return new Response(null, { status: 308, headers: { Location: `${url.pathname}/${url.search}` } });
   let response: Response;
   const componentMatch = /^\/(components|addons|preview)\/([a-z-]+)\/$/.exec(path);
+  // A component's Playground tab: the playground, on its own page.
+  const playgroundMatch = /^\/components\/([a-z-]+)\/playground\/$/.exec(path);
   const componentTabMatch = /^\/components\/([a-z-]+)\/(develop|accessibility)\/$/.exec(path);
   // A renamed component's old documentation address goes straight to its Develop tab, in one redirect.
   const movedDoc = (to: string) => to.startsWith('/docs/components/') ? `/components/${to.slice(17, -1)}/develop/` : to;
-  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
+  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)), homeCode: homeCode(), frameworkLogos: Object.fromEntries(FRAMEWORKS.map(({ id }) => [id, frameworkLogo(id)])), expressiveCards: ['button-group', 'split-button', 'fab-menu', 'loading-indicator', 'toolbar', 'progress'].map(slug => catalogCard(slug as Parameters<typeof catalogCard>[0], playgroundHref(slug), false, [{ label: 'Playground', href: `/components/${slug}/playground/` }])), shaking: treeShaking(Object.fromEntries(componentSlugs.map(slug => [slug, components[slug].name])), [['Actions', ['button', 'fab']], ['Selection & input', ['checkbox', 'text-field']], ['Navigation', ['tabs', 'navigation-bar']], ['Containment', ['card', 'dialog']], ['Communication', ['snackbar', 'tooltip']]]) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('top-app-bar', 'app-bar')) + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('/drawer/', '/navigation-drawer/')) + url.search } });
   // Bottom app bar left the site for Toolbar; its published URLs keep working.
   else if (path === '/components/bottom-app-bar/' || path === '/docs/components/bottom-app-bar/' || path === '/preview/bottom-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('bottom-app-bar', 'toolbar')) + url.search } });
-  else if (path === '/components/') response = page(path, 'Components — material', 'Material 3 Expressive components for the web, Material Design 3\'s latest: try each one live, then copy its code for React, Vue, Svelte, SolidJS or vanilla JS.', 'catalog', { catalogCard, catalogVisuals });
+  else if (path === '/components/') response = page(path, 'Components — material', 'Material 3 Expressive components for the web, Material Design 3\'s latest: try each one live, then copy its code for React, Vue, Svelte, SolidJS or vanilla JS.', 'catalog', { catalogCard: (slug: Parameters<typeof catalogCard>[0], href: string, deprecated: boolean) => catalogCard(slug, href, deprecated, isComponent(slug) && !isAddon(slug) ? componentTabs(slug).filter(tab => tab !== 'overview').map(tab => ({ label: componentTabLabels[tab], href: componentTabHref(slug, tab), icon: tab === 'playground' ? undefined : icon(tab === 'develop' ? 'code' : componentTabIcons[tab]) })) : []), catalogVisuals });
   else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogCard, catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&
-    (componentMatch[1] === 'preview' || path === playgroundHref(componentMatch[2]!))) {
-    const slug = componentMatch[2]!;
+    (componentMatch[1] === 'preview' || path === playgroundHref(componentMatch[2]!))
+    || (playgroundMatch && isComponent(playgroundMatch[1]!) && !isAddon(playgroundMatch[1]!))) {
+    const slug = (playgroundMatch?.[1] ?? componentMatch![2])! as keyof typeof components;
     const component = components[slug];
-    response = componentMatch[1] === 'preview'
+    const onPlayground = !!playgroundMatch;
+    response = componentMatch?.[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
-      : page(path, `${component.name} — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web, live: copy its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'overview'), intro: isAddon(slug) ? '' : componentIntro(slug), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      // The Overview: one section per scenario, each live (component-overview.ts).
+      : !onPlayground && !isAddon(slug) ? page(path, `${component.name} — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web: each way to use it, live, with its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component-tab', {
+        // The component's intro leads the Overview; the framework chips stay on the Playground.
+        slug, componentHeader: componentHeader(slug, 'overview'), frameworksRow: `<div class="component-intro component-intro--overview">${componentIntro(slug)}</div>`,
+        ...componentOverview(slug, { playground: componentTabHref(slug, 'playground'), develop: componentTabHref(slug, 'develop'), codeIcon: icon('code'), playIcon: icon('play_circle') }),
+      })
+      : page(path, `${component.name}: Playground — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web, live: copy its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'playground'), intro: isAddon(slug) ? '' : componentIntro(slug), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301

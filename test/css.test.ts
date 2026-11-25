@@ -45,7 +45,8 @@ describe('stylesheets', () => {
     expect(home).not.toMatch(/\/\*(?!\!)/);
     const order = ['Google Sans', '.skip-link', '.ui-card', '.doc-install', '.hljs-keyword', '.hero__tagline', '.header__mark', '.header__search'];
     order.reduce((prev, needle) => { const index = at(home, needle); expect(index).toBeGreaterThan(prev); return index; }, -1);
-    expect(home).not.toContain('.catalog-visual');
+    // The home's Expressive cards are the catalog's live cards (catalog.css), after the site's sheets.
+    expect(at(home, '.catalog-visual')).toBeGreaterThan(at(home, '.header__search'));
     expect(home).not.toContain('.example-layout');
 
     const page = bundleCss('page');

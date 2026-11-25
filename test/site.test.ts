@@ -694,7 +694,7 @@ describe('documentation front matter', () => {
 
 test('scripts and stylesheets are the hashed files from the manifest', async () => {
   const manifest = JSON.parse(readFileSync(resolve(import.meta.dir, '../dist/asset-manifest.json'), 'utf8')) as Record<string, string>;
-  const page = await (await get('/components/button/')).text();
+  const page = await (await get('/components/button/playground/')).text();
   const assets = [...page.matchAll(/(?:src|href)="(\/(?:dist|styles)\/[^"]+\.(?:js|css)[^"]*)"/g)].map(match => match[1]!);
   // One sheet for the page, plus the scripts it loads. Both names carry the content hash.
   // The Button playground pilot swaps the page's sheet for the material-panel bundle —

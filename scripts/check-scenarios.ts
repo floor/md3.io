@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 import { openSettings } from './panel-driver';
 import { handleRequest } from '../server';
 import { componentCode, componentSlugs, components, initialComponentState, normalizeComponentState } from '../src/shared/components';
-import { addonSlugs, playgroundHref } from '../src/shared/addons';
+import { addonSlugs, componentPlaygroundHref } from '../src/shared/addons';
 
 const playgroundSlugs = [...componentSlugs, ...addonSlugs];
 
@@ -47,7 +47,7 @@ try {
     for (const scenario of [null, ...components[slug].scenarios]) {
       const where = `${slug}${scenario ? `/?scenario=${scenario.id}` : ''}`;
       errors.length = 0;
-      await page.goto(new URL(`${playgroundHref(slug)}${scenario ? `?scenario=${scenario.id}` : ''}`, base).href);
+      await page.goto(new URL(`${componentPlaygroundHref(slug)}${scenario ? `?scenario=${scenario.id}` : ''}`, base).href);
 
       await openSettings(page);
       await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
@@ -197,7 +197,7 @@ try {
   }
   // The search scenario's clear button (spec section 6): it shows only while the field has
   // a value, and an empty field must not keep a button to focus.
-  await page.goto(`${base}components/text-field/?scenario=search`);
+  await page.goto(`${base}components/text-field/playground/?scenario=search`);
   await openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   // A CSS locator, not a role one: a hidden button leaves the accessibility tree, and a
@@ -219,7 +219,7 @@ try {
   const noScenario = playgroundSlugs.find(slug => !components[slug].scenarios?.length);
   if (noScenario) {
     errors.length = 0;
-    await page.goto(new URL(`${playgroundHref(noScenario)}?scenario=x`, base).href);
+    await page.goto(new URL(`${componentPlaygroundHref(noScenario)}?scenario=x`, base).href);
 
     await openSettings(page);
     // Wait for the ready round-trip without matching a status text: a scenario message would
@@ -243,7 +243,7 @@ try {
   // The button's toggle controls: the selected state reaches the preview, the vanilla
   // panel, and the element panel.
   errors.length = 0;
-  await page.goto(`${base}components/button/?scenario=favorite`);
+  await page.goto(`${base}components/button/playground/?scenario=favorite`);
   await openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   const favorite = frame.locator('#stage button');
@@ -283,7 +283,7 @@ try {
   assert(errors.length === 0, `button/favorite: ${errors.join('\n')}`);
   // Old state keys (e.g. ?hiking=true) must load quietly with no error and no unknown banner.
   errors.length = 0;
-  await page.goto(`${base}components/chips/?hiking=true`);
+  await page.goto(`${base}components/chips/playground/?hiking=true`);
   await openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   assert(await page.locator('#playground-status').textContent() === 'Ready to try', 'chips/?hiking=true: status is not Ready to try');

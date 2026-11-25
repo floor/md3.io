@@ -152,10 +152,17 @@ export function catalogVisual(slug: ComponentSlug): string {
 }
 
 /** An overview card: a real <m-card>, the live visual as its media, the text as its content. */
-export function catalogCard(slug: ComponentSlug, href: string, deprecated: boolean): string {
+/** A card's actions: links to the component's pages (Playground, Develop, Accessibility), as material's small buttons. */
+export type CardTab = { label: string; href: string; icon?: string };
+export function catalogCard(slug: ComponentSlug, href: string, deprecated: boolean, tabs: readonly CardTab[] = []): string {
   const { name, summary } = components[slug];
   const status = deprecated ? '<span class="catalog-status"><m-badge variant="small" label="Deprecated" color="secondary" aria-hidden="true"></m-badge> Deprecated</span>' : '';
-  const body = `<div class="component-card__body"><h3><a href="${escape(href)}">${escape(name)}</a></h3><p>${escape(summary)}</p>${status}</div>`;
+  // The card itself is not a link (its stage stays live to try): the title and the actions are.
+  const actions = tabs.length ? `<div class="component-card__actions">${tabs.map(({ label, href: to, icon }) => icon
+    // Develop and Accessibility: standard icon buttons, named and titled by their tab.
+    ? `<a class="mtrl-icon-button mtrl-icon-button--standard mtrl-icon-button--s mtrl-icon-button--round" href="${escape(to)}" aria-label="${escape(`${name}: ${label}`)}" title="${escape(label)}"><span class="mtrl-icon-button__icon">${icon}</span></a>`
+    : `<a class="mtrl-button mtrl-button--tonal mtrl-button--s mtrl-button--round" href="${escape(to)}" aria-label="${escape(`${name}: ${label}`)}"><span class="mtrl-button__text">${escape(label)}</span></a>`).join('')}</div>` : '';
+  const body = `<div class="component-card__body"><h3><a href="${escape(href)}">${escape(name)}</a></h3><p>${escape(summary)}</p>${status}${actions}</div>`;
   // Rendering the card renders the elements in its scene. A demo app bar's headline is not
   // the page's title, so it is not a heading (src/client/catalog/app-bar.ts, once upgraded).
   return renderElement('m-card', { variant: 'filled', class: 'component-card' }, `${catalogVisuals[slug].replace('<div class="', '<div slot="media" class="')}${body}`, renderStyles)

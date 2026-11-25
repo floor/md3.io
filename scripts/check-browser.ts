@@ -24,7 +24,7 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/home-desktop.png`, fullPage: true });
   await page.getByRole('link', { name: 'Explore components' }).click();
   await page.waitForURL(url => url.pathname === '/components/');
-  await page.goto(new URL('/components/button/', base).href);
+  await page.goto(new URL('/components/button/playground/', base).href);
   const preview = page.frameLocator('#preview');
   const button = preview.getByRole('button', { name: 'Button', exact: true });
   await button.waitFor();
@@ -232,7 +232,7 @@ try {
   await loadingPage.route('**/preview/**', async route => { await documentGate; await route.continue(); });
   await loadingPage.route('**/dist/*.js', async route => { await modulesGate; await route.continue(); });
   try {
-    await loadingPage.goto(`${base}components/icon-button/`, { waitUntil: 'commit' });
+    await loadingPage.goto(`${base}components/icon-button/playground/`, { waitUntil: 'commit' });
     await loadingPage.locator('#preview').waitFor();
     await loadingPage.waitForFunction(() => getComputedStyle(document.querySelector('#preview')!).colorScheme === 'dark');
     const background = await loadingPage.locator('#preview').evaluate(element => getComputedStyle(element).backgroundColor);
@@ -300,7 +300,7 @@ try {
   // across the boundaries on one route from every bundle.
   const routes = [
     { name: 'home', path: '' },
-    { name: 'playground', path: 'components/button/' },
+    { name: 'playground', path: 'components/button/playground/' },
     { name: 'catalog', path: 'components/' },
     { name: 'docs', path: 'docs/frameworks/' },
     // This route redirects to Showcase once the rename lands.
@@ -382,7 +382,7 @@ try {
     }
   }
 
-  await page.goto(`${base}components/button/`);
+  await page.goto(`${base}components/button/playground/`);
   await page.setViewportSize({ width: 599, height: 900 });
   await bar.getByRole('link', { name: 'Docs', exact: true }).focus();
   await page.setViewportSize({ width: 600, height: 900 });
@@ -550,7 +550,7 @@ try {
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-measure-enlarged.png` });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${base}components/button/`);
+  await page.goto(`${base}components/button/playground/`);
   await preview.getByRole('button', { name: 'Button', exact: true }).waitFor();
   await page.screenshot({ animations: 'disabled', path: `${output}/button-mobile.png`, fullPage: true });
   const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].map(element => ({ tag: element.tagName, class: element.className, width: element.getBoundingClientRect().width, right: element.getBoundingClientRect().right })).filter(item => item.right > innerWidth + 1));
@@ -567,7 +567,7 @@ try {
   await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
   await page.waitForURL(`${base}privacy/`);
   await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
-  await page.goto(`${base}components/button/`);
+  await page.goto(`${base}components/button/playground/`);
   assert(await page.locator('.site-footer').count() === 1, 'A component page has the footer once');
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   await checkPlaygroundLayout(context, base, output);
