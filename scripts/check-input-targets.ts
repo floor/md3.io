@@ -71,7 +71,7 @@ export async function checkVisualControlSizes(page: Page) {
 
 async function checkPickers(page: Page, base: string, width: number, captures: string) {
   for (const kind of ['date', 'time'] as const) {
-    await page.goto(new URL(`components/${kind}picker/`, base).href);
+    await page.goto(new URL(`components/${kind}picker/playground/`, base).href);
     const fields = page.locator(`#configuration m-text-field[data-picker="${kind}"]:not([disabled])`);
     const triggers = fields.locator('button[part~="trailing-icon"]');
     await checkTargets(triggers, `${width}px ${kind} picker triggers`);
@@ -170,7 +170,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       const buttonLink = componentList.getByRole('link', { name: 'Button', exact: true });
       await checkTargets(componentList.getByRole('link'), `${width}px component list rows`);
       await edge(page, buttonLink, 'touch', 'left');
-      await page.waitForURL(new URL('components/button/', base).href);
+      await page.waitForURL(new URL('components/button/playground/', base).href);
       await checkVisualControlSizes(page);
 
       const frameworks = page.getByRole('grid', { name: 'Framework', exact: true });
@@ -226,7 +226,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       await edge(page, toggle, 'touch', 'top');
       await panel.waitForSwitch(page, 'toggle', true);
 
-      await goto('/components/slider/');
+      await goto('/components/slider/playground/');
       const slider = page.locator('#configuration m-slider:not([disabled])').first();
       const trackTarget = slider.locator('[part~="container"]');
       await checkTargets(trackTarget, `${width}px slider pointer area`);
@@ -297,7 +297,7 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
     const staticPage = await staticContext.newPage();
     for (const width of [360, 1440]) {
       await staticPage.setViewportSize({ width, height: 900 });
-      await staticPage.goto(new URL('components/datepicker/', base).href);
+      await staticPage.goto(new URL('components/datepicker/playground/', base).href);
       // Without scripts a phone shows none of these (the theme buttons sit in the hidden rail
       // until a script moves them): check the size of whichever are shown.
       await checkTargets(staticPage.locator('#theme-picker button, #theme-toggle button, m-text-field[data-picker] button'),

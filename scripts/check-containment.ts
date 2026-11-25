@@ -38,7 +38,7 @@ try {
   };
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Containment' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
-    await page.goto(`${server.url}components/${slug}/`);
+    await page.goto(`${server.url}components/${slug}/playground/`);
     await frame.locator('#stage > *').first().waitFor();
     await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
     assert(errors.length === 0, errors.join('\n'));

@@ -83,7 +83,7 @@ try {
   await page.reload();
   assert(await hex() === oceanDark, 'The saved theme and mode come back on reload');
   // The playground reads the same key.
-  await page.goto(`${base}/components/button/`);
+  await page.goto(`${base}/components/button/playground/`);
   // The playground takes the site's theme (the header), which is this saved choice.
   assert(await page.evaluate(() => document.documentElement.dataset.siteTheme) === 'ocean', 'The playground opens with the theme chosen on the Color page');
   await page.goto(`${base}/styles/color/`);

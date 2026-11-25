@@ -22,7 +22,7 @@ try {
   const toggle = (name: string) => panel.toggle(page, name);
   // The FAB menu is checked on its own below: it has no variant or disabled control.
   for (const slug of componentSlugs.filter(value => value !== 'button' && value !== 'fab-menu' && components[value].group === 'Actions')) {
-    await page.goto(`${server.url}components/${slug}/`);
+    await page.goto(`${server.url}components/${slug}/playground/`);
     await panel.openSettings(page);
     const root = frame.locator(`#stage > .mtrl-${slug}`);
     await root.waitFor();
@@ -116,7 +116,7 @@ try {
   }
   // FAB menu: the list opens from the FAB, Escape closes it and gives focus back to the FAB,
   // and each item count the configuration offers renders that many items
-  await page.goto(`${server.url}components/fab-menu/`);
+  await page.goto(`${server.url}components/fab-menu/playground/`);
   await panel.openSettings(page);
   console.log('Checking fab-menu');
   const fabButton = frame.locator('#stage [aria-expanded]').first();

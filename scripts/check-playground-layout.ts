@@ -46,7 +46,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         const label = `${slug} at ${width} × ${height}px`;
         console.log(`Checking playground reflow for ${label}`);
         await page.setViewportSize({ width, height });
-        await page.goto(new URL(`components/${slug}/`, base).href);
+        await page.goto(new URL(`components/${slug}/playground/`, base).href);
         if (width >= 600) {
           const rail = await page.locator('#site-primary-rail').boundingBox();
           assert(rail && Math.abs(rail.width - 96) < 1, `${label}: the collapsed rail must reserve 96px`);
@@ -167,7 +167,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
     // One framework chips row per page, never in the preview card. On a component's tabs it
     // heads the content (beside the Overview's presentation, at the top right of Develop);
     // on a Showcase example it sits under the title and description, 20px and 18px apart.
-    for (const [label, path] of [['component', 'components/button/'], ['develop', 'components/button/develop/'], ['showcase', 'showcase/settings/']] as const) {
+    for (const [label, path] of [['component', 'components/button/playground/'], ['develop', 'components/button/develop/'], ['showcase', 'showcase/settings/']] as const) {
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(new URL(path, base).href);
@@ -188,7 +188,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
     }
     // Keyboard: on a component's tabs the chips come right after the tab bar.
     await page.setViewportSize({ width: 1440, height: 900 });
-    for (const path of ['components/button/', 'components/button/develop/']) {
+    for (const path of ['components/button/playground/', 'components/button/develop/']) {
       await page.goto(new URL(path, base).href);
       await page.locator('.component-tabs a').last().focus();
       for (let i = 0; i < 4; i++) {

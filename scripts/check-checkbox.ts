@@ -21,7 +21,7 @@ try {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
-  await page.goto(`${server.url}components/button/`);
+  await page.goto(`${server.url}components/button/playground/`);
   // The panel is material's elements: the theme select opens a listbox, and the
   // mode group's buttons live in its shadow root (scripts/panel-driver.ts).
   await panel.chooseTheme(page, 'Forest');
