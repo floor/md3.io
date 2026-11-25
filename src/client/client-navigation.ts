@@ -176,7 +176,8 @@ function swapHead(next: Document, url: URL) {
   for (const attribute of next.documentElement.attributes) document.documentElement.setAttribute(attribute.name, attribute.value);
   let saved: string | null = null;
   try { saved = localStorage.getItem('md3-example-framework'); } catch { /* Optional storage. */ }
-  const asked = url.pathname.startsWith('/docs/') ? url.searchParams.get('framework') : null;
+  // Documentation pages, Docs' and a component's Develop and Accessibility tabs, honour ?framework=.
+  const asked = /^\/(docs\/|components\/[a-z-]+\/(develop|accessibility)\/)/.test(url.pathname) ? url.searchParams.get('framework') : null;
   const frameworks = ['vanilla', 'html', 'react', 'vue', 'svelte', 'solid'];
   const framework = asked && frameworks.includes(asked) ? asked : saved;
   if (framework && frameworks.includes(framework)) {

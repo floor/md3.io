@@ -107,10 +107,10 @@ describe('site routes and documentation', () => {
   test('the retired segmented button URL redirects to the button group', async () => {
     const response = await get('/docs/components/segmented-button/');
     expect(response.status).toBe(301);
-    expect(response.headers.get('Location')).toBe('/docs/components/button-group/');
+    expect(response.headers.get('Location')).toBe('/components/button-group/develop/');
   });
   test('the text field slug redirects from textfield to text-field', async () => {
-    for (const [from, to] of [['/components/textfield/', '/components/text-field/'], ['/preview/textfield/', '/preview/text-field/'], ['/docs/components/textfield/', '/docs/components/text-field/']] as const) {
+    for (const [from, to] of [['/components/textfield/', '/components/text-field/'], ['/preview/textfield/', '/preview/text-field/'], ['/docs/components/textfield/', '/components/text-field/develop/']] as const) {
       const response = await get(`${from}?theme=ocean`);
       expect(response.status).toBe(301);
       expect(response.headers.get('Location')).toBe(`${to}?theme=ocean`);

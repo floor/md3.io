@@ -477,8 +477,8 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/credits/') response = page(path, 'Credits — material', 'The design system, fonts and icons md3.io and the material library build on.', 'credits');
   else if (path === '/docs/') response = page(path, 'Docs — material', 'Configuration and API references for the material library\'s components.', 'docs', { docCard });
   else if (path === '/docs/components/components/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/architecture/' } });
-  else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/docs/components/button-group/' } });
-  else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${path.replace('textfield', 'text-field')}${url.search}` } });
+  else if (path === '/docs/components/segmented-button/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `/components/button-group/develop/${url.search}` } });
+  else if (path === '/components/textfield/' || path === '/preview/textfield/' || path === '/docs/components/textfield/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: `${movedDoc(path.replace('textfield', 'text-field'))}${url.search}` } });
   // The six framework guides are one Frameworks page: their URLs, and the guides' older
   // /docs/components/<slug>/ ones, answer 301 to it with that framework chosen.
   else if (componentTabMatch && isComponent(componentTabMatch[1]!) && !isAddon(componentTabMatch[1]!) && componentTabs(componentTabMatch[1]!).includes(componentTabMatch[2] as ComponentTab)) {

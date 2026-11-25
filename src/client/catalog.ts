@@ -72,6 +72,9 @@ registerPage('catalog', (content, life) => {
     for (const trigger of visual.querySelectorAll('[data-catalog-open]')) {
       if ((trigger as HTMLElement).dataset.wired) continue;
       (trigger as HTMLElement).dataset.wired = 'true';
+      // A component's hero is kept across its tab switches: the next page's lifecycle wires the
+      // trigger again, so this one's mark goes with its handler.
+      life.add(() => { delete (trigger as HTMLElement).dataset.wired; });
       life.events(trigger).addEventListener('click', () => {
         const sheet = visual.querySelector<HTMLElement & { show?: () => void; open?: boolean }>(`m-${trigger.getAttribute('data-catalog-open')}`);
         if (sheet) { if (typeof sheet.show === 'function') sheet.show(); else sheet.open = true; }
