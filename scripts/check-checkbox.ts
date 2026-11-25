@@ -113,7 +113,8 @@ try {
   assert(!await parentBox.evaluate((element: HTMLInputElement) => element.required), 'Checkbox starts required');
   await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.documentElement.dataset.themeMode === 'dark');
   assert(await frame.locator('html').getAttribute('data-theme') === 'forest', 'Checkbox lost saved preview appearance');
-  assert((await page.locator('.eyebrow').textContent())?.includes('SELECTION & INPUT'), 'Checkbox has the wrong category');
+  // The tabbed page's hero names the component (its family is in the drawer).
+  assert((await page.locator('.component-hero h1').textContent())?.trim() === 'Checkbox', 'Checkbox hero has the wrong title');
   await page.screenshot({ path: `${output}/checkbox-desktop.png`, fullPage: true, animations: 'disabled' });
 
   // A theme or tab change restyles the preview without recreating it.

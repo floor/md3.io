@@ -31,6 +31,7 @@ try {
   for (const slug of componentSlugs.filter(slug => components[slug].group === 'Selection & input' && slug !== 'checkbox' && (!process.argv[2] || slug === process.argv[2]))) {
     console.log(`Checking ${slug}`);
     await page.goto(`${server.url}components/${slug}/`);
+    await panel.openSettings(page);
     await frame.locator('#stage > *').first().waitFor();
     assert(errors.length === 0, errors.join('\n'));
     await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
@@ -192,6 +193,7 @@ try {
   };
   await page.setViewportSize({ width: 1024, height: 900 });
   await page.goto(`${server.url}components/text-field/`);
+  await panel.openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   await headingFits('text-field/1024');
   await panel.chooseMode(page, 'dark');

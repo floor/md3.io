@@ -3,6 +3,7 @@
 // state's snippet in the code panel, with no console error and no failed response.
 // Custom and an unknown id are not part of this loop.
 import { chromium } from 'playwright';
+import { openSettings } from './panel-driver';
 import { handleRequest } from '../server';
 import { componentCode, componentSlugs, components, initialComponentState, normalizeComponentState } from '../src/shared/components';
 import { addonSlugs, playgroundHref } from '../src/shared/addons';
@@ -47,6 +48,8 @@ try {
       const where = `${slug}${scenario ? `/?scenario=${scenario.id}` : ''}`;
       errors.length = 0;
       await page.goto(new URL(`${playgroundHref(slug)}${scenario ? `?scenario=${scenario.id}` : ''}`, base).href);
+
+      await openSettings(page);
       await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
       await frame.locator('#stage > *').first().waitFor();
       assert(await page.locator('.device__bar').count() === 0, `${where}: playgrounds must not show a device chooser`);
@@ -195,6 +198,7 @@ try {
   // The search scenario's clear button (spec section 6): it shows only while the field has
   // a value, and an empty field must not keep a button to focus.
   await page.goto(`${base}components/text-field/?scenario=search`);
+  await openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   // A CSS locator, not a role one: a hidden button leaves the accessibility tree, and a
   // role locator would wait for it to come back instead of reporting it hidden.
@@ -216,6 +220,8 @@ try {
   if (noScenario) {
     errors.length = 0;
     await page.goto(new URL(`${playgroundHref(noScenario)}?scenario=x`, base).href);
+
+    await openSettings(page);
     // Wait for the ready round-trip without matching a status text: a scenario message would
     // pass a "not loading" wait and must fail the assertion below, not the wait.
     await page.waitForFunction(() => document.querySelector('#playground-status')?.textContent !== 'Loading preview…');
@@ -238,6 +244,7 @@ try {
   // panel, and the element panel.
   errors.length = 0;
   await page.goto(`${base}components/button/?scenario=favorite`);
+  await openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   const favorite = frame.locator('#stage button');
   assert(await favorite.getAttribute('aria-pressed') === 'true', 'button/favorite: the preview is not pressed');
@@ -277,6 +284,7 @@ try {
   // Old state keys (e.g. ?hiking=true) must load quietly with no error and no unknown banner.
   errors.length = 0;
   await page.goto(`${base}components/chips/?hiking=true`);
+  await openSettings(page);
   await page.getByRole('status').filter({ hasText: 'Ready to try' }).waitFor();
   assert(await page.locator('#playground-status').textContent() === 'Ready to try', 'chips/?hiking=true: status is not Ready to try');
   assert(errors.length === 0, `chips/?hiking=true: ${errors.join('\n')}`);

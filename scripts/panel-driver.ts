@@ -17,6 +17,9 @@ const inPanel = (page: Page, selector: string) => page.locator(`#configuration $
 export async function openSettings(page: Page): Promise<void> {
   // After a client navigation the address changes before the page arrives: wait for its form.
   await page.locator('#configuration').waitFor({ state: 'attached' });
+  // The playground sits below the page's hero and tabs: bring it into view at once (the
+  // site scrolls smoothly, which keeps an element moving while a click waits for it).
+  await page.evaluate(() => document.querySelector('.playground')?.scrollIntoView({ block: 'start', behavior: 'instant' }));
   const toggle = page.locator('#settings-toggle');
   if (!await toggle.count()) return;
   // After a client navigation the page's script may not have wired the button yet: press

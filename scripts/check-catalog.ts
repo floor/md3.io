@@ -67,12 +67,14 @@ async function checkDirectory(pane: Locator, path: string, docs = false) {
       `${family.name}: a native button controls the following list`);
     equal(await list.locator('a').evaluateAll(links => links.map(link => link.getAttribute('href'))), expected.map(item => item.href),
       `${family.name}: the members follow the expected A–Z order`);
-    const active = expected.some(item => item.href === path);
+    // A component's Develop or Accessibility tab belongs to the component.
+    const active = expected.some(item => item.href === path.replace(/(?:develop|accessibility)\/$/, ''));
     assert(await toggle.getAttribute('aria-expanded') === String(active) && await list.isVisible() === active,
       `${family.name}: only the current family is open on load`);
   }
   const current = pane.locator('a[aria-current="page"]');
-  const currentHref = hrefs.includes(path) ? path : null;
+  const route = path.replace(/(?:develop|accessibility)\/$/, '');
+  const currentHref = hrefs.includes(route) ? route : null;
   assert(await current.count() === Number(currentHref !== null), 'Current link count matches the route');
   if (currentHref) assert(await current.getAttribute('href') === currentHref && await current.isVisible(), 'The current link is visible and matches the route');
 }
