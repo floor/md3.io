@@ -1,7 +1,7 @@
 <div class="component-list-layout component-list-layout--detail">
 <%~ include('component-list', it) %>
 <div class="page-wrap component-page" id="component-content" tabindex="-1" data-component="<%= it.slug %>">
-  <% if (it.componentHeader) { %><%~ it.componentHeader %><div class="component-overview"><div class="component-overview__main"><div class="component-lede"><div class="component-intro"><%~ it.intro %></div><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div></div><% } else { %>
+  <% if (it.componentHeader) { %><%~ it.componentHeader %><div class="component-overview component-overview--playground"><div class="component-overview__main"><div class="component-lede"><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div></div><% } else { %>
   <header class="page-heading">
     <div class="page-heading__top">
       <a class="text-link component-list-up" href="<%= it.isAddons ? '/addons/' : '/components/' %>"><%~ it.icon('arrow_back') %> <%= it.isAddons ? 'All add-ons' : 'All components' %></a>
@@ -16,7 +16,7 @@
   </header>
   <% } %>
   <% if (!it.componentHeader) { %><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div><% } %>
-  <% if (it.componentHeader) { %><h2 class="component-section-title" id="playground">Playground</h2><% } %>
+  <% if (it.componentHeader) { %><h2 class="sr-only" id="playground">Playground</h2><% } %>
   <section class="playground playground--material" aria-label="<%= it.component.name %> playground"><%/* The panel's scope takes the site theme and mode as it is parsed, so its first paint is themed; the settings sheet a person left open is open from the first paint too. */%><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; try { if (localStorage.getItem('md3-playground-settings') === 'open') s.setAttribute('data-settings-open', ''); } catch {} })(document.currentScript.parentElement);</script>
     <div class="preview-panel">
       <div class="panel-heading preview-heading">
@@ -54,7 +54,7 @@
     </form>
   </section>
   <% if (it.usedIn && it.usedIn.length) { %><p class="component-used-in">Used in: <% it.usedIn.forEach((example, index) => { %><% if (index) { %>, <% } %><a class="text-link" href="/showcase/<%= example.slug %>/"><%= example.title %></a><% }); %></p><% } %>
-  <% if (it.componentHeader) { %></div><aside class="doc-toc component-overview__toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><a href="#playground">Playground</a></aside></div><% } %>
+  <% if (it.componentHeader) { %></div></div><% } %>
 </div>
 </div>
 <script type="module" src="/dist/playground-material.js"></script>

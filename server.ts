@@ -458,7 +458,8 @@ export async function handleRequest(request: Request): Promise<Response> {
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
       // The Overview: one section per scenario, each live (component-overview.ts).
       : !onPlayground && !isAddon(slug) ? page(path, `${component.name} — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web: each way to use it, live, with its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component-tab', {
-        slug, componentHeader: componentHeader(slug, 'overview'), frameworksRow: '',
+        // The component's intro leads the Overview; the framework chips stay on the Playground.
+        slug, componentHeader: componentHeader(slug, 'overview'), frameworksRow: `<div class="component-intro component-intro--overview">${componentIntro(slug)}</div>`,
         ...componentOverview(slug, { playground: componentTabHref(slug, 'playground'), develop: componentTabHref(slug, 'develop'), codeIcon: icon('code'), playIcon: icon('play_circle') }),
       })
       : page(path, `${component.name}: Playground — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web, live: copy its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'playground'), intro: isAddon(slug) ? '' : componentIntro(slug), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
