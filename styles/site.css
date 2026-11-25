@@ -98,6 +98,9 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .page-hero__art { position: relative; min-height: 200px; border-radius: 28px; background: var(--mtrl-sys-color-primary-container); overflow: hidden; }
 /* Waves drawn in the theme's colours (src/client/hero-waves.ts) cover the tile without sizing it. */
 .page-hero__waves { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+/* On a phone the title holds the tile's top: centred, it moved as the description rewrapped
+   when the site font arrived. */
+@container (max-width: 759px) { .page-hero__text { justify-content: flex-start; } }
 @container (min-width: 760px) {
   .page-hero { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
   .page-hero__text { min-height: 420px; padding: 56px 48px; }
@@ -313,3 +316,6 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
    32px top margin is the gap). */
 .content > :is(.page-wrap, .pager-wrap, .docs-overview, .component-list-layout, .component-tab-layout) { padding-bottom: 0; }
 .content > :is(.component-list-layout, .component-tab-layout) > .page-wrap { padding-bottom: 0; }
+/* An icon-only chip is 40px wide: its touch area (material's ::before, 48px tall) widens to
+   48px around it, so the row keeps its width on a phone. */
+:is(.component-lede, .component-tab-page) .framework-chips::part(action)::before { inset-inline: -4px; }
