@@ -355,3 +355,7 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .shaking__core { padding-bottom: 14px; border-bottom: 1px dashed var(--border); }
 .shaking__bars .shaking__group { display: block; margin-top: 8px; font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); }
 .shaking__bars { gap: 10px; }
+.shaking__list li { grid-template-columns: 9em minmax(0, 1fr); }
+.shaking__list .shaking__kb { text-align: left; }
+.shaking__list code.shaking__kb { font-size: var(--fs-xs); overflow-wrap: anywhere; }
+@media (max-width: 599px) { .shaking__list li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }

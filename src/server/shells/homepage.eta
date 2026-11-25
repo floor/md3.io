@@ -16,10 +16,45 @@
     <div><span class="feature-index">02 / COMPATIBLE</span><h2>One library, every stack.</h2><p>Plain JavaScript factories, web components, and React, Vue, Svelte and SolidJS components, with server rendering. In TypeScript.</p></div>
     <div><span class="feature-index">03 / LIGHTWEIGHT</span><h2>Small by design.</h2><p>Tree-shakable, with zero runtime dependencies: a <%= it.shaking.core %> KB core, then each component adds from <%= it.shaking.min %> KB gzip. <a class="text-link" href="/docs/bundle-size/">See every size</a></p></div>
   </div>
+  <%/* Expressive: what M3 Expressive brings, as material ships it. Google's description from
+     https://m3.material.io/blog/building-with-m3-expressive (read 2026-11-25); the components'
+     notes from the Why material guide's coverage table. */%>
+  <section class="shaking" aria-labelledby="expressive-title">
+    <div class="shaking__text">
+      <span class="feature-index">EXPRESSIVE</span>
+      <h2 id="expressive-title">Material 3 Expressive, built for the web.</h2>
+      <p>M3 Expressive is <a class="text-link" href="https://m3.material.io/blog/building-with-m3-expressive">Google's evolution of Material 3</a>: new and updated components, spring motion, and new shapes, colour and type. material brings it to the web, with Expressive sizes and shapes on every button.</p>
+      <pre class="shaking__code"><code>import { createButton } from 'material';
+
+const save = createButton({
+  text: 'Save', size: 'l', shape: 'square',
+});</code></pre>
+      <p class="shaking__note"><a class="text-link" href="/docs/why-material/#material-3-and-expressive-coverage">What material ships of M3 Expressive</a></p>
+    </div>
+    <ul class="shaking__bars shaking__list" aria-label="Expressive components">
+      <% [['button-group', 'Button group', 'Connected groups that change shape as you select'], ['split-button', 'Split button', 'A main action paired with a menu'], ['fab-menu', 'FAB menu', 'Related actions, opened from a FAB'], ['loading-indicator', 'Loading indicator', 'The morphing-shape indicator for short waits'], ['progress', 'Progress', 'Flat or wavy, linear or circular'], ['toolbar', 'Toolbar', 'Docked and floating, horizontal or vertical'], ['button', 'Button', 'Five sizes, round or square'], ['icon-button', 'Icon button', 'Sizes, shapes, widths and toggles']].forEach(([slug, name, note]) => { %><li><a class="shaking__name text-link" href="/components/<%= slug %>/"><%= name %></a><span class="shaking__kb"><%= note %></span></li><% }) %>
+    </ul>
+  </section>
+  <%/* Compatible: the same component in every way of building. */%>
+  <section class="shaking" aria-labelledby="compatible-title">
+    <div class="shaking__text">
+      <span class="feature-index">COMPATIBLE</span>
+      <h2 id="compatible-title">One library, every stack.</h2>
+      <p>The same components, the way you build: plain JavaScript factories, web components for any page, and components for React, Vue, Svelte and SolidJS. They render on the server too, and every API is typed.</p>
+      <pre class="shaking__code"><code>// React
+import { Button } from 'material/react';
+
+&lt;Button variant="filled"&gt;Save&lt;/Button&gt;</code></pre>
+      <p class="shaking__note"><a class="text-link" href="/docs/frameworks/">Frameworks guide</a> · <a class="text-link" href="/docs/server-rendering/">Server rendering</a></p>
+    </div>
+    <ul class="shaking__bars shaking__list" aria-label="Frameworks">
+      <% [['Vanilla JS', "import { createButton } from 'material'"], ['Web Components', "import { defineAll } from 'material/elements'"], ['React', "import { Button } from 'material/react'"], ['Vue', "import { MButton } from 'material/vue'"], ['Svelte', "import { Button } from 'material/svelte'"], ['SolidJS', "import { Button } from 'material/solid'"]].forEach(([name, line]) => { %><li><span class="shaking__name"><%= name %></span><code class="shaking__kb"><%= line %></code></li><% }) %>
+    </ul>
+  </section>
   <%/* Tree-shaking: the measured cost of one component (data/sizes.json, scripts/sizes.ts). */%>
   <section class="shaking" aria-labelledby="shaking-title">
     <div class="shaking__text">
-      <span class="feature-index">TREE-SHAKABLE</span>
+      <span class="feature-index">LIGHTWEIGHT</span>
       <h2 id="shaking-title">Ship only what you use.</h2>
       <p>Every component is its own module, with its own stylesheet. Import a button and your bundler keeps the button: the other components never reach your users.</p>
       <pre class="shaking__code"><code>import { createButton } from 'material';
