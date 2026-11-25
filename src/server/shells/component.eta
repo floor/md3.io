@@ -23,6 +23,7 @@
         <%~ it.panel.tabs %>
         <span class="preview-dot" aria-hidden="true"></span>
         <%~ it.panel.appearance %>
+        <% if (it.panel.zoom) { %><%~ it.panel.zoom %><% } %>
         <%~ it.panel.copy %>
         <% if (it.panel.codepen) { %><%~ it.panel.codepen %><% } %>
         <% if (it.panel.settings) { %><%~ it.panel.settings %><% } %>

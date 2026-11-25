@@ -449,6 +449,19 @@ registerPage('playground', (content, life) => {
       status.textContent = 'Code selected. Use your copy shortcut.';
     }
   });
+  // The preview's zoom (FLO-1565, prototype): CSS zoom on the preview document, stepping
+  // 100, 85, 70 and 50%; kept when the frame reloads.
+  const ZOOMS = [1, 0.85, 0.7, 0.5];
+  let zoomIndex = 0;
+  const zoomButton = content.querySelector<HTMLElement>('#preview-zoom');
+  const applyZoom = () => {
+    const root = frame.contentDocument?.documentElement;
+    if (root) root.style.zoom = ZOOMS[zoomIndex] === 1 ? '' : String(ZOOMS[zoomIndex]);
+    const label = `${Math.round(ZOOMS[zoomIndex]! * 100)}%`;
+    if (zoomButton) { zoomButton.textContent = label; zoomButton.setAttribute('aria-label', `Preview zoom: ${label}`); }
+  };
+  if (zoomButton) life.events(zoomButton).addEventListener('click', () => { zoomIndex = (zoomIndex + 1) % ZOOMS.length; applyZoom(); });
+  life.events(frame).addEventListener('load', applyZoom);
   // Open in CodePen: the current setup's vanilla code, as a pen (shared/codepen.ts), in a
   // new tab. A form POST is CodePen's prefill; nothing is stored here.
   const codepenButton = content.querySelector<HTMLElement>('#open-codepen');
