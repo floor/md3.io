@@ -159,10 +159,10 @@ try {
       localStorage.setItem('md3-site-mode', m!);
     }, [theme, mode]);
     const themedPage = await themedContext.newPage();
-    for (const route of ['styles/', 'styles/color-lab/', 'docs/components/menu/', '']) {
+    for (const route of ['styles/', 'styles/color-lab/', 'components/menu/develop/', '']) {
       await themedPage.goto(`${base}${route}`);
       await themedPage.waitForTimeout(400);
-      if (route.startsWith('docs/')) {
+      if (route.endsWith('/develop/')) {
         // The search dialog's active result is an accent-dim surface too.
         await themedPage.locator('#search-trigger').click();
         await themedPage.locator('#search-input').fill('button');
@@ -289,8 +289,8 @@ try {
   await page.reload();
   await assertAppearance('baseline', 'light');
 
-  await page.goto(`${base}docs/components/button/`);
-  await page.locator('.md h1').waitFor();
+  await page.goto(`${base}components/button/develop/`);
+  await page.locator('.component-hero h1').waitFor();
   await page.screenshot({ animations: 'disabled', path: `${output}/docs-desktop.png`, fullPage: false });
   const tocHref = await page.locator('.doc-toc a').first().getAttribute('href');
   assert(tocHref && await page.locator(tocHref).count() === 1, 'TOC target is missing');
@@ -483,7 +483,8 @@ try {
   const measureAt = async (width: number, route: string) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${base}${route}`);
-    await page.locator('.md h1').waitFor();
+    // A guide's title is in its article; a component's Develop tab carries it in its header.
+    await page.locator(':is(.md, .component-hero) h1').first().waitFor();
     await page.evaluate(() => document.fonts.ready);
     const reading = await measureProse();
     assert(reading.count >= 2 && reading.narrow === 0 && reading.longest <= 125,
@@ -516,7 +517,7 @@ try {
     // Guide prose and API prose: Getting started reads like a guide, Button carries
     // the API tables.
     await measureAt(width, 'docs/getting-started/');
-    const api = await measureAt(width, 'docs/components/button/');
+    const api = await measureAt(width, 'components/button/develop/');
     if (width === 1024) assert(api.toc === false, 'The table of contents shows below its breakpoint');
     if (width === 1440) {
       assert(api.toc === true, 'The table of contents is hidden at 1440 px');
@@ -536,8 +537,8 @@ try {
   // still fits; the fragment still lands and the focus ring is reachable. The table
   // of contents is part of this, so this runs where it shows (above 1150 px).
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${base}docs/components/button/`);
-  await page.locator('.md h1').waitFor();
+  await page.goto(`${base}components/button/develop/`);
+  await page.locator('.component-hero h1').waitFor();
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: '.md { --fs-md: 20px; }' });
   const enlarged = await measureProse();

@@ -122,9 +122,6 @@ const playgroundDirectory = componentDirectory(componentSlugs.map(slug => ({
 const addonEntries = addonSlugs.map(slug => ({ slug, name: addons[slug].name, href: playgroundHref(slug) }))
   .sort((a, b) => a.name.localeCompare(b.name, 'en'));
 const addonDirectory = { entries: addonEntries, sections: [{ id: 'addons', name: 'Add-ons', items: addonEntries }] };
-const documentationDirectory = componentDirectory(docSlugs.filter(slug => !isGuide(slug) && !docHref(slug).startsWith('/docs/addons/')).map(slug => ({
-  slug, name: componentName(slug), href: docHref(slug),
-})));
 function page(path: string, title: string, description: string, template: string, data: Record<string, unknown> = {}, status = 200) {
   const isDocs = path.startsWith('/docs');
   const isExamples = path.startsWith('/showcase');
@@ -293,10 +290,9 @@ const primaryRail = (current: string): string => {
 function sidebarEntries(groups: readonly { label: string; items: readonly { name: string; href: string }[] }[], isDocs: boolean) {
   return [
     ...groups.flatMap(group => [{ name: group.label }, ...group.items]),
-    // The Docs list's Components group is the reference pages alone: the components overview
-    // is the Components section's page, not a document.
-    ...(isDocs ? [{ name: 'Components' }, ...documentationDirectory.entries,
-      ...(addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : [])] : []),
+    // Docs is the guides: a component's documentation is its Develop tab. Add-ons stay here
+    // while they are public without tabs of their own.
+    ...(isDocs && addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : []),
   ];
 }
 /** Each rail destination's drawer rows, in the page, so resting on the rail fills the drawer at once. */
@@ -314,10 +310,7 @@ function railSections(): string {
   return railSectionsJson = JSON.stringify(sections).replaceAll('<', '\\u003c');
 }
 /** The reading order across sections, a cycle: the documentation, Styles, the Showcase, and back. */
-const documentationOrder = [...documentationGroups, {
-  label: 'Components',
-  items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
-}, ...(addonsPublic ? [addonDocGroup] : [])];
+const documentationOrder = [...documentationGroups, ...(addonsPublic ? [addonDocGroup] : [])];
 /** The components overview, then every component in the drawer's order: a loop. */
 const componentsOrder: PagerItem[] = [{ name: 'Components overview', href: '/components/' }, ...playgroundDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry])
   // Each component's tabs in turn: "Button: Develop".
@@ -420,11 +413,13 @@ export async function handleRequest(request: Request): Promise<Response> {
   let response: Response;
   const componentMatch = /^\/(components|addons|preview)\/([a-z-]+)\/$/.exec(path);
   const componentTabMatch = /^\/components\/([a-z-]+)\/(develop|accessibility)\/$/.exec(path);
+  // A renamed component's old documentation address goes straight to its Develop tab, in one redirect.
+  const movedDoc = (to: string) => to.startsWith('/docs/components/') ? `/components/${to.slice(17, -1)}/develop/` : to;
   if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)) });
-  else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('top-app-bar', 'app-bar') + url.search } });
-  else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('/drawer/', '/navigation-drawer/') + url.search } });
+  else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('top-app-bar', 'app-bar')) + url.search } });
+  else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('/drawer/', '/navigation-drawer/')) + url.search } });
   // Bottom app bar left the site for Toolbar; its published URLs keep working.
-  else if (path === '/components/bottom-app-bar/' || path === '/docs/components/bottom-app-bar/' || path === '/preview/bottom-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace('bottom-app-bar', 'toolbar') + url.search } });
+  else if (path === '/components/bottom-app-bar/' || path === '/docs/components/bottom-app-bar/' || path === '/preview/bottom-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('bottom-app-bar', 'toolbar')) + url.search } });
   else if (path === '/components/') response = page(path, 'Components — material', 'Explore the material library\'s components in an interactive playground.', 'catalog', { catalogCard, catalogVisuals });
   else if (path === '/addons/') response = page(path, 'Add-ons — material', 'Explore add-on components built on Material design tokens.', 'catalog', { catalogCard, catalogVisuals, install: renderInstall('material-addons material') });
   else if (componentMatch && isComponent(componentMatch[2]!) &&
@@ -482,7 +477,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const tab = componentTabMatch[2] as 'develop' | 'accessibility';
     const document = componentDocument(slug)!;
     const component = components[slug];
-    response = page(path, `${component.name} ${componentTabLabels[tab].toLowerCase()} — material`, tab === 'develop' ? `Usage, examples and the API of the material library's ${component.name.toLowerCase()}.` : `Accessibility of the material library's ${component.name.toLowerCase()}.`, 'component-tab', {
+    response = page(path, `${component.name}: ${componentTabLabels[tab]} — material`, tab === 'develop' ? `Usage, examples and the API of the material library's ${component.name.toLowerCase()}.` : `Accessibility of the material library's ${component.name.toLowerCase()}.`, 'component-tab', {
       slug, componentHeader: componentHeader(slug, tab),
       // The framework switcher heads every tab, icons only, at the right.
       frameworksRow: frameworkChipsRow(() => true, 'docs-frameworks component-frameworks'),
@@ -507,7 +502,9 @@ export async function handleRequest(request: Request): Promise<Response> {
   else {
     const match = /^\/docs\/(components|addons)\/([a-z0-9-]+)\/$/.exec(path);
     const slug = match?.[2];
-    if (slug && match?.[1] === 'components' && (isGuide(slug) || slug === 'form' || slug === 'colorpicker')) {
+    // A component's documentation moved to its Develop tab (the browser keeps the #anchor;
+    // site-content.ts sends #accessibility on to the Accessibility tab).
+    if (slug && match?.[1] === 'components' && (isGuide(slug) || slug === 'form' || slug === 'colorpicker' || isComponent(slug))) {
       return new Response(null, { status: 301, headers: { ...commonHeaders, Location: docHref(slug) + url.search } });
     }
     const document = slug && path === docHref(slug) ? renderDocument(slug) : null;

@@ -158,9 +158,10 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         await page.screenshot({ animations: 'disabled', path: `${captures}/${slug}-${width}.png` });
       }
     }
-    // One framework chips row per page, in the same place on all three page types:
-    // directly under the title and description, never in the preview card.
-    for (const [label, path] of [['component', 'components/button/'], ['documentation', 'docs/components/button/'], ['showcase', 'showcase/settings/']] as const) {
+    // One framework chips row per page, never in the preview card. On a component's tabs it
+    // heads the content (beside the Overview's presentation, at the top right of Develop);
+    // on a Showcase example it sits under the title and description, 20px and 18px apart.
+    for (const [label, path] of [['component', 'components/button/'], ['develop', 'components/button/develop/'], ['showcase', 'showcase/settings/']] as const) {
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(new URL(path, base).href);
@@ -175,24 +176,21 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
           while (next && next.getBoundingClientRect().height === 0) next = next.nextElementSibling;
           return { count: rows.length, afterTitle: row.top >= h1.bottom, gap: intro ? Math.round(row.top - intro.getBoundingClientRect().bottom) : -1, below: next ? Math.round(next.getBoundingClientRect().top - row.bottom) : -1, inPreview: !!rowEl.closest('.preview-panel') };
         });
-        assert(place.count === 1 && place.afterTitle && place.gap === 20 && place.below === 18 && !place.inPreview, `${label} at ${width}px: the chips row does not share the 20px/18px gaps (${JSON.stringify(place)})`);
+        assert(place.count === 1 && place.afterTitle && !place.inPreview, `${label} at ${width}px: not one chips row after the title, outside the preview (${JSON.stringify(place)})`);
+        if (label === 'showcase') assert(place.gap === 20 && place.below === 18, `showcase at ${width}px: the chips row does not keep its 20px/18px gaps (${JSON.stringify(place)})`);
       }
     }
-    // Keyboard: right after the heading on all three types — Tab from the page's
-    // own navigation reaches the chips before any preview or frame control.
+    // Keyboard: on a component's tabs the chips come right after the tab bar.
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(new URL('components/button/', base).href);
-    await page.locator('.component-list-up').focus();
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
-    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'component: the framework chips are not reachable right after the heading');
-    await page.goto(new URL('docs/components/button/', base).href);
-    await page.locator('.doc-toolbar a').first().focus();
-    for (let i = 0; i < 12; i++) {
-      await page.keyboard.press('Tab');
-      if (await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null)) break;
+    for (const path of ['components/button/', 'components/button/develop/']) {
+      await page.goto(new URL(path, base).href);
+      await page.locator('.component-tabs a').last().focus();
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press('Tab');
+        if (await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null)) break;
+      }
+      assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), `${path}: the framework chips are not reachable right after the tabs`);
     }
-    assert(await page.evaluate(() => document.activeElement?.closest('.framework-chips-row') !== null), 'documentation: the framework chips are not reachable right after the heading');
     await page.goto(new URL('showcase/settings/', base).href);
     await page.evaluate(() => (document.querySelector('h1') as HTMLElement).setAttribute('tabindex', '-1'));
     await page.locator('#content h1').focus();

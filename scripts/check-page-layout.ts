@@ -22,7 +22,7 @@ const fixedRoutes = [
   ['component-detail', '/components/button/', '#preview'],
   ['documentation', '/docs/'],
   ['guide', '/docs/frameworks/'],
-  ['api-reference', '/docs/components/button/'],
+  ['api-reference', '/components/button/develop/'],
   ['privacy', '/privacy/'],
   ['credits', '/credits/'],
   ['not-found', '/layout-check-missing-page/'],

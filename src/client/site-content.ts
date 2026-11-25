@@ -7,6 +7,10 @@ registerPage('site-content', (content, life) => {
   initSiteNavigation(content, life);
   // The overview heroes' art tile: a fresh drawing in the theme's colours on each visit.
   for (const tile of content.querySelectorAll<HTMLElement>('.page-hero__art')) drawWaves(tile);
+  // An old link to a component's accessibility notes (/docs/components/<slug>/#accessibility,
+  // redirected to Develop with its anchor) goes on to the Accessibility tab.
+  const developTab = /^\/components\/([a-z-]+)\/develop\/$/.exec(location.pathname);
+  if (developTab && location.hash === '#accessibility' && !document.getElementById('accessibility')) location.replace(`/components/${developTab[1]}/accessibility/`);
   // A component's hero scene keeps its overview card's layout (420px wide, the frames drawn
   // for it) and is scaled whole to fill its tile exactly: CSS cannot divide the tile's
   // width by 420px, so its size is read here.

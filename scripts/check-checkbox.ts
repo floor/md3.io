@@ -278,8 +278,8 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Checkbox mobile layout overflows');
   await page.screenshot({ path: `${output}/checkbox-mobile.png`, fullPage: true, animations: 'disabled' });
-  await page.goto(`${server.url}docs/components/checkbox/`);
-  assert(await page.getByRole('link', { name: 'Open playground' }).getAttribute('href') === '/components/checkbox/', 'Checkbox docs link to the wrong playground');
+  await page.goto(`${server.url}components/checkbox/develop/`);
+  assert(await page.locator('.component-tabs a', { hasText: 'Overview' }).getAttribute('href') === '/components/checkbox/', 'Checkbox Develop tab links to the wrong playground');
   assert(errors.length === 0, errors.join('\n'));
   console.log('Checkbox browser checks passed.');
 } finally {

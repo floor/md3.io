@@ -37,7 +37,7 @@ describe('site search', () => {
     expect(searchSite('peek-height').find(result => result.section === 'Components')?.group).toBe('Sheets');
     expect(searchSite('Dialog').find(result => result.url === '/components/dialog/')?.group).toBe('Component');
     if (addonsPublic) expect(searchSite('swatches only').find(result => result.section === 'Docs')?.group).toBe('Add-on');
-    expect(searchSite('side sheet', 50).find(result => result.url.startsWith('/docs/components/side-sheet/'))?.group).toBe('Sheets');
+    expect(searchSite('side sheet', 50).find(result => result.url.startsWith('/components/side-sheet/develop/'))?.group).toBe('Sheets');
   });
   test('an add-on uses its own path and result label', () => {
     if (!addonsPublic) { expect(searchSite('createAvatar').some(result => result.url.startsWith('/addons/'))).toBe(false); return; }

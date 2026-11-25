@@ -518,15 +518,11 @@ try {
         await page.goto(`${base}/components/${slug}/`);
         await checkComponentList(page);
       }
+      // A component's documentation is its Develop tab: the old Docs address lands there, and
+      // the tab keeps the component list, as its Overview does.
       await page.goto(`${base}/docs/components/${slug}/`);
-      const docs = await revealSectionList(page, 'Docs links', '/docs/');
-      await checkDirectory(docs, new URL(page.url()).pathname, true);
-      if (slug === 'button-group') {
-        const current = docs.getByRole('link', { name: 'Button group', exact: true });
-        if (width === 390) await current.evaluate(link => link.scrollIntoView({ block: 'center', behavior: 'instant' }));
-        else await current.scrollIntoViewIfNeeded();
-        await page.screenshot({ animations: 'disabled', path: `${azCaptures}/docs-sidebar-${width}.png` });
-      }
+      assert(new URL(page.url()).pathname === `/components/${slug}/develop/`, `${slug}: the old documentation address lands on the Develop tab`);
+      if (width === 1440) await checkComponentList(page);
     }
   }
 
