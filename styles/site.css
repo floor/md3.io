@@ -337,3 +337,6 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 @media (prefers-reduced-motion: reduce) { .component-tabs { transition: none; } }
 /* A section reached from On this page lands below the stuck tabs. */
 :is(.component-page, .component-tab-page) :is(h2, h3)[id], .component-page #playground { scroll-margin-top: calc(var(--header-height) + 96px); }
+/* A tab's body is at least the window's height, so a short tab (Accessibility) still lets the
+   bar stay at the top after a switch. */
+:is(.component-page, .component-tab-page) > .component-overview { min-height: calc(100dvh - var(--header-height)); }
