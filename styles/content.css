@@ -503,7 +503,7 @@ pre.doc-install__command[data-package-manager="bun"],
 :root[data-package-manager]:not([data-package-manager="bun"]) pre.doc-install__command[data-package-manager="bun"] { display: none; }
 
 /* Previous and next at the end of a page, in sidebar order (as on vlist.io). */
-.page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; }
+.page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; padding-top: 92px; }
 .pager-wrap { padding-top: 0; }
 .pager-wrap .page-nav { margin-top: 0; }
 /* The links look like the overviews' cards: no border, the cards' corner and surface,
