@@ -20,7 +20,7 @@ const tokenScope = `:is(.${CATALOG_SCOPE}, .catalog-status)`;
 export const catalogTokens = scopedTokens(tokenScope, `:root[data-theme-mode=dark] ${tokenScope}`, undefined, false);
 
 /** The surface elements of the overlays, by component. */
-export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', datepicker: 'md3-catalog-datepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs' } as const;
+export const SURFACES = { dialog: 'md3-catalog-dialog', menu: 'md3-catalog-menu', snackbar: 'md3-catalog-snackbar', tooltip: 'md3-catalog-tooltip', timepicker: 'md3-catalog-timepicker', datepicker: 'md3-catalog-datepicker', toolbar: 'md3-catalog-toolbar', tabs: 'md3-catalog-tabs', carousel: 'md3-catalog-carousel' } as const;
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 type Attributes = Record<string, string | number | boolean | undefined>;
@@ -33,21 +33,6 @@ const text = escape;
 const div = (className: string, content: string) => `<div class="${className}">${content}</div>`;
 
 const destinations = [{ value: 'inbox', label: 'Inbox', icon: symbols.inbox }, { value: 'favorites', label: 'Favorites', icon: symbols.heart }, { value: 'sent', label: 'Sent', icon: symbols.send }];
-// Lorem Picsum photos, from vlist.io's carousel demo (src/data/carousel.js), at twice
-// the card's 200 × 148 slide. The card's element loads only as it nears the viewport,
-// so the photos do too.
-// Lorem Picsum (https://picsum.photos, read 2026-10-02) says "Images from Unsplash" and states no licence of its own.
-// Unsplash publishes its licence at https://unsplash.com/license (read 2026-10-02): "Unsplash grants you an irrevocable, nonexclusive, worldwide copyright license to download, copy, modify, distribute, perform, and use images from Unsplash for free, including for commercial purposes, without permission from or attributing the photographer or Unsplash."
-// Neither page says which terms cover a given photo. The images are loaded from that service at view time, not stored in this repository.
-const places = [
-  { id: 29, title: 'Himalayan Peaks', location: 'Nepal' },
-  { id: 49, title: 'Santorini Village', location: 'Greece' },
-  { id: 62, title: 'Tuscan Sunrise', location: 'Tuscany' },
-  { id: 506, title: 'Gullfoss Falls', location: 'Iceland' },
-  { id: 122, title: 'Millennium Bridge', location: 'London' },
-  { id: 984, title: 'Highland Drama', location: 'Scotland' },
-];
-const picsum = (id: number) => `https://picsum.photos/id/${id}/400/296`;
 const card = components.card.config({ title: 'A little time outside', subtitle: 'Find your next escape', content: '', media: false, actions: true, variant: 'elevated' });
 
 const visuals: Record<ComponentSlug, string> = {
@@ -122,8 +107,8 @@ const visuals: Record<ComponentSlug, string> = {
     (card.buttons ?? []).map(button => m('button', { slot: 'actions', variant: button.variant }, text(String(button.text)))).join('')),
   list: m('list', { selection: 'single', value: '1', 'aria-label': 'Ideas for today' },
     ['Morning walk', 'Read a chapter', 'Try a new recipe'].map((headline, index) => m('list-item', { value: String(index + 1), 'leading-icon': [symbols.heart, symbols.bookmark, symbols.download][index], 'trailing-text': `${(index + 1) * 5} min` }, headline)).join('')),
-  carousel: m('carousel', { 'aria-label': 'Places to explore', 'item-width': 200, gap: 8, padding: 0, 'corner-radius': 28 },
-    places.map(place => m('carousel-item', { src: picsum(place.id), alt: `${place.title}, ${place.location}`, description: place.location }, text(place.title))).join('')),
+  // The factory, so it scrolls freely (snap: false): <m-carousel> takes no snap attribute.
+  carousel: `<${SURFACES.carousel}></${SURFACES.carousel}>`,
   divider: div('catalog-divider', ['Ideas for today', 'Places to explore', 'Saved for later', 'Recently viewed'].map(label => `<p><i aria-hidden="true"></i>${label}</p>`).join(m('divider'))),
   dialog: `<${SURFACES.dialog}></${SURFACES.dialog}>`,
   'bottom-sheet': m('button', { variant: 'tonal', 'data-catalog-open': 'bottom-sheet' }, 'Show bottom sheet') + m('bottom-sheet', { headline: 'Plan your visit', 'peek-height': 120 }, '<p>Find a new trail, take in the view, and make time for a quiet moment.</p>'),

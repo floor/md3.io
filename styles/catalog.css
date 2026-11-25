@@ -70,7 +70,7 @@
 .catalog-visual--tabs .catalog-frame__screen { padding: 4px 0 0; }
 /* Three two-line rows fit the list preview at this scale. */
 .catalog-visual--list m-list { width: 320px; zoom: 0.8; border-radius: 16px; overflow: hidden; }
-.catalog-visual--carousel m-carousel { display: block; width: 100%; height: 148px; }
+.catalog-visual--carousel md3-catalog-carousel { display: block; width: 100%; height: 148px; }
 .catalog-visual--card m-card { width: min(100%, 300px); }
 
 /* Pinned to the card's edges, as they are to the window's. */
