@@ -137,7 +137,10 @@ function page(path: string, title: string, description: string, template: string
   const directory = isAddons ? addonDirectory : playgroundDirectory;
   const sidebarGroups = isDocs ? documentationGroups : isExamples ? exampleGroups : isStyles ? stylesGroups : [];
   // Component docs lead to Styles, and Styles to the Showcase.
-  const pager = status === 200 && sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
+  const pager = status !== 200 ? ''
+    // Components read in their drawer's order, the overview first (add-ons stay apart).
+    : isComponents && !isAddons ? pagerHtml(componentsOrder, path, true)
+    : sidebarGroups.length && template !== 'styles-themes' && template !== 'styles-color-lab' ? pagerHtml(readingOrder, path, true) : '';
   const componentDrawer = isComponents
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
@@ -155,7 +158,11 @@ function page(path: string, title: string, description: string, template: string
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
     path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
-    content: template === 'document' || !pager ? content : `${content}<div class="page-wrap pager-wrap">${pager}</div>`,
+    // The pager takes the page's own content width: the overviews' inset body, or a component
+    // page's side padding.
+    content: template === 'document' || !pager ? content
+      : template === 'catalog' || template === 'docs' ? `${content}<div class="pager-wrap pager-wrap--overview"><div class="page-hero-body">${pager}</div></div>`
+      : `${content}<div class="page-wrap pager-wrap${isComponentDetail ? ' pager-wrap--component' : ''}">${pager}</div>`,
   }), status);
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
@@ -240,6 +247,9 @@ const documentationOrder = [...documentationGroups, {
   label: 'Components',
   items: documentationDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry]),
 }, ...(addonsPublic ? [addonDocGroup] : [])];
+/** The components overview, then every component in the drawer's order: a loop. */
+const componentsOrder: PagerItem[] = [{ name: 'Components overview', href: '/components/' }, ...playgroundDirectory.entries.flatMap(entry => 'items' in entry ? entry.items : [entry])]
+  .map(({ name, href }) => ({ name, href, section: 'Components' }));
 const readingOrder = [documentationOrder, ...(stylesPublic ? [stylesGroups] : []), ...(showcasePublic ? [exampleGroups] : [])].flatMap(groups => groups.flatMap(group => group.items.map(item => ({ ...item, section: groups[0]!.label }))));
 
 // material's light-DOM stylesheets for a set of components, dependencies first: each

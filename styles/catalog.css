@@ -63,7 +63,7 @@
 .catalog-stack--progress { flex-direction: row; align-items: center; gap: 32px; width: 100%; justify-content: center; }
 .catalog-stack--progress m-progress:first-child { flex: 0 1 200px; }
 
-.catalog-visual--slider m-slider, .catalog-visual--tabs md3-catalog-tabs { width: min(100%, 320px); }
+.catalog-visual--tabs md3-catalog-tabs { width: min(100%, 320px); }
 .catalog-visual--text-field m-text-field, .catalog-visual--select m-select, .catalog-visual--datepicker m-datepicker { width: min(100%, 280px); }
 .catalog-visual--search m-search { flex: 1; width: 100%; min-width: 0; max-width: 100%; }
 .catalog-visual--search m-search::part(search) { min-width: 0; width: 100%; }
@@ -169,3 +169,49 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
   top: calc(var(--frame) * -1); bottom: calc(var(--frame) * -1); background: color-mix(in srgb, var(--mtrl-sys-color-scrim) 22%, var(--mtrl-sys-color-surface)); }
 .catalog-frame--picker .catalog-frame__screen { align-items: flex-start; padding: 16px 0 0; overflow: hidden; }
 .catalog-visual--datepicker md3-catalog-datepicker, .catalog-visual--timepicker md3-catalog-timepicker { width: auto; zoom: 0.62; }
+
+/* The toolbar floats above the phone's gesture bar, drawn at phone scale. A transform,
+   not zoom: its overflow menu opens in the top layer, placed from the opener's box. */
+.catalog-visual--toolbar .catalog-frame__screen { padding-bottom: 22px; container-type: inline-size; }
+.catalog-visual--toolbar md3-catalog-toolbar { flex: none; scale: 0.7; transform-origin: 50% 100%; }
+@container (width < 260px) { .catalog-visual--toolbar md3-catalog-toolbar { scale: 0.6; } }
+.catalog-visual:is(.catalog-visual--toolbar, .catalog-visual--snackbar) .catalog-frame__screen::after {
+  content: ""; position: absolute; bottom: 10px; left: 50%; translate: -50% 0;
+  width: 96px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface);
+}
+
+/* The snackbar over a photo grid, drawn at phone scale above the gesture bar: three
+   thumbnails in a row, then two tall photos, on the surface's gaps. */
+.catalog-visual--snackbar .catalog-frame__screen {
+  padding: 0 0 26px;
+  --tile: var(--mtrl-sys-color-surface-container-highest);
+  --gap: var(--mtrl-sys-color-surface);
+  background:
+    linear-gradient(90deg, transparent calc(33.3% - 2px), var(--gap) 0 calc(33.3% + 2px), transparent 0 calc(66.6% - 2px), var(--gap) 0 calc(66.6% + 2px), transparent 0) 0 0 / 100% 34px no-repeat,
+    linear-gradient(transparent 34px, var(--gap) 0 38px, transparent 0),
+    linear-gradient(90deg, transparent calc(50% - 2px), var(--gap) 0 calc(50% + 2px), transparent 0) 0 38px / 100% 100% no-repeat,
+    var(--tile);
+}
+.catalog-visual--snackbar md3-catalog-snackbar { width: 100%; zoom: 0.7; }
+
+/* The dialog open in its card, drawn small. Zoom is safe here: it is not in the top layer. */
+.catalog-visual--dialog md3-catalog-dialog { zoom: 0.46; }
+
+/* The slider card: a Sound settings screen, its bar on top and a slider per volume. */
+.catalog-visual--slider .catalog-frame__screen { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; gap: 0; }
+.catalog-sound { display: flex; flex-direction: column; width: 100%; height: 100%; }
+.catalog-sound__bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; font-size: 18px; color: var(--mtrl-sys-color-on-surface); background: var(--mtrl-sys-color-surface-container); }
+.catalog-sound__bar svg, .catalog-sound__icon svg { width: 20px; height: 20px; fill: currentColor; flex: none; }
+.catalog-sound__row { display: flex; align-items: flex-end; gap: 14px; padding: 10px 16px 0; color: var(--mtrl-sys-color-on-surface); }
+.catalog-sound__icon { display: flex; padding-bottom: 12px; }
+.catalog-sound__control { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.catalog-sound__label { font-size: 14px; line-height: 20px; }
+.catalog-sound__control m-slider { width: 100%; }
+
+/* The radio card: a settings group, its heading over two choices. */
+.catalog-choice { display: flex; flex-direction: column; gap: 4px; color: var(--mtrl-sys-color-on-surface); }
+.catalog-choice__title { font-size: 16px; line-height: 24px; padding-inline-start: 4px; }
+/* The value bubble shows while a slider is dragged (show-value), and under the pointer. */
+@media (hover: hover) {
+  .catalog-visual--slider m-slider[show-value]:hover::part(value) { visibility: visible; opacity: 1; scale: 1; transition: scale 400ms cubic-bezier(0.05, 0.7, 0.1, 1), opacity 400ms cubic-bezier(0.05, 0.7, 0.1, 1), visibility 0s; }
+}

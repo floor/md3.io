@@ -101,6 +101,9 @@ try {
         assert.equal(await page.locator(selector).getAttribute(attr), await direct.locator(selector).getAttribute(attr), `${path}: ${selector}`);
       }
       assert.equal(await mainText(page), await mainText(direct), `${path}: direct and swapped main text`);
+      // A server-rendered material element keeps the shadow root the server sent (a swap
+      // that copies nodes drops it, and the element shows empty and unstyled).
+      assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#content [data-mtrl-ssr]')].filter(element => !element.shadowRoot).map(element => element.localName)), [], `${path}: swapped elements lost their shadow roots`);
       assert.deepEqual(await page.locator('head script[type="application/ld+json"]').allTextContents(), await direct.locator('head script[type="application/ld+json"]').allTextContents());
       await direct.close();
       assert.equal(await page.evaluate(() => document.activeElement?.matches('h1, #content')), true, `focus moves to content (active: ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 250))})`);

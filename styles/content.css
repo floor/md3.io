@@ -506,8 +506,15 @@ pre.doc-install__command[data-package-manager="bun"],
 .page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); }
 .pager-wrap { padding-top: 0; }
 .pager-wrap .page-nav { margin-top: 0; }
-.page-nav__link { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 20px 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); text-decoration: none; transition: border-color .15s, background-color .15s; }
-.page-nav__link:hover { border-color: var(--text-dim); background: var(--bg-card-hover); }
+/* The links look like the overviews' cards: no border, the cards' corner and surface,
+   and their hover surface. */
+.page-nav__link { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 20px 24px; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); text-decoration: none; transition: background-color 150ms ease; }
+.page-nav__link:hover { background: var(--mtrl-sys-color-surface-container-high); }
+/* On the overviews, the pager sits in the same inset body as the cards; on a component
+   page, in the playground's side padding. */
+.pager-wrap--overview { padding: 0 8px 64px; container-type: inline-size; }
+.pager-wrap--overview .page-hero-body { padding-top: 0; }
+.page-wrap.pager-wrap--component { padding-inline: clamp(18px, 2.4vw, 40px); }
 .page-nav__link:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .page-nav__link--next { grid-column: 2; text-align: right; }
 .page-nav__label { color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .5px; text-transform: uppercase; }

@@ -1,9 +1,12 @@
 import { containsFocus, currentFocus, initSiteNavigation } from './site-navigation';
 import { copyText } from './site';
 import { registerPage, mountPage } from './page-lifecycle';
+import { drawWaves } from './hero-waves';
 registerPage('site-content', (content, life) => {
   const root = document.documentElement;
   initSiteNavigation(content, life);
+  // The overview heroes' art tile: a fresh drawing in the theme's colours on each visit.
+  for (const tile of content.querySelectorAll<HTMLElement>('.page-hero__art')) drawWaves(tile);
   const docToc = content.querySelector('.doc-toc');
   if (docToc) {
     const tocHidden = matchMedia('(width < 1200px)');

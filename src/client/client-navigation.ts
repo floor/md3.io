@@ -63,8 +63,12 @@ function swapBody(next: Document) {
   });
   // Insert the destination while connected, then move the live drawer before removing
   // old content. moveBefore preserves its custom-element instance and pill animation.
-  if (nextIndex) layout.insertBefore(document.importNode(nextIndex, true), content);
-  content.append(...[...nextMain.childNodes].map(node => document.importNode(node, true)));
+  // Adopted, not imported: an import copies nodes without their shadow roots, so the
+  // server-rendered material elements (cards, drawers) arrived empty and unstyled.
+  // The destination drawer's selection, read before adoption empties the parsed page.
+  const destinationValue = nextMain.querySelector('m-drawer')?.getAttribute('value') ?? nextIndex?.querySelector('m-drawer')?.getAttribute('value') ?? '';
+  if (nextIndex) layout.insertBefore(document.adoptNode(nextIndex), content);
+  content.append(...[...nextMain.childNodes].map(node => document.adoptNode(node)));
   const replacement = [...layout.querySelectorAll<Drawer>('m-drawer.site-drawer:not(.site-rail-drawer m-drawer)')].find(drawer => drawer !== persistentDrawer && !oldChildren.some(node => node.contains(drawer)) && !oldIndex?.contains(drawer));
   const nextSignature = replacement ? drawerSignature(replacement) : '';
   if (replacement && persistentDrawer && nextSignature !== signature) {
@@ -84,8 +88,9 @@ function swapBody(next: Document) {
     // Same section: keep the live drawer so its selection pill animates to the new item.
     move(persistentDrawer, replacement.parentElement!, replacement);
     replacement.remove();
-    const selected = nextMain.querySelector('m-drawer')?.getAttribute('value') ?? nextIndex?.querySelector('m-drawer')?.getAttribute('value') ?? '';
+    const selected = destinationValue;
     persistentDrawer.value = selected;
+    persistentDrawer.setAttribute('value', selected);
     // Declarative changes are observed in a microtask; expand through the public API.
     queueMicrotask(() => {
       if (persistentDrawer) persistentDrawer.value = selected;
@@ -226,7 +231,7 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
   try {
     const response = await fetch(url, { signal, headers: { Accept: 'text/html' } });
     if (!response.ok || !response.headers.get('content-type')?.includes('text/html') || new URL(response.url).origin !== location.origin) throw new Error('Not a site page');
-    const next = new DOMParser().parseFromString(await response.text(), 'text/html');
+    const next = parsePage(await response.text());
     if (next.documentElement.dataset.navigationShell !== shell || !next.getElementById('content') || !next.querySelector('.layout-main')) throw new Error('Different layout');
     // A redirected URL needs the server's normal history semantics.
     if (new URL(response.url).pathname !== url.pathname || new URL(response.url).search !== url.search) throw new Error('Redirect');
@@ -309,6 +314,29 @@ async function navigate(url: URL, position: [number, number] | undefined, commit
     // opacity 0 under a later navigation that does not fade (the modal's view transition).
     leaving?.cancel();
   }
+}
+/**
+ * The fetched page as a document, with its declarative shadow roots: the server renders
+ * material elements (the cards, the drawer) with `<template shadowrootmode>`, which
+ * DOMParser leaves as inert templates, so those elements arrived unstyled and empty.
+ */
+function parsePage(html: string): Document {
+  const parse = (Document as unknown as { parseHTMLUnsafe?: (html: string) => Document }).parseHTMLUnsafe;
+  if (parse) return parse(html);
+  const page = new DOMParser().parseFromString(html, 'text/html');
+  // A shadow root's own content can hold further templates: attach those first.
+  const attach = (scope: ParentNode): void => {
+    for (const template of [...scope.querySelectorAll<HTMLTemplateElement>('template[shadowrootmode]')]) {
+      attach(template.content);
+      const host = template.parentElement;
+      if (!host || host.shadowRoot) continue;
+      const root = host.attachShadow({ mode: template.getAttribute('shadowrootmode') === 'closed' ? 'closed' : 'open', delegatesFocus: template.hasAttribute('shadowrootdelegatesfocus') });
+      root.append(template.content);
+      template.remove();
+    }
+  };
+  attach(page);
+  return page;
 }
 if (shell && content && layout) {
   if (api) {
