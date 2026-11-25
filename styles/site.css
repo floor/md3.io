@@ -294,3 +294,13 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-hero__visual > .page-hero__art { position: absolute; inset: 0; min-height: 0; border-radius: 0; }
 .component-hero__scene { position: relative; width: min(100%, 420px); }
 .component-hero__scene > .catalog-visual { height: 232px; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+/* The scene grows with the tile: scaled whole (not zoomed, which misplaces the search
+   view and menus that open from it), from its centre, within the tile's padding. */
+.component-hero__visual { container-type: inline-size; }
+.component-hero__scene { transform-origin: center; }
+/* Each step keeps the 420 × 232 scene inside the tile's padding: 420 × scale ≤ the tile's
+   inner width (what the container query measures). */
+@container (min-width: 483px) { .component-hero__scene { scale: 1.15; } }
+@container (min-width: 525px) { .component-hero__scene { scale: 1.25; } }
+@container (min-width: 567px) { .component-hero__scene { scale: 1.35; } }
+@container (min-width: 630px) { .component-hero__scene { scale: 1.5; } }
