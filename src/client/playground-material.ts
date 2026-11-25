@@ -20,25 +20,27 @@ import 'material/elements/css/text-field';
 import 'material/elements/css/tabs';
 import 'material/elements/css/button-group';
 import 'material/elements/css/button';
+import 'material/elements/css/icon-button';
 import 'material/elements/css/chips';
 import 'material/elements/css/slider';
 import 'material/elements/css/snackbar';
 import 'material/elements/css/datepicker';
 import 'material/elements/css/timepicker';
-import { defineButton, defineButtonGroup, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
+import { defineButton, defineButtonGroup, defineIconButton, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 import { registerPage } from './page-lifecycle';
 registerPage('playground-material', (content, life) => {
   // Settings opens the configuration as a side sheet beside the preview, and closes it.
   const playground = content.querySelector<HTMLElement>('.playground');
   const settingsToggle = content.querySelector<HTMLElement>('#settings-toggle');
   if (playground && settingsToggle) {
+    // A toggle icon button: its own pressed state (aria-pressed) says whether the sheet is open.
+    const toggle = settingsToggle as HTMLElement & { selected?: boolean };
     const setOpen = (open: boolean) => {
       playground.toggleAttribute('data-settings-open', open);
-      settingsToggle.setAttribute('aria-expanded', String(open));
-      settingsToggle.shadowRoot?.querySelector('button')?.setAttribute('aria-expanded', String(open));
+      if (toggle.selected !== open) toggle.selected = open;
     };
     setOpen(false);
-    life.events(settingsToggle).addEventListener('click', () => setOpen(!playground.hasAttribute('data-settings-open')));
+    life.events(settingsToggle).addEventListener('change', () => setOpen(Boolean(toggle.selected)));
   }
   defineSelect();
   defineSwitch();
@@ -46,6 +48,7 @@ registerPage('playground-material', (content, life) => {
   defineTabs();
   defineButtonGroup();
   defineButton();
+  defineIconButton();
   defineChips();
   defineSlider();
   defineSnackbar();

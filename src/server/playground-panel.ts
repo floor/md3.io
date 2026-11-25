@@ -280,8 +280,10 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // Copy code, at the right end of the preview heading: material's xs tonal button with
   // the content_copy symbol, in both views; a copy confirms with material's snackbar
   // (playground.ts), M3's brief message about something the app just did.
-  const copy = renderElement('m-button', { variant: 'tonal', size: 'xs', icon: readFileSync(resolve(root, 'icons/content_copy.svg'), 'utf8').trim(), id: 'copy-code', class: 'preview-copy' }, 'Copy code', renderStyles);
-  // Settings, beside Copy code: opens the configuration as a side sheet, closed by default.
-  const settings = renderElement('m-button', { variant: 'tonal', size: 'xs', icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), id: 'settings-toggle', class: 'preview-settings', 'aria-controls': 'configuration', 'aria-expanded': 'false' }, 'Settings', renderStyles);
+  // Copy code and Settings: material's icon buttons, with the official Material Symbols.
+  const copy = renderElement('m-icon-button', { icon: readFileSync(resolve(root, 'icons/content_copy.svg'), 'utf8').trim(), 'aria-label': 'Copy code', title: 'Copy code', id: 'copy-code', class: 'preview-copy' }, '', renderStyles);
+  // Settings, beside Copy code: a toggle icon button that opens the configuration as a side
+  // sheet, closed by default (filled while open).
+  const settings = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/settings-fill.svg'), 'utf8').trim(), 'aria-label': 'Settings', title: 'Settings', 'aria-controls': 'configuration', id: 'settings-toggle', class: 'preview-settings' }, '', renderStyles);
   return { frameworks, tabs, appearance, scenario, sections, copy, settings };
 }
