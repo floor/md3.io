@@ -165,7 +165,7 @@ function page(path: string, title: string, description: string, template: string
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
-const documentationGroups = [{ label: 'Docs', items: [{ name: 'Overview', href: '/docs/' }] }, guideGroup];
+const documentationGroups = [{ label: 'Docs', items: [{ name: 'Docs overview', href: '/docs/' }] }, guideGroup];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /**
  * A component's pages, as tabs under one header: the overview (the playground), its
@@ -289,7 +289,8 @@ const primaryRail = (current: string): string => {
 /** A section page's own drawer: its groups, and on Docs every component's reference. */
 function sidebarEntries(groups: readonly { label: string; items: readonly { name: string; href: string }[] }[], isDocs: boolean) {
   return [
-    ...groups.flatMap(group => [{ name: group.label }, ...group.items]),
+    // Docs' first group is its overview alone, under no header (as Components overview is).
+    ...groups.flatMap((group, index) => [...(isDocs && index === 0 ? [] : [{ name: group.label }]), ...group.items]),
     // Docs is the guides: a component's documentation is its Develop tab. Add-ons stay here
     // while they are public without tabs of their own.
     ...(isDocs && addonsPublic ? [{ name: addonDocGroup.label }, ...addonDocGroup.items] : []),
