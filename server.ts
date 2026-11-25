@@ -1,7 +1,7 @@
 import { Eta } from 'eta';
 import { resolve, extname, sep } from 'node:path';
 import { IMMUTABLE_CACHE, SHORT_CACHE, isImmutableAsset, loadAssetManifest } from './src/server/assets';
-import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guideGroup, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
+import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guideGroup, guideGroups, isGuide, renderDocument, renderInstall, installSpecifier, FRAMEWORK_GUIDES, frameworkHref } from './src/server/content';
 import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
@@ -144,7 +144,7 @@ function page(path: string, title: string, description: string, template: string
       // A component's Develop or Accessibility tab marks the component itself.
       : renderSectionDrawer(path.replace(/(?:develop|accessibility)\/$/, ''), 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
-  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
+  const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, guideGroups, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
   const sectionDrawer = sidebarGroups.length ? renderSectionDrawer(path, `${section} links`, sidebarEntries(sidebarGroups, isDocs)) : '';
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
@@ -165,7 +165,7 @@ function page(path: string, title: string, description: string, template: string
 }
 const styleDescription = (href: string) => stylePages.find(entry => entry.href === href)!.description;
 const stylesGroups = [{ label: 'Styles', items: stylePages.map(({ name, href }) => ({ name, href })) }];
-const documentationGroups = [{ label: 'Docs', items: [{ name: 'Docs overview', href: '/docs/' }] }, guideGroup];
+const documentationGroups = [{ label: 'Docs', items: [{ name: 'Docs overview', href: '/docs/' }] }, ...guideGroups];
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 /**
  * A component's pages, as tabs under one header: the overview (the playground), its

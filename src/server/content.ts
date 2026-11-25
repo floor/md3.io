@@ -114,6 +114,13 @@ function docSummary(slug: string): string {
 const entry = (slug: string) => ({ slug, name: componentName(slug), href: docHref(slug), summary: docSummary(slug) });
 /** The guides that exist yet, in their order. */
 export const guideGroup = { label: 'Guides', items: GUIDES.filter(slug => slugs.has(slug)).map(entry) };
+/** The guides as Docs shows them (the owner, 2026-11-25): starting, building, how it works. */
+const GUIDE_GROUPS: [string, string[]][] = [
+  ['Get started', ['why-material', 'getting-started']],
+  ['Build', ['frameworks', 'theming', 'server-rendering']],
+  ['How it works', ['architecture', 'events-and-overlays']],
+];
+export const guideGroups = GUIDE_GROUPS.map(([label, guides]) => ({ label, items: guides.filter(slug => slugs.has(slug)).map(entry) }));
 export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry).sort((a, b) => a.name.localeCompare(b.name, 'en')) };
 /** The components' documents, by group: their Develop tabs now, no longer Docs pages. */
 export const componentDocGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) }));

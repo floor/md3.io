@@ -3,7 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium, type Locator } from 'playwright';
 import { handleRequest } from '../server';
-import { addonDocGroup, guideGroup } from '../src/server/content';
+import { addonDocGroup, guideGroups } from '../src/server/content';
 import { examples } from '../src/server/examples';
 import { addonsPublic, showcasePublic, stylesPublic } from '../src/shared/visibility';
 import { stylePages } from '../src/server/styles';
@@ -190,7 +190,7 @@ try {
 
   // Docs is the guides (and the add-ons while public): a component's documentation is its Develop tab.
   const sections = [
-    { label: 'Docs', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroup.items.map(item => item.href), ...(addonsPublic ? addonDocGroup.items.map(item => item.href) : [])] },
+    { label: 'Docs', path: '/docs/frameworks/', hrefs: ['/docs/', ...guideGroups.flatMap(group => group.items).map(item => item.href), ...(addonsPublic ? addonDocGroup.items.map(item => item.href) : [])] },
     ...(stylesPublic ? [{ label: 'Styles', path: '/styles/shape/', hrefs: stylePages.map(style => style.href) }] : []),
     ...(showcasePublic ? [{ label: showcaseLabel, path: `${showcasePath}${examples[0]!.slug}/`, hrefs: [showcasePath, ...examples.map(example => `${showcasePath}${example.slug}/`)] }] : []),
   ];
@@ -255,7 +255,7 @@ try {
     const selected = drawer.locator('a[aria-current="page"][href="/docs/addons/avatar/"]');
     await selected.waitFor();
     const headings = await drawer.locator('[part~="section-label"]').allTextContents();
-    assert.equal(headings.at(-2), 'Guides');
+    assert.equal(headings.at(-2), 'How it works');
     assert.equal(headings.at(-1), 'Add-ons');
   }
   for (const slug of ['colorpicker', 'form']) {
