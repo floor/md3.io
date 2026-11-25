@@ -302,3 +302,7 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
   box-sizing: border-box; width: min(100% - 2 * var(--footer-inset), 1208px);
   margin: 32px auto 0;
 }
+/* Previous and next under a page with On this page span the body, not the text column: the
+   width of the footer below and of the overviews' pager. */
+.page-wrap > .doc-pager { box-sizing: border-box; max-width: calc(1208px + 2 * clamp(12px, 5cqi, 64px)); margin-inline: auto; padding-inline: clamp(12px, 5cqi, 64px); }
+.component-tab-page > .component-tab-pager { box-sizing: border-box; width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px); margin-inline: auto; }

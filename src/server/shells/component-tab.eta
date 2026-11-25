@@ -7,6 +7,5 @@
     <%~ it.frameworksRow %>
     <%~ it.html %>
   </article>
-  <%~ it.pager %>
-</div><aside class="doc-toc component-overview__toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></aside></div></div>
+</div><aside class="doc-toc component-overview__toc" aria-label="On this page"><h2 class="ui-title">ON THIS PAGE</h2><% it.toc.forEach(item => { %><a href="#<%= item.id %>"><%= item.title %></a><% }); %></aside></div><% if (it.pager) { %><div class="component-tab-pager"><%~ it.pager %></div><% } %></div>
 </div>
