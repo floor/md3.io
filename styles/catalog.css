@@ -240,3 +240,19 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
    drawn for the card: on the hero's waves the buttons stand on the art itself. */
 .component-hero__scene .catalog-frame--floor { inset: 0; border: 0; background: transparent; }
 .component-hero__scene .catalog-frame--floor .catalog-gesture { display: none; }
+
+/* A component's Overview: one section per scenario, live (component-overview.ts). */
+.scenarios { display: grid; gap: 48px; margin-top: 8px; }
+.scenario { scroll-margin-top: 96px; }
+.scenario__heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 16px; }
+.scenario__heading h2, .md .scenario__heading h2 { margin: 0 0 4px; padding: 0; border: 0; font-size: 24px; line-height: 32px; font-weight: 400; }
+.md .scenarios:first-child, .md .scenarios { margin-top: 0; }
+.scenario__heading p { margin: 0; color: var(--text-muted); max-width: 60ch; }
+.scenario-actions { display: flex; align-items: center; gap: 4px; }
+.scenario-actions a { text-decoration: none; font-family: var(--font-sans); }
+.scenario-actions .mtrl-button--s { padding: 0 16px 0 12px; gap: 8px; }
+.scenario-actions svg { width: 20px; height: 20px; }
+.scenario-actions .mtrl-icon-button svg { width: 24px; height: 24px; }
+.scenario__stage { border-radius: 28px; overflow: hidden; background: var(--mtrl-sys-color-surface-container-low); }
+.scenario__stage iframe { display: block; width: 100%; height: 320px; border: 0; }
+@media (max-width: 600px) { .scenario__stage iframe { height: 300px; } }

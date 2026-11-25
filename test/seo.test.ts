@@ -24,7 +24,7 @@ describe('sitemap and robots', () => {
     const paths = [...xml.matchAll(/<loc>https:\/\/md3\.io([^<]*)<\/loc>/g)].map(match => match[1]!);
     // Hidden sections (src/shared/visibility.ts) are left out of the sitemap.
     const expected = ['/', '/components/', ...(addonsPublic ? ['/addons/'] : []), '/docs/', ...(showcasePublic ? ['/showcase/'] : []), '/privacy/', '/credits/',
-      ...[...componentSlugs, ...(addonsPublic ? addonSlugs : [])].map(playgroundHref), ...docSlugs.map(docHref).filter(href => addonsPublic || !href.startsWith('/docs/addons/')),
+      ...[...componentSlugs, ...(addonsPublic ? addonSlugs : [])].map(playgroundHref), ...componentSlugs.map(slug => `/components/${slug}/playground/`), ...docSlugs.map(docHref).filter(href => addonsPublic || !href.startsWith('/docs/addons/')),
       ...(stylesPublic ? stylePages.map(page => page.href) : []), ...(showcasePublic ? examples.map(example => `/showcase/${example.slug}/`) : [])];
     expect([...paths].sort()).toEqual([...new Set(expected)].sort());
     expect(paths.filter(path => /^\/(preview|api)\/|\/frame\//.test(path))).toEqual([]);

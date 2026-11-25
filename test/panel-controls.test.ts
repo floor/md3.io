@@ -129,7 +129,7 @@ describe('a control a named set replaces', () => {
   });
 
   test('a default page keeps its controls and only marks the rows a named set can replace', async () => {
-    const list = await page('/components/list/');
+    const list = await page('/components/list/playground/');
     for (const key of ['lines', 'leading', 'trailing', 'dividers', 'subheader', 'count', 'ariaLabel', 'disableLast', 'supportingText', 'overline', 'first', 'fourth', 'fifth']) {
       const open = rowOpen(list, key);
       expect(open).toContain(' data-replaced="listContentDefault">');
@@ -156,21 +156,21 @@ describe('a control a named set replaces', () => {
     expect(componentCode('list', initialComponentState('list'))).toContain('Ideas for today');
     expect(componentCode('list', initialComponentState('list'))).not.toContain('replaced');
 
-    const carousel = await page('/components/carousel/');
+    const carousel = await page('/components/carousel/playground/');
     expect(rowOpen(carousel, 'captions')).toContain(' data-replaced="slidesDefault">');
     expect(rowOpen(carousel, 'initialSlide')).not.toContain('data-replaced');
     expect(carousel).toMatch(/<m-select value="0" id="control-initialSlide" name="initialSlide"[^>]*data-enabled-when="slidesDefault"/);
 
-    const slider = await page('/components/slider/');
+    const slider = await page('/components/slider/playground/');
     expect(rowOpen(slider, 'secondValue')).not.toContain('data-replaced');
     // Material's slider; Value and Range end step by the page's Step option (10 by default).
     expect(slider).toMatch(/<m-slider value="80" step="10" [^>]*name="secondValue"[^>]*data-enabled-when="range"/);
 
-    const checkbox = await page('/components/checkbox/');
+    const checkbox = await page('/components/checkbox/playground/');
     expect(rowOpen(checkbox, 'value')).not.toContain('data-replaced');
     expect(checkbox).toMatch(/<m-text-field [^>]*value="on" id="checkbox-value" name="value"/);
 
-    const chips = await page('/components/chips/');
+    const chips = await page('/components/chips/playground/');
     expect(rowOpen(chips, 'avatar')).toContain(' data-replaced="chipSetDefault">');
     expect(rowOpen(chips, 'icons')).not.toContain('data-replaced');
     expect(list).not.toContain('configuration-controls" hidden');

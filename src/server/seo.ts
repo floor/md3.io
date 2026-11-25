@@ -56,7 +56,10 @@ export function sitemapPages(): SitemapPage[] {
   const add = (path: string, priority: string, ...files: string[]) => pages.push({ path, priority, lastmod: lastmod(...files) });
   add('/', '1.0', shell('homepage'));
   add('/components/', '0.9', shell('catalog'), 'src/server/catalog.ts');
-  for (const slug of componentSlugs) add(`/components/${slug}/`, '0.8', ...componentFiles(slug), shell('component'));
+  for (const slug of componentSlugs) {
+    add(`/components/${slug}/`, '0.8', ...componentFiles(slug), shell('component-tab'), 'src/server/component-overview.ts');
+    add(`/components/${slug}/playground/`, '0.7', ...componentFiles(slug), shell('component'));
+  }
   if (addonsPublic) {
     add('/addons/', '0.9', shell('catalog'), 'src/shared/addons.ts', 'src/server/catalog.ts');
     for (const slug of addonSlugs) add(playgroundHref(slug), '0.8', `src/shared/content/${slug}.ts`, shell('component'));
