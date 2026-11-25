@@ -220,15 +220,20 @@ function componentDocument(slug: string) {
     ...document,
     develop: apiEntries(start < 0 ? html : html.slice(0, start) + (end < 0 ? '' : html.slice(end))),
     developToc: document.toc.filter(item => item.id !== 'accessibility'),
-    accessibility: accessibility.replace(/<h2 id="accessibility">[\s\S]*?<\/h2>\n?/, ''),
+    accessibility,
   };
 }
 /** A component's presentation: its document's opening paragraph. */
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
-/** The end of a component's overview: its other tabs, and the components of its family. */
-function componentReferences(slug: string): string {
+const componentTabSummaries: Record<ComponentTab, string> = {
+  overview: 'The playground: try every option, and copy its code',
+  develop: 'Usage, examples, and the API: options, methods and events',
+  accessibility: 'Roles, keyboard and screen reader behaviour',
+};
+/** The end of every tab of a component: its other tabs, and the components of its family. */
+function componentReferences(slug: string, current: ComponentTab): string {
   const component = components[slug as keyof typeof components];
-  const tabs = componentTabs(slug).filter(tab => tab !== 'overview').map(tab => `<a class="component-references__link" href="${componentTabHref(slug, tab)}"><span class="component-references__label">${componentTabLabels[tab]}</span><span>${tab === 'develop' ? 'Usage, examples, and the API: options, methods and events' : 'Roles, keyboard and screen reader behaviour'}</span></a>`);
+  const tabs = componentTabs(slug).filter(tab => tab !== current).map(tab => `<a class="component-references__link" href="${componentTabHref(slug, tab)}"><span class="component-references__label">${componentTabLabels[tab]}</span><span>${componentTabSummaries[tab]}</span></a>`);
   const family = componentFamilyOf(slug);
   const related = (family?.slugs ?? []).filter(other => other !== slug && isComponent(other)).map(other => `<a class="component-references__link" href="/components/${other}/"><span class="component-references__label">${escapeHtml(components[other as keyof typeof components].name)}</span><span>${escapeHtml(components[other as keyof typeof components].description)}</span></a>`);
   return `<section class="component-references" aria-labelledby="component-references-title"><h2 id="component-references-title">More on ${escapeHtml(component.name.toLowerCase())}</h2><div class="component-references__grid">${[...tabs, ...related].join('')}</div></section>`;
@@ -438,7 +443,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'overview'), intro: isAddon(slug) ? '' : componentIntro(slug), references: isAddon(slug) ? '' : componentReferences(slug), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'overview'), intro: isAddon(slug) ? '' : componentIntro(slug), references: isAddon(slug) ? '' : componentReferences(slug, 'overview'), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
@@ -491,7 +496,9 @@ export async function handleRequest(request: Request): Promise<Response> {
       // The framework switcher heads every tab, icons only, at the right.
       frameworksRow: frameworkChipsRow(() => true, 'docs-frameworks component-frameworks'),
       html: tab === 'develop' ? document.develop : document.accessibility,
-      toc: tab === 'develop' ? document.developToc : [], frameworks: tab === 'develop' && document.frameworks,
+      references: componentReferences(slug, tab),
+      toc: [...(tab === 'develop' ? document.developToc : [{ id: 'accessibility', title: 'Accessibility' }]), { id: 'component-references-title', title: `More on ${component.name.toLowerCase()}` }],
+      frameworks: tab === 'develop' && document.frameworks,
     });
   }
   else if (/^\/docs\/(?:components\/)?[a-z-]+\/$/.test(path) && path.split('/').at(-2)! in FRAMEWORK_GUIDES) {

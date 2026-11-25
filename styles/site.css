@@ -242,7 +242,12 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-tabs__tab .inline-icon { width: 20px; height: 20px; flex: none; }
 @media (width < 600px) { .component-tabs__tab .inline-icon { display: none; } }
 /* The Develop and Accessibility pages: the article starts under the tabs. */
-.component-tab-page > .document-layout { margin-block-start: 40px; }
+/* The tab pages' body: the Overview's width and inset, under the tabs. */
+.component-tab-page > .component-overview {
+  box-sizing: border-box; width: min(100% - 2 * clamp(12px, 5cqi, 64px), 1208px);
+  margin: 40px auto 0;
+}
+.component-tab-page .component-overview__main > .md { max-width: none; margin: 0; padding: 0; }
 /* A tab page keeps the component list for the shell (it docks the rail's drawer, which is
    the list a person uses), out of sight. */
 .component-tab-layout > .component-list { display: none; }
