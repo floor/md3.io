@@ -319,3 +319,6 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* An icon-only chip is 40px wide: its touch area (material's ::before, 48px tall) widens to
    48px around it, so the row keeps its width on a phone. */
 :is(.component-lede, .component-tab-page) .framework-chips::part(action)::before { inset-inline: -4px; }
+/* The drawers' section headers (Guides, Add-ons…) stand apart from their rows: the primary
+   colour, weight 600. */
+m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weight: 600; }
