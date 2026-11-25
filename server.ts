@@ -7,6 +7,7 @@ import { components, componentDeprecations, componentIcons, componentSlugs, isCo
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
+import { componentTabMarkdown, documentMarkdown, llmsFullTxt, llmsTxt } from './src/server/markdown-docs';
 import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
@@ -156,6 +157,8 @@ function page(path: string, title: string, description: string, template: string
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
+    // The page's Markdown twin, for AI tools (a guide, or a component's Develop or Accessibility tab).
+    markdown: /^\/docs\/([a-z-]+)\/$/.exec(path) && isGuide(path.slice(6, -1)) ? `/docs/${path.slice(6, -1)}.md` : /^\/components\/[a-z-]+\/(develop|accessibility)\/$/.test(path) ? `${path.slice(0, -1)}.md` : null,
     path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: isComponentDetail && !isAddons, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     // The pager takes the page's own content width: the overviews' inset body, or a component
     // page's side padding.
@@ -412,6 +415,16 @@ export async function handleRequest(request: Request): Promise<Response> {
   }
   if (path === '/robots.txt') return text(request.method === 'HEAD' ? null : robotsTxt(), 'text/plain');
   if (path === '/sitemap.xml') return text(request.method === 'HEAD' ? null : sitemapXml(), 'application/xml');
+  // The documentation as Markdown, for AI tools and crawlers (markdown-docs.ts).
+  if (path === '/llms.txt') return text(request.method === 'HEAD' ? null : llmsTxt(), 'text/plain');
+  if (path === '/llms-full.txt') return text(request.method === 'HEAD' ? null : llmsFullTxt(), 'text/plain');
+  const guideMarkdown = /^\/docs\/([a-z-]+)\.md$/.exec(path);
+  if (guideMarkdown && isGuide(guideMarkdown[1]!)) return text(request.method === 'HEAD' ? null : documentMarkdown(guideMarkdown[1]!), 'text/markdown');
+  const tabMarkdown = /^\/components\/([a-z-]+)\/(develop|accessibility)\.md$/.exec(path);
+  if (tabMarkdown && isComponent(tabMarkdown[1]!) && !isAddon(tabMarkdown[1]!)) {
+    const body = componentTabMarkdown(tabMarkdown[1]!, tabMarkdown[2] as 'develop' | 'accessibility');
+    if (body) return text(request.method === 'HEAD' ? null : body, 'text/markdown');
+  }
   // GET /api/search?q=…&limit=… — the site search dialog's results.
   if (path === '/api/search' || path === '/api/search/') {
     const q = url.searchParams.get('q') ?? '';

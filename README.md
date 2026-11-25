@@ -66,6 +66,12 @@ The owner set these choices on 2026-11-25. Search Console then showed md3.io at 
 
 **Structured data.** Every page carries a `BreadcrumbList` (Home › section › page). The home page also carries `SoftwareApplication` and `WebSite` with the `/?q=` search action (`structuredData()` in `src/server/seo.ts`).
 
+**For AI tools** (FLO-1564, `src/server/markdown-docs.ts`), the documentation is also served as Markdown, which AI tools, AI search and crawlers read more reliably than HTML:
+- `/llms.txt` maps the library: a paragraph, then every guide and component page as Markdown, grouped.
+- `/llms-full.txt` holds every guide and component document in one file.
+- Every guide has a twin at `/docs/<slug>.md`. A component's Develop and Accessibility tabs have theirs at `/components/<slug>/develop.md` and `…/accessibility.md`, and each HTML page points to its twin with `<link rel="alternate" type="text/markdown">`.
+- The Markdown is the docs' own: facts filled in, links made absolute to the twins, and each `example` block expanded into the code the page shows, one fenced block per framework.
+
 **Addresses.**
 - The sitemap (`/sitemap.xml`) lists every public page, with its source file's last commit date.
 - `data/published-urls.txt` lists every address ever published. `test/published-urls.test.ts` requires each to answer 200 or 301, and requires the sitemap's pages to be listed there.
