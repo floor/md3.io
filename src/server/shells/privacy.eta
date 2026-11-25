@@ -18,6 +18,7 @@
     <li>the playground tab you last opened, code or preview;</li>
     <li>the theme, mode and shape corners you set in Styles;</li>
     <li>whether the Styles preview panel is open;</li>
+    <li>whether a component playground's settings are open;</li>
     <li>the device size and orientation of the example frame.</li>
   </ul>
   <p>These values never leave your browser: the site doesn't send them anywhere. To remove them, clear the site data for md3.io in your browser's settings.</p>

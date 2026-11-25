@@ -62,12 +62,17 @@ registerPage('playground-material', (content, life) => {
   if (playground && settingsToggle) {
     // A toggle icon button: its own pressed state (aria-pressed) says whether the sheet is open.
     const toggle = settingsToggle as HTMLElement & { selected?: boolean };
-    const setOpen = (open: boolean) => {
+    // Closed until a person opens it; their choice is kept for the next component page.
+    const KEY = 'md3-playground-settings';
+    const setOpen = (open: boolean, remember = false) => {
       playground.toggleAttribute('data-settings-open', open);
       if (toggle.selected !== open) toggle.selected = open;
+      if (remember) try { if (open) localStorage.setItem(KEY, 'open'); else localStorage.removeItem(KEY); } catch { /* Storage may be unavailable. */ }
     };
-    setOpen(false);
-    life.events(settingsToggle).addEventListener('change', () => setOpen(Boolean(toggle.selected)));
+    let saved = false;
+    try { saved = localStorage.getItem(KEY) === 'open'; } catch { /* Storage may be unavailable. */ }
+    setOpen(saved);
+    life.events(settingsToggle).addEventListener('change', () => setOpen(Boolean(toggle.selected), true));
   }
   defineSelect();
   defineSwitch();
