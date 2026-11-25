@@ -503,7 +503,7 @@ pre.doc-install__command[data-package-manager="bun"],
 :root[data-package-manager]:not([data-package-manager="bun"]) pre.doc-install__command[data-package-manager="bun"] { display: none; }
 
 /* Previous and next at the end of a page, in sidebar order (as on vlist.io). */
-.page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--border); }
+.page-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 64px; }
 .pager-wrap { padding-top: 0; }
 .pager-wrap .page-nav { margin-top: 0; }
 /* The links look like the overviews' cards: no border, the cards' corner and surface,
@@ -540,7 +540,3 @@ pre.doc-install__command[data-package-manager="bun"],
 .md .api-entry__key { color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .5px; text-transform: uppercase; }
 .md .api-entry__type { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; color: var(--text-dim); }
 .md .api-entry__type code, .md .api-entry__fact code { font-size: var(--fs-sm); padding: 1px 6px; border-radius: 6px; }
-/* 92px after previous and next on every page: the page's own 64px and 28px more; an article
-   that ends with them drops its bottom padding. */
-nav.page-nav { margin-block-end: 28px; }
-.document-layout .md:has(> nav.page-nav) { padding-bottom: 0; }
