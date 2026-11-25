@@ -1,7 +1,7 @@
 <div class="component-list-layout component-list-layout--detail">
 <%~ include('component-list', it) %>
 <div class="page-wrap component-page" id="component-content" tabindex="-1" data-component="<%= it.slug %>">
-  <% if (it.componentHeader) { %><%~ it.componentHeader %><% if (it.intro) { %><div class="component-intro"><%~ it.intro %></div><% } %><% } else { %>
+  <% if (it.componentHeader) { %><%~ it.componentHeader %><div class="component-lede"><div class="component-intro"><%~ it.intro %></div><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div></div><% } else { %>
   <header class="page-heading">
     <div class="page-heading__top">
       <a class="text-link component-list-up" href="<%= it.isAddons ? '/addons/' : '/components/' %>"><%~ it.icon('arrow_back') %> <%= it.isAddons ? 'All add-ons' : 'All components' %></a>
@@ -15,7 +15,7 @@
     <p><%= it.component.description %></p>
   </header>
   <% } %>
-  <div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div>
+  <% if (!it.componentHeader) { %><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div><% } %>
   <section class="playground playground--material" aria-label="<%= it.component.name %> playground"><%/* The panel's scope takes the site theme and mode as it is parsed, so its first paint is themed. */%><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script>
     <div class="preview-panel">
       <div class="panel-heading preview-heading">

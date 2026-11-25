@@ -488,7 +488,9 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = page(path, `${component.name} ${componentTabLabels[tab].toLowerCase()} — material`, tab === 'develop' ? `Usage, examples and the API of the material library's ${component.name.toLowerCase()}.` : `Accessibility of the material library's ${component.name.toLowerCase()}.`, 'component-tab', {
       slug, componentHeader: componentHeader(slug, tab),
-      html: tab === 'develop' ? withFrameworkChips({ ...document, html: document.develop })!.html : document.accessibility,
+      // The framework switcher heads every tab, icons only, at the right.
+      frameworksRow: frameworkChipsRow(() => true, 'docs-frameworks component-frameworks'),
+      html: tab === 'develop' ? document.develop : document.accessibility,
       toc: tab === 'develop' ? document.developToc : [], frameworks: tab === 'develop' && document.frameworks,
     });
   }
