@@ -212,3 +212,4 @@
 /components/loading-indicator/playground/
 /components/snackbar/playground/
 /components/tooltip/playground/
+/docs/bundle-size/

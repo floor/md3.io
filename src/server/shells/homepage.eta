@@ -24,9 +24,9 @@
       <pre class="shaking__code"><code>import { createButton } from 'material';
 import 'material/styles/base';
 import 'material/styles/button';</code></pre>
-      <p class="shaking__note">A page that uses one component loads <strong><%= it.shaking.min %>–<%= it.shaking.max %> KB</strong>, JavaScript and CSS, gzip, across all <%= it.shaking.count %> components. Measured on material <%= it.shaking.version %>, <%= it.shaking.measured %>. <a class="text-link" href="/docs/why-material/">How we measure</a></p>
+      <p class="shaking__note">A page that imports one component loads <strong><%= it.shaking.min %>–<%= it.shaking.max %> KB</strong> of JavaScript, gzip, across all <%= it.shaking.count %> components: material's own measurement, on material <%= it.shaking.version %>. <a class="text-link" href="/docs/bundle-size/">Every component's size</a></p>
     </div>
-    <ul class="shaking__bars" aria-label="A page with only this component, gzip">
+    <ul class="shaking__bars" aria-label="A page with only this component, JavaScript, gzip">
       <% it.shaking.rows.forEach(row => { %><li><span class="shaking__name"><%= row.name %></span><span class="shaking__bar" style="--share: <%= row.share.toFixed(3) %>"></span><span class="shaking__kb"><%= row.kb %> KB</span></li><% }) %>
     </ul>
   </section>

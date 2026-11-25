@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { root } from './content';
 import { isAddon } from '../shared/addons';
+import { materialSizes } from './material-sizes';
 
 // What each component costs an app, measured by scripts/sizes.ts: gzip bytes of
 // minified JS and CSS, for the factory and the web component.
@@ -11,14 +12,19 @@ interface SizesFile { material: string; measured: string; gzip: number; core: Re
 
 export const sizes: SizesFile = JSON.parse(readFileSync(resolve(root, 'data/sizes.json'), 'utf8'));
 
-/** The home page's tree-shaking figures: what a page that imports one component loads (JS + CSS, gzip). */
+/** The home page's tree-shaking figures: material's own measurement (material-sizes.ts),
+ * a page importing only one component, JavaScript, gzip. */
 export function treeShaking(names: Record<string, string>, picks: readonly string[]) {
-  const kb = (bytes: number) => (bytes / 1024).toFixed(1);
-  const alone = Object.values(sizes.components).map(size => size.factory.alone);
+  const { version, date, rows } = materialSizes(sizes.material);
+  const kb = (cell: string) => Number.parseFloat(cell);
+  // The components the site shows (material also measures bottom-app-bar, which it does not).
+  const measured = rows.filter(row => row.slug);
+  const max = Math.max(...measured.map(row => kb(row.gzip)));
   return {
-    version: sizes.material, measured: sizes.measured, count: alone.length,
-    min: kb(Math.min(...alone)), max: kb(Math.max(...alone)),
-    rows: picks.filter(slug => sizes.components[slug]).map(slug => ({ name: names[slug] ?? slug, kb: kb(sizes.components[slug]!.factory.alone), share: sizes.components[slug]!.factory.alone / Math.max(...alone) })),
+    version, measured: date, count: measured.length,
+    min: Math.min(...measured.map(row => kb(row.gzip))).toFixed(1), max: max.toFixed(1),
+    rows: picks.flatMap(slug => measured.filter(row => row.slug === slug))
+      .map(row => ({ name: names[row.slug!] ?? row.name, kb: kb(row.gzip).toFixed(1), share: kb(row.gzip) / max })),
   };
 }
 
