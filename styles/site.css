@@ -402,3 +402,6 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .compat__tile .compat__name { font-size: 14px; line-height: 20px; }
 .compat__tile .compat__note { font-size: 12px; line-height: 16px; }
 @media (min-width: 600px) { .compat .compat__logos { order: -1; } }
+/* The JS mark fills less of its box than the other logos: a little larger to match. */
+.compat__tile--vanilla .compat__logo svg { width: 56px; height: 56px; }
+@media (max-width: 599px) { .compat__tile--vanilla .compat__logo svg { width: 46px; height: 46px; } }
