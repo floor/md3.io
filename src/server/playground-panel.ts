@@ -44,7 +44,7 @@ export const renderStyles = elementCssBase ? { styles: 'link', cssBase: elementC
 
 /** Every piece of a panel's element markup, for linkedStylesheets. */
 export const panelMarkup = (panel: ReturnType<typeof materialPanel>): string =>
-  [panel.frameworks, panel.tabs, panel.appearance, panel.copy, panel.zoom, panel.codepen, panel.settings, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
+  [panel.frameworks, panel.tabs, panel.appearance, panel.copy, panel.codepen, panel.settings, panel.scenario, ...panel.sections.flatMap(section => section.items)].join('');
 
 /** The stylesheets a rendered panel links from its shadow roots, for the page to preload. */
 export const linkedStylesheets = (html: string): string[] =>
@@ -239,7 +239,7 @@ export function exampleViewTabs(view: 'preview' | 'code'): string {
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string; zoom: string; codepen: string; settings: string } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string; codepen: string; settings: string } {
   // The framework picker above the heading: a single-select filter chip set.
   // Six choices are past the five a segmented button (now the connected button
   // group) takes, and M3 points to chips beyond that; single choice is a filter
@@ -283,12 +283,10 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // (playground.ts), M3's brief message about something the app just did.
   // Copy code and Settings: material's icon buttons, with the official Material Symbols.
   const copy = renderElement('m-icon-button', { icon: readFileSync(resolve(root, 'icons/content_copy.svg'), 'utf8').trim(), 'aria-label': 'Copy code', title: 'Copy code', id: 'copy-code', class: 'preview-copy' }, '', renderStyles);
-  // The preview's zoom (FLO-1565): a text button that steps 100, 85, 70 and 50% (playground.ts).
-  const zoom = renderElement('m-button', { variant: 'text', size: 'xs', id: 'preview-zoom', class: 'preview-zoom', 'aria-label': 'Preview zoom: 100%', title: 'Preview zoom' }, '100%', renderStyles);
   // Open in CodePen, beside Copy code: the playground's vanilla code as a pen (codepen.ts).
   const codepen = renderElement('m-icon-button', { icon: readFileSync(resolve(root, 'icons/open_in_new.svg'), 'utf8').trim(), 'aria-label': 'Open in CodePen', title: 'Open in CodePen', id: 'open-codepen', class: 'preview-codepen', 'data-material-version': mtrlVersion }, '', renderStyles);
   // Settings, beside Copy code: a toggle icon button that opens the configuration as a side
   // sheet, closed by default (filled while open).
   const settings = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/settings-fill.svg'), 'utf8').trim(), 'aria-label': 'Settings', title: 'Settings', 'aria-controls': 'configuration', id: 'settings-toggle', class: 'preview-settings' }, '', renderStyles);
-  return { frameworks, tabs, appearance, scenario, sections, copy, zoom, codepen, settings };
+  return { frameworks, tabs, appearance, scenario, sections, copy, codepen, settings };
 }
