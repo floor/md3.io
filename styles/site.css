@@ -368,4 +368,6 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .shaking--carousel { grid-template-columns: minmax(0, 1fr) !important; }
 .shaking--carousel .shaking__text { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 56px; }
 @media (min-width: 900px) { .shaking--carousel .shaking__text { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shaking--carousel .shaking__text > :is(.feature-index, h2, p:not(.shaking__note)) { grid-column: 1; } .shaking--carousel .shaking__code { grid-column: 2; grid-row: 1 / span 3; align-self: end; margin: 0; } }
-.landing .component-grid.expressive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 16px; }
+.landing .component-grid.expressive-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 600px) { .landing .component-grid.expressive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .landing .component-grid.expressive-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
