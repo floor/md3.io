@@ -10,10 +10,11 @@
     <div class="hero__install"><%~ it.install %></div>
     <div class="hero__notes"><span>Material Design 3</span><span>Tree-shakable</span><span>Zero runtime dependencies</span><span>Open source</span></div>
   </section>
-  <div class="landing-features">
-    <div><span class="feature-index">01 / EXPLORE</span><h2>Find the right expression.</h2><p>Try variants, sizes, and shapes in a live component playground.</p></div>
-    <div><span class="feature-index">02 / CUSTOMIZE</span><h2>Make it feel like you.</h2><p>Switch Material themes and light or dark mode. See every change as you make it.</p></div>
-    <div><span class="feature-index">03 / BUILD</span><h2>Take it from here.</h2><p>Copy your configuration and bring the component to your project. No framework required.</p></div>
+  <%/* Why material: three reasons, right after the hero (the owner, 2026-11-25). */%>
+  <div class="landing-features landing-features--reasons">
+    <div><span class="feature-index">01 / EXPRESSIVE</span><h2>Material 3 Expressive, today.</h2><p>Google's latest Material Design, built for the web: the new shapes, motion and components, in <%= it.shaking.count %> components you can try live.</p></div>
+    <div><span class="feature-index">02 / ANY FRAMEWORK</span><h2>One library, every stack.</h2><p>Plain JavaScript factories, web components, and React, Vue, Svelte and SolidJS components, with server rendering. In TypeScript.</p></div>
+    <div><span class="feature-index">03 / LIGHTWEIGHT</span><h2>Small by design.</h2><p>Tree-shakable, with zero runtime dependencies: a component starts at <%= it.shaking.min %> KB gzip. <a class="text-link" href="/docs/bundle-size/">See every size</a></p></div>
   </div>
   <%/* Tree-shaking: the measured cost of one component (data/sizes.json, scripts/sizes.ts). */%>
   <section class="shaking" aria-labelledby="shaking-title">
@@ -30,5 +31,10 @@ import 'material/styles/button';</code></pre>
       <% it.shaking.rows.forEach(row => { %><li><span class="shaking__name"><%= row.name %></span><span class="shaking__bar" style="--share: <%= row.share.toFixed(3) %>"></span><span class="shaking__kb"><%= row.kb %> KB</span></li><% }) %>
     </ul>
   </section>
+  <div class="landing-features">
+    <div><span class="feature-index">01 / EXPLORE</span><h2>Find the right expression.</h2><p>Try variants, sizes, and shapes in a live component playground.</p></div>
+    <div><span class="feature-index">02 / CUSTOMIZE</span><h2>Make it feel like you.</h2><p>Switch Material themes and light or dark mode. See every change as you make it.</p></div>
+    <div><span class="feature-index">03 / BUILD</span><h2>Take it from here.</h2><p>Copy your configuration and bring the component to your project. No framework required.</p></div>
+  </div>
   <%~ include('footer', it) %>
 </div>
