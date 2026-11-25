@@ -114,3 +114,21 @@ export function structuredData(path: string, name: string, description: string, 
 /** JSON for a <script> element: `<` escaped, so no text in it can close the element. */
 export const jsonForScript = (value: unknown): string =>
   JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+
+/**
+ * The title a search result shows: the page's name with the words people search for
+ * ("Material Design 3", "web", "md3"), under 65 characters. The name alone stays the
+ * breadcrumb's (structuredData).
+ */
+export function documentTitle(path: string, name: string): string {
+  if (path === '/') return 'md3.io – Material Design 3 components for the web';
+  if (path === '/components/') return 'Material Design 3 components for the web | md3.io';
+  if (path === '/docs/') return 'Material Design 3 for the web: guides | md3.io';
+  const tab = /^\/components\/[a-z-]+\/(develop|accessibility)\/$/.exec(path)?.[1];
+  const component = name.replace(/: (Develop|Accessibility)$/, '');
+  if (tab === 'develop') return `${component} API and examples – Material Design 3 | md3.io`;
+  if (tab === 'accessibility') return `${component} accessibility – Material Design 3 | md3.io`;
+  if (/^\/components\/[a-z-]+\/$/.test(path)) return `${component} – Material Design 3 web component | md3.io`;
+  if (/^\/docs\/[a-z-]+\/$/.test(path)) return `${name} – Material Design 3 for the web | md3.io`;
+  return `${name} | md3.io`;
+}
