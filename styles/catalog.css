@@ -117,7 +117,10 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 }
 /* The card is not a link: its title and its actions are, and its stage stays live to try. */
 .component-card__body h3 a:hover { text-decoration: underline; }
-.component-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.component-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 16px; }
+.component-card__actions .mtrl-button { margin-right: 4px; }
+.component-card__actions .mtrl-icon-button { color: var(--mtrl-sys-color-on-surface-variant); }
+.component-card__actions .mtrl-icon-button svg { width: 24px; height: 24px; }
 .component-card__actions .mtrl-button { font-family: var(--font-sans); text-decoration: none; }
 /* material's sheet is layered: the site's unlayered reset wins over its S button's sides. */
 .component-card__actions .mtrl-button--s { padding: 0 16px; }
