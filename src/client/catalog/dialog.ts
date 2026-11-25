@@ -6,6 +6,7 @@ import 'material/elements/css/radios';
 import { registerStyles } from 'material/elements';
 import createDialog from 'material/components/dialog';
 import createRadios from 'material/components/radios';
+import { keepFocusInCard } from './card-focus';
 import { surface } from './surface';
 
 // Open in place rather than over the page: the dialog sits in the card, in the flow.
@@ -30,7 +31,8 @@ export const define = (): void => surface('md3-catalog-dialog', ['progress', 'bu
     current?.destroy();
     const dialog = createDialog({
       title: 'Alarm sound', ariaLabel: 'Alarm sound', size: 'small', divider: true, closeButton: false,
-      modal: false, autofocus: false, closeOnOverlayClick: false, container: host,
+      // Always open in the page, so keyboard users Tab on past it: no focus trap.
+      modal: false, autofocus: false, trapFocus: false, closeOnOverlayClick: false, container: host,
       buttons: [{ text: 'Cancel', variant: 'text', closeDialog: true }, { text: 'OK', variant: 'text', closeDialog: true, attributes: { disabled: true } }],
     });
     const radios = createRadios({ name: 'alarm-sound', options: choices, direction: 'vertical' });
@@ -43,6 +45,7 @@ export const define = (): void => surface('md3-catalog-dialog', ['progress', 'bu
     dialog.open();
     current = { destroy: () => { radios.destroy(); dialog.destroy(); } };
   };
-  requestAnimationFrame(open);
-  return { element: host, destroy: () => { active = false; clearTimeout(timer); current?.destroy(); } };
+  keepFocusInCard(host);
+  const frame = requestAnimationFrame(open);
+  return { element: host, destroy: () => { active = false; cancelAnimationFrame(frame); clearTimeout(timer); current?.destroy(); } };
 });
