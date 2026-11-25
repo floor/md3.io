@@ -62,10 +62,11 @@ import 'material/styles/base';
 import 'material/styles/button';</code></pre>
       <p class="shaking__note">material's core, <strong><%= it.shaking.core %> KB</strong>, loads once; each component then adds <strong><%= it.shaking.min %>–<%= it.shaking.max %> KB</strong> of JavaScript, gzip, across all <%= it.shaking.count %> components. material's own measurement, on material <%= it.shaking.version %>. <a class="text-link" href="/docs/bundle-size/">Every component's size</a></p>
     </div>
-    <ul class="shaking__bars" aria-label="What each component adds over the core, JavaScript, gzip">
-      <li class="shaking__core"><span class="shaking__name">Core, once</span><span class="shaking__kb"><%= it.shaking.core %> KB</span></li>
-      <% it.shaking.groups.forEach(group => { %><li class="shaking__group"><%= group.label %></li><% group.rows.forEach(row => { %><li><span class="shaking__name"><%= row.name %></span><span class="shaking__kb">+<%= row.kb %> KB</span></li><% }) }) %>
-    </ul>
+    <table class="shaking__table">
+      <caption class="sr-only">What each component adds over material's core, JavaScript, gzip</caption>
+      <thead><tr><th scope="col">Category</th><th scope="col">Components</th></tr></thead>
+      <tbody><% it.shaking.groups.forEach(group => { %><tr><th scope="row"><%= group.label %></th><td><%= group.rows.map(row => `${row.name} +${row.kb} KB`).join(', ') %></td></tr><% }) %></tbody>
+    </table>
   </section>
   <div class="landing-features">
     <div><span class="feature-index">01 / EXPLORE</span><h2>Find the right expression.</h2><p>Try variants, sizes, and shapes in a live component playground.</p></div>

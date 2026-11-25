@@ -29,7 +29,7 @@ describe('bundle size', () => {
   test('the home figures are the table\'s, and link to the guide', async () => {
     const html = await page('/');
     const button = materialSizes(version).rows.find(row => row.name === 'button')!;
-    expect(html).toContain(`+${Number.parseFloat(button.vsCore.replace("+", "")).toFixed(1)} KB</span>`);
+    expect(html).toContain(`Button +${Number.parseFloat(button.vsCore.replace("+", "")).toFixed(1)} KB`);
     expect(html).toContain('href="/docs/bundle-size/"');
   });
 });
