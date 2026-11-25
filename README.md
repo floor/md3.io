@@ -42,6 +42,36 @@ The site includes a compact landing page, a component catalog, all six Actions p
 
 The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build installs `material` from npm as pinned in `package.json` and `bun.lock`.
 
+## Search (SEO)
+
+The owner set these choices on 2026-11-25. Search Console then showed md3.io at an average position of about 14, with a 3.7% click-through rate, on searches such as "md3", "md3 web" and "material design 3 web".
+
+**Titles.** `documentTitle()` in `src/server/seo.ts` builds every page's `<title>`, `og:title` and `twitter:title`. Each title stays under 65 characters, the most a search result shows. A route passes only the page's own name (for example "Button: Develop"), and that name stays the breadcrumb's.
+
+| Page | Title |
+|---|---|
+| Home | md3.io – Material 3 Expressive components for the web |
+| Components overview | Material 3 Expressive components for the web \| md3.io |
+| Component, Overview tab | Button – Material 3 Expressive web component \| md3.io |
+| Component, Develop tab | Button API and examples – Material Design 3 \| md3.io |
+| Component, Accessibility tab | Button accessibility – Material Design 3 \| md3.io |
+| Guide | Theming – Material Design 3 for the web \| md3.io |
+| Other pages | Credits \| md3.io |
+
+**"Material 3 Expressive" is the lead term** where a reader lands: the home page, the components overview and a component's Overview tab. Expressive is M3's latest evolution, and few web libraries implement it yet, which sets md3.io apart. Google names it "Material 3 Expressive" / "M3 Expressive" on m3.material.io and its *Building with M3 Expressive* post (read on 2026-11-25). Every component's Overview title says it, including components Expressive did not change, such as Divider, because the library implements M3 Expressive as a whole. The Develop and Accessibility tabs keep "Material Design 3", for people who search the classic name. Descriptions carry both terms.
+
+**Descriptions** say what the page holds and for which frameworks (React, Vue, Svelte, SolidJS, vanilla JS, Web Components). The searchable part comes first, so Google's cut at about 160 characters falls on the tagline.
+
+**Crawling.** `robots.txt` blocks nothing (`robotsTxt()` in `src/server/seo.ts`). The internal routes, `/preview/` (the playground frames) and `/api/`, answer `X-Robots-Tag: noindex` instead. When `robots.txt` blocked them, Google indexed the preview frames from the component pages' links without fetching them, and never read their `noindex`. Search Console reported this as "Indexed, though blocked by robots.txt". Don't block them again: Google can only drop a page it is allowed to fetch.
+
+**Structured data.** Every page carries a `BreadcrumbList` (Home › section › page). The home page also carries `SoftwareApplication` and `WebSite` with the `/?q=` search action (`structuredData()` in `src/server/seo.ts`).
+
+**Addresses.**
+- The sitemap (`/sitemap.xml`) lists every public page, with its source file's last commit date.
+- `data/published-urls.txt` lists every address ever published. `test/published-urls.test.ts` requires each to answer 200 or 301, and requires the sitemap's pages to be listed there.
+- A component's documentation is its Develop tab, and `/docs/components/<slug>/` answers 301 there, keeping the query string.
+- A renamed address redirects in one hop, never through a second redirect.
+
 ## Deploy
 
 md3.io runs on **floor-vps** behind Cloudflare: nginx (`deploy/nginx/md3.io.conf`) proxies to the `md3.io` PM2 process (`ecosystem.production.config.cjs`, port 4300). After the approved main commit is pushed, the operator runs `bash scripts/deploy.sh`. `DEPLOY_HOST` defaults to `admin@46.226.104.226`; `DEPLOY_DIR` defaults to `/home/floor`, containing the `md3.io` checkout. `DRY_RUN=1 bash scripts/deploy.sh` prints the exact remote script without opening SSH.
