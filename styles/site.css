@@ -295,4 +295,10 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .site-footer__links .inline-icon { width: 14px; height: 14px; }
 /* On every page but the home (whose footer sits in its own column), the footer closes the
    main column, inside its side margins. */
-.content > .site-footer { margin: 32px clamp(16px, 4vw, 48px) 0; }
+/* The overviews' body width and inset (page-wrap's 8px, then clamp(12px, 5cqi, 64px), at
+   most 1208px), the width previous and next take. */
+.content > .site-footer {
+  --footer-inset: calc(8px + clamp(12px, (100% - 16px) * 0.05, 64px));
+  box-sizing: border-box; width: min(100% - 2 * var(--footer-inset), 1208px);
+  margin: 32px auto 0;
+}
