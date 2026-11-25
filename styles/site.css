@@ -287,3 +287,10 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-overview__toc { margin: 32px 0 0; }
 /* On Develop and Accessibility the article starts at the top: the list starts with it. */
 .component-tab-page .component-overview__toc { margin-top: 0; }
+
+/* A component's hero art is a stage: the generated waves fill it, and the component's live
+   scene from its overview card stands over them on its own rounded surface. */
+.component-hero__visual { position: relative; display: grid; place-items: center; min-height: 280px; padding: 24px; border-radius: 28px; overflow: hidden; }
+.component-hero__visual > .page-hero__art { position: absolute; inset: 0; min-height: 0; border-radius: 0; }
+.component-hero__scene { position: relative; width: min(100%, 420px); }
+.component-hero__scene > .catalog-visual { height: 232px; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }

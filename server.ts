@@ -153,12 +153,12 @@ function page(path: string, title: string, description: string, template: string
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
   const panelStyles = isAddons ? 'addon-panel' : 'material-panel';
-  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'component-tab' ? 'component-tab' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : 'page';
   const jsonLd = status === 200 ? structuredData(path, title.replace(/ — material$/, ''), description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
     icon,
     skipTarget: isComponentDetail ? 'component-content' : 'content',
-    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
+    path, title, description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: isComponentDetail && !isAddons, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : undefined,
     // The pager takes the page's own content width: the overviews' inset body, or a component
     // page's side padding.
     content: template === 'document' || template === 'component-tab' || !pager ? content
@@ -246,7 +246,10 @@ function componentHeader(slug: string, current: ComponentTab): string {
   const note = deprecation ? `<p role="note"><strong>Deprecated.</strong> Use <a class="text-link" href="${escapeHtml(deprecation.href)}">${escapeHtml(deprecation.replacement)}</a> instead.</p>` : '';
   const tabs = componentTabs(slug).map(tab => `<a class="component-tabs__tab" href="${componentTabHref(slug, tab)}"${tab === current ? ' aria-current="page"' : ''}>${icon(componentTabIcons[tab])}<span>${componentTabLabels[tab]}</span></a>`).join('');
   return `<header class="page-hero component-hero"><div class="page-hero__text"><h1>${escapeHtml(component.name)}</h1><p>${escapeHtml(component.description)}</p>${note}</div>`
-    + `<div class="page-hero__art" aria-hidden="true" data-seed="${escapeHtml(slug)}"></div></header>`
+    // The art is a stage: the generated waves, and over them the component's live scene from
+    // its overview card (a demo app bar's headline is not a heading of this page).
+    + `<div class="component-hero__visual"><div class="page-hero__art" aria-hidden="true" data-seed="${escapeHtml(slug)}"></div>`
+    + `<div class="component-hero__scene">${catalogVisuals[slug as keyof typeof catalogVisuals].replaceAll('<h1 part="headline"', '<h1 part="headline" role="presentation"')}</div></div></header>`
     + `<nav class="component-tabs" aria-label="${escapeHtml(component.name)} pages">${tabs}</nav>`;
 }
 

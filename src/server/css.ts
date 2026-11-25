@@ -8,7 +8,9 @@ const root = resolve(import.meta.dir, '../..');
 const style = (name: string) => resolve(root, 'styles', `${name}.css`);
 const shell = ['tokens', 'shell', 'navigation', 'ui', 'content', 'syntax'] as const;
 const catalog = [...shell, 'site', 'search', 'roboto', 'component-list', 'preupgrade', 'catalog'] as const;
-const materialPanel = [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material'] as const;
+// A component page's hero shows its overview card's scene: the catalog's pre-upgrade and
+// visual rules come too.
+const materialPanel = [...shell, 'site', 'search', 'roboto', 'component-list', 'playground-material', 'preupgrade', 'catalog'] as const;
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
@@ -17,6 +19,7 @@ export const stylesheetBundles = {
   page: [...shell, 'site', 'search'],
   'material-panel': materialPanel,
   'addon-panel': materialPanel,
+  'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog'],
   // Add-on visuals that use factories need their light-DOM styles.
   catalog,
   'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'mtrl:listbox', 'addons:styles'],
