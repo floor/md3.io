@@ -289,18 +289,21 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-tab-page .component-overview__toc { margin-top: 0; }
 
 /* A component's hero art is a stage: the generated waves fill it, and the component's live
-   scene from its overview card stands over them on its own rounded surface. */
-.component-hero__visual { position: relative; display: grid; place-items: center; min-height: 280px; padding: 24px; border-radius: 28px; overflow: hidden; }
+   scene from its overview card stands on them, the tile's own size, with no surface of its
+   own: the waves are its background. */
+.component-hero__visual { position: relative; display: grid; min-height: 280px; border-radius: 28px; overflow: hidden; }
 .component-hero__visual > .page-hero__art { position: absolute; inset: 0; min-height: 0; border-radius: 0; }
-.component-hero__scene { position: relative; width: min(100%, 420px); }
-.component-hero__scene > .catalog-visual { height: 232px; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
-/* The scene grows with the tile: scaled whole (not zoomed, which misplaces the search
-   view and menus that open from it), from its centre, within the tile's padding. */
-.component-hero__visual { container-type: inline-size; }
-.component-hero__scene { transform-origin: center; }
-/* Each step keeps the 420 × 232 scene inside the tile's padding: 420 × scale ≤ the tile's
-   inner width (what the container query measures). */
-@container (min-width: 483px) { .component-hero__scene { scale: 1.15; } }
-@container (min-width: 525px) { .component-hero__scene { scale: 1.25; } }
-@container (min-width: 567px) { .component-hero__scene { scale: 1.35; } }
-@container (min-width: 630px) { .component-hero__scene { scale: 1.5; } }
+/* The scene keeps the card's layout and is scaled whole to the tile (site-content.ts sets
+   the sizes; without it, the card's size, centred). Scaled, not zoomed: zoom misplaces the
+   search view and the menus that open from a scene. */
+.component-hero__visual { place-items: center; }
+.component-hero__scene {
+  position: relative; display: grid;
+  width: var(--scene-width, min(100%, 420px)); height: var(--scene-height, 240px);
+  scale: var(--scene-scale, 1); transform-origin: center;
+}
+.component-hero__scene > .catalog-visual { height: 100%; border-radius: 0; --catalog-stage: transparent; background: transparent; box-shadow: none; }
+/* The card's "floor" (a full-width screen with its edge, under Button's scene) is a surface
+   drawn for the card: on the hero's waves the buttons stand on the art itself. */
+.component-hero__scene .catalog-frame--floor { inset: 0; border: 0; background: transparent; }
+.component-hero__scene .catalog-frame--floor .catalog-gesture { display: none; }
