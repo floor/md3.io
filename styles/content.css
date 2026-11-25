@@ -543,3 +543,6 @@ pre.doc-install__command[data-package-manager="bun"],
 /* A long type or default wraps inside its entry instead of widening the column (a phone). */
 .md .api-entry { grid-template-columns: minmax(0, 1fr); }
 .md .api-entry :is(.api-entry__name, .api-entry__type, .api-entry__fact) code { overflow-wrap: anywhere; }
+
+/* Code blocks take M3's large corner (shape.corner.large, 16px), the docs' and the home's alike. */
+.md pre, .doc-install, .shaking__code, .install, #lab-code-panel pre { border-radius: var(--mtrl-sys-shape-corner-large, 16px); }

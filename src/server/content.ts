@@ -127,6 +127,9 @@ export const addonDocGroup = { label: 'Add-ons', items: addonDocSlugs.map(entry)
 export const componentDocGroups = Object.entries(groups).map(([label, items]) => ({ label, items: items.filter(slug => slugs.has(slug)).map(entry) }));
 /** Docs' own groups after the guides: the add-ons, while they are public and have no tabs. */
 export const docGroups = addonsPublic ? [addonDocGroup] : [];
+/** Code, highlighted as the docs highlight it (highlight.js, the site's syntax.css colours). */
+export const highlightCode = (code: string, language: string): string =>
+  `<code class="hljs language-${language}">${hljs.highlight(code, { language }).value}</code>`;
 export function escapeHTML(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
 }
