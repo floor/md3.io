@@ -29,6 +29,33 @@ import 'material/elements/css/timepicker';
 import { defineButton, defineButtonGroup, defineIconButton, defineChips, defineDatepicker, defineSelect, defineSlider, defineSnackbar, defineTimepicker, defineSwitch, defineTabs, defineTextField } from 'material/elements';
 import { registerPage } from './page-lifecycle';
 registerPage('playground-material', (content, life) => {
+  // A settings select's menu is fixed to the window, placed when it opens. material moves it
+  // with the window's scroll, but only from 20ms after opening, and not with a layout shift:
+  // a field moved meanwhile left its menu hanging (Radio buttons' Selected, now and then).
+  // While a menu is open, a moved field re-places it (material repositions on scroll).
+  const settings = content.querySelector<HTMLElement>('#configuration');
+  if (settings) {
+    let frame = 0;
+    const openSelect = () => [...settings.querySelectorAll('m-select')].find(select => select.shadowRoot?.querySelector('.mtrl-menu--visible'));
+    const watch = () => {
+      if (frame) return;
+      let last = '';
+      let waiting = 30;
+      const tick = () => {
+        const select = openSelect();
+        if (!select) { frame = waiting-- > 0 && !last ? requestAnimationFrame(tick) : 0; return; }
+        const { top, left } = select.getBoundingClientRect();
+        const at = `${Math.round(top)},${Math.round(left)}`;
+        if (at !== last) window.dispatchEvent(new Event('scroll'));
+        last = at;
+        frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    };
+    life.events(settings).addEventListener('click', watch);
+    life.events(settings).addEventListener('keydown', watch);
+    life.add(() => cancelAnimationFrame(frame));
+  }
   // Settings opens the configuration as a side sheet beside the preview, and closes it.
   const playground = content.querySelector<HTMLElement>('.playground');
   const settingsToggle = content.querySelector<HTMLElement>('#settings-toggle');
