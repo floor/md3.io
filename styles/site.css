@@ -251,20 +251,10 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* A tab page keeps the component list for the shell (it docks the rail's drawer, which is
    the list a person uses), out of sight. */
 .component-tab-layout > .component-list { display: none; }
-/* A component's overview: its presentation under the tabs, and its references at the end. */
+/* A component's overview: its presentation under the tabs. */
 .component-intro { max-width: var(--measure, 100ch); margin: 32px 0 24px; font-size: var(--fs-md); line-height: 1.7; color: var(--text-muted); }
 .component-intro p { margin: 0; }
 .component-intro a { color: var(--accent-text); }
-.component-references { margin-block-start: 48px; }
-.component-references h2 { margin: 0 0 20px; font-size: clamp(24px, 3cqi, 32px); line-height: 1.25; font-weight: 400; }
-.component-references__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
-@container (min-width: 580px) { .component-references__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@container (min-width: 900px) { .component-references__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.component-references__link { display: flex; flex-direction: column; gap: 6px; padding: 20px 24px; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); color: var(--text-muted); text-decoration: none; font-size: var(--fs-sm); line-height: 1.5; transition: background-color 150ms ease; }
-.component-references__link:hover { background: var(--mtrl-sys-color-surface-container-high); }
-.component-references__link:focus-visible { outline: 3px solid var(--mtrl-sys-color-secondary); outline-offset: -3px; }
-.component-references__label { color: var(--text); font-size: 20px; line-height: 28px; }
-
 /* Under a component's tabs: the presentation, and at its right the framework switcher,
    icons only (each chip keeps its name as its accessible label). It
    heads every tab of a component. */

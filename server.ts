@@ -6,7 +6,7 @@ import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
-import { componentDirectory, componentFamilyOf } from './src/server/component-directory';
+import { componentDirectory } from './src/server/component-directory';
 import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
 import { examples, exampleBySlug, exampleVariants, exampleComponents, exampleTags, examplesUsingComponent, filterChips } from './src/server/examples';
 import { elementMeta } from './src/server/elements-meta';
@@ -225,19 +225,6 @@ function componentDocument(slug: string) {
 }
 /** A component's presentation: its document's opening paragraph. */
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
-const componentTabSummaries: Record<ComponentTab, string> = {
-  overview: 'The playground: try every option, and copy its code',
-  develop: 'Usage, examples, and the API: options, methods and events',
-  accessibility: 'Roles, keyboard and screen reader behaviour',
-};
-/** The end of every tab of a component: its other tabs, and the components of its family. */
-function componentReferences(slug: string, current: ComponentTab): string {
-  const component = components[slug as keyof typeof components];
-  const tabs = componentTabs(slug).filter(tab => tab !== current).map(tab => `<a class="component-references__link" href="${componentTabHref(slug, tab)}"><span class="component-references__label">${componentTabLabels[tab]}</span><span>${componentTabSummaries[tab]}</span></a>`);
-  const family = componentFamilyOf(slug);
-  const related = (family?.slugs ?? []).filter(other => other !== slug && isComponent(other)).map(other => `<a class="component-references__link" href="/components/${other}/"><span class="component-references__label">${escapeHtml(components[other as keyof typeof components].name)}</span><span>${escapeHtml(components[other as keyof typeof components].description)}</span></a>`);
-  return `<section class="component-references" aria-labelledby="component-references-title"><h2 id="component-references-title">More on ${escapeHtml(component.name.toLowerCase())}</h2><div class="component-references__grid">${[...tabs, ...related].join('')}</div></section>`;
-}
 const componentTabs = (slug: string): ComponentTab[] => ['overview', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
 /** The header every tab of a component shares: the overview's hero, then the tab bar. */
 function componentHeader(slug: string, current: ComponentTab): string {
@@ -446,7 +433,7 @@ export async function handleRequest(request: Request): Promise<Response> {
     const component = components[slug];
     response = componentMatch[1] === 'preview'
       ? internalHtml(eta.render('preview', { themes, themeSheets, slug, component, addonStyles: isAddon(slug) ? ['styles'] : [] }))
-      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'overview'), intro: isAddon(slug) ? '' : componentIntro(slug), references: isAddon(slug) ? '' : componentReferences(slug, 'overview'), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
+      : page(path, `${component.name} — material`, component.description, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'overview'), intro: isAddon(slug) ? '' : componentIntro(slug), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }
   else if (path === '/showcase/') response = page(path, 'Showcase — material', 'The same interfaces in every framework: web components, React, Vue, Svelte, Solid and vanilla.', 'examples', { examples, componentFilters: filterChips('Filter by component', 'component', exampleComponents), tagFilters: filterChips('Filter by tag', 'tag', exampleTags) });
   // Examples became the Showcase (owner, 2026-11-18): every old /examples/… page answers 301
@@ -499,8 +486,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       // The framework switcher heads every tab, icons only, at the right.
       frameworksRow: frameworkChipsRow(() => true, 'docs-frameworks component-frameworks'),
       html: tab === 'develop' ? document.develop : document.accessibility,
-      references: componentReferences(slug, tab),
-      toc: [...(tab === 'develop' ? document.developToc : [{ id: 'accessibility', title: 'Accessibility' }]), { id: 'component-references-title', title: `More on ${component.name.toLowerCase()}` }],
+      toc: [...(tab === 'develop' ? document.developToc : [{ id: 'accessibility', title: 'Accessibility' }])],
       frameworks: tab === 'develop' && document.frameworks,
     });
   }
