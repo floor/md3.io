@@ -10,6 +10,18 @@ import type { Locator, Page } from 'playwright';
 
 const inPanel = (page: Page, selector: string) => page.locator(`#configuration ${selector}`);
 
+/**
+ * The playground's settings are a side sheet, closed until Settings opens it: open it before
+ * reaching for a control (once open it stays so for the page).
+ */
+export async function openSettings(page: Page): Promise<void> {
+  const toggle = page.locator('#settings-toggle');
+  if (!await toggle.count()) return;
+  if (await page.locator('.playground[data-settings-open]').count()) return;
+  await toggle.click();
+  await page.locator('.playground[data-settings-open]').waitFor();
+}
+
 /** The select element (material or native) carrying `name`, or null. */
 async function selectFor(page: Page, name: string): Promise<Locator | null> {
   for (const selector of [`m-select[name="${name}"]`, `select[name="${name}"]`]) {
@@ -29,6 +41,7 @@ async function pickOption(page: Page, label: string): Promise<void> {
 
 /** Picks `value` in the control named `name`: a select's option or a group's button. */
 export async function choose(page: Page, name: string, value: string): Promise<void> {
+  await openSettings(page);
   const group = inPanel(page, `m-button-group[data-group-for="${name}"]`);
   if (await group.count()) {
     // The item's accessible name: its label, or its aria-label for an icon item.
@@ -59,6 +72,7 @@ export function switchFor(page: Page, name: string): Locator {
 
 /** Flips the switch named `name`. */
 export async function toggle(page: Page, name: string): Promise<void> {
+  await openSettings(page);
   const before = await isOn(page, name);
   await switchFor(page, name).click();
   await page.waitForFunction(([key, was]) => {
@@ -70,6 +84,7 @@ export async function toggle(page: Page, name: string): Promise<void> {
 
 /** Sets the switch named `name` on or off. */
 export async function setSwitch(page: Page, name: string, on: boolean): Promise<void> {
+  await openSettings(page);
   if (await isOn(page, name) !== on) await toggle(page, name);
 }
 
@@ -84,6 +99,7 @@ export function isOn(page: Page, name: string): Promise<boolean> {
 
 /** Types `text` into the field named `name`, replacing what it held. */
 export async function fill(page: Page, name: string, text: string): Promise<void> {
+  await openSettings(page);
   const field = inPanel(page, `m-text-field[name="${name}"]`);
   if (await field.count()) await field.locator('input, textarea').first().fill(text);
   else await inPanel(page, `input[name="${name}"]:not([type="hidden"])`).fill(text);
@@ -160,6 +176,7 @@ export async function chooseFramework(page: Page, id: string): Promise<void> {
 /** Back to the playground's starting options: the Scenario select's Default, the
  *  material panel's way back (it has no Reset), or Reset on a native panel. */
 export async function backToDefault(page: Page): Promise<void> {
+  await openSettings(page);
   const scenario = page.locator('m-select#scenario');
   if (await scenario.count()) {
     const current = await scenario.evaluate(host => String((host as HTMLElement & { value?: unknown }).value ?? ''));
@@ -210,6 +227,7 @@ export function scenarioValue(page: Page): Promise<string> {
 
 /** Picks a scenario by id in the Scenario select. */
 export async function chooseScenario(page: Page, id: string): Promise<void> {
+  await openSettings(page);
   const host = page.locator('m-select#scenario');
   if (await host.count()) {
     if (await scenarioValue(page) === id) return;
@@ -244,6 +262,7 @@ export async function previewSettled(page: Page): Promise<void> {
 /** Moves the slider named `name` to `value`, through its handle with the arrow
  *  keys (material's slider), or by typing into a native range input. */
 export async function slide(page: Page, name: string, value: string): Promise<void> {
+  await openSettings(page);
   const host = inPanel(page, `m-slider[name="${name}"]`);
   if (await host.count()) {
     const { current, step } = await host.evaluate(element => ({

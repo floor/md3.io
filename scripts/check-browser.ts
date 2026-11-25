@@ -51,6 +51,7 @@ try {
   assert(await originalButton!.evaluate(node => node === node.ownerDocument.querySelector('button')), 'Switching views recreated the component');
   await page.getByRole('tab', { name: 'Code', exact: true }).focus();
   await page.keyboard.press('Enter');
+  await panel.openSettings(page);
   await page.getByRole('textbox', { name: 'Text', exact: true }).fill('Code view update');
   assert((await page.locator('#generated-code').textContent())?.includes('Code view update'), 'Code view does not update with the configuration');
   await page.screenshot({ animations: 'disabled', path: `${output}/button-code-desktop.png`, fullPage: true });
@@ -562,12 +563,12 @@ try {
   await page.goto(base);
   await page.screenshot({ animations: 'disabled', path: `${output}/home-mobile.png`, fullPage: true });
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Mobile landing overflows');
-  // The privacy page: the home page's footer links to it (the site's only footer).
+  // The privacy page: the footer links to it, on every page.
   await page.locator('.site-footer').getByRole('link', { name: 'Privacy', exact: true }).click();
   await page.waitForURL(`${base}privacy/`);
   await page.getByRole('heading', { level: 1, name: 'Privacy', exact: true }).waitFor();
   await page.goto(`${base}components/button/`);
-  assert(await page.locator('.site-footer').count() === 0, 'Only the home page has the footer');
+  assert(await page.locator('.site-footer').count() === 1, 'A component page has the footer once');
   assert(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   await checkPlaygroundLayout(context, base, output);
   await checkInputTargets(browser, base, output);

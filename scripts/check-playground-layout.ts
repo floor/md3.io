@@ -52,6 +52,7 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
           assert(rail && Math.abs(rail.width - 96) < 1, `${label}: the collapsed rail must reserve 96px`);
         }
         await live.click();
+        await panel.openSettings(page);
         const preview = page.locator('.preview-panel');
         const previewBox = await preview.boundingBox();
         const formBox = await form.boundingBox();
@@ -68,8 +69,13 @@ export async function checkPlaygroundLayout(context: BrowserContext, base: strin
         if (width === 840) {
           // The component list is the rail's drawer, over the page: nothing reserves room for it.
           assert(!await page.locator('main .component-list').isVisible(), `${label}: the page's own list takes room`);
-          const used = await preview.evaluate(element => element.getBoundingClientRect().left);
-          assert(Math.abs(used - 116) < 1, `${label}: expected the 96px rail and 20px padding before the preview, got ${used}px`);
+          // The overviews' body inset: page-wrap's 8px, then clamp(12px, 5% of the rest, 64px).
+          const [used, expected] = await preview.evaluate(element => {
+            const main = document.querySelector('main')!.getBoundingClientRect();
+            const inset = 8 + Math.min(64, Math.max(12, (main.width - 16) * 0.05));
+            return [element.getBoundingClientRect().left, main.left + inset];
+          });
+          assert(Math.abs(used - expected) < 1, `${label}: expected the rail and the body inset before the preview (${expected}px), got ${used}px`);
         }
         await panel.checkPlaygroundScroll(page, label, height < 860 ? 'page' : 'fit');
 
