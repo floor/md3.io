@@ -202,9 +202,11 @@ function hashTarget(url: URL) {
 function restore(url: URL, position?: [number, number]) {
   const target = content?.querySelector<HTMLElement>('h1') ?? content;
   if (target) { if (!target.hasAttribute('tabindex')) target.tabIndex = -1; target.focus({ preventScroll: true }); }
-  if (position) scrollTo(...position);
-  else if (url.hash) hashTarget(url)?.scrollIntoView();
-  else scrollTo(0, 0);
+  // A new page starts where it lands, at once: the site's smooth scrolling (shell.css) is for
+  // moving within a page, not for arriving on another.
+  if (position) scrollTo({ left: position[0], top: position[1], behavior: 'instant' });
+  else if (url.hash) hashTarget(url)?.scrollIntoView({ behavior: 'instant' });
+  else scrollTo({ left: 0, top: 0, behavior: 'instant' });
   status.textContent = document.title;
 }
 /** Dynamic imports cannot be cancelled; stop waiting on them when a visit expires. */
