@@ -319,7 +319,7 @@ try {
         ?.querySelector('.mtrl-drawer__item--active')?.getBoundingClientRect().height === 36);
       const { fontFamily, ...listStyle } = selectedStyle;
       const { fontFamily: materialFont, ...drawerStyle } = await itemStyle(reference);
-      assert.match(fontFamily, /DIN Alternate/);
+      assert.match(fontFamily, /Google Sans/);
       assert.match(materialFont, /Roboto/);
       assert.deepEqual(drawerStyle, listStyle, `${theme} ${mode} matches the real drawer geometry, typescale and colours`);
 

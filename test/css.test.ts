@@ -33,7 +33,7 @@ describe('stylesheets', () => {
     const preview = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/preview.css'), 'utf8'));
     expect(preview).toContain('#stage> :is(.mtrl-switch,.mtrl-slider,.mtrl-text-field,.mtrl-select,.mtrl-search)');
     const tokens = minifyCss(readFileSync(resolve(import.meta.dir, '../styles/tokens.css'), 'utf8'));
-    expect(tokens).toContain('url("/fonts/DIN-Alternate-Regular.woff2") format("woff2")');
+    expect(tokens).toContain('url("/fonts/GoogleSans-latin-wght.woff2") format("woff2")');
     const base = readFileSync(resolve(import.meta.dir, '../node_modules/material/dist/styles/base.css'), 'utf8');
     const min = minifyCss(base);
     expect(min.split('{').length).toBe(min.split('}').length);
@@ -43,7 +43,7 @@ describe('stylesheets', () => {
   test('each page bundle is that page\'s old links, in that order, minified', () => {
     const home = bundleCss('home');
     expect(home).not.toMatch(/\/\*(?!\!)/);
-    const order = ['DIN Alternate', '.skip-link', '.ui-card', '.doc-install', '.hljs-keyword', '.hero__tagline', '.header__mark', '.header__search'];
+    const order = ['Google Sans', '.skip-link', '.ui-card', '.doc-install', '.hljs-keyword', '.hero__tagline', '.header__mark', '.header__search'];
     order.reduce((prev, needle) => { const index = at(home, needle); expect(index).toBeGreaterThan(prev); return index; }, -1);
     expect(home).not.toContain('.catalog-visual');
     expect(home).not.toContain('.example-layout');

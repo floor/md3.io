@@ -46,7 +46,7 @@
 .example-card__title { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
 .example-card__description { color: var(--text-muted); font-size: var(--fs-sm); }
 /* Two lines, sized in lh so a font swap cannot change the row. A longer list
-   (Notes) wraps to three lines in the fallback face and two in DIN, which
+   (Notes) wraps to three lines in the fallback face and two in Google Sans, which
    shifts the card below it. The title carries the full list. */
 .example-card__components {
   display: -webkit-box;
