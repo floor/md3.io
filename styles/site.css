@@ -285,3 +285,5 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-overview { display: flex; gap: 32px; min-width: 0; }
 .component-overview__main { flex: 1; min-width: 0; }
 .component-overview__toc { margin: 32px 0 0; }
+/* On Develop and Accessibility the article starts at the top: the list starts with it. */
+.component-tab-page .component-overview__toc { margin-top: 0; }
