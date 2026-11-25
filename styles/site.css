@@ -307,3 +307,9 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
    drawn for the card: on the hero's waves the buttons stand on the art itself. */
 .component-hero__scene .catalog-frame--floor { inset: 0; border: 0; background: transparent; }
 .component-hero__scene .catalog-frame--floor .catalog-gesture { display: none; }
+/* 92px between a component's tabs and its content, on every tab. */
+.component-page > .component-overview > .component-overview__main > .component-lede { margin-block-start: 92px; }
+.component-page > .component-overview > .component-overview__toc { margin-top: 92px; }
+.component-tab-page > .component-overview { margin-top: 92px; }
+/* A section's title on the Overview (Playground), as More on <component>. */
+.component-section-title { margin: 48px 0 20px; font-size: clamp(24px, 3cqi, 32px); line-height: 1.25; font-weight: 400; }
