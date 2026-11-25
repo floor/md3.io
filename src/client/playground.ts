@@ -3,6 +3,7 @@ import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import { radioOptionSets } from '../shared/content/radios';
+import { CODEPEN_DEFINE, codepenPen } from '../shared/codepen';
 import { components, componentCode, elementConfig, initialComponentState, isComponent, normalizeComponentState, type ComponentState, type Scenario } from '../shared/components';
 import { checkboxEditClearsCheckedSet } from '../shared/content/checkbox';
 import { controlConcealed, sectionConcealed } from '../shared/content/types';
@@ -447,6 +448,23 @@ registerPage('playground', (content, life) => {
       const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range);
       status.textContent = 'Code selected. Use your copy shortcut.';
     }
+  });
+  // Open in CodePen: the current setup's vanilla code, as a pen (shared/codepen.ts), in a
+  // new tab. A form POST is CodePen's prefill; nothing is stored here.
+  const codepenButton = content.querySelector<HTMLElement>('#open-codepen');
+  if (codepenButton) life.events(codepenButton).addEventListener('click', () => {
+    const name = document.querySelector('.component-hero h1')?.textContent?.trim() ?? slug;
+    const pen = codepenPen({
+      code: componentCode(slug, state),
+      version: codepenButton.dataset.materialVersion ?? 'latest',
+      title: `${name} – Material 3 Expressive`,
+      description: `The Material 3 Expressive ${name.toLowerCase()} from the material library, as set up on ${location.href}`,
+    });
+    const form = document.createElement('form');
+    form.action = CODEPEN_DEFINE; form.method = 'POST'; form.target = '_blank'; form.hidden = true;
+    const input = document.createElement('input');
+    input.type = 'hidden'; input.name = 'data'; input.value = JSON.stringify(pen);
+    form.append(input); document.body.append(form); form.submit(); form.remove();
   });
   selectFramework(framework);
   // `?scenario=` is the only configuration parameter a load reads: a known id applies over
