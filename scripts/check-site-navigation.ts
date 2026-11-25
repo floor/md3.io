@@ -138,7 +138,8 @@ try {
     }
 
     if (width < 840) {
-      await page.getByRole('link', { name: 'All components', exact: true }).click();
+      // The rail's Components destination (the component page's own up link went with its tabs).
+      await page.getByRole('navigation', { name: 'Primary navigation', exact: true }).getByRole('link', { name: 'Components', exact: true }).click();
       await page.waitForURL(url('/components/'));
       // Below 840px the section list opens from the navigation button, with the rail.
       await page.getByRole('button', { name: compact ? 'Open section navigation' : 'Expand navigation', exact: true }).click();
@@ -157,7 +158,7 @@ try {
   const desk = await deskContext.newPage();
   desk.setDefaultTimeout(8000);
   await desk.goto(url('/components/button/'));
-  await desk.getByRole('link', { name: 'All components', exact: true }).click();
+  await desk.getByRole('navigation', { name: 'Primary navigation', exact: true }).getByRole('link', { name: 'Components', exact: true }).click();
   await desk.locator('.component-catalog').waitFor();
   const directory = desk.getByRole('navigation', { name: 'Component list', exact: true });
   const buttons = directory.getByRole('button', { name: 'Buttons', exact: true });

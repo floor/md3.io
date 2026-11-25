@@ -463,8 +463,9 @@ try {
     await page.screenshot({ animations: 'disabled', path: `${captures}/overview-${width}.png` });
     await page.goto(`${base}/components/tooltip/`);
     assert(await page.getByRole('heading', { name: 'Tooltip', level: 1, exact: true }).count() === 1, `${width}px: the detail heading is missing`);
-    const up = page.getByRole('link', { name: 'All components', exact: true });
-    assert(await up.getAttribute('href') === '/components/', `${width}px: missing up link`);
+    // A component page's tabs: its Overview is the page itself.
+    const overviewTab = page.locator('.component-tabs a[aria-current="page"]');
+    assert(await overviewTab.getAttribute('href') === '/components/tooltip/', `${width}px: missing the Overview tab`);
     assert(await page.getByText('Browse components', { exact: true }).count() === 0, `${width}px: temporary component picker on the detail`);
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px: the detail overflows`);
     // The page's own copy of the list stays hidden: the rail's drawer is the list.
@@ -481,7 +482,7 @@ try {
     await dismissSectionList(page);
     await page.screenshot({ animations: 'disabled', path: `${captures}/detail-${width}.png` });
     await checkDetailFocusOrder(page, width);
-    await up.click();
+    await page.getByRole('navigation', { name: 'Primary navigation', exact: true }).getByRole('link', { name: 'Components', exact: true }).click();
     await page.waitForURL(`${base}/components/`);
   }
 
