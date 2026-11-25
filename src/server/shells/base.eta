@@ -70,7 +70,7 @@
       let framework; try { framework = localStorage.getItem('md3-example-framework'); } catch {}
       // A documentation page's ?framework= chooses the framework before paint, and keeps it
       // (the old guide URLs redirect to /docs/frameworks/?framework=<id>).
-      const asked = location.pathname.startsWith('/docs/') ? new URLSearchParams(location.search).get('framework') : null;
+      const asked = /^\/(docs\/|components\/[a-z-]+\/(develop|accessibility)\/)/.test(location.pathname) ? new URLSearchParams(location.search).get('framework') : null;
       if (ids.includes(asked)) { framework = asked; try { localStorage.setItem('md3-example-framework', asked); } catch {} }
       if (ids.includes(framework)) document.documentElement.dataset.framework = framework;
     })();
