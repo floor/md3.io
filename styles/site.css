@@ -405,3 +405,5 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 /* The JS mark fills less of its box than the other logos: a little larger to match. */
 .compat__tile--vanilla .compat__logo svg { width: 56px; height: 56px; }
 @media (max-width: 599px) { .compat__tile--vanilla .compat__logo svg { width: 46px; height: 46px; } }
+/* The Compatible cards take the Expressive cards' colour (catalog.css: surface-container-low). */
+.compat__tile.mtrl-card { background-color: var(--mtrl-sys-color-surface-container-low); }
