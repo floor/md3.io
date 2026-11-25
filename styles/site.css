@@ -391,3 +391,10 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .compat__name, .compat__note { display: block; }
 /* material's own card content padding (card.css: 16px), lost to the site's unlayered reset. */
 .compat__tile .mtrl-card__content { padding: 16px; }
+/* Compatible cards: the logo centred in a media band of its own colour; the name in bold, its use below in a smaller line. */
+.compat__tile .mtrl-card__media { display: grid; place-items: center; height: 112px; border-radius: 0; background: var(--mtrl-sys-color-surface-container-lowest); }
+.compat__tile .compat__name { font-size: 16px; line-height: 24px; font-weight: 600; }
+.compat__tile .compat__note { margin-top: 4px; font-size: 13px; line-height: 18px; color: var(--mtrl-sys-color-on-surface-variant); }
+@media (max-width: 599px) { .compat__tile .mtrl-card__media { height: 88px; } .compat__logo svg { width: 40px; height: 40px; } }
+/* The Web Components logo's near-black ink, lightened in dark mode (frameworkLogo's --brand-ink). */
+:root[data-theme-mode="dark"] .compat__logo { --brand-ink: #e6e1e5; }
