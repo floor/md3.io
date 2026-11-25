@@ -29,7 +29,8 @@ describe('published URLs', () => {
       if (status !== 200 && status !== 301) failures.push(`${path}: ${status}`);
     }
     expect(failures).toEqual([]);
-  });
+    // Every published address rendered in turn (about 140 since the component tabs).
+  }, 30_000);
 
   test('every sitemap path is in the list', () => {
     const listed = new Set(urls);
