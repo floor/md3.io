@@ -400,3 +400,13 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .compat:has(.compat__tile--vue input:checked) .compat__snippet--vue { visibility: visible; }
 .compat:has(.compat__tile--svelte input:checked) .compat__snippet--svelte { visibility: visible; }
 .compat:has(.compat__tile--solid input:checked) .compat__snippet--solid { visibility: visible; }
+/* Compatible cards, M3's anatomy: the logo in the media, the name and a line in the content. */
+.compat__tile.mtrl-card { display: flex; flex-direction: column; padding: 0; gap: 0; justify-items: initial; align-content: initial; text-align: left; }
+.compat__tile .mtrl-card__media { display: grid; place-items: center; margin: 4px 4px 0; padding: 20px 0; background: var(--mtrl-sys-color-surface-container-high); }
+.compat__tile .mtrl-card__content { display: grid; gap: 4px; padding: 12px 16px 16px; }
+.compat__tile .compat__name { font-size: 16px; line-height: 24px; font-weight: 500; color: var(--mtrl-sys-color-on-surface); text-align: left; }
+.compat__note { font-size: 12px; line-height: 16px; color: var(--mtrl-sys-color-on-surface-variant); overflow-wrap: anywhere; }
+.compat__tile .compat__logo svg { width: 48px; height: 48px; }
+.compat__tile.mtrl-card:has(input:checked) .compat__note { color: var(--mtrl-sys-color-on-secondary-container); }
+@media (max-width: 599px) { .compat__logos { grid-template-columns: repeat(2, minmax(0, 1fr)); } .compat__tile .mtrl-card__media { padding: 14px 0; } .compat__tile .compat__logo svg { width: 36px; height: 36px; } }
+.compat__tile .mtrl-card__content { align-content: start; }
