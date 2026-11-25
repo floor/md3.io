@@ -205,9 +205,17 @@ function apiEntries(html: string): string {
 }
 
 /** The developer documentation split at its Accessibility section: the Develop and Accessibility tabs. */
+/**
+ * A component's pages do not link to m3.material.io (the owner, 2026-11-25): a "See the M3 …
+ * guidelines" sentence goes, and a citation inside the text keeps its words without the link.
+ */
+const withoutM3Links = (html: string) => html
+  .replace(/\s*See\s+the\s+<a href="https:\/\/m3\.material\.io[^"]*">[^<]*<\/a>[^.<]*\./g, '')
+  .replace(/<a href="https:\/\/m3\.material\.io[^"]*">([\s\S]*?)<\/a>/g, '$1');
 function componentDocument(slug: string) {
-  const document = renderDocument(slug);
-  if (!document) return null;
+  const rendered = renderDocument(slug);
+  if (!rendered) return null;
+  const document = { ...rendered, html: withoutM3Links(rendered.html) };
   // The tab's header carries the title: the document's own h1 goes.
   const html = document.html.replace(/<h1 id="[^"]*">[\s\S]*?<\/h1>\n?/, '');
   const start = html.indexOf('<h2 id="accessibility">');
