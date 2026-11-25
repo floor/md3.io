@@ -14,7 +14,8 @@ const materialPanel = [...shell, 'site', 'search', 'roboto', 'component-list', '
 
 export const stylesheetBundles = {
   // homepage.css sits between syntax.css and site.css, as the home page's links did.
-  home: [...shell, 'homepage', 'site', 'search'],
+  // The home's calls to action are material's buttons (links with its button classes).
+  home: [...shell, 'homepage', 'site', 'search', 'mtrl:button'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
   'material-panel': materialPanel,

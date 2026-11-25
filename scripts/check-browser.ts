@@ -205,7 +205,7 @@ try {
         // checked segments), and the text inside those surfaces.
         const tinted = [...document.querySelectorAll<HTMLElement>('*')].filter(element => getComputedStyle(element).backgroundColor === container);
         const inside = tinted.flatMap(element => [element, ...element.querySelectorAll<HTMLElement>('*')]);
-        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .btn--primary, .styles-card__visual--type span'), ...inside])];
+        const candidates = [...new Set([...document.querySelectorAll<HTMLElement>('.choice input + span, .hero__actions .mtrl-button__text, .styles-card__visual--type span'), ...inside])];
         return candidates.filter(element => element.getBoundingClientRect().width > 0
           && ([...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) || element instanceof SVGElement)).map(element => {
           const style = getComputedStyle(element);
