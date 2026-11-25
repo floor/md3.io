@@ -24,6 +24,7 @@ const fixedRoutes = [
   ['guide', '/docs/frameworks/'],
   ['api-reference', '/docs/components/button/'],
   ['privacy', '/privacy/'],
+  ['credits', '/credits/'],
   ['not-found', '/layout-check-missing-page/'],
 ] as const;
 
@@ -246,8 +247,8 @@ export async function checkPageLayout(browser: Browser, base: string, output: st
           const settled = await geometry(page);
           stableBox(cold.header, settled.header, ['x', 'y', 'width', 'height'], 1, `${label} header`);
           stableBox(cold.main, settled.main, ['x', 'y', 'width'], 1, `${label} main`);
-          // The centered Privacy article can change width when its font loads.
-          const headingPosition = (heading: Box | null) => entry.name === 'privacy' && heading
+          // The centered Privacy and Credits articles can change width when their font loads.
+          const headingPosition = (heading: Box | null) => (entry.name === 'privacy' || entry.name === 'credits') && heading
             ? { ...heading, x: heading.x + heading.width / 2 }
             : heading;
           stableBox(headingPosition(cold.heading), headingPosition(settled.heading), ['x', 'y'], 8, `${label} heading`);

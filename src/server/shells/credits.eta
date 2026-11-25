@@ -1,0 +1,18 @@
+<article class="md">
+  <h1>Credits</h1>
+  <p>md3.io and the material library are an independent project by <a href="https://floor.io">Floor IO</a>. They are not affiliated with or endorsed by Google. They owe a great deal to the work below.</p>
+  <h2>Material Design</h2>
+  <p>The library implements Material Design 3, Google's design system: its components, tokens, colour, type and motion follow the guidelines on <a href="https://m3.material.io/">m3.material.io</a>. The site itself is deeply inspired by m3.material.io: its component pages, overview cards and type. Material Design is a trademark of Google.</p>
+  <h2>Fonts</h2>
+  <ul>
+    <li><strong>Google Sans</strong>, the site's text and headings. Copyright 2025 The Google Sans Project Authors (<a href="https://github.com/googlefonts/googlesans">googlefonts/googlesans</a>), licensed under the SIL Open Font License 1.1 (<a href="/fonts/GoogleSans-OFL.txt">licence</a>).</li>
+    <li><strong>Google Sans Code</strong>, the code samples. Copyright 2025 The Google Sans Code Project Authors (<a href="https://github.com/googlefonts/googlesans-code">googlefonts/googlesans-code</a>), licensed under the SIL Open Font License 1.1 (<a href="/fonts/GoogleSansCode-OFL.txt">licence</a>).</li>
+    <li><strong>Roboto</strong>, the components and their previews. Copyright 2011 The Roboto Project Authors (<a href="https://github.com/googlefonts/roboto-classic">googlefonts/roboto-classic</a>), licensed under the SIL Open Font License 1.1 (<a href="/fonts/Roboto-OFL.txt">licence</a>).</li>
+  </ul>
+  <p>The site serves these fonts itself; your browser doesn't fetch them from Google.</p>
+  <h2>Icons</h2>
+  <p>The icons are <strong>Material Symbols</strong> by Google (<a href="https://github.com/google/material-design-icons">google/material-design-icons</a>), licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a>.</p>
+  <h2>The library</h2>
+  <p><a href="https://github.com/floor/material">material</a> is open source under the MIT License.</p>
+  <p>Last updated 25 November 2026.</p>
+</article>
