@@ -95,7 +95,7 @@
 
     /* The reading measure for prose only, not the column: 100ch in the body font at
        --fs-md; narrower columns (phones) simply fill. */
-    --measure: 100ch;
+    --measure: 84ch;
 
 
     /* Radii */

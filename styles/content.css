@@ -531,7 +531,7 @@ pre.doc-install__command[data-package-manager="bun"],
 /* A component's API, as entries: the name, its description, then its facts (type values as
    chips, the default, parameters, return value or payload). */
 .md .api-list { display: flex; flex-direction: column; margin: 8px 0 32px; border-top: 1px solid var(--border); }
-.md .api-entry { display: grid; gap: 8px; padding: 18px 4px; border-bottom: 1px solid var(--border); }
+.md .api-entry { display: grid; gap: 8px; padding: 18px 0; border-bottom: 1px solid var(--border); }
 .md .api-entry__name { font-family: var(--font-mono); font-size: var(--fs-md); color: var(--text); }
 .md .api-entry__name code { font-size: inherit; padding: 2px 8px; border-radius: 8px; background: var(--mtrl-sys-color-secondary-container); color: var(--mtrl-sys-color-on-secondary-container); }
 .md .api-entry__description { margin: 0; max-width: var(--measure); color: var(--text-muted); font-size: var(--fs-md); line-height: 1.6; }
@@ -540,3 +540,6 @@ pre.doc-install__command[data-package-manager="bun"],
 .md .api-entry__key { color: var(--text-dim); font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .5px; text-transform: uppercase; }
 .md .api-entry__type { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; color: var(--text-dim); }
 .md .api-entry__type code, .md .api-entry__fact code { font-size: var(--fs-sm); padding: 1px 6px; border-radius: 6px; }
+/* A long type or default wraps inside its entry instead of widening the column (a phone). */
+.md .api-entry { grid-template-columns: minmax(0, 1fr); }
+.md .api-entry :is(.api-entry__name, .api-entry__type, .api-entry__fact) code { overflow-wrap: anywhere; }

@@ -262,7 +262,10 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .component-lede > .component-intro { flex: 1 1 auto; min-width: 0; margin: 0; }
 .component-lede > .framework-chips-row { flex: none; margin: 0; }
 @container (max-width: 700px) { .component-lede { flex-direction: column-reverse; } }
-.component-tab-page .component-frameworks { float: right; margin: 0 0 16px 24px; }
+/* At the top right of Develop and Accessibility, the text beside it; on a phone, on its own
+   line above the text, which then keeps the column's full width. */
+.component-tab-page .component-frameworks { margin: 0 0 16px; }
+@media (width >= 840px) { .component-tab-page .component-frameworks { float: right; margin: 0 0 16px 24px; } }
 :is(.component-lede, .component-tab-page) .framework-chips::part(label),
 :is(.component-lede, .component-tab-page) .framework-chips::part(checkmark) { display: none; }
 /* Selected, the chip keeps its logo (material swaps it for the checkmark). */
