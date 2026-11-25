@@ -278,25 +278,6 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 /* On Develop and Accessibility the article starts at the top: the list starts with it. */
 .component-tab-page .component-overview__toc { margin-top: 0; }
 
-/* A component's hero art is a stage: the generated waves fill it, and the component's live
-   scene from its overview card stands on them, the tile's own size, with no surface of its
-   own: the waves are its background. */
-.component-hero__visual { position: relative; display: grid; min-height: 280px; border-radius: 28px; overflow: hidden; }
-.component-hero__visual > .page-hero__art { position: absolute; inset: 0; min-height: 0; border-radius: 0; }
-/* The scene keeps the card's layout and is scaled whole to the tile (site-content.ts sets
-   the sizes; without it, the card's size, centred). Scaled, not zoomed: zoom misplaces the
-   search view and the menus that open from a scene. */
-.component-hero__visual { place-items: center; }
-.component-hero__scene {
-  position: relative; display: grid;
-  width: var(--scene-width, min(100%, 420px)); height: var(--scene-height, 240px);
-  scale: var(--scene-scale, 1); transform-origin: center;
-}
-.component-hero__scene > .catalog-visual { height: 100%; border-radius: 0; --catalog-stage: transparent; background: transparent; box-shadow: none; }
-/* The card's "floor" (a full-width screen with its edge, under Button's scene) is a surface
-   drawn for the card: on the hero's waves the buttons stand on the art itself. */
-.component-hero__scene .catalog-frame--floor { inset: 0; border: 0; background: transparent; }
-.component-hero__scene .catalog-frame--floor .catalog-gesture { display: none; }
 /* 92px between a component's tabs and its content, on every tab. */
 .component-page > .component-overview > .component-overview__main > .component-lede { margin-block-start: 92px; }
 .component-page > .component-overview > .component-overview__toc { margin-top: 92px; }

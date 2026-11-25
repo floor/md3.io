@@ -215,3 +215,24 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 @media (hover: hover) {
   .catalog-visual--slider m-slider[show-value]:hover::part(value) { visibility: visible; opacity: 1; scale: 1; transition: scale 400ms cubic-bezier(0.05, 0.7, 0.1, 1), opacity 400ms cubic-bezier(0.05, 0.7, 0.1, 1), visibility 0s; }
 }
+
+/* On a component page (its bundles carry this sheet for the hero). */
+/* A component's hero art is a stage: the generated waves fill it, and the component's live
+   scene from its overview card stands on them, the tile's own size, with no surface of its
+   own: the waves are its background. */
+.component-hero__visual { position: relative; display: grid; min-height: 280px; border-radius: 28px; overflow: hidden; }
+.component-hero__visual > .page-hero__art { position: absolute; inset: 0; min-height: 0; border-radius: 0; }
+/* The scene keeps the card's layout and is scaled whole to the tile (site-content.ts sets
+   the sizes; without it, the card's size, centred). Scaled, not zoomed: zoom misplaces the
+   search view and the menus that open from a scene. */
+.component-hero__visual { place-items: center; }
+.component-hero__scene {
+  position: relative; display: grid;
+  width: var(--scene-width, min(100%, 420px)); height: var(--scene-height, 240px);
+  scale: var(--scene-scale, 1); transform-origin: center;
+}
+.component-hero__scene > .catalog-visual { height: 100%; border-radius: 0; --catalog-stage: transparent; background: transparent; box-shadow: none; }
+/* The card's "floor" (a full-width screen with its edge, under Button's scene) is a surface
+   drawn for the card: on the hero's waves the buttons stand on the art itself. */
+.component-hero__scene .catalog-frame--floor { inset: 0; border: 0; background: transparent; }
+.component-hero__scene .catalog-frame--floor .catalog-gesture { display: none; }
