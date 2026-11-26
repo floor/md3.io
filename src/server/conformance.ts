@@ -36,11 +36,13 @@ interface Matrix {
 
 const root = resolve(import.meta.dir, '../..');
 const dir = resolve(root, 'data/conformance');
-const semver = (v: string) => v.split('.').map(Number);
-const newer = (a: string, b: string) => { const x = semver(a), y = semver(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return (y[i] ?? 0) - (x[i] ?? 0); return 0; };
+// A release is x.y.z; a pre-release import is x.y.z-pre@<commit> (Priam, 2026-11-26), newer than x.y.z-1 and older
+// than x.y.z, dropped once the tag's own file replaces it.
+const semver = (v: string) => [...v.split(/[-@]/)[0]!.split('.').map(Number), v.includes('-pre') ? 0 : 1];
+const newer = (a: string, b: string) => { const x = semver(a), y = semver(b); for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return (y[i] ?? 0) - (x[i] ?? 0); return 0; };
 /** The vendored releases, newest first: one file per material version, data/conformance/<version>.json, written by
  *  `bun run conformance:sync`. A tag never changes, so each is read once. */
-export const conformanceVersions = (): string[] => readdirSync(dir).map(f => /^(\d+\.\d+\.\d+)\.json$/.exec(f)?.[1]).filter((v): v is string => !!v).sort(newer);
+export const conformanceVersions = (): string[] => readdirSync(dir).map(f => /^(\d+\.\d+\.\d+(?:-pre@[0-9a-f]{7,40})?)\.json$/.exec(f)?.[1]).filter((v): v is string => !!v).sort(newer);
 const cache = new Map<string, Matrix>();
 /** The matrix at a version, or the latest; the sample until a release carries the file. Null for an unknown version. */
 export const loadMatrix = (version?: string | null): Matrix | null => {
