@@ -316,3 +316,8 @@
 /* Copy code floats at the code view's top right, staying in place as the code scrolls. */
 .code-panel__copy { position: sticky; top: 12px; z-index: 1; float: right; height: 0; margin-right: 12px; overflow: visible; }
 .code-panel__copy .preview-copy { margin: 0; background: var(--mtrl-sys-color-surface-container-high); border-radius: 50%; }
+
+/* Everything in the heading on one centre line: even padding above and below, and the framework chips without the
+   8px offset their container keeps elsewhere (site.css, room for the selected chip's lift). */
+.component-page:has(> .component-hero) .component-overview--playground .playground--material .preview-heading { padding-block: 8px; }
+.preview-heading .framework-chips::part(container) { padding-block: 0; margin-block: 0; min-height: 0; align-items: center; }
