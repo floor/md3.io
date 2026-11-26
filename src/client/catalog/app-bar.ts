@@ -19,5 +19,11 @@ export const define = (visual?: Element): void | (() => void) => {
   requestAnimationFrame(demote);
   // A property section's "on scroll" phone starts with its list scrolled, so the bar shows its scrolled state.
   for (const list of visual?.querySelectorAll<HTMLElement>('[data-start-scroll]') ?? []) requestAnimationFrame(() => list.scrollTo(0, 120));
-  return visual ? anatomy(visual) : undefined;
+  // The phone's status bar takes the bar's colour once its list scrolls, as on a device, edge to edge.
+  const lists = [...visual?.querySelectorAll<HTMLElement>('.property-top__list') ?? []];
+  const tint = (list: HTMLElement) => list.closest('.property-top__screen')?.classList.toggle('is-scrolled', list.scrollTop > 0);
+  const onScroll = (event: Event) => tint(event.currentTarget as HTMLElement);
+  for (const list of lists) { list.addEventListener('scroll', onScroll, { passive: true }); tint(list); }
+  const cleanup = visual ? anatomy(visual) : undefined;
+  return () => { for (const list of lists) list.removeEventListener('scroll', onScroll); cleanup?.(); };
 };

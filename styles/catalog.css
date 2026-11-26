@@ -473,3 +473,9 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-tasks { width: 380px; max-width: 100%; box-sizing: border-box; padding: 24px 16px; border-radius: 28px; background: var(--mtrl-sys-color-surface); }
 .property-tasks h3, .md .property-tasks h3 { margin: 0 0 12px 16px; font-size: 28px; font-weight: 400; }
 .catalog-visual--list.property-note__stage { height: auto; min-height: 0; padding: 32px 16px; display: grid; place-items: center; }
+.property-tasks { width: 420px; }
+.property-tasks m-list { width: 100%; }
+.property-top__screen .catalog-frame__status { transition: background-color 200ms; }
+.property-top__screen.is-scrolled .catalog-frame__status { background: var(--mtrl-sys-color-surface-container); }
+/* The dialog sections: drawn at 70%, so the three sizes read side by side with the page. */
+.catalog-visual--dialog.property-stage .property-surface { zoom: 0.7; }

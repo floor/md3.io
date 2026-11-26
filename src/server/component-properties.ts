@@ -356,8 +356,17 @@ const badgeSections: PropertySection[] = [
 // Lists, as M3's figures: the same items in each style, a star leading and a shortcut trailing.
 const listOf = (attrs: Attributes, items: string) => `<div class="property-list">${m('list', { 'aria-label': 'Example', selection: 'none', ...attrs }, items)}</div>`;
 const starItems = (n: number, trailing = true, selected: number[] = []) => Array.from({ length: n }, (_, i) => m('list-item', { value: `i${i + 1}`, headline: 'List item', 'leading-icon': symbols.stars, ...(trailing ? { 'trailing-text': '⌘C' } : {}), ...(selected.includes(i + 1) ? { selected: true } : {}) })).join('');
+// The glance's task list, as M3's list anatomy: an icon, the task and its due date, and a checkbox
+// after it, checked for the tasks that are done (two, always the same on load).
+const tasks: [string, string, string, string, boolean][] = [
+  ['invites', symbols.mail, 'Mail out invitations', 'Due Mon 1 Dec', true],
+  ['dessert', symbols.restaurant, 'Order a gluten-free dessert for 12', 'Due Wed 3 Dec', false],
+  ['karaoke', symbols.mic, 'Book the karaoke venue', 'Due Thu 4 Dec', true],
+  ['music', symbols.musicNote, 'Make a playlist', 'Due Fri 5 Dec', false],
+];
 const taskItems = () => m('list-item', { kind: 'subheader', headline: 'Party planning' })
-  + [['invites', 'Mail out invitations'], ['dessert', 'Order a gluten-free dessert for 12'], ['karaoke', 'Book the karaoke venue'], ['music', 'Make a playlist']].map(([value, headline]) => m('list-item', { value: value!, headline: headline!, ...(value === 'invites' || value === 'karaoke' ? { selected: true } : {}) })).join('');
+  + tasks.map(([value, icon, headline, due, done]) => m('list-item', { value, headline, 'supporting-text': due, 'leading-icon': icon,
+    'trailing-icon': done ? symbols.checkBox : symbols.checkBoxOutlineBlank, ...(done ? { selected: true } : {}) })).join('');
 const listSections: PropertySection[] = [
   { key: 'style', title: 'Style', text: 'Standard items sit on the surface; segmented items are each their own rounded tile. The look changes, not the behaviour.',
     values: [{ label: 'standard', name: 'Standard', markup: listOf({ variant: 'standard', selection: 'single', value: 'i3' }, starItems(6)) },
@@ -506,6 +515,7 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'Expanding and collapsing an item to show the items under it.',
     'Swiping an item to reveal more actions.',
   ] },
+  dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
   'navigation-drawer': { missing: ['M3 Expressive recommends the expanded navigation rail in its place; the drawer stays available.'] },
