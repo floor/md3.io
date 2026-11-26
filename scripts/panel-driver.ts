@@ -170,6 +170,19 @@ export async function chooseMode(page: Page, mode: 'light' | 'dark'): Promise<vo
   if (await page.evaluate(() => document.documentElement.dataset.themeMode) === mode) return;
   await clickUntil(page, () => page.locator('#theme-toggle').click(),
     () => page.evaluate(wanted => document.documentElement.dataset.themeMode === wanted, mode), `mode ${mode}`);
+  await leaveRail(page);
+}
+
+/** The mode and theme buttons sit at the foot of the rail at 1440px: resting there opens a rail drawer,
+ *  which then covers the page. Moves the pointer onto the page and waits for any drawer to close. */
+export async function leaveRail(page: Page): Promise<void> {
+  const viewport = page.viewportSize();
+  if (!viewport) return;
+  await page.mouse.move(viewport.width / 2, viewport.height / 2);
+  // Focus left on the rail's button keeps its drawer open too.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  if (await page.locator('.site-rail-drawer[data-open]').count()) await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.site-rail-drawer[data-open]'), undefined, { timeout: 5000 }).catch(() => {});
 }
 
 /** Picks a framework with the preview controls (Factory is the vanilla entry). */
