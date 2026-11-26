@@ -18,7 +18,11 @@ registerStyles({
     + '.catalog-tooltips .mtrl-tooltip--rich{width:200px;max-width:200px}'
     + '.catalog-tooltips .mtrl-tooltip__arrow{display:none}'
     + '.catalog-tooltips--scene{justify-content:flex-end;align-items:flex-start}.catalog-tooltips__row{display:flex;align-items:flex-start;gap:8px}'
-    + '.catalog-tooltips__avatar{border-radius:50%;margin-top:4px;object-fit:cover}',
+    + '.catalog-tooltips--scene .mtrl-tooltip{opacity:0!important;visibility:visible!important;position:absolute!important;top:52px!important;left:50%!important;translate:-50% 0!important;white-space:nowrap;transition:opacity 150ms}'
+    + '.catalog-tooltips--scene .mtrl-tooltip.mtrl-tooltip--visible{opacity:1!important}'
+    + '.catalog-tooltips__cell{position:relative;display:flex;flex-direction:column;align-items:center}'
+    + '.catalog-tooltips__account{width:48px;height:48px;padding:4px;border:0;border-radius:50%;background:none;cursor:pointer}'
+    + '.catalog-tooltips__avatar{display:block;border-radius:50%;object-fit:cover}',
 });
 
 const items = [
@@ -41,16 +45,35 @@ const figure = ({ variant, text, icon, label, scene }: Figure) => () => {
   const target = createIconButton({ icon, ariaLabel: label, variant: scene ? 'standard' : 'tonal' } as never);
   const tooltip = createTooltip({ text, variant, target: target.element, position: scene ? 'bottom' : 'top', showOnHover: false, showOnFocus: false });
   if (scene) {
-    // As M3's figure: the screen's top corner, Settings, Notifications (its tooltip shown) and the account.
+    // As M3's figure: the screen's top corner, Settings, Notifications and the account, each named by its
+    // own plain tooltip, shown on hover and keyboard focus; Notifications' shows at rest, as in the figure.
     const settings = createIconButton({ icon: symbols.settings, ariaLabel: 'Settings', variant: 'standard' } as never);
+    const settingsTip = createTooltip({ text: 'Settings', variant: 'plain', target: settings.element, position: 'bottom' });
+    const account = document.createElement('button');
+    account.type = 'button';
+    account.className = 'catalog-tooltips__account';
+    account.setAttribute('aria-label', 'Your account');
+    account.innerHTML = '<img src="https://picsum.photos/id/338/96/96" alt="" width="40" height="40" class="catalog-tooltips__avatar">';
+    const accountTip = createTooltip({ text: 'Your account', variant: 'plain', target: account, position: 'bottom' });
     const row = document.createElement('div');
     row.className = 'catalog-tooltips__row';
-    const avatar = document.createElement('img');
-    Object.assign(avatar, { src: 'https://picsum.photos/id/338/96/96', alt: 'Your account', width: 40, height: 40, className: 'catalog-tooltips__avatar' });
+    const slot = (button: HTMLElement, tip: { element: HTMLElement }) => { const cell = document.createElement('div'); cell.className = 'catalog-tooltips__item catalog-tooltips__cell'; cell.append(button, tip.element); return cell; };
+    item.classList.add('catalog-tooltips__cell');
     item.append(target.element, tooltip.element);
-    row.append(settings.element, item, avatar);
+    row.append(slot(settings.element, settingsTip), item, slot(account, accountTip));
     host.append(row);
-  } else {
+    const tips = [settingsTip, tooltip, accountTip];
+    // One at a time: a tooltip shown by the pointer or focus hides the resting one.
+    const only = (shown: typeof tooltip) => () => { for (const tip of tips) if (tip !== shown) tip.hide(true); };
+    for (const [button, tip] of [[settings.element, settingsTip], [target.element, tooltip], [account, accountTip]] as const) {
+      button.addEventListener('pointerenter', only(tip));
+      button.addEventListener('focusin', only(tip));
+    }
+    let active = true;
+    const frame = requestAnimationFrame(() => { if (active) tooltip.show(true); });
+    return { element: host, destroy: () => { active = false; cancelAnimationFrame(frame); for (const tip of tips) tip.destroy(); target.destroy(); settings.destroy(); } };
+  }
+  {
     item.append(tooltip.element, target.element);
     host.append(item);
   }
