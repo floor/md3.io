@@ -542,3 +542,4 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
   font-display: swap;
 }
 .property-welcome .property-scene__hello, .md .property-welcome p.property-scene__hello { font-family: "Google Sans Flex", var(--font-sans); letter-spacing: 0; }
+.property-tasks__check { pointer-events: none; }

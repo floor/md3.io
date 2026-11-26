@@ -4,6 +4,7 @@
 // the catalog script upgrades as it scrolls into view (src/client/catalog.ts), as the
 // overview cards and the component heroes are. The sentences follow the component's API
 // table (docs/components/<slug>.md).
+import { checkboxMark } from '../shared/list-checkbox';
 import { symbols } from '../shared/icons';
 import { statusBar } from './catalog';
 
@@ -372,7 +373,7 @@ const tasks: [string, string, string, string, boolean][] = [
 ];
 const taskItems = () => m('list-item', { kind: 'subheader', headline: 'Party planning' })
   + tasks.map(([value, icon, headline, due, done]) => m('list-item', { value, headline, 'supporting-text': due, 'leading-icon': icon,
-    'trailing-icon': done ? symbols.checkBox : symbols.checkBoxOutlineBlank, ...(done ? { selected: true } : {}) })).join('');
+    'trailing-icon': checkboxMark(done), ...(done ? { selected: true } : {}) })).join('');
 const listSections: PropertySection[] = [
   { key: 'style', title: 'Style', text: 'Standard items sit on the surface; segmented items are each their own rounded tile. The look changes, not the behaviour.',
     values: [{ label: 'standard', name: 'Standard', markup: listOf({ variant: 'standard', selection: 'single', value: 'i3' }, starItems(6)) },
