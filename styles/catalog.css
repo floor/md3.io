@@ -553,3 +553,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-visual.property-note__stage:has(.property-scene--photo) { padding-bottom: 180px; }
 .catalog-visual--menu.property-note__stage { height: auto; padding: 32px 16px; display: grid; place-items: center; }
 .catalog-visual--menu.property-stage .property-value { align-self: start; }
+/* The checkbox's glance: a parent over its group, indented as M3 nests them. */
+.property-checks { display: grid; gap: 4px; }
+.property-checks__group { display: grid; gap: 4px; padding-left: 32px; }

@@ -414,10 +414,26 @@ const menuSections: PropertySection[] = [
     values: [{ label: 'default', name: 'Default', markup: menuOf('density-default') }, { label: 'dense', name: 'Dense', markup: menuOf('density-dense') }] },
 ];
 
+// Checkbox: a label beside each, as M3's figures; indeterminate is a property, set from data-indeterminate.
+const cb = (attrs: Attributes, label = 'Label') => m('checkbox', { ...attrs }, label);
+const checkboxSections: PropertySection[] = [
+  { key: 'state', title: 'State', text: 'Unchecked, checked, or indeterminate: some of the options it stands for are chosen, not all.',
+    values: [{ label: 'unchecked', name: 'Unchecked', markup: cb({}) }, { label: 'checked', name: 'Checked', markup: cb({ checked: true }) },
+      { label: 'indeterminate', name: 'Indeterminate', markup: cb({ 'data-indeterminate': true }) }] },
+  { key: 'error', title: 'Error', text: 'An error shows that a required choice is missing or wrong, in every state.',
+    values: [{ label: 'unchecked', name: 'Error, unchecked', markup: cb({ error: true }) }, { label: 'checked', name: 'Error, checked', markup: cb({ error: true, checked: true }) },
+      { label: 'indeterminate', name: 'Error, indeterminate', markup: cb({ error: true, 'data-indeterminate': true }) }] },
+  { key: 'disabled', title: 'Disabled', text: 'Disabled, it keeps its state but takes no input.',
+    values: [{ label: 'unchecked', name: 'Disabled, unchecked', markup: cb({ disabled: true }) }, { label: 'checked', name: 'Disabled, checked', markup: cb({ disabled: true, checked: true }) },
+      { label: 'indeterminate', name: 'Disabled, indeterminate', markup: cb({ disabled: true, 'data-indeterminate': true }) }] },
+  { key: 'label', title: 'Label position', text: 'The label after the box, or before it.',
+    values: [{ label: 'end', name: 'Label after', markup: cb({ 'label-position': 'end' }) }, { label: 'start', name: 'Label before', markup: cb({ 'label-position': 'start' }) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -447,6 +463,17 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  checkbox: {
+    points: '<ul><li>Choose any number of options from a list, or turn one option on or off.</li>'
+      + '<li>A parent checkbox can stand for a group: checked when all are, indeterminate when some are.</li>'
+      + '<li>The whole row, label included, is the target.</li>'
+      + '<li>It joins a form like a native checkbox: <code>name</code>, <code>value</code>, <code>required</code>.</li></ul>',
+    // A pizza order: All toppings checks or clears the four, and shows when some of them are chosen.
+    stage: `<div class="property-scene property-scene--checks"><h3>Toppings</h3><p>Choose any, for a large pizza.</p>`
+      + `<div class="property-checks">${cb({ 'data-indeterminate': true, 'data-parent': true }, 'All toppings')}<div class="property-checks__group">`
+      + [['Mushrooms', true], ['Olives', false], ['Peppers', true], ['Basil', false]].map(([label, on]) => cb({ checked: on as boolean, 'data-child': true }, label as string)).join('') + '</div></div></div>',
+    caption: 'A parent checkbox over four toppings: indeterminate while some are chosen.', kind: 'checkbox',
+  },
   menu: {
     points: '<ul><li>A short list of actions or choices, opened from a button and closed once one is chosen.</li>'
       + '<li>Each item a label, with an icon, a keyboard shortcut or a line of supporting text.</li>'
