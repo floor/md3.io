@@ -279,3 +279,8 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .scenarios { grid-template-columns: minmax(0, 1fr); }
 .scenarios > .scenario { min-width: 0; }
 .property-column { display: grid; justify-items: center; gap: 20px; }
+/* Numbers under the values and a legend below the stage, as M3's figures. */
+.property-number { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 12px; background: var(--mtrl-sys-color-inverse-surface); color: var(--mtrl-sys-color-inverse-on-surface); font-size: 13px; font-weight: 500; line-height: 1; }
+.property-legend { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.property-legend li { display: flex; align-items: center; gap: 12px; color: var(--text-muted); }
+.property-legend code { font-size: 12px; color: var(--mtrl-sys-color-on-surface-variant); background: none; padding: 0; }

@@ -18,7 +18,8 @@ interface PropertySection {
   title: string;
   text: string;
   /** The values shown side by side, each with the markup that shows it. */
-  values: readonly { label: string; markup: string }[];
+  /** `name` is the legend's wording (the label, capitalised, otherwise). */
+  values: readonly { label: string; markup: string; name?: string }[];
   /** The stage lays the values out in a column (wide or tall values). */
   stack?: boolean;
 }
@@ -44,7 +45,7 @@ const kindColumn = (kind: 'standard' | 'connected') => `<div class="property-col
 const buttonGroup: PropertySection[] = [
   // As M3's Variants figure (the owner's reference, 2026-11-26): three standard groups, three connected.
   { key: 'kind', title: 'Kind', text: 'Standard groups space their buttons apart, each its own control; connected groups join them into one.',
-    values: [{ label: 'standard', markup: kindColumn('standard') }, { label: 'connected', markup: kindColumn('connected') }] },
+    values: [{ label: 'standard', name: 'Standard button group', markup: kindColumn('standard') }, { label: 'connected', name: 'Connected button group', markup: kindColumn('connected') }] },
   { key: 'variant', title: 'Variant', text: 'A group has no colours of its own: the variant goes to every button.',
     values: ['filled', 'tonal', 'outlined', 'elevated', 'text'].map(variant => ({ label: variant, markup: cups({ kind: 'connected', variant }) })), stack: true },
   { key: 'size', title: 'Size', text: 'From xs to xl, shared by every button: it sets their height.',
@@ -69,8 +70,11 @@ export function propertyOverview(slug: string, links: { playground: string; deve
   const html = sections.map(section => {
     const id = `property-${section.key}`;
     const stage = `<div class="catalog-visual catalog-visual--${slug} property-stage${section.stack ? ' property-stage--stack' : ''}">`
-      + section.values.map(value => `<figure class="property-value">${value.markup}<figcaption><code>${escape(value.label)}</code></figcaption></figure>`).join('') + `</div>`;
-    return `<section class="scenario" aria-labelledby="${id}"><div class="scenario__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}</section>`;
+      // As M3's figures: a number under each value, and a legend below the stage.
+      + section.values.map((value, index) => `<figure class="property-value">${value.markup}<figcaption><span class="property-number" aria-hidden="true">${index + 1}</span><span class="sr-only">${escape(value.name ?? value.label)}</span></figcaption></figure>`).join('') + `</div>`;
+    const name = (value: PropertySection['values'][number]) => value.name ?? value.label.charAt(0).toUpperCase() + value.label.slice(1);
+    const legend = `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))} <code>${escape(value.label)}</code></li>`).join('')}</ol>`;
+    return `<section class="scenario" aria-labelledby="${id}"><div class="scenario__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}${legend}</section>`;
   }).join('');
   return { html: `<div class="scenarios">${html}</div>`, toc: sections.map(section => ({ id: `property-${section.key}`, title: section.title })) };
 }
