@@ -124,8 +124,8 @@
 .md .matrix .matrix-lede, .md .matrix .matrix-facts { margin-bottom: 12px; }
 .md .matrix a.matrix-row__anchor { color: var(--text); text-decoration: none; }
 .md .matrix .matrix-card p, .md .matrix .matrix-card__rest { font-size: 13px; line-height: 1.5; }
-.md .matrix .matrix-card__browser, .md .matrix .matrix-card__score { font-size: 14px; }
-.md .matrix .matrix-card__percent { font-size: 36px; line-height: 44px; }
+.md .matrix p.matrix-card__browser, .md .matrix p.matrix-card__score { font-size: 14px; }
+.md .matrix p.matrix-card__percent { font-size: 36px; line-height: 44px; }
 .md .matrix .matrix-caution { font-size: 14px; }
 .md .matrix ul.matrix-rows { margin: 0; padding: 0; }
 .md .matrix li.matrix-row { margin: 0; }
