@@ -458,7 +458,7 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + m('button-group', { kind: 'standard', variant: 'tonal', size: 'l', selection: 'none', 'aria-label': 'Get started' },
         m('button-group-item', { value: 'access', icon: symbols.accessibilityNew, 'aria-label': 'Accessibility' }) + m('button-group-item', { value: 'start' }, 'Get started')
         + m('button-group-item', { value: 'language', icon: symbols.language, 'aria-label': 'Language' })) + '</div></div>',
-    caption: 'An app\'s welcome screen: Get started, between accessibility and language.', kind: 'button-group',
+    caption: 'An app\'s welcome screen: Get started, between accessibility and language. Press one: it widens and its neighbours narrow.', kind: 'button-group',
   },
   'split-button': {
     points: '<ul><li>One main action and a menu of related ones, in two halves.</li>'
