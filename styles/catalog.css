@@ -311,3 +311,12 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* The sentence takes the section's width: no buttons sit beside it. */
 .property-section__heading p { margin: 0; color: var(--text-muted); }
 .property-progress { width: 240px; display: grid; place-items: center; min-height: 48px; }
+/* Navigation shown in a phone-sized box, so a bar or a rail has its own width or height. */
+.property-screen { position: relative; overflow: hidden; border-radius: 12px; background: var(--mtrl-sys-color-surface); box-shadow: 0 0 0 1px var(--mtrl-sys-color-outline-variant); }
+.property-screen--wide { width: 360px; }
+.property-screen--tall { height: 320px; display: flex; }
+.property-screen--drawer { width: 280px; height: 260px; }
+.property-surface { display: block; }
+.property-screen--wider { width: 600px; }
+.property-screen--appbar { width: 360px; height: 160px; }
+.property-screen--appbar m-top-app-bar { position: relative; display: block; height: 100%; }

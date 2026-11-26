@@ -177,8 +177,61 @@ const progress: PropertySection[] = [
     values: [{ label: 'off', name: 'Without the percentage', markup: pr({}) }, { label: 'on', name: 'With the percentage', markup: pr({ 'show-label': true }) }] },
 ];
 
+// Navigation: rail, bar, drawer and app bar as elements, each in a phone-width box; tabs and
+// toolbar as catalog surfaces, one per value (src/client/catalog/tabs.ts and toolbar.ts).
+const places = [{ value: 'inbox', label: 'Inbox', icon: symbols.inbox, badge: 8 }, { value: 'favorites', label: 'Favorites', icon: symbols.heart }, { value: 'sent', label: 'Sent', icon: symbols.send }];
+const screen = (content: string, kind = 'wide') => `<div class="property-screen property-screen--${kind}">${content}</div>`;
+const rail = (attrs: Attributes, badges = true) => screen(m('navigation-rail', { value: 'inbox', 'no-toggle': true, 'aria-label': 'Mail', ...attrs },
+  places.map(place => m('navigation-rail-item', { value: place.value, icon: place.icon, ...(badges && place.badge ? { badge: place.badge } : {}) }, place.label)).join('')), 'tall');
+const navigationRail: PropertySection[] = [
+  { key: 'expanded', title: 'Expanded', text: 'Collapsed to its icons, or expanded with the labels beside them.',
+    values: [{ label: 'false', name: 'Collapsed', markup: rail({}) }, { label: 'true', name: 'Expanded', markup: rail({ expanded: true }) }] },
+  { key: 'badges', title: 'Badges', text: 'A destination can carry a badge, a count or a dot.',
+    values: [{ label: 'off', name: 'Without badges', markup: rail({}, false) }, { label: 'on', name: 'With a badge', markup: rail({}) }] },
+];
+// The horizontal layout is for bars 600px wide or more (the API table).
+const bar = (attrs: Attributes, badges = false) => screen(m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail', ...attrs },
+  places.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon, ...(badges && place.badge ? { badge: place.badge } : {}) }, place.label)).join('')), attrs['item-layout'] === 'horizontal' ? 'wider' : 'wide');
+const navigationBar: PropertySection[] = [
+  { key: 'item-layout', title: 'Item layout', text: 'The icon above the label, or beside it.',
+    values: [{ label: 'vertical', markup: bar({ 'item-layout': 'vertical' }) }, { label: 'horizontal', markup: bar({ 'item-layout': 'horizontal' }) }], stack: true },
+  { key: 'badges', title: 'Badges', text: 'A destination can carry a badge, a count or a dot.',
+    values: [{ label: 'off', name: 'Without badges', markup: bar({}) }, { label: 'on', name: 'With a badge', markup: bar({}, true) }], stack: true },
+];
+const drawer = (attrs: Attributes, icons = true) => screen(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail', ...attrs },
+  places.map(place => m('drawer-item', { value: place.value, ...(icons ? { icon: place.icon } : {}) }, place.label)).join('')), 'drawer');
+const navigationDrawer: PropertySection[] = [
+  { key: 'dense', title: 'Density', text: 'Dense items are 36dp high, with a 48dp hit target; the type and the icons stay the same.',
+    values: [{ label: 'false', name: 'Default', markup: drawer({}) }, { label: 'true', name: 'Dense', markup: drawer({ dense: true }) }] },
+  { key: 'icons', title: 'Icons', text: 'A destination can show an icon before its label.',
+    values: [{ label: 'on', name: 'With icons', markup: drawer({}) }, { label: 'off', name: 'Without icons', markup: drawer({}, false) }] },
+];
+// The app bar is laid out absolutely inside its element: the box gives it the large type's height.
+const appBar = (type: string) => screen(m('top-app-bar', { type, headline: 'My library', 'no-scroll': true },
+  m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })), 'appbar');
+const appBarSections: PropertySection[] = [
+  { key: 'type', title: 'Type', text: 'Its height and where the headline sits: small, centre-aligned, medium or large.',
+    values: [{ label: 'small', markup: appBar('small') }, { label: 'center', name: 'Centre-aligned', markup: appBar('center') }, { label: 'medium', markup: appBar('medium') }, { label: 'large', markup: appBar('large') }], stack: true },
+];
+const surfaceOf = (slug: string, suffix: string) => `<md3-catalog-${slug}-${suffix} class="property-surface"></md3-catalog-${slug}-${suffix}>`;
+const tabsSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Primary tabs, for a page\'s main destinations, or secondary tabs, within a section.',
+    values: [{ label: 'primary', markup: screen(surfaceOf('tabs', 'variant-primary')) }, { label: 'secondary', markup: screen(surfaceOf('tabs', 'variant-secondary')) }], stack: true },
+  { key: 'icons', title: 'Icons', text: 'A tab can show an icon with its label.',
+    values: [{ label: 'on', name: 'With icons', markup: screen(surfaceOf('tabs', 'icons-on')) }, { label: 'off', name: 'Without icons', markup: screen(surfaceOf('tabs', 'icons-off')) }], stack: true },
+];
+const toolbarSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Full width at the bottom, or a pill above the content.',
+    values: [{ label: 'docked', markup: screen(surfaceOf('toolbar', 'variant-docked')) }, { label: 'floating', markup: surfaceOf('toolbar', 'variant-floating') }], stack: true },
+  { key: 'color', title: 'Color', text: 'The surface container colour, or the primary container.',
+    values: [{ label: 'standard', markup: surfaceOf('toolbar', 'color-standard') }, { label: 'vibrant', markup: surfaceOf('toolbar', 'color-vibrant') }] },
+  { key: 'orientation', title: 'Orientation', text: 'A floating toolbar\'s layout: a docked one is always horizontal.',
+    values: [{ label: 'horizontal', markup: surfaceOf('toolbar', 'orientation-horizontal') }, { label: 'vertical', markup: surfaceOf('toolbar', 'orientation-vertical') }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
+  'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
 };
 
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;

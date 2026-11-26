@@ -11,7 +11,19 @@ import createMenu from 'material/components/menu';
 import { symbols } from '../../shared/icons';
 import { surface } from './surface';
 
-export const define = (): void => surface('md3-catalog-toolbar', ['button', 'icon-button', 'toolbar', 'fab', 'menu'], () => createToolbar({
+const items = [
+  { icon: symbols.archive, ariaLabel: 'Archive' },
+  { icon: symbols.delete, ariaLabel: 'Delete' },
+  { icon: symbols.markEmailUnread, ariaLabel: 'Mark as unread' },
+  { icon: symbols.snooze, ariaLabel: 'Snooze' },
+];
+/** The Overview's property sections: `md3-catalog-toolbar-<property>-<value>` (component-properties.ts). */
+const TOOLBAR_PROPERTIES: Record<string, Record<string, unknown>> = {
+  'variant-docked': { variant: 'docked' }, 'variant-floating': { variant: 'floating' },
+  'color-standard': { variant: 'floating', color: 'standard' }, 'color-vibrant': { variant: 'floating', color: 'vibrant' },
+  'orientation-horizontal': { variant: 'floating', orientation: 'horizontal' }, 'orientation-vertical': { variant: 'floating', orientation: 'vertical' },
+};
+const card = (): void => surface('md3-catalog-toolbar', ['button', 'icon-button', 'toolbar', 'fab', 'menu'], () => createToolbar({
   variant: 'floating',
   color: 'vibrant',
   ariaLabel: 'Message actions',
@@ -29,3 +41,9 @@ export const define = (): void => surface('md3-catalog-toolbar', ['button', 'ico
   },
   fab: createFab({ icon: symbols.reply, ariaLabel: 'Reply', variant: 'tertiary-container' }),
 }));
+
+export const define = (): void => {
+  card();
+  for (const [suffix, config] of Object.entries(TOOLBAR_PROPERTIES)) surface(`md3-catalog-toolbar-${suffix}`, ['button', 'icon-button', 'toolbar'], () =>
+    createToolbar({ ariaLabel: 'Message actions', items, ...config } as never));
+};

@@ -9,7 +9,18 @@ import { surface } from './surface';
 
 const destinations = [['inbox', 'Inbox', symbols.inbox], ['favorites', 'Favorites', symbols.heart], ['sent', 'Sent', symbols.send]] as const;
 
-export const define = (): void => surface('md3-catalog-tabs', ['badge', 'progress', 'button', 'tabs'], () => createTabs({
+const tabs = (config: Record<string, unknown>) => () => createTabs({
   scrollable: false,
-  tabs: destinations.map(([value, text, icon]) => ({ value, text, icon, state: value === 'inbox' ? 'active' : undefined })),
-}));
+  tabs: destinations.map(([value, text, icon]) => ({ value, text, ...(config.icons === false ? {} : { icon }), state: value === 'inbox' ? 'active' : undefined })),
+  ...(config.variant ? { variant: config.variant as 'primary' | 'secondary' } : {}),
+});
+/** The Overview's property sections: `md3-catalog-tabs-<property>-<value>` (component-properties.ts). */
+const TABS_PROPERTIES: Record<string, Record<string, unknown>> = {
+  'variant-primary': { variant: 'primary' }, 'variant-secondary': { variant: 'secondary' },
+  'icons-on': {}, 'icons-off': { icons: false },
+};
+
+export const define = (): void => {
+  surface('md3-catalog-tabs', ['badge', 'progress', 'button', 'tabs'], tabs({}));
+  for (const [suffix, config] of Object.entries(TABS_PROPERTIES)) surface(`md3-catalog-tabs-${suffix}`, ['badge', 'progress', 'button', 'tabs'], tabs(config));
+};
