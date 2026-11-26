@@ -338,10 +338,25 @@ const carouselSections: PropertySection[] = [
   ['full-screen', 'Full-screen', 'One item at a time, edge to edge, scrolling vertically: a phone\'s whole screen.'],
 ].map(([layout, title, text]) => ({ key: layout!, title: title!, text: text!, values: [{ label: layout!, markup: carouselOf(layout!) }], single: true }));
 
+// Badges, on navigation bar destinations as M3's figures show them: an empty badge is the dot.
+const badgeBar = (items: [string, string, string?][], label: string) => screen(m('navigation-bar', { value: '', 'aria-label': label },
+  items.map(([text, icon, badge], i) => m('navigation-bar-item', { value: `d${i}`, icon, ...(badge !== undefined ? { badge, 'badge-label': badge === '' ? 'New' : `${badge} new` } : {}) }, text)).join('')), 'wide');
+const badgeItem = (badge: string) => `<div class="property-badge-item">${badgeBar([['Label', symbols.stars, badge]], 'Example')}</div>`;
+const badgeColors = ['error', 'primary', 'secondary', 'tertiary', 'success', 'warning', 'info'];
+const badgeSections: PropertySection[] = [
+  { key: 'size', title: 'Size', text: 'Small, a dot that says something is new; large, a short label with a count or a status.',
+    values: [{ label: 'small', name: 'Small, on a navigation destination', markup: badgeItem('') }, { label: 'large', name: 'Large, on a navigation destination', markup: badgeItem('1') },
+      { label: 'max', name: 'Large, with the most characters', markup: badgeItem('999+') }] },
+  { key: 'label', title: 'Label text', text: 'A large badge holds at most four characters: a longer count shortens to 999+, or to its max and a plus.',
+    values: [{ label: 'label', markup: badgeBar([['Favorites', symbols.star, '3'], ['Recent', symbols.schedule, '10'], ['Contacts', symbols.person, '99+'], ['Mail', symbols.mail, '999+']], 'Phone'), }], single: true },
+  { key: 'color', title: 'Color', text: 'Error by default, as M3 maps it; material adds the theme\'s other roles for badges that carry another meaning.',
+    values: badgeColors.map(color => ({ label: color, name: color[0]!.toUpperCase() + color.slice(1), markup: m('badge', { color, label: '3' }) })) },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -371,6 +386,14 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  badge: {
+    points: '<ul><li>A small mark on an icon that says something changed there: new messages, a count, a status.</li>'
+      + '<li>Small, a dot; large, a label of up to four characters.</li>'
+      + '<li>On navigation destinations through their <code>badge</code> attribute, an empty value for the dot; anywhere else with <code>&lt;m-badge&gt;</code>.</li>'
+      + '<li>Give it a label for screen readers, such as <code>badge-label="3 new messages"</code>.</li></ul>',
+    stage: `<div class="property-badge-glance">${badgeBar([['Mail', symbols.mail, '999+'], ['Chat', symbols.chat, '10'], ['Rooms', symbols.groups, ''], ['Meet', symbols.videocam, '3']], 'Messaging')}</div>`,
+    caption: 'A messaging app\'s destinations: counts on Mail, Chat and Meet, a dot on Rooms.', kind: 'navigation-bar',
+  },
   'app-bar': {
     points: '<ul><li>The current screen\'s title, a navigation button and its most important actions, at the top.</li>'
       + '<li>Four types: small and centre-aligned on one row; medium and large, with the headline on a second row.</li>'

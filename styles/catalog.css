@@ -465,3 +465,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-anatomy__line--dotted { height: 0; background: none; border-top: 1px dotted currentColor; }
 .property-anatomy__callouts { z-index: 2; pointer-events: none; }
 .property-anatomy .property-bar { isolation: isolate; }
+/* Badges: a single destination per value; the glance bar alone, centred. */
+.property-badge-item .property-screen--wide { width: 112px; }
+.property-badge-glance { display: grid; place-items: center; padding: 48px 16px; }
