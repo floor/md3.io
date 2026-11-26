@@ -445,11 +445,18 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
   'button-group': {
     points: '<ul><li>Related buttons together: actions side by side, or a choice among options.</li>'
       + '<li>Standard groups space their buttons; connected groups join them into one control.</li>'
-      + '<li>No selection, one at a time, or several.</li>'
+      + '<li>Plain actions, or a choice: one at a time, or several.</li>'
       + '<li>One variant, size and shape for every button in it.</li></ul>',
-    stage: `<div class="property-scene"><h3>Shopping list</h3><p>Milk, <strong>eggs</strong>, bread and <em>fresh basil</em> for Saturday.</p><div class="property-scene__row">`
-      + group('connected', 'tonal', [{ icon: 'bold', name: 'Bold', on: true }, { icon: 'italic', name: 'Italic' }, { icon: 'underline', name: 'Underline' }], 'Text style', 'multi') + '</div></div>',
-    caption: 'Text styles as a connected group: several can be on at once.', kind: 'button-group',
+    // A calendar: Day, Week or Month, one at a time; the events below follow the choice.
+    stage: `<div class="property-scene property-scene--lists"><h3>November 2026</h3><div class="property-scene__row property-scene__row--start">`
+      + m('button-group', { kind: 'connected', variant: 'tonal', selection: 'single', 'aria-label': 'Calendar view' },
+        [['day', 'Day'], ['week', 'Week'], ['month', 'Month']].map(([value, label]) => m('button-group-item', { value: value!, selected: value === 'week', 'selected-icon': symbols.check }, label!)).join(''))
+      + `</div>${lists({
+        day: [['Stand-up', 'Video call', '9:30'], ['Lunch with Ada', 'Café Lumen', '12:30'], ['Dentist', 'Rue Haute 12', '16:00']],
+        week: [['Stand-up', 'Thu 26, video call', '9:30'], ['Dinner at Sam\'s', 'Fri 27', '19:30'], ['Farmers\' market', 'Sat 28', '9:00'], ['Football', 'Sun 29, the park', '10:00']],
+        month: [['Book club', 'Tue 3', '19:00'], ['Team offsite', 'Tue 10 to Thu 12', '3 days'], ['Carmen\'s birthday', 'Sat 21', 'Party'], ['Dinner at Sam\'s', 'Fri 27', '19:30'], ['Rent', 'Mon 30', 'Due']],
+      }, { day: 'Today', week: 'This week', month: 'November' }, 'week')}</div>`,
+    caption: 'A calendar\'s views as a connected group: one at a time, the events follow.', kind: 'button-group',
   },
   'split-button': {
     points: '<ul><li>One main action and a menu of related ones, in two halves.</li>'

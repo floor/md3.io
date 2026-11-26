@@ -505,3 +505,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-scene--screen h3 { padding: 0 24px; }
 .property-scene--screen .property-phone__list { margin: 0; height: calc(100% - 48px); overflow-y: auto; }
 .property-scene--screen > m-fab, .property-scene--screen > m-extended-fab, .property-scene--screen > m-fab-menu { position: absolute; right: 16px; bottom: 16px; }
+.property-scene--lists .property-phone__list { margin: 8px -24px -24px; max-height: 260px; overflow-y: auto; }
+.property-scene__row--start { justify-content: flex-start; margin-top: 4px; }
+.property-scene--lists { overflow: hidden; }
