@@ -359,12 +359,15 @@ m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weigh
 .shaking__list .shaking__kb { text-align: left; }
 .shaking__list code.shaking__kb { font-size: var(--fs-xs); overflow-wrap: anywhere; }
 @media (max-width: 599px) { .shaking__list li { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
-.shaking__table { width: 100%; border-collapse: collapse; align-self: center; font-size: var(--fs-ui); }
-.shaking__table th, .shaking__table td { text-align: left; padding: 12px 16px; border: 1px solid var(--border); }
-.shaking__table thead th { font-weight: 500; color: var(--text-muted); text-align: center; }
+.shaking__table { width: 100%; border-collapse: separate; border-spacing: 0; align-self: center; font-size: var(--fs-ui); border: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); border-radius: 24px; overflow: hidden; }
+/* As m3.material.io's tables: a rounded outline, a tinted header, thin lines between cells. */
+.shaking__table th, .shaking__table td { text-align: left; padding: 16px 24px; border: 0; border-right: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); border-bottom: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); }
+.shaking__table tr > :last-child { border-right: 0; }
+.shaking__table tbody tr:last-child > * { border-bottom: 0; }
+.shaking__table thead th { font-weight: 400; color: var(--text-muted); text-align: center; background: var(--mtrl-sys-color-surface-container-low, var(--surface-2)); }
 .shaking__table tbody th { font-weight: 400; white-space: nowrap; }
 .shaking__table td { font-variant-numeric: tabular-nums; }
-@media (max-width: 599px) { .shaking__table tbody th { white-space: normal; } .shaking__table th, .shaking__table td { padding: 10px; } }
+@media (max-width: 599px) { .shaking__table tbody th { white-space: normal; } .shaking__table th, .shaking__table td { padding: 12px; } }
 .shaking--carousel { grid-template-columns: minmax(0, 1fr) !important; }
 .shaking--carousel .shaking__text { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 56px; }
 @media (min-width: 900px) { .shaking--carousel .shaking__text { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .shaking--carousel .shaking__text > :is(.feature-index, h2, p:not(.shaking__note)) { grid-column: 1; } .shaking--carousel .shaking__code { grid-column: 2; grid-row: 1 / span 3; align-self: end; margin: 0; } }
