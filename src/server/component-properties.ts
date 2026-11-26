@@ -296,10 +296,16 @@ const bottomSheetSections: PropertySection[] = [
     values: [{ label: 'on', name: 'With the handle', markup: bottomSheet({}) }, { label: 'off', name: 'Without', markup: bottomSheet({ 'no-drag-handle': true }) }] },
 ];
 
+const carouselOf = (layout: string) => `<div class="property-carousel">${surfaceOf('carousel', `variant-${layout}`)}</div>`;
+const carouselSections: PropertySection[] = [
+  { key: 'variant', title: 'Layout', text: 'Multi-browse, the default, shows large, medium and small items; uncontained lets them run past the edge; hero shows one large item and a glimpse of the next, centred hero puts it between two small ones; full-screen shows one item edge to edge.',
+    values: [['multi-browse', 'Multi-browse'], ['uncontained', 'Uncontained'], ['hero', 'Hero'], ['hero-center', 'Centred hero'], ['full-screen', 'Full-screen']].map(([layout, name]) => ({ label: layout!, name, markup: carouselOf(layout!) })), stack: true },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -329,6 +335,14 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  carousel: {
+    points: '<ul><li>A collection to browse rather than read in full: photos, artwork, featured entries.</li>'
+      + '<li>Its items change size as they scroll, and settle into place.</li>'
+      + '<li>Five layouts: multi-browse, uncontained, hero, centred hero and full-screen.</li>'
+      + '<li>Scrolling settles on an item by default; an uncontained carousel scrolls freely.</li></ul>',
+    stage: '<div class="property-carousel property-carousel--glance"><md3-catalog-carousel-variant-multi-browse class="property-surface"></md3-catalog-carousel-variant-multi-browse></div>',
+    caption: 'Places to explore, in the default multi-browse layout: drag or scroll it.', kind: 'carousel',
+  },
   card: {
     points: '<ul><li>One subject on one surface: its media, a title, supporting text and its actions.</li>'
       + '<li>The card puts its sections in M3\'s order: media, header, content, then actions.</li>'
