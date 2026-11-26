@@ -481,10 +481,30 @@ const switchSections: PropertySection[] = [
     values: [{ label: 'off', name: 'Disabled, off', markup: sw({ disabled: true }) }, { label: 'on', name: 'Disabled, on', markup: sw({ disabled: true, checked: true }) }] },
 ];
 
+// Slider: M3 Expressive's figures, a slider each at a phone's width.
+const sl = (attrs: Attributes) => `<div class="property-slider${attrs.orientation === 'vertical' ? ' property-slider--vertical' : ''}">${m('slider', { 'aria-label': 'Example', min: 0, max: 100, value: 40, ...attrs })}</div>`;
+const sliderSections: PropertySection[] = [
+  { key: 'configuration', title: 'Configuration', text: 'Standard, from the start; centred, from the middle, for a value either side of zero; or a range, between two handles.',
+    values: [{ label: 'standard', name: 'Standard', markup: sl({}) }, { label: 'centered', name: 'Centred', markup: sl({ centered: true, min: -50, max: 50, value: 20 }) },
+      { label: 'range', name: 'Range', markup: sl({ range: true, value: 20, 'second-value': 70 }) }], stack: true },
+  { key: 'size', title: 'Size', text: 'From XS to XL: the track\'s thickness, for more presence on screen.',
+    values: ['XS', 'S', 'M', 'L', 'XL'].map(size => ({ label: size.toLowerCase(), name: size, markup: sl({ size }) })), stack: true },
+  { key: 'icon', title: 'Inset icon', text: 'From size M, an icon inside the track says what it sets, and can change at the minimum.',
+    values: [{ label: 'm', name: 'Size M, volume', markup: sl({ size: 'M', 'inset-icon': symbols.volumeUp, 'inset-icon-at-min': symbols.volumeOff, 'aria-label': 'Volume', value: 60 }) },
+      { label: 'l', name: 'Size L, brightness', markup: sl({ size: 'L', 'inset-icon': symbols.lightMode, 'aria-label': 'Brightness', value: 70 }) }], stack: true },
+  { key: 'stops', title: 'Stops', text: 'With a step, the handle snaps to set values; ticks mark them, and the value can show above the handle while it moves.',
+    values: [{ label: 'continuous', name: 'Continuous', markup: sl({}) }, { label: 'ticks', name: 'Steps of 10, with ticks', markup: sl({ step: 10, ticks: true }) },
+      { label: 'value', name: 'Value shown while it moves: drag it', markup: sl({ step: 10, ticks: true, 'show-value': true }) }], stack: true },
+  { key: 'orientation', title: 'Orientation', text: 'Horizontal, or vertical, from bottom to top.',
+    values: [{ label: 'horizontal', name: 'Horizontal', markup: sl({ size: 'M' }) }, { label: 'vertical', name: 'Vertical', markup: sl({ size: 'M', orientation: 'vertical' }) }] },
+  { key: 'disabled', title: 'Disabled', text: 'Disabled, it shows its value and takes no input.',
+    values: [{ label: 'enabled', name: 'Enabled', markup: sl({}) }, { label: 'disabled', name: 'Disabled', markup: sl({ disabled: true }) }], stack: true },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -514,6 +534,17 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  slider: {
+    points: '<ul><li>A value, or a range, picked along a track: volume, brightness, a price.</li>'
+      + '<li>Standard, centred or range; five sizes, from XS to XL.</li>'
+      + '<li>From size M, an icon inside the track; with a step, it snaps to set values.</li>'
+      + '<li>The arrow keys move it, Page Up and Down by larger steps, Home and End to the ends.</li></ul>',
+    stage: `<div class="property-scene property-scene--settings"><h3>Sound &amp; display</h3>`
+      + m('slider', { size: 'M', min: 0, max: 100, value: 60, 'inset-icon': symbols.volumeUp, 'inset-icon-at-min': symbols.volumeOff, 'aria-label': 'Media volume', label: 'Media volume' })
+      + m('slider', { size: 'M', min: 0, max: 100, value: 75, 'inset-icon': symbols.lightMode, 'aria-label': 'Brightness', label: 'Brightness' })
+      + m('slider', { min: 0, max: 100, step: 10, ticks: true, 'show-value': true, value: 40, 'aria-label': 'Text size', label: 'Text size' }) + '</div>',
+    caption: 'A phone\'s volume and brightness, size M with their icons; text size in steps.', kind: 'slider',
+  },
   switch: {
     points: '<ul><li>Turns one setting on or off, at once: no save button.</li>'
       + '<li>For a choice that applies immediately; a checkbox for one confirmed later, in a form.</li>'

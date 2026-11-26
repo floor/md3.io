@@ -566,3 +566,9 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-switch { width: 280px; max-width: 100%; }
 .property-scene--settings { display: grid; gap: 20px; }
 .property-scene--settings h3 { margin-bottom: 0; }
+/* Sliders at a phone's width; a vertical one as tall. */
+.property-slider { width: 320px; max-width: 100%; }
+.property-slider > * { display: block; width: 100%; }
+.property-slider--vertical { width: auto; height: 240px; }
+.property-slider--vertical > * { height: 100%; width: auto; }
+.property-scene--settings > m-slider { display: block; width: 100%; }
