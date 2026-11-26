@@ -25,7 +25,6 @@
         <%~ it.panel.appearance %>
         <% if (it.panel.code) { %><%~ it.panel.code %><% } %>
         <%~ it.panel.copy %>
-        <% if (it.panel.codepen) { %><%~ it.panel.codepen %><% } %>
         <% if (it.panel.settings) { %><%~ it.panel.settings %><% } %>
       </div>
       <div class="playground-space">
