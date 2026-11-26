@@ -123,10 +123,8 @@ registerPage('playground', (content, life) => {
 
   /** The panels and the controls that belong to the showing view. */
   function showPanel(showingCode: boolean) {
-    // Code is a bottom sheet over the preview (the owner, 2026-11-26): the preview stays live beneath it.
-    content.querySelector<HTMLElement>('#live-panel')!.hidden = false;
+    content.querySelector<HTMLElement>('#live-panel')!.hidden = showingCode;
     content.querySelector<HTMLElement>('#code-panel')!.hidden = !showingCode;
-    content.querySelector<HTMLElement>('.playground-space')?.toggleAttribute('data-code-open', showingCode);
     previewDot.hidden = showingCode;
   }
   function selectTab(selected: HTMLButtonElement) {
@@ -137,8 +135,6 @@ registerPage('playground', (content, life) => {
       content.querySelector<HTMLElement>(`#${CSS.escape(tab.getAttribute('aria-controls')!)}`)!.hidden = !active;
     }
     const showingCode = selected.id === 'code-tab';
-    content.querySelector<HTMLElement>('#live-panel')!.hidden = false;
-    content.querySelector<HTMLElement>('.playground-space')?.toggleAttribute('data-code-open', showingCode);
     previewDot.hidden = showingCode;
   }
   // The tabs select by value; the element keeps its own roving focus and
@@ -148,7 +144,13 @@ registerPage('playground', (content, life) => {
     showPanel(view === 'code');
   }
   /** Shows a view on either panel: the branch every caller takes. */
-  const switchView = (view: 'live' | 'code') => (viewTabs ? selectView(view) : selectTab(content.querySelector<HTMLButtonElement>(view === 'code' ? '#code-tab' : '#live-tab')!));
+  // The Code toggle (no tabs since 2026-11-26): pressed, the code shows as a bottom sheet over the preview.
+  const codeToggle = content.querySelector<HTMLElement & { selected?: boolean }>('#code-toggle');
+  life.events(codeToggle)?.addEventListener('change', () => showPanel(Boolean(codeToggle!.selected)));
+  const switchView = (view: 'live' | 'code') => {
+    if (codeToggle) { if (codeToggle.selected !== (view === 'code')) codeToggle.selected = view === 'code'; showPanel(view === 'code'); return; }
+    if (viewTabs) selectView(view); else { const tab = content.querySelector<HTMLButtonElement>(view === 'code' ? '#code-tab' : '#live-tab'); if (tab) selectTab(tab); }
+  };
   life.events(viewTabs)?.addEventListener('change', () => selectView(String(viewTabs!.value) === 'code' ? 'code' : 'live'));
   for (const tab of tabs) {
     life.events(tab).addEventListener('click', () => selectTab(tab));

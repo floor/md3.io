@@ -18,7 +18,8 @@ describe('the material playground panel', () => {
     expect(html).toContain('data-mtrl-ssr');
     // Preview / Code in the heading; the theme and mode come from the site
     // header (one appearance for the whole site), the heading keeps the form's copy.
-    expect(html).toMatch(/<m-tabs[^>]*aria-label="Playground view"/);
+    expect(html).toMatch(/<m-icon-button[^>]*id="code-toggle"/);
+    expect(html).not.toMatch(/<m-tabs[^>]*aria-label="Playground view"/);
     expect(html).not.toContain('id="preview-theme"');
     expect(html).toContain('<input type="hidden" name="theme" value="baseline" form="configuration" data-appearance="theme">');
     expect(html).toContain('<input type="hidden" name="mode" value="light" form="configuration" data-appearance="mode">');

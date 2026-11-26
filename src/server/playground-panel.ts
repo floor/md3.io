@@ -239,7 +239,7 @@ export function exampleViewTabs(view: 'preview' | 'code'): string {
 }
 
 /** The panel's markup, piece by piece, for the component template to place. */
-export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string; codepen: string; settings: string } {
+export function materialPanel(component: ComponentDefinition, slug: string, themes: readonly string[], hasElement: boolean): { frameworks: string; tabs: string; appearance: string; scenario: string; sections: PanelSection[]; copy: string; codepen: string; settings: string; code: string } {
   // The framework picker above the heading: a single-select filter chip set.
   // Six choices are past the five a segmented button (now the connected button
   // group) takes, and M3 points to chips beyond that; single choice is a filter
@@ -288,5 +288,8 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   // Settings, beside Copy code: a toggle icon button that opens the configuration as a side
   // sheet, closed by default (filled while open).
   const settings = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/settings-fill.svg'), 'utf8').trim(), 'aria-label': 'Settings', title: 'Settings', 'aria-controls': 'configuration', id: 'settings-toggle', class: 'preview-settings' }, '', renderStyles);
-  return { frameworks, tabs, appearance, scenario, sections, copy, codepen, settings };
+  // Code, first of the heading's actions (the owner, 2026-11-26: no Preview/Code tabs): a toggle icon button that
+  // raises the code as a bottom sheet over the live preview, filled while it shows.
+  const code = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/code.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/code-fill.svg'), 'utf8').trim(), 'aria-label': 'Code', title: 'Code', 'aria-controls': 'code-panel', id: 'code-toggle', class: 'preview-code' }, '', renderStyles);
+  return { frameworks, tabs: '', code, appearance, scenario, sections, copy, codepen, settings };
 }
