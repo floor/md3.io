@@ -271,10 +271,12 @@ const phone = () => `<div class="property-phone"><div class="property-phone__scr
   + m('navigation-bar', { value: 'home', 'aria-label': 'Music app' }, destinationsOfPhone.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
   + `<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>`;
 const tablet = (navigation: string, content = lists(), bleed = false) => `<div class="property-phone property-phone--tablet${bleed ? ' property-phone--bleed' : ''}"><div class="property-phone__screen property-phone__screen--side">${navigation}<div class="property-phone__content">${content}</div></div></div>`;
-const tabletRail = () => tablet(m('navigation-rail', { value: 'home', 'no-toggle': true, 'aria-label': 'Music app' },
-  destinationsOfPhone.map(place => m('navigation-rail-item', { value: place.value, icon: place.icon }, place.label)).join('')));
-// As the drawer's card: the screen bleeds off the stage's right and bottom edges, a section label
-// over the boxes, Inbox's count at its end; the open box's messages beside it.
+// As the drawer's: the mail app, the rail expanded (M3 Expressive's replacement for the drawer), its menu
+// button kept so it collapses and expands; the screen runs off the stage's right and bottom edges.
+const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded: true, 'aria-label': 'Mail' },
+  [['inbox', symbols.inbox, 'Inbox', 24], ['outbox', symbols.send, 'Outbox'], ['favorites', symbols.heart, 'Favorites'], ['trash', symbols.delete, 'Trash']]
+    .map(([value, icon, label, badge]) => m('navigation-rail-item', { value: value as string, icon: icon as string, ...(value === 'inbox' ? { 'selected-icon': symbols.inboxFill } : {}), ...(badge ? { badge: badge as number } : {}) }, label as string)).join('')),
+  lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
   'navigation-rail': {
@@ -282,7 +284,7 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>Collapsed, the labels sit under the icons; expanded, it widens into a panel with the labels beside them.</li>'
       + '<li>A modal rail expands over the page in a dialog; a standard one takes its place in the layout.</li>'
       + '<li>A badge on any destination: a count, a short text, or a dot.</li></ul>',
-    stage: tabletRail(), caption: 'A rail beside a music app\'s lists: choose a destination to see its list.', kind: 'navigation-rail',
+    stage: tabletRail(), caption: 'An expanded rail beside a mail app\'s boxes: choose one to see its messages, or collapse it with its menu button.', kind: 'navigation-rail',
   },
   'navigation-drawer': {
     points: '<ul><li>The app\'s destinations in a vertical list along one edge, grouped with dividers, section labels and expandable sections.</li>'
