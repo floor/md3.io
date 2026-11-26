@@ -31,17 +31,19 @@ const cups = (attrs: Attributes, selected: readonly string[] = ['8']) => m('butt
 // One item: an icon, a label, or both; `on` marks it selected.
 type Item = { icon?: keyof typeof symbols; text?: string; on?: boolean; name?: string };
 const item = ({ icon, text, on, name }: Item, index: number) => m('button-group-item', {
-  value: String(index), selected: on, icon: icon ? symbols[icon] : undefined, 'aria-label': text ? undefined : name ?? icon,
+  value: String(index), selected: on, icon: icon ? symbols[icon] : undefined,
+  // The stars mark fills when selected, as in M3's figure.
+  'selected-icon': icon === 'stars' ? symbols.starsFill : undefined, 'aria-label': text ? undefined : name ?? icon,
 }, text ?? '');
 const group = (kind: string, variant: string, items: Item[], label: string, selection = 'single') =>
   m('button-group', { kind, variant, selection, 'aria-label': label }, items.map(item).join(''));
 const kindColumn = (kind: 'standard' | 'connected') => `<div class="property-column">${kind === 'standard'
   ? group('standard', 'filled', [{ icon: 'bluetooth', name: 'Bluetooth' }, { icon: 'alarm', name: 'Alarm' }, { icon: 'link', name: 'Link' }, { icon: 'wifi', name: 'Wi-Fi' }], 'Quick settings', 'none')
     + group('standard', 'tonal', [{ text: 'Label' }, { icon: 'edit', text: 'Label', on: true }, { text: 'Label' }, { icon: 'delete', name: 'Delete' }], 'Actions')
-    + group('standard', 'tonal', [{ icon: 'star' }, { icon: 'star' }, { icon: 'star', text: 'Label', on: true }, { icon: 'star' }, { icon: 'star' }], 'Rating')
-  : group('connected', 'tonal', [{ icon: 'star' }, { icon: 'star', on: true }, { icon: 'star' }, { icon: 'star' }, { icon: 'star' }], 'Rating')
-    + group('connected', 'tonal', [{ icon: 'star', text: 'Label' }, { icon: 'star', text: 'Label', on: true }, { icon: 'star', text: 'Label' }], 'Views')
-    + group('connected', 'tonal', [{ icon: 'star' }, { icon: 'star', text: 'Label', on: true }, { icon: 'star' }], 'Mode')}</div>`;
+    + group('standard', 'tonal', [{ icon: 'stars' }, { icon: 'stars' }, { icon: 'stars', text: 'Label', on: true }, { icon: 'stars' }, { icon: 'stars' }], 'Rating')
+  : group('connected', 'tonal', [{ icon: 'stars' }, { icon: 'stars', on: true }, { icon: 'stars' }, { icon: 'stars' }, { icon: 'stars' }], 'Rating')
+    + group('connected', 'tonal', [{ icon: 'stars', text: 'Label' }, { icon: 'stars', text: 'Label', on: true }, { icon: 'stars', text: 'Label' }], 'Views')
+    + group('connected', 'tonal', [{ icon: 'stars' }, { icon: 'stars', text: 'Label', on: true }, { icon: 'stars' }], 'Mode')}</div>`;
 const buttonGroup: PropertySection[] = [
   // As M3's Variants figure (the owner's reference, 2026-11-26): three standard groups, three connected.
   { key: 'kind', title: 'Kind', text: 'Standard groups space their buttons apart, each its own control; connected groups join them into one.',
