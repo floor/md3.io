@@ -234,6 +234,31 @@ const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
 };
 
+// A component's M3 Expressive note, as m3.material.io's component pages open with: what
+// changed, beside the component in a phone screen. Each point is from the linked page, read
+// on the date given.
+interface ExpressiveNote { source: string; read: string; points: string; stage: string; caption: string }
+const mail = [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday']];
+const phone = (content: string) => `<div class="property-phone"><div class="property-phone__screen"><ul class="property-phone__list">${content}</ul>`
+  + m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail' }, places.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
+  + `<span class="property-phone__handle" aria-hidden="true"></span></div></div>`;
+const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  'navigation-bar': {
+    source: 'https://m3.material.io/components/navigation-bar/overview', read: '2026-11-26',
+    points: '<p>Variants and naming:</p><ul><li>Baseline navigation bar is no longer recommended</li><li>Added <strong>flexible</strong> navigation bar<ul><li>Shorter height</li><li>Can be used in medium window sizes with horizontal navigation items</li></ul></li></ul>'
+      + '<p>Color:</p><ul><li>Active label changed from <strong>on-surface-variant</strong> to <strong>secondary</strong></li></ul>',
+    stage: phone(mail.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('')),
+    caption: 'The flexible navigation bar is shorter and can be used in medium windows with horizontal nav items.',
+  },
+};
+const expressiveNote = (slug: string): string => {
+  const note = NOTES[slug];
+  if (!note) return '';
+  return `<section class="property-note" aria-labelledby="property-expressive"><h2 id="property-expressive">M3 Expressive update</h2><div class="property-note__body">`
+    + `<div class="property-note__points">${note.points}<p class="property-note__source"><a class="text-link" href="${note.source}">From m3.material.io</a></p></div>`
+    + `<figure class="property-note__figure"><div class="catalog-visual catalog-visual--navigation-bar property-note__stage">${note.stage}</div><figcaption>${note.caption}</figcaption></figure></div></section>`;
+};
+
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;
 
 /** The Overview's sections and its On this page entries, for a component with properties. */
@@ -248,5 +273,6 @@ export function propertyOverview(slug: string, links: { playground: string; deve
     const legend = `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))}</li>`).join('')}</ol>`;
     return `<section class="property-section" aria-labelledby="${id}"><div class="property-section__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}${legend}</section>`;
   }).join('');
-  return { html: `<div class="property-sections">${html}</div>`, toc: sections.map(section => ({ id: `property-${section.key}`, title: section.title })) };
+  const note = expressiveNote(slug);
+  return { html: `<div class="property-sections">${note}${html}</div>`, toc: [...(note ? [{ id: 'property-expressive', title: 'M3 Expressive update' }] : []), ...sections.map(section => ({ id: `property-${section.key}`, title: section.title }))] };
 }

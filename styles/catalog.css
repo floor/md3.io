@@ -320,3 +320,24 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-screen--wider { width: 600px; }
 .property-screen--appbar { width: 360px; height: 160px; }
 .property-screen--appbar m-top-app-bar { position: relative; display: block; height: 100%; }
+/* A component's M3 Expressive note: the points beside the component in a phone screen (component-properties.ts). */
+.property-note h2, .md .property-note h2 { margin: 0 0 16px; padding: 0; border: 0; font-size: 24px; line-height: 32px; font-weight: 400; }
+.property-note__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 40px; align-items: start; }
+@media (min-width: 900px) { .property-note__body { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+.property-note__points p { margin: 0 0 8px; }
+.property-note__points ul { margin: 0 0 16px; padding-left: 22px; }
+.property-note__points li { margin: 6px 0; }
+.property-note__points li::marker { content: "✦  "; font-size: 0.8em; }
+.property-note__source { font-size: 13px; }
+.property-note__figure { margin: 0; }
+.property-note__figure figcaption { margin-top: 12px; color: var(--text-muted); font-size: 14px; }
+.catalog-visual.property-note__stage { height: 300px; padding: 0; align-items: flex-end; border-radius: 28px; background: color-mix(in srgb, var(--mtrl-sys-color-primary) 12%, var(--mtrl-sys-color-surface)); }
+.property-phone { width: min(360px, 86%); height: 100%; box-sizing: border-box; border: 8px solid var(--mtrl-sys-color-outline); border-bottom: 0; border-radius: 0 0 36px 36px; }
+.property-phone { border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-top: 0; border-radius: 0 0 40px 40px; overflow: hidden; }
+.property-phone__screen { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; background: var(--mtrl-sys-color-surface); }
+.property-phone__list { list-style: none; margin: 0; padding: 0 20px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+.property-phone__list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--mtrl-sys-color-outline-variant); color: var(--mtrl-sys-color-on-surface-variant); font-size: 14px; }
+.property-phone__list li > span:first-child { display: grid; }
+.property-phone__list strong { color: var(--mtrl-sys-color-on-surface); font-weight: 400; font-size: 16px; }
+.property-phone__handle { display: block; width: 108px; height: 4px; margin: 4px auto 8px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+.property-phone m-navigation-bar { flex: none; }
