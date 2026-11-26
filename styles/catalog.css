@@ -284,3 +284,8 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-legend { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
 .property-legend li { display: flex; align-items: center; gap: 12px; color: var(--text-muted); }
 .property-legend code { font-size: 12px; color: var(--mtrl-sys-color-on-surface-variant); background: none; padding: 0; }
+/* Open menus rise above their FAB: room above, and apart. */
+.catalog-visual.property-stage--menus { padding-top: 176px; gap: 32px 120px; }
+@media (max-width: 839px) { .catalog-visual.property-stage--menus { flex-wrap: nowrap; gap: 32px 72px; } }
+.property-stage--menus .property-value { flex-shrink: 0; }
+@media (max-width: 839px) { .catalog-visual.property-stage--menus { gap: 32px 120px; padding-left: 96px; padding-right: 24px; } }

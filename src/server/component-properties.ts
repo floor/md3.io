@@ -22,6 +22,8 @@ interface PropertySection {
   values: readonly { label: string; markup: string; name?: string }[];
   /** The stage lays the values out in a column (wide or tall values). */
   stack?: boolean;
+  /** Room above each value for an open menu, and between them. */
+  menus?: boolean;
 }
 
 // Button group: a cup-size choice, 8 oz selected, as the API's own examples do.
@@ -80,7 +82,57 @@ const button: PropertySection[] = [
     values: [{ label: 'enabled', markup: btn({}) }, { label: 'disabled', markup: btn({ disabled: true }) }] },
 ];
 
-const PROPERTIES: Partial<Record<string, PropertySection[]>> = { 'button-group': buttonGroup, button };
+// Icon button, split button, FAB, extended FAB and FAB menu: their API tables' values and wording.
+const ib = (attrs: Attributes) => m('icon-button', { icon: symbols.edit, 'aria-label': 'Edit', ...attrs });
+const iconButton: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Four, in descending order of emphasis.',
+    values: ['filled', 'tonal', 'outlined', 'standard'].map(variant => ({ label: variant, markup: ib({ variant }) })) },
+  { key: 'size', title: 'Size', text: 'From xs to xl: the size of its container.',
+    values: ['xs', 's', 'm', 'l', 'xl'].map(size => ({ label: size, name: size.toUpperCase(), markup: ib({ variant: 'filled', size }) })) },
+  { key: 'width', title: 'Width', text: 'Narrow, default or wide, relative to the size\'s container.',
+    values: ['narrow', 'default', 'wide'].map(width => ({ label: width, markup: ib({ variant: 'tonal', size: 'm', width }) })) },
+  { key: 'shape', title: 'Shape', text: 'Round or square.',
+    values: ['round', 'square'].map(shape => ({ label: shape, markup: ib({ variant: 'tonal', size: 'm', shape }) })) },
+  { key: 'toggle', title: 'Toggle', text: 'A toggle icon button keeps its selected state.',
+    values: [{ label: 'off', name: 'Toggle, not selected', markup: ib({ variant: 'tonal', size: 'm', toggle: true }) }, { label: 'on', name: 'Toggle, selected', markup: ib({ variant: 'tonal', size: 'm', toggle: true, selected: true }) }] },
+];
+const sb = (attrs: Attributes) => m('split-button', { label: 'Label', icon: symbols.edit, 'trailing-label': 'More options', ...attrs },
+  ['First', 'Second', 'Third'].map(label => m('menu-item', {}, label)).join(''));
+const splitButton: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Shared by both halves.',
+    values: ['filled', 'tonal', 'outlined', 'elevated'].map(variant => ({ label: variant, markup: sb({ variant }) })) },
+  { key: 'size', title: 'Size', text: 'From xs to xl, for both halves.',
+    values: ['xs', 's', 'm', 'l', 'xl'].map(size => ({ label: size, name: size.toUpperCase(), markup: sb({ size }) })) },
+];
+const colours = ['primary-container', 'secondary-container', 'tertiary-container', 'primary', 'secondary', 'tertiary'];
+const named = (value: string) => value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+const fabSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Its colour style: a container colour, or the colour itself.',
+    values: colours.map(variant => ({ label: variant, name: named(variant), markup: m('fab', { variant, icon: symbols.edit, 'aria-label': 'Edit' }) })) },
+  { key: 'size', title: 'Size', text: 'Default, medium or large: the container, the icon and the corner.',
+    values: ['default', 'medium', 'large'].map(size => ({ label: size, markup: m('fab', { size, icon: symbols.edit, 'aria-label': 'Edit' }) })) },
+];
+const xf = (attrs: Attributes) => m('extended-fab', { icon: symbols.add, ...attrs }, 'Label');
+const extendedFab: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Its colour style: a container colour, or the colour itself.',
+    values: colours.map(variant => ({ label: variant, name: named(variant), markup: xf({ variant }) })) },
+  { key: 'size', title: 'Size', text: 'Small, medium or large: the height, the icon, the spacing and the label\'s type style.',
+    values: ['small', 'medium', 'large'].map(size => ({ label: size, markup: xf({ size }) })) },
+  { key: 'icon-position', title: 'Icon position', text: 'The icon before the label, or after it.',
+    values: [{ label: 'start', name: 'Icon first', markup: xf({}) }, { label: 'end', name: 'Icon last', markup: xf({ 'icon-position': 'end' }) }] },
+];
+const fm = (attrs: Attributes) => m('fab-menu', { icon: symbols.edit, 'aria-label': 'Create', presentation: 'list', ...attrs },
+  [['first', 'First'], ['second', 'Second'], ['third', 'Third']].map(([value, label]) => m('fab-menu-item', { value, icon: symbols.star }, label!)).join(''));
+const fabMenu: PropertySection[] = [
+  { key: 'color', title: 'Color', text: 'Its colour set: primary, secondary or tertiary.',
+    values: ['primary', 'secondary', 'tertiary'].map(color => ({ label: color, markup: fm({ color, open: true }) })), menus: true },
+  { key: 'size', title: 'Size', text: 'The FAB\'s size: default, medium or large.',
+    values: ['default', 'medium', 'large'].map(size => ({ label: size, markup: fm({ size }) })) },
+];
+
+const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
+  'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu,
+};
 
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;
 
@@ -89,7 +141,7 @@ export function propertyOverview(slug: string, links: { playground: string; deve
   const sections = PROPERTIES[slug]!;
   const html = sections.map(section => {
     const id = `property-${section.key}`;
-    const stage = `<div class="catalog-visual catalog-visual--${slug} property-stage${section.stack ? ' property-stage--stack' : ''}">`
+    const stage = `<div class="catalog-visual catalog-visual--${slug} property-stage${section.stack ? ' property-stage--stack' : ''}${section.menus ? ' property-stage--menus' : ''}">`
       // As M3's figures: a number under each value, and a legend below the stage.
       + section.values.map((value, index) => `<figure class="property-value">${value.markup}<figcaption><span class="property-number" aria-hidden="true">${index + 1}</span><span class="sr-only">${escape(value.name ?? value.label)}</span></figcaption></figure>`).join('') + `</div>`;
     const name = (value: PropertySection['values'][number]) => value.name ?? value.label.charAt(0).toUpperCase() + value.label.slice(1);
