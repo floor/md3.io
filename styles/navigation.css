@@ -406,3 +406,12 @@ body {
     #site-primary-rail m-navigation-rail::part(label) { inset-inline: 50% auto; width: max-content; max-width: none; translate: -50% 0; overflow: visible; text-overflow: clip; text-align: center; white-space: nowrap; }
     #site-primary-rail .site-rail-top { width: 100%; }
 }
+/* A tab page too: without scripts there is no drawer, so its own list shows, in a column beside the tabs. */
+@media (scripting: none) and (min-width: 840px) {
+    .layout .component-tab-layout { display: grid; grid-template-columns: clamp(160px, 19vw, 256px) minmax(0, 1fr); align-items: start; }
+    .layout .component-tab-layout > .component-list { display: block; grid-column: 1; grid-row: 1; }
+    .layout .component-tab-layout > :not(.component-list) { grid-column: 2; }
+}
+@media (scripting: none) and (max-width: 839px) {
+    .layout .component-tab-layout > .component-list { display: block; }
+}
