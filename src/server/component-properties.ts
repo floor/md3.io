@@ -253,7 +253,7 @@ const variantBar = (type: string) => `<div class="property-bar property-bar--${t
   + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })) + '</div>';
 // The medium bar's anatomy, as M3's figure: container, leading button, trailing icons, headline.
 const appBarAnatomy = () => `<div class="property-anatomy property-anatomy--bar"><div class="property-bar property-bar--medium">` + m('top-app-bar', { type: 'medium', headline: 'Headline', 'no-scroll': true, 'data-anatomy': true, 'data-part-shadow': '[class*=headline]:4:bottom' },
-  m('icon-button', { slot: 'leading', icon: symbols.arrowBack, 'aria-label': 'Back', 'data-part': '2', 'data-part-side': 'top' }) + m('icon-button', { slot: 'trailing', icon: symbols.search, 'aria-label': 'Search' })
+  m('icon-button', { slot: 'leading', icon: symbols.arrowBack, 'aria-label': 'Back', 'data-part': '2', 'data-part-side': 'top' }) + m('icon-button', { slot: 'trailing', icon: symbols.search, 'aria-label': 'Search', 'data-part': '3', 'data-part-side': 'top' })
   + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite', 'data-part': '3', 'data-part-side': 'top' })) + '</div></div>';
 const appBarSections: PropertySection[] = [
   { key: 'anatomy', title: 'Anatomy', text: 'The parts of an app bar: a medium bar here; the small bar has the same, on one row.',

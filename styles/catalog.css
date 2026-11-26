@@ -462,3 +462,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-issues h3, .md .property-issues h3 { margin: 20px 0 8px; font-size: 16px; font-weight: 500; }
 .property-issues ul { margin: 0; padding-left: 22px; }
 .property-issues li { margin: 6px 0; color: var(--text-muted); }
+.property-anatomy__line--dotted { height: 0; background: none; border-top: 1px dotted currentColor; }
+.property-anatomy__callouts { z-index: 2; pointer-events: none; }
+.property-anatomy .property-bar { isolation: isolate; }
