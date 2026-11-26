@@ -102,7 +102,7 @@ try {
       // the scenario, or rewrite the code. That failed on eb6b7ad, where the
       // stage wrote `visible` back.
       const hoverKeeps = async (id: string | null, name: string) => {
-        await page.goto(`${server.url}components/tooltip/${id ? `?scenario=${id}` : ''}`);
+        await page.goto(`${server.url}components/tooltip/playground/${id ? `?scenario=${id}` : ''}`);
         await frame.locator('#stage > *').first().waitFor();
         const expected = id ?? 'default';
         assert(await panel.scenarioValue(page) === expected, `${name}: the scenario did not load`);
@@ -189,6 +189,10 @@ try {
     assert(await frame.locator('#stage > [data-appearance-check="retained"]').count() === 1, `${slug}: appearance recreated the component`);
     if (slug === 'progress' || slug === 'loading-indicator') await canvasPainted();
     await page.screenshot({ path: `${output}/${slug}-desktop.png`, fullPage: true, animations: 'disabled' });
+    // The playground's tabs sit under the page's sticky tab bar once it scrolls: back to the top first.
+    await page.evaluate(() => scrollTo(0, 0));
+    await panel.leaveRail(page);
+    if (await page.locator('.site-rail-drawer[data-open]').count()) await page.screenshot({ path: `${output}/${slug}-rail-drawer-open.png` });
     await page.getByRole('tab', { name: 'Code', exact: true }).click();
     await page.getByRole('button', { name: 'Copy code', exact: true }).click();
     await page.getByRole('status').filter({ hasText: 'Code copied' }).waitFor();

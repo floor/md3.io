@@ -170,7 +170,9 @@ export async function checkInputTargets(browser: Browser, base: string, output: 
       const buttonLink = componentList.getByRole('link', { name: 'Button', exact: true });
       await checkTargets(componentList.getByRole('link'), `${width}px component list rows`);
       await edge(page, buttonLink, 'touch', 'left');
-      await page.waitForURL(new URL('components/button/playground/', base).href);
+      await page.waitForURL(new URL('components/button/', base).href);
+      // The list opens the Overview; the controls are on the Playground tab.
+      await goto('/components/button/playground/');
       await checkVisualControlSizes(page);
 
       const frameworks = page.getByRole('grid', { name: 'Framework', exact: true });

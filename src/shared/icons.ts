@@ -15,6 +15,18 @@ import brush from '../../icons/brush.svg' with { type: 'text' };
 import callEnd from '../../icons/call_end.svg' with { type: 'text' };
 import check from '../../icons/check.svg' with { type: 'text' };
 import checkBox from '../../icons/check_box.svg' with { type: 'text' };
+import notifications from '../../icons/notifications.svg' with { type: 'text' };
+import lightMode from '../../icons/light_mode.svg' with { type: 'text' };
+import formatClear from '../../icons/format_clear.svg' with { type: 'text' };
+import formatPaint from '../../icons/format_paint.svg' with { type: 'text' };
+import borderStyle from '../../icons/border_style.svg' with { type: 'text' };
+import table from '../../icons/table.svg' with { type: 'text' };
+import formatLineSpacing from '../../icons/format_line_spacing.svg' with { type: 'text' };
+import formatIndentIncrease from '../../icons/format_indent_increase.svg' with { type: 'text' };
+import moreVert from '../../icons/more_vert.svg' with { type: 'text' };
+import skipPrevious from '../../icons/skip_previous.svg' with { type: 'text' };
+import playArrow from '../../icons/play_arrow.svg' with { type: 'text' };
+import checkBoxOutlineBlank from '../../icons/check_box_outline_blank.svg' with { type: 'text' };
 import chevronLeft from '../../icons/chevron_left.svg' with { type: 'text' };
 import chevronRight from '../../icons/chevron_right.svg' with { type: 'text' };
 import close from '../../icons/close.svg' with { type: 'text' };
@@ -48,6 +60,13 @@ import tab from '../../icons/tab.svg' with { type: 'text' };
 import undo from '../../icons/undo.svg' with { type: 'text' };
 import videocamOff from '../../icons/videocam_off.svg' with { type: 'text' };
 import alarm from '../../icons/alarm.svg' with { type: 'text' };
+import bluetooth from '../../icons/bluetooth.svg' with { type: 'text' };
+import link from '../../icons/link.svg' with { type: 'text' };
+import wifi from '../../icons/wifi.svg' with { type: 'text' };
+import stars from '../../icons/stars.svg' with { type: 'text' };
+import podcasts from '../../icons/podcasts.svg' with { type: 'text' };
+import inboxFill from '../../icons/inbox-fill.svg' with { type: 'text' };
+import starsFill from '../../icons/stars-fill.svg' with { type: 'text' };
 import article from '../../icons/article.svg' with { type: 'text' };
 import barChart from '../../icons/bar_chart.svg' with { type: 'text' };
 import bedtime from '../../icons/bedtime.svg' with { type: 'text' };
@@ -116,6 +135,18 @@ export const symbols = {
   brush: trim(brush),
   check: trim(check),
   checkBox: trim(checkBox),
+  notifications: trim(notifications),
+  lightMode: trim(lightMode),
+  formatClear: trim(formatClear),
+  formatPaint: trim(formatPaint),
+  borderStyle: trim(borderStyle),
+  table: trim(table),
+  formatLineSpacing: trim(formatLineSpacing),
+  formatIndentIncrease: trim(formatIndentIncrease),
+  moreVert: trim(moreVert),
+  skipPrevious: trim(skipPrevious),
+  playArrow: trim(playArrow),
+  checkBoxOutlineBlank: trim(checkBoxOutlineBlank),
   close: trim(close),
   download: trim(download),
   edit: trim(edit),
@@ -162,6 +193,13 @@ export const symbols = {
   videocamOff: trim(videocamOff),
   // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
   alarm: trim(alarm),
+  bluetooth: trim(bluetooth),
+  link: trim(link),
+  wifi: trim(wifi),
+  stars: trim(stars),
+  podcasts: trim(podcasts),
+  inboxFill: trim(inboxFill),
+  starsFill: trim(starsFill),
   article: trim(article),
   barChart: trim(barChart),
   bedtime: trim(bedtime),
@@ -231,6 +269,18 @@ const files: Record<keyof typeof symbols, string> = {
   brush: 'brush',
   check: 'check',
   checkBox: 'check_box',
+  notifications: 'notifications',
+  lightMode: 'light_mode',
+  formatClear: 'format_clear',
+  formatPaint: 'format_paint',
+  borderStyle: 'border_style',
+  table: 'table',
+  formatLineSpacing: 'format_line_spacing',
+  formatIndentIncrease: 'format_indent_increase',
+  moreVert: 'more_vert',
+  skipPrevious: 'skip_previous',
+  playArrow: 'play_arrow',
+  checkBoxOutlineBlank: 'check_box_outline_blank',
   close: 'close',
   download: 'download',
   edit: 'edit',
@@ -277,6 +327,13 @@ const files: Record<keyof typeof symbols, string> = {
   videocamOff: 'videocam_off',
   // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
   alarm: 'alarm',
+  bluetooth: 'bluetooth',
+  link: 'link',
+  wifi: 'wifi',
+  stars: 'stars',
+  podcasts: 'podcasts',
+  inboxFill: 'inbox-fill',
+  starsFill: 'stars-fill',
   article: 'article',
   barChart: 'bar_chart',
   bedtime: 'bedtime',

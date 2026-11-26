@@ -83,7 +83,8 @@ try {
         await page.waitForFunction(([selector, current]) => {
           const next = document.querySelector(selector);
           return !!next?.checkVisibility() && next.shadowRoot?.querySelector('a[aria-current="page"]')?.getAttribute('href') === current;
-        }, [RAIL_DRAWER, new URL(path, server.url).pathname] as const).catch(async error => {
+        // A component's tabs (Playground, Develop, Accessibility) are one page in the drawer: the component's.
+        }, [RAIL_DRAWER, new URL(path, server.url).pathname.replace(/(?:playground|develop|accessibility)\/$/, '')] as const).catch(async error => {
           const state = await page.evaluate(selector => { const next = document.querySelector(selector) as any; const panel = next?.parentElement as HTMLElement | null; return { visible: next?.checkVisibility(), open: panel?.hasAttribute('data-open'), section: panel?.dataset.section, value: next?.value, current: next?.shadowRoot?.querySelector('a[aria-current="page"]')?.getAttribute('href') ?? null }; }, RAIL_DRAWER);
           throw new Error(`${path}: the docked drawer does not show the page: ${JSON.stringify(state)}`, { cause: error });
         });
@@ -116,7 +117,8 @@ try {
     assert.equal(await drawer!.evaluate((node, selector) => node === document.querySelector(selector), RAIL_DRAWER), true);
     await page.locator(RAIL_DRAWER).getByRole('link', { name: 'Icon button', exact: true }).getAttribute('aria-current').then(value => assert.equal(value, 'page'));
     assert.equal(await drawer!.evaluate(node => (node as any).isSectionExpanded('navigation')), true, 'other drawer sections remain open');
-    await go('/components/button/');
+    // The playground and its settings are on the Playground tab since the component tabs.
+    await go('/components/button/playground/');
     await panel.choose(page, 'variant', 'outlined');
     await page.waitForFunction(() => document.querySelector<HTMLIFrameElement>('#preview')?.contentDocument?.querySelector('.mtrl-button--outlined'));
     await page.getByRole('tab', { name: 'Code', exact: true }).click();

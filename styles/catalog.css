@@ -260,3 +260,410 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .component-overview--playground { display: block; }
 .component-overview--playground .component-lede { justify-content: flex-end; }
 .component-intro--overview { margin-bottom: 40px; font-size: var(--fs-lg, 18px); max-width: 70ch; }
+/* A card's title link is a 48dp target (M3's minimum) though its text is shorter. */
+.component-card__body h3 a { display: inline-flex; align-items: center; min-height: 48px; min-width: 48px; margin: -10px 0; }
+
+/* A component's Overview by property: the values side by side in one stage, in the page (component-properties.ts). */
+.property-stage { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 32px 48px; padding: 40px 24px; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); }
+.property-stage--stack { flex-direction: column; gap: 20px; }
+.property-value { display: grid; justify-items: center; gap: 12px; margin: 0; }
+.property-value figcaption code { font-size: 12px; color: var(--mtrl-sys-color-on-surface-variant); background: none; padding: 0; }
+.property-stage--stack .property-value { grid-template-columns: 6em auto; align-items: center; justify-items: start; gap: 16px; }
+.property-stage--stack .property-value figcaption { grid-column: 1; grid-row: 1; justify-self: end; }
+/* The property stages take their content's height (a catalog visual is a fixed 200px card stage). */
+.catalog-visual.property-stage { height: auto; min-height: 160px; overflow: visible; contain: none; padding: 40px 24px; gap: 32px 48px; flex-wrap: wrap; }
+.catalog-visual.property-stage--stack { flex-direction: column; flex-wrap: nowrap; gap: 20px; }
+/* On a narrow screen a wide value (an xl group) scrolls inside its stage, not the page. */
+@media (max-width: 839px) { .catalog-visual.property-stage { overflow-x: auto; justify-content: flex-start; align-items: flex-start; } .catalog-visual.property-stage--stack { align-items: flex-start; } .property-stage--stack .property-value { grid-template-columns: 4.5em auto; } }
+/* A section may be narrower than its widest value: that value scrolls in its stage. */
+.scenarios { grid-template-columns: minmax(0, 1fr); }
+.scenarios > .scenario { min-width: 0; }
+.property-column { display: grid; justify-items: center; gap: 20px; }
+/* Numbers under the values and a legend below the stage, as M3's figures. */
+.property-number { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 12px; background: var(--mtrl-sys-color-inverse-surface); color: var(--mtrl-sys-color-inverse-on-surface); font-size: 13px; font-weight: 500; line-height: 1; }
+.property-legend { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+.property-legend li { display: flex; align-items: center; gap: 12px; color: var(--text-muted); }
+.property-legend code { font-size: 12px; color: var(--mtrl-sys-color-on-surface-variant); background: none; padding: 0; }
+/* Open menus rise above their FAB: room above, and apart. */
+.catalog-visual.property-stage--menus { padding-top: 176px; gap: 32px 120px; }
+@media (max-width: 839px) { .catalog-visual.property-stage--menus { flex-wrap: nowrap; gap: 32px 72px; } }
+.property-stage--menus .property-value { flex-shrink: 0; }
+@media (max-width: 839px) { .catalog-visual.property-stage--menus { gap: 32px 120px; padding-left: 96px; padding-right: 24px; } }
+/* A dotted grid behind the values, as m3.material.io's figures: dots of the outline colour every 8px, the first
+   row and column one spacing from the edge (a layer inset by half a spacing, dots at the middle of each cell). */
+.catalog-visual.property-stage { background-color: var(--mtrl-sys-color-surface-container-low); background-image: none; isolation: isolate; }
+.catalog-visual.property-stage::before {
+  content: ""; position: absolute; inset: 4px; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--mtrl-sys-color-outline) 30%, transparent) 0.75px, transparent 1px);
+  background-size: 8px 8px;
+  background-position: 0 0;
+}
+/* A small corner, as m3.material.io's figures: M3's medium corner (12px). */
+.catalog-visual.property-stage { border-radius: var(--mtrl-sys-shape-corner-medium, 12px); }
+/* A picker shown open in a property stage keeps its own width: in a flex row it would shrink below its calendar or its fields. */
+.property-picker { display: block; width: max-content; flex-shrink: 0; }
+.property-value:has(.property-picker) { flex-shrink: 0; }
+/* A component's Overview by property (component-properties.ts): its sections, named for what they are. */
+.property-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; margin-top: 0; }
+.property-section { scroll-margin-top: 96px; min-width: 0; }
+.property-section__heading { margin-bottom: 16px; }
+.property-section__heading h2, .md .property-section__heading h2 { margin: 0 0 4px; padding: 0; border: 0; font-size: 24px; line-height: 32px; font-weight: 400; }
+/* The sentence takes the section's width: no buttons sit beside it. */
+.property-section__heading p { margin: 0; color: var(--text-muted); }
+.property-progress { width: 240px; display: grid; place-items: center; min-height: 48px; }
+/* Navigation shown in a phone-sized box, so a bar or a rail has its own width or height. */
+.property-screen { position: relative; overflow: hidden; border-radius: 12px; background: var(--mtrl-sys-color-surface); box-shadow: 0 0 0 1px var(--mtrl-sys-color-outline-variant); }
+.property-screen--wide { width: 360px; }
+.property-screen--tall { height: 320px; display: flex; }
+.property-screen--drawer { width: 280px; height: 260px; }
+.property-surface { display: block; }
+.property-screen--wider { width: 600px; }
+.property-screen--appbar { width: 360px; height: 160px; }
+.property-screen--appbar m-top-app-bar { position: relative; display: block; height: 100%; }
+/* A component's M3 Expressive note: the points beside the component in a phone screen (component-properties.ts). */
+.property-note h2, .md .property-note h2 { margin: 0 0 16px; padding: 0; border: 0; font-size: 24px; line-height: 32px; font-weight: 400; }
+.property-note__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px 40px; align-items: start; }
+@media (min-width: 900px) { .property-note__body { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+.property-note__points p { margin: 0 0 8px; }
+.property-note__points ul { margin: 0 0 16px; padding-left: 22px; }
+.property-note__points li { margin: 6px 0; }
+.property-note__points li::marker { content: "✦  "; font-size: 0.8em; }
+.property-note__source { font-size: 13px; }
+.property-note__figure { margin: 0; }
+.property-note__figure figcaption { margin-top: 12px; color: var(--text-muted); font-size: 14px; }
+.catalog-visual.property-note__stage { height: 300px; padding: 0; align-items: flex-end; border-radius: 28px; background: color-mix(in srgb, var(--mtrl-sys-color-primary) 12%, var(--mtrl-sys-color-surface)); }
+.property-phone { width: min(360px, 86%); height: 100%; box-sizing: border-box; border: 8px solid var(--mtrl-sys-color-outline); border-bottom: 0; border-radius: 0 0 36px 36px; }
+.property-phone { border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-top: 0; border-radius: 0 0 40px 40px; overflow: hidden; }
+.property-phone__screen { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; background: var(--mtrl-sys-color-surface); }
+.property-phone__list { list-style: none; margin: 0; padding: 0 20px; flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+.property-phone__list li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--mtrl-sys-color-outline-variant); color: var(--mtrl-sys-color-on-surface-variant); font-size: 14px; }
+.property-phone__list li > span:first-child { display: grid; }
+.property-phone__list strong { color: var(--mtrl-sys-color-on-surface); font-weight: 400; font-size: 16px; }
+.property-phone__handle { display: block; width: 108px; height: 4px; margin: 4px auto 8px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+.property-phone m-navigation-bar { flex: none; }
+/* At a glance: room below the phone, and the bar's colour carried to the bottom of its screen, behind the home handle. */
+.catalog-visual.property-note__stage { padding-bottom: 32px; height: 332px; }
+.property-phone { border-bottom: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); }
+.property-phone__screen { background: var(--mtrl-sys-color-surface-container); }
+.property-phone__list { background: var(--mtrl-sys-color-surface); }
+.property-phone__home { display: grid; place-items: center; height: 20px; }
+.property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+.property-note__points ul { padding-left: 22px; }
+.property-note__points li { margin: 0 0 12px; }
+/* At a glance, closer to M3's figure: the home handle in its own strip under the bar's labels, and more room under the phone. */
+.catalog-visual.property-note__stage { height: 400px; padding-bottom: 56px; }
+.property-phone__home { height: 32px; }
+.property-phone__home span { width: 108px; height: 4px; }
+/* The inbox: a list of its own (the article's list margin dropped), from the top, scrolling under the bar. */
+.md .property-phone__list, .property-phone__list { margin: 0; padding: 0 20px; justify-content: flex-start; overflow-y: auto; min-height: 0; overscroll-behavior: contain; scrollbar-width: none; }
+.md .property-phone__list li { margin: 0; }
+.property-phone__list li { flex: none; }
+.property-phone__list li:last-child { border-bottom: 0; }
+.property-phone__list:focus-visible { outline: 2px solid var(--mtrl-sys-color-secondary); outline-offset: -2px; }
+.property-phone__list[hidden] { display: none; }
+/* At a glance: the stage no taller than the points beside it. */
+.catalog-visual.property-note__stage { height: 300px; padding-bottom: 28px; }
+/* A wider phone, as in M3's figure (about 60% of the stage). */
+.property-phone { width: min(440px, 92%); }
+/* At a glance on a tablet: the rail or the drawer at the side of the lists. */
+.catalog-visual.property-note__stage:has(.property-phone--tablet) { padding: 28px; align-items: center; }
+.property-phone--tablet { width: 100%; height: 100%; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-radius: 28px; }
+.property-phone__screen--side { flex-direction: row; justify-content: flex-start; align-items: stretch; background: var(--mtrl-sys-color-surface); }
+.property-phone__screen--side > m-navigation-rail, .property-phone__screen--side > m-drawer { flex: none; height: 100%; }
+.property-phone__content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.property-phone__content .property-phone__list { height: 100%; }
+/* The drawer's At a glance, as its card: the screen runs off the stage's right and bottom edges, on the plain stage colour. */
+.catalog-visual.property-note__stage:has(.property-phone--bleed) { padding: 32px 0 0 32px; align-items: stretch; justify-content: flex-start; background: color-mix(in srgb, var(--mtrl-sys-color-primary) 12%, var(--mtrl-sys-color-surface)); }
+.property-phone--bleed { width: calc(100% + 8px); height: calc(100% + 8px); border-right: 0; border-bottom: 0; border-radius: 28px 0 0 0; }
+.property-phone--bleed m-drawer { border-inline-end: 1px solid var(--mtrl-sys-color-outline-variant); }
+/* The drawer's property boxes: the box is the drawer's width and the drawer fills its height; the box's edge is its divider. */
+.property-screen--drawer { width: 240px; height: 460px; }
+.property-screen--drawer m-drawer { display: block; height: 100%; }
+.property-screen--drawer m-drawer::part(drawer), .property-screen--drawer m-drawer::part(container) { height: 100%; border-inline-end: 0; }
+.catalog-visual.property-note__stage:has(.property-phone--bleed) { height: 360px; }
+/* A note before At a glance, such as a component M3 no longer recommends. */
+.property-advice { margin: 0 0 8px; padding: 16px 20px; border-radius: 12px; background: var(--mtrl-sys-color-secondary-container); color: var(--mtrl-sys-color-on-secondary-container); }
+.property-advice a { font-size: inherit; }
+/* Unread messages: the sender and subject in bold, a dot by the time. */
+.property-phone__list li.is-unread strong { font-weight: 600; }
+.property-phone__list li.is-unread > span:first-child > span { color: var(--mtrl-sys-color-on-surface); font-weight: 500; }
+.property-phone__list li > span:last-child { display: flex; align-items: center; gap: 8px; }
+.property-phone__unread { width: 8px; height: 8px; border-radius: 50%; background: var(--mtrl-sys-color-primary); }
+/* Containment's property stages. */
+.property-card { width: 300px; }
+.property-screen--sheet { width: 420px; height: 280px; }
+.property-sheet-page { padding: 16px; color: var(--mtrl-sys-color-on-surface-variant); font-size: 13px; }
+.property-sheet__text { margin: 0; font-size: 14px; }
+/* A sheet docks to its box, not the window: the transform makes the box the reference of its fixed position. */
+.property-screen--sheet { transform: translateZ(0); contain: layout paint; }
+.property-card img[slot="media"] { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+/* The card's At a glance and Anatomy. */
+.property-card--glance { width: 320px; }
+.property-card--glance img[slot="media"] { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+.property-anatomy { position: relative; width: 360px; padding: 8px 80px; }
+.property-anatomy__media { height: 160px; background: var(--mtrl-sys-color-primary-container); }
+.property-anatomy p { margin: 0; color: var(--mtrl-sys-color-on-surface-variant); font-size: 14px; line-height: 20px; }
+.property-anatomy__callouts { position: absolute; inset: 0; pointer-events: none; }
+.property-anatomy__line { position: absolute; height: 1px; background: var(--mtrl-sys-color-on-surface); }
+.property-anatomy__dot { position: absolute; width: 8px; height: 8px; box-sizing: border-box; border: 1.5px solid var(--mtrl-sys-color-on-surface); border-radius: 50%; background: var(--mtrl-sys-color-surface); }
+.property-anatomy__number { position: absolute; }
+.catalog-visual.property-note__stage:has(.property-card--glance) { height: auto; padding: 32px; align-items: center; }
+.property-anatomy { width: 520px; box-sizing: border-box; }
+@media (max-width: 599px) { .property-anatomy { width: 340px; padding: 8px 48px; } }
+/* The carousel's stages: a phone-wide strip per layout, and a wider one at a glance. */
+.property-carousel { width: 560px; max-width: 100%; height: 220px; }
+.property-carousel > * { display: block; height: 100%; }
+.property-carousel--glance { width: 100%; height: 240px; }
+.catalog-visual.property-note__stage:has(.property-carousel--glance) { height: auto; padding: 28px; }
+.property-stage--stack .property-value:has(.property-carousel) { grid-template-columns: 7em minmax(0, 560px); }
+/* One layout per section: the strip takes the stage's width. */
+.property-carousel { width: min(100%, 880px); height: 240px; }
+/* A phone in portrait, for the full-screen carousel. */
+.property-device { width: 280px; height: 520px; box-sizing: border-box; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-radius: 40px; overflow: hidden; background: var(--mtrl-sys-color-surface); }
+.property-device__screen { height: 100%; }
+.property-device__screen > * { display: block; height: 100%; }
+/* The top of a phone, for the app bar: the frame runs off the stage's bottom edge; the list scrolls under the bar. */
+.property-top { width: 360px; height: 300px; box-sizing: border-box; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-bottom: 0; border-radius: 40px 40px 0 0; overflow: hidden; }
+.property-top__screen { position: relative; height: 100%; background: var(--mtrl-sys-color-surface); }
+.property-top__screen m-top-app-bar { position: absolute; inset: 0 0 auto; z-index: 1; display: block; }
+.property-top__list { position: absolute; inset: 0; overflow-y: auto; padding-top: var(--bar, 64px) !important; }
+.property-top--medium .property-top__list { --bar: 112px; }
+.property-top--large .property-top__list { --bar: 152px; }
+.catalog-visual.property-note__stage:has(.property-top) { height: 300px; padding: 0; align-items: flex-end; }
+.catalog-visual.property-stage:has(.property-top) { padding-bottom: 0; align-items: flex-end; }
+/* The top of the phone, as M3's figure: room above the frame, a status bar, the bar and the list below it. */
+.catalog-visual.property-note__stage:has(.property-top), .catalog-visual.property-stage:has(.property-top) { padding-top: 40px; }
+.property-top { height: 320px; }
+.property-top__screen { display: flex; flex-direction: column; }
+.property-top__screen > .catalog-frame__status { position: relative; flex: none; z-index: 2; padding: 14px 24px 6px; background: var(--mtrl-sys-color-surface); }
+.property-top__screen m-top-app-bar { position: relative; inset: auto; flex: none; height: var(--bar, 64px); }
+.property-top--center .property-top__screen, .property-top--small .property-top__screen { --bar: 64px; }
+.property-top--medium .property-top__screen { --bar: 112px; }
+.property-top--large .property-top__screen { --bar: 152px; }
+.property-top__list { position: static; flex: 1; min-height: 0; padding-top: 0 !important; }
+/* Below the status bar, the bar lies over the list, which scrolls under it: compressed, the bar leaves no gap. */
+.property-top__body { position: relative; flex: 1; min-height: 0; }
+.property-top__body m-top-app-bar { position: absolute; inset: 0 0 auto; height: auto; z-index: 1; }
+.property-top__body .property-top__list { position: absolute; inset: 0; padding-top: var(--bar, 64px) !important; }
+.catalog-visual.property-note__stage:has(.property-top) { height: auto; padding-top: 40px; }
+/* The app bar's variants: each bar alone at its own height (laid out absolutely inside its element). */
+.property-bar { width: 380px; max-width: 100%; position: relative; background: var(--mtrl-sys-color-surface); }
+.property-bar m-top-app-bar { position: relative; display: block; height: 100%; }
+.property-bar--small, .property-bar--center { height: 64px; }
+.property-bar--medium { height: 112px; }
+.property-bar--large { height: 152px; }
+.property-stage--stack .property-value:has(.property-bar) { grid-template-columns: 3em auto; }
+.catalog-visual.property-stage--stack:has(.property-bar) { gap: 32px; padding: 48px 24px; }
+.property-anatomy--bar { width: 540px; padding: 8px 80px; }
+.property-anatomy--bar .property-bar { width: 100%; }
+.property-anatomy__line--v { width: 1px; height: auto; }
+.property-anatomy--bar { padding: 64px 80px; }
+/* Known issues, at the end of the Overview. */
+.property-issues h3, .md .property-issues h3 { margin: 20px 0 8px; font-size: 16px; font-weight: 500; }
+.property-issues ul { margin: 0; padding-left: 22px; }
+.property-issues li { margin: 6px 0; color: var(--text-muted); }
+.property-anatomy__line--dotted { height: 0; background: none; border-top: 1px dotted currentColor; }
+.property-anatomy__callouts { z-index: 2; pointer-events: none; }
+.property-anatomy .property-bar { isolation: isolate; }
+/* Badges: a single destination per value; the glance bar alone, centred. */
+.property-badge-item .property-screen--wide { width: 112px; }
+.property-badge-glance { display: grid; place-items: center; padding: 48px 16px; }
+/* Lists: each list at a phone's width; the glance, a task list on its own surface. */
+.property-list { width: 360px; max-width: 100%; }
+.property-tasks { width: 380px; max-width: 100%; box-sizing: border-box; padding: 24px 16px; border-radius: 28px; background: var(--mtrl-sys-color-surface); }
+.property-tasks h3, .md .property-tasks h3 { margin: 0 0 12px 16px; font-size: 28px; font-weight: 400; }
+.catalog-visual--list.property-note__stage { height: auto; min-height: 0; padding: 32px 16px; display: grid; place-items: center; }
+.property-tasks { width: 420px; }
+.property-tasks m-list { width: 100%; }
+.property-top__screen .catalog-frame__status { transition: background-color 200ms; }
+.property-top__screen.is-scrolled .catalog-frame__status { background: var(--mtrl-sys-color-surface-container); }
+/* The dialog sections: drawn at 70%, so the three sizes read side by side with the page. */
+.catalog-visual--dialog.property-stage .property-surface { zoom: 0.7; }
+/* The dialog's glance: a phone with a clock's alarm settings, dimmed, the dialog over them. */
+.property-device--dialog { width: 320px; height: 560px; }
+.property-dialog-screen { position: relative; background: var(--mtrl-sys-color-surface); }
+.property-device__screen.property-dialog-screen > * { height: auto; }
+.property-dialog-screen h3, .md .property-dialog-screen h3 { margin: 16px 24px 8px; font-size: 28px; font-weight: 400; }
+.property-dialog-screen .property-phone__list { margin: 0; padding: 0 24px; }
+.property-dialog-screen__scrim { position: absolute !important; inset: 0; height: auto !important; background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 32%, transparent); }
+.property-dialog-screen > .property-surface { position: absolute !important; inset: 0; display: grid !important; place-items: center; height: auto !important; zoom: 0.85; }
+.catalog-visual--dialog.property-note__stage { height: auto; padding: 32px 16px 0; display: grid; place-items: end center; overflow: hidden; }
+.catalog-visual--dialog.property-note__stage .property-device { border-bottom: 0; border-radius: 40px 40px 0 0; height: 480px; }
+.property-dialog-screen > .property-surface { display: grid !important; place-items: center; zoom: 0.8; top: 80px !important; }
+.property-device__screen.property-dialog-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px 0; }
+/* A list in a flex row shrinks to its content (material, being fixed): fill the box. */
+.property-list m-list { width: 100%; }
+/* The button family's glance scenes: a card on the stage, its context and the component. */
+.catalog-visual.property-note__stage:has(.property-scene) { height: auto; padding: 40px 16px; display: grid; place-items: center; }
+.property-scene { position: relative; width: 360px; max-width: 100%; box-sizing: border-box; padding: 24px; border-radius: 28px; background: var(--mtrl-sys-color-surface); color: var(--mtrl-sys-color-on-surface); }
+.property-scene h3, .md .property-scene h3 { margin: 0 0 8px; font-size: 22px; font-weight: 400; }
+.property-scene p, .md .property-scene p { margin: 0 0 20px; color: var(--mtrl-sys-color-on-surface-variant); font-size: 14px; line-height: 20px; }
+.property-scene__actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.property-scene__row { display: flex; justify-content: center; align-items: center; gap: 4px; }
+.property-scene--player { text-align: center; }
+.property-scene--screen { height: 380px; overflow: hidden; padding: 24px 0 0; }
+.property-scene--screen h3 { padding: 0 24px; }
+.property-scene--screen .property-phone__list { margin: 0; height: calc(100% - 48px); overflow-y: auto; }
+.property-scene--screen > m-fab, .property-scene--screen > m-extended-fab, .property-scene--screen > m-fab-menu { position: absolute; right: 16px; bottom: 16px; }
+.property-scene--lists .property-phone__list { margin: 8px -24px -24px; max-height: 260px; overflow-y: auto; }
+.property-scene__row--start { justify-content: flex-start; margin-top: 4px; }
+.property-scene--lists { overflow: hidden; }
+/* The button group's welcome screen, and the call controls at two window widths. */
+.property-scene--welcome { padding: 32px 16px 40px; text-align: center; }
+.property-scene__hello, .md .property-scene__hello { margin: 0 0 24px; font-size: 56px; line-height: 1; font-weight: 700; color: var(--mtrl-sys-color-primary); }
+.property-call { box-sizing: border-box; padding: 16px; border-radius: 24px; background: var(--mtrl-sys-color-surface); display: flex; justify-content: center; }
+.property-call--s { width: 300px; }
+.property-call--l { width: 560px; max-width: 100%; }
+.property-scene.property-scene--welcome { width: 440px; }
+.md .property-scene p.property-scene__hello, .property-scene p.property-scene__hello { margin: 0 0 24px; font-size: 56px; line-height: 1.1; font-weight: 700; color: var(--mtrl-sys-color-primary); }
+/* The welcome title in M3's display face, Google Sans (self-hosted), not the components' Roboto. */
+.property-scene p.property-scene__hello, .md .property-scene p.property-scene__hello { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.5px; }
+/* The button group's welcome, as M3's figure: the bottom of a phone, its title, and the group with
+   narrow tertiary-container icon buttons beside a wide filled tertiary action. The per-button colours
+   and widths are set through the group's CSS parts until material gives items their own (FLO-1593). */
+.catalog-visual.property-note__stage:has(.property-welcome) { height: auto; padding: 0 16px 48px; display: grid; place-items: start center; }
+.property-welcome { width: 420px; max-width: 100%; box-sizing: border-box; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-top: 0; border-radius: 0 0 32px 32px; overflow: hidden; }
+.property-welcome__screen { padding: 16px 16px 12px; text-align: center; background: var(--mtrl-sys-color-surface-container); }
+.property-welcome .property-scene__hello, .md .property-welcome p.property-scene__hello { margin: 0 0 16px; font-family: var(--font-sans); font-size: 72px; line-height: 1.1; font-weight: 700; letter-spacing: -1px; color: var(--mtrl-sys-color-primary); }
+.property-welcome .property-scene__row { gap: 0; }
+.property-welcome m-button-group { --mtrl-button-group-gap: 8px; }
+.property-welcome m-button-group::part(button) { width: 220px; background: var(--mtrl-sys-color-tertiary); color: var(--mtrl-sys-color-on-tertiary); font-size: 24px; }
+.property-welcome m-button-group::part(icon-button) { width: 64px; min-width: 64px; background: var(--mtrl-sys-color-tertiary-container); color: var(--mtrl-sys-color-on-tertiary-container); }
+.property-welcome m-button-group::part(button) { --mtrl-button-label-size: 22px; }
+
+.property-welcome .property-phone__home { display: flex; justify-content: center; padding-top: 24px; }
+.property-welcome .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+/* Google Sans Flex (SIL OFL 1.1, fonts/GoogleSansFlex-OFL.txt), one Latin instance from Google Fonts
+   (weight 700, optical size 144, fully rounded), self-hosted: M3's rounded display face, for the button group's Welcome title. */
+@font-face {
+  font-family: "Google Sans Flex";
+  src: url("/fonts/GoogleSansFlex-latin-700-rounded.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+.property-welcome .property-scene__hello, .md .property-welcome p.property-scene__hello { font-family: "Google Sans Flex", var(--font-sans); letter-spacing: 0; }
+.property-tasks__check { pointer-events: none; }
+/* Menus open in place: each under its button, the stage tall enough for it. */
+.property-menu { min-height: 260px; }
+.property-scene--photo { padding: 0; overflow: visible; }
+.property-scene--photo img { display: block; width: 100%; height: auto; border-radius: 28px 28px 0 0; }
+.property-scene__bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px 20px; }
+.property-scene__bar > span { display: grid; }
+.property-scene__bar span span { font-size: 13px; color: var(--mtrl-sys-color-on-surface-variant); }
+.catalog-visual.property-note__stage:has(.property-scene--photo) { padding-bottom: 180px; }
+.catalog-visual--menu.property-note__stage { height: auto; padding: 32px 16px; display: grid; place-items: center; }
+.catalog-visual--menu.property-stage .property-value { align-self: start; }
+/* The checkbox's glance: a parent over its group, indented as M3 nests them. */
+.property-checks { display: grid; gap: 4px; }
+.property-checks__group { display: grid; gap: 4px; padding-left: 32px; }
+/* Fields: a field's width as M3's figures; the booking form's fields one under the other. */
+.property-field { width: 280px; max-width: 100%; }
+.property-field > * { display: block; width: 100%; }
+.property-scene--form { display: grid; gap: 16px; }
+.property-scene--form > m-text-field, .property-scene--form > m-select { display: block; width: 100%; }
+.property-scene--form p { margin-bottom: 4px; }
+/* The switch: a label beside it, as wide as a settings row; the glance's rows one under the other. */
+.property-switch { width: 280px; max-width: 100%; }
+.property-scene--settings { display: grid; gap: 20px; }
+.property-scene--settings h3 { margin-bottom: 0; }
+/* Sliders at a phone's width; a vertical one as tall. */
+.property-slider { width: 320px; max-width: 100%; }
+.property-slider > * { display: block; width: 100%; }
+.property-slider--vertical { width: auto; height: 240px; }
+.property-slider--vertical > * { height: 100%; width: auto; }
+.property-scene--settings > m-slider { display: block; width: 100%; }
+/* Radios and chips: a group at a phone's width; the glances' groups across the card. */
+.property-radios { width: 280px; max-width: 100%; }
+.property-radios--row { width: auto; }
+.property-chips { max-width: 100%; }
+.property-scene--chips { display: grid; gap: 12px; }
+.property-scene--chips .property-phone__list { margin: 0 -24px; }
+/* Search: a bar at a phone's width; an open view's stage tall enough for its suggestions. */
+.property-search { width: 360px; max-width: 100%; }
+.property-search > * { display: block; width: 100%; }
+.property-search--open { min-height: 300px; }
+.property-device--search { width: 340px; height: 520px; }
+.property-search-screen { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; background: var(--mtrl-sys-color-surface); }
+.property-device__screen.property-search-screen > * { height: auto; }
+.property-search-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 12px 0; }
+.property-search-screen .property-phone__list { margin: 0 -12px; flex: 1; overflow-y: auto; }
+.catalog-visual--search.property-note__stage { height: auto; padding: 32px 16px 0; display: grid; place-items: end center; overflow: hidden; }
+.catalog-visual--search.property-note__stage .property-device { border-bottom: 0; border-radius: 40px 40px 0 0; height: 460px; }
+.property-search-screen > m-search { height: 56px; flex: none; }
+.property-search--open > m-search { position: relative; }
+/* Material leaves the avatar button with the browser's border and background (reported): reset here. */
+m-search::part(avatar) { border: 0; background: none; padding: 0; border-radius: 50%; cursor: pointer; }
+/* Sheets: a modal figure's scrim in its screen; the side sheet's shop and the bottom sheet's map. */
+.property-sheet-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 32%, transparent); }
+.property-shop { padding: 16px 24px; }
+.property-shop h3, .md .property-shop h3 { margin: 0 0 8px; font-size: 20px; font-weight: 400; }
+.property-shop ul { margin: 0; padding: 0; list-style: none; max-width: 300px; }
+.property-shop li { padding: 12px 0; border-bottom: 1px solid var(--mtrl-sys-color-outline-variant); font-size: 14px; }
+.property-shop__filters { display: grid; gap: 4px; }
+.property-device--map { width: 300px; height: 540px; }
+.property-map { position: relative; transform: translateZ(0); overflow: hidden; }
+.property-map img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.property-map__actions { display: flex; gap: 8px; margin-top: 16px; }
+.catalog-visual--bottom-sheet.property-note__stage, .catalog-visual--side-sheet.property-note__stage { height: auto; padding: 32px 16px; display: grid; place-items: center; }
+.property-screen--glance { width: 520px; max-width: 100%; height: 300px; }
+.property-screen--bottom { height: 340px; }
+.property-map__photo { display: block; width: 100%; height: 100%; object-fit: cover; }
+.property-sheet__more { margin-top: 16px; }
+/* The side sheet's glance, as M3's figure: a tablet's top-end corner, its screen running off the stage. */
+.catalog-visual--side-sheet.property-note__stage:has(.property-corner) { padding: 40px 32px 0 0; place-items: start end; overflow: hidden; }
+.property-corner { width: 560px; max-width: 100%; height: 320px; box-sizing: border-box; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-left: 0; border-bottom: 0; border-radius: 0 40px 0 0; overflow: hidden; }
+.property-corner__screen { position: relative; height: 100%; transform: translateZ(0); background: var(--mtrl-sys-color-surface); overflow: hidden; }
+/* A modal side sheet's 16dp corners at its free edge, as M3 shows it over the scrim. */
+.property-corner m-side-sheet::part(sheet), .property-corner m-side-sheet { border-radius: 16px 0 0 16px; overflow: hidden; }
+.property-sheet-scrim { background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 40%, transparent); }
+/* The bottom sheet's glance: a phone's bottom half, a photo, the sheet over it, the home handle. */
+.catalog-visual--bottom-sheet.property-note__stage:has(.property-welcome) { padding: 0 16px 48px; place-items: start center; }
+.property-welcome--sheet { width: 420px; }
+.property-bottom { position: relative; height: 420px; transform: translateZ(0); overflow: hidden; background: var(--mtrl-sys-color-surface); }
+.property-bottom > img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.property-bottom m-list { width: 100%; }
+.property-bottom .property-phone__home { position: absolute; left: 0; right: 0; bottom: 10px; display: flex; justify-content: center; z-index: 100; }
+.property-bottom .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+/* Bottom sheet content: rows (56dp, an icon then the label), a grid of icon-over-label actions, people. */
+.property-sheet-rows { display: grid; margin: 0 -24px; }
+.property-sheet-row { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 24px; border: 0; background: none; color: var(--mtrl-sys-color-on-surface); font: 400 16px/24px Roboto, sans-serif; text-align: start; cursor: pointer; }
+.property-sheet-row:hover, .property-sheet-cell:hover, .property-sheet-person:hover { background: color-mix(in srgb, var(--mtrl-sys-color-on-surface) 8%, transparent); }
+.property-sheet-row svg, .property-sheet-cell svg { width: 24px; height: 24px; flex: none; color: var(--mtrl-sys-color-on-surface-variant); }
+.property-sheet-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.property-sheet-cell, .property-sheet-person { display: grid; justify-items: center; gap: 8px; padding: 12px 4px; border: 0; border-radius: 12px; background: none; color: var(--mtrl-sys-color-on-surface); font: 400 13px/18px Roboto, sans-serif; cursor: pointer; }
+.property-sheet-divider { border: 0; border-top: 1px solid var(--mtrl-sys-color-outline-variant); margin: 12px 0; }
+.property-sheet-label, .md .property-sheet-label { margin: 0 0 8px; font: 500 14px/20px Roboto, sans-serif; color: var(--mtrl-sys-color-on-surface); }
+.property-sheet-people { display: grid; grid-template-columns: repeat(5, 1fr); }
+.property-sheet-person img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.property-sheet-head { display: flex; align-items: center; gap: 16px; }
+.property-sheet-head img { border-radius: 8px; }
+.property-sheet-head > span { display: grid; font: 400 16px/24px Roboto, sans-serif; }
+.property-sheet-head > span span { font-size: 14px; color: var(--mtrl-sys-color-on-surface-variant); }
+.property-welcome--sheet .property-bottom { height: 480px; }
+/* Snackbar: a phone's width per figure; the glance, a mail app's bottom with its navigation bar. */
+.property-snackbar { width: 360px; max-width: 100%; }
+.catalog-visual--snackbar.property-note__stage:has(.property-welcome) { height: auto; padding: 0 16px 48px; display: grid; place-items: start center; }
+.property-welcome--snack { width: 400px; }
+.property-snack-screen { display: flex; flex-direction: column; height: 400px; background: var(--mtrl-sys-color-surface); }
+.property-snack-screen .property-phone__list { flex: 1; overflow-y: auto; margin: 0; }
+.property-snack-screen > md3-catalog-snackbar-glance { display: block; margin: 0 0 8px; }
+.property-snack-screen .property-phone__home { display: flex; justify-content: center; padding: 8px 0 10px; background: var(--mtrl-sys-color-surface-container); }
+.property-snack-screen .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+/* Tooltip: a figure's room above or below its target; the glance, a phone's top corner. */
+.property-tooltip { min-height: 140px; display: grid; align-items: end; }
+.catalog-visual--tooltip.property-note__stage:has(.property-corner) { height: auto; padding: 40px 32px 0 0; place-items: start end; overflow: hidden; }
+.property-corner--tooltip { width: 420px; height: 240px; }
+.property-tooltip-screen { padding: 0 16px; }
+.property-tooltip-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 8px 8px; }
+/* Divider: two rows of a list each, a phone's width; a row of actions for the vertical one. */
+.property-divider { width: 320px; max-width: 100%; background: var(--mtrl-sys-color-surface); border-radius: 16px; overflow: hidden; }
+.property-divider--row { display: flex; align-items: center; gap: 4px; width: auto; padding: 8px 12px; }
+.property-divider--row > m-divider { align-self: stretch; margin: 8px 4px; }
+.property-divider-row { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 0 16px; color: var(--mtrl-sys-color-on-surface); }
+.property-divider-row svg { width: 24px; height: 24px; flex: none; color: var(--mtrl-sys-color-on-surface-variant); }
+.property-divider-row > span { display: grid; font: 400 16px/24px Roboto, sans-serif; }
+.property-divider-row > span span { font-size: 14px; line-height: 20px; color: var(--mtrl-sys-color-on-surface-variant); }
+.property-scene--divided { padding: 24px 0 8px; }
+.property-scene--divided h3 { padding: 0 16px; }
+.property-divider-label, .md .property-divider-label { margin: 8px 16px 0; font: 500 14px/20px Roboto, sans-serif; color: var(--mtrl-sys-color-primary); }
+.property-scene p.property-divider-label, .md .property-scene p.property-divider-label { margin: 12px 16px 4px; }

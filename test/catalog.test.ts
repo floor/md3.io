@@ -53,7 +53,7 @@ describe('the components overview', () => {
     for (const slug of componentSlugs) {
       expect(entry, slug).toContain(`import('./catalog/${slug}')`);
       // Its elements are defined when the entry calls `define`, after every chunk it needs ran.
-      expect(await Bun.file(new URL(`../src/client/catalog/${slug}.ts`, import.meta.url)).text(), slug).toContain('export const define = (): void =>');
+      expect(await Bun.file(new URL(`../src/client/catalog/${slug}.ts`, import.meta.url)).text(), slug).toMatch(/export const define = \((?:visual\?: Element)?\): void(?: \| \(\(\) => void\))? =>/);
     }
     // Nothing from the playground's table or mtrl's elements is in the entry itself.
     expect(entry.replace(/^import \{ registerPage \} from [^;]+;/m, '')).not.toMatch(/^import (?!type )/m);

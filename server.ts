@@ -9,6 +9,7 @@ import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
 import { componentOverview } from './src/server/component-overview';
+import { hasPropertyOverview, propertyOverview } from './src/server/component-properties';
 import { homeCode } from './src/server/home-code';
 import { componentTabMarkdown, documentMarkdown, llmsFullTxt, llmsTxt } from './src/server/markdown-docs';
 import { componentDrawerEntries, drawerItems, renderSectionDrawer } from './src/server/section-drawer';
@@ -462,7 +463,10 @@ export async function handleRequest(request: Request): Promise<Response> {
       : !onPlayground && !isAddon(slug) ? page(path, `${component.name} — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web: each way to use it, live, with its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component-tab', {
         // The component's intro leads the Overview; the framework chips stay on the Playground.
         slug, componentHeader: componentHeader(slug, 'overview'), frameworksRow: `<div class="component-intro component-intro--overview">${componentIntro(slug)}</div>`,
-        ...componentOverview(slug, { playground: componentTabHref(slug, 'playground'), develop: componentTabHref(slug, 'develop'), codeIcon: icon('code'), playIcon: icon('play_circle') }),
+        // By property where a component has its list (component-properties.ts), by scenario otherwise.
+        ...(hasPropertyOverview(slug)
+          ? propertyOverview(slug, { playground: componentTabHref(slug, 'playground'), develop: componentTabHref(slug, 'develop'), codeIcon: icon('code'), playIcon: icon('play_circle') }, component.name)
+          : componentOverview(slug, { playground: componentTabHref(slug, 'playground'), develop: componentTabHref(slug, 'develop'), codeIcon: icon('code'), playIcon: icon('play_circle') })),
       })
       : page(path, `${component.name}: Playground — material`, `The Material 3 Expressive ${component.name.toLowerCase()} for the web, live: copy its code for React, Vue, Svelte, SolidJS or vanilla JS. ${component.description}`, 'component', { component, slug, componentHeader: isAddon(slug) ? '' : componentHeader(slug, 'playground'), intro: isAddon(slug) ? '' : componentIntro(slug), documentationHref: docHref(slug), icons: componentIcons, themes, element: elementMeta(slug), size: componentSize(slug), usedIn: showcasePublic ? examplesUsingComponent(slug) : [], panel: materialPanel(component, slug, themes, !!elementMeta(slug)) });
   }

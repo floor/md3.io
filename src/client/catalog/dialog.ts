@@ -15,14 +15,22 @@ registerStyles({
     // A non-modal dialog sits on a fixed overlay with a scrim: here it is in the flow, clear.
     + '.catalog-dialog .mtrl-dialog__overlay{position:static!important;inset:auto!important;background:none!important;overflow:visible!important;display:flex!important;justify-content:center;align-items:center;padding:0!important}'
     + '.catalog-dialog .mtrl-dialog{transform:none!important;translate:none!important;opacity:1!important;margin:0!important;width:300px}'
-    + '.catalog-dialog .mtrl-radios{padding-block:8px}',
+    + '.catalog-dialog .mtrl-radios{padding-block:8px}'
+    // A property section's dialog keeps its own width (its size).
+    // A property section's dialog takes material's own width for its size, out of a 600px container.
+    + '.catalog-dialog.catalog-dialog--sized{width:600px}'
+    + '.catalog-dialog.catalog-dialog--sized .mtrl-dialog--small{width:80%;max-width:360px}'
+    // Medium is the default: its dialog has neither size class. The overlay spans the container so the widths resolve.
+    + '.catalog-dialog.catalog-dialog--sized .mtrl-dialog__overlay{width:100%!important}'
+    + '.catalog-dialog.catalog-dialog--sized .mtrl-dialog:not(.mtrl-dialog--small):not(.mtrl-dialog--large){width:90%;max-width:560px}'
+    + '.catalog-dialog.catalog-dialog--sized .mtrl-dialog--large{width:95%;max-width:560px}',
 });
 
 const choices = [{ value: 'none', label: 'None' }, { value: 'bright', label: 'Bright' }, { value: 'chimes', label: 'Chimes' }, { value: 'waves', label: 'Waves' }];
 
-export const define = (): void => surface('md3-catalog-dialog', ['progress', 'button', 'divider', 'dialog', 'radios', 'catalog-dialog'], () => {
+const dialogSurface = (config: { size?: string; divider?: boolean } = {}, sized = false) => () => {
   const host = document.createElement('div');
-  host.className = 'catalog-dialog';
+  host.className = sized ? 'catalog-dialog catalog-dialog--sized' : 'catalog-dialog';
   let active = true;
   let timer = 0;
   let current: { destroy: () => void } | undefined;
@@ -30,7 +38,7 @@ export const define = (): void => surface('md3-catalog-dialog', ['progress', 'bu
     if (!active) return;
     current?.destroy();
     const dialog = createDialog({
-      title: 'Alarm sound', ariaLabel: 'Alarm sound', size: 'small', divider: true, closeButton: false,
+      title: 'Alarm sound', ariaLabel: 'Alarm sound', size: (config.size ?? 'small') as never, divider: config.divider ?? true, closeButton: false,
       // Always open in the page, so keyboard users Tab on past it: no focus trap.
       modal: false, autofocus: false, trapFocus: false, closeOnOverlayClick: false, container: host,
       buttons: [{ text: 'Cancel', variant: 'text', closeDialog: true }, { text: 'OK', variant: 'text', closeDialog: true, attributes: { disabled: true } }],
@@ -48,4 +56,15 @@ export const define = (): void => surface('md3-catalog-dialog', ['progress', 'bu
   keepFocusInCard(host);
   const frame = requestAnimationFrame(open);
   return { element: host, destroy: () => { active = false; cancelAnimationFrame(frame); clearTimeout(timer); current?.destroy(); } };
-});
+};
+
+/** The Overview's property sections: `md3-catalog-dialog-<property>-<value>` (component-properties.ts). */
+const DIALOG_PROPERTIES: Record<string, { size?: string; divider?: boolean }> = {
+  'size-small': { size: 'small' }, 'size-medium': { size: 'medium' }, 'size-large': { size: 'large' },
+  'dividers-on': { divider: true }, 'dividers-off': { divider: false }, glance: { size: 'small' },
+};
+const styles = ['progress', 'button', 'divider', 'dialog', 'radios', 'catalog-dialog'];
+export const define = (): void => {
+  surface('md3-catalog-dialog', styles, dialogSurface());
+  for (const [suffix, config] of Object.entries(DIALOG_PROPERTIES)) surface(`md3-catalog-dialog-${suffix}`, styles, dialogSurface(config, suffix.startsWith('size')));
+};
