@@ -2,8 +2,9 @@
 import 'material/elements/css/top-app-bar';
 import { defineTopAppBar } from 'material/elements';
 import { define as defineIconButtonCard } from './icon-button';
+import { anatomy } from './anatomy';
 
-export const define = (visual?: Element): void => {
+export const define = (visual?: Element): void | (() => void) => {
   defineIconButtonCard();
   defineTopAppBar();
   // The demo's headline is not the page's title: material renders it as an <h1>, which
@@ -18,4 +19,5 @@ export const define = (visual?: Element): void => {
   requestAnimationFrame(demote);
   // A property section's "on scroll" phone starts with its list scrolled, so the bar shows its scrolled state.
   for (const list of visual?.querySelectorAll<HTMLElement>('[data-start-scroll]') ?? []) requestAnimationFrame(() => list.scrollTo(0, 120));
+  return visual ? anatomy(visual) : undefined;
 };

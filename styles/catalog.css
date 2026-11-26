@@ -454,3 +454,7 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-bar--large { height: 152px; }
 .property-stage--stack .property-value:has(.property-bar) { grid-template-columns: 3em auto; }
 .catalog-visual.property-stage--stack:has(.property-bar) { gap: 32px; padding: 48px 24px; }
+.property-anatomy--bar { width: 540px; padding: 8px 80px; }
+.property-anatomy--bar .property-bar { width: 100%; }
+.property-anatomy__line--v { width: 1px; height: auto; }
+.property-anatomy--bar { padding: 64px 80px; }

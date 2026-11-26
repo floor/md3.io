@@ -251,7 +251,13 @@ const phoneTop = (type: string, follow = false, scrolled = false) => {
 const variantBar = (type: string) => `<div class="property-bar property-bar--${type}">` + m('top-app-bar', { type, headline: 'Headline', 'no-scroll': true },
   m('icon-button', { slot: 'leading', icon: symbols.arrowBack, 'aria-label': 'Back' }) + m('icon-button', { slot: 'trailing', icon: symbols.search, 'aria-label': 'Search' })
   + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })) + '</div>';
+// The medium bar's anatomy, as M3's figure: container, leading button, trailing icons, headline.
+const appBarAnatomy = () => `<div class="property-anatomy property-anatomy--bar"><div class="property-bar property-bar--medium">` + m('top-app-bar', { type: 'medium', headline: 'Headline', 'no-scroll': true, 'data-anatomy': true, 'data-part-shadow': '[class*=headline]:4:bottom' },
+  m('icon-button', { slot: 'leading', icon: symbols.arrowBack, 'aria-label': 'Back', 'data-part': '2', 'data-part-side': 'top' }) + m('icon-button', { slot: 'trailing', icon: symbols.search, 'aria-label': 'Search' })
+  + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite', 'data-part': '3', 'data-part-side': 'top' })) + '</div></div>';
 const appBarSections: PropertySection[] = [
+  { key: 'anatomy', title: 'Anatomy', text: 'The parts of an app bar: a medium bar here; the small bar has the same, on one row.',
+    values: [{ label: 'anatomy', markup: appBarAnatomy() }], anatomy: ['Container', 'Leading button', 'Trailing icons', 'Headline'] },
   { key: 'variants', title: 'Variants', text: 'Small and centre-aligned bars are one 64dp row; medium and large put the headline on a second row, and compress to the small bar as the page scrolls.',
     values: [['small', 'Small'], ['center', 'Centre-aligned'], ['medium', 'Medium'], ['large', 'Large']].map(([type, name]) => ({ label: type!, name, markup: variantBar(type!) })), stack: true },
 ];
@@ -286,11 +292,11 @@ const photoCard = () => m('card', { variant: 'elevated', headline: 'Himalayan Pe
 // The card's anatomy, as M3's figure: numbered callouts on its parts (catalog/card.ts places them
 // on the parts it measures, so they follow the font and the theme).
 const anatomyParts = ['Container', 'Media', 'Headline', 'Subhead', 'Supporting text', 'Actions'];
-const anatomyCard = () => `<div class="property-anatomy">${m('card', { variant: 'elevated' },
-  '<div slot="media" class="property-anatomy__media" data-part="2"></div>'
+const anatomyCard = () => `<div class="property-anatomy">${m('card', { variant: 'elevated', 'data-anatomy': true, 'data-container-at': 0.2 },
+  '<div slot="media" class="property-anatomy__media" data-part="2" data-part-side="right"></div>'
   + '<span slot="headline" data-part="3">Headline</span><span slot="subhead" data-part="4">Subhead</span>'
   + '<p data-part="5">Explain more about the topic shown in the headline and subhead through supporting text.</p>'
-  + m('button', { slot: 'actions', variant: 'outlined' }, 'Action') + m('button', { slot: 'actions', variant: 'filled', 'data-part': '6' }, 'Action'))}</div>`;
+  + m('button', { slot: 'actions', variant: 'outlined' }, 'Action') + m('button', { slot: 'actions', variant: 'filled', 'data-part': '6', 'data-part-side': 'right' }, 'Action'))}</div>`;
 const cardSections: PropertySection[] = [
   { key: 'anatomy', title: 'Anatomy', text: 'The parts of a card, top to bottom, in the order the card places them.',
     values: [{ label: 'anatomy', name: 'Anatomy', markup: anatomyCard() }], anatomy: anatomyParts },
@@ -371,6 +377,8 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>As the page scrolls, the bar takes its scrolled colour and a level of elevation, and a medium or large bar compresses to the small one.</li>'
       + '<li>It follows the window\'s scrolling, or an element\'s, named by <code>scroll-target</code>.</li></ul>',
     stage: phoneTop('large', true), caption: 'A large app bar over a library: scroll the list to compress it.', kind: 'app-bar',
+    // M3's app bars page, read 2026-11-26: medium flexible and large flexible replace medium and large, no longer recommended.
+    advice: 'M3 Expressive no longer recommends the medium and large app bars: medium flexible and large flexible app bars replace them. material does not have the flexible bars yet; the medium and large ones here are the baseline bars. <a class="text-link" href="https://m3.material.io/components/app-bars/overview">M3\'s note</a>',
   },
   carousel: {
     points: '<ul><li>A collection to browse rather than read in full: photos, artwork, featured entries.</li>'
