@@ -578,3 +578,18 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-chips { max-width: 100%; }
 .property-scene--chips { display: grid; gap: 12px; }
 .property-scene--chips .property-phone__list { margin: 0 -24px; }
+/* Search: a bar at a phone's width; an open view's stage tall enough for its suggestions. */
+.property-search { width: 360px; max-width: 100%; }
+.property-search > * { display: block; width: 100%; }
+.property-search--open { min-height: 300px; }
+.property-device--search { width: 340px; height: 520px; }
+.property-search-screen { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; background: var(--mtrl-sys-color-surface); }
+.property-device__screen.property-search-screen > * { height: auto; }
+.property-search-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 12px 0; }
+.property-search-screen .property-phone__list { margin: 0 -12px; flex: 1; overflow-y: auto; }
+.catalog-visual--search.property-note__stage { height: auto; padding: 32px 16px 0; display: grid; place-items: end center; overflow: hidden; }
+.catalog-visual--search.property-note__stage .property-device { border-bottom: 0; border-radius: 40px 40px 0 0; height: 460px; }
+.property-search-screen > m-search { height: 56px; flex: none; }
+.property-search--open > m-search { position: relative; }
+/* Material leaves the avatar button with the browser's border and background (reported): reset here. */
+m-search::part(avatar) { border: 0; background: none; padding: 0; border-radius: 50%; cursor: pointer; }

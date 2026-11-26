@@ -532,10 +532,29 @@ const chipsSections: PropertySection[] = [
     values: [{ label: 'enabled', name: 'Enabled', markup: chipsOf({}, chip('Terrace', { variant: 'filter' })) }, { label: 'disabled', name: 'Disabled', markup: chipsOf({}, chip('Terrace', { variant: 'filter', disabled: true })) }] },
 ];
 
+// Search: the bar, and its view open with suggestions, as M3's figures; a mail app's search at a glance.
+const avatarImg = '<img src="https://picsum.photos/id/64/80/80" alt="" width="30" height="30">';
+const recent = [['invoice', 'Invoice from Lumen', symbols.schedule, 'Recent'], ['ada', 'Ada Vale', symbols.schedule, 'Recent'], ['trip', 'Trip to Lisbon', symbols.schedule, 'Recent']];
+const suggestions = () => recent.map(([value, label, icon, group]) => m('search-suggestion', { value: value!, label: label!, icon: icon!, group: group! })).join('');
+// An open view is shown as a copy in the page (src/client/catalog/search.ts): a real one is a top-layer popover
+// with a scrim over the page.
+const searchOf = (attrs: Attributes, open = false) => `<div class="property-search${open ? ' property-search--open' : ''}">${m('search', { placeholder: 'Search mail', 'aria-label': 'Search mail', ...(open ? { 'view-mode': 'docked', 'data-shown-open': true } : {}), ...attrs }, suggestions())}</div>`;
+const searchSections: PropertySection[] = [
+  { key: 'bar', title: 'Search bar', text: 'A leading icon, then the field; at its end an action, such as voice, or the account\'s avatar.',
+    values: [{ label: 'plain', name: 'Leading icon only', markup: searchOf({ 'leading-icon': symbols.search }) },
+      { label: 'action', name: 'With an action', markup: searchOf({ 'leading-icon': symbols.search, 'trailing-icon': symbols.mic, 'trailing-label': 'Search by voice' }) },
+      { label: 'avatar', name: 'With an avatar', markup: searchOf({ 'leading-icon': symbols.search, avatar: avatarImg, 'avatar-label': 'Ada Vale\'s account' }) }], stack: true },
+  { key: 'view', title: 'Search view', text: 'Focused, the bar opens into a view of suggestions: contained in one surface, or divided from the field by a line.',
+    values: [{ label: 'contained', name: 'Contained', markup: searchOf({ 'leading-icon': symbols.search, variant: 'contained' }, true) },
+      { label: 'divided', name: 'Divided', markup: searchOf({ 'leading-icon': symbols.search, variant: 'divided' }, true) }] },
+  { key: 'disabled', title: 'Disabled', text: 'Disabled, the bar shows and takes no input.',
+    values: [{ label: 'enabled', name: 'Enabled', markup: searchOf({ 'leading-icon': symbols.search }) }, { label: 'disabled', name: 'Disabled', markup: searchOf({ 'leading-icon': symbols.search, disabled: true }) }], stack: true },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -565,6 +584,16 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  search: {
+    points: '<ul><li>A bar that opens into a view of suggestions, recent searches or results.</li>'
+      + '<li>Docked under the bar on large screens; full-screen on a phone.</li>'
+      + '<li>A leading icon, an action such as voice, or the account\'s avatar.</li>'
+      + '<li>The arrow keys move through the suggestions; Escape closes the view.</li></ul>',
+    stage: `<div class="property-device property-device--search"><div class="property-device__screen property-search-screen">${statusBar}`
+      + m('search', { placeholder: 'Search mail', 'aria-label': 'Search mail', 'leading-icon': symbols.search, avatar: avatarImg, 'avatar-label': 'Ada Vale\'s account', 'full-width': true }, suggestions())
+      + `${lists(mailboxes, mailNames, 'inbox')}</div></div>`,
+    caption: 'A mail app\'s search bar: tap it to see recent searches.', kind: 'search',
+  },
   radios: {
     points: '<ul><li>One option out of a set, all of them visible at once.</li>'
       + '<li>For two to five options; a select for longer lists.</li>'
