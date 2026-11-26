@@ -1,4 +1,4 @@
-// md3.io/conformance/matrix (src/server/conformance.ts): the search field, the filter chips (status, reference,
+// md3.io/specs/matrix (src/server/specs.ts): the search field, the filter chips (status, reference,
 // aspect), each row's disclosure, and the tray that counts what the filters select and copies it as CSV.
 // Without this script every row shows with its detail open.
 import 'material/elements/css/card';
@@ -14,7 +14,7 @@ import { registerPage, type PageLifecycle } from './page-lifecycle';
 type ListRow = { id: string; group: string; html: string; component: string; property: string; aspect: string; spec: string; compose: string };
 type Picked = HTMLElement & { value?: string | string[] };
 
-/** The matrix as one list: vlist pages through /api/conformance/rows, a header per component; the search and the
+/** The matrix as one list: vlist pages through /api/specs/rows, a header per component; the search and the
  *  chips set the query and reload it; the tray counts the matches and copies them, fetched whole, as CSV. */
 function mountList(page: HTMLElement, host: HTMLElement, life: PageLifecycle): void {
   page.classList.add('matrix--scripted');
@@ -33,7 +33,7 @@ function mountList(page: HTMLElement, host: HTMLElement, life: PageLifecycle): v
     return params;
   };
   const rows = async (params: URLSearchParams, signal?: AbortSignal) => {
-    const response = await fetch(`/api/conformance/rows/?${params}`, { signal });
+    const response = await fetch(`/api/specs/rows/?${params}`, { signal });
     const body = await response.json() as { items: ListRow[]; total: number };
     return body;
   };
@@ -79,7 +79,7 @@ function mountList(page: HTMLElement, host: HTMLElement, life: PageLifecycle): v
   });
 }
 
-registerPage('conformance', (content, life) => {
+registerPage('specs', (content, life) => {
   // The index's cards and progress bars, and a component page's controls: material's elements.
   defineCard(); defineProgress(); defineChips(); defineTextField(); defineIconButton(); defineButton();
   const listHost = content.querySelector<HTMLElement>('.matrix-list');

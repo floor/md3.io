@@ -1,18 +1,18 @@
-// md3.io/conformance/matrix: material's conformance with M3, property by property (FLO-1607, the owner's
+// md3.io/specs/matrix: material's specs with M3, property by property (FLO-1607, the owner's
 // request of 2026-11-26). Laid out as the parity matrix the owner likes, from material's components in
 // md3.io's design: a masthead, a summary card per browser, a caution line, a controls bar (search and
 // filter chips with counts), a sticky column header, a section per component (its meters and its rows,
 // each disclosing its detail), and a tray of what the filters select, with a copy button.
 //
 // The data is material's public matrix file, schema v1 agreed with material on 2026-11-26, vendored at the
-// pinned version by `bun run conformance:sync` into data/conformance/<version>.json. Until material tags the
+// pinned version by `bun run specs:sync` into data/specs/<version>.json. Until material tags the
 // first real file, the page renders a labelled sample. Scores are derived here. The search, the chips and
-// the tray run in src/client/conformance.ts; without scripts every row shows, details open.
+// the tray run in src/client/specs.ts; without scripts every row shows, details open.
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { symbols } from '../shared/icons';
 import type { Database } from 'bun:sqlite';
-import { buildIndex, queryRows } from './conformance-db';
+import { buildIndex, queryRows } from './specs-db';
 
 type Status = 'match' | 'drift' | 'no-value';
 /** The two references material is measured against (schema v1, revised 2026-11-26): the M3 specification on
@@ -35,18 +35,18 @@ interface Matrix {
 }
 
 const root = resolve(import.meta.dir, '../..');
-const dir = resolve(root, 'data/conformance');
+const dir = resolve(root, 'data/specs');
 // A release is x.y.z; a pre-release import is x.y.z-pre@<commit> (Priam, 2026-11-26), newer than x.y.z-1 and older
 // than x.y.z, dropped once the tag's own file replaces it.
 const semver = (v: string) => [...v.split(/[-@]/)[0]!.split('.').map(Number), v.includes('-pre') ? 0 : 1];
 const newer = (a: string, b: string) => { const x = semver(a), y = semver(b); for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return (y[i] ?? 0) - (x[i] ?? 0); return 0; };
-/** The vendored releases, newest first: one file per material version, data/conformance/<version>.json, written by
- *  `bun run conformance:sync`. A tag never changes, so each is read once. */
-export const conformanceVersions = (): string[] => readdirSync(dir).map(f => /^(\d+\.\d+\.\d+(?:-pre@[0-9a-f]{7,40})?)\.json$/.exec(f)?.[1]).filter((v): v is string => !!v).sort(newer);
+/** The vendored releases, newest first: one file per material version, data/specs/<version>.json, written by
+ *  `bun run specs:sync`. A tag never changes, so each is read once. */
+export const specsVersions = (): string[] => readdirSync(dir).map(f => /^(\d+\.\d+\.\d+(?:-pre@[0-9a-f]{7,40})?)\.json$/.exec(f)?.[1]).filter((v): v is string => !!v).sort(newer);
 const cache = new Map<string, Matrix>();
 /** The matrix at a version, or the latest; the sample until a release carries the file. Null for an unknown version. */
 export const loadMatrix = (version?: string | null): Matrix | null => {
-  const versions = conformanceVersions();
+  const versions = specsVersions();
   if (version && !versions.includes(version)) return null;
   const key = version ?? versions[0] ?? 'sample';
   if (!cache.has(key)) cache.set(key, JSON.parse(readFileSync(resolve(dir, `${key}.json`), 'utf8')) as Matrix);
@@ -133,12 +133,12 @@ const LEGEND = `<p class="matrix-legend">Each card's strip has one mark per prop
 
 /** The matrix's index, as the Components page: the hero, then a card per component in its category, its
  *  stage the component's scores against each reference. */
-export function conformanceIndex(sections: { id: string; name: string; items: { slug: string }[] }[]): { html: string } {
+export function specsIndex(sections: { id: string; name: string; items: { slug: string }[] }[]): { html: string } {
   const matrix = load();
   const byId = new Map(matrix.components.map(component => [component.id, component]));
   const rows = matrix.components.flatMap(component => component.properties);
   const card = (component: Component) => {
-    const href = `/components/${component.id}/conformance/`;
+    const href = `/components/${component.id}/specs/`;
     const drift = component.properties.filter(row => REFS.some(r => row.status[r] === 'drift')).length;
     const noValue = component.properties.filter(row => REFS.every(r => row.status[r] === 'no-value')).length;
     const stage = `<div slot="media" class="matrix-stage">${REFS.map(ref => {
@@ -164,15 +164,15 @@ export function conformanceIndex(sections: { id: string; name: string; items: { 
 }
 
 /** One component's properties: its scores, the controls, and its rows. */
-export function conformanceComponent(id: string): { html: string; name: string; toc: { id: string; title: string }[] } | null {
+export function specsComponent(id: string): { html: string; name: string; toc: { id: string; title: string }[] } | null {
   const matrix = load();
   const component = matrix.components.find(c => c.id === id);
   if (!component) return null;
   const rows = component.properties;
   const aspects = [...new Set(rows.map(row => row.aspect))];
 
-  const masthead = `<header class="matrix-masthead"><h2 id="matrix-summary">Conformance</h2>`
-    + `<p class="matrix-lede">The ${escape(component.name.toLowerCase())} against Material 3's two references, property by property: the specification's value, Compose's, material's, and whether they match. <a class="text-link" href="/conformance/">Every component</a></p>`
+  const masthead = `<header class="matrix-masthead"><h2 id="matrix-summary">Specs</h2>`
+    + `<p class="matrix-lede">The ${escape(component.name.toLowerCase())} against Material 3's two references, property by property: the specification's value, Compose's, material's, and whether they match. <a class="text-link" href="/specs/">Every component</a></p>`
     + facts(matrix, rows, 1) + `</header>`;
   const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label });
   const countBy = (key: (row: Row) => boolean) => rows.filter(key).length;
@@ -200,7 +200,7 @@ export function conformanceComponent(id: string): { html: string; name: string; 
   const tray = `<aside class="matrix-tray" aria-label="Selection"><p class="matrix-tray__count" role="status"><strong data-matrix-count>${rows.length}</strong> of ${rows.length} properties</p>`
     + m('button', { variant: 'tonal', icon: symbols.contentCopy, class: 'matrix-copy' }, 'Copy as CSV') + '</aside>';
 
-  return { name: component.name, toc: [{ id: 'matrix-summary', title: 'Conformance' }, { id: `${component.id}-title`, title: 'Properties' }], html: `<div class="matrix" data-refs="${REFS.join(' ')}">${masthead}${summaryCards(rows)}${caution(matrix)}${controls}${header}<div class="matrix-sections">${sections}</div>${tray}</div>` };
+  return { name: component.name, toc: [{ id: 'matrix-summary', title: 'Specs' }, { id: `${component.id}-title`, title: 'Properties' }], html: `<div class="matrix" data-refs="${REFS.join(' ')}">${masthead}${summaryCards(rows)}${caution(matrix)}${controls}${header}<div class="matrix-sections">${sections}</div>${tray}</div>` };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -222,14 +222,14 @@ type ListItem = { id: string; group: string; html: string; component: string; pr
  *  `{ items, total }` for vlist's data plugin. q searches; status, aspect take comma lists; ref is spec or compose. */
 let index: Database | null = null;
 /** The SQLite index of every vendored release (or the sample), built once per server start. */
-const conformanceIndexDb = (): Database => index ??= buildIndex((conformanceVersions().length ? conformanceVersions() : ['sample']).map(version => ({ version, matrix: loadMatrix(version === 'sample' ? null : version)! })));
+const specsIndexDb = (): Database => index ??= buildIndex((specsVersions().length ? specsVersions() : ['sample']).map(version => ({ version, matrix: loadMatrix(version === 'sample' ? null : version)! })));
 
-export function conformanceRows(params: URLSearchParams): { items: ListItem[]; total: number } | null {
+export function specsRows(params: URLSearchParams): { items: ListItem[]; total: number } | null {
   const requested = params.get('version');
-  if (requested && !conformanceVersions().includes(requested)) return null;
-  const version = requested ?? conformanceVersions()[0] ?? 'sample';
+  if (requested && !specsVersions().includes(requested)) return null;
+  const version = requested ?? specsVersions()[0] ?? 'sample';
   const list = (key: string) => (params.get(key) ?? '').split(',').filter(Boolean);
-  const { rows, total } = queryRows(conformanceIndexDb(), {
+  const { rows, total } = queryRows(specsIndexDb(), {
     version, q: params.get('q') ?? '', statuses: list('status'), aspects: list('aspect'),
     refs: list('ref').filter((r): r is Ref => REFS.includes(r as Ref)), component: params.get('component') ?? undefined,
     offset: Math.max(0, Number(params.get('offset')) || 0), limit: Math.min(1000, Math.max(1, Number(params.get('limit')) || 50)),
@@ -252,7 +252,7 @@ const controlsFor = (rows: Row[]) => {
 
 /** The list page: title and facts, the two reference cards, the method, search and filters, the column header,
  *  the list and the tray; without scripts, every row as plain HTML. */
-export function conformanceList(): { html: string; name: string } {
+export function specsList(): { html: string; name: string } {
   const matrix = load();
   const rows = matrix.components.flatMap(component => component.properties);
   const head = `<header class="matrix-masthead"><h2 class="matrix-list-title">Every property</h2>${facts(matrix, rows, matrix.components.length)}</header>`;
@@ -260,7 +260,7 @@ export function conformanceList(): { html: string; name: string } {
   const fallback = matrix.components.map(component => `<h2 class="matrix-group">${escape(component.name)}</h2><ul class="matrix-rows">${component.properties.map(row => `<li class="matrix-row">${rowLine(row)}</li>`).join('')}</ul>`).join('');
   const tray = `<aside class="matrix-tray" aria-label="Selection"><p class="matrix-tray__count" role="status"><strong data-matrix-count>${rows.length}</strong> of ${rows.length} properties</p>`
     + m('button', { variant: 'tonal', icon: symbols.contentCopy, class: 'matrix-copy' }, 'Copy as CSV') + '</aside>';
-  return { name: 'Every property', html: `<div class="matrix matrix--list" data-refs="${REFS.join(' ')}">${head}${summaryCards(rows)}${caution(matrix)}${controlsFor(rows)}${colhead}<div class="matrix-list" aria-label="Conformance, every property"></div><p class="matrix-empty" hidden>No property matches the search and filters.</p><div class="matrix-fallback">${fallback}</div>${tray}</div>` };
+  return { name: 'Every property', html: `<div class="matrix matrix--list" data-refs="${REFS.join(' ')}">${head}${summaryCards(rows)}${caution(matrix)}${controlsFor(rows)}${colhead}<div class="matrix-list" aria-label="Specs, every property"></div><p class="matrix-empty" hidden>No property matches the search and filters.</p><div class="matrix-fallback">${fallback}</div>${tray}</div>` };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -278,7 +278,7 @@ const disagrees = (row: Row) => { const a = refValue(row, 'spec'), b = refValue(
 
 /** The summary at a version: the release's facts, its counts overall, per component and per aspect, and the ids of
  *  the rows whose references disagree. */
-export function conformanceSummary(version: string | null) {
+export function specsSummary(version: string | null) {
   const matrix = loadMatrix(version);
   if (!matrix) return null;
   const rows = matrix.components.flatMap(c => c.properties);

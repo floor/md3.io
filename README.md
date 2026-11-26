@@ -48,7 +48,7 @@ Each component has four tabs: Overview, Playground, Develop and Accessibility. T
 
 - **At a glance** opens most Overviews: a few points in our own words, never m3.material.io's text, beside the live component in a realistic scene, often in a device frame. The scenes are in `NOTES` in `src/server/component-properties.ts`.
 - **A section per property** (Variant, Size, Shape, State and so on) shows the property's values side by side in one stage, numbered, with a legend of names only. The sections are in `PROPERTIES` in the same file, one list per component.
-- **Known issues** ends the Overview: what M3 recommends that material does not do yet, and the known bugs, one sentence each. The entries come from material's conformance matrix, sent by material's team with the version and date checked; an entry goes when its fix ships. They are in `KNOWN_ISSUES`.
+- **Known issues** ends the Overview: what M3 recommends that material does not do yet, and the known bugs, one sentence each. The entries come from material's specs matrix, sent by material's team with the version and date checked; an entry goes when its fix ships. They are in `KNOWN_ISSUES`.
 
 How the stages are built:
 

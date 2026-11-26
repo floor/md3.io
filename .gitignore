@@ -2,5 +2,5 @@ node_modules/
 dist/
 analysis/
 .DS_Store
-# The live issues export (scripts/conformance-issues.ts): written on the hub, never committed.
-data/conformance/issues.json
+# The live issues export (scripts/specs-issues.ts): written on the hub, never committed.
+data/specs/issues.json

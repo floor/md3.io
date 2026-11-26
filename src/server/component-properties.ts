@@ -967,7 +967,7 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'Expanding and collapsing an item to show the items under it.',
     'Swiping an item to reveal more actions.',
   ] },
-  // The button family, from material's conformance matrix (Priam, checked 2026-11-26 against material 3.16.5:
+  // The button family, from material's specs matrix (Priam, checked 2026-11-26 against material 3.16.5:
   // m3.material.io read that day, Compose Material 3 tokens 41.1.19 and 1.4.0). "Newest tokens" marks a
   // value Google changed in its newest tokens, not yet in a released version.
   button: { bugs: [
@@ -996,7 +996,7 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'At sizes M and L the space between icon and label is 16 and 20px, where M3\'s newest tokens give 12 and 16dp (newest tokens only).',
   ] },
   'fab-menu': { bugs: ['Menu items keep no shadow on hover, focus and press, where M3\'s newest tokens raise them to level 4 on hover and level 3 on focus and press (newest tokens only).'] },
-  // Selection and input, and the menu, from material's conformance matrix (Priam, checked 2026-11-26 against
+  // Selection and input, and the menu, from material's specs matrix (Priam, checked 2026-11-26 against
   // material 3.16.5; m3.material.io read that day, Compose Material 3 tokens 41.1.19 and 1.4.0). Checkbox,
   // chips and slider: no known deviation.
   switch: { bugs: ['A disabled, unselected switch fills its track with the on-surface colour at 12%, where M3 uses surface-container-highest at 12%.'] },
@@ -1018,7 +1018,7 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
   // Confirmed by material's side-sheet table (Priam, 2026-11-26, Chromium and WebKit).
   'side-sheet': { missing: ['A back icon in the header, to go back from another region within the sheet.', 'The detached variant, with 16dp corners all round, apart from the window\'s edge.', 'A built-in row of actions at the bottom of the sheet.'],
     bugs: ['The headline uses the on-surface colour, where M3 uses on-surface-variant.'] },
-  // Surfaces, from material's conformance matrix (Priam, checked 2026-11-26 against material 3.16.6; m3.material.io
+  // Surfaces, from material's specs matrix (Priam, checked 2026-11-26 against material 3.16.6; m3.material.io
   // read that day, Compose Material 3 tokens 41.1.19 and 1.4.0). Divider: no known deviation.
   tooltip: { missing: ['A rich tooltip\'s subhead and its one or two buttons; planned for the next minor release.'], bugs: [
     'A plain tooltip hides about 0.1s after the pointer leaves its trigger, where the M3 guidelines keep it for 1.5s.',

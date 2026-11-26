@@ -11,7 +11,7 @@ const options = { outdir, naming: { entry: '[name].[ext]', chunk: 'chunk-[hash].
 // A single lifecycle registry is shared even by independently bundled page entries.
 // Keeping the catalog and material-panel groups separate avoids pulling their full
 // component tables into other pages' initial chunks.
-for (const names of [['page-lifecycle'], ['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab', 'conformance'], ['playground-material'], ['catalog']]) {
+for (const names of [['page-lifecycle'], ['site', 'playground', 'preview', 'examples', 'styles', 'styles-frame', 'theme-app', 'colour-lab', 'specs'], ['playground-material'], ['catalog']]) {
   const result = await Bun.build({ ...options,
     entrypoints: names.map(name => resolve(root, `src/client/${name}.ts`)),
     plugins: [{ name: 'page-lifecycle', setup(build) {

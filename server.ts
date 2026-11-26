@@ -7,7 +7,7 @@ import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
-import { conformanceComponent, conformanceIndex, conformanceList, conformanceRows, conformanceSummary, conformanceVersions, loadMatrix } from './src/server/conformance';
+import { specsComponent, specsIndex, specsList, specsRows, specsSummary, specsVersions, loadMatrix } from './src/server/specs';
 import { componentDirectory } from './src/server/component-directory';
 import { componentOverview } from './src/server/component-overview';
 import { hasPropertyOverview, propertyOverview } from './src/server/component-properties';
@@ -148,7 +148,7 @@ function page(path: string, title: string, description: string, template: string
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
       // A component's Develop or Accessibility tab marks the component itself.
-      : renderSectionDrawer(path.replace(/(?:develop|accessibility|conformance)\/$/, ''), 'Component list', componentDrawerEntries(playgroundDirectory.entries))
+      : renderSectionDrawer(path.replace(/(?:develop|accessibility|specs)\/$/, ''), 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
   const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, guideGroups, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
@@ -156,7 +156,7 @@ function page(path: string, title: string, description: string, template: string
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
   const panelStyles = isAddons ? 'addon-panel' : 'material-panel';
-  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'component-tab' && data.conformance ? 'conformance-tab' : template === 'component-tab' ? 'component-tab' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : template === 'conformance' ? 'conformance' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'component-tab' && data.specs ? 'specs-tab' : template === 'component-tab' ? 'component-tab' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : template === 'specs' ? 'specs' : 'page';
   const pageName = title.replace(/ — material$/, '');
   const jsonLd = status === 200 ? structuredData(path, pageName, description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
@@ -164,7 +164,7 @@ function page(path: string, title: string, description: string, template: string
     skipTarget: isComponentDetail ? 'component-content' : 'content',
     // The page's Markdown twin, for AI tools (a guide, or a component's Develop or Accessibility tab).
     markdown: /^\/docs\/([a-z-]+)\/$/.exec(path) && isGuide(path.slice(6, -1)) ? `/docs/${path.slice(6, -1)}.md` : /^\/components\/[a-z-]+\/(develop|accessibility)\/$/.test(path) ? `${path.slice(0, -1)}.md` : null,
-    path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: (isComponentDetail && !isAddons) || isHome, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : template === 'conformance' || data.conformance === true ? 'conformance' : undefined,
+    path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: (isComponentDetail && !isAddons) || isHome, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : template === 'specs' || data.specs === true ? 'specs' : undefined,
     // The pager takes the page's own content width: the overviews' inset body, or a component
     // page's side padding.
     content: template === 'document' || template === 'component-tab' || !pager ? content
@@ -241,18 +241,18 @@ function componentDocument(slug: string) {
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
 const componentTabs = (slug: string): ComponentTab[] => ['overview', 'playground', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
 /** The header every tab of a component shares: the overview's hero, then the tab bar. */
-/** The conformance pages' header, as a component's (the owner, 2026-11-26): the hero, then a tab per page. Issues
+/** The specs pages' header, as a component's (the owner, 2026-11-26): the hero, then a tab per page. Issues
  *  joins the tabs when its page exists. The seed keeps the header in place across a tab switch (client-navigation). */
-type ConformanceTab = 'overview' | 'matrix';
-const conformanceTabs: { id: ConformanceTab; label: string; icon: string; href: string }[] = [
-  { id: 'overview', label: 'Overview', icon: 'explore', href: '/conformance/' },
-  { id: 'matrix', label: 'Matrix', icon: 'table', href: '/conformance/matrix/' },
+type SpecsTab = 'overview' | 'matrix';
+const specsTabs: { id: SpecsTab; label: string; icon: string; href: string }[] = [
+  { id: 'overview', label: 'Overview', icon: 'explore', href: '/specs/' },
+  { id: 'matrix', label: 'Matrix', icon: 'table', href: '/specs/matrix/' },
 ];
-function conformanceHeader(current: ConformanceTab): string {
-  const tabs = conformanceTabs.map(tab => `<a class="component-tabs__tab" href="${tab.href}"${tab.id === current ? ' aria-current="page"' : ''}>${icon(tab.icon)}<span>${tab.label}</span></a>`).join('');
-  return `<header class="page-hero component-hero conformance-hero"><div class="page-hero__text"><h1>Conformance</h1><p>How material follows Material 3's two official references, the specification on m3.material.io and Jetpack Compose Material 3, component by component and property by property.</p></div>`
-    + `<div class="component-hero__visual"><div class="page-hero__art" aria-hidden="true" data-seed="conformance"></div></div></header>`
-    + `<nav class="component-tabs" aria-label="Conformance pages">${tabs}</nav>`;
+function specsHeader(current: SpecsTab): string {
+  const tabs = specsTabs.map(tab => `<a class="component-tabs__tab" href="${tab.href}"${tab.id === current ? ' aria-current="page"' : ''}>${icon(tab.icon)}<span>${tab.label}</span></a>`).join('');
+  return `<header class="page-hero component-hero specs-hero"><div class="page-hero__text"><h1>Specs</h1><p>How material follows Material 3's two official references, the specification on m3.material.io and Jetpack Compose Material 3, component by component and property by property.</p></div>`
+    + `<div class="component-hero__visual"><div class="page-hero__art" aria-hidden="true" data-seed="specs"></div></div></header>`
+    + `<nav class="component-tabs" aria-label="Specs pages">${tabs}</nav>`;
 }
 
 function componentHeader(slug: string, current: ComponentTab): string {
@@ -519,29 +519,31 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/color-lab/') response = page(path, 'Colour Lab — material', styleDescription('/styles/color-lab/'), 'styles-color-lab', { seeds: LAB_SEEDS, variants: LAB_VARIANTS, samples: LAB_SAMPLES, roleGroups: LAB_ROLE_GROUPS });
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
-  // The conformance matrix (FLO-1607): hidden until the owner approves it (src/shared/visibility.ts).
-  // Conformance (FLO-1607), hidden until the owner approves it (src/shared/visibility.ts): the dedicated page
+  // The specs matrix (FLO-1607): hidden until the owner approves it (src/shared/visibility.ts).
+  // Specs (FLO-1607), hidden until the owner approves it (src/shared/visibility.ts): the dedicated page
   // on the Components page's layout, and each component's matrix on the component pages' layout.
-  else if (path === '/conformance/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections), header: conformanceHeader('overview') });
-  else if (path === '/conformance/matrix/') response = page(path, 'Conformance matrix — material', 'Every property of the material library against Material 3\'s specification and Jetpack Compose Material 3, grouped by component.', 'conformance', { conformance: conformanceList(), header: conformanceHeader('matrix') });
+  // Conformance was renamed Specs (the owner, 2026-11-26): the old addresses answer 301 to the new ones.
+  else if (path.startsWith('/conformance/') || /^\/components\/[a-z-]+\/conformance\/$/.test(path)) response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: path.replace(/\/conformance\//, '/specs/') + url.search } });
+  else if (path === '/specs/') response = page(path, 'Specs — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'specs', { specs: specsIndex(playgroundDirectory.sections), header: specsHeader('overview') });
+  else if (path === '/specs/matrix/') response = page(path, 'Specs matrix — material', 'Every property of the material library against Material 3\'s specification and Jetpack Compose Material 3, grouped by component.', 'specs', { specs: specsList(), header: specsHeader('matrix') });
   // The list's pages, for vlist's data plugin; hidden with the page until the owner approves it.
-  // The conformance API (hidden with the pages until the owner approves them). ?version=<material version>, default the
+  // The specs API (hidden with the pages until the owner approves them). ?version=<material version>, default the
   // latest vendored release; a version's answer never changes, so it is cached for good.
-  else if (/^\/api\/conformance(\/(versions|matrix|summary|rows))?\/?$/.test(path)) {
+  else if (/^\/api\/specs(\/(versions|matrix|summary|rows))?\/?$/.test(path)) {
     const what = path.split('/')[3] || 'versions';
     const version = url.searchParams.get('version');
-    const body = what === 'versions' ? { latest: conformanceVersions()[0] ?? null, versions: conformanceVersions() }
-      : what === 'matrix' ? loadMatrix(version) : what === 'summary' ? conformanceSummary(version) : conformanceRows(url.searchParams);
+    const body = what === 'versions' ? { latest: specsVersions()[0] ?? null, versions: specsVersions() }
+      : what === 'matrix' ? loadMatrix(version) : what === 'summary' ? specsSummary(version) : specsRows(url.searchParams);
     const cache = version && what !== 'versions' ? 'public, max-age=31536000, immutable' : 'public, max-age=300';
     response = body ? Response.json(body, { headers: { 'Cache-Control': cache, 'X-Robots-Tag': 'noindex', 'Access-Control-Allow-Origin': '*' } })
-      : Response.json({ error: `No conformance matrix for material ${version}`, versions: conformanceVersions() }, { status: 404, headers: { 'X-Robots-Tag': 'noindex' } });
+      : Response.json({ error: `No specs matrix for material ${version}`, versions: specsVersions() }, { status: 404, headers: { 'X-Robots-Tag': 'noindex' } });
   }
   // A component's matrix sits under the component (its section, drawer and header).
-  else if (/^\/components\/[a-z-]+\/conformance\/$/.test(path) && isComponent(path.split('/')[2]!) && conformanceComponent(path.split('/')[2]!)) {
+  else if (/^\/components\/[a-z-]+\/specs\/$/.test(path) && isComponent(path.split('/')[2]!) && specsComponent(path.split('/')[2]!)) {
     const slug = path.split('/')[2]!;
-    const detail = conformanceComponent(slug)!;
-    response = page(path, `${detail.name}: conformance — material`, `${detail.name}: how the material library follows Material 3's specification and Jetpack Compose Material 3, property by property.`, 'component-tab', {
-      slug, componentHeader: componentHeader(slug, 'conformance' as ComponentTab), frameworksRow: '', html: detail.html, toc: detail.toc, conformance: true,
+    const detail = specsComponent(slug)!;
+    response = page(path, `${detail.name}: specs — material`, `${detail.name}: how the material library follows Material 3's specification and Jetpack Compose Material 3, property by property.`, 'component-tab', {
+      slug, componentHeader: componentHeader(slug, 'specs' as ComponentTab), frameworksRow: '', html: detail.html, toc: detail.toc, specs: true,
     });
   }
   else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');

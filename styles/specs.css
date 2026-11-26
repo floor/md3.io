@@ -1,7 +1,7 @@
-/* The conformance matrix (src/server/conformance.ts), laid out as the parity matrix the owner likes:
+/* The specs matrix (src/server/specs.ts), laid out as the parity matrix the owner likes:
    masthead, a summary card per browser, a caution line, the controls bar, a sticky column header, a section
    per component with its rows, and a tray of the selection. md3.io's tokens, both themes. */
-.conformance-page { box-sizing: border-box; width: min(100% - 2 * clamp(16px, 4vw, 48px), 1208px); margin: 40px auto 120px; color: var(--text); }
+.specs-page { box-sizing: border-box; width: min(100% - 2 * clamp(16px, 4vw, 48px), 1208px); margin: 40px auto 120px; color: var(--text); }
 .matrix { --matrix-cols: minmax(0, 1fr) repeat(2, minmax(120px, 200px)) minmax(88px, 140px); }
 .matrix[data-only="spec"], .matrix[data-only="compose"] { --matrix-cols: minmax(0, 1fr) minmax(120px, 200px) minmax(88px, 140px); }
 
@@ -119,8 +119,8 @@
 .matrix-stage__ref m-progress { grid-column: 1 / -1; display: block; width: 100%; }
 .matrix-stage__ref .matrix-ticks { grid-column: 1 / -1; }
 .matrix-stage__ref .matrix-ticks__label { display: none; }
-/* "Conformance" is longer than "Components": a step smaller, so it fits its tile. */
-.conformance-hero .page-hero__text h1 { font-size: clamp(40px, 15.5cqi, 104px); }
+/* "Specs" is longer than "Components": a step smaller, so it fits its tile. */
+.specs-hero .page-hero__text h1 { font-size: clamp(40px, 15.5cqi, 104px); }
 
 /* On a component's page the matrix sits in the article (.md): its own type, not the article's. */
 .md .matrix h2#matrix-summary { margin: 0 0 12px; padding: 0; border: 0; font: 400 28px/36px var(--font-sans); }
@@ -140,5 +140,5 @@
 .matrix-legend .matrix-tick { display: inline-block; vertical-align: middle; }
 
 /* Under the tabs, the matrix's own heading and facts. */
-.conformance-tab-page .matrix-list-title { margin: 0 0 8px; font: 400 28px/36px var(--font-sans); }
-.conformance-tab-page .matrix-index .component-catalog__section { margin-top: 32px; }
+.specs-tab-page .matrix-list-title { margin: 0 0 8px; font: 400 28px/36px var(--font-sans); }
+.specs-tab-page .matrix-index .component-catalog__section { margin-top: 32px; }

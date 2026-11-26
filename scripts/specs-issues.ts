@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-// scripts/conformance-issues.ts
+// scripts/specs-issues.ts
 /**
- * The public export of the conformance issues: Linear project "material" in,
- * `conformance/issues.json` out.
+ * The public export of the specs issues: Linear project "material" in,
+ * `specs/issues.json` out.
  *
  * The export is every issue of the project, curated for publication: one
  * entry per issue, with a public slug, its type and kind, component, aspects,
@@ -20,8 +20,8 @@
  * scripts/public-names.ts, so a tracker id or a team name in a title fails the
  * run instead of reaching the page.
  *
- *   LINEAR_API_KEY=… bun run scripts/conformance-issues.ts
- *   bun run scripts/conformance-issues.ts --from analysis/linear-issues.json
+ *   LINEAR_API_KEY=… bun run scripts/specs-issues.ts
+ *   bun run scripts/specs-issues.ts --from analysis/linear-issues.json
  *
  * With no `LINEAR_API_KEY` and no `--from`, it exits 2 and names the variable.
  * `--from` reads a saved GraphQL response instead of the network.
@@ -34,11 +34,11 @@ import { publicNameRefs } from "./public-names";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // On md3.io (the owner's decision of 2026-11-26, moved from material at 6ee26794): the hub writes the export
-// outside the repository, where it serves it; CONFORMANCE_ISSUES_OUT names the file, data/conformance/issues.json
+// outside the repository, where it serves it; SPECS_ISSUES_OUT names the file, data/specs/issues.json
 // (ignored by git) by default. The Linear key is the owner's credential, set on the hub, never in the repository.
-const OUTPUT = process.env.CONFORMANCE_ISSUES_OUT ?? resolve(ROOT, "data/conformance/issues.json");
+const OUTPUT = process.env.SPECS_ISSUES_OUT ?? resolve(ROOT, "data/specs/issues.json");
 
-/** The Conformance label group the export keeps. A bug carries none of them. */
+/** Linear's "Conformance" label group, the kinds the export keeps. A bug carries none of them. */
 export const KINDS = ["drift-spec", "drift-compose", "drift-both", "reference-conflict", "deviation", "api-gap"] as const;
 export type Kind = (typeof KINDS)[number];
 
@@ -57,9 +57,9 @@ export interface LinearIssue {
   milestone: string | null;
 }
 
-export type Type = "bug" | "conformance" | "improvement" | "feature";
+export type Type = "bug" | "specs" | "improvement" | "feature";
 
-/** One entry of `conformance/issues.json`. */
+/** One entry of `specs/issues.json`. */
 export interface IssueEntry {
   id: string;
   title: string;
@@ -91,16 +91,16 @@ export const materialVersion = async (): Promise<string> => {
   return manifest.dependencies?.material?.replace(/^[^\d]*/, "") ?? "unknown";
 };
 
-/** The label names an issue carries that belong to the Conformance group. */
+/** The label names an issue carries that belong to Linear's "Conformance" group. */
 export const kindsOf = (issue: LinearIssue): Kind[] =>
   issue.labels.filter((label): label is Kind => (KINDS as readonly string[]).includes(label));
 
-/** The first Conformance label in the group's own order, so the kind is stable. */
+/** The first "Conformance" label in the group's own order, so the kind is stable. */
 export const kindOf = (issue: LinearIssue): Kind | null => kindsOf(issue)[0] ?? null;
 
-/** What kind of issue it is: a conformance one keeps its kind; the rest fall to their label. */
+/** What kind of issue it is: a specs one keeps its kind; the rest fall to their label. */
 export const typeOf = (issue: LinearIssue): Type => {
-  if (kindOf(issue) !== null) return "conformance";
+  if (kindOf(issue) !== null) return "specs";
   const labels = issue.labels.map((label) => label.toLowerCase());
   if (labels.includes("bug")) return "bug";
   if (labels.includes("feature") || labels.includes("enhancement")) return "feature";
@@ -279,7 +279,7 @@ export const issuesFromResponse = (response: unknown): LinearIssue[] => {
   });
 };
 
-const QUERY = `query ConformanceIssues($after: String) {
+const QUERY = `query SpecsIssues($after: String) {
   issues(first: 100, after: $after, filter: { project: { name: { eq: "material" } } }) {
     pageInfo { hasNextPage endCursor }
     nodes {
@@ -322,7 +322,7 @@ if (import.meta.main) {
   const from = fromIndex === -1 ? null : process.argv[fromIndex + 1];
   const key = process.env.LINEAR_API_KEY;
   if (!from && !key) {
-    console.error("conformance-issues: set LINEAR_API_KEY (or pass --from <file>)");
+    console.error("specs-issues: set LINEAR_API_KEY (or pass --from <file>)");
     process.exit(2);
   }
   const issues = from
@@ -333,5 +333,5 @@ if (import.meta.main) {
   guard(text);
   await mkdir(dirname(OUTPUT), { recursive: true });
   await writeFile(OUTPUT, text);
-  console.log(`conformance-issues: ${file.issues.length} issue(s) written to ${OUTPUT}`);
+  console.log(`specs-issues: ${file.issues.length} issue(s) written to ${OUTPUT}`);
 }

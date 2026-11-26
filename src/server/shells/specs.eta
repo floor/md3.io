@@ -1,0 +1,5 @@
+<%/* Specs (src/server/specs.ts). The overview and the matrix carry the component pages' header (a hero, then
+   tabs) and its body width; a component's own matrix is a tab of that component's page instead (component-tab.eta). */%>
+<% if (it.header) { %><div class="page-wrap component-tab-page specs-tab-page"><%~ it.header %><div class="component-overview"><div class="component-overview__main"><%~ it.specs.html %></div></div></div><% } else if (it.specs.name) { %><article class="specs-page">
+  <%~ it.specs.html %>
+</article><% } else { %><%~ it.specs.html %><% } %>

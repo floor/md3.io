@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { buildIndex, queryRows, type MatrixFile } from '../src/server/conformance-db';
+import { buildIndex, queryRows, type MatrixFile } from '../src/server/specs-db';
 
-const sample = JSON.parse(readFileSync(new URL('../data/conformance/sample.json', import.meta.url), 'utf8')) as MatrixFile;
+const sample = JSON.parse(readFileSync(new URL('../data/specs/sample.json', import.meta.url), 'utf8')) as MatrixFile;
 const later: MatrixFile = { ...sample, components: sample.components.map(c => ({ ...c, properties: c.properties.map(r => ({ ...r, status: { ...r.status, spec: 'match' as const } })) })) };
 const db = buildIndex([{ version: '1.0.0', matrix: sample }, { version: '1.1.0', matrix: later }]);
 const all = sample.components.flatMap(c => c.properties);
 
-describe('the conformance index', () => {
+describe('the specs index', () => {
   test('pages a version in the file order, with its total', () => {
     const page = queryRows(db, { version: '1.0.0', offset: 1, limit: 2 });
     expect(page.total).toBe(all.length);

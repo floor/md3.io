@@ -20,13 +20,13 @@ export const stylesheetBundles = {
   home: [...shell, 'homepage', 'site', 'search', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:card'],
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
-  // The conformance matrix (src/server/conformance.ts).
-  conformance: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'vlist', 'conformance'],
+  // The specs matrix (src/server/specs.ts).
+  specs: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'vlist', 'specs'],
   'material-panel': materialPanel,
   'addon-panel': materialPanel,
   'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button'],
-  // A component's conformance matrix: the component pages' layout, with the matrix's sheet.
-  'conformance-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'conformance'],
+  // A component's specs matrix: the component pages' layout, with the matrix's sheet.
+  'specs-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'specs'],
   // Add-on visuals that use factories need their light-DOM styles.
   catalog,
   'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'mtrl:listbox', 'addons:styles'],

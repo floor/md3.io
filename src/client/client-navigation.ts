@@ -155,7 +155,7 @@ function pageScripts(doc: Document, origin = location.origin) {
     // Third-party scripts the host injects into every page (Cloudflare Web Analytics in
     // production) already run once in the shell; they are not page modules.
     if (src.origin !== origin) return [];
-    const match = /^\/dist\/(catalog|examples|playground-material|playground|styles|theme-app|colour-lab|conformance)(?:\.[a-f0-9]{10})?\.js$/.exec(src.pathname);
+    const match = /^\/dist\/(catalog|examples|playground-material|playground|styles|theme-app|colour-lab|specs)(?:\.[a-f0-9]{10})?\.js$/.exec(src.pathname);
     if (/^\/dist\/site(?:\.[a-f0-9]{10})?\.js$/.test(src.pathname)) return [];
     if (!match) throw new Error('Unmanaged page script');
     return [{ src, name: match[1]! }];

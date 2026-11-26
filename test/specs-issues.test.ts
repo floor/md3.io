@@ -1,6 +1,6 @@
-// test/conformance/issues-export.test.ts
+// test/specs-issues.test.ts (from material test/conformance/issues-export.test.ts)
 //
-// The conformance issues export, against a synthetic Linear response. No key
+// The specs issues export, against a synthetic Linear response. No key
 // and no network: `issuesFromResponse` takes the saved response.
 import { describe, expect, test } from "bun:test";
 
@@ -17,7 +17,7 @@ import {
   slugBaseOf,
   statusOf,
   typeOf,
-} from "../scripts/conformance-issues";
+} from "../scripts/specs-issues";
 
 const node = (overrides: Record<string, unknown>) => ({
   id: "id-0",
@@ -104,7 +104,7 @@ const RESPONSE = {
   },
 };
 
-describe("conformance issues export", () => {
+describe("specs issues export", () => {
   test("reads the issues out of a saved response", () => {
     const issues = issuesFromResponse(RESPONSE);
     expect(issues).toHaveLength(10);
@@ -126,7 +126,7 @@ describe("conformance issues export", () => {
 
   test("its type stands beside its kind", () => {
     const issues = issuesFromResponse(RESPONSE);
-    expect(typeOf(issues[0]!)).toBe("conformance");
+    expect(typeOf(issues[0]!)).toBe("specs");
     expect(kindOf(issues[0]!)).toBe("drift-compose");
     expect(typeOf(issues.find((issue) => issue.id === "L-7")!)).toBe("bug");
     expect(typeOf(issues.find((issue) => issue.id === "L-9")!)).toBe("feature");
@@ -202,7 +202,7 @@ describe("conformance issues export", () => {
     const later = buildFile(issues, "3.16.7", "2026-11-27T00:00:00.000Z");
     expect(serialize(later).replace(/"2026-11-27[^"]*"/, "\"X\"")).toBe(first.replace(/"2026-11-26T00:00:00.000Z"/, "\"X\""));
     const counts = JSON.parse(first).counts;
-    expect(counts.types).toEqual({ bug: 1, conformance: 6, feature: 1, improvement: 1 });
+    expect(counts.types).toEqual({ bug: 1, specs: 6, feature: 1, improvement: 1 });
     expect(counts.kinds).toEqual({ "api-gap": 1, "drift-both": 1, "drift-compose": 1, "drift-spec": 1, deviation: 1, "reference-conflict": 1 });
     expect(counts.statuses).toEqual({ "decision-needed": 1, fixed: 2, "in-progress": 1, kept: 1, open: 4 });
   });

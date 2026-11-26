@@ -1,7 +1,7 @@
-// The conformance index (the owner's decision of 2026-11-26, relayed by Priam): SQLite (bun:sqlite) for the list's
+// The specs index (the owner's decision of 2026-11-26, relayed by Priam): SQLite (bun:sqlite) for the list's
 // search, filters and pages. A derived index, never edited: it is built in memory at start from the vendored release
-// files, data/conformance/<version>.json (each a copy of a release tag's conformance/matrix.json, the only source),
-// so it is rebuilt from the tags every time. A new release is loaded when conformance:sync vendors its tag and the
+// files, data/specs/<version>.json (each a copy of a release tag's conformance/matrix.json, the only source),
+// so it is rebuilt from the tags every time. A new release is loaded when specs:sync vendors its tag and the
 // site deploys. Row ids are material's, stable across versions, so a row's history is a query on its id.
 //
 // The tables are the agreed schema's matrix tables (releases, components, matrix_rows, search), without the issues
