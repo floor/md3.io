@@ -420,3 +420,8 @@
     .header__actions #search-trigger::part(text) { display: none; }
     .header__actions #search-trigger::part(button) { width: 40px; min-width: 40px; height: 40px; padding: 0; gap: 0; justify-content: center; border-radius: 50%; background: transparent; color: var(--mtrl-sys-color-on-surface-variant); }
 }
+/* Its touch target stays 48 × 48 around the 40px button, as an icon button's does. */
+@media (max-width: 599px) {
+    .header__actions #search-trigger::part(button)::after { inset-inline: auto; left: 50%; width: 48px; height: 48px; translate: -50% -50%; transform: none; }
+    .header__actions #search-trigger::part(button) { overflow: visible; z-index: 1; }
+}
