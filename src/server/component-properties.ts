@@ -688,6 +688,24 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'At sizes M and L the space between icon and label is 16 and 20px, where M3\'s newest tokens give 12 and 16dp (newest tokens only).',
   ] },
   'fab-menu': { bugs: ['Menu items keep no shadow on hover, focus and press, where M3\'s newest tokens raise them to level 4 on hover and level 3 on focus and press (newest tokens only).'] },
+  // Selection and input, and the menu, from material's conformance matrix (Priam, checked 2026-11-26 against
+  // material 3.16.5; m3.material.io read that day, Compose Material 3 tokens 41.1.19 and 1.4.0). Checkbox,
+  // chips and slider: no known deviation.
+  switch: { bugs: ['A disabled, unselected switch fills its track with the on-surface colour at 12%, where M3 uses surface-container-highest at 12%.'] },
+  radios: { bugs: ['With the ripple turned off (<code>ripple: false</code>), the radio button loses its keyboard focus ring and focus layer, where M3 keeps them.'] },
+  'text-field': { bugs: ['The focus ring on a trailing action button, such as clear, is 2px wide, where M3\'s focus ring is 3dp.'] },
+  select: { bugs: [
+    'When the field sits near the bottom of the window, the popup opens above it, but the selected option can be scrolled out of view; a fix is in review.',
+    'Options are 48px tall when the popup opens in the top layer and 44px when it opens inline, where M3 uses one height.',
+    'The popup uses the expressive menu surface (surface-container-low, 16px corners), where M3\'s dropdown uses the standard menu surface (surface-container, 4dp corners).',
+    'The trailing arrow turns primary when the field has focus, where M3 keeps it on-surface-variant, or error when the field is in error.',
+  ] },
+  search: { bugs: ['A search bar with no trailing actions leaves 8px at its end, where M3 specifies 16dp.'] },
+  menu: { missing: ['An inline or static display: only one menu can be open on a page at a time, always in the top layer, so a page cannot show several menus open side by side (this page shows each in place, never opened).'],
+    bugs: [
+      'In the vibrant colour style, a leading icon keeps its resting colour on hover, focus and press, where M3\'s newest tokens switch it to tertiary; Compose itself does not apply this yet.',
+      'A menu placed in a scrolling container with the <code>container</code> option chooses its side from the window, not the container, so the container can cut it off and focusing an item can scroll the menu over its button; a fix is in progress. Menus without <code>container</code> are not affected.',
+    ] },
   dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
