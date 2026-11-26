@@ -240,3 +240,58 @@
     margin-inline: auto;
 }
 
+
+/* The owner, 2026-11-26: the playground takes the height the window has, and its settings are a side sheet of the
+   playground itself, not a second card. One surface, one outline and one corner radius hold the preview and, when
+   open, the sheet at its right edge behind a divider. */
+.component-overview--playground .playground--material {
+    gap: 0;
+    align-items: stretch;
+    border: 1px solid var(--mtrl-sys-color-outline-variant);
+    border-radius: 28px;
+    overflow: clip;
+    background: var(--mtrl-sys-color-surface-container-lowest, var(--bg-card));
+}
+.component-overview--playground .playground--material > .preview-panel { border: 0; border-radius: 0; background: transparent; }
+.component-overview--playground .playground--material > .configuration.split-panel {
+    border: 0;
+    border-inline-start: 1px solid var(--mtrl-sys-color-outline-variant);
+    border-radius: 0;
+    box-shadow: none;
+}
+@media (min-width: 840px) {
+    /* Whatever height the window offers, less a margin, so a person scrolled to it sees all of it. */
+    .component-overview--playground .playground--material { height: max(480px, calc(100dvh - var(--header-height, 0px) - 112px)); scroll-margin-top: calc(var(--header-height, 0px) + 96px); }
+    .component-overview--playground .playground--material > .preview-panel { height: 100%; }
+    .component-overview--playground .playground--material .playground-space { flex: 1 1 auto; min-height: 0; }
+    .component-overview--playground .playground--material > .configuration { contain: size; overflow: clip; height: 100%; display: flex; flex-direction: column; }
+    .component-overview--playground .playground--material .configuration-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
+}
+/* Beside the drawer the sheet still sits inside the card, below the preview. */
+@media (840px <= width < 1040px) {
+    .component-overview--playground .playground--material { height: auto; }
+    .component-overview--playground .playground--material > .preview-panel { height: max(420px, calc(100dvh - var(--header-height, 0px) - 112px)); }
+    .component-overview--playground .playground--material > .configuration.split-panel { border-inline-start: 0; border-top: 1px solid var(--mtrl-sys-color-outline-variant); contain: none; height: auto; }
+}
+@media (width < 840px) {
+    .component-overview--playground .playground--material > .preview-panel { min-height: 420px; }
+    .component-overview--playground .playground--material > .configuration.split-panel { border-inline-start: 0; border-top: 1px solid var(--mtrl-sys-color-outline-variant); }
+}
+
+/* Code is a bottom sheet of the preview: it rises over the lower part, the live preview still above it. */
+.component-overview--playground .playground-space > .code-panel {
+    inset: auto 0 0 0;
+    height: min(60%, 520px);
+    min-height: 200px;
+    overflow: auto;
+    border-radius: 28px 28px 0 0;
+    background: var(--mtrl-sys-color-surface-container-low);
+    box-shadow: 0 -1px 3px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000) 15%, transparent), 0 -4px 12px color-mix(in srgb, var(--mtrl-sys-color-shadow, #000) 10%, transparent);
+    animation: playground-code-up 250ms cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.component-overview--playground .playground-space > .code-panel::before {
+    content: ''; display: block; width: 32px; height: 4px; margin: 12px auto 4px; border-radius: 2px;
+    background: color-mix(in srgb, var(--mtrl-sys-color-on-surface-variant) 40%, transparent);
+}
+@keyframes playground-code-up { from { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) { .component-overview--playground .playground-space > .code-panel { animation: none; } }

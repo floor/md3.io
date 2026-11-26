@@ -123,8 +123,10 @@ registerPage('playground', (content, life) => {
 
   /** The panels and the controls that belong to the showing view. */
   function showPanel(showingCode: boolean) {
-    content.querySelector<HTMLElement>('#live-panel')!.hidden = showingCode;
+    // Code is a bottom sheet over the preview (the owner, 2026-11-26): the preview stays live beneath it.
+    content.querySelector<HTMLElement>('#live-panel')!.hidden = false;
     content.querySelector<HTMLElement>('#code-panel')!.hidden = !showingCode;
+    content.querySelector<HTMLElement>('.playground-space')?.toggleAttribute('data-code-open', showingCode);
     previewDot.hidden = showingCode;
   }
   function selectTab(selected: HTMLButtonElement) {
@@ -135,6 +137,8 @@ registerPage('playground', (content, life) => {
       content.querySelector<HTMLElement>(`#${CSS.escape(tab.getAttribute('aria-controls')!)}`)!.hidden = !active;
     }
     const showingCode = selected.id === 'code-tab';
+    content.querySelector<HTMLElement>('#live-panel')!.hidden = false;
+    content.querySelector<HTMLElement>('.playground-space')?.toggleAttribute('data-code-open', showingCode);
     previewDot.hidden = showingCode;
   }
   // The tabs select by value; the element keeps its own roving focus and
