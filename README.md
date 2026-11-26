@@ -42,6 +42,24 @@ The site includes a compact landing page, a component catalog, all six Actions p
 
 The styles and fonts are copied locally rather than served from a sibling project, so the site can be deployed with its own files. Runtime does not depend on vlist.io. Build installs `material` from npm as pinned in `package.json` and `bun.lock`.
 
+## Component pages
+
+Each component has four tabs: Overview, Playground, Develop and Accessibility. The owner set the Overview's shape on 2026-11-26: it is built from sections by property, not by scenario, and follows m3.material.io's figures.
+
+- **At a glance** opens most Overviews: a few points in our own words, never m3.material.io's text, beside the live component in a realistic scene, often in a device frame. The scenes are in `NOTES` in `src/server/component-properties.ts`.
+- **A section per property** (Variant, Size, Shape, State and so on) shows the property's values side by side in one stage, numbered, with a legend of names only. The sections are in `PROPERTIES` in the same file, one list per component.
+- **Known issues** ends the Overview: what M3 recommends that material does not do yet, and the known bugs, one sentence each. The entries come from material's conformance matrix, sent by material's team with the version and date checked; an entry goes when its fix ships. They are in `KNOWN_ISSUES`.
+
+How the stages are built:
+
+- **In the page, no iframe.** A stage is server-rendered material elements inside `div.catalog-visual.catalog-visual--<slug>`. Iframes slow the page down; the Playground keeps its own.
+- **The stage style:** dots every 8px over `surface-container-low`, the first row inset by 8px, a 12px radius, and the height of its content.
+- **The client module** `src/client/catalog/<slug>.ts` defines the elements and any figure behaviour; its `define(visual)` may return a cleanup.
+- **Overlays shown in place.** Material keeps one menu, one snackbar and one search view open per page, and opens dialogs, modal sheets and pickers in the browser's top layer. So their figures show the real component made visible in the page without opening it, as a catalog surface (`surface()` in `src/client/catalog/surface.ts`). Opening them would move focus, scroll the page or cover it with a scrim. Their buttons still work; a menu's or a search's button opens the real one.
+- **Claims:** any statement about what m3.material.io says comes from a page read that day and cites it in the code; facts about the library come from its docs and its code.
+
+When you add or change a section, check it in a browser at 1440px and at phone width, check that nothing takes focus or scrolls the page on load, then run `bun run test:browser`.
+
 ## Search (SEO)
 
 The owner set these choices on 2026-11-25. Search Console then showed md3.io at an average position of about 14, with a 3.7% click-through rate, on searches such as "md3", "md3 web" and "material design 3 web".
