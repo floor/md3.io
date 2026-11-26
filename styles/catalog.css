@@ -543,3 +543,13 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 }
 .property-welcome .property-scene__hello, .md .property-welcome p.property-scene__hello { font-family: "Google Sans Flex", var(--font-sans); letter-spacing: 0; }
 .property-tasks__check { pointer-events: none; }
+/* Menus open in place: each under its button, the stage tall enough for it. */
+.property-menu { min-height: 260px; }
+.property-scene--photo { padding: 0; overflow: visible; }
+.property-scene--photo img { display: block; width: 100%; height: auto; border-radius: 28px 28px 0 0; }
+.property-scene__bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px 20px; }
+.property-scene__bar > span { display: grid; }
+.property-scene__bar span span { font-size: 13px; color: var(--mtrl-sys-color-on-surface-variant); }
+.catalog-visual.property-note__stage:has(.property-scene--photo) { padding-bottom: 180px; }
+.catalog-visual--menu.property-note__stage { height: auto; padding: 32px 16px; display: grid; place-items: center; }
+.catalog-visual--menu.property-stage .property-value { align-self: start; }

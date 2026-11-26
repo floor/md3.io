@@ -15,6 +15,7 @@ import brush from '../../icons/brush.svg' with { type: 'text' };
 import callEnd from '../../icons/call_end.svg' with { type: 'text' };
 import check from '../../icons/check.svg' with { type: 'text' };
 import checkBox from '../../icons/check_box.svg' with { type: 'text' };
+import moreVert from '../../icons/more_vert.svg' with { type: 'text' };
 import skipPrevious from '../../icons/skip_previous.svg' with { type: 'text' };
 import playArrow from '../../icons/play_arrow.svg' with { type: 'text' };
 import checkBoxOutlineBlank from '../../icons/check_box_outline_blank.svg' with { type: 'text' };
@@ -126,6 +127,7 @@ export const symbols = {
   brush: trim(brush),
   check: trim(check),
   checkBox: trim(checkBox),
+  moreVert: trim(moreVert),
   skipPrevious: trim(skipPrevious),
   playArrow: trim(playArrow),
   checkBoxOutlineBlank: trim(checkBoxOutlineBlank),
@@ -251,6 +253,7 @@ const files: Record<keyof typeof symbols, string> = {
   brush: 'brush',
   check: 'check',
   checkBox: 'check_box',
+  moreVert: 'more_vert',
   skipPrevious: 'skip_previous',
   playArrow: 'play_arrow',
   checkBoxOutlineBlank: 'check_box_outline_blank',

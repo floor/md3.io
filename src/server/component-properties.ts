@@ -395,10 +395,27 @@ const listSections: PropertySection[] = [
       { label: 'icon', name: 'Icon', markup: listOf({}, m('list-item', { headline: 'Settings', 'supporting-text': 'Display, sound', 'trailing-icon': symbols.chevronRight })) }], stack: true },
 ];
 
+// Menus, each open in the page under its button: a catalog surface per value (src/client/catalog/menu.ts),
+// since <m-menu> opens in the top layer, one at a time.
+const menuOf = (suffix: string) => `<div class="property-menu">${surfaceOf('menu', suffix)}</div>`;
+const menuSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Vertical, M3 Expressive\'s menu, the default; or baseline, the earlier style.',
+    values: [{ label: 'vertical', name: 'Vertical', markup: menuOf('variant-vertical') }, { label: 'baseline', name: 'Baseline', markup: menuOf('variant-baseline') }] },
+  { key: 'color', title: 'Color', text: 'Standard, on a surface colour; or vibrant, in the tertiary colours, to stand out.',
+    values: [{ label: 'standard', name: 'Standard', markup: menuOf('color-standard') }, { label: 'vibrant', name: 'Vibrant', markup: menuOf('color-vibrant') }] },
+  { key: 'items', title: 'Items', text: 'A label, with an icon before it, a keyboard shortcut after it, or a line of supporting text.',
+    values: [{ label: 'label', name: 'Labels', markup: menuOf('items-label') }, { label: 'shortcut', name: 'Icons and shortcuts', markup: menuOf('items-shortcut') },
+      { label: 'supporting', name: 'Supporting text', markup: menuOf('items-supporting') }] },
+  { key: 'groups', title: 'Groups', text: 'A divider or a gap sets groups of items apart.',
+    values: [{ label: 'divider', name: 'Divider', markup: menuOf('groups-divider') }, { label: 'gap', name: 'Gap', markup: menuOf('groups-gap') }] },
+  { key: 'density', title: 'Density', text: 'Dense items are shorter, for long menus and pointer use.',
+    values: [{ label: 'default', name: 'Default', markup: menuOf('density-default') }, { label: 'dense', name: 'Dense', markup: menuOf('density-dense') }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -428,6 +445,16 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  menu: {
+    points: '<ul><li>A short list of actions or choices, opened from a button and closed once one is chosen.</li>'
+      + '<li>Each item a label, with an icon, a keyboard shortcut or a line of supporting text.</li>'
+      + '<li>Dividers or gaps group the items; an item can open a submenu.</li>'
+      + '<li>Arrow keys move through it; Escape closes it and returns focus to its button.</li></ul>',
+    // A photo in a gallery, its menu open from the more button.
+    // A photo in a gallery, its menu open from the more button (a catalog surface, as the sections' menus).
+    stage: surfaceOf('menu', 'glance'),
+    caption: 'A photo\'s options, from its more button: choose one, or press Escape.', kind: 'menu',
+  },
   // The button family at a glance: each in a small scene of its own, a card on the stage.
   button: {
     points: '<ul><li>An action a person can take: send, save, confirm, or go on to the next step.</li>'
