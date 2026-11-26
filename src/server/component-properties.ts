@@ -501,10 +501,41 @@ const sliderSections: PropertySection[] = [
     values: [{ label: 'enabled', name: 'Enabled', markup: sl({}) }, { label: 'disabled', name: 'Disabled', markup: sl({ disabled: true }) }], stack: true },
 ];
 
+// Radio buttons: one group per value, a delivery choice.
+const deliveries = [['standard', 'Standard, 3 to 5 days'], ['express', 'Express, next day'], ['pickup', 'Pick up in store']];
+const rg = (attrs: Attributes, value = 'express', disabled = '') => `<div class="property-radios">${m('radios', { 'aria-label': 'Delivery', value, ...attrs },
+  deliveries.map(([v, l]) => m('radio', { value: v!, label: l!, ...(v === disabled ? { disabled: true } : {}) })).join(''))}</div>`;
+const radiosSections: PropertySection[] = [
+  { key: 'selection', title: 'Selection', text: 'One option of a set, at most: none chosen yet, or one.',
+    values: [{ label: 'none', name: 'None chosen', markup: rg({}, '') }, { label: 'one', name: 'One chosen', markup: rg({}) }] },
+  { key: 'direction', title: 'Direction', text: 'A column, or a row for two or three short options.',
+    values: [{ label: 'vertical', name: 'Vertical', markup: rg({ direction: 'vertical' }) },
+      { label: 'horizontal', name: 'Horizontal', markup: `<div class="property-radios property-radios--row">${m('radios', { 'aria-label': 'Size', value: 'm', direction: 'horizontal' }, [['s', 'S'], ['m', 'M'], ['l', 'L']].map(([v, l]) => m('radio', { value: v!, label: l! })).join(''))}</div>` }] },
+  { key: 'disabled', title: 'Disabled', text: 'One option out of reach, or the whole group.',
+    values: [{ label: 'option', name: 'One option disabled', markup: rg({}, 'express', 'pickup') }, { label: 'group', name: 'Group disabled', markup: rg({ disabled: true }) }] },
+];
+// Chips: a group each, as M3's four types.
+const chip = (label: string, attrs: Attributes = {}) => m('chip', { label, value: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'), ...attrs });
+const chipsOf = (attrs: Attributes, chips: string) => `<div class="property-chips">${m('chips', { 'aria-label': 'Example', ...attrs }, chips)}</div>`;
+const chipsSections: PropertySection[] = [
+  { key: 'type', title: 'Type', text: 'Assist chips start an action; filter chips narrow content; input chips hold what a person entered; suggestion chips offer what they might want.',
+    values: [{ label: 'assist', name: 'Assist', markup: chipsOf({}, chip('Add to calendar', { variant: 'assist', icon: symbols.calendarToday }) + chip('Share', { variant: 'assist', icon: symbols.share })) },
+      { label: 'filter', name: 'Filter', markup: chipsOf({ selection: 'multiple' }, chip('Open now', { variant: 'filter', selected: true }) + chip('Terrace', { variant: 'filter' })) },
+      { label: 'input', name: 'Input', markup: chipsOf({}, chip('Ada Vale', { variant: 'input', icon: symbols.person, 'remove-label': 'Remove Ada Vale' }) + chip('Sam Holt', { variant: 'input', icon: symbols.person, 'remove-label': 'Remove Sam Holt' })) },
+      { label: 'suggestion', name: 'Suggestion', markup: chipsOf({}, chip('Tonight', { variant: 'suggestion' }) + chip('Near me', { variant: 'suggestion' })) }], stack: true },
+  { key: 'elevated', title: 'Elevation', text: 'Flat, with an outline; or elevated, where the chip sits over an image or a busy surface.',
+    values: [{ label: 'flat', name: 'Flat', markup: chipsOf({}, chip('Share', { variant: 'assist', icon: symbols.share })) }, { label: 'elevated', name: 'Elevated', markup: chipsOf({}, chip('Share', { variant: 'assist', icon: symbols.share, elevated: true })) }] },
+  { key: 'selection', title: 'Selection', text: 'Filter chips: one choice at a time, or several.',
+    values: [{ label: 'single', name: 'Single', markup: chipsOf({ selection: 'single' }, ['Today', 'Tomorrow', 'This week'].map((l, i) => chip(l, { variant: 'filter', ...(i === 0 ? { selected: true } : {}) })).join('')) },
+      { label: 'multiple', name: 'Multiple', markup: chipsOf({ selection: 'multiple' }, ['Vegetarian', 'Terrace', 'Open now'].map((l, i) => chip(l, { variant: 'filter', ...(i < 2 ? { selected: true } : {}) })).join('')) }], stack: true },
+  { key: 'disabled', title: 'Disabled', text: 'Disabled, a chip stays visible but takes no input.',
+    values: [{ label: 'enabled', name: 'Enabled', markup: chipsOf({}, chip('Terrace', { variant: 'filter' })) }, { label: 'disabled', name: 'Disabled', markup: chipsOf({}, chip('Terrace', { variant: 'filter', disabled: true })) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -534,6 +565,27 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  radios: {
+    points: '<ul><li>One option out of a set, all of them visible at once.</li>'
+      + '<li>For two to five options; a select for longer lists.</li>'
+      + '<li>The whole row, label included, is the target; the arrow keys move the choice.</li>'
+      + '<li>A real form value: <code>name</code>, <code>value</code>, <code>required</code>.</li></ul>',
+    stage: `<div class="property-scene property-scene--settings"><h3>Delivery</h3>${m('radios', { 'aria-label': 'Delivery', value: 'express' },
+      [['standard', 'Standard, 3 to 5 days · free'], ['express', 'Express, next day · €9'], ['pickup', 'Pick up in store · free']].map(([v, l]) => m('radio', { value: v!, label: l! })).join(''))}`
+      + `<div class="property-scene__actions">${m('button', { variant: 'filled' }, 'Continue')}</div></div>`,
+    caption: 'A checkout\'s delivery choice: one of three.', kind: 'radios',
+  },
+  chips: {
+    points: '<ul><li>Compact elements for an action, a filter, an entry or a suggestion.</li>'
+      + '<li>Four types: assist, filter, input and suggestion.</li>'
+      + '<li>A group of filter chips allows one choice, or several.</li>'
+      + '<li>Arrow keys move along a group; Delete removes an input chip.</li></ul>',
+    stage: `<div class="property-scene property-scene--chips"><h3>Restaurants nearby</h3>`
+      + m('chips', { selection: 'multiple', 'aria-label': 'Filters' }, ['Open now', 'Terrace', 'Vegetarian', 'Under €30'].map((l, i) => chip(l, { variant: 'filter', ...(i === 0 || i === 2 ? { selected: true } : {}) })).join(''))
+      + `<ul class="property-phone__list"><li><span><strong>Ristorante Lumen</strong><span>Italian · 400 m</span></span><span>4.6</span></li><li><span><strong>Green Table</strong><span>Vegetarian · 650 m</span></span><span>4.4</span></li></ul>`
+      + m('chips', { 'aria-label': 'Actions' }, chip('Book a table', { variant: 'assist', icon: symbols.calendarToday }) + chip('Share', { variant: 'assist', icon: symbols.share })) + '</div>',
+    caption: 'Filters on a list of restaurants, and assist chips for what to do next.', kind: 'chips',
+  },
   slider: {
     points: '<ul><li>A value, or a range, picked along a track: volume, brightness, a price.</li>'
       + '<li>Standard, centred or range; five sizes, from XS to XL.</li>'

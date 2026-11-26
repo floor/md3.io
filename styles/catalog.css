@@ -572,3 +572,9 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-slider--vertical { width: auto; height: 240px; }
 .property-slider--vertical > * { height: 100%; width: auto; }
 .property-scene--settings > m-slider { display: block; width: 100%; }
+/* Radios and chips: a group at a phone's width; the glances' groups across the card. */
+.property-radios { width: 280px; max-width: 100%; }
+.property-radios--row { width: auto; }
+.property-chips { max-width: 100%; }
+.property-scene--chips { display: grid; gap: 12px; }
+.property-scene--chips .property-phone__list { margin: 0 -24px; }
