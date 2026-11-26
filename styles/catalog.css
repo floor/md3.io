@@ -262,3 +262,19 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .component-intro--overview { margin-bottom: 40px; font-size: var(--fs-lg, 18px); max-width: 70ch; }
 /* A card's title link is a 48dp target (M3's minimum) though its text is shorter. */
 .component-card__body h3 a { display: inline-flex; align-items: center; min-height: 48px; min-width: 48px; margin: -10px 0; }
+
+/* A component's Overview by property: the values side by side in one stage, in the page (component-properties.ts). */
+.property-stage { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 32px 48px; padding: 40px 24px; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-low); }
+.property-stage--stack { flex-direction: column; gap: 20px; }
+.property-value { display: grid; justify-items: center; gap: 12px; margin: 0; }
+.property-value figcaption code { font-size: 12px; color: var(--mtrl-sys-color-on-surface-variant); background: none; padding: 0; }
+.property-stage--stack .property-value { grid-template-columns: 6em auto; align-items: center; justify-items: start; gap: 16px; }
+.property-stage--stack .property-value figcaption { grid-column: 1; grid-row: 1; justify-self: end; }
+/* The property stages take their content's height (a catalog visual is a fixed 200px card stage). */
+.catalog-visual.property-stage { height: auto; min-height: 160px; overflow: visible; contain: none; padding: 40px 24px; gap: 32px 48px; flex-wrap: wrap; }
+.catalog-visual.property-stage--stack { flex-direction: column; flex-wrap: nowrap; gap: 20px; }
+/* On a narrow screen a wide value (an xl group) scrolls inside its stage, not the page. */
+@media (max-width: 839px) { .catalog-visual.property-stage { overflow-x: auto; justify-content: flex-start; align-items: flex-start; } .catalog-visual.property-stage--stack { align-items: flex-start; } .property-stage--stack .property-value { grid-template-columns: 4.5em auto; } }
+/* A section may be narrower than its widest value: that value scrolls in its stage. */
+.scenarios { grid-template-columns: minmax(0, 1fr); }
+.scenarios > .scenario { min-width: 0; }
