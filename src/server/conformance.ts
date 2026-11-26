@@ -160,9 +160,7 @@ export function conformanceIndex(sections: { id: string; name: string; items: { 
     if (!items.length) return '';
     return `<section class="component-catalog__section docs-group" aria-labelledby="matrix-${escape(section.id)}"><h2 id="matrix-${escape(section.id)}">${escape(section.name)}</h2><div class="component-grid">${items.map(card).join('')}</div></section>`;
   }).join('');
-  const hero = `<header class="page-hero"><div class="page-hero__text"><h1>Conformance</h1>`
-    + `<p>How material follows Material 3's two official references, the specification on m3.material.io and Jetpack Compose Material 3, component by component and property by property.</p></div><div class="page-hero__art" aria-hidden="true"></div></header>`;
-  return { html: `<div class="page-wrap docs-overview matrix-index">${hero}<div class="page-hero-body">${facts(matrix, rows, matrix.components.length)}${summaryCards(rows)}${caution(matrix)}${LEGEND}${grid}</div></div>` };
+  return { html: `<div class="matrix-index">${facts(matrix, rows, matrix.components.length)}${summaryCards(rows)}${caution(matrix)}${LEGEND}${grid}</div>` };
 }
 
 /** One component's properties: its scores, the controls, and its rows. */
@@ -257,7 +255,7 @@ const controlsFor = (rows: Row[]) => {
 export function conformanceList(): { html: string; name: string } {
   const matrix = load();
   const rows = matrix.components.flatMap(component => component.properties);
-  const head = `<header class="matrix-masthead"><p class="matrix-eyebrow"><a class="text-link" href="/conformance/">Conformance</a></p><h1>Every property</h1>${facts(matrix, rows, matrix.components.length)}</header>`;
+  const head = `<header class="matrix-masthead"><h2 class="matrix-list-title">Every property</h2>${facts(matrix, rows, matrix.components.length)}</header>`;
   const colhead = `<div class="matrix-colhead" aria-hidden="true"><span>Property</span>${REFS.map(r => `<span data-col="${r}">${REF[r]}</span>`).join('')}<span data-col="material">material</span></div>`;
   const fallback = matrix.components.map(component => `<h2 class="matrix-group">${escape(component.name)}</h2><ul class="matrix-rows">${component.properties.map(row => `<li class="matrix-row">${rowLine(row)}</li>`).join('')}</ul>`).join('');
   const tray = `<aside class="matrix-tray" aria-label="Selection"><p class="matrix-tray__count" role="status"><strong data-matrix-count>${rows.length}</strong> of ${rows.length} properties</p>`

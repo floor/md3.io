@@ -1,4 +1,5 @@
-<%/* Conformance (src/server/conformance.ts): the index, laid out as the Components page, or one component's properties. */%>
-<% if (it.conformance.name) { %><article class="conformance-page">
+<%/* Conformance (src/server/conformance.ts). The overview and the matrix carry the component pages' header (a hero, then
+   tabs) and its body width; a component's own matrix is a tab of that component's page instead (component-tab.eta). */%>
+<% if (it.header) { %><div class="page-wrap component-tab-page conformance-tab-page"><%~ it.header %><div class="component-overview"><div class="component-overview__main"><%~ it.conformance.html %></div></div></div><% } else if (it.conformance.name) { %><article class="conformance-page">
   <%~ it.conformance.html %>
 </article><% } else { %><%~ it.conformance.html %><% } %>

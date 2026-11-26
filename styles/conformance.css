@@ -120,7 +120,7 @@
 .matrix-stage__ref .matrix-ticks { grid-column: 1 / -1; }
 .matrix-stage__ref .matrix-ticks__label { display: none; }
 /* "Conformance" is longer than "Components": a step smaller, so it fits its tile. */
-.matrix-index .page-hero__text h1 { font-size: clamp(40px, 15.5cqi, 104px); }
+.conformance-hero .page-hero__text h1 { font-size: clamp(40px, 15.5cqi, 104px); }
 
 /* On a component's page the matrix sits in the article (.md): its own type, not the article's. */
 .md .matrix h2#matrix-summary { margin: 0 0 12px; padding: 0; border: 0; font: 400 28px/36px var(--font-sans); }
@@ -138,3 +138,7 @@
 .matrix-stage__count { display: block; font-weight: 400; font-size: 12px; }
 .matrix-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0 0 24px; font-size: 13px; color: var(--text-muted); }
 .matrix-legend .matrix-tick { display: inline-block; vertical-align: middle; }
+
+/* Under the tabs, the matrix's own heading and facts. */
+.conformance-tab-page .matrix-list-title { margin: 0 0 8px; font: 400 28px/36px var(--font-sans); }
+.conformance-tab-page .matrix-index .component-catalog__section { margin-top: 32px; }

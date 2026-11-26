@@ -241,6 +241,20 @@ function componentDocument(slug: string) {
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
 const componentTabs = (slug: string): ComponentTab[] => ['overview', 'playground', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
 /** The header every tab of a component shares: the overview's hero, then the tab bar. */
+/** The conformance pages' header, as a component's (the owner, 2026-11-26): the hero, then a tab per page. Issues
+ *  joins the tabs when its page exists. The seed keeps the header in place across a tab switch (client-navigation). */
+type ConformanceTab = 'overview' | 'matrix';
+const conformanceTabs: { id: ConformanceTab; label: string; icon: string; href: string }[] = [
+  { id: 'overview', label: 'Overview', icon: 'explore', href: '/conformance/' },
+  { id: 'matrix', label: 'Matrix', icon: 'table', href: '/conformance/matrix/' },
+];
+function conformanceHeader(current: ConformanceTab): string {
+  const tabs = conformanceTabs.map(tab => `<a class="component-tabs__tab" href="${tab.href}"${tab.id === current ? ' aria-current="page"' : ''}>${icon(tab.icon)}<span>${tab.label}</span></a>`).join('');
+  return `<header class="page-hero component-hero conformance-hero"><div class="page-hero__text"><h1>Conformance</h1><p>How material follows Material 3's two official references, the specification on m3.material.io and Jetpack Compose Material 3, component by component and property by property.</p></div>`
+    + `<div class="component-hero__visual"><div class="page-hero__art" aria-hidden="true" data-seed="conformance"></div></div></header>`
+    + `<nav class="component-tabs" aria-label="Conformance pages">${tabs}</nav>`;
+}
+
 function componentHeader(slug: string, current: ComponentTab): string {
   const component = components[slug as keyof typeof components];
   const deprecation = componentDeprecations[slug as keyof typeof componentDeprecations];
@@ -508,8 +522,8 @@ export async function handleRequest(request: Request): Promise<Response> {
   // The conformance matrix (FLO-1607): hidden until the owner approves it (src/shared/visibility.ts).
   // Conformance (FLO-1607), hidden until the owner approves it (src/shared/visibility.ts): the dedicated page
   // on the Components page's layout, and each component's matrix on the component pages' layout.
-  else if (path === '/conformance/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections) });
-  else if (path === '/conformance/matrix/') response = page(path, 'Conformance matrix — material', 'Every property of the material library against Material 3\'s specification and Jetpack Compose Material 3, grouped by component.', 'conformance', { conformance: conformanceList() });
+  else if (path === '/conformance/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections), header: conformanceHeader('overview') });
+  else if (path === '/conformance/matrix/') response = page(path, 'Conformance matrix — material', 'Every property of the material library against Material 3\'s specification and Jetpack Compose Material 3, grouped by component.', 'conformance', { conformance: conformanceList(), header: conformanceHeader('matrix') });
   // The list's pages, for vlist's data plugin; hidden with the page until the owner approves it.
   // The conformance API (hidden with the pages until the owner approves them). ?version=<material version>, default the
   // latest vendored release; a version's answer never changes, so it is cached for good.
