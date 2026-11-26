@@ -562,3 +562,7 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-scene--form { display: grid; gap: 16px; }
 .property-scene--form > m-text-field, .property-scene--form > m-select { display: block; width: 100%; }
 .property-scene--form p { margin-bottom: 4px; }
+/* The switch: a label beside it, as wide as a settings row; the glance's rows one under the other. */
+.property-switch { width: 280px; max-width: 100%; }
+.property-scene--settings { display: grid; gap: 20px; }
+.property-scene--settings h3 { margin-bottom: 0; }

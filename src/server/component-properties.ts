@@ -466,10 +466,25 @@ const selectSections: PropertySection[] = [
     values: [{ label: 'default', name: 'Default', markup: sel({}) }, { label: 'compact', name: 'Compact', markup: sel({ density: 'compact' }) }] },
 ];
 
+// Switch: a labelled switch each, as M3's figures; the icon shows in its handle.
+const sw = (attrs: Attributes, label = 'Label') => `<div class="property-switch">${m('switch', { ...attrs }, label)}</div>`;
+const switchSections: PropertySection[] = [
+  { key: 'state', title: 'State', text: 'Off or on: the change takes effect at once, without a save.',
+    values: [{ label: 'off', name: 'Off', markup: sw({}) }, { label: 'on', name: 'On', markup: sw({ checked: true }) }] },
+  { key: 'icon', title: 'Icon', text: 'On, the handle shows a check; an icon of your own can say what the setting is.',
+    values: [{ label: 'check', name: 'The default check', markup: sw({ checked: true }) }, { label: 'icon', name: 'An icon of your own', markup: sw({ checked: true, icon: symbols.bedtime }, 'Bedtime mode') }] },
+  { key: 'supporting', title: 'Supporting text', text: 'A line under the label says what the setting does.',
+    values: [{ label: 'supporting', name: 'Supporting text', markup: sw({ checked: true, 'supporting-text': 'Dims the screen at 22:00' }, 'Bedtime mode') }], single: true },
+  { key: 'error', title: 'Error', text: 'An error shows that a required setting is missing.',
+    values: [{ label: 'off', name: 'Error, off', markup: sw({ error: true, required: true, 'supporting-text': 'Accept to continue' }, 'Terms of service') }], single: true },
+  { key: 'disabled', title: 'Disabled', text: 'Disabled, it keeps its state but takes no input.',
+    values: [{ label: 'off', name: 'Disabled, off', markup: sw({ disabled: true }) }, { label: 'on', name: 'Disabled, on', markup: sw({ disabled: true, checked: true }) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -499,6 +514,17 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  switch: {
+    points: '<ul><li>Turns one setting on or off, at once: no save button.</li>'
+      + '<li>For a choice that applies immediately; a checkbox for one confirmed later, in a form.</li>'
+      + '<li>On, its handle shows a check, or an icon of your own; a line of supporting text says what it does.</li>'
+      + '<li>A real form control: <code>name</code>, <code>value</code>, <code>required</code>.</li></ul>',
+    stage: `<div class="property-scene property-scene--settings"><h3>Connections</h3>`
+      + m('switch', { checked: true }, 'Wi-Fi')
+      + m('switch', {}, 'Bluetooth')
+      + m('switch', { checked: true, icon: symbols.bedtime, 'supporting-text': 'Dims the screen and silences calls from 22:00' }, 'Bedtime mode') + '</div>',
+    caption: 'A phone\'s settings: each switch takes effect as it is turned.', kind: 'switch',
+  },
   'text-field': {
     points: '<ul><li>Text a person types: a name, an email, an amount, a search.</li>'
       + '<li>Filled or outlined; a label that moves up when the field has a value.</li>'
