@@ -65,6 +65,12 @@ const buttonGroup: PropertySection[] = [
     values: ['horizontal', 'vertical'].map(orientation => ({ label: orientation, markup: cups({ kind: 'connected', variant: 'tonal', orientation }) })) },
   { key: 'selection', title: 'Selection', text: 'Plain actions, or toggle buttons: one selected at a time, or several.',
     values: [['none', []], ['single', ['8']], ['multi', ['8', '12']]].map(([selection, selected]) => ({ label: selection as string, markup: cups({ kind: 'connected', variant: 'tonal', selection: selection as string }, selected as string[]) })) },
+  // As M3's adaptive figure (the owner's reference, 2026-11-26): a call's controls, one line at every width.
+  { key: 'resizing', title: 'Resizing', text: 'A group stays on one line as the window changes: smaller buttons in a compact window, larger ones where there is room.',
+    values: [{ label: 'compact', name: 'Compact window: size S', markup: `<div class="property-call property-call--s">` + m('button-group', { kind: 'standard', variant: 'tonal', size: 's', selection: 'none', 'aria-label': 'Call controls' },
+        [['mic', symbols.mic, 'Mute'], ['camera', symbols.videocam, 'Camera'], ['hand', symbols.frontHand, 'Raise hand'], ['end', symbols.callEnd, 'End call']].map(([value, icon, label]) => m('button-group-item', { value: value!, icon: icon!, 'aria-label': label! })).join('')) + '</div>' },
+      { label: 'expanded', name: 'Expanded window: size L', markup: `<div class="property-call property-call--l">` + m('button-group', { kind: 'standard', variant: 'tonal', size: 'l', selection: 'none', 'aria-label': 'Call controls' },
+        [['mic', symbols.mic, 'Mute'], ['camera', symbols.videocam, 'Camera'], ['hand', symbols.frontHand, 'Raise hand'], ['end', symbols.callEnd, 'End call']].map(([value, icon, label]) => m('button-group-item', { value: value!, icon: icon!, 'aria-label': label! })).join('')) + '</div>' }], stack: true },
   { key: 'density', title: 'Density', text: 'Each step lowers the height by 4dp, down to 32dp, with a 48dp hit target kept.',
     values: ['default', 'comfortable', 'compact'].map(density => ({ label: density, markup: cups({ kind: 'connected', variant: 'tonal', density }) })) },
 ];
@@ -447,16 +453,12 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>Standard groups space their buttons; connected groups join them into one control.</li>'
       + '<li>Plain actions, or a choice: one at a time, or several.</li>'
       + '<li>One variant, size and shape for every button in it.</li></ul>',
-    // A calendar: Day, Week or Month, one at a time; the events below follow the choice.
-    stage: `<div class="property-scene property-scene--lists"><h3>November 2026</h3><div class="property-scene__row property-scene__row--start">`
-      + m('button-group', { kind: 'connected', variant: 'tonal', selection: 'single', 'aria-label': 'Calendar view' },
-        [['day', 'Day'], ['week', 'Week'], ['month', 'Month']].map(([value, label]) => m('button-group-item', { value: value!, selected: value === 'week', 'selected-icon': symbols.check }, label!)).join(''))
-      + `</div>${lists({
-        day: [['Stand-up', 'Video call', '9:30'], ['Lunch with Ada', 'Café Lumen', '12:30'], ['Dentist', 'Rue Haute 12', '16:00']],
-        week: [['Stand-up', 'Thu 26, video call', '9:30'], ['Dinner at Sam\'s', 'Fri 27', '19:30'], ['Farmers\' market', 'Sat 28', '9:00'], ['Football', 'Sun 29, the park', '10:00']],
-        month: [['Book club', 'Tue 3', '19:00'], ['Team offsite', 'Tue 10 to Thu 12', '3 days'], ['Carmen\'s birthday', 'Sat 21', 'Party'], ['Dinner at Sam\'s', 'Fri 27', '19:30'], ['Rent', 'Mon 30', 'Due']],
-      }, { day: 'Today', week: 'This week', month: 'November' }, 'week')}</div>`,
-    caption: 'A calendar\'s views as a connected group: one at a time, the events follow.', kind: 'button-group',
+    // As M3's figure: an app's welcome screen, its first step between accessibility and language.
+    stage: `<div class="property-scene property-scene--welcome"><p class="property-scene__hello">Welcome</p><div class="property-scene__row">`
+      + m('button-group', { kind: 'standard', variant: 'tonal', size: 'l', selection: 'none', 'aria-label': 'Get started' },
+        m('button-group-item', { value: 'access', icon: symbols.accessibilityNew, 'aria-label': 'Accessibility' }) + m('button-group-item', { value: 'start' }, 'Get started')
+        + m('button-group-item', { value: 'language', icon: symbols.language, 'aria-label': 'Language' })) + '</div></div>',
+    caption: 'An app\'s welcome screen: Get started, between accessibility and language.', kind: 'button-group',
   },
   'split-button': {
     points: '<ul><li>One main action and a menu of related ones, in two halves.</li>'
@@ -612,7 +614,7 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'The keyboard focus ring is 2px wide, where M3\'s focus ring is 3dp (colour and offset match).',
     'An icon button created with <code>shape: undefined</code> loses its round shape at sizes other than small; fixed in material 3.16.6.',
   ] },
-  'button-group': { bugs: ['The group follows its buttons\' height at every density level, so at −3 it inherits the small button\'s 32px floor (M3: 28dp).'] },
+  'button-group': { missing: ['A variant, size or width per button: every button takes the group\'s, so a wide filled action between tonal icons, as in M3\'s figures, is not possible.'], bugs: ['The group follows its buttons\' height at every density level, so at −3 it inherits the small button\'s 32px floor (M3: 28dp).'] },
   'split-button': { missing: ['Density: the split button keeps its height at every density level.'], bugs: [
     'A selected split button shows no state layer on its trailing half, where M3 applies one without changing the colour.',
     'The menu icon is not optically offset when unselected (M3: −1, −1, −2, −3 and −6dp from XS to XL).',

@@ -508,3 +508,11 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-scene--lists .property-phone__list { margin: 8px -24px -24px; max-height: 260px; overflow-y: auto; }
 .property-scene__row--start { justify-content: flex-start; margin-top: 4px; }
 .property-scene--lists { overflow: hidden; }
+/* The button group's welcome screen, and the call controls at two window widths. */
+.property-scene--welcome { padding: 32px 16px 40px; text-align: center; }
+.property-scene__hello, .md .property-scene__hello { margin: 0 0 24px; font-size: 56px; line-height: 1; font-weight: 700; color: var(--mtrl-sys-color-primary); }
+.property-call { box-sizing: border-box; padding: 16px; border-radius: 24px; background: var(--mtrl-sys-color-surface); display: flex; justify-content: center; }
+.property-call--s { width: 300px; }
+.property-call--l { width: 560px; max-width: 100%; }
+.property-scene.property-scene--welcome { width: 440px; }
+.md .property-scene p.property-scene__hello, .property-scene p.property-scene__hello { margin: 0 0 24px; font-size: 56px; line-height: 1.1; font-weight: 700; color: var(--mtrl-sys-color-primary); }
