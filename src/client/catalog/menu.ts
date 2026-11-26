@@ -20,7 +20,7 @@ import { registerStyles } from 'material/elements';
 // The menu in the page: its box positioned against the surface (a transform makes it the reference
 // for the menu's fixed position), the surface as tall as the menu.
 registerStyles({
-  'catalog-menu': '.catalog-menu__still{pointer-events:none}.catalog-menu__still[hidden]{display:none!important}.catalog-menu{position:relative;transform:translateZ(0);min-height:248px;min-width:240px;display:flex;flex-direction:column;align-items:flex-start}'
+  'catalog-menu': '.catalog-menu{position:relative;transform:translateZ(0);min-height:248px;min-width:240px;display:flex;flex-direction:column;align-items:flex-start}'
     + '.catalog-menu--fab{width:520px;max-width:100%;height:380px;padding:24px 24px 0;box-sizing:border-box;background:var(--mtrl-sys-color-surface);border:8px solid color-mix(in srgb,var(--mtrl-sys-color-outline) 70%,transparent);border-top:0;border-left:0;border-radius:0 0 40px 0;overflow:hidden}'
     + '.catalog-menu__page p{margin:0;font:16px/24px Roboto,sans-serif;color:var(--mtrl-sys-color-on-surface)}.catalog-menu__page mark{background:var(--mtrl-sys-color-secondary-container);color:inherit;border-radius:4px}'
     + '.catalog-menu--fab>.mtrl-fab{position:absolute;right:24px;bottom:32px}'
@@ -67,9 +67,6 @@ const MENU_PROPERTIES: Record<string, { config?: Partial<MenuConfig>; entries: E
   glance: { config: { position: 'left-end' }, entries: editor, trigger: 'fab' },
 };
 
-// Material keeps one menu open per page (its registry closes the last one), so a section cannot show
-// its menus open side by side. Each surface shows a still copy of its real menu (inert, hidden from
-// assistive technology); its button opens the real menu over the copy, which shows again when it closes.
 const openMenu = ({ config = {}, entries, selected, trigger: kind = 'button', submenu }: (typeof MENU_PROPERTIES)[string]) => () => {
   const host = document.createElement('div');
   host.className = `catalog-menu catalog-menu--${kind}`;
@@ -101,59 +98,75 @@ const openMenu = ({ config = {}, entries, selected, trigger: kind = 'button', su
     opener = trigger.element;
     destroyTrigger = () => trigger.destroy();
   }
-  const menu = createMenu({ ...menuDefaults, ...config, items: entries, opener, layer: "top" } as MenuConfig);
-  if (selected) menu.setSelected(selected);
-  let still: HTMLElement | undefined;
+  // The real menu, shown in place without opening it: material's registry keeps one open menu per
+  // page, and a menu that never opened is not in it, so every section's menus stay up together. Its
+  // items keep their own handlers (hover, press, choose, the arrow keys); its button moves focus into it.
   let active = true;
-  // The live menu over the copies: they hide while it is open.
-  const show = (visible: boolean) => { for (const copy of host.querySelectorAll<HTMLElement>('.catalog-menu__still')) copy.hidden = !visible; };
-  menu.on?.('open', () => show(false));
-  menu.on?.('close', () => show(true));
-  // A still copy of the menu as material renders it: its items are built when it is created, so
-  // nothing opens, nothing takes focus and the page never moves.
-  const copyOf = (element: HTMLElement) => {
-    const copy = element.cloneNode(true) as HTMLElement;
-    for (const node of [copy, ...copy.querySelectorAll('[id]')]) node.removeAttribute('id');
-    copy.classList.add('catalog-menu__still', 'mtrl-menu--visible');
-    copy.removeAttribute('popover');
-    copy.inert = true;
-    copy.setAttribute('aria-hidden', 'true');
-    return copy;
+  const build = (items: Entries, owner: HTMLElement) => {
+    const built = createMenu({ ...menuDefaults, ...config, openSubmenuOnHover: false, items, opener: document.createElement('span'), container: owner, layer: undefined, closeOnClickOutside: false } as MenuConfig);
+    const element = built.element;
+    element.classList.add('mtrl-menu--visible', 'catalog-menu__shown');
+    element.removeAttribute('aria-hidden');
+    element.removeAttribute('popover');
+    owner.append(element);
+    return built;
   };
-  let extra: { destroy: () => void } | undefined;
+  const menu = build(entries, host);
+  if (selected) menu.setSelected(selected);
+  // A choice shows as the menu's selected item, where the figure has one.
+  if (selected) menu.on?.('select', (event: { itemId?: string; item?: { id?: string } }) => { const id = event?.itemId ?? event?.item?.id; if (id) menu.setSelected(id); });
+  // Submenus open beside their item, in this box (material's would open on the page's body, away from
+  // the menu shown in place): choosing an item with one shows it; the Submenus figure starts with one open.
+  let inner: ReturnType<typeof build> | undefined;
+  let openFor: string | undefined = submenu;
+  const showSubmenu = (id: string | undefined) => {
+    inner?.destroy();
+    inner = undefined;
+    for (const row of menu.element.querySelectorAll('[aria-expanded=true]')) row.setAttribute('aria-expanded', 'false');
+    openFor = id;
+    const parent = id ? entries.find(entry => 'id' in entry && entry.id === id) as Item | undefined : undefined;
+    if (!parent?.submenu) return;
+    inner = build(parent.submenu as Entries, host);
+    inner.element.classList.add('mtrl-menu--submenu');
+    if (id === submenu && selected) inner.setSelected('custom-1-2');
+    place();
+  };
+  const onRow = (event: Event) => {
+    const row = (event.target as Element).closest?.('[data-id]');
+    const id = row?.getAttribute('data-id') ?? undefined;
+    const item = id ? entries.find(entry => 'id' in entry && entry.id === id) as Item | undefined : undefined;
+    if (!item?.hasSubmenu) return;
+    if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showSubmenu(openFor === id && !(event instanceof KeyboardEvent) ? undefined : id);
+    if (event instanceof KeyboardEvent) inner?.element.querySelector<HTMLElement>('[role^=menuitem]')?.focus();
+  };
+  menu.element.addEventListener('click', onRow, true);
+  menu.element.addEventListener('keydown', onRow, true);
+  const first = () => menu.element.querySelector<HTMLElement>('[role=menuitem]:not([aria-disabled=true]), [role=menuitemradio], [role=menuitemcheckbox]');
+  const toMenu = (event: Event) => { event.preventDefault(); first()?.focus(); };
+  opener.addEventListener('click', toMenu);
   const place = () => {
     if (!active || !host.isConnected) return;
-    still?.remove();
-    host.querySelector('.catalog-menu__sub')?.remove();
-    still = copyOf(menu.element);
-    host.append(still);
-    // Under its button, beside the FAB, or under the button's end, as the menu opens when there is room.
+    const element = menu.element;
     const button = opener.getBoundingClientRect(), box = host.getBoundingClientRect();
-    if (kind === 'fab') Object.assign(still.style, { position: 'absolute', top: 'auto', left: 'auto', transform: 'none', bottom: `${box.bottom - button.bottom}px`, right: `${box.right - button.left + 8}px` });
-    else Object.assign(still.style, { position: 'absolute', top: `${button.bottom - box.top + 4}px`, bottom: 'auto', transform: 'none',
+    if (kind === 'fab') Object.assign(element.style, { position: 'absolute', top: 'auto', left: 'auto', transform: 'none', bottom: `${box.bottom - button.bottom}px`, right: `${box.right - button.left + 8}px` });
+    else Object.assign(element.style, { position: 'absolute', top: `${button.bottom - box.top + 4}px`, bottom: 'auto', transform: 'none',
       ...(kind !== 'button' && kind !== 'format' ? { left: 'auto', right: `${box.right - button.right}px` } : { left: `${button.left - box.left}px`, right: 'auto' }) });
-    // The submenu beside its item, without covering it: a copy of a menu of the submenu's items.
-    if (submenu) {
-      const parent = entries.find(entry => 'id' in entry && entry.id === submenu) as Item | undefined;
-      const row = still.querySelector<HTMLElement>(`[data-id="${submenu}"]`);
-      if (parent?.submenu && row) {
+    if (inner && openFor) {
+      const row = element.querySelector<HTMLElement>(`[data-id="${openFor}"]`);
+      if (row) {
         row.setAttribute('aria-expanded', 'true');
-        extra?.destroy();
-        const inner = createMenu({ ...menuDefaults, ...config, items: parent.submenu as Entries, opener: document.createElement('span'), container: document.createElement('div'), layer: undefined } as MenuConfig);
-        extra = inner;
-        const copy = copyOf(inner.element);
-        copy.classList.add('mtrl-menu--submenu', 'catalog-menu__sub');
-        host.append(copy);
-        const r = row.getBoundingClientRect(), m = still.getBoundingClientRect(), b = host.getBoundingClientRect();
-        Object.assign(copy.style, { position: 'absolute', left: `${m.right - b.left + 4}px`, top: `${r.top - b.top - 8}px`, right: 'auto', bottom: 'auto', transform: 'none' });
+        const r = row.getBoundingClientRect(), m = element.getBoundingClientRect(), b = host.getBoundingClientRect();
+        Object.assign(inner.element.style, { position: 'absolute', left: `${m.right - b.left + 4}px`, top: `${r.top - b.top - 8}px`, right: 'auto', bottom: 'auto', transform: 'none' });
       }
     }
   };
-  // Again when the surface's box changes (its first layout, the window's width).
   const observer = new ResizeObserver(() => place());
   observer.observe(host);
-  const frame = requestAnimationFrame(() => requestAnimationFrame(place));
-  return { element: host, destroy: () => { active = false; observer.disconnect(); cancelAnimationFrame(frame); extra?.destroy(); menu.destroy(); destroyTrigger(); } };
+  const frame = requestAnimationFrame(() => requestAnimationFrame(() => (submenu ? showSubmenu(submenu) : place())));
+  return { element: host, destroy: () => { active = false; observer.disconnect(); cancelAnimationFrame(frame); opener.removeEventListener('click', toMenu); inner?.destroy(); menu.destroy(); destroyTrigger(); } };
 };
 
 export const define = (): void => {
