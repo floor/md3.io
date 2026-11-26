@@ -955,7 +955,9 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
       'A menu placed in a scrolling container with the <code>container</code> option chooses its side from the window, not the container, so the container can cut it off and focusing an item can scroll the menu over its button; a fix is in progress. Menus without <code>container</code> are not affected.',
     ] },
   // M3's side sheet figure (the owner's reference, 2026-11-26): a back icon in the header, for a region within the sheet.
-  'side-sheet': { missing: ['A back icon in the header, to go back from another region within the sheet.'] },
+  // Confirmed by material's side-sheet table (Priam, 2026-11-26, Chromium and WebKit).
+  'side-sheet': { missing: ['A back icon in the header, to go back from another region within the sheet.', 'The detached variant, with 16dp corners all round, apart from the window\'s edge.', 'A built-in row of actions at the bottom of the sheet.'],
+    bugs: ['The headline uses the on-surface colour, where M3 uses on-surface-variant.'] },
   dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
