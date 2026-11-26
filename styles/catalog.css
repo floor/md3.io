@@ -354,3 +354,9 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-visual.property-note__stage { height: 400px; padding-bottom: 56px; }
 .property-phone__home { height: 32px; }
 .property-phone__home span { width: 108px; height: 4px; }
+/* The inbox: a list of its own (the article's list margin dropped), from the top, scrolling under the bar. */
+.md .property-phone__list, .property-phone__list { margin: 0; padding: 0 20px; justify-content: flex-start; overflow-y: auto; min-height: 0; overscroll-behavior: contain; scrollbar-width: none; }
+.md .property-phone__list li { margin: 0; }
+.property-phone__list li { flex: none; }
+.property-phone__list li:last-child { border-bottom: 0; }
+.property-phone__list:focus-visible { outline: 2px solid var(--mtrl-sys-color-secondary); outline-offset: -2px; }

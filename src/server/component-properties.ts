@@ -238,8 +238,10 @@ const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
 // words, from the component's document (docs/components/<slug>.md), beside the component in a
 // phone screen.
 interface ExpressiveNote { points: string; stage: string; caption: string }
-const mail = [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday']];
-const phone = (content: string) => `<div class="property-phone"><div class="property-phone__screen"><ul class="property-phone__list">${content}</ul>`
+// A real inbox, scrollable inside the phone.
+const mail = [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday'],
+  ['Britta Holt', 'Birthday gift', 'Yesterday'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Jordan Price', 'Weekend hike', 'Sun'], ['Sam Rivera', 'Flight details', 'Sat'], ['Noor Haddad', 'Book club notes', 'Fri']];
+const phone = (content: string) => `<div class="property-phone"><div class="property-phone__screen"><ul class="property-phone__list" tabindex="0" aria-label="Inbox">${content}</ul>`
   + m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail' }, places.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
   + `<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>`;
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
