@@ -142,6 +142,26 @@ const openMenu = ({ config = {}, entries, selected, trigger: kind = 'button', su
     showSubmenu(openFor === id && !(event instanceof KeyboardEvent) ? undefined : id);
     if (event instanceof KeyboardEvent) inner?.element.querySelector<HTMLElement>('[role^=menuitem]')?.focus();
   };
+  // With a pointer, as material's own: hovering an item with a submenu opens it; hovering another item of
+  // the menu, or leaving both menus for a moment, closes it (the Submenus figure goes back to its open one).
+  let leaveTimer = 0;
+  const rowOf = (event: Event) => (event.target as Element).closest?.('[data-id]')?.getAttribute('data-id') ?? undefined;
+  const onOver = (event: Event) => {
+    clearTimeout(leaveTimer);
+    const id = rowOf(event);
+    if (!id || id === openFor) return;
+    const item = entries.find(entry => 'id' in entry && entry.id === id) as Item | undefined;
+    showSubmenu(item?.hasSubmenu ? id : undefined);
+  };
+  const onLeave = () => {
+    clearTimeout(leaveTimer);
+    leaveTimer = window.setTimeout(() => { if (openFor !== submenu) showSubmenu(submenu); }, 300);
+  };
+  const keep = () => clearTimeout(leaveTimer);
+  menu.element.addEventListener('mouseover', onOver);
+  menu.element.addEventListener('mouseleave', onLeave);
+  host.addEventListener('mouseover', (event) => { if (inner?.element.contains(event.target as Node)) keep(); });
+  host.addEventListener('mouseout', (event) => { if (inner?.element.contains(event.target as Node) && !inner.element.contains(event.relatedTarget as Node) && !menu.element.contains(event.relatedTarget as Node)) onLeave(); });
   menu.element.addEventListener('click', onRow, true);
   menu.element.addEventListener('keydown', onRow, true);
   const first = () => menu.element.querySelector<HTMLElement>('[role=menuitem]:not([aria-disabled=true]), [role=menuitemradio], [role=menuitemcheckbox]');
@@ -166,7 +186,7 @@ const openMenu = ({ config = {}, entries, selected, trigger: kind = 'button', su
   const observer = new ResizeObserver(() => place());
   observer.observe(host);
   const frame = requestAnimationFrame(() => requestAnimationFrame(() => (submenu ? showSubmenu(submenu) : place())));
-  return { element: host, destroy: () => { active = false; observer.disconnect(); cancelAnimationFrame(frame); opener.removeEventListener('click', toMenu); inner?.destroy(); menu.destroy(); destroyTrigger(); } };
+  return { element: host, destroy: () => { active = false; clearTimeout(leaveTimer); observer.disconnect(); cancelAnimationFrame(frame); opener.removeEventListener('click', toMenu); inner?.destroy(); menu.destroy(); destroyTrigger(); } };
 };
 
 export const define = (): void => {
