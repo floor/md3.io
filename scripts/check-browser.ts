@@ -279,7 +279,7 @@ try {
     await page.waitForURL(url => url.pathname === `/components/${slug}/`, { waitUntil: "commit" });
     // The Overview's own content, swapped in by client navigation, before its tab is clicked.
     await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).waitFor();
-    await page.locator('.scenarios').waitFor();
+    await page.locator('.scenarios, .property-sections').first().waitFor();
     await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).click();
     await page.waitForURL(url => url.pathname === `/components/${slug}/playground/`, { waitUntil: "commit" });
     await page.locator("#preview").waitFor();

@@ -303,3 +303,10 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* A picker shown open in a property stage keeps its own width: in a flex row it would shrink below its calendar or its fields. */
 .property-picker { display: block; width: max-content; flex-shrink: 0; }
 .property-value:has(.property-picker) { flex-shrink: 0; }
+/* A component's Overview by property (component-properties.ts): its sections, named for what they are. */
+.property-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; margin-top: 0; }
+.property-section { scroll-margin-top: 96px; min-width: 0; }
+.property-section__heading { margin-bottom: 16px; }
+.property-section__heading h2, .md .property-section__heading h2 { margin: 0 0 4px; padding: 0; border: 0; font-size: 24px; line-height: 32px; font-weight: 400; }
+/* The sentence takes the section's width: no buttons sit beside it. */
+.property-section__heading p { margin: 0; color: var(--text-muted); }
