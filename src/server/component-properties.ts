@@ -1018,8 +1018,19 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
   // Confirmed by material's side-sheet table (Priam, 2026-11-26, Chromium and WebKit).
   'side-sheet': { missing: ['A back icon in the header, to go back from another region within the sheet.', 'The detached variant, with 16dp corners all round, apart from the window\'s edge.', 'A built-in row of actions at the bottom of the sheet.'],
     bugs: ['The headline uses the on-surface colour, where M3 uses on-surface-variant.'] },
-  // M3's rich tooltip figure (the owner's reference, 2026-11-26): a subhead and up to two buttons, planned for material 3.17.0.
-  tooltip: { missing: ['A rich tooltip\'s subhead and its one or two buttons: material\'s rich tooltip holds supporting text only.'] },
+  // Surfaces, from material's conformance matrix (Priam, checked 2026-11-26 against material 3.16.6; m3.material.io
+  // read that day, Compose Material 3 tokens 41.1.19 and 1.4.0). Divider: no known deviation.
+  tooltip: { missing: ['A rich tooltip\'s subhead and its one or two buttons; planned for the next minor release.'], bugs: [
+    'A plain tooltip hides about 0.1s after the pointer leaves its trigger, where the M3 guidelines keep it for 1.5s.',
+    'Two tooltips can be visible at once (one from keyboard focus, one from the pointer), where M3 shows one at a time.',
+    'Tooltips keep their 150ms fade when the system asks for reduced motion.',
+    'The gap between a plain tooltip and its trigger is 8px, where M3 specifies 4dp.',
+  ] },
+  snackbar: { bugs: ['The close button is a 40px button, so its icon sits 8px from the button\'s edges, where M3 allots a 48dp area with 12dp around the icon.'] },
+  'bottom-sheet': { bugs: [
+    'At full height the sheet reaches the top of the window, where the M3 website keeps 56dp of clearance (72dp on compact windows).',
+    'On a window just over 640px wide the sheet keeps 30px on each side, where the M3 website asks for at least 56dp.',
+  ] },
   dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
