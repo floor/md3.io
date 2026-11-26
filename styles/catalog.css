@@ -296,3 +296,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
   background-size: 8px 8px;
   background-position: 4px 4px;
 }
+/* A small corner, as m3.material.io's figures: M3's medium corner (12px). */
+.catalog-visual.property-stage { border-radius: var(--mtrl-sys-shape-corner-medium, 12px); }
