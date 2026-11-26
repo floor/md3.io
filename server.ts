@@ -6,7 +6,7 @@ import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guide
 import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
-import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
+import { isHiddenPath, playgroundPublic, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
 import { componentOverview } from './src/server/component-overview';
 import { hasPropertyOverview, propertyOverview } from './src/server/component-properties';
@@ -238,7 +238,7 @@ function componentDocument(slug: string) {
 }
 /** A component's presentation: its document's opening paragraph. */
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
-const componentTabs = (slug: string): ComponentTab[] => ['overview', 'playground', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
+const componentTabs = (slug: string): ComponentTab[] => ['overview', ...(playgroundPublic ? ['playground' as const] : []), 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
 /** The header every tab of a component shares: the overview's hero, then the tab bar. */
 function componentHeader(slug: string, current: ComponentTab): string {
   const component = components[slug as keyof typeof components];
