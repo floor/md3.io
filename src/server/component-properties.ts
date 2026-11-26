@@ -248,7 +248,7 @@ const library = [['Mirror lake', 'Waterhouse'], ['Honeydew', 'Waterhouse'], ['Pa
 let screens = 0;
 const phoneTop = (type: string, follow = false, scrolled = false) => {
   const id = `property-scroll-${++screens}`;
-  // The phone's status bar (9:30, signal, battery), as the overview cards' frames show it.
+  // The phone's status bar (the time, signal, battery), as the overview cards' frames show it.
   return `<div class="property-top property-top--${type}"><div class="property-top__screen">${statusBar}<div class="property-top__body">`
     + m('top-app-bar', { type, headline: 'My library', ...(follow ? { 'scroll-target': id } : { 'no-scroll': true }) },
       m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' }))

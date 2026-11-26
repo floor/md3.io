@@ -1,5 +1,6 @@
 import './search';
 import './client-navigation';
+import { startClocks } from './clock';
 import { applyTheme } from './theme-sheets';
 import { currentAppearance, onAppearance, setAppearance } from './appearance';
 const root = document.documentElement;
@@ -112,3 +113,6 @@ export async function copyText(text: string): Promise<boolean> {
   try { await navigator.clipboard.writeText(text); return true; }
   catch { return false; }
 }
+
+// The drawn phones' status bars show the visitor's time (src/client/clock.ts).
+startClocks();

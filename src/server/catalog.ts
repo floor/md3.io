@@ -134,7 +134,7 @@ const frames: Partial<Record<ComponentSlug, FrameKind>> = {
   switch: 'right',
   'navigation-drawer': 'drawer', 'side-sheet': 'side',
 };
-export const statusBar = '<div class="catalog-frame__status" aria-hidden="true"><span>9:30</span><svg viewBox="0 0 34 12" width="34" height="12"><path d="M0 2h12L6 10zM15 10 25 1v9z"/><rect x="28" y="2" width="6" height="9" rx="1"/></svg></div>';
+export const statusBar = '<div class="catalog-frame__status" aria-hidden="true"><span data-clock>9:30</span><svg viewBox="0 0 34 12" width="34" height="12"><path d="M0 2h12L6 10zM15 10 25 1v9z"/><rect x="28" y="2" width="6" height="9" rx="1"/></svg></div>';
 const frame = (kind: FrameKind, content: string) =>
   `<div class="catalog-frame catalog-frame--${kind}">${kind === 'top' ? statusBar : ''}<div class="catalog-frame__screen">${content}</div></div>`;
 
