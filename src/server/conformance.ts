@@ -5,10 +5,10 @@
 // each disclosing its detail), and a tray of what the filters select, with a copy button.
 //
 // The data is material's public matrix file, schema v1 agreed with material on 2026-11-26, vendored at the
-// pinned version by `bun run conformance:sync` into data/conformance/matrix.json. Until material tags the
+// pinned version by `bun run conformance:sync` into data/conformance/<version>.json. Until material tags the
 // first real file, the page renders a labelled sample. Scores are derived here. The search, the chips and
 // the tray run in src/client/conformance.ts; without scripts every row shows, details open.
-import { existsSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { symbols } from '../shared/icons';
 
@@ -33,10 +33,22 @@ interface Matrix {
 }
 
 const root = resolve(import.meta.dir, '../..');
-const load = (): Matrix => {
-  const real = resolve(root, 'data/conformance/matrix.json');
-  return JSON.parse(readFileSync(existsSync(real) ? real : resolve(root, 'data/conformance/sample.json'), 'utf8')) as Matrix;
+const dir = resolve(root, 'data/conformance');
+const semver = (v: string) => v.split('.').map(Number);
+const newer = (a: string, b: string) => { const x = semver(a), y = semver(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return (y[i] ?? 0) - (x[i] ?? 0); return 0; };
+/** The vendored releases, newest first: one file per material version, data/conformance/<version>.json, written by
+ *  `bun run conformance:sync`. A tag never changes, so each is read once. */
+export const conformanceVersions = (): string[] => readdirSync(dir).map(f => /^(\d+\.\d+\.\d+)\.json$/.exec(f)?.[1]).filter((v): v is string => !!v).sort(newer);
+const cache = new Map<string, Matrix>();
+/** The matrix at a version, or the latest; the sample until a release carries the file. Null for an unknown version. */
+export const loadMatrix = (version?: string | null): Matrix | null => {
+  const versions = conformanceVersions();
+  if (version && !versions.includes(version)) return null;
+  const key = version ?? versions[0] ?? 'sample';
+  if (!cache.has(key)) cache.set(key, JSON.parse(readFileSync(resolve(dir, `${key}.json`), 'utf8')) as Matrix);
+  return cache.get(key)!;
 };
+const load = (): Matrix => loadMatrix()!;
 
 const escape = (value: string): string => value.replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[char]!);
 type Attributes = Record<string, string | number | boolean | undefined>;
@@ -206,14 +218,16 @@ type ListItem = { id: string; group: string; html: string; component: string; pr
 
 /** A page of the list, in component order, after the page's search and filters:
  *  `{ items, total }` for vlist's data plugin. q searches; status, aspect take comma lists; ref is spec or compose. */
-export function conformanceRows(params: URLSearchParams): { items: ListItem[]; total: number } {
+export function conformanceRows(params: URLSearchParams): { items: ListItem[]; total: number } | null {
+  const matrix = loadMatrix(params.get('version'));
+  if (!matrix) return null;
   const list = (key: string) => (params.get(key) ?? '').split(',').filter(Boolean);
   const query = (params.get('q') ?? '').trim().toLowerCase();
   const statuses = list('status');
   const aspects = list('aspect');
   const refs = list('ref').filter((r): r is Ref => REFS.includes(r as Ref));
   const against = refs.length ? refs : REFS;
-  const all: ListItem[] = load().components.flatMap(component => component.properties
+  const all: ListItem[] = matrix.components.flatMap(component => component.properties
     .filter(row => (!aspects.length || aspects.includes(row.aspect))
       && (!statuses.length || against.some(r => statuses.includes(row.status[r])))
       && (!query || [component.name, row.property, row.variant ?? '', row.state ?? '', row.aspect, row.note ?? '', refValue(row, 'spec') ?? '', refValue(row, 'compose') ?? '', row.material.value].join(' ').toLowerCase().includes(query)))
@@ -247,4 +261,33 @@ export function conformanceList(): { html: string; name: string } {
   const tray = `<aside class="matrix-tray" aria-label="Selection"><p class="matrix-tray__count" role="status"><strong data-matrix-count>${rows.length}</strong> of ${rows.length} properties</p>`
     + m('button', { variant: 'tonal', icon: symbols.contentCopy, class: 'matrix-copy' }, 'Copy as CSV') + '</aside>';
   return { name: 'Every property', html: `<div class="matrix matrix--list" data-refs="${REFS.join(' ')}">${head}${summaryCards(rows)}${caution(matrix)}${controlsFor(rows)}${colhead}<div class="matrix-list" aria-label="Conformance, every property"></div><p class="matrix-empty" hidden>No property matches the search and filters.</p><div class="matrix-fallback">${fallback}</div>${tray}</div>` };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// The derived counts (Priam's notes, 2026-11-26): worked out from the file, never stored or edited.
+type Counts = { rows: number } & Record<Ref, { match: number; drift: number; noValue: number }> & { materialOnly: number; disagree: number };
+const counts = (rows: Row[]): Counts => ({
+  rows: rows.length,
+  spec: tally(rows, 'spec'), compose: tally(rows, 'compose'),
+  // Neither reference gives a value: material's own, not a gap.
+  materialOnly: rows.filter(row => REFS.every(r => refValue(row, r) === null)).length,
+  // Both references give a value and they differ: the conflicts the owner decides.
+  disagree: rows.filter(disagrees).length,
+});
+const disagrees = (row: Row) => { const a = refValue(row, 'spec'), b = refValue(row, 'compose'); return a !== null && b !== null && a.replace(/\s+/g, '').toLowerCase() !== b.replace(/\s+/g, '').toLowerCase(); };
+
+/** The summary at a version: the release's facts, its counts overall, per component and per aspect, and the ids of
+ *  the rows whose references disagree. */
+export function conformanceSummary(version: string | null) {
+  const matrix = loadMatrix(version);
+  if (!matrix) return null;
+  const rows = matrix.components.flatMap(c => c.properties);
+  const aspects = [...new Set(rows.map(r => r.aspect))];
+  return {
+    schema: matrix.schema, material: matrix.material, sample: matrix.sample ?? false, measured: matrix.measured, references: matrix.references,
+    total: counts(rows),
+    components: matrix.components.map(c => ({ id: c.id, name: c.name, ...counts(c.properties) })),
+    aspects: aspects.map(a => ({ id: a, name: ASPECT[a] ?? a, ...counts(rows.filter(r => r.aspect === a)) })),
+    disagree: rows.filter(disagrees).map(r => r.id),
+  };
 }

@@ -7,7 +7,7 @@ import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
-import { conformanceComponent, conformanceIndex, conformanceList, conformanceRows } from './src/server/conformance';
+import { conformanceComponent, conformanceIndex, conformanceList, conformanceRows, conformanceSummary, conformanceVersions, loadMatrix } from './src/server/conformance';
 import { componentDirectory } from './src/server/component-directory';
 import { componentOverview } from './src/server/component-overview';
 import { hasPropertyOverview, propertyOverview } from './src/server/component-properties';
@@ -511,7 +511,17 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/conformance/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections) });
   else if (path === '/conformance/matrix/') response = page(path, 'Conformance matrix — material', 'Every property of the material library against Material 3\'s specification and Jetpack Compose Material 3, grouped by component.', 'conformance', { conformance: conformanceList() });
   // The list's pages, for vlist's data plugin; hidden with the page until the owner approves it.
-  else if (path === '/api/conformance/rows/' || path === '/api/conformance/rows') response = Response.json(conformanceRows(url.searchParams), { headers: { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
+  // The conformance API (hidden with the pages until the owner approves them). ?version=<material version>, default the
+  // latest vendored release; a version's answer never changes, so it is cached for good.
+  else if (/^\/api\/conformance(\/(versions|matrix|summary|rows))?\/?$/.test(path)) {
+    const what = path.split('/')[3] || 'versions';
+    const version = url.searchParams.get('version');
+    const body = what === 'versions' ? { latest: conformanceVersions()[0] ?? null, versions: conformanceVersions() }
+      : what === 'matrix' ? loadMatrix(version) : what === 'summary' ? conformanceSummary(version) : conformanceRows(url.searchParams);
+    const cache = version && what !== 'versions' ? 'public, max-age=31536000, immutable' : 'public, max-age=300';
+    response = body ? Response.json(body, { headers: { 'Cache-Control': cache, 'X-Robots-Tag': 'noindex', 'Access-Control-Allow-Origin': '*' } })
+      : Response.json({ error: `No conformance matrix for material ${version}`, versions: conformanceVersions() }, { status: 404, headers: { 'X-Robots-Tag': 'noindex' } });
+  }
   // A component's matrix sits under the component (its section, drawer and header).
   else if (/^\/components\/[a-z-]+\/conformance\/$/.test(path) && isComponent(path.split('/')[2]!) && conformanceComponent(path.split('/')[2]!)) {
     const slug = path.split('/')[2]!;
