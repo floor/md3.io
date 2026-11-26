@@ -289,12 +289,14 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 @media (max-width: 839px) { .catalog-visual.property-stage--menus { flex-wrap: nowrap; gap: 32px 72px; } }
 .property-stage--menus .property-value { flex-shrink: 0; }
 @media (max-width: 839px) { .catalog-visual.property-stage--menus { gap: 32px 120px; padding-left: 96px; padding-right: 24px; } }
-/* A dotted grid behind the values, as m3.material.io's figures: dots of the outline colour, every 8px, on the stage's own colour. */
-.catalog-visual.property-stage {
-  background-color: var(--mtrl-sys-color-surface-container-low);
+/* A dotted grid behind the values, as m3.material.io's figures: dots of the outline colour every 8px, the first
+   row and column one spacing from the edge (a layer inset by half a spacing, dots at the middle of each cell). */
+.catalog-visual.property-stage { background-color: var(--mtrl-sys-color-surface-container-low); background-image: none; isolation: isolate; }
+.catalog-visual.property-stage::before {
+  content: ""; position: absolute; inset: 4px; z-index: -1; pointer-events: none;
   background-image: radial-gradient(circle, color-mix(in srgb, var(--mtrl-sys-color-outline) 30%, transparent) 0.75px, transparent 1px);
   background-size: 8px 8px;
-  background-position: 4px 4px;
+  background-position: 0 0;
 }
 /* A small corner, as m3.material.io's figures: M3's medium corner (12px). */
 .catalog-visual.property-stage { border-radius: var(--mtrl-sys-shape-corner-medium, 12px); }
