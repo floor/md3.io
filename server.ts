@@ -148,7 +148,7 @@ function page(path: string, title: string, description: string, template: string
     ? isAddons
       ? renderSectionDrawer(path, 'Add-ons list', [{ name: 'Add-ons overview', href: '/addons/' }, ...addonEntries])
       // A component's Develop or Accessibility tab marks the component itself.
-      : renderSectionDrawer(path.replace(/(?:develop|accessibility)\/$/, ''), 'Component list', componentDrawerEntries(playgroundDirectory.entries))
+      : renderSectionDrawer(path.replace(/(?:develop|accessibility|conformance)\/$/, ''), 'Component list', componentDrawerEntries(playgroundDirectory.entries))
     : '';
   const content = eta.render(template, { ...data, path, isCatalog, isAddons, icon, playgroundHref, linkable: (slug: string) => addonsPublic || !isAddon(slug), docGroups, guideGroup, guideGroups, components, componentDeprecations, playgroundDirectory: directory, componentDrawer, pager });
   const section = isDocs ? 'Docs' : isExamples ? 'Showcase' : isStyles ? 'Styles' : isAddons ? 'Add-ons' : isComponents ? 'Components' : '';
@@ -156,7 +156,7 @@ function page(path: string, title: string, description: string, template: string
   // One built sheet per page type, the same files that page used to link. See stylesheetBundles.
   const catalogStyles = isAddons ? 'addons-catalog' : 'catalog';
   const panelStyles = isAddons ? 'addon-panel' : 'material-panel';
-  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'component-tab' ? 'component-tab' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : template === 'conformance' ? 'conformance' : 'page';
+  const css: StylesheetBundle = isHome ? 'home' : isCatalog ? catalogStyles : isExamples ? 'examples' : isComponentDetail && data.panel ? panelStyles : template === 'component-tab' && data.conformance ? 'conformance-tab' : template === 'component-tab' ? 'component-tab' : template === 'styles-themes' ? 'themes' : template === 'styles-color-lab' ? 'colour-lab' : isStyles ? 'styles' : template === 'conformance' ? 'conformance' : 'page';
   const pageName = title.replace(/ — material$/, '');
   const jsonLd = status === 200 ? structuredData(path, pageName, description, section).map(jsonForScript) : [];
   return html(eta.render('base', {
@@ -164,7 +164,7 @@ function page(path: string, title: string, description: string, template: string
     skipTarget: isComponentDetail ? 'component-content' : 'content',
     // The page's Markdown twin, for AI tools (a guide, or a component's Develop or Accessibility tab).
     markdown: /^\/docs\/([a-z-]+)\/$/.exec(path) && isGuide(path.slice(6, -1)) ? `/docs/${path.slice(6, -1)}.md` : /^\/components\/[a-z-]+\/(develop|accessibility)\/$/.test(path) ? `${path.slice(0, -1)}.md` : null,
-    path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: (isComponentDetail && !isAddons) || isHome, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : template === 'conformance' ? 'conformance' : undefined,
+    path, title: documentTitle(path, pageName), description, noindex: isHiddenPath(path), showcasePublic, isHome, isExamples, themes, appBar, primaryRail: primaryRail(path === '/' ? '/' : primaryDestinations.find(item => item.label === section)?.href ?? ''), themeButton, themeMenu, modeButton, headerScope: HEADER_SCOPE, themeSheets, isCatalog, heroScene: (isComponentDetail && !isAddons) || isHome, catalogTokens, panelStylesheets: [...new Set([...[...new Set([...headerStylesheets, ...linkedStylesheets(primaryRail('/'))])], ...(data.panel ? linkedStylesheets(panelMarkup(data.panel as ReturnType<typeof materialPanel>)) : [])])], section, sectionDrawer, primaryDestinations, railSections: railSections(), jsonLd, css, script: template === 'styles-themes' ? 'theme-app' : template === 'styles-color-lab' ? 'colour-lab' : template === 'conformance' || data.conformance === true ? 'conformance' : undefined,
     // The pager takes the page's own content width: the overviews' inset body, or a component
     // page's side padding.
     content: template === 'document' || template === 'component-tab' || !pager ? content
@@ -506,10 +506,17 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   // The conformance matrix (FLO-1607): hidden until the owner approves it (src/shared/visibility.ts).
-  else if (path === '/conformance/matrix/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections) });
-  else if (/^\/conformance\/matrix\/[a-z-]+\/$/.test(path) && conformanceComponent(path.split('/')[3]!)) {
-    const detail = conformanceComponent(path.split('/')[3]!)!;
-    response = page(path, `${detail.name} conformance — material`, `${detail.name}: how the material library follows Material 3's specification and Jetpack Compose Material 3, property by property.`, 'conformance', { conformance: detail });
+  // Conformance (FLO-1607), hidden until the owner approves it (src/shared/visibility.ts): the dedicated page
+  // on the Components page's layout, and each component's matrix on the component pages' layout.
+  else if (path === '/conformance/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections) });
+  else if (path === '/conformance/matrix/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: '/conformance/' } });
+  // A component's matrix sits under the component (its section, drawer and header).
+  else if (/^\/components\/[a-z-]+\/conformance\/$/.test(path) && isComponent(path.split('/')[2]!) && conformanceComponent(path.split('/')[2]!)) {
+    const slug = path.split('/')[2]!;
+    const detail = conformanceComponent(slug)!;
+    response = page(path, `${detail.name}: conformance — material`, `${detail.name}: how the material library follows Material 3's specification and Jetpack Compose Material 3, property by property.`, 'component-tab', {
+      slug, componentHeader: componentHeader(slug, 'conformance' as ComponentTab), frameworksRow: '', html: detail.html, toc: detail.toc, conformance: true,
+    });
   }
   else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');
   else if (path === '/credits/') response = page(path, 'Credits — material', 'The design system, fonts and icons md3.io and the material library build on.', 'credits');

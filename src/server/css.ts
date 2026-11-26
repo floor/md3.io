@@ -25,6 +25,8 @@ export const stylesheetBundles = {
   'material-panel': materialPanel,
   'addon-panel': materialPanel,
   'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button'],
+  // A component's conformance matrix: the component pages' layout, with the matrix's sheet.
+  'conformance-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'conformance'],
   // Add-on visuals that use factories need their light-DOM styles.
   catalog,
   'addons-catalog': [...catalog, 'mtrl:button', 'mtrl:text-field', 'mtrl:listbox', 'addons:styles'],

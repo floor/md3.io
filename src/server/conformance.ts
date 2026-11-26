@@ -120,7 +120,7 @@ export function conformanceIndex(sections: { id: string; name: string; items: { 
   const byId = new Map(matrix.components.map(component => [component.id, component]));
   const rows = matrix.components.flatMap(component => component.properties);
   const card = (component: Component) => {
-    const href = `/conformance/matrix/${component.id}/`;
+    const href = `/components/${component.id}/conformance/`;
     const drift = component.properties.filter(row => REFS.some(r => row.status[r] === 'drift')).length;
     const noValue = component.properties.filter(row => REFS.every(r => row.status[r] === 'no-value')).length;
     const stage = `<div slot="media" class="matrix-stage">${REFS.map(ref => {
@@ -145,16 +145,15 @@ export function conformanceIndex(sections: { id: string; name: string; items: { 
 }
 
 /** One component's properties: its scores, the controls, and its rows. */
-export function conformanceComponent(id: string): { html: string; name: string } | null {
+export function conformanceComponent(id: string): { html: string; name: string; toc: { id: string; title: string }[] } | null {
   const matrix = load();
   const component = matrix.components.find(c => c.id === id);
   if (!component) return null;
   const rows = component.properties;
   const aspects = [...new Set(rows.map(row => row.aspect))];
 
-  const masthead = `<header class="matrix-masthead">`
-    + `<p class="matrix-eyebrow"><a class="text-link" href="/conformance/matrix/">Conformance</a></p><h1>${escape(component.name)}</h1>`
-    + `<p class="matrix-lede">${escape(component.name)} against Material 3's two references, property by property: the specification's value, Compose's, material's, and whether they match. <a class="text-link" href="/components/${escape(component.id)}/">The ${escape(component.name.toLowerCase())}'s page</a></p>`
+  const masthead = `<header class="matrix-masthead"><h2 id="matrix-summary">Conformance</h2>`
+    + `<p class="matrix-lede">The ${escape(component.name.toLowerCase())} against Material 3's two references, property by property: the specification's value, Compose's, material's, and whether they match. <a class="text-link" href="/conformance/">Every component</a></p>`
     + facts(matrix, rows, 1) + `</header>`;
   const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label: `${label} ${count}` });
   const countBy = (key: (row: Row) => boolean) => rows.filter(key).length;
@@ -171,7 +170,7 @@ export function conformanceComponent(id: string): { html: string; name: string }
   const sections = [component].map(component => {
     const drifts = component.properties.filter(row => REFS.some(r => row.status[r] === 'drift')).length;
     return `<section class="matrix-section" id="${escape(component.id)}" aria-labelledby="${escape(component.id)}-title">`
-      + `<div class="matrix-section__head"><h2 id="${escape(component.id)}-title"><a href="/components/${escape(component.id)}/">${escape(component.name)}</a></h2>`
+      + `<div class="matrix-section__head"><h2 id="${escape(component.id)}-title">Properties</h2>`
       + `<span class="matrix-badge${drifts ? ' matrix-badge--drift' : ''}">${drifts ? `${drifts} drift` : 'All match'}</span>`
       + `<span class="matrix-section__ticks">${REFS.map(r => ticks(component.properties, r)).join('')}</span></div>`
       + `<ul class="matrix-rows">${component.properties.map(row => rowHtml(row, matrix)).join('')}</ul>`
@@ -181,5 +180,5 @@ export function conformanceComponent(id: string): { html: string; name: string }
   const tray = `<aside class="matrix-tray" aria-label="Selection"><p class="matrix-tray__count" role="status"><strong data-matrix-count>${rows.length}</strong> of ${rows.length} properties</p>`
     + m('button', { variant: 'tonal', icon: symbols.contentCopy, class: 'matrix-copy' }, 'Copy as CSV') + '</aside>';
 
-  return { name: component.name, html: `<div class="matrix" data-refs="${REFS.join(' ')}">${masthead}${summaryCards(rows)}${caution(matrix)}${controls}${header}<div class="matrix-sections">${sections}</div>${tray}</div>` };
+  return { name: component.name, toc: [{ id: 'matrix-summary', title: 'Conformance' }, { id: `${component.id}-title`, title: 'Properties' }], html: `<div class="matrix" data-refs="${REFS.join(' ')}">${masthead}${summaryCards(rows)}${caution(matrix)}${controls}${header}<div class="matrix-sections">${sections}</div>${tray}</div>` };
 }

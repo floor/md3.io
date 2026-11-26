@@ -15,6 +15,6 @@ export const isAddonPath = (path: string): boolean => path.startsWith('/addons/'
 export const isShowcasePath = (path: string): boolean => path.startsWith('/showcase/');
 /** A Styles page; /styles/*.css are the site's own stylesheets, not pages. */
 export const isStylesPath = (path: string): boolean => path.startsWith('/styles/') && !path.endsWith('.css');
-export const isConformancePath = (path: string): boolean => path.startsWith('/conformance/');
+export const isConformancePath = (path: string): boolean => path.startsWith('/conformance/') || /^\/components\/[a-z-]+\/conformance\/$/.test(path);
 /** A page of a hidden section: served, never linked, not indexed. */
 export const isHiddenPath = (path: string): boolean => (!addonsPublic && isAddonPath(path)) || (!showcasePublic && isShowcasePath(path)) || (!stylesPublic && isStylesPath(path)) || (!conformancePublic && isConformancePath(path));
