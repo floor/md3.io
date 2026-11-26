@@ -152,8 +152,33 @@ const datepicker: PropertySection[] = [
     values: [{ label: 'day', name: 'Days', markup: pickerSurface('datepicker', 'view-day') }, { label: 'month', name: 'Months', markup: pickerSurface('datepicker', 'view-month') }, { label: 'year', name: 'Years', markup: pickerSurface('datepicker', 'view-year') }] },
 ];
 
+// Loading indicator and progress: their API tables' values and wording.
+const li = (attrs: Attributes) => m('loading-indicator', { size: 72, 'aria-label': 'Loading', ...attrs });
+const loadingIndicator: PropertySection[] = [
+  { key: 'contained', title: 'Contained', text: 'Bare, or on a primary-container circle for contrast over content.',
+    values: [{ label: 'false', name: 'Uncontained', markup: li({}) }, { label: 'true', name: 'Contained', markup: li({ contained: true }) }] },
+  { key: 'value', title: 'Type', text: 'It loops while the wait is open-ended, or shows a value from 0 to 1.',
+    values: [{ label: 'null', name: 'Indeterminate', markup: li({}) }, { label: '0.6', name: 'Determinate, at 0.6', markup: li({ value: 0.6 }) }] },
+  { key: 'size', title: 'Size', text: 'Its width and height, from 24 to 240 pixels: 48 by default.',
+    values: [24, 48, 96].map(size => ({ label: String(size), name: `${size}px`, markup: li({ size }) })) },
+];
+// A linear indicator takes its container's width: each one is given 240px here.
+const pr = (attrs: Attributes) => `<div class="property-progress">${m('progress', { value: 60, 'aria-label': 'Progress', ...attrs })}</div>`;
+const progress: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'A line, or a circle.',
+    values: ['linear', 'circular'].map(variant => ({ label: variant, markup: pr({ variant }) })) },
+  { key: 'shape', title: 'Shape', text: 'A flat or a wavy active indicator.',
+    values: ['flat', 'wavy'].map(shape => ({ label: shape, markup: `<div class="property-column">${pr({ shape })}${pr({ shape, variant: 'circular' })}</div>` })) },
+  { key: 'thickness', title: 'Thickness', text: 'Thin (4px) or thick (8px).',
+    values: ['thin', 'thick'].map(thickness => ({ label: thickness, markup: pr({ thickness }) })) },
+  { key: 'indeterminate', title: 'Type', text: 'A value from 0 to the maximum, or activity without a value.',
+    values: [{ label: 'determinate', name: 'Determinate, at 60%', markup: pr({}) }, { label: 'indeterminate', name: 'Indeterminate', markup: pr({ indeterminate: true }) }] },
+  { key: 'label', title: 'Percentage', text: 'The value can be shown as a percentage beside the indicator.',
+    values: [{ label: 'off', name: 'Without the percentage', markup: pr({}) }, { label: 'on', name: 'With the percentage', markup: pr({ 'show-label': true }) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
-  'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker,
+  'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
 };
 
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;
