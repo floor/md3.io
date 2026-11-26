@@ -61,7 +61,7 @@ const dialogSurface = (config: { size?: string; divider?: boolean } = {}, sized 
 /** The Overview's property sections: `md3-catalog-dialog-<property>-<value>` (component-properties.ts). */
 const DIALOG_PROPERTIES: Record<string, { size?: string; divider?: boolean }> = {
   'size-small': { size: 'small' }, 'size-medium': { size: 'medium' }, 'size-large': { size: 'large' },
-  'dividers-on': { divider: true }, 'dividers-off': { divider: false },
+  'dividers-on': { divider: true }, 'dividers-off': { divider: false }, glance: { size: 'small' },
 };
 const styles = ['progress', 'button', 'divider', 'dialog', 'radios', 'catalog-dialog'];
 export const define = (): void => {

@@ -421,6 +421,18 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  dialog: {
+    points: '<ul><li>A short task or a decision that needs an answer before going on: it interrupts on purpose.</li>'
+      + '<li>A title, content such as a message or a few choices, and the actions at the end.</li>'
+      + '<li>A scrim dims the page behind it; keyboard focus stays inside until it closes.</li>'
+      + '<li>Small, medium or large, or the whole screen on a phone.</li></ul>',
+    // A clock's alarm settings, dimmed behind the dialog that changes the alarm's sound.
+    stage: `<div class="property-device property-device--dialog"><div class="property-device__screen property-dialog-screen">${statusBar}<h3>Alarm</h3>`
+      + '<ul class="property-phone__list"><li><span><strong>Time</strong><span>7:00</span></span></li><li><span><strong>Repeat</strong><span>Weekdays</span></span></li>'
+      + '<li><span><strong>Alarm sound</strong><span>None</span></span></li><li><span><strong>Vibrate</strong><span>On</span></span></li></ul>'
+      + `<div class="property-dialog-screen__scrim"></div>${surfaceOf('dialog', 'glance')}</div></div>`,
+    caption: 'An alarm\'s sound, chosen in a dialog over its settings: pick one to turn on OK.', kind: 'dialog',
+  },
   list: {
     points: '<ul><li>Rows of related items to scan, find one, and act on it.</li>'
       + '<li>Each item a headline, with supporting text or an overline, and content before and after it.</li>'

@@ -479,3 +479,15 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-top__screen.is-scrolled .catalog-frame__status { background: var(--mtrl-sys-color-surface-container); }
 /* The dialog sections: drawn at 70%, so the three sizes read side by side with the page. */
 .catalog-visual--dialog.property-stage .property-surface { zoom: 0.7; }
+/* The dialog's glance: a phone with a clock's alarm settings, dimmed, the dialog over them. */
+.property-device--dialog { width: 320px; height: 560px; }
+.property-dialog-screen { position: relative; background: var(--mtrl-sys-color-surface); }
+.property-device__screen.property-dialog-screen > * { height: auto; }
+.property-dialog-screen h3, .md .property-dialog-screen h3 { margin: 16px 24px 8px; font-size: 28px; font-weight: 400; }
+.property-dialog-screen .property-phone__list { margin: 0; padding: 0 24px; }
+.property-dialog-screen__scrim { position: absolute !important; inset: 0; height: auto !important; background: color-mix(in srgb, var(--mtrl-sys-color-scrim, #000) 32%, transparent); }
+.property-dialog-screen > .property-surface { position: absolute !important; inset: 0; display: grid !important; place-items: center; height: auto !important; zoom: 0.85; }
+.catalog-visual--dialog.property-note__stage { height: auto; padding: 32px 16px 0; display: grid; place-items: end center; overflow: hidden; }
+.catalog-visual--dialog.property-note__stage .property-device { border-bottom: 0; border-radius: 40px 40px 0 0; height: 480px; }
+.property-dialog-screen > .property-surface { display: grid !important; place-items: center; zoom: 0.8; top: 80px !important; }
+.property-device__screen.property-dialog-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px 0; }
