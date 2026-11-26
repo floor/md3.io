@@ -5,12 +5,11 @@ import 'material/elements/css/datepicker';
 import createDatePicker from 'material/components/datepicker';
 import { inPlace, surface } from './surface';
 
-/** Early days, so the selection sits in the calendar's first rows and the card needs no scrolling. */
-const currentRange = (): [Date, Date] => {
-  const today = new Date();
-  return [new Date(today.getFullYear(), today.getMonth(), 2), new Date(today.getFullYear(), today.getMonth(), 5)];
-};
-const day = (): Date => { const today = new Date(); return new Date(today.getFullYear(), today.getMonth(), 5); };
+/** Dates ahead, as a person picks them: a week from today, and a stay of four nights from then. The
+ *  calendar opens on that date's month (the next one, near a month's end). */
+const fromToday = (days: number): Date => { const today = new Date(); return new Date(today.getFullYear(), today.getMonth(), today.getDate() + days); };
+const currentRange = (): [Date, Date] => [fromToday(7), fromToday(11)];
+const day = (): Date => fromToday(7);
 
 /** The property sections' surfaces: `md3-catalog-datepicker-<property>-<value>`. */
 const DATEPICKER_PROPERTIES: Record<string, () => Record<string, unknown>> = {
@@ -26,7 +25,7 @@ const DATEPICKER_PROPERTIES: Record<string, () => Record<string, unknown>> = {
 
 export const define = (): void => {
   surface('md3-catalog-datepicker', ['progress', 'button', 'datepicker'], () =>
-    inPlace(() => createDatePicker({ variant: 'modal', selectionMode: 'range', value: currentRange(), label: 'Select dates' }) as never));
+    inPlace(() => createDatePicker({ variant: 'modal', selectionMode: 'range', value: currentRange(), label: 'Select dates', animate: false }) as never));
   for (const [suffix, config] of Object.entries(DATEPICKER_PROPERTIES)) surface(`md3-catalog-datepicker-${suffix}`, ['progress', 'button', 'datepicker'], () =>
-    inPlace(() => createDatePicker({ label: 'Select date', ...config() } as never) as never));
+    inPlace(() => createDatePicker({ label: 'Select date', animate: false, ...config() } as never) as never));
 };
