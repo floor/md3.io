@@ -341,3 +341,12 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-phone__list strong { color: var(--mtrl-sys-color-on-surface); font-weight: 400; font-size: 16px; }
 .property-phone__handle { display: block; width: 108px; height: 4px; margin: 4px auto 8px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
 .property-phone m-navigation-bar { flex: none; }
+/* At a glance: room below the phone, and the bar's colour carried to the bottom of its screen, behind the home handle. */
+.catalog-visual.property-note__stage { padding-bottom: 32px; height: 332px; }
+.property-phone { border-bottom: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); }
+.property-phone__screen { background: var(--mtrl-sys-color-surface-container); }
+.property-phone__list { background: var(--mtrl-sys-color-surface); }
+.property-phone__home { display: grid; place-items: center; height: 20px; }
+.property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+.property-note__points ul { padding-left: 22px; }
+.property-note__points li { margin: 0 0 12px; }
