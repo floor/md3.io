@@ -397,3 +397,16 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* A sheet docks to its box, not the window: the transform makes the box the reference of its fixed position. */
 .property-screen--sheet { transform: translateZ(0); contain: layout paint; }
 .property-card img[slot="media"] { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+/* The card's At a glance and Anatomy. */
+.property-card--glance { width: 320px; }
+.property-card--glance img[slot="media"] { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+.property-anatomy { position: relative; width: 360px; padding: 8px 80px; }
+.property-anatomy__media { height: 160px; background: var(--mtrl-sys-color-primary-container); }
+.property-anatomy p { margin: 0; color: var(--mtrl-sys-color-on-surface-variant); font-size: 14px; line-height: 20px; }
+.property-anatomy__callouts { position: absolute; inset: 0; pointer-events: none; }
+.property-anatomy__line { position: absolute; height: 1px; background: var(--mtrl-sys-color-on-surface); }
+.property-anatomy__dot { position: absolute; width: 8px; height: 8px; box-sizing: border-box; border: 1.5px solid var(--mtrl-sys-color-on-surface); border-radius: 50%; background: var(--mtrl-sys-color-surface); }
+.property-anatomy__number { position: absolute; }
+.catalog-visual.property-note__stage:has(.property-card--glance) { height: auto; padding: 32px; align-items: center; }
+.property-anatomy { width: 520px; box-sizing: border-box; }
+@media (max-width: 599px) { .property-anatomy { width: 340px; padding: 8px 48px; } }

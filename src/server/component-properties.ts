@@ -24,6 +24,8 @@ interface PropertySection {
   stack?: boolean;
   /** Room above each value for an open menu, and between them. */
   menus?: boolean;
+  /** A figure of the parts: its legend names them, numbered as the callouts are. */
+  anatomy?: readonly string[];
 }
 
 // Button group: a cup-size choice, 8 oz selected, as the API's own examples do.
@@ -258,7 +260,17 @@ const cardOf = (attrs: Attributes, actions = true) => m('card', { headline: 'A l
 const photoCard = () => m('card', { variant: 'elevated', headline: 'Himalayan Peaks', subhead: 'Nepal' },
   '<img slot="media" src="https://picsum.photos/id/29/600/338" width="600" height="338" alt="Snowy peaks of the Himalaya under a blue sky" loading="lazy">'
   + m('button', { slot: 'actions', variant: 'text' }, 'Explore') + m('button', { slot: 'actions', variant: 'tonal' }, 'Save'));
+// The card's anatomy, as M3's figure: numbered callouts on its parts (catalog/card.ts places them
+// on the parts it measures, so they follow the font and the theme).
+const anatomyParts = ['Container', 'Media', 'Headline', 'Subhead', 'Supporting text', 'Actions'];
+const anatomyCard = () => `<div class="property-anatomy">${m('card', { variant: 'elevated' },
+  '<div slot="media" class="property-anatomy__media" data-part="2"></div>'
+  + '<span slot="headline" data-part="3">Headline</span><span slot="subhead" data-part="4">Subhead</span>'
+  + '<p data-part="5">Explain more about the topic shown in the headline and subhead through supporting text.</p>'
+  + m('button', { slot: 'actions', variant: 'outlined' }, 'Action') + m('button', { slot: 'actions', variant: 'filled', 'data-part': '6' }, 'Action'))}</div>`;
 const cardSections: PropertySection[] = [
+  { key: 'anatomy', title: 'Anatomy', text: 'The parts of a card, top to bottom, in the order the card places them.',
+    values: [{ label: 'anatomy', name: 'Anatomy', markup: anatomyCard() }], anatomy: anatomyParts },
   { key: 'variant', title: 'Variant', text: 'Elevated, with a shadow; filled, on a container colour; or outlined, with a border.',
     values: ['elevated', 'filled', 'outlined'].map(variant => ({ label: variant, markup: `<div class="property-card">${cardOf({ variant })}</div>` })) },
   { key: 'media', title: 'Media', text: 'Media at the top of the card, clipped to its shape: a photo here.',
@@ -317,6 +329,16 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  card: {
+    points: '<ul><li>One subject on one surface: its media, a title, supporting text and its actions.</li>'
+      + '<li>The card puts its sections in M3\'s order: media, header, content, then actions.</li>'
+      + '<li>Elevated, filled or outlined, by how much it should stand out.</li>'
+      + '<li>The whole card can be one button when it leads to one place.</li></ul>',
+    stage: `<div class="property-card property-card--glance">${m('card', { variant: 'elevated', headline: 'Himalayan Peaks', subhead: 'From your saved places' },
+      '<img slot="media" src="https://picsum.photos/id/29/600/338" width="600" height="338" alt="Snowy peaks of the Himalaya under a blue sky" loading="lazy">'
+      + m('button', { slot: 'actions', variant: 'filled' }, 'Plan a trip'))}</div>`,
+    caption: 'A card about one place: its photo, its name, and the one thing to do next.', kind: 'card',
+  },
   'navigation-rail': {
     points: '<ul><li>Three to seven destinations in a column along the side of a medium or expanded window.</li>'
       + '<li>Collapsed, the labels sit under the icons; expanded, it widens into a panel with the labels beside them.</li>'
@@ -360,9 +382,12 @@ export function propertyOverview(slug: string, links: { playground: string; deve
     const id = `property-${section.key}`;
     const stage = `<div class="catalog-visual catalog-visual--${slug} property-stage${section.stack ? ' property-stage--stack' : ''}${section.menus ? ' property-stage--menus' : ''}">`
       // As M3's figures: a number under each value, and a legend below the stage.
-      + section.values.map((value, index) => `<figure class="property-value">${value.markup}<figcaption><span class="property-number" aria-hidden="true">${index + 1}</span><span class="sr-only">${escape(value.name ?? value.label)}</span></figcaption></figure>`).join('') + `</div>`;
+      + (section.anatomy ? section.values.map(value => value.markup).join('')
+        : section.values.map((value, index) => `<figure class="property-value">${value.markup}<figcaption><span class="property-number" aria-hidden="true">${index + 1}</span><span class="sr-only">${escape(value.name ?? value.label)}</span></figcaption></figure>`).join('')) + `</div>`;
     const name = (value: PropertySection['values'][number]) => value.name ?? value.label.charAt(0).toUpperCase() + value.label.slice(1);
-    const legend = `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))}</li>`).join('')}</ol>`;
+    const legend = section.anatomy
+      ? `<ol class="property-legend">${section.anatomy.map((part, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(part)}</li>`).join('')}</ol>`
+      : `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))}</li>`).join('')}</ol>`;
     return `<section class="property-section" aria-labelledby="${id}"><div class="property-section__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}${legend}</section>`;
   }).join('');
   const note = expressiveNote(slug);
