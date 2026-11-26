@@ -62,7 +62,25 @@ const buttonGroup: PropertySection[] = [
     values: ['default', 'comfortable', 'compact'].map(density => ({ label: density, markup: cups({ kind: 'connected', variant: 'tonal', density }) })) },
 ];
 
-const PROPERTIES: Partial<Record<string, PropertySection[]>> = { 'button-group': buttonGroup };
+// Button: a "Label" button, as M3's figures; the sentences follow Button's own document.
+const btn = (attrs: Attributes, text = 'Label') => m('button', attrs, text);
+const button: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Five, from most to least emphasis: filled for the one main action, tonal, elevated, outlined, and text for the least.',
+    values: ['filled', 'tonal', 'elevated', 'outlined', 'text'].map(variant => ({ label: variant, markup: btn({ variant }) })) },
+  { key: 'size', title: 'Size', text: 'From xs to xl.',
+    values: ['xs', 's', 'm', 'l', 'xl'].map(size => ({ label: size, name: size.toUpperCase(), markup: btn({ size, icon: symbols.edit }) })) },
+  { key: 'shape', title: 'Shape', text: 'Round or square.',
+    values: ['round', 'square'].map(shape => ({ label: shape, markup: btn({ shape, size: 'm' }) })) },
+  { key: 'icon', title: 'Icon', text: 'An icon before the label, or after it.',
+    values: [{ label: 'none', name: 'Label only', markup: btn({}) }, { label: 'start', name: 'Leading icon', markup: btn({ icon: symbols.edit }) },
+      { label: 'end', name: 'Trailing icon', markup: btn({ icon: symbols.arrowForward, 'icon-position': 'end' }) }] },
+  { key: 'toggle', title: 'Toggle', text: 'A toggle button keeps its selected state, and changes its colours with it.',
+    values: [{ label: 'off', name: 'Toggle, not selected', markup: btn({ toggle: true, variant: 'tonal' }) }, { label: 'on', name: 'Toggle, selected', markup: btn({ toggle: true, selected: true, variant: 'tonal' }) }] },
+  { key: 'disabled', title: 'State', text: 'Disabled, a button stays visible but takes no press.',
+    values: [{ label: 'enabled', markup: btn({}) }, { label: 'disabled', markup: btn({ disabled: true }) }] },
+];
+
+const PROPERTIES: Partial<Record<string, PropertySection[]>> = { 'button-group': buttonGroup, button };
 
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;
 
