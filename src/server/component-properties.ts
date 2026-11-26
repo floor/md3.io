@@ -454,10 +454,10 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>Plain actions, or a choice: one at a time, or several.</li>'
       + '<li>One variant, size and shape for every button in it.</li></ul>',
     // As M3's figure: an app's welcome screen, its first step between accessibility and language.
-    stage: `<div class="property-scene property-scene--welcome"><p class="property-scene__hello">Welcome</p><div class="property-scene__row">`
+    stage: `<div class="property-welcome"><div class="property-welcome__screen"><p class="property-scene__hello">Welcome</p><div class="property-scene__row">`
       + m('button-group', { kind: 'standard', variant: 'tonal', size: 'l', selection: 'none', 'aria-label': 'Get started' },
         m('button-group-item', { value: 'access', icon: symbols.accessibilityNew, 'aria-label': 'Accessibility' }) + m('button-group-item', { value: 'start' }, 'Get started')
-        + m('button-group-item', { value: 'language', icon: symbols.language, 'aria-label': 'Language' })) + '</div></div>',
+        + m('button-group-item', { value: 'language', icon: symbols.language, 'aria-label': 'Language' })) + '</div><div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>',
     caption: 'An app\'s welcome screen: Get started, between accessibility and language. Press one: it widens and its neighbours narrow.', kind: 'button-group',
   },
   'split-button': {

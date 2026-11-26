@@ -518,3 +518,18 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .md .property-scene p.property-scene__hello, .property-scene p.property-scene__hello { margin: 0 0 24px; font-size: 56px; line-height: 1.1; font-weight: 700; color: var(--mtrl-sys-color-primary); }
 /* The welcome title in M3's display face, Google Sans (self-hosted), not the components' Roboto. */
 .property-scene p.property-scene__hello, .md .property-scene p.property-scene__hello { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.5px; }
+/* The button group's welcome, as M3's figure: the bottom of a phone, its title, and the group with
+   narrow tertiary-container icon buttons beside a wide filled tertiary action. The per-button colours
+   and widths are set through the group's CSS parts until material gives items their own (FLO-1593). */
+.catalog-visual.property-note__stage:has(.property-welcome) { height: auto; padding: 0 16px 48px; display: grid; place-items: start center; }
+.property-welcome { width: 420px; max-width: 100%; box-sizing: border-box; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-top: 0; border-radius: 0 0 32px 32px; overflow: hidden; }
+.property-welcome__screen { padding: 16px 16px 12px; text-align: center; background: var(--mtrl-sys-color-surface-container); }
+.property-welcome .property-scene__hello, .md .property-welcome p.property-scene__hello { margin: 0 0 16px; font-family: var(--font-sans); font-size: 72px; line-height: 1.1; font-weight: 700; letter-spacing: -1px; color: var(--mtrl-sys-color-primary); }
+.property-welcome .property-scene__row { gap: 0; }
+.property-welcome m-button-group { --mtrl-button-group-gap: 8px; }
+.property-welcome m-button-group::part(button) { width: 220px; background: var(--mtrl-sys-color-tertiary); color: var(--mtrl-sys-color-on-tertiary); font-size: 24px; }
+.property-welcome m-button-group::part(icon-button) { width: 64px; min-width: 64px; background: var(--mtrl-sys-color-tertiary-container); color: var(--mtrl-sys-color-on-tertiary-container); }
+.property-welcome m-button-group::part(button) { --mtrl-button-label-size: 22px; }
+
+.property-welcome .property-phone__home { display: flex; justify-content: center; padding-top: 24px; }
+.property-welcome .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
