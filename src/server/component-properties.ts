@@ -430,10 +430,46 @@ const checkboxSections: PropertySection[] = [
     values: [{ label: 'end', name: 'Label after', markup: cb({ 'label-position': 'end' }) }, { label: 'start', name: 'Label before', markup: cb({ 'label-position': 'start' }) }] },
 ];
 
+// Text field and select: a labelled field each, filled and outlined as M3's figures; a booking form at a glance.
+const tf = (attrs: Attributes) => `<div class="property-field">${m('text-field', { label: 'Label', ...attrs })}</div>`;
+const textFieldSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Filled, with more emphasis; or outlined, lighter, for forms with many fields.',
+    values: [{ label: 'filled', name: 'Filled', markup: tf({ variant: 'filled', value: 'Ada Vale' }) }, { label: 'outlined', name: 'Outlined', markup: tf({ variant: 'outlined', value: 'Ada Vale' }) }] },
+  { key: 'icons', title: 'Icons', text: 'An icon before the text says what the field is for; one after it can act on it, such as clearing it.',
+    values: [{ label: 'leading', name: 'Leading icon', markup: tf({ label: 'Search', 'leading-icon': symbols.search }) },
+      { label: 'trailing', name: 'Trailing icon, an action', markup: tf({ label: 'Search', value: 'Mirror lake', 'leading-icon': symbols.search, 'trailing-icon': symbols.close, 'trailing-icon-label': 'Clear' }) }] },
+  { key: 'affixes', title: 'Prefix and suffix', text: 'Fixed text before or after the value, such as a currency or a unit.',
+    values: [{ label: 'prefix', name: 'Prefix', markup: tf({ label: 'Amount', 'prefix-text': '€', value: '24.00' }) }, { label: 'suffix', name: 'Suffix', markup: tf({ label: 'Weight', 'suffix-text': 'kg', value: '12' }) }] },
+  { key: 'supporting', title: 'Supporting text', text: 'A line under the field: a hint, a character count, or what is wrong.',
+    values: [{ label: 'hint', name: 'Supporting text', markup: tf({ label: 'Email', 'supporting-text': 'We only use it for your receipt' }) },
+      { label: 'count', name: 'Character count', markup: tf({ label: 'Nickname', value: 'Ada', maxlength: 20 }) },
+      { label: 'error', name: 'Error', markup: tf({ label: 'Email', value: 'ada@', error: true, 'supporting-text': 'Enter an email address, such as ada@example.com' }) }], stack: true },
+  { key: 'state', title: 'State', text: 'Disabled, it shows its value and takes no input; read only, it can be focused and copied, not changed.',
+    values: [{ label: 'enabled', name: 'Enabled', markup: tf({ value: 'Ada Vale' }) }, { label: 'readonly', name: 'Read only', markup: tf({ value: 'Ada Vale', readonly: true }) },
+      { label: 'disabled', name: 'Disabled', markup: tf({ value: 'Ada Vale', disabled: true }) }], stack: true },
+  { key: 'density', title: 'Density', text: 'Compact fields are shorter, for dense forms and pointer use.',
+    values: [{ label: 'default', name: 'Default', markup: tf({ value: 'Ada Vale' }) }, { label: 'compact', name: 'Compact', markup: tf({ value: 'Ada Vale', density: 'compact' }) }] },
+];
+const sizes = [['2', '2 people'], ['4', '4 people'], ['6', '6 people'], ['8', '8 people']];
+const sel = (attrs: Attributes, options = sizes, value = '4') => `<div class="property-field">${m('select', { label: 'Party size', value, ...attrs }, options.map(([v, l, icon]) => m('select-option', { value: v!, label: l!, ...(icon ? { icon } : {}) })).join(''))}</div>`;
+const selectSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Filled or outlined, as a text field.',
+    values: [{ label: 'filled', name: 'Filled', markup: sel({ variant: 'filled' }) }, { label: 'outlined', name: 'Outlined', markup: sel({ variant: 'outlined' }) }] },
+  { key: 'options', title: 'Options', text: 'Each option a label, with an icon before it where one helps.',
+    values: [{ label: 'text', name: 'Labels', markup: sel({ label: 'Seating' }, [['inside', 'Inside'], ['terrace', 'Terrace'], ['bar', 'At the bar']], 'terrace') },
+      { label: 'icons', name: 'Icons', markup: sel({ label: 'Contact by' }, [['mail', 'Email', symbols.mail], ['phone', 'Phone', symbols.callEnd], ['none', 'No contact', symbols.close]], 'mail') }] },
+  { key: 'supporting', title: 'Supporting text', text: 'A hint under the field, or what is wrong when it is in error.',
+    values: [{ label: 'hint', name: 'Supporting text', markup: sel({ 'supporting-text': 'Tables seat up to 8' }) }, { label: 'error', name: 'Error', markup: sel({ error: true, required: true, 'supporting-text': 'Choose a party size' }, sizes, '') }] },
+  { key: 'state', title: 'State', text: 'Disabled, it shows its choice and cannot be opened.',
+    values: [{ label: 'enabled', name: 'Enabled', markup: sel({}) }, { label: 'disabled', name: 'Disabled', markup: sel({ disabled: true }) }] },
+  { key: 'density', title: 'Density', text: 'Compact fields are shorter, for dense forms and pointer use.',
+    values: [{ label: 'default', name: 'Default', markup: sel({}) }, { label: 'compact', name: 'Compact', markup: sel({ density: 'compact' }) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -463,6 +499,29 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  'text-field': {
+    points: '<ul><li>Text a person types: a name, an email, an amount, a search.</li>'
+      + '<li>Filled or outlined; a label that moves up when the field has a value.</li>'
+      + '<li>Icons, a prefix or a suffix, and a line of supporting text or a character count under it.</li>'
+      + '<li>A real input in a form: <code>name</code>, <code>type</code>, <code>required</code>, <code>pattern</code>, <code>autocomplete</code>.</li></ul>',
+    stage: `<div class="property-scene property-scene--form"><h3>Book a table</h3><p>Ristorante Lumen, Saturday 28 November.</p>`
+      + m('text-field', { label: 'Name', value: 'Ada Vale', autocomplete: 'name', 'leading-icon': symbols.person })
+      + m('text-field', { label: 'Email', type: 'email', autocomplete: 'email', 'leading-icon': symbols.mail, 'supporting-text': 'For your confirmation' })
+      + m('text-field', { label: 'Requests', maxlength: 80, 'supporting-text': 'Allergies, a high chair…' })
+      + `<div class="property-scene__actions">${m('button', { variant: 'filled' }, 'Book')}</div></div>`,
+    caption: 'A booking form: a name, an email with its hint, and a request with a character count.', kind: 'text-field',
+  },
+  select: {
+    points: '<ul><li>One choice from a short list, shown in a field: a size, a time, a country.</li>'
+      + '<li>Filled or outlined, as a text field; its menu lists the options.</li>'
+      + '<li>Options can carry an icon; one can be disabled.</li>'
+      + '<li>A real form value: <code>name</code>, <code>required</code>, <code>value</code>.</li></ul>',
+    stage: `<div class="property-scene property-scene--form"><h3>Book a table</h3><p>Ristorante Lumen, Saturday 28 November.</p>`
+      + m('select', { label: 'Party size', value: '4' }, sizes.map(([v, l]) => m('select-option', { value: v!, label: l! })).join(''))
+      + m('select', { label: 'Time', value: '20:00' }, ['19:00', '19:30', '20:00', '20:30', '21:00'].map(t => m('select-option', { value: t, label: t, ...(t === '19:30' ? { disabled: true } : {}) })).join(''))
+      + `<div class="property-scene__actions">${m('button', { variant: 'filled' }, 'Book')}</div></div>`,
+    caption: 'A booking: open either field to choose; 19:30 is fully booked.', kind: 'select',
+  },
   checkbox: {
     points: '<ul><li>Choose any number of options from a list, or turn one option on or off.</li>'
       + '<li>A parent checkbox can stand for a group: checked when all are, indeterminate when some are.</li>'

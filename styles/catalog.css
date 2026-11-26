@@ -556,3 +556,9 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* The checkbox's glance: a parent over its group, indented as M3 nests them. */
 .property-checks { display: grid; gap: 4px; }
 .property-checks__group { display: grid; gap: 4px; padding-left: 32px; }
+/* Fields: a field's width as M3's figures; the booking form's fields one under the other. */
+.property-field { width: 280px; max-width: 100%; }
+.property-field > * { display: block; width: 100%; }
+.property-scene--form { display: grid; gap: 16px; }
+.property-scene--form > m-text-field, .property-scene--form > m-select { display: block; width: 100%; }
+.property-scene--form p { margin-bottom: 4px; }
