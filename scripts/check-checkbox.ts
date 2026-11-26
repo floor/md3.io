@@ -29,6 +29,10 @@ try {
   // At 1440px the component list is the rail's drawer: it opens on resting on Components.
   await page.locator('m-navigation-rail a[href="/components/"]').hover();
   await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Checkbox', exact: true }).click();
+  // The list opens a component's Overview; its Playground tab holds the preview.
+  await page.waitForURL(url => url.pathname === '/components/checkbox/');
+  await page.locator('.component-tabs a[href="/components/checkbox/playground/"]').click();
+  await page.waitForURL(url => url.pathname === '/components/checkbox/playground/');
   const frame = page.frameLocator('#preview');
   const boxes = frame.getByRole('checkbox');
   const parentBox = frame.getByRole('checkbox', { name: 'Additions', exact: true });
