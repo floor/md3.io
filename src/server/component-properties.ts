@@ -75,7 +75,7 @@ export function propertyOverview(slug: string, links: { playground: string; deve
       // As M3's figures: a number under each value, and a legend below the stage.
       + section.values.map((value, index) => `<figure class="property-value">${value.markup}<figcaption><span class="property-number" aria-hidden="true">${index + 1}</span><span class="sr-only">${escape(value.name ?? value.label)}</span></figcaption></figure>`).join('') + `</div>`;
     const name = (value: PropertySection['values'][number]) => value.name ?? value.label.charAt(0).toUpperCase() + value.label.slice(1);
-    const legend = `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))} <code>${escape(value.label)}</code></li>`).join('')}</ol>`;
+    const legend = `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))}</li>`).join('')}</ol>`;
     return `<section class="scenario" aria-labelledby="${id}"><div class="scenario__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}${legend}</section>`;
   }).join('');
   return { html: `<div class="scenarios">${html}</div>`, toc: sections.map(section => ({ id: `property-${section.key}`, title: section.title })) };
