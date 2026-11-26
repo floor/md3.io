@@ -287,9 +287,9 @@ export function materialPanel(component: ComponentDefinition, slug: string, them
   const codepen = renderElement('m-icon-button', { icon: readFileSync(resolve(root, 'icons/open_in_new.svg'), 'utf8').trim(), 'aria-label': 'Open in CodePen', title: 'Open in CodePen', id: 'open-codepen', class: 'preview-codepen', 'data-material-version': mtrlVersion }, '', renderStyles);
   // Settings, beside Copy code: a toggle icon button that opens the configuration as a side
   // sheet, closed by default (filled while open).
-  const settings = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/settings-fill.svg'), 'utf8').trim(), 'aria-label': 'Settings', title: 'Settings', 'aria-controls': 'configuration', id: 'settings-toggle', class: 'preview-settings' }, '', renderStyles);
+  const settings = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/settings.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/settings-fill.svg'), 'utf8').trim(), 'aria-label': 'Settings', title: 'Settings', 'aria-controls': 'configuration', id: 'settings-toggle', class: 'preview-settings', size: 'xs' }, '', renderStyles);
   // Code, first of the heading's actions (the owner, 2026-11-26: no Preview/Code tabs): a toggle icon button that
   // raises the code as a bottom sheet over the live preview, filled while it shows.
-  const code = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/code.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/code-fill.svg'), 'utf8').trim(), 'aria-label': 'Code', title: 'Code', 'aria-controls': 'code-panel', id: 'code-toggle', class: 'preview-code' }, '', renderStyles);
+  const code = renderElement('m-icon-button', { toggle: true, icon: readFileSync(resolve(root, 'icons/code.svg'), 'utf8').trim(), 'selected-icon': readFileSync(resolve(root, 'icons/code-fill.svg'), 'utf8').trim(), 'aria-label': 'Code', title: 'Code', 'aria-controls': 'code-panel', id: 'code-toggle', class: 'preview-code', size: 'xs' }, '', renderStyles);
   return { frameworks, tabs: '', code, appearance, scenario, sections, copy, codepen, settings };
 }
