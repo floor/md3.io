@@ -24,8 +24,8 @@ interface PropertySection {
 }
 
 // Button group: a cup-size choice, 8 oz selected, as the API's own examples do.
-const cups = (attrs: Attributes) => m('button-group', { selection: 'single', value: '8', 'aria-label': 'Cup size', ...attrs },
-  [['8', '8 oz'], ['12', '12 oz'], ['16', '16 oz']].map(([value, label]) => m('button-group-item', { value, selected: value === '8', 'selected-icon': symbols.check }, label!)).join(''));
+const cups = (attrs: Attributes, selected: readonly string[] = ['8']) => m('button-group', { selection: 'single', 'aria-label': 'Cup size', ...attrs },
+  [['8', '8 oz'], ['12', '12 oz'], ['16', '16 oz']].map(([value, label]) => m('button-group-item', { value, selected: selected.includes(value!), 'selected-icon': symbols.check }, label!)).join(''));
 const buttonGroup: PropertySection[] = [
   { key: 'kind', title: 'Kind', text: 'Standard groups space their buttons apart, each its own control; connected groups join them into one.',
     values: ['standard', 'connected'].map(kind => ({ label: kind, markup: cups({ kind, variant: 'tonal' }) })) },
@@ -37,8 +37,8 @@ const buttonGroup: PropertySection[] = [
     values: ['round', 'square'].map(shape => ({ label: shape, markup: cups({ kind: 'connected', variant: 'tonal', size: 'm', shape }) })) },
   { key: 'orientation', title: 'Orientation', text: 'A row or a column.',
     values: ['horizontal', 'vertical'].map(orientation => ({ label: orientation, markup: cups({ kind: 'connected', variant: 'tonal', orientation }) })) },
-  { key: 'density', title: 'Density', text: 'Each step lowers the height by 4dp, down to 32dp, with a 48dp hit target kept.',
-    values: ['default', 'comfortable', 'compact'].map(density => ({ label: density, markup: cups({ kind: 'connected', variant: 'tonal', density }) })) },
+  { key: 'selection', title: 'Selection', text: 'Plain actions, or toggle buttons: one selected at a time, or several.',
+    values: [['none', []], ['single', ['8']], ['multi', ['8', '12']]].map(([selection, selected]) => ({ label: selection as string, markup: cups({ kind: 'connected', variant: 'tonal', selection: selection as string }, selected as string[]) })) },
 ];
 
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = { 'button-group': buttonGroup };
