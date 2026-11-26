@@ -11,9 +11,10 @@ import { defineButton, defineCard, defineChips, defineIconButton, defineProgress
 import { registerPage } from './page-lifecycle';
 
 registerPage('conformance', (content, life) => {
+  // The index's cards and progress bars, and a component page's controls: material's elements.
+  defineCard(); defineProgress(); defineChips(); defineTextField(); defineIconButton(); defineButton();
   const page = content.querySelector<HTMLElement>('.matrix');
   if (!page) return;
-  defineCard(); defineProgress(); defineChips(); defineTextField(); defineIconButton(); defineButton();
   page.classList.add('matrix--scripted');
   const allRefs = (page.dataset.refs ?? 'spec compose').split(' ');
   const rows = [...page.querySelectorAll<HTMLElement>('.matrix-row')];

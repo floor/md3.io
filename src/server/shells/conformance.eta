@@ -1,4 +1,4 @@
-<%/* The conformance matrix (src/server/conformance.ts). */%>
-<article class="conformance-page">
+<%/* Conformance (src/server/conformance.ts): the index, laid out as the Components page, or one component's properties. */%>
+<% if (it.conformance.name) { %><article class="conformance-page">
   <%~ it.conformance.html %>
-</article>
+</article><% } else { %><%~ it.conformance.html %><% } %>

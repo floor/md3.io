@@ -103,3 +103,16 @@
   .matrix-detail { padding-left: 16px; }
 }
 .matrix-detail dd { overflow-wrap: anywhere; }
+
+/* The index, as the Components page: each card's stage shows the component's scores against both references. */
+.matrix-index .matrix-facts, .matrix-index .matrix-summary, .matrix-index .matrix-caution { margin-inline: 0; }
+.matrix-index .matrix-summary { margin-top: 8px; }
+.matrix-stage { display: grid; align-content: center; gap: 20px; min-height: 200px; box-sizing: border-box; padding: 28px 32px; }
+.matrix-stage__ref { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 6px 12px; }
+.matrix-stage__label { font: 500 13px/18px var(--font-sans); color: var(--text-muted); }
+.matrix-stage__percent { font: 400 32px/36px var(--font-sans); color: var(--text); }
+.matrix-stage__ref m-progress { grid-column: 1 / -1; display: block; width: 100%; }
+.matrix-stage__ref .matrix-ticks { grid-column: 1 / -1; }
+.matrix-stage__ref .matrix-ticks__label { display: none; }
+/* "Conformance" is longer than "Components": a step smaller, so it fits its tile. */
+.matrix-index .page-hero__text h1 { font-size: clamp(40px, 15.5cqi, 104px); }

@@ -21,7 +21,7 @@ export const stylesheetBundles = {
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
   // The conformance matrix (src/server/conformance.ts).
-  conformance: [...shell, 'site', 'search', 'conformance'],
+  conformance: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'conformance'],
   'material-panel': materialPanel,
   'addon-panel': materialPanel,
   'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button'],

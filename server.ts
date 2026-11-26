@@ -7,7 +7,7 @@ import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
 import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
-import { conformancePage } from './src/server/conformance';
+import { conformanceComponent, conformanceIndex } from './src/server/conformance';
 import { componentDirectory } from './src/server/component-directory';
 import { componentOverview } from './src/server/component-overview';
 import { hasPropertyOverview, propertyOverview } from './src/server/component-properties';
@@ -506,7 +506,11 @@ export async function handleRequest(request: Request): Promise<Response> {
   else if (path === '/styles/typography/') response = page(path, 'Typography — material', styleDescription('/styles/typography/'), 'styles-typography', { typescale, unloadedFonts, mtrlVersion, roleUsage, fontWeights, components, themeBase });
   else if (path === '/styles/shape/') response = page(path, 'Shape — material', styleDescription('/styles/shape/'), 'styles-shape', { shape: themeBase.shape, mtrlVersion, themeBase, cornerMax: CORNER_MAX, m3Scale: M3_CORNER_SCALE, m3ShapeCount: M3_SHAPE_COUNT, library: shapeLibrary, libraryColors });
   // The conformance matrix (FLO-1607): hidden until the owner approves it (src/shared/visibility.ts).
-  else if (path === '/conformance/matrix/') response = page(path, 'Conformance matrix — material', 'How closely the material library follows Material 3, property by property, measured in Chromium and WebKit.', 'conformance', { conformance: conformancePage() });
+  else if (path === '/conformance/matrix/') response = page(path, 'Conformance — material', 'How closely the material library follows Material 3\'s specification and Jetpack Compose Material 3, component by component.', 'conformance', { conformance: conformanceIndex(playgroundDirectory.sections) });
+  else if (/^\/conformance\/matrix\/[a-z-]+\/$/.test(path) && conformanceComponent(path.split('/')[3]!)) {
+    const detail = conformanceComponent(path.split('/')[3]!)!;
+    response = page(path, `${detail.name} conformance — material`, `${detail.name}: how the material library follows Material 3's specification and Jetpack Compose Material 3, property by property.`, 'conformance', { conformance: detail });
+  }
   else if (path === '/privacy/') response = page(path, 'Privacy — material', 'How md3.io counts visits, what it keeps in your browser, and how to reach us.', 'privacy');
   else if (path === '/credits/') response = page(path, 'Credits — material', 'The design system, fonts and icons md3.io and the material library build on.', 'credits');
   else if (path === '/docs/') response = page(path, 'Docs — material', 'Guides to Material Design 3 on the web: getting started, frameworks, theming, server rendering and how the material library works.', 'docs', { docCard });
