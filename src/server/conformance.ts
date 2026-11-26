@@ -176,7 +176,7 @@ export function conformanceComponent(id: string): { html: string; name: string; 
   const masthead = `<header class="matrix-masthead"><h2 id="matrix-summary">Conformance</h2>`
     + `<p class="matrix-lede">The ${escape(component.name.toLowerCase())} against Material 3's two references, property by property: the specification's value, Compose's, material's, and whether they match. <a class="text-link" href="/conformance/">Every component</a></p>`
     + facts(matrix, rows, 1) + `</header>`;
-  const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label: `${label} ${count}` });
+  const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label });
   const countBy = (key: (row: Row) => boolean) => rows.filter(key).length;
   const controls = `<div class="matrix-controls" role="search">`
     + m('text-field', { variant: 'outlined', label: 'Search properties', 'leading-icon': symbols.search, class: 'matrix-search', density: 'compact' })
@@ -241,7 +241,7 @@ export function conformanceRows(params: URLSearchParams): { items: ListItem[]; t
 
 const controlsFor = (rows: Row[]) => {
   const aspects = [...new Set(rows.map(row => row.aspect))];
-  const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label: `${label} ${count}` });
+  const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label });
   const countBy = (key: (row: Row) => boolean) => rows.filter(key).length;
   return `<div class="matrix-controls" role="search">`
     + m('text-field', { variant: 'outlined', label: 'Search properties', 'leading-icon': symbols.search, class: 'matrix-search', density: 'compact' })
