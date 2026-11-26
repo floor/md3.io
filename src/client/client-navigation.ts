@@ -239,7 +239,11 @@ function keepTabs(scrolled: number) {
   // The bar's place in the flow: under the hero, 8px apart (.component-hero's margin).
   const natural = hero.getBoundingClientRect().bottom + scrollY + 8;
   const stickyTop = parseFloat(getComputedStyle(tabs).top) || 0;
-  scrollTo({ left: 0, top: Math.min(scrolled, Math.max(0, natural - stickyTop)), behavior: 'instant' });
+  // The playground goes further (the owner, 2026-11-26): the hero scrolls out of view and the tabs stick, so
+  // the playground has the window below them.
+  const stuck = Math.max(0, natural - stickyTop);
+  const playground = !!content?.querySelector('.component-overview--playground');
+  scrollTo({ left: 0, top: playground ? stuck : Math.min(scrolled, stuck), behavior: 'instant' });
   status.textContent = document.title;
 }
 function restore(url: URL, position?: [number, number]) {

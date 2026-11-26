@@ -262,10 +262,11 @@
 }
 @media (min-width: 840px) {
     /* Whatever height the window offers, less a margin, so a person scrolled to it sees all of it. */
-    .component-overview--playground .playground.playground--material { min-height: 480px; scroll-margin-top: calc(var(--header-height, 0px) + 96px); }
+    /* At least the window below the stuck tabs (the tab switch scrolls the hero away): 228px above it, 16px under. */
+    .component-overview--playground .playground.playground--material { min-height: max(480px, calc(100dvh - var(--header-height, 0px) - 244px)); scroll-margin-top: calc(var(--header-height, 0px) + 96px); }
     .component-overview--playground .playground.playground--material > .preview-panel { min-height: 0; }
     .component-overview--playground .playground.playground--material .playground-space { flex: 1 1 auto; min-height: 0; }
-    .component-overview--playground .playground.playground--material > .configuration { contain: size; overflow: clip; height: 100%; display: flex; flex-direction: column; }
+    .component-overview--playground .playground.playground--material[data-settings-open] > .configuration { contain: size; overflow: clip; height: 100%; display: flex; flex-direction: column; }
     .component-overview--playground .playground.playground--material .configuration-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
 }
 /* Beside the drawer the sheet still sits inside the card, below the preview. */
