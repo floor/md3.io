@@ -299,3 +299,9 @@
     .component-overview--playground > .component-overview__main > .playground { flex: 0 0 auto; }
     .component-overview--playground > .component-overview__main > .playground > .preview-panel { height: 480px; }
 }
+
+/* The component's name before the playground (the owner, 2026-11-26): the tab switch scrolls the hero and its
+   title away, so the row above the playground names it, at the left, the framework chips at the right. The page's
+   h1 stays in the hero; this is a visual label, hidden from assistive technology. */
+.component-overview--playground .component-lede { justify-content: space-between; align-items: center; gap: 16px; }
+.component-lede > .playground-title { margin: 0 auto 0 0; order: -1; min-width: 0; font: 400 clamp(24px, 3vw, 32px)/1.25 var(--font-sans); color: var(--mtrl-sys-color-on-surface, var(--text)); }
