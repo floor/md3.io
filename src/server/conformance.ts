@@ -116,8 +116,8 @@ const ticks = (rows: Row[], ref: Ref) =>
   `<span class="matrix-ticks" role="img" aria-label="Against ${REF[ref]}: ${tally(rows, ref).match} of ${rows.length} match"><span class="matrix-ticks__label">${REF[ref]}</span>${rows.map(row => `<i class="matrix-tick matrix-tick--${row.status[ref]}"></i>`).join('')}</span>`;
 
 const percentOf = (rows: Row[], ref: Ref) => { const t = tally(rows, ref); const measured = t.match + t.drift; return measured ? Math.round((t.match / measured) * 100) : null; };
-const caution = (matrix: Matrix) => `<p class="matrix-caution">${symbols.error}<span>${matrix.sample ? '<strong>Sample data.</strong> These pages show the matrix\'s shape with a few rows; material\'s measured file replaces it. ' : ''}`
-  + `Where the two references disagree, each status is shown as it is. Method: measured from the rendered page in ${matrix.method.browsers.map(b => ENGINE[b] ?? b).join(' and ')}, values in CSS pixels; a row shows each engine's value only when they differ.</span></p>`;
+// The method note is hidden for now (the owner, 2026-11-26); only the sample's label shows, and only on the sample.
+const caution = (matrix: Matrix) => matrix.sample ? `<p class="matrix-caution">${symbols.error}<span><strong>Sample data.</strong> These pages show the matrix's shape with a few rows; material's measured file replaces it.</span></p>` : '';
 const summaryCards = (rows: Row[]) => `<div class="matrix-summary">${REFS.map(ref => {
   const t = tally(rows, ref);
   const measured = t.match + t.drift;
