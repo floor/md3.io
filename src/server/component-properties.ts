@@ -583,10 +583,18 @@ const searchSections: PropertySection[] = [
     values: [{ label: 'enabled', name: 'Enabled', markup: searchOf({ 'leading-icon': symbols.search }) }, { label: 'disabled', name: 'Disabled', markup: searchOf({ 'leading-icon': symbols.search, disabled: true }) }], stack: true },
 ];
 
+// Snackbar: each figure the real snackbar, in place at a phone's width (src/client/catalog/snackbar.ts).
+const snack = (suffix: string) => `<div class="property-snackbar">${surfaceOf('snackbar', suffix)}</div>`;
+const snackbarSections: PropertySection[] = [
+  { key: 'content', title: 'Content', text: 'A short message; one action at most, such as Undo; a close button where it stays until dismissed; and a longer message on two lines.',
+    values: [{ label: 'message', name: 'A message', markup: snack('content-message') }, { label: 'action', name: 'With an action', markup: snack('content-action') },
+      { label: 'close', name: 'With a close button', markup: snack('content-close') }, { label: 'long', name: 'Two lines, an action and a close button', markup: snack('content-long') }], stack: true },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, snackbar: snackbarSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -616,6 +624,17 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  snackbar: {
+    points: '<ul><li>A brief update about something the app did or will do, at the bottom of the screen.</li>'
+      + '<li>It does not interrupt: people carry on without touching it.</li>'
+      + '<li>One at a time; a new one waits for the last, or replaces it.</li>'
+      + '<li>One action at most, such as Undo; a close button is optional.</li></ul>',
+    // As M3's figure (the owner's reference, 2026-11-26): a mail app, an email just archived, over its navigation bar.
+    stage: `<div class="property-welcome property-welcome--snack"><div class="property-snack-screen">${lists(mailboxes, mailNames, 'inbox')}${surfaceOf('snackbar', 'glance')}`
+      + m('navigation-bar', { value: 'mail', 'aria-label': 'Mail app' }, [['mail', symbols.mail, 'Mail'], ['chat', symbols.chat, 'Chat'], ['meet', symbols.videocam, 'Meet']].map(([value, icon, label]) => m('navigation-bar-item', { value: value!, icon: icon! }, label!)).join(''))
+      + '<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>',
+    caption: 'An email archived, with Undo, over the mail app\'s navigation bar.', kind: 'snackbar',
+  },
   'side-sheet': {
     points: '<ul><li>Secondary content or controls beside the page: filters, details, settings.</li>'
       + '<li>Standard, beside the page, which stays in use; or modal, over a scrim, for a task to finish first.</li>'

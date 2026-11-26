@@ -640,3 +640,12 @@ m-search::part(avatar) { border: 0; background: none; padding: 0; border-radius:
 .property-sheet-head > span { display: grid; font: 400 16px/24px Roboto, sans-serif; }
 .property-sheet-head > span span { font-size: 14px; color: var(--mtrl-sys-color-on-surface-variant); }
 .property-welcome--sheet .property-bottom { height: 480px; }
+/* Snackbar: a phone's width per figure; the glance, a mail app's bottom with its navigation bar. */
+.property-snackbar { width: 360px; max-width: 100%; }
+.catalog-visual--snackbar.property-note__stage:has(.property-welcome) { height: auto; padding: 0 16px 48px; display: grid; place-items: start center; }
+.property-welcome--snack { width: 400px; }
+.property-snack-screen { display: flex; flex-direction: column; height: 400px; background: var(--mtrl-sys-color-surface); }
+.property-snack-screen .property-phone__list { flex: 1; overflow-y: auto; margin: 0; }
+.property-snack-screen > md3-catalog-snackbar-glance { display: block; margin: 0 0 8px; }
+.property-snack-screen .property-phone__home { display: flex; justify-content: center; padding: 8px 0 10px; background: var(--mtrl-sys-color-surface-container); }
+.property-snack-screen .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
