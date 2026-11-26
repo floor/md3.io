@@ -68,11 +68,8 @@ const MENU_PROPERTIES: Record<string, { config?: Partial<MenuConfig>; entries: E
 };
 
 // Material keeps one menu open per page (its registry closes the last one), so a section cannot show
-// its menus open side by side. Each surface opens its real menu once, keeps a still copy of it where it
-// rendered (inert, hidden from assistive technology), and closes it, one surface at a time. Its button
-// opens the real menu over the copy; the copy shows again when it closes.
-let queue = Promise.resolve();
-const settle = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// its menus open side by side. Each surface shows a still copy of its real menu (inert, hidden from
+// assistive technology); its button opens the real menu over the copy, which shows again when it closes.
 const openMenu = ({ config = {}, entries, selected, trigger: kind = 'button', submenu }: (typeof MENU_PROPERTIES)[string]) => () => {
   const host = document.createElement('div');
   host.className = `catalog-menu catalog-menu--${kind}`;
@@ -104,62 +101,59 @@ const openMenu = ({ config = {}, entries, selected, trigger: kind = 'button', su
     opener = trigger.element;
     destroyTrigger = () => trigger.destroy();
   }
-  const menu = createMenu({ ...menuDefaults, ...config, items: entries, opener, container: host, layer: undefined } as MenuConfig);
+  const menu = createMenu({ ...menuDefaults, ...config, items: entries, opener, layer: "top" } as MenuConfig);
   if (selected) menu.setSelected(selected);
   let still: HTMLElement | undefined;
   let active = true;
-  menu.on?.('open', () => { if (still) still.hidden = true; });
-  menu.on?.('close', () => { if (still) still.hidden = false; });
-  queue = queue.then(async () => {
-    if (!active || !host.isConnected) await new Promise(requestAnimationFrame);
-    if (!active) return;
-    const { scrollX, scrollY } = window;
-    const focused = document.activeElement as HTMLElement | null;
-    menu.open(undefined, 'mouse');
-    await settle(350);
-    if (!active) return;
-    still = menu.element.cloneNode(true) as HTMLElement;
-    still.removeAttribute('id');
-    for (const element of still.querySelectorAll('[id]')) element.removeAttribute('id');
-    still.inert = true;
-    still.setAttribute('aria-hidden', 'true');
-    still.classList.add('catalog-menu__still');
-    menu.close();
-    // Under its button, as it opens when there is room: the window's edge may have flipped it above.
+  // The live menu over the copies: they hide while it is open.
+  const show = (visible: boolean) => { for (const copy of host.querySelectorAll<HTMLElement>('.catalog-menu__still')) copy.hidden = !visible; };
+  menu.on?.('open', () => show(false));
+  menu.on?.('close', () => show(true));
+  // A still copy of the menu as material renders it: its items are built when it is created, so
+  // nothing opens, nothing takes focus and the page never moves.
+  const copyOf = (element: HTMLElement) => {
+    const copy = element.cloneNode(true) as HTMLElement;
+    for (const node of [copy, ...copy.querySelectorAll('[id]')]) node.removeAttribute('id');
+    copy.classList.add('catalog-menu__still', 'mtrl-menu--visible');
+    copy.removeAttribute('popover');
+    copy.inert = true;
+    copy.setAttribute('aria-hidden', 'true');
+    return copy;
+  };
+  let extra: { destroy: () => void } | undefined;
+  const place = () => {
+    if (!active || !host.isConnected) return;
+    still?.remove();
+    host.querySelector('.catalog-menu__sub')?.remove();
+    still = copyOf(menu.element);
+    host.append(still);
+    // Under its button, beside the FAB, or under the button's end, as the menu opens when there is room.
     const button = opener.getBoundingClientRect(), box = host.getBoundingClientRect();
     if (kind === 'fab') Object.assign(still.style, { position: 'absolute', top: 'auto', left: 'auto', transform: 'none', bottom: `${box.bottom - button.bottom}px`, right: `${box.right - button.left + 8}px` });
     else Object.assign(still.style, { position: 'absolute', top: `${button.bottom - box.top + 4}px`, bottom: 'auto', transform: 'none',
       ...(kind !== 'button' && kind !== 'format' ? { left: 'auto', right: `${box.right - button.right}px` } : { left: `${button.left - box.left}px`, right: 'auto' }) });
-    host.append(still);
-    // The submenu, opened from its item (it opens on the page's body), copied beside that item.
+    // The submenu beside its item, without covering it: a copy of a menu of the submenu's items.
     if (submenu) {
-      const parent = menu.element.querySelector<HTMLElement>(`[data-id="${submenu}"]`);
-      menu.open(undefined, 'mouse');
-      await settle(350);
-      menu.element.querySelector<HTMLElement>(`[data-id="${submenu}"]`)?.click();
-      await settle(350);
-      const open = document.querySelector<HTMLElement>('.mtrl-menu--submenu.mtrl-menu--visible');
-      const row = still.querySelector<HTMLElement>(`[data-id="${submenu}"]`) ?? parent;
-      if (open && row) {
-        const copy = open.cloneNode(true) as HTMLElement;
-        for (const element of [copy, ...copy.querySelectorAll('[id]')]) element.removeAttribute('id');
-        copy.classList.add('catalog-menu__still');
-        copy.inert = true;
-        copy.setAttribute('aria-hidden', 'true');
-        menu.close();
-        await settle(50);
-        const r = row.getBoundingClientRect(), b = host.getBoundingClientRect(), m = still.getBoundingClientRect();
-        Object.assign(copy.style, { position: 'absolute', left: `${m.right - b.left + 4}px`, top: `${r.top - b.top - 8}px`, right: 'auto', bottom: 'auto', transform: 'none' });
+      const parent = entries.find(entry => 'id' in entry && entry.id === submenu) as Item | undefined;
+      const row = still.querySelector<HTMLElement>(`[data-id="${submenu}"]`);
+      if (parent?.submenu && row) {
+        row.setAttribute('aria-expanded', 'true');
+        extra?.destroy();
+        const inner = createMenu({ ...menuDefaults, ...config, items: parent.submenu as Entries, opener: document.createElement('span'), container: document.createElement('div'), layer: undefined } as MenuConfig);
+        extra = inner;
+        const copy = copyOf(inner.element);
+        copy.classList.add('mtrl-menu--submenu', 'catalog-menu__sub');
         host.append(copy);
+        const r = row.getBoundingClientRect(), m = still.getBoundingClientRect(), b = host.getBoundingClientRect();
+        Object.assign(copy.style, { position: 'absolute', left: `${m.right - b.left + 4}px`, top: `${r.top - b.top - 8}px`, right: 'auto', bottom: 'auto', transform: 'none' });
       }
-      menu.close();
-      focused?.focus?.({ preventScroll: true });
-      window.scrollTo(scrollX, scrollY);
     }
-    focused?.focus?.({ preventScroll: true });
-    window.scrollTo(scrollX, scrollY);
-  });
-  return { element: host, destroy: () => { active = false; menu.destroy(); destroyTrigger(); } };
+  };
+  // Again when the surface's box changes (its first layout, the window's width).
+  const observer = new ResizeObserver(() => place());
+  observer.observe(host);
+  const frame = requestAnimationFrame(() => requestAnimationFrame(place));
+  return { element: host, destroy: () => { active = false; observer.disconnect(); cancelAnimationFrame(frame); extra?.destroy(); menu.destroy(); destroyTrigger(); } };
 };
 
 export const define = (): void => {
