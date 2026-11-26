@@ -433,6 +433,30 @@ const expressiveNote = (slug: string): string => {
     + `<figure class="property-note__figure"><div class="catalog-visual catalog-visual--${note.kind ?? slug} property-note__stage">${note.stage}</div><figcaption>${note.caption}</figcaption></figure></div></section>`;
 };
 
+// Known issues, at the end of a component's Overview: what M3 recommends that material does not do yet,
+// and the bugs we know of, each one sentence; an entry goes when its fix ships. Each was found on
+// 2026-11-26 against material 3.16.4 (the M3 points from the component's M3 page, read that day).
+const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[] }>> = {
+  'app-bar': { missing: [
+    'The search app bar, with a search field and elements inside and outside it.',
+    'A subtitle under the headline.',
+    'The medium flexible and large flexible app bars, which replace the medium and large ones in M3 Expressive.',
+    'An image or a logo in place of the headline.',
+    'Leading or centred text on every app bar: only the one-row bar can be centred today.',
+  ] },
+  timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
+  progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
+  'navigation-drawer': { missing: ['M3 Expressive recommends the expanded navigation rail in its place; the drawer stays available.'] },
+};
+const knownIssues = (slug: string): string => {
+  const issues = KNOWN_ISSUES[slug];
+  if (!issues) return '';
+  const list = (title: string, items?: string[]) => items?.length ? `<h3>${title}</h3><ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>` : '';
+  return `<section class="property-section property-issues" aria-labelledby="property-known-issues"><div class="property-section__heading"><h2 id="property-known-issues">Known issues</h2>`
+    + `<p>What M3 recommends that material does not do yet, and the bugs we know of, on material's current release.</p></div>`
+    + list('Not yet in material', issues.missing) + list('Bugs', issues.bugs) + '</section>';
+};
+
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;
 
 /** The Overview's sections and its On this page entries, for a component with properties. */
@@ -451,5 +475,6 @@ export function propertyOverview(slug: string, links: { playground: string; deve
     return `<section class="property-section" aria-labelledby="${id}"><div class="property-section__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}${legend}</section>`;
   }).join('');
   const note = expressiveNote(slug);
-  return { html: `<div class="property-sections">${note}${html}</div>`, toc: [...(note ? [{ id: 'property-expressive', title: 'At a glance' }] : []), ...sections.map(section => ({ id: `property-${section.key}`, title: section.title }))] };
+  const issues = knownIssues(slug);
+  return { html: `<div class="property-sections">${note}${html}${issues}</div>`, toc: [...(note ? [{ id: 'property-expressive', title: 'At a glance' }] : []), ...sections.map(section => ({ id: `property-${section.key}`, title: section.title })), ...(issues ? [{ id: 'property-known-issues', title: 'Known issues' }] : [])] };
 }
