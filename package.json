@@ -24,7 +24,8 @@
     "highlight.js": "11.11.1",
     "marked": "17.0.2",
     "material": "3.16.6",
-    "minisearch": "^7.2.0"
+    "minisearch": "^7.2.0",
+    "vlist": "3.3.4"
   },
   "devDependencies": {
     "@babel/core": "^7",

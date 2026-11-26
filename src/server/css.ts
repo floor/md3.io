@@ -21,7 +21,7 @@ export const stylesheetBundles = {
   // Docs, a component playground, and every other page: the shell, without the homepage.
   page: [...shell, 'site', 'search'],
   // The conformance matrix (src/server/conformance.ts).
-  conformance: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'conformance'],
+  conformance: [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button', 'vlist', 'conformance'],
   'material-panel': materialPanel,
   'addon-panel': materialPanel,
   'component-tab': [...shell, 'site', 'search', 'roboto', 'preupgrade', 'catalog', 'mtrl:button', 'mtrl:icon-button'],
@@ -61,6 +61,7 @@ export function mtrlTokens(css = readFileSync(resolve(root, 'node_modules/materi
 const fileFor = (name: string) => name === 'preupgrade'
   ? resolve(root, 'node_modules/material/dist/elements/preupgrade.css')
   : name.startsWith('mtrl:') ? resolve(root, 'node_modules/material/dist/styles', `${name.slice(5)}.css`)
+  : name === 'vlist' ? resolve(root, 'node_modules/vlist/dist/vlist.css')
   : name === 'addons:styles' ? resolve(root, 'node_modules/material-addons/dist/styles.css')
   : style(name);
 

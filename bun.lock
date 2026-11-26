@@ -11,6 +11,7 @@
         "marked": "17.0.2",
         "material": "3.16.6",
         "minisearch": "^7.2.0",
+        "vlist": "3.3.4",
       },
       "devDependencies": {
         "@babel/core": "^7",
@@ -292,6 +293,8 @@
     "undici-types": ["undici-types@8.9.0", "", {}, "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="],
 
     "update-browserslist-db": ["update-browserslist-db@1.3.3", "", { "dependencies": { "escalade": "^3.2.0", "picocolors": "^1.1.1" }, "peerDependencies": { "browserslist": ">= 4.21.0" }, "bin": { "update-browserslist-db": "cli.js" } }, "sha512-pJ2sYawQS0R/WI928Gj5GlPhTGzbMelq0+4INtSYNDV9ErKJcX6xjGWkoG/VnB3dpUm00zALaqkrUD77pO5TDQ=="],
+
+    "vlist": ["vlist@3.3.4", "", { "peerDependencies": { "react": ">=17.0.0", "solid-js": ">=1.6.0", "svelte": ">=4.0.0", "vue": ">=3.0.0" }, "optionalPeers": ["react", "solid-js", "svelte", "vue"] }, "sha512-9qhftmbW1Kej+DgT0pK58CUWol0iNUyAKbBHacNnixE3LdjEjjzDlFR1VwxGZvJvTxT0SujtqPDshB8rwLHlXg=="],
 
     "vue": ["vue@3.5.43", "", { "dependencies": { "@vue/compiler-dom": "3.5.43", "@vue/compiler-sfc": "3.5.43", "@vue/runtime-dom": "3.5.43", "@vue/server-renderer": "3.5.43", "@vue/shared": "3.5.43" }, "peerDependencies": { "typescript": "*" }, "optionalPeers": ["typescript"] }, "sha512-o5qZoksdnjIKvW1srZ3ab7pcDNYAerBjRe54D0LBLfRdCYFrSgBHVXokMas35czQc0//lmx4/tuY4ZNQ+Rf2Ng=="],
 

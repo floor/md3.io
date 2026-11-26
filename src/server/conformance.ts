@@ -182,3 +182,63 @@ export function conformanceComponent(id: string): { html: string; name: string; 
 
   return { name: component.name, toc: [{ id: 'matrix-summary', title: 'Conformance' }, { id: `${component.id}-title`, title: 'Properties' }], html: `<div class="matrix" data-refs="${REFS.join(' ')}">${masthead}${summaryCards(rows)}${caution(matrix)}${controls}${header}<div class="matrix-sections">${sections}</div>${tray}</div>` };
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// The matrix as one list (the owner, 2026-11-26): every row, grouped by component, in a vlist that pages through
+// md3.io's API. The server renders each row's markup, so the client only places it.
+
+/** One row's line: its property, both references' values with their status, and material's value. */
+const rowLine = (row: Row): string => {
+  const qualifier = [row.variant, row.state].filter(Boolean).join(' · ');
+  return `<div class="matrix-row__main">`
+    + `<div class="matrix-row__name"><span><span class="matrix-row__anchor">${escape(row.property)}</span>${qualifier ? `<span class="matrix-muted">${escape(qualifier)}</span>` : ''}</span></div>`
+    + REFS.map(r => `<div class="matrix-row__cell" data-col="${r}"><span class="matrix-value">${escape(refValue(row, r) ?? '—')}</span>${glyph(row.status[r], r)}</div>`).join('')
+    + `<div class="matrix-row__cell matrix-row__material" data-col="material"><span class="matrix-value">${escape(row.material.value)}</span></div></div>`;
+};
+
+type ListItem = { id: string; group: string; html: string; component: string; property: string; aspect: string; spec: Status; compose: Status };
+
+/** A page of the list, in component order, after the page's search and filters:
+ *  `{ items, total }` for vlist's data plugin. q searches; status, aspect take comma lists; ref is spec or compose. */
+export function conformanceRows(params: URLSearchParams): { items: ListItem[]; total: number } {
+  const list = (key: string) => (params.get(key) ?? '').split(',').filter(Boolean);
+  const query = (params.get('q') ?? '').trim().toLowerCase();
+  const statuses = list('status');
+  const aspects = list('aspect');
+  const refs = list('ref').filter((r): r is Ref => REFS.includes(r as Ref));
+  const against = refs.length ? refs : REFS;
+  const all: ListItem[] = load().components.flatMap(component => component.properties
+    .filter(row => (!aspects.length || aspects.includes(row.aspect))
+      && (!statuses.length || against.some(r => statuses.includes(row.status[r])))
+      && (!query || [component.name, row.property, row.variant ?? '', row.state ?? '', row.aspect, row.note ?? '', refValue(row, 'spec') ?? '', refValue(row, 'compose') ?? '', row.material.value].join(' ').toLowerCase().includes(query)))
+    .map(row => ({ id: row.id, group: component.name, html: rowLine(row), component: component.name, property: [row.property, row.variant, row.state].filter(Boolean).join(', '), aspect: row.aspect, spec: row.status.spec, compose: row.status.compose })));
+  const offset = Math.max(0, Number(params.get('offset')) || 0);
+  const limit = Math.min(1000, Math.max(1, Number(params.get('limit')) || 50));
+  return { items: all.slice(offset, offset + limit), total: all.length };
+}
+
+const controlsFor = (rows: Row[]) => {
+  const aspects = [...new Set(rows.map(row => row.aspect))];
+  const chip = (group: string, value: string, label: string, count: number) => m('chip', { variant: 'filter', value: `${group}:${value}`, label: `${label} ${count}` });
+  const countBy = (key: (row: Row) => boolean) => rows.filter(key).length;
+  return `<div class="matrix-controls" role="search">`
+    + m('text-field', { variant: 'outlined', label: 'Search properties', 'leading-icon': symbols.search, class: 'matrix-search', density: 'compact' })
+    + `<div class="matrix-chip-groups">`
+    + `<div class="matrix-chip-group"><span>Status</span>${m('chips', { selection: 'multiple', 'aria-label': 'Status', class: 'matrix-chips', 'data-group': 'status' }, (['match', 'drift', 'no-value'] as const).map(st => chip('status', st, STATUS[st].label, countBy(row => REFS.some(r => row.status[r] === st)))).join(''))}</div>`
+    + `<div class="matrix-chip-group"><span>Against</span>${m('chips', { selection: 'single', 'aria-label': 'Against', class: 'matrix-chips', 'data-group': 'ref' }, REFS.map(r => chip('ref', r, REF[r], countBy(row => refValue(row, r) !== null))).join(''))}</div>`
+    + `<div class="matrix-chip-group"><span>Aspect</span>${m('chips', { selection: 'multiple', 'aria-label': 'Aspect', class: 'matrix-chips', 'data-group': 'aspect' }, aspects.map(a => chip('aspect', a, ASPECT[a] ?? a, countBy(row => row.aspect === a))).join(''))}</div>`
+    + `</div></div>`;
+};
+
+/** The list page: title and facts, the two reference cards, the method, search and filters, the column header,
+ *  the list and the tray; without scripts, every row as plain HTML. */
+export function conformanceList(): { html: string; name: string } {
+  const matrix = load();
+  const rows = matrix.components.flatMap(component => component.properties);
+  const head = `<header class="matrix-masthead"><p class="matrix-eyebrow"><a class="text-link" href="/conformance/">Conformance</a></p><h1>Every property</h1>${facts(matrix, rows, matrix.components.length)}</header>`;
+  const colhead = `<div class="matrix-colhead" aria-hidden="true"><span>Property</span>${REFS.map(r => `<span data-col="${r}">${REF[r]}</span>`).join('')}<span data-col="material">material</span></div>`;
+  const fallback = matrix.components.map(component => `<h2 class="matrix-group">${escape(component.name)}</h2><ul class="matrix-rows">${component.properties.map(row => `<li class="matrix-row">${rowLine(row)}</li>`).join('')}</ul>`).join('');
+  const tray = `<aside class="matrix-tray" aria-label="Selection"><p class="matrix-tray__count" role="status"><strong data-matrix-count>${rows.length}</strong> of ${rows.length} properties</p>`
+    + m('button', { variant: 'tonal', icon: symbols.contentCopy, class: 'matrix-copy' }, 'Copy as CSV') + '</aside>';
+  return { name: 'Every property', html: `<div class="matrix matrix--list" data-refs="${REFS.join(' ')}">${head}${summaryCards(rows)}${caution(matrix)}${controlsFor(rows)}${colhead}<div class="matrix-list" aria-label="Conformance, every property"></div><p class="matrix-empty" hidden>No property matches the search and filters.</p><div class="matrix-fallback">${fallback}</div>${tray}</div>` };
+}
