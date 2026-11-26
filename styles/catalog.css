@@ -418,3 +418,7 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-stage--stack .property-value:has(.property-carousel) { grid-template-columns: 7em minmax(0, 560px); }
 /* One layout per section: the strip takes the stage's width. */
 .property-carousel { width: min(100%, 880px); height: 240px; }
+/* A phone in portrait, for the full-screen carousel. */
+.property-device { width: 280px; height: 520px; box-sizing: border-box; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-radius: 40px; overflow: hidden; background: var(--mtrl-sys-color-surface); }
+.property-device__screen { height: 100%; }
+.property-device__screen > * { display: block; height: 100%; }

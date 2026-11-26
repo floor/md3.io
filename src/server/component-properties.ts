@@ -298,14 +298,17 @@ const bottomSheetSections: PropertySection[] = [
     values: [{ label: 'on', name: 'With the handle', markup: bottomSheet({}) }, { label: 'off', name: 'Without', markup: bottomSheet({ 'no-drag-handle': true }) }] },
 ];
 
-const carouselOf = (layout: string) => `<div class="property-carousel">${surfaceOf('carousel', `variant-${layout}`)}</div>`;
+// Full-screen fills a phone's screen, in portrait, and scrolls vertically (the carousel's document).
+const carouselOf = (layout: string) => layout === 'full-screen'
+  ? `<div class="property-device"><div class="property-device__screen">${surfaceOf('carousel', `variant-${layout}`)}</div></div>`
+  : `<div class="property-carousel">${surfaceOf('carousel', `variant-${layout}`)}</div>`;
 // One section per layout, each its own sentence and a full-width strip (a single value: no number, no legend).
 const carouselSections: PropertySection[] = [
   ['multi-browse', 'Multi-browse', 'The default: at least one large, one medium and one small item, and more large ones as the container grows.'],
   ['uncontained', 'Uncontained', 'Items keep one size and run off the trailing edge, and the list scrolls freely, without settling on an item.'],
   ['hero', 'Hero', 'One large item, with a glimpse of the next.'],
   ['hero-center', 'Centred hero', 'One large item, centred between two small ones.'],
-  ['full-screen', 'Full-screen', 'One item at a time, edge to edge.'],
+  ['full-screen', 'Full-screen', 'One item at a time, edge to edge, scrolling vertically: a phone\'s whole screen.'],
 ].map(([layout, title, text]) => ({ key: layout!, title: title!, text: text!, values: [{ label: layout!, markup: carouselOf(layout!) }], single: true }));
 
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
@@ -346,7 +349,8 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>Its items change size as they scroll, and settle into place.</li>'
       + '<li>Five layouts: multi-browse, uncontained, hero, centred hero and full-screen.</li>'
       + '<li>Scrolling settles on an item by default; an uncontained carousel scrolls freely.</li></ul>',
-    stage: '<div class="property-carousel property-carousel--glance"><md3-catalog-carousel-variant-multi-browse class="property-surface"></md3-catalog-carousel-variant-multi-browse></div>',
+    // The places, as the carousel's card shows them; each layout below has its own photos.
+    stage: '<div class="property-carousel property-carousel--glance"><md3-catalog-carousel class="property-surface"></md3-catalog-carousel></div>',
     caption: 'Places to explore, in the default multi-browse layout: drag or scroll it.', kind: 'carousel',
   },
   card: {
