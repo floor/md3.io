@@ -516,3 +516,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-call--l { width: 560px; max-width: 100%; }
 .property-scene.property-scene--welcome { width: 440px; }
 .md .property-scene p.property-scene__hello, .property-scene p.property-scene__hello { margin: 0 0 24px; font-size: 56px; line-height: 1.1; font-weight: 700; color: var(--mtrl-sys-color-primary); }
+/* The welcome title in M3's display face, Google Sans (self-hosted), not the components' Roboto. */
+.property-scene p.property-scene__hello, .md .property-scene p.property-scene__hello { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.5px; }
