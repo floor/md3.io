@@ -598,10 +598,24 @@ const tooltipSections: PropertySection[] = [
       { label: 'rich', name: 'Rich', markup: `<div class="property-tooltip">${surfaceOf('tooltip', 'variant-rich')}</div>` }] },
 ];
 
+// Divider: each variant between two rows of a list, as M3's figures; vertical, between actions.
+const row = (title: string, sub: string, icon?: string) => `<div class="property-divider-row">${icon ? icon : ''}<span><strong>${title}</strong><span>${sub}</span></span></div>`;
+const between = (attrs: Attributes, icons = false) => `<div class="property-divider">${row('Wi-Fi', 'Home network', icons ? symbols.wifi : undefined)}${m('divider', attrs)}${row('Bluetooth', 'Off', icons ? symbols.bluetooth : undefined)}</div>`;
+const dividerSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Full width, to set groups apart; inset, from where the text starts, between items of one group; or middle inset, in from both ends.',
+    values: [{ label: 'full-width', name: 'Full width', markup: between({ variant: 'full-width' }, true) }, { label: 'inset', name: 'Inset', markup: between({ variant: 'inset', 'inset-start': 56 }, true) },
+      { label: 'middle-inset', name: 'Middle inset', markup: between({ variant: 'middle-inset' }, true) }] },
+  { key: 'orientation', title: 'Orientation', text: 'Horizontal, between rows; or vertical, between items in a row.',
+    values: [{ label: 'horizontal', name: 'Horizontal', markup: between({}, true) },
+      { label: 'vertical', name: 'Vertical', markup: `<div class="property-divider property-divider--row">${m('icon-button', { icon: symbols.bold, 'aria-label': 'Bold' })}${m('icon-button', { icon: symbols.italic, 'aria-label': 'Italic' })}${m('divider', { orientation: 'vertical' })}${m('icon-button', { icon: symbols.link, 'aria-label': 'Link' })}${m('icon-button', { icon: symbols.image, 'aria-label': 'Image' })}</div>` }] },
+  { key: 'thickness', title: 'Thickness', text: 'One pixel by default, the outline-variant colour; thicker for a stronger break.',
+    values: [{ label: '1', name: '1px', markup: between({}) }, { label: '4', name: '4px', markup: between({ thickness: 4 }) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, snackbar: snackbarSections, tooltip: tooltipSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, snackbar: snackbarSections, tooltip: tooltipSections, divider: dividerSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -631,6 +645,17 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  divider: {
+    points: '<ul><li>A thin line that groups content in lists and containers.</li>'
+      + '<li>Full width between groups; inset between the items of one group.</li>'
+      + '<li>Horizontal between rows, vertical between items in a row.</li>'
+      + '<li>Decorative: it is hidden from assistive technology unless it separates real sections.</li></ul>',
+    stage: `<div class="property-scene property-scene--divided"><h3>Settings</h3><p class="property-divider-label">Network</p>`
+      + row('Wi-Fi', 'Home network', symbols.wifi) + m('divider', { variant: 'inset', 'inset-start': 56 }) + row('Bluetooth', 'Off', symbols.bluetooth)
+      + m('divider', { variant: 'full-width' }) + '<p class="property-divider-label">Display</p>'
+      + row('Brightness', 'Adaptive', symbols.lightMode) + m('divider', { variant: 'inset', 'inset-start': 56 }) + row('Bedtime mode', 'From 22:00', symbols.bedtime) + '</div>',
+    caption: 'Settings in two groups: a full-width divider between them, inset dividers within each.', kind: 'divider',
+  },
   tooltip: {
     points: '<ul><li>A short label or a few lines of context for a button or another element.</li>'
       + '<li>Plain, to name what an icon button does; rich, to say more about a feature.</li>'

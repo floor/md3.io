@@ -655,3 +655,15 @@ m-search::part(avatar) { border: 0; background: none; padding: 0; border-radius:
 .property-corner--tooltip { width: 420px; height: 240px; }
 .property-tooltip-screen { padding: 0 16px; }
 .property-tooltip-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 8px 8px; }
+/* Divider: two rows of a list each, a phone's width; a row of actions for the vertical one. */
+.property-divider { width: 320px; max-width: 100%; background: var(--mtrl-sys-color-surface); border-radius: 16px; overflow: hidden; }
+.property-divider--row { display: flex; align-items: center; gap: 4px; width: auto; padding: 8px 12px; }
+.property-divider--row > m-divider { align-self: stretch; margin: 8px 4px; }
+.property-divider-row { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 0 16px; color: var(--mtrl-sys-color-on-surface); }
+.property-divider-row svg { width: 24px; height: 24px; flex: none; color: var(--mtrl-sys-color-on-surface-variant); }
+.property-divider-row > span { display: grid; font: 400 16px/24px Roboto, sans-serif; }
+.property-divider-row > span span { font-size: 14px; line-height: 20px; color: var(--mtrl-sys-color-on-surface-variant); }
+.property-scene--divided { padding: 24px 0 8px; }
+.property-scene--divided h3 { padding: 0 16px; }
+.property-divider-label, .md .property-divider-label { margin: 8px 16px 0; font: 500 14px/20px Roboto, sans-serif; color: var(--mtrl-sys-color-primary); }
+.property-scene p.property-divider-label, .md .property-scene p.property-divider-label { margin: 12px 16px 4px; }
