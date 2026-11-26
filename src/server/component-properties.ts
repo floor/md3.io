@@ -179,7 +179,8 @@ const progress: PropertySection[] = [
 
 // The drawer's example is a mail app, as M3's own drawer: the boxes, a divider, personal folders.
 const mailboxes: Record<string, string[][]> = {
-  inbox: [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday'], ['Britta Holt', 'Birthday gift', 'Yesterday'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Jordan Price', 'Weekend hike', 'Sun']],
+  // A fourth field marks a message unread: the Inbox's badge counts them.
+  inbox: [['Ali Connors', 'Brunch this weekend?', '10:12', 'unread'], ['Sandra Adams', 'Summer BBQ', '9:41', 'unread'], ['Trevor Hansen', 'Oui oui', 'Yesterday', 'unread'], ['Britta Holt', 'Birthday gift', 'Yesterday'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Jordan Price', 'Weekend hike', 'Sun']],
   outbox: [['To Ali Connors', 'Re: Brunch this weekend?', 'Sending'], ['To the team', 'Notes from Friday', 'Sending']],
   favorites: [['Sandra Adams', 'Summer BBQ', '9:41'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Mia Torres', 'Holiday photos', 'Oct 28']],
   trash: [['Newsletter', 'This week in gardening', 'Tue'], ['Store', 'Your receipt', 'Oct 27']],
@@ -187,8 +188,9 @@ const mailboxes: Record<string, string[][]> = {
   travel: [['Air North', 'Your boarding pass', 'Sat'], ['Harbour Hotel', 'Booking confirmed', 'Oct 29']],
 };
 const mailNames: Record<string, string> = { inbox: 'Inbox', outbox: 'Outbox', favorites: 'Favorites', trash: 'Trash', work: 'Work', travel: 'Travel' };
+const unread = mailboxes.inbox!.filter(row => row[3] === 'unread').length;
 const mailItems = (count = true) => [
-  m('drawer-item', { value: 'inbox', icon: symbols.inbox, 'selected-icon': symbols.inboxFill, ...(count ? { badge: 24 } : {}) }, 'Inbox'),
+  m('drawer-item', { value: 'inbox', icon: symbols.inbox, 'selected-icon': symbols.inboxFill, ...(count ? { badge: unread, 'badge-label': `${unread} unread` } : {}) }, 'Inbox'),
   m('drawer-item', { value: 'outbox', icon: symbols.send }, 'Outbox'), m('drawer-item', { value: 'favorites', icon: symbols.heart }, 'Favorites'), m('drawer-item', { value: 'trash', icon: symbols.delete }, 'Trash'),
   m('drawer-item', { type: 'divider' }), m('drawer-item', { type: 'section' }, 'Personal folders'),
   m('drawer-item', { value: 'work', icon: symbols.folder }, 'Work'), m('drawer-item', { value: 'travel', icon: symbols.folder }, 'Travel'),
@@ -266,7 +268,7 @@ const shelves: Record<string, string[][]> = {
 };
 const labels: Record<string, string> = { home: 'Home', music: 'Music', podcasts: 'Podcasts' };
 const lists = (boxes: Record<string, string[][]> = shelves, names: Record<string, string> = labels, first = 'home') => Object.entries(boxes).map(([box, rows]) => `<ul class="property-phone__list" data-for="${box}" tabindex="0" aria-label="${names[box]}"${box === first ? '' : ' hidden'}>`
-  + rows.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('') + '</ul>').join('');
+  + rows.map(([who, what, when, state]) => `<li${state === 'unread' ? ' class="is-unread"' : ''}><span><strong>${who}</strong><span>${what}</span></span><span>${when}${state === 'unread' ? '<span class="property-phone__unread" aria-label="Unread"></span>' : ''}</span></li>`).join('') + '</ul>').join('');
 const phone = () => `<div class="property-phone"><div class="property-phone__screen">${lists()}`
   + m('navigation-bar', { value: 'home', 'aria-label': 'Music app' }, destinationsOfPhone.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
   + `<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>`;
@@ -274,7 +276,7 @@ const tablet = (navigation: string, content = lists(), bleed = false) => `<div c
 // As the drawer's: the mail app, the rail expanded (M3 Expressive's replacement for the drawer), its menu
 // button kept so it collapses and expands; the screen runs off the stage's right and bottom edges.
 const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded: true, 'aria-label': 'Mail' },
-  [['inbox', symbols.inbox, 'Inbox', 24], ['outbox', symbols.send, 'Outbox'], ['favorites', symbols.heart, 'Favorites'], ['trash', symbols.delete, 'Trash']]
+  [['inbox', symbols.inbox, 'Inbox', unread], ['outbox', symbols.send, 'Outbox'], ['favorites', symbols.heart, 'Favorites'], ['trash', symbols.delete, 'Trash']]
     .map(([value, icon, label, badge]) => m('navigation-rail-item', { value: value as string, icon: icon as string, ...(value === 'inbox' ? { 'selected-icon': symbols.inboxFill } : {}), ...(badge ? { badge: badge as number } : {}) }, label as string)).join('')),
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);

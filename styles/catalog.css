@@ -384,3 +384,8 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* A note before At a glance, such as a component M3 no longer recommends. */
 .property-advice { margin: 0 0 8px; padding: 16px 20px; border-radius: 12px; background: var(--mtrl-sys-color-secondary-container); color: var(--mtrl-sys-color-on-secondary-container); }
 .property-advice a { font-size: inherit; }
+/* Unread messages: the sender and subject in bold, a dot by the time. */
+.property-phone__list li.is-unread strong { font-weight: 600; }
+.property-phone__list li.is-unread > span:first-child > span { color: var(--mtrl-sys-color-on-surface); font-weight: 500; }
+.property-phone__list li > span:last-child { display: flex; align-items: center; gap: 8px; }
+.property-phone__unread { width: 8px; height: 8px; border-radius: 50%; background: var(--mtrl-sys-color-primary); }
