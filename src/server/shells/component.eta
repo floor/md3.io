@@ -1,7 +1,7 @@
 <div class="component-list-layout component-list-layout--detail">
 <%~ include('component-list', it) %>
 <div class="page-wrap component-page" id="component-content" tabindex="-1" data-component="<%= it.slug %>">
-  <% if (it.componentHeader) { %><%~ it.componentHeader %><div class="component-overview component-overview--playground"><div class="component-overview__main"><div class="component-lede"><p class="playground-title" aria-hidden="true"><%= it.component.name %></p><div class="framework-chips-row playground--material"><script>(s => { const r = document.documentElement; s.dataset.theme = r.dataset.siteTheme || 'baseline'; s.dataset.themeMode = r.dataset.themeMode; })(document.currentScript.parentElement);</script><%~ it.panel.frameworks %></div></div><% } else { %>
+  <% if (it.componentHeader) { %><%~ it.componentHeader %><div class="component-overview component-overview--playground"><div class="component-overview__main"><% } else { %>
   <header class="page-heading">
     <div class="page-heading__top">
       <a class="text-link component-list-up" href="<%= it.isAddons ? '/addons/' : '/components/' %>"><%~ it.icon('arrow_back') %> <%= it.isAddons ? 'All add-ons' : 'All components' %></a>
@@ -21,6 +21,7 @@
     <div class="preview-panel">
       <div class="panel-heading preview-heading">
         <%~ it.panel.tabs %>
+        <% if (it.componentHeader) { %><%/* The component's name and the framework chips sit in the playground's own heading (the owner, 2026-11-26): the hero has scrolled away. A visual label; the h1 stays in the hero. */%><p class="playground-title" aria-hidden="true"><%= it.component.name %></p><div class="framework-chips-row"><%~ it.panel.frameworks %></div><% } %>
         <span class="preview-dot" aria-hidden="true"></span>
         <%~ it.panel.appearance %>
         <% if (it.panel.code) { %><%~ it.panel.code %><% } %>

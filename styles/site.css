@@ -281,13 +281,13 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
    line above the text, which then keeps the column's full width. */
 .component-tab-page .component-frameworks { margin: 0 0 16px; }
 @media (width >= 840px) { .component-tab-page .component-frameworks { float: right; margin: 0 0 16px 24px; } }
-:is(.component-lede, .component-tab-page) .framework-chips::part(label),
-:is(.component-lede, .component-tab-page) .framework-chips::part(checkmark) { display: none; }
+:is(.component-lede, .component-tab-page, .preview-heading) .framework-chips::part(label),
+:is(.component-lede, .component-tab-page, .preview-heading) .framework-chips::part(checkmark) { display: none; }
 /* Selected, the chip keeps its logo (material swaps it for the checkmark). */
-:is(.component-lede, .component-tab-page) .framework-chips::part(leading-icon) { display: inline-flex !important; width: 18px !important; opacity: 1 !important; margin: 0 !important; }
-:is(.component-lede, .component-tab-page) .framework-chips::part(action) { padding-inline: 11px; gap: 0; }
+:is(.component-lede, .component-tab-page, .preview-heading) .framework-chips::part(leading-icon) { display: inline-flex !important; width: 18px !important; opacity: 1 !important; margin: 0 !important; }
+:is(.component-lede, .component-tab-page, .preview-heading) .framework-chips::part(action) { padding-inline: 11px; gap: 0; }
 /* Six icon chips fit any width: shown whole, not in a scroller that clips the last. */
-:is(.component-lede, .component-tab-page) .framework-chips::part(container) { overflow: visible; }
+:is(.component-lede, .component-tab-page, .preview-heading) .framework-chips::part(container) { overflow: visible; }
 .component-lede > .framework-chips-row, .component-tab-page .component-frameworks { max-width: 100%; min-width: 0; }
 /* A component's Overview: its sections, and "On this page" at the right, as on Develop. */
 .component-overview { display: flex; gap: 32px; min-width: 0; }
@@ -330,7 +330,7 @@ html[data-preview-mode="dark"] #preview { background: var(--mtrl-sys-color-surfa
 .content > :is(.component-list-layout, .component-tab-layout) > .page-wrap { padding-bottom: 0; }
 /* An icon-only chip is 40px wide: its touch area (material's ::before, 48px tall) widens to
    48px around it, so the row keeps its width on a phone. */
-:is(.component-lede, .component-tab-page) .framework-chips::part(action)::before { inset-inline: -4px; }
+:is(.component-lede, .component-tab-page, .preview-heading) .framework-chips::part(action)::before { inset-inline: -4px; }
 /* The drawers' section headers (Guides, Add-ons…) stand apart from their rows: the primary
    colour, weight 600. */
 m-drawer::part(section-label) { color: var(--mtrl-sys-color-primary); font-weight: 600; }

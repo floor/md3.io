@@ -262,8 +262,8 @@
 }
 @media (min-width: 840px) {
     /* Whatever height the window offers, less a margin, so a person scrolled to it sees all of it. */
-    /* At least the window below the stuck tabs (the tab switch scrolls the hero away): 228px above it, 16px under. */
-    .component-overview--playground .playground.playground--material { min-height: max(480px, calc(100dvh - var(--header-height, 0px) - 244px)); scroll-margin-top: calc(var(--header-height, 0px) + 96px); }
+    /* At least the window below the stuck tabs (the tab switch scrolls the hero away): 88px above it, 16px under. */
+    .component-overview--playground .playground.playground--material { min-height: max(480px, calc(100dvh - var(--header-height, 0px) - 104px)); scroll-margin-top: calc(var(--header-height, 0px) + 96px); }
     .component-overview--playground .playground.playground--material > .preview-panel { min-height: 0; }
     .component-overview--playground .playground.playground--material .playground-space { flex: 1 1 auto; min-height: 0; }
     .component-overview--playground .playground.playground--material[data-settings-open] > .configuration { contain: size; overflow: clip; height: 100%; display: flex; flex-direction: column; }
@@ -300,12 +300,15 @@
     .component-overview--playground > .component-overview__main > .playground > .preview-panel { height: 480px; }
 }
 
-/* The component's name before the playground (the owner, 2026-11-26): the tab switch scrolls the hero and its
-   title away, so the row above the playground names it, at the left, the framework chips at the right. The page's
-   h1 stays in the hero; this is a visual label, hidden from assistive technology. */
-.component-overview--playground .component-lede { justify-content: space-between; align-items: center; gap: 16px; }
-.component-lede > .playground-title { margin: 0 auto 0 0; order: -1; min-width: 0; font: 400 clamp(24px, 3vw, 32px)/1.25 var(--font-sans); color: var(--mtrl-sys-color-on-surface, var(--text)); }
+/* The playground's heading: the component's name at its left, then the framework chips and the actions at its
+   right (the owner, 2026-11-26). The tab switch scrolls the hero and its title away. */
+.preview-heading > .playground-title { margin: 0 auto 0 8px; min-width: 0; font: 400 22px/28px var(--font-sans); color: var(--mtrl-sys-color-on-surface); }
+.preview-heading > .framework-chips-row { margin: 0; padding: 0; }
+.preview-heading:has(> .playground-title) :is(.preview-code, .preview-copy) { margin-left: 0; }
 
 /* The heading and the footer on the stage's own colour (the owner, 2026-11-26), and no status dot. */
 .component-overview--playground .playground.playground--material :is(.preview-heading, .preview-footer) { background: var(--mtrl-sys-color-surface-container-low); }
 .component-overview--playground .playground.playground--material .preview-dot { display: none; }
+
+/* A gap under the tabs: the playground now starts the body, its name and chips in its own heading. */
+.component-overview--playground { padding-top: 16px; }
