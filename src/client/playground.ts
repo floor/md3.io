@@ -54,16 +54,16 @@ registerPage('playground', (content, life) => {
   const elementMetaScript = content.querySelector<HTMLScriptElement>('#element-meta');
   const element: ElementMeta | null = elementMetaScript ? JSON.parse(elementMetaScript.textContent || 'null') : null;
   // The framework picker: material's single-select filter chip set in
-  // place of the tabs (playground-panel.ts). Picking a chip does what a tab click
-  // did: show that framework's code, and remember it.
+  // place of the tabs (playground-panel.ts). Picking a chip chooses the framework and
+  // remembers it; the view stays as it is.
   type ChipsHost = HTMLElement & { value: string | string[] | null };
   const frameworkChips = content.querySelector<ChipsHost>('m-chips.framework-chips');
   life.events(frameworkChips)?.addEventListener('change', event => {
     const value = (event as CustomEvent<{ value?: unknown }>).detail?.value ?? frameworkChips!.value;
     const next = String(Array.isArray(value) ? value[0] ?? '' : value ?? '');
     if (!FRAMEWORKS.some(f => f.id === next) || next === framework) return;
+    // A framework chip changes what runs and what the code shows, not the view (the owner, 2026-11-26).
     selectFramework(next as Framework, false, true);
-    switchView('code');
   });
   const FRAMEWORK_KEY = 'md3-example-framework';
   let framework: Framework = 'vanilla';
