@@ -19,6 +19,8 @@ const names = [
   'play_arrow',
   'more_vert',
   'notifications',
+  'expand_more',
+  'remove',
   'format_bold',
   'format_indent_increase',
   'format_line_spacing',

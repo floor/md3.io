@@ -1,37 +1,98 @@
-/* The conformance matrix (src/server/conformance.ts): a header with the facts and filters, then a section
-   per component with its meter and its table, in M3's table style (as the home page's Lightweight table). */
-.conformance-page { box-sizing: border-box; width: min(100% - 2 * clamp(16px, 4vw, 48px), 1208px); margin: 40px auto 64px; color: var(--text); }
-.conformance-header h1 { margin: 0 0 12px; font: 400 clamp(36px, 5vw, 57px)/1.1 var(--font-sans); letter-spacing: -0.5px; }
-.conformance-lede { max-width: 70ch; margin: 0 0 24px; font-size: var(--fs-md); line-height: 1.6; color: var(--text-muted); }
-.conformance-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px 32px; margin: 0 0 24px; }
-.conformance-facts div { display: grid; gap: 4px; }
-.conformance-facts dt { font: 500 12px/16px var(--font-sans); letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
-.conformance-facts dd { margin: 0; line-height: 1.5; }
-.conformance-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; padding: 16px; border-radius: 16px; background: var(--mtrl-sys-color-surface-container-low, var(--surface-2)); }
-.conformance-filter { display: grid; gap: 4px; font-size: 13px; color: var(--text-muted); }
-.conformance-filter select { min-height: 40px; padding: 0 12px; border: 1px solid var(--mtrl-sys-color-outline, var(--border)); border-radius: 8px; background: var(--mtrl-sys-color-surface, transparent); color: var(--text); font: inherit; font-size: 14px; }
-.conformance-apply { min-height: 40px; padding: 0 20px; border: 0; border-radius: 20px; background: var(--mtrl-sys-color-primary); color: var(--mtrl-sys-color-on-primary); font: 500 14px/20px var(--font-sans); cursor: pointer; }
-.conformance-component { margin-top: 48px; scroll-margin-top: 96px; }
-.conformance-component__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; margin-bottom: 16px; }
-.conformance-component__head h2 { margin: 0; font: 400 28px/36px var(--font-sans); }
-.conformance-component__head h2 a { color: inherit; text-decoration: none; }
-.conformance-component__head h2 a:hover { text-decoration: underline; }
-.conformance-meter { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text-muted); }
-.conformance-meter strong { color: var(--text); font-weight: 500; }
-.conformance-meter meter { width: 160px; height: 8px; }
-.conformance-table-wrap { overflow-x: auto; }
-.conformance-table { width: 100%; min-width: 720px; border-collapse: separate; border-spacing: 0; font-size: 14px; border: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); border-radius: 24px; overflow: hidden; }
-.conformance-table th, .conformance-table td { padding: 14px 20px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); border-right: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); }
-.conformance-table tr > :last-child { border-right: 0; }
-.conformance-table tbody tr:last-child > * { border-bottom: 0; }
-.conformance-table thead th { font-weight: 400; color: var(--text-muted); background: var(--mtrl-sys-color-surface-container-low, var(--surface-2)); }
-.conformance-table tbody th { font-weight: 500; }
-.conformance-table tbody tr:target { background: var(--mtrl-sys-color-secondary-container); }
-.conformance-anchor { color: inherit; text-decoration: none; }
-.conformance-anchor:hover { text-decoration: underline; }
-.conformance-muted, .conformance-source { display: block; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
-.conformance-status { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 500; }
-.conformance-status--match { background: color-mix(in srgb, var(--mtrl-sys-color-primary) 14%, transparent); color: var(--mtrl-sys-color-primary); }
-.conformance-status--drift { background: var(--mtrl-sys-color-error-container); color: var(--mtrl-sys-color-on-error-container); }
-.conformance-status--no-source { background: var(--mtrl-sys-color-surface-container-high, var(--surface-2)); color: var(--text-muted); }
-.conformance-sample { margin: 0 0 24px; padding: 12px 16px; border-radius: 12px; background: var(--mtrl-sys-color-tertiary-container); color: var(--mtrl-sys-color-on-tertiary-container); font-size: 14px; }
+/* The conformance matrix (src/server/conformance.ts), laid out as the parity matrix the owner likes:
+   masthead, a summary card per browser, a caution line, the controls bar, a sticky column header, a section
+   per component with its rows, and a tray of the selection. md3.io's tokens, both themes. */
+.conformance-page { box-sizing: border-box; width: min(100% - 2 * clamp(16px, 4vw, 48px), 1208px); margin: 40px auto 120px; color: var(--text); }
+.matrix { --matrix-cols: minmax(0, 1fr) repeat(2, 104px); }
+.matrix[data-only="chromium"], .matrix[data-only="webkit"] { --matrix-cols: minmax(0, 1fr) 104px; }
+
+/* Masthead */
+.matrix-eyebrow { margin: 0 0 8px; font: 500 12px/16px var(--font-mono); letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+.matrix-masthead h1 { margin: 0 0 12px; font: 400 clamp(32px, 4.5vw, 52px)/1.12 var(--font-sans); letter-spacing: -0.5px; }
+.matrix-lede { max-width: 68ch; margin: 0 0 12px; font-size: var(--fs-md); line-height: 1.6; color: var(--text-muted); }
+.matrix-facts { margin: 0 0 28px; font-size: 13px; line-height: 1.6; color: var(--text-muted); }
+
+/* Summary cards, one per browser */
+.matrix-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.matrix-card { display: block; }
+.matrix-card :is(p) { margin: 0; }
+.matrix-card__browser { font: 500 14px/20px var(--font-sans); color: var(--text-muted); }
+.matrix-card__score { margin-top: 8px !important; font-size: 16px; }
+.matrix-card__score strong { font-weight: 500; }
+.matrix-card__percent { margin: 4px 0 12px !important; font: 400 36px/44px var(--font-sans); }
+.matrix-card m-progress { display: block; width: 100%; }
+.matrix-card__rest { margin-top: 12px !important; font-size: 13px; color: var(--text-muted); }
+.matrix-card::part(card), .matrix-card .mtrl-card { padding: 20px; }
+
+/* Caution line */
+.matrix-caution { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 24px; padding: 12px 16px; border-radius: 12px; background: var(--mtrl-sys-color-tertiary-container); color: var(--mtrl-sys-color-on-tertiary-container); font-size: 14px; line-height: 1.5; }
+.matrix-caution svg { width: 20px; height: 20px; flex: none; margin-top: 1px; }
+
+/* Controls bar */
+.matrix-controls { display: grid; gap: 12px; padding: 16px; border-radius: 16px; background: var(--mtrl-sys-color-surface-container-low, var(--surface-2)); }
+.matrix-search { display: block; max-width: 420px; }
+.matrix-chip-groups { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.matrix-chip-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.matrix-chip-group > span { font: 500 12px/16px var(--font-sans); letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+
+/* Sticky column header */
+.matrix-colhead { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: var(--matrix-cols); gap: 0; margin-top: 24px; padding: 10px 16px; border-bottom: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); background: var(--bg, var(--mtrl-sys-color-surface)); font: 500 12px/16px var(--font-sans); letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted); }
+.matrix-colhead > span:not(:first-child) { text-align: center; }
+
+/* Sections */
+.matrix-section { padding-top: 24px; scroll-margin-top: 120px; }
+.matrix-section--empty .matrix-rows { display: none; }
+.matrix-section__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 16px 12px; }
+.matrix-section__head h2 { margin: 0; font: 400 24px/32px var(--font-sans); }
+.matrix-section__head h2 a { color: inherit; text-decoration: none; }
+.matrix-section__head h2 a:hover { text-decoration: underline; }
+.matrix-badge { padding: 2px 10px; border-radius: 10px; font: 500 12px/18px var(--font-sans); background: color-mix(in srgb, var(--mtrl-sys-color-primary) 14%, transparent); color: var(--mtrl-sys-color-primary); }
+.matrix-badge--drift { background: var(--mtrl-sys-color-error-container); color: var(--mtrl-sys-color-on-error-container); }
+.matrix-section__ticks { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-left: auto; }
+.matrix-ticks { display: inline-flex; align-items: center; gap: 2px; font-size: 12px; color: var(--text-muted); }
+.matrix-ticks__label { margin-right: 6px; }
+.matrix-tick { width: 6px; height: 14px; border-radius: 2px; background: var(--mtrl-sys-color-outline-variant); }
+.matrix-tick--match { background: var(--mtrl-sys-color-primary); }
+.matrix-tick--drift { background: var(--mtrl-sys-color-error); }
+.matrix-empty { margin: 0; padding: 8px 16px; font-size: 14px; color: var(--text-muted); }
+
+/* Rows */
+.matrix-rows { margin: 0; padding: 0; list-style: none; border: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); border-radius: 16px; overflow: hidden; }
+.matrix-row { scroll-margin-top: 120px; }
+.matrix-row + .matrix-row { border-top: 1px solid var(--mtrl-sys-color-outline-variant, var(--border)); }
+.matrix-row:target { background: var(--mtrl-sys-color-secondary-container); }
+.matrix-row__main { display: grid; grid-template-columns: var(--matrix-cols); align-items: center; min-height: 52px; padding: 0 16px 0 8px; }
+.matrix-row__name { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.matrix-row__name > span { display: grid; min-width: 0; }
+.matrix-row__anchor { color: var(--text); text-decoration: none; font-size: 15px; }
+.matrix-row__anchor:hover { text-decoration: underline; }
+.matrix-muted { font-size: 12px; color: var(--text-muted); }
+.matrix-row__cell { display: grid; place-items: center; }
+.matrix-glyph { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; }
+.matrix-glyph svg { width: 18px; height: 18px; }
+.matrix-glyph--match { background: color-mix(in srgb, var(--mtrl-sys-color-primary) 14%, transparent); color: var(--mtrl-sys-color-primary); }
+.matrix-glyph--drift { background: var(--mtrl-sys-color-error-container); color: var(--mtrl-sys-color-on-error-container); }
+.matrix-glyph--no-source { background: var(--mtrl-sys-color-surface-container-high, var(--surface-2)); color: var(--text-muted); }
+.matrix[data-only="chromium"] .matrix-row__cell:nth-child(3), .matrix[data-only="chromium"] .matrix-colhead > span:nth-child(3),
+.matrix[data-only="webkit"] .matrix-row__cell:nth-child(2), .matrix[data-only="webkit"] .matrix-colhead > span:nth-child(2) { display: none; }
+.matrix-row__toggle { flex: none; transition: rotate 150ms; }
+.matrix-row--open .matrix-row__toggle { rotate: 180deg; }
+
+/* A row's detail: open without scripts; with them, behind the row's disclosure. */
+.matrix-detail { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 24px; margin: 0; padding: 4px 16px 16px 52px; font-size: 14px; }
+.matrix--scripted .matrix-row:not(.matrix-row--open) .matrix-detail { display: none; }
+.matrix--scripted .matrix-row:not(.matrix-row--open) :target + .matrix-detail { display: grid; }
+.matrix-detail div { display: grid; gap: 2px; }
+.matrix-detail dt { font: 500 12px/16px var(--font-sans); letter-spacing: 0.3px; color: var(--text-muted); }
+.matrix-detail dd { margin: 0; line-height: 1.5; }
+.matrix-detail strong { font-weight: 500; }
+
+/* The tray: what the filters select, and the copy */
+.matrix-tray { position: fixed; z-index: 3; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 16px; padding: 10px 10px 10px 20px; border-radius: 28px; background: var(--mtrl-sys-color-surface-container-high, var(--surface-2)); box-shadow: 0 2px 6px rgb(0 0 0 / 0.15), 0 8px 24px rgb(0 0 0 / 0.12); }
+.matrix-tray__count { margin: 0; font-size: 14px; }
+.matrix-tray__count[data-copied]::after { content: ' · copied'; color: var(--mtrl-sys-color-primary); }
+.matrix:not(.matrix--scripted) .matrix-tray, .matrix:not(.matrix--scripted) .matrix-controls, .matrix:not(.matrix--scripted) .matrix-row__toggle { display: none; }
+@media (max-width: 599px) {
+  .matrix { --matrix-cols: minmax(0, 1fr) repeat(2, 64px); }
+  .matrix-tray { left: 16px; right: 16px; bottom: calc(80px + 12px + env(safe-area-inset-bottom)); justify-content: space-between; }
+  .matrix-detail { padding-left: 16px; }
+}
