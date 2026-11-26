@@ -300,3 +300,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 }
 /* A small corner, as m3.material.io's figures: M3's medium corner (12px). */
 .catalog-visual.property-stage { border-radius: var(--mtrl-sys-shape-corner-medium, 12px); }
+/* A picker shown open in a property stage keeps its own width: in a flex row it would shrink below its calendar or its fields. */
+.property-picker { display: block; width: max-content; flex-shrink: 0; }
+.property-value:has(.property-picker) { flex-shrink: 0; }
