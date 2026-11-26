@@ -5,6 +5,7 @@
 // overview cards and the component heroes are. The sentences follow the component's API
 // table (docs/components/<slug>.md).
 import { symbols } from '../shared/icons';
+import { statusBar } from './catalog';
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 type Attributes = Record<string, string | number | boolean | undefined>;
@@ -233,10 +234,28 @@ const navigationDrawer: PropertySection[] = [
 // The app bar is laid out absolutely inside its element: the box gives it the large type's height.
 const appBar = (type: string) => screen(m('top-app-bar', { type, headline: 'My library', 'no-scroll': true },
   m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })), 'appbar');
+// The top of a phone: an app bar over a list that scrolls under it. With `scrollTarget` the bar follows
+// that list (its scrolled state, and a medium or large bar compresses), as the app bar's document says.
+const library = [['Mirror lake', 'Waterhouse'], ['Honeydew', 'Waterhouse'], ['Paper boats', 'The Lindens'], ['Northern line', 'Ada Vale'], ['Glasshouse', 'The Lindens'],
+  ['Slow river', 'Ada Vale'], ['Small hours', 'Waterhouse'], ['Harbour lights', 'The Lindens'], ['Open water', 'Ada Vale'], ['Late bloom', 'Waterhouse']];
+let screens = 0;
+const phoneTop = (type: string, follow = false, scrolled = false) => {
+  const id = `property-scroll-${++screens}`;
+  // The phone's status bar (9:30, signal, battery), as the overview cards' frames show it.
+  return `<div class="property-top property-top--${type}"><div class="property-top__screen">${statusBar}<div class="property-top__body">`
+    + m('top-app-bar', { type, headline: 'My library', ...(follow ? { 'scroll-target': id } : { 'no-scroll': true }) },
+      m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' }))
+    + `<ul class="property-phone__list property-top__list" id="${id}" tabindex="0" aria-label="My library"${scrolled ? ' data-start-scroll' : ''}>${library.map(([title, artist]) => `<li><span><strong>${title}</strong><span>${artist}</span></span></li>`).join('')}</ul></div></div></div>`;
+};
 const appBarSections: PropertySection[] = [
-  { key: 'type', title: 'Type', text: 'Its height and where the headline sits: small, centre-aligned, medium or large.',
-    values: [{ label: 'small', markup: appBar('small') }, { label: 'center', name: 'Centre-aligned', markup: appBar('center') }, { label: 'medium', markup: appBar('medium') }, { label: 'large', markup: appBar('large') }], stack: true },
-];
+  ['small', 'Small', 'One 64dp row: the navigation button, the headline and the actions.'],
+  ['center', 'Centre-aligned', 'One 64dp row, the headline centred between the navigation button and an action.'],
+  ['medium', 'Medium', 'The headline on a second row, under the buttons; it compresses to the small bar as the page scrolls.'],
+  ['large', 'Large', 'A larger headline on a second row, for a screen\'s top level; it compresses too.'],
+].map(([type, title, text]) => ({ key: `type-${type}`, title: title!, text: text!, values: [{ label: type!, markup: phoneTop(type!) }], single: true } as PropertySection));
+// The bar flat at the top of its list, and in its scrolled state once the list has scrolled (catalog/app-bar.ts starts it scrolled).
+appBarSections.push({ key: 'scroll', title: 'Scroll states', text: 'Flat at the top of the page; once it scrolls, the bar takes its scrolled colour and a level of elevation.',
+  values: [{ label: 'flat', name: 'Flat', markup: phoneTop('small', true) }, { label: 'scrolled', name: 'On scroll', markup: phoneTop('small', true, true) }] });
 const surfaceOf = (slug: string, suffix: string) => `<md3-catalog-${slug}-${suffix} class="property-surface"></md3-catalog-${slug}-${suffix}>`;
 const tabsSections: PropertySection[] = [
   { key: 'variant', title: 'Variant', text: 'Primary tabs, for a page\'s main destinations, or secondary tabs, within a section.',
@@ -344,6 +363,13 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  'app-bar': {
+    points: '<ul><li>The current screen\'s title, a navigation button and its most important actions, at the top.</li>'
+      + '<li>Four types: small and centre-aligned on one row; medium and large, with the headline on a second row.</li>'
+      + '<li>As the page scrolls, the bar takes its scrolled colour and a level of elevation, and a medium or large bar compresses to the small one.</li>'
+      + '<li>It follows the window\'s scrolling, or an element\'s, named by <code>scroll-target</code>.</li></ul>',
+    stage: phoneTop('large', true), caption: 'A large app bar over a library: scroll the list to compress it.', kind: 'app-bar',
+  },
   carousel: {
     points: '<ul><li>A collection to browse rather than read in full: photos, artwork, featured entries.</li>'
       + '<li>Its items change size as they scroll, and settle into place.</li>'
