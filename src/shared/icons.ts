@@ -48,6 +48,9 @@ import tab from '../../icons/tab.svg' with { type: 'text' };
 import undo from '../../icons/undo.svg' with { type: 'text' };
 import videocamOff from '../../icons/videocam_off.svg' with { type: 'text' };
 import alarm from '../../icons/alarm.svg' with { type: 'text' };
+import bluetooth from '../../icons/bluetooth.svg' with { type: 'text' };
+import link from '../../icons/link.svg' with { type: 'text' };
+import wifi from '../../icons/wifi.svg' with { type: 'text' };
 import article from '../../icons/article.svg' with { type: 'text' };
 import barChart from '../../icons/bar_chart.svg' with { type: 'text' };
 import bedtime from '../../icons/bedtime.svg' with { type: 'text' };
@@ -162,6 +165,9 @@ export const symbols = {
   videocamOff: trim(videocamOff),
   // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
   alarm: trim(alarm),
+  bluetooth: trim(bluetooth),
+  link: trim(link),
+  wifi: trim(wifi),
   article: trim(article),
   barChart: trim(barChart),
   bedtime: trim(bedtime),
@@ -277,6 +283,9 @@ const files: Record<keyof typeof symbols, string> = {
   videocamOff: 'videocam_off',
   // The navigation playground's named sets (src/shared/content/navigation-rail.ts and the drawer, tabs and menu).
   alarm: 'alarm',
+  bluetooth: 'bluetooth',
+  link: 'link',
+  wifi: 'wifi',
   article: 'article',
   barChart: 'bar_chart',
   bedtime: 'bedtime',

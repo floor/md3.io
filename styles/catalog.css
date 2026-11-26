@@ -278,3 +278,4 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* A section may be narrower than its widest value: that value scrolls in its stage. */
 .scenarios { grid-template-columns: minmax(0, 1fr); }
 .scenarios > .scenario { min-width: 0; }
+.property-column { display: grid; justify-items: center; gap: 20px; }
