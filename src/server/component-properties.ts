@@ -247,12 +247,14 @@ const phoneTop = (type: string, follow = false, scrolled = false) => {
       m('icon-button', { slot: 'leading', icon: symbols.menu, 'aria-label': 'Open navigation' }) + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' }))
     + `<ul class="property-phone__list property-top__list" id="${id}" tabindex="0" aria-label="My library"${scrolled ? ' data-start-scroll' : ''}>${library.map(([title, artist]) => `<li><span><strong>${title}</strong><span>${artist}</span></span></li>`).join('')}</ul></div></div></div>`;
 };
+// The variants, as M3's figure: each bar alone, at its own height, stacked and numbered.
+const variantBar = (type: string) => `<div class="property-bar property-bar--${type}">` + m('top-app-bar', { type, headline: 'Headline', 'no-scroll': true },
+  m('icon-button', { slot: 'leading', icon: symbols.arrowBack, 'aria-label': 'Back' }) + m('icon-button', { slot: 'trailing', icon: symbols.search, 'aria-label': 'Search' })
+  + m('icon-button', { slot: 'trailing', icon: symbols.heart, 'aria-label': 'Favorite' })) + '</div>';
 const appBarSections: PropertySection[] = [
-  ['small', 'Small', 'One 64dp row: the navigation button, the headline and the actions.'],
-  ['center', 'Centre-aligned', 'One 64dp row, the headline centred between the navigation button and an action.'],
-  ['medium', 'Medium', 'The headline on a second row, under the buttons; it compresses to the small bar as the page scrolls.'],
-  ['large', 'Large', 'A larger headline on a second row, for a screen\'s top level; it compresses too.'],
-].map(([type, title, text]) => ({ key: `type-${type}`, title: title!, text: text!, values: [{ label: type!, markup: phoneTop(type!) }], single: true } as PropertySection));
+  { key: 'variants', title: 'Variants', text: 'Small and centre-aligned bars are one 64dp row; medium and large put the headline on a second row, and compress to the small bar as the page scrolls.',
+    values: [['small', 'Small'], ['center', 'Centre-aligned'], ['medium', 'Medium'], ['large', 'Large']].map(([type, name]) => ({ label: type!, name, markup: variantBar(type!) })), stack: true },
+];
 // The bar flat at the top of its list, and in its scrolled state once the list has scrolled (catalog/app-bar.ts starts it scrolled).
 appBarSections.push({ key: 'scroll', title: 'Scroll states', text: 'Flat at the top of the page; once it scrolls, the bar takes its scrolled colour and a level of elevation.',
   values: [{ label: 'flat', name: 'Flat', markup: phoneTop('small', true) }, { label: 'scrolled', name: 'On scroll', markup: phoneTop('small', true, true) }] });

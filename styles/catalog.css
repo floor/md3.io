@@ -446,3 +446,11 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-top__body m-top-app-bar { position: absolute; inset: 0 0 auto; height: auto; z-index: 1; }
 .property-top__body .property-top__list { position: absolute; inset: 0; padding-top: var(--bar, 64px) !important; }
 .catalog-visual.property-note__stage:has(.property-top) { height: auto; padding-top: 40px; }
+/* The app bar's variants: each bar alone at its own height (laid out absolutely inside its element). */
+.property-bar { width: 380px; max-width: 100%; position: relative; background: var(--mtrl-sys-color-surface); }
+.property-bar m-top-app-bar { position: relative; display: block; height: 100%; }
+.property-bar--small, .property-bar--center { height: 64px; }
+.property-bar--medium { height: 112px; }
+.property-bar--large { height: 152px; }
+.property-stage--stack .property-value:has(.property-bar) { grid-template-columns: 3em auto; }
+.catalog-visual.property-stage--stack:has(.property-bar) { gap: 32px; padding: 48px 24px; }
