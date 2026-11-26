@@ -15,6 +15,7 @@ import brush from '../../icons/brush.svg' with { type: 'text' };
 import callEnd from '../../icons/call_end.svg' with { type: 'text' };
 import check from '../../icons/check.svg' with { type: 'text' };
 import checkBox from '../../icons/check_box.svg' with { type: 'text' };
+import checkBoxOutlineBlank from '../../icons/check_box_outline_blank.svg' with { type: 'text' };
 import chevronLeft from '../../icons/chevron_left.svg' with { type: 'text' };
 import chevronRight from '../../icons/chevron_right.svg' with { type: 'text' };
 import close from '../../icons/close.svg' with { type: 'text' };
@@ -123,6 +124,7 @@ export const symbols = {
   brush: trim(brush),
   check: trim(check),
   checkBox: trim(checkBox),
+  checkBoxOutlineBlank: trim(checkBoxOutlineBlank),
   close: trim(close),
   download: trim(download),
   edit: trim(edit),
@@ -245,6 +247,7 @@ const files: Record<keyof typeof symbols, string> = {
   brush: 'brush',
   check: 'check',
   checkBox: 'check_box',
+  checkBoxOutlineBlank: 'check_box_outline_blank',
   close: 'close',
   download: 'download',
   edit: 'edit',
