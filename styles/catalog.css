@@ -292,7 +292,7 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 /* A dotted grid behind the values, as m3.material.io's figures: dots of the outline colour, every 8px, on the stage's own colour. */
 .catalog-visual.property-stage {
   background-color: var(--mtrl-sys-color-surface-container-low);
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--mtrl-sys-color-outline) 45%, transparent) 0.75px, transparent 1px);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent) 0.75px, transparent 1px);
   background-size: 8px 8px;
   background-position: 4px 4px;
 }
