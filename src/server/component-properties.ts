@@ -353,10 +353,36 @@ const badgeSections: PropertySection[] = [
     values: badgeColors.map(color => ({ label: color, name: color[0]!.toUpperCase() + color.slice(1), markup: m('badge', { color, label: '3' }) })) },
 ];
 
+// Lists, as M3's figures: the same items in each style, a star leading and a shortcut trailing.
+const listOf = (attrs: Attributes, items: string) => `<div class="property-list">${m('list', { 'aria-label': 'Example', selection: 'none', ...attrs }, items)}</div>`;
+const starItems = (n: number, trailing = true, selected: number[] = []) => Array.from({ length: n }, (_, i) => m('list-item', { value: `i${i + 1}`, headline: 'List item', 'leading-icon': symbols.stars, ...(trailing ? { 'trailing-text': '⌘C' } : {}), ...(selected.includes(i + 1) ? { selected: true } : {}) })).join('');
+const taskItems = () => m('list-item', { kind: 'subheader', headline: 'Party planning' })
+  + [['invites', 'Mail out invitations'], ['dessert', 'Order a gluten-free dessert for 12'], ['karaoke', 'Book the karaoke venue'], ['music', 'Make a playlist']].map(([value, headline]) => m('list-item', { value: value!, headline: headline!, ...(value === 'invites' || value === 'karaoke' ? { selected: true } : {}) })).join('');
+const listSections: PropertySection[] = [
+  { key: 'style', title: 'Style', text: 'Standard items sit on the surface; segmented items are each their own rounded tile. The look changes, not the behaviour.',
+    values: [{ label: 'standard', name: 'Standard', markup: listOf({ variant: 'standard', selection: 'single', value: 'i3' }, starItems(6)) },
+      { label: 'segmented', name: 'Segmented', markup: listOf({ variant: 'segmented', selection: 'single', value: 'i3' }, starItems(6)) }] },
+  { key: 'selection', title: 'Selection', text: 'One mode per list: items that act, a single choice, or several.',
+    values: [{ label: 'none', name: 'Single action: each item one target', markup: listOf({ variant: 'segmented', selection: 'none' }, starItems(4, false)) },
+      { label: 'single', name: 'Single select', markup: listOf({ variant: 'segmented', selection: 'single', value: 'i3' }, starItems(4, false)) },
+      { label: 'multiple', name: 'Multi-select', markup: listOf({ variant: 'segmented', selection: 'multiple' }, starItems(4, false, [3, 4])) }] },
+  { key: 'lines', title: 'Lines', text: 'A headline alone, with supporting text, or with an overline above it.',
+    values: [{ label: 'one', name: 'One line', markup: listOf({}, m('list-item', { headline: 'Mirror lake', 'leading-icon': symbols.libraryMusic }) ) },
+      { label: 'two', name: 'Two lines', markup: listOf({}, m('list-item', { headline: 'Mirror lake', 'supporting-text': 'Waterhouse', 'leading-icon': symbols.libraryMusic })) },
+      { label: 'three', name: 'Three lines', markup: listOf({}, m('list-item', { overline: 'Now playing', headline: 'Mirror lake', 'supporting-text': 'Waterhouse', 'leading-icon': symbols.libraryMusic })) }], stack: true },
+  { key: 'leading', title: 'Leading content', text: 'An icon, an avatar or an image before the text.',
+    values: [{ label: 'icon', name: 'Icon', markup: listOf({}, m('list-item', { headline: 'Ada Vale', 'supporting-text': 'Contact', 'leading-icon': symbols.person })) },
+      { label: 'avatar', name: 'Avatar', markup: listOf({}, m('list-item', { headline: 'Ada Vale', 'supporting-text': 'Contact', 'leading-avatar': 'A' })) },
+      { label: 'image', name: 'Image', markup: listOf({}, m('list-item', { headline: 'Paper boats', 'supporting-text': 'The Lindens', 'leading-image': 'https://picsum.photos/id/1015/112/112' })) }], stack: true },
+  { key: 'trailing', title: 'Trailing content', text: 'A short text, such as a count or a shortcut, or an icon after the text.',
+    values: [{ label: 'text', name: 'Text', markup: listOf({}, m('list-item', { headline: 'Inbox', 'supporting-text': 'Mail', 'trailing-text': '100+' })) },
+      { label: 'icon', name: 'Icon', markup: listOf({}, m('list-item', { headline: 'Settings', 'supporting-text': 'Display, sound', 'trailing-icon': symbols.chevronRight })) }], stack: true },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -386,6 +412,14 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  list: {
+    points: '<ul><li>Rows of related items to scan, find one, and act on it.</li>'
+      + '<li>Each item a headline, with supporting text or an overline, and content before and after it.</li>'
+      + '<li>Standard or segmented: the same list, on the surface or as separate tiles.</li>'
+      + '<li>Items can act, or be chosen one at a time or several at once; the selected ones are highlighted.</li></ul>',
+    stage: `<div class="property-tasks"><h3>My tasks</h3>${m('list', { variant: 'segmented', selection: 'multiple', 'aria-label': 'Party planning' }, taskItems())}</div>`,
+    caption: 'A task list: choose the tasks that are done.', kind: 'list',
+  },
   badge: {
     points: '<ul><li>A small mark on an icon that says something changed there: new messages, a count, a status.</li>'
       + '<li>Small, a dot; large, a label of up to four characters.</li>'
@@ -466,6 +500,11 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'The medium flexible and large flexible app bars, which replace the medium and large ones in M3 Expressive.',
     'An image or a logo in place of the headline.',
     'Leading or centred text on every app bar: only the one-row bar can be centred today.',
+  ] },
+  list: { missing: [
+    'Items with a primary action and secondary actions of their own, such as a bookmark or a menu button.',
+    'Expanding and collapsing an item to show the items under it.',
+    'Swiping an item to reveal more actions.',
   ] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
