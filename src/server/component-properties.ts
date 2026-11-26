@@ -26,6 +26,8 @@ interface PropertySection {
   menus?: boolean;
   /** A figure of the parts: its legend names them, numbered as the callouts are. */
   anatomy?: readonly string[];
+  /** One value alone: shown without a number or a legend. */
+  single?: boolean;
 }
 
 // Button group: a cup-size choice, 8 oz selected, as the API's own examples do.
@@ -297,10 +299,14 @@ const bottomSheetSections: PropertySection[] = [
 ];
 
 const carouselOf = (layout: string) => `<div class="property-carousel">${surfaceOf('carousel', `variant-${layout}`)}</div>`;
+// One section per layout, each its own sentence and a full-width strip (a single value: no number, no legend).
 const carouselSections: PropertySection[] = [
-  { key: 'variant', title: 'Layout', text: 'Multi-browse, the default, shows large, medium and small items; uncontained lets them run past the edge; hero shows one large item and a glimpse of the next, centred hero puts it between two small ones; full-screen shows one item edge to edge.',
-    values: [['multi-browse', 'Multi-browse'], ['uncontained', 'Uncontained'], ['hero', 'Hero'], ['hero-center', 'Centred hero'], ['full-screen', 'Full-screen']].map(([layout, name]) => ({ label: layout!, name, markup: carouselOf(layout!) })), stack: true },
-];
+  ['multi-browse', 'Multi-browse', 'The default: at least one large, one medium and one small item, and more large ones as the container grows.'],
+  ['uncontained', 'Uncontained', 'Items keep one size and run off the trailing edge, and the list scrolls freely, without settling on an item.'],
+  ['hero', 'Hero', 'One large item, with a glimpse of the next.'],
+  ['hero-center', 'Centred hero', 'One large item, centred between two small ones.'],
+  ['full-screen', 'Full-screen', 'One item at a time, edge to edge.'],
+].map(([layout, title, text]) => ({ key: layout!, title: title!, text: text!, values: [{ label: layout!, markup: carouselOf(layout!) }], single: true }));
 
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
@@ -396,10 +402,10 @@ export function propertyOverview(slug: string, links: { playground: string; deve
     const id = `property-${section.key}`;
     const stage = `<div class="catalog-visual catalog-visual--${slug} property-stage${section.stack ? ' property-stage--stack' : ''}${section.menus ? ' property-stage--menus' : ''}">`
       // As M3's figures: a number under each value, and a legend below the stage.
-      + (section.anatomy ? section.values.map(value => value.markup).join('')
+      + (section.anatomy || section.single ? section.values.map(value => value.markup).join('')
         : section.values.map((value, index) => `<figure class="property-value">${value.markup}<figcaption><span class="property-number" aria-hidden="true">${index + 1}</span><span class="sr-only">${escape(value.name ?? value.label)}</span></figcaption></figure>`).join('')) + `</div>`;
     const name = (value: PropertySection['values'][number]) => value.name ?? value.label.charAt(0).toUpperCase() + value.label.slice(1);
-    const legend = section.anatomy
+    const legend = section.single ? '' : section.anatomy
       ? `<ol class="property-legend">${section.anatomy.map((part, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(part)}</li>`).join('')}</ol>`
       : `<ol class="property-legend">${section.values.map((value, index) => `<li><span class="property-number" aria-hidden="true">${index + 1}</span>${escape(name(value))}</li>`).join('')}</ol>`;
     return `<section class="property-section" aria-labelledby="${id}"><div class="property-section__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}${legend}</section>`;

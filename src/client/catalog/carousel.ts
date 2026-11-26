@@ -8,7 +8,7 @@ import { surface } from './surface';
 const slides = () => carouselPlaces.map(place => ({ image: picsum(place.id), alt: `${place.title}, ${place.location}`, title: place.title, description: place.location }));
 
 /** The Overview's property sections: `md3-catalog-carousel-variant-<layout>` (component-properties.ts). The hero layouts get a large
- * item that fills most of the 560px strip, so the layout reads as one hero and a glimpse. */
+ * item that fills most of the strip, so the layout reads as one hero and a glimpse. */
 const LAYOUTS = ['multi-browse', 'uncontained', 'hero', 'hero-center', 'full-screen'] as const;
 
 export const define = (): void => {
@@ -17,7 +17,7 @@ export const define = (): void => {
     return { element: carousel.element, destroy: () => carousel.destroy() };
   });
   for (const layout of LAYOUTS) surface(`md3-catalog-carousel-variant-${layout}`, ['carousel'], () => {
-    const carousel = createCarousel({ ariaLabel: 'Places to explore', variant: layout, ...(layout === 'full-screen' ? {} : { itemWidth: layout === 'hero' ? 440 : layout === 'hero-center' ? 360 : 240 }), gap: 8, padding: 0, slides: slides() } as never);
+    const carousel = createCarousel({ ariaLabel: 'Places to explore', variant: layout, ...(layout === 'full-screen' ? {} : { itemWidth: layout === 'hero' ? 780 : layout === 'hero-center' ? 780 : 280 }), gap: 8, padding: 0, slides: slides() } as never);
     return { element: carousel.element, destroy: () => carousel.destroy() };
   });
 };

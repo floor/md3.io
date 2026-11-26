@@ -416,3 +416,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-carousel--glance { width: 100%; height: 240px; }
 .catalog-visual.property-note__stage:has(.property-carousel--glance) { height: auto; padding: 28px; }
 .property-stage--stack .property-value:has(.property-carousel) { grid-template-columns: 7em minmax(0, 560px); }
+/* One layout per section: the strip takes the stage's width. */
+.property-carousel { width: min(100%, 880px); height: 240px; }
