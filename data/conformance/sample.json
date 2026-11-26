@@ -1,0 +1,292 @@
+{
+  "schema": 1,
+  "sample": true,
+  "generated": "2026-11-26T18:00:00Z",
+  "material": {
+    "version": "3.16.6",
+    "commit": "5f90f4d"
+  },
+  "reference": {
+    "compose": {
+      "artifact": "androidx.compose.material3:material3",
+      "version": "1.5.0",
+      "commit": "919e948eaa351c590e7e6fc89d4014fad7a6e78c",
+      "released": "2026-11-18"
+    },
+    "m3Site": {
+      "url": "https://m3.material.io",
+      "read": "2026-11-26"
+    }
+  },
+  "browsers": [
+    "chromium",
+    "webkit"
+  ],
+  "engines": {
+    "chromium": "sample",
+    "webkit": "sample"
+  },
+  "components": [
+    {
+      "id": "button",
+      "name": "Button",
+      "rows": [
+        {
+          "id": "button/container-height/size-s",
+          "property": "Container height",
+          "aspect": "size",
+          "variant": "size s",
+          "m3": {
+            "value": "40 dp",
+            "source": {
+              "kind": "compose",
+              "file": "ButtonSmallTokens.kt",
+              "symbol": "ContainerHeight"
+            }
+          },
+          "material": {
+            "chromium": "40 px",
+            "webkit": "40 px"
+          },
+          "status": {
+            "chromium": "match",
+            "webkit": "match"
+          },
+          "note": ""
+        },
+        {
+          "id": "button/container-height/density-3",
+          "property": "Container height, density −3",
+          "aspect": "density",
+          "variant": "size s",
+          "m3": {
+            "value": "28 dp",
+            "source": {
+              "kind": "m3-site",
+              "url": "https://m3.material.io/foundations/layout/understanding-layout/density",
+              "read": "2026-11-26"
+            }
+          },
+          "material": {
+            "chromium": "32 px",
+            "webkit": "32 px"
+          },
+          "status": {
+            "chromium": "drift",
+            "webkit": "drift"
+          },
+          "note": "A small button stays 32px tall at density −3."
+        },
+        {
+          "id": "button/corner/selected-square",
+          "property": "Corner, selected, square",
+          "aspect": "shape",
+          "m3": {
+            "value": "12 dp",
+            "source": {
+              "kind": "compose",
+              "file": "ButtonSmallTokens.kt",
+              "symbol": "SelectedContainerShapeSquare"
+            }
+          },
+          "material": {
+            "chromium": "20 px",
+            "webkit": "20 px"
+          },
+          "status": {
+            "chromium": "drift",
+            "webkit": "drift"
+          },
+          "note": "A small selected square toggle keeps a 20px corner."
+        },
+        {
+          "id": "button/label/typography",
+          "property": "Label typography",
+          "aspect": "typography",
+          "m3": {
+            "value": "Label Large",
+            "source": {
+              "kind": "compose",
+              "file": "ButtonSmallTokens.kt",
+              "symbol": "LabelTextFont"
+            }
+          },
+          "material": {
+            "chromium": "Label Large",
+            "webkit": "Label Large"
+          },
+          "status": {
+            "chromium": "match",
+            "webkit": "match"
+          },
+          "note": ""
+        },
+        {
+          "id": "button/focus-ring/width",
+          "property": "Focus ring width",
+          "aspect": "focus",
+          "m3": {
+            "value": "3 dp",
+            "source": {
+              "kind": "compose",
+              "file": "FocusIndicatorTokens.kt",
+              "symbol": "FocusIndicatorThickness"
+            }
+          },
+          "material": {
+            "chromium": "3 px",
+            "webkit": "3 px"
+          },
+          "status": {
+            "chromium": "match",
+            "webkit": "match"
+          },
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "fab",
+      "name": "FAB",
+      "rows": [
+        {
+          "id": "fab/container-height/default",
+          "property": "Container height",
+          "aspect": "size",
+          "m3": {
+            "value": "56 dp",
+            "source": {
+              "kind": "compose",
+              "file": "FabBaselineTokens.kt",
+              "symbol": "ContainerHeight"
+            }
+          },
+          "material": {
+            "chromium": "56 px",
+            "webkit": "56 px"
+          },
+          "status": {
+            "chromium": "match",
+            "webkit": "match"
+          },
+          "note": ""
+        },
+        {
+          "id": "fab/focus-ring/width",
+          "property": "Focus ring width",
+          "aspect": "focus",
+          "m3": {
+            "value": "3 dp",
+            "source": {
+              "kind": "compose",
+              "file": "FocusIndicatorTokens.kt",
+              "symbol": "FocusIndicatorThickness"
+            }
+          },
+          "material": {
+            "chromium": "2 px",
+            "webkit": "2 px"
+          },
+          "status": {
+            "chromium": "drift",
+            "webkit": "drift"
+          },
+          "note": "The focus ring is 2px in the outline colour."
+        },
+        {
+          "id": "fab/icon-size/large",
+          "property": "Icon size, large",
+          "aspect": "size",
+          "variant": "large",
+          "m3": {
+            "value": "36 dp",
+            "source": {
+              "kind": "compose",
+              "file": "FabLargeTokens.kt",
+              "symbol": "IconSize"
+            }
+          },
+          "material": {
+            "chromium": "32 px",
+            "webkit": "32 px"
+          },
+          "status": {
+            "chromium": "drift",
+            "webkit": "drift"
+          },
+          "note": "Newest tokens only: the released tokens say 32."
+        }
+      ]
+    },
+    {
+      "id": "switch",
+      "name": "Switch",
+      "rows": [
+        {
+          "id": "switch/track/disabled-unselected",
+          "property": "Track colour, disabled, unselected",
+          "aspect": "colour",
+          "state": "disabled",
+          "m3": {
+            "value": "Surface Container Highest 12%",
+            "source": {
+              "kind": "compose",
+              "file": "SwitchTokens.kt",
+              "symbol": "DisabledUnselectedTrackColor"
+            }
+          },
+          "material": {
+            "chromium": "On Surface 12%",
+            "webkit": "On Surface 12%"
+          },
+          "status": {
+            "chromium": "drift",
+            "webkit": "drift"
+          },
+          "note": ""
+        },
+        {
+          "id": "switch/handle/size-selected",
+          "property": "Handle size, selected",
+          "aspect": "size",
+          "state": "selected",
+          "m3": {
+            "value": "24 dp",
+            "source": {
+              "kind": "compose",
+              "file": "SwitchTokens.kt",
+              "symbol": "SelectedHandleWidth"
+            }
+          },
+          "material": {
+            "chromium": "24 px",
+            "webkit": "24 px"
+          },
+          "status": {
+            "chromium": "match",
+            "webkit": "match"
+          },
+          "note": ""
+        },
+        {
+          "id": "switch/density",
+          "property": "Density",
+          "aspect": "density",
+          "m3": {
+            "value": null,
+            "source": null
+          },
+          "material": {
+            "chromium": "—",
+            "webkit": "—"
+          },
+          "status": {
+            "chromium": "no-source",
+            "webkit": "no-source"
+          },
+          "note": "M3 gives no density for the switch."
+        }
+      ]
+    }
+  ]
+}

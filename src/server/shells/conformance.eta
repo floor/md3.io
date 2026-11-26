@@ -1,0 +1,4 @@
+<%/* The conformance matrix (src/server/conformance.ts). */%>
+<article class="conformance-page">
+  <%~ it.conformance.html %>
+</article>
