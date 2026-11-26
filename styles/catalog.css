@@ -533,3 +533,12 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 
 .property-welcome .property-phone__home { display: flex; justify-content: center; padding-top: 24px; }
 .property-welcome .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+/* Google Sans Flex (SIL OFL 1.1, fonts/GoogleSansFlex-OFL.txt), one Latin instance from Google Fonts
+   (weight 700, optical size 144, fully rounded), self-hosted: M3's rounded display face, for the button group's Welcome title. */
+@font-face {
+  font-family: "Google Sans Flex";
+  src: url("/fonts/GoogleSansFlex-latin-700-rounded.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+.property-welcome .property-scene__hello, .md .property-welcome p.property-scene__hello { font-family: "Google Sans Flex", var(--font-sans); letter-spacing: 0; }
