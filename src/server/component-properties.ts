@@ -177,6 +177,23 @@ const progress: PropertySection[] = [
     values: [{ label: 'off', name: 'Without the percentage', markup: pr({}) }, { label: 'on', name: 'With the percentage', markup: pr({ 'show-label': true }) }] },
 ];
 
+// The drawer's example is a mail app, as M3's own drawer: the boxes, a divider, personal folders.
+const mailboxes: Record<string, string[][]> = {
+  inbox: [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday'], ['Britta Holt', 'Birthday gift', 'Yesterday'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Jordan Price', 'Weekend hike', 'Sun']],
+  outbox: [['To Ali Connors', 'Re: Brunch this weekend?', 'Sending'], ['To the team', 'Notes from Friday', 'Sending']],
+  favorites: [['Sandra Adams', 'Summer BBQ', '9:41'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Mia Torres', 'Holiday photos', 'Oct 28']],
+  trash: [['Newsletter', 'This week in gardening', 'Tue'], ['Store', 'Your receipt', 'Oct 27']],
+  work: [['Dana Kim', 'Quarterly plan', '11:02'], ['Omar Said', 'Design review notes', 'Mon'], ['Priya Nair', 'Hiring update', 'Fri']],
+  travel: [['Air North', 'Your boarding pass', 'Sat'], ['Harbour Hotel', 'Booking confirmed', 'Oct 29']],
+};
+const mailNames: Record<string, string> = { inbox: 'Inbox', outbox: 'Outbox', favorites: 'Favorites', trash: 'Trash', work: 'Work', travel: 'Travel' };
+const mailItems = (count = true) => [
+  m('drawer-item', { value: 'inbox', icon: symbols.inbox, 'selected-icon': symbols.inboxFill, ...(count ? { badge: 24 } : {}) }, 'Inbox'),
+  m('drawer-item', { value: 'outbox', icon: symbols.send }, 'Outbox'), m('drawer-item', { value: 'favorites', icon: symbols.heart }, 'Favorites'), m('drawer-item', { value: 'trash', icon: symbols.delete }, 'Trash'),
+  m('drawer-item', { type: 'divider' }), m('drawer-item', { type: 'section' }, 'Personal folders'),
+  m('drawer-item', { value: 'work', icon: symbols.folder }, 'Work'), m('drawer-item', { value: 'travel', icon: symbols.folder }, 'Travel'),
+].join('');
+
 // Navigation: rail, bar, drawer and app bar as elements, each in a phone-width box; tabs and
 // toolbar as catalog surfaces, one per value (src/client/catalog/tabs.ts and toolbar.ts).
 const places = [{ value: 'inbox', label: 'Inbox', icon: symbols.inbox, badge: 8 }, { value: 'favorites', label: 'Favorites', icon: symbols.heart }, { value: 'sent', label: 'Sent', icon: symbols.send }];
@@ -198,8 +215,9 @@ const navigationBar: PropertySection[] = [
   { key: 'badges', title: 'Badges', text: 'A destination can carry a badge, a count or a dot.',
     values: [{ label: 'off', name: 'Without badges', markup: bar({}) }, { label: 'on', name: 'With a badge', markup: bar({}, true) }], stack: true },
 ];
+// The property boxes show the same mail drawer; without icons, the entries keep their order.
 const drawer = (attrs: Attributes, icons = true) => screen(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 240, 'aria-label': 'Mail', ...attrs },
-  places.map(place => m('drawer-item', { value: place.value, ...(icons ? { icon: place.icon } : {}) }, place.label)).join('')), 'drawer');
+  icons ? mailItems() : mailItems().replace(/ icon="[^"]*"/g, '').replace(/ selected-icon="[^"]*"/g, '')), 'drawer');
 const navigationDrawer: PropertySection[] = [
   { key: 'dense', title: 'Density', text: 'Dense items are 36dp high, with a 48dp hit target; the type and the icons stay the same.',
     values: [{ label: 'false', name: 'Default', markup: drawer({}) }, { label: 'true', name: 'Dense', markup: drawer({ dense: true }) }] },
@@ -249,15 +267,6 @@ const shelves: Record<string, string[][]> = {
 const labels: Record<string, string> = { home: 'Home', music: 'Music', podcasts: 'Podcasts' };
 const lists = (boxes: Record<string, string[][]> = shelves, names: Record<string, string> = labels, first = 'home') => Object.entries(boxes).map(([box, rows]) => `<ul class="property-phone__list" data-for="${box}" tabindex="0" aria-label="${names[box]}"${box === first ? '' : ' hidden'}>`
   + rows.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('') + '</ul>').join('');
-// The drawer's example is a mail app: a box per destination.
-const mailboxes: Record<string, string[][]> = {
-  inbox: [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday'], ['Britta Holt', 'Birthday gift', 'Yesterday'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Jordan Price', 'Weekend hike', 'Sun']],
-  sent: [['To Ali Connors', 'Re: Brunch this weekend?', '10:20'], ['To Jordan Price', 'Re: Weekend hike', 'Sun'], ['To the team', 'Notes from Friday', 'Fri'], ['To Britta Holt', 'Thank you!', 'Oct 30']],
-  favorites: [['Sandra Adams', 'Summer BBQ', '9:41'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Mia Torres', 'Holiday photos', 'Oct 28']],
-};
-const mailNames: Record<string, string> = { inbox: 'Inbox', favorites: 'Favorites', sent: 'Sent' };
-const mailDestinations = [{ value: 'inbox', icon: symbols.inbox, badge: 8 }, { value: 'favorites', icon: symbols.heart }, { value: 'sent', icon: symbols.send }];
-/** A phone, its navigation bar at the bottom; or a tablet, a rail or a drawer at its side. */
 const phone = () => `<div class="property-phone"><div class="property-phone__screen">${lists()}`
   + m('navigation-bar', { value: 'home', 'aria-label': 'Music app' }, destinationsOfPhone.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
   + `<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>`;
@@ -266,9 +275,7 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'home', 'no-toggle
   destinationsOfPhone.map(place => m('navigation-rail-item', { value: place.value, icon: place.icon }, place.label)).join('')));
 // As the drawer's card: the screen bleeds off the stage's right and bottom edges, a section label
 // over the boxes, Inbox's count at its end; the open box's messages beside it.
-const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' },
-  m('drawer-item', { type: 'section' }, 'Your mailbox')
-  + mailDestinations.map(place => m('drawer-item', { value: place.value, icon: place.icon, ...(place.badge ? { badge: place.badge } : {}) }, mailNames[place.value]!)).join('')), lists(mailboxes, mailNames, 'inbox'), true);
+const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
   'navigation-rail': {
     points: '<ul><li>Three to seven destinations in a column along the side of a medium or expanded window.</li>'

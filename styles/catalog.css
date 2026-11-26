@@ -377,6 +377,7 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-phone--bleed { width: calc(100% + 8px); height: calc(100% + 8px); border-right: 0; border-bottom: 0; border-radius: 28px 0 0 0; }
 .property-phone--bleed m-drawer { border-inline-end: 1px solid var(--mtrl-sys-color-outline-variant); }
 /* The drawer's property boxes: the box is the drawer's width and the drawer fills its height; the box's edge is its divider. */
-.property-screen--drawer { width: 240px; height: 280px; }
+.property-screen--drawer { width: 240px; height: 460px; }
 .property-screen--drawer m-drawer { display: block; height: 100%; }
 .property-screen--drawer m-drawer::part(drawer), .property-screen--drawer m-drawer::part(container) { height: 100%; border-inline-end: 0; }
+.catalog-visual.property-note__stage:has(.property-phone--bleed) { height: 360px; }

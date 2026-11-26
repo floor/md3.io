@@ -53,6 +53,7 @@ import link from '../../icons/link.svg' with { type: 'text' };
 import wifi from '../../icons/wifi.svg' with { type: 'text' };
 import stars from '../../icons/stars.svg' with { type: 'text' };
 import podcasts from '../../icons/podcasts.svg' with { type: 'text' };
+import inboxFill from '../../icons/inbox-fill.svg' with { type: 'text' };
 import starsFill from '../../icons/stars-fill.svg' with { type: 'text' };
 import article from '../../icons/article.svg' with { type: 'text' };
 import barChart from '../../icons/bar_chart.svg' with { type: 'text' };
@@ -173,6 +174,7 @@ export const symbols = {
   wifi: trim(wifi),
   stars: trim(stars),
   podcasts: trim(podcasts),
+  inboxFill: trim(inboxFill),
   starsFill: trim(starsFill),
   article: trim(article),
   barChart: trim(barChart),
@@ -294,6 +296,7 @@ const files: Record<keyof typeof symbols, string> = {
   wifi: 'wifi',
   stars: 'stars',
   podcasts: 'podcasts',
+  inboxFill: 'inbox-fill',
   starsFill: 'stars-fill',
   article: 'article',
   barChart: 'bar_chart',
