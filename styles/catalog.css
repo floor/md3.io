@@ -381,3 +381,6 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-screen--drawer m-drawer { display: block; height: 100%; }
 .property-screen--drawer m-drawer::part(drawer), .property-screen--drawer m-drawer::part(container) { height: 100%; border-inline-end: 0; }
 .catalog-visual.property-note__stage:has(.property-phone--bleed) { height: 360px; }
+/* A note before At a glance, such as a component M3 no longer recommends. */
+.property-advice { margin: 0 0 8px; padding: 16px 20px; border-radius: 12px; background: var(--mtrl-sys-color-secondary-container); color: var(--mtrl-sys-color-on-secondary-container); }
+.property-advice a { font-size: inherit; }

@@ -255,7 +255,7 @@ const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
 // words, from the component's document (docs/components/<slug>.md), beside the component in a
 // phone screen.
-interface ExpressiveNote { points: string; stage: string; caption: string; kind?: string }
+interface ExpressiveNote { points: string; stage: string; caption: string; kind?: string; advice?: string }
 // A music app, scrollable inside the phone: one list per destination of the bar, the current one
 // shown; choosing a destination shows its list (src/client/catalog/navigation-bar.ts).
 const destinationsOfPhone = [{ value: 'home', label: 'Home', icon: symbols.home }, { value: 'music', label: 'Music', icon: symbols.libraryMusic }, { value: 'podcasts', label: 'Podcasts', icon: symbols.podcasts }];
@@ -290,6 +290,8 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>Each destination a button, or a link when it has an <code>href</code>.</li>'
       + '<li>Dense items keep long lists compact, with a 48dp target kept.</li></ul>',
     stage: tabletDrawer(), caption: 'A drawer beside a mail app\'s boxes: choose one to see its messages.', kind: 'navigation-drawer',
+    // M3's navigation drawer page, read 2026-11-26: the drawer is no longer recommended; the expanded rail replaces it.
+    advice: 'M3 Expressive no longer recommends the navigation drawer: an expanded <a class="text-link" href="/components/navigation-rail/">navigation rail</a> does most of the same and adapts better across window sizes. <a class="text-link" href="https://m3.material.io/components/navigation-drawer/overview">M3\'s note</a>',
   },
   'navigation-bar': {
     points: '<ul><li>The app\'s main destinations, in a row along the bottom of the window: each a button, or a link when it has an <code>href</code>.</li>'
@@ -303,7 +305,8 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
 const expressiveNote = (slug: string): string => {
   const note = NOTES[slug];
   if (!note) return '';
-  return `<section class="property-note" aria-labelledby="property-expressive"><h2 id="property-expressive">At a glance</h2><div class="property-note__body">`
+  return (note.advice ? `<p class="property-advice" role="note">${note.advice}</p>` : '')
+    + `<section class="property-note" aria-labelledby="property-expressive"><h2 id="property-expressive">At a glance</h2><div class="property-note__body">`
     + `<div class="property-note__points">${note.points}</div>`
     + `<figure class="property-note__figure"><div class="catalog-visual catalog-visual--${note.kind ?? slug} property-note__stage">${note.stage}</div><figcaption>${note.caption}</figcaption></figure></div></section>`;
 };
