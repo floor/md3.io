@@ -363,3 +363,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-phone__list[hidden] { display: none; }
 /* At a glance: the stage no taller than the points beside it. */
 .catalog-visual.property-note__stage { height: 300px; padding-bottom: 28px; }
+/* A wider phone, as in M3's figure (about 60% of the stage). */
+.property-phone { width: min(440px, 92%); }
