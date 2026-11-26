@@ -25,12 +25,11 @@
         <span class="preview-dot" aria-hidden="true"></span>
         <%~ it.panel.appearance %>
         <% if (it.panel.code) { %><%~ it.panel.code %><% } %>
-        <%~ it.panel.copy %>
         <% if (it.panel.settings) { %><%~ it.panel.settings %><% } %>
       </div>
       <div class="playground-space">
         <div id="live-panel" class="playground-view" role="region" aria-label="Preview"><iframe id="preview" title="Interactive <%= it.component.name.toLowerCase() %> preview, from the material library" src="/preview/<%= it.slug %>/"></iframe></div>
-        <div id="code-panel" class="playground-view code-panel" role="region" aria-label="Code" tabindex="0" hidden>
+        <div id="code-panel" class="playground-view code-panel" role="region" aria-label="Code" tabindex="0" hidden><%/* Copy code floats on the code view, so it shows only with the code (the owner, 2026-11-26). */%><div class="code-panel__copy"><%~ it.panel.copy %></div>
           <% if (it.isAddons && !it.element) { %><p class="framework-note">Use this add-on’s Vanilla factory in any framework.</p><% } else if (!it.element) { %><p class="framework-note">Web Components, React, Vue, Svelte and SolidJS come with the <%= it.component.name.toLowerCase() %> web component; the vanilla factory works in any of them today.</p><% } %>
           <pre><code id="generated-code" class="hljs language-javascript"></code></pre>
         </div>

@@ -312,3 +312,7 @@
 
 /* A gap under the tabs: the playground now starts the body, its name and chips in its own heading. */
 .component-overview--playground { padding-top: 16px; }
+
+/* Copy code floats at the code view's top right, staying in place as the code scrolls. */
+.code-panel__copy { position: sticky; top: 12px; z-index: 1; float: right; height: 0; margin-right: 12px; overflow: visible; }
+.code-panel__copy .preview-copy { margin: 0; background: var(--mtrl-sys-color-surface-container-high); border-radius: 50%; }
