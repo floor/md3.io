@@ -43,7 +43,7 @@ const figure = ({ variant, text, icon, label, scene }: Figure) => () => {
   const item = document.createElement('div');
   item.className = 'catalog-tooltips__item';
   const target = createIconButton({ icon, ariaLabel: label, variant: scene ? 'standard' : 'tonal' } as never);
-  const tooltip = createTooltip({ text, variant, target: target.element, position: scene ? 'bottom' : 'top', showOnHover: false, showOnFocus: false });
+  const tooltip = createTooltip({ text, variant, target: target.element, position: scene ? 'bottom' : 'top', showOnHover: !!scene, showOnFocus: !!scene });
   if (scene) {
     // As M3's figure: the screen's top corner, Settings, Notifications and the account, each named by its
     // own plain tooltip, shown on hover and keyboard focus; Notifications' shows at rest, as in the figure.
