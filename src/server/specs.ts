@@ -89,6 +89,11 @@ const refSource = (row: Row, ref: Ref, matrix: Matrix): string => {
   return `${escape(matrix.references.compose.name)} ${escape(matrix.references.compose.version)}, ${compose.url ? `<a class="text-link" href="${escape(compose.url)}${compose.line ? `#L${compose.line}` : ''}">${escape(name)}</a>` : escape(name)}`;
 };
 
+/** A value as a row shows it. A colour names its role only (the owner, 2026-11-26, via Priam): its hex depends on the
+ *  theme, so the " #RRGGBB" the file appends is dropped here and kept in a row's detail. material's per-theme
+ *  values come as an additive `resolved` field in a later release. */
+const shown = (value: string | null): string | null => value === null ? null : value.replace(/\s*#[0-9a-f]{6}(?:[0-9a-f]{2})?\b/gi, '').trim() || value;
+
 const glyph = (status: Status, ref: Ref) =>
   `<span class="matrix-glyph matrix-glyph--${status}" role="img" aria-label="Against ${REF[ref]}: ${STATUS[status].label}" title="Against ${REF[ref]}: ${STATUS[status].label}">${STATUS[status].icon}</span>`;
 
@@ -101,8 +106,8 @@ const rowHtml = (row: Row, matrix: Matrix): string => {
     + `<div class="matrix-row__main">`
     + `<div class="matrix-row__name">${m('icon-button', { icon: symbols.expandMore, 'aria-label': `Details: ${row.property}${qualifier ? `, ${qualifier}` : ''}`, 'aria-expanded': 'false', 'aria-controls': detail, class: 'matrix-row__toggle', size: 'xs' })}`
     + `<span><a class="matrix-row__anchor" href="#${escape(row.id)}">${escape(row.property)}</a>${qualifier ? `<span class="matrix-muted">${escape(qualifier)}</span>` : ''}</span></div>`
-    + REFS.map(r => `<div class="matrix-row__cell" data-col="${r}"><span class="matrix-value">${escape(refValue(row, r) ?? '—')}</span>${glyph(row.status[r], r)}</div>`).join('')
-    + `<div class="matrix-row__cell matrix-row__material" data-col="material"><span class="matrix-value">${escape(row.material.value)}</span></div>`
+    + REFS.map(r => `<div class="matrix-row__cell" data-col="${r}"><span class="matrix-value">${escape(shown(refValue(row, r)) ?? '—')}</span>${glyph(row.status[r], r)}</div>`).join('')
+    + `<div class="matrix-row__cell matrix-row__material" data-col="material"><span class="matrix-value">${escape(shown(row.material.value)!)}</span></div>`
     + `</div><dl class="matrix-detail" id="${detail}">`
     + REFS.map(r => `<div><dt>${REF[r]}</dt><dd>${refValue(row, r) ? `<strong>${escape(refValue(row, r)!)}</strong> · ` : ''}${refSource(row, r, matrix)} · <em>${STATUS[row.status[r]].label}</em></dd></div>`).join('')
     + `<div><dt>material</dt><dd><strong>${escape(row.material.value)}</strong>, ${engines}</dd></div>`
@@ -212,8 +217,8 @@ const rowLine = (row: Row): string => {
   const qualifier = [row.variant, row.state].filter(Boolean).join(' · ');
   return `<div class="matrix-row__main">`
     + `<div class="matrix-row__name"><span><span class="matrix-row__anchor">${escape(row.property)}</span>${qualifier ? `<span class="matrix-muted">${escape(qualifier)}</span>` : ''}</span></div>`
-    + REFS.map(r => `<div class="matrix-row__cell" data-col="${r}"><span class="matrix-value">${escape(refValue(row, r) ?? '—')}</span>${glyph(row.status[r], r)}</div>`).join('')
-    + `<div class="matrix-row__cell matrix-row__material" data-col="material"><span class="matrix-value">${escape(row.material.value)}</span></div></div>`;
+    + REFS.map(r => `<div class="matrix-row__cell" data-col="${r}"><span class="matrix-value">${escape(shown(refValue(row, r)) ?? '—')}</span>${glyph(row.status[r], r)}</div>`).join('')
+    + `<div class="matrix-row__cell matrix-row__material" data-col="material"><span class="matrix-value">${escape(shown(row.material.value)!)}</span></div></div>`;
 };
 
 type ListItem = { id: string; group: string; html: string; component: string; property: string; aspect: string; spec: Status; compose: Status };
