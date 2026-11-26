@@ -11,6 +11,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { symbols } from '../shared/icons';
+import type { Database } from 'bun:sqlite';
+import { buildIndex, queryRows } from './conformance-db';
 
 type Status = 'match' | 'drift' | 'no-value';
 /** The two references material is measured against (schema v1, revised 2026-11-26): the M3 specification on
@@ -218,23 +220,21 @@ type ListItem = { id: string; group: string; html: string; component: string; pr
 
 /** A page of the list, in component order, after the page's search and filters:
  *  `{ items, total }` for vlist's data plugin. q searches; status, aspect take comma lists; ref is spec or compose. */
+let index: Database | null = null;
+/** The SQLite index of every vendored release (or the sample), built once per server start. */
+const conformanceIndexDb = (): Database => index ??= buildIndex((conformanceVersions().length ? conformanceVersions() : ['sample']).map(version => ({ version, matrix: loadMatrix(version === 'sample' ? null : version)! })));
+
 export function conformanceRows(params: URLSearchParams): { items: ListItem[]; total: number } | null {
-  const matrix = loadMatrix(params.get('version'));
-  if (!matrix) return null;
+  const requested = params.get('version');
+  if (requested && !conformanceVersions().includes(requested)) return null;
+  const version = requested ?? conformanceVersions()[0] ?? 'sample';
   const list = (key: string) => (params.get(key) ?? '').split(',').filter(Boolean);
-  const query = (params.get('q') ?? '').trim().toLowerCase();
-  const statuses = list('status');
-  const aspects = list('aspect');
-  const refs = list('ref').filter((r): r is Ref => REFS.includes(r as Ref));
-  const against = refs.length ? refs : REFS;
-  const all: ListItem[] = matrix.components.flatMap(component => component.properties
-    .filter(row => (!aspects.length || aspects.includes(row.aspect))
-      && (!statuses.length || against.some(r => statuses.includes(row.status[r])))
-      && (!query || [component.name, row.property, row.variant ?? '', row.state ?? '', row.aspect, row.note ?? '', refValue(row, 'spec') ?? '', refValue(row, 'compose') ?? '', row.material.value].join(' ').toLowerCase().includes(query)))
-    .map(row => ({ id: row.id, group: component.name, html: rowLine(row), component: component.name, property: [row.property, row.variant, row.state].filter(Boolean).join(', '), aspect: row.aspect, spec: row.status.spec, compose: row.status.compose })));
-  const offset = Math.max(0, Number(params.get('offset')) || 0);
-  const limit = Math.min(1000, Math.max(1, Number(params.get('limit')) || 50));
-  return { items: all.slice(offset, offset + limit), total: all.length };
+  const { rows, total } = queryRows(conformanceIndexDb(), {
+    version, q: params.get('q') ?? '', statuses: list('status'), aspects: list('aspect'),
+    refs: list('ref').filter((r): r is Ref => REFS.includes(r as Ref)), component: params.get('component') ?? undefined,
+    offset: Math.max(0, Number(params.get('offset')) || 0), limit: Math.min(1000, Math.max(1, Number(params.get('limit')) || 50)),
+  });
+  return { total, items: rows.map(row => ({ id: row.id, group: row.componentName, html: rowLine(row), component: row.componentName, property: [row.property, row.variant, row.state].filter(Boolean).join(', '), aspect: row.aspect, spec: row.status.spec, compose: row.status.compose })) };
 }
 
 const controlsFor = (rows: Row[]) => {
