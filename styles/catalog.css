@@ -389,3 +389,10 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-phone__list li.is-unread > span:first-child > span { color: var(--mtrl-sys-color-on-surface); font-weight: 500; }
 .property-phone__list li > span:last-child { display: flex; align-items: center; gap: 8px; }
 .property-phone__unread { width: 8px; height: 8px; border-radius: 50%; background: var(--mtrl-sys-color-primary); }
+/* Containment's property stages. */
+.property-card { width: 300px; }
+.property-screen--sheet { width: 420px; height: 280px; }
+.property-sheet-page { padding: 16px; color: var(--mtrl-sys-color-on-surface-variant); font-size: 13px; }
+.property-sheet__text { margin: 0; font-size: 14px; }
+/* A sheet docks to its box, not the window: the transform makes the box the reference of its fixed position. */
+.property-screen--sheet { transform: translateZ(0); contain: layout paint; }

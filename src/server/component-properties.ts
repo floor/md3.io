@@ -249,9 +249,38 @@ const toolbarSections: PropertySection[] = [
     values: [{ label: 'horizontal', markup: surfaceOf('toolbar', 'orientation-horizontal') }, { label: 'vertical', markup: surfaceOf('toolbar', 'orientation-vertical') }] },
 ];
 
+// Containment: card as elements; dialog as catalog surfaces, one per value (catalog/dialog.ts);
+// the sheets standard (not modal), open in a screen box.
+const cardOf = (attrs: Attributes, actions = true) => m('card', { headline: 'A little time outside', subhead: 'Find your next escape', ...attrs },
+  actions ? m('button', { slot: 'actions', variant: 'text' }, 'Explore') + m('button', { slot: 'actions', variant: 'tonal' }, 'Save') : '');
+const cardSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Elevated, with a shadow; filled, on a container colour; or outlined, with a border.',
+    values: ['elevated', 'filled', 'outlined'].map(variant => ({ label: variant, markup: `<div class="property-card">${cardOf({ variant })}</div>` })) },
+  { key: 'actions', title: 'Actions', text: 'A card can end with its actions, or hold content alone.',
+    values: [{ label: 'on', name: 'With actions', markup: `<div class="property-card">${cardOf({ variant: 'outlined' })}</div>` }, { label: 'off', name: 'Without actions', markup: `<div class="property-card">${cardOf({ variant: 'outlined' }, false)}</div>` }] },
+];
+const dialogSections: PropertySection[] = [
+  { key: 'size', title: 'Size', text: 'Its width: small, medium or large (it can also fill the width or the whole screen).',
+    values: ['small', 'medium', 'large'].map(size => ({ label: size, markup: surfaceOf('dialog', `size-${size}`) })), stack: true },
+  { key: 'divider', title: 'Dividers', text: 'Dividers can set the content apart from the title and the actions.',
+    values: [{ label: 'on', name: 'With dividers', markup: surfaceOf('dialog', 'dividers-on') }, { label: 'off', name: 'Without dividers', markup: surfaceOf('dialog', 'dividers-off') }] },
+];
+const sheetText = '<p class="property-sheet__text">A place for useful context, related information and settings.</p>';
+const sideSheet = (position: string) => screen(`<div class="property-sheet-page">Page content</div>` + m('side-sheet', { open: true, headline: 'Details', width: 220, position }, sheetText), 'sheet');
+const bottomSheet = (attrs: Attributes) => screen(`<div class="property-sheet-page">Page content</div>` + m('bottom-sheet', { open: true, headline: 'Plan your visit', ...attrs }, sheetText), 'sheet');
+const sideSheetSections: PropertySection[] = [
+  { key: 'position', title: 'Position', text: 'The edge it docks to, in the reading direction: the end, or the start.',
+    values: [{ label: 'end', markup: sideSheet('end') }, { label: 'start', markup: sideSheet('start') }] },
+];
+const bottomSheetSections: PropertySection[] = [
+  { key: 'drag-handle', title: 'Drag handle', text: 'The handle at its top: a button, and the way to drag it taller or shorter.',
+    values: [{ label: 'on', name: 'With the handle', markup: bottomSheet({}) }, { label: 'off', name: 'Without', markup: bottomSheet({ 'no-drag-handle': true }) }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
+  card: cardSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
