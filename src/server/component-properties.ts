@@ -421,6 +421,72 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  // The button family at a glance: each in a small scene of its own, a card on the stage.
+  button: {
+    points: '<ul><li>An action a person can take: send, save, confirm, or go on to the next step.</li>'
+      + '<li>Five variants by emphasis: filled for the one main action, then tonal, elevated, outlined and text.</li>'
+      + '<li>A label, with an icon before or after it; five sizes, round or square.</li>'
+      + '<li>A toggle button keeps its selected state.</li></ul>',
+    stage: `<div class="property-scene"><h3>Your order is on its way</h3><p>Order 2041 left the shop at 9:12 and arrives between 11:00 and 11:30.</p>`
+      + `<div class="property-scene__actions">${btn({ variant: 'text' }, 'Details')}${btn({ variant: 'filled', icon: symbols.schedule }, 'Track order')}</div></div>`,
+    caption: 'One main action, filled; a second, quieter one, as text.', kind: 'button',
+  },
+  'icon-button': {
+    points: '<ul><li>One action shown as an icon alone, where the icon says enough: play, skip, like.</li>'
+      + '<li>Four variants by emphasis: filled, tonal, outlined and standard.</li>'
+      + '<li>Five sizes, narrow, default or wide, round or square.</li>'
+      + '<li>A toggle keeps its state; its label for screen readers is <code>aria-label</code>.</li></ul>',
+    stage: `<div class="property-scene property-scene--player"><h3>Mirror lake</h3><p>Waterhouse</p><div class="property-scene__row">`
+      + ib({ icon: symbols.heart, 'selected-icon': symbols.heartFill, 'aria-label': 'Like', toggle: true, selected: true })
+      + ib({ icon: symbols.skipPrevious, 'aria-label': 'Previous' }) + ib({ icon: symbols.pause, 'aria-label': 'Pause', variant: 'filled', size: 'l', width: 'wide' })
+      + ib({ icon: symbols.skipNext, 'aria-label': 'Next' }) + ib({ icon: symbols.playlistAdd, 'aria-label': 'Add to playlist' }) + '</div></div>',
+    caption: 'A player: the main control filled and wide, the others standard; the heart is a toggle.', kind: 'icon-button',
+  },
+  'button-group': {
+    points: '<ul><li>Related buttons together: actions side by side, or a choice among options.</li>'
+      + '<li>Standard groups space their buttons; connected groups join them into one control.</li>'
+      + '<li>No selection, one at a time, or several.</li>'
+      + '<li>One variant, size and shape for every button in it.</li></ul>',
+    stage: `<div class="property-scene"><h3>Shopping list</h3><p>Milk, <strong>eggs</strong>, bread and <em>fresh basil</em> for Saturday.</p><div class="property-scene__row">`
+      + group('connected', 'tonal', [{ icon: 'bold', name: 'Bold', on: true }, { icon: 'italic', name: 'Italic' }, { icon: 'underline', name: 'Underline' }], 'Text style', 'multi') + '</div></div>',
+    caption: 'Text styles as a connected group: several can be on at once.', kind: 'button-group',
+  },
+  'split-button': {
+    points: '<ul><li>One main action and a menu of related ones, in two halves.</li>'
+      + '<li>The leading half does the action; the trailing half opens the menu.</li>'
+      + '<li>Filled, tonal, outlined or elevated, shared by both halves.</li>'
+      + '<li>Five sizes, from XS to XL.</li></ul>',
+    stage: `<div class="property-scene"><h3>Reply to Ada</h3><p>Thanks, Saturday works. I will bring the basil.</p><div class="property-scene__actions">`
+      + m('split-button', { label: 'Send', icon: symbols.send, 'trailing-label': 'More send options', variant: 'filled' }, ['Schedule send', 'Save as draft'].map(label => m('menu-item', {}, label)).join('')) + '</div></div>',
+    caption: 'Send now, or open the menu to schedule it.', kind: 'split-button',
+  },
+  fab: {
+    points: '<ul><li>The screen\'s most important action, always within reach.</li>'
+      + '<li>Placed at the end of the screen, above the content.</li>'
+      + '<li>A container colour, or the colour itself, in three sizes.</li>'
+      + '<li>An icon alone: give it an <code>aria-label</code>.</li></ul>',
+    stage: `<div class="property-scene property-scene--screen"><h3>Notes</h3>${lists({ notes: [['Shopping list', 'Milk, eggs, bread', 'Today'], ['Trip', 'Book the train', 'Mon'], ['Ideas', 'A garden bench', '20 Nov'], ['Books', 'Three to read', '12 Nov']] }, { notes: 'Notes' }, 'notes')}`
+      + m('fab', { icon: symbols.add, 'aria-label': 'New note' }) + '</div>',
+    caption: 'A notes app: the FAB adds a note.', kind: 'fab',
+  },
+  'extended-fab': {
+    points: '<ul><li>The screen\'s most important action, with its name beside the icon.</li>'
+      + '<li>Clearer than a FAB when the icon alone could be read two ways.</li>'
+      + '<li>Three sizes; the icon before the label or after it.</li>'
+      + '<li>A container colour, or the colour itself.</li></ul>',
+    stage: `<div class="property-scene property-scene--screen"><h3>Inbox</h3>${lists(mailboxes, mailNames, 'inbox')}` + xf({ icon: symbols.edit }).replace('>Label<', '>Compose<') + '</div>',
+    caption: 'A mail app: Compose, named so it cannot be mistaken.', kind: 'extended-fab',
+  },
+  'fab-menu': {
+    points: '<ul><li>A FAB that opens a few related actions, two to six.</li>'
+      + '<li>The FAB turns into a close button while the menu is open.</li>'
+      + '<li>Primary, secondary or tertiary colours, in three sizes.</li>'
+      + '<li>Each item an icon and a label.</li></ul>',
+    stage: `<div class="property-scene property-scene--screen"><h3>Notes</h3>${lists({ notes: [['Shopping list', 'Milk, eggs, bread', 'Today'], ['Trip', 'Book the train', 'Mon'], ['Ideas', 'A garden bench', '20 Nov']] }, { notes: 'Notes' }, 'notes')}`
+      + m('fab-menu', { icon: symbols.add, 'aria-label': 'Create', presentation: 'list' }, [['note', 'Note', symbols.edit], ['list', 'List', symbols.check], ['photo', 'Photo', symbols.image]].map(([value, label, icon]) => m('fab-menu-item', { value: value!, icon: icon! }, label!)).join('')) + '</div>',
+    caption: 'A notes app: open the menu to choose what to create.', kind: 'fab-menu',
+  },
+
   dialog: {
     points: '<ul><li>A short task or a decision that needs an answer before going on: it interrupts on purpose.</li>'
       + '<li>A title, content such as a message or a few choices, and the actions at the end.</li>'
@@ -527,6 +593,35 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
     'Expanding and collapsing an item to show the items under it.',
     'Swiping an item to reveal more actions.',
   ] },
+  // The button family, from material's conformance matrix (Priam, checked 2026-11-26 against material 3.16.5:
+  // m3.material.io read that day, Compose Material 3 tokens 41.1.19 and 1.4.0). "Newest tokens" marks a
+  // value Google changed in its newest tokens, not yet in a released version.
+  button: { bugs: [
+    'At density −3 a small button stays 32px tall, where M3\'s density scale gives 28dp (−4dp per step); levels 0 to −2 match.',
+    'A small toggle button in the square shape, when selected, has a 20px corner, where M3 specifies 12dp.',
+  ] },
+  'icon-button': { bugs: [
+    'At density −3 a small icon button stays 32px tall, where M3\'s density scale gives 28dp.',
+    'The keyboard focus ring is 2px wide, where M3\'s focus ring is 3dp (colour and offset match).',
+    'An icon button created with <code>shape: undefined</code> loses its round shape at sizes other than small; fixed in material 3.16.6.',
+  ] },
+  'button-group': { bugs: ['The group follows its buttons\' height at every density level, so at −3 it inherits the small button\'s 32px floor (M3: 28dp).'] },
+  'split-button': { missing: ['Density: the split button keeps its height at every density level.'], bugs: [
+    'A selected split button shows no state layer on its trailing half, where M3 applies one without changing the colour.',
+    'The menu icon is not optically offset when unselected (M3: −1, −1, −2, −3 and −6dp from XS to XL).',
+    'At rest, the inner corners at sizes M, L and XL are 4dp rounder than M3: 8, 12 and 16px instead of 4, 8 and 12dp.',
+    'At sizes XS and S the 48px touch area is shifted upward, so a press just below the button misses.',
+  ] },
+  fab: { bugs: [
+    'The keyboard focus ring is 2px in the outline colour, where M3\'s is 3dp in the secondary colour.',
+    'The large FAB\'s icon is 32px, where M3\'s newest tokens give 36dp (the released tokens say 32).',
+  ] },
+  'extended-fab': { bugs: [
+    'The keyboard focus ring is 2px in the outline colour, where M3\'s is 3dp in the secondary colour.',
+    'The large size\'s icon is 32px, where M3\'s newest tokens give 36dp (newest tokens only).',
+    'At sizes M and L the space between icon and label is 16 and 20px, where M3\'s newest tokens give 12 and 16dp (newest tokens only).',
+  ] },
+  'fab-menu': { bugs: ['Menu items keep no shadow on hover, focus and press, where M3\'s newest tokens raise them to level 4 on hover and level 3 on focus and press (newest tokens only).'] },
   dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },

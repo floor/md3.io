@@ -16,6 +16,8 @@ const names = [
   'bookmark',
   'check',
   'check_box_outline_blank',
+  'play_arrow',
+  'skip_previous',
   // Added by hand before they were listed here; a run deletes what is not listed.
   'bluetooth',
   'code',

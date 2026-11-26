@@ -493,3 +493,15 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-device__screen.property-dialog-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px 0; }
 /* A list in a flex row shrinks to its content (material, being fixed): fill the box. */
 .property-list m-list { width: 100%; }
+/* The button family's glance scenes: a card on the stage, its context and the component. */
+.catalog-visual.property-note__stage:has(.property-scene) { height: auto; padding: 40px 16px; display: grid; place-items: center; }
+.property-scene { position: relative; width: 360px; max-width: 100%; box-sizing: border-box; padding: 24px; border-radius: 28px; background: var(--mtrl-sys-color-surface); color: var(--mtrl-sys-color-on-surface); }
+.property-scene h3, .md .property-scene h3 { margin: 0 0 8px; font-size: 22px; font-weight: 400; }
+.property-scene p, .md .property-scene p { margin: 0 0 20px; color: var(--mtrl-sys-color-on-surface-variant); font-size: 14px; line-height: 20px; }
+.property-scene__actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.property-scene__row { display: flex; justify-content: center; align-items: center; gap: 4px; }
+.property-scene--player { text-align: center; }
+.property-scene--screen { height: 380px; overflow: hidden; padding: 24px 0 0; }
+.property-scene--screen h3 { padding: 0 24px; }
+.property-scene--screen .property-phone__list { margin: 0; height: calc(100% - 48px); overflow-y: auto; }
+.property-scene--screen > m-fab, .property-scene--screen > m-extended-fab, .property-scene--screen > m-fab-menu { position: absolute; right: 16px; bottom: 16px; }
