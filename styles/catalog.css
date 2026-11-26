@@ -491,3 +491,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-visual--dialog.property-note__stage .property-device { border-bottom: 0; border-radius: 40px 40px 0 0; height: 480px; }
 .property-dialog-screen > .property-surface { display: grid !important; place-items: center; zoom: 0.8; top: 80px !important; }
 .property-device__screen.property-dialog-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px 0; }
+/* A list in a flex row shrinks to its content (material, being fixed): fill the box. */
+.property-list m-list { width: 100%; }
