@@ -1,290 +1,331 @@
 {
   "schema": 1,
   "sample": true,
-  "generated": "2026-11-26T18:00:00Z",
-  "material": {
-    "version": "3.16.6",
-    "commit": "5f90f4d"
-  },
-  "reference": {
-    "compose": {
-      "artifact": "androidx.compose.material3:material3",
-      "version": "1.5.0",
-      "commit": "919e948eaa351c590e7e6fc89d4014fad7a6e78c",
-      "released": "2026-11-18"
-    },
-    "m3Site": {
+  "material": "3.16.6",
+  "commit": "5f90f4d",
+  "measured": "2026-11-26",
+  "references": {
+    "spec": {
+      "name": "Material 3 specification",
       "url": "https://m3.material.io",
       "read": "2026-11-26"
+    },
+    "compose": {
+      "name": "Jetpack Compose Material 3",
+      "version": "1.5.0",
+      "commit": "919e948eaa351c590e7e6fc89d4014fad7a6e78c",
+      "date": "2026-11-18",
+      "url": "https://developer.android.com/jetpack/androidx/releases/compose-material3#1.5.0"
     }
   },
-  "browsers": [
-    "chromium",
-    "webkit"
-  ],
-  "engines": {
-    "chromium": "sample",
-    "webkit": "sample"
+  "method": {
+    "browsers": [
+      "chromium",
+      "webkit"
+    ],
+    "engines": {
+      "chromium": "sample",
+      "webkit": "sample"
+    },
+    "note": "Each value is measured in both engines; a row records a per-engine value only when the engines differ."
   },
   "components": [
     {
       "id": "button",
       "name": "Button",
-      "rows": [
+      "properties": [
         {
           "id": "button/container-height/size-s",
           "property": "Container height",
           "aspect": "size",
           "variant": "size s",
-          "m3": {
-            "value": "40 dp",
-            "source": {
-              "kind": "compose",
-              "file": "ButtonSmallTokens.kt",
-              "symbol": "ContainerHeight"
-            }
+          "spec": {
+            "value": "40dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Small button",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "40dp",
+            "file": "ButtonSmallTokens.kt",
+            "symbol": "ContainerHeight",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt"
           },
           "material": {
-            "chromium": "40 px",
-            "webkit": "40 px"
+            "value": "40px",
+            "engines": null
           },
           "status": {
-            "chromium": "match",
-            "webkit": "match"
+            "spec": "match",
+            "compose": "match"
           },
-          "note": ""
+          "note": "",
+          "issue": null
         },
         {
           "id": "button/container-height/density-3",
           "property": "Container height, density −3",
           "aspect": "density",
           "variant": "size s",
-          "m3": {
-            "value": "28 dp",
-            "source": {
-              "kind": "m3-site",
-              "url": "https://m3.material.io/foundations/layout/understanding-layout/density",
-              "read": "2026-11-26"
-            }
+          "spec": {
+            "value": "28dp",
+            "url": "https://m3.material.io/foundations/layout/understanding-layout/density",
+            "section": "Density",
+            "read": "2026-11-26"
           },
+          "compose": null,
           "material": {
-            "chromium": "32 px",
-            "webkit": "32 px"
+            "value": "32px",
+            "engines": null
           },
           "status": {
-            "chromium": "drift",
-            "webkit": "drift"
+            "spec": "drift",
+            "compose": "no-value"
           },
-          "note": "A small button stays 32px tall at density −3."
+          "note": "The spec lowers 4dp per density step; Compose gives no density value.",
+          "issue": null
         },
         {
           "id": "button/corner/selected-square",
           "property": "Corner, selected, square",
           "aspect": "shape",
-          "m3": {
-            "value": "12 dp",
-            "source": {
-              "kind": "compose",
-              "file": "ButtonSmallTokens.kt",
-              "symbol": "SelectedContainerShapeSquare"
-            }
+          "spec": {
+            "value": "12dp",
+            "url": "https://m3.material.io/components/buttons/specs",
+            "section": "Small button",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "12dp",
+            "file": "ButtonSmallTokens.kt",
+            "symbol": "SelectedContainerShapeSquare",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ButtonSmallTokens.kt"
           },
           "material": {
-            "chromium": "20 px",
-            "webkit": "20 px"
+            "value": "20px",
+            "engines": null
           },
           "status": {
-            "chromium": "drift",
-            "webkit": "drift"
+            "spec": "drift",
+            "compose": "drift"
           },
-          "note": "A small selected square toggle keeps a 20px corner."
+          "note": "A small selected square toggle keeps a 20px corner.",
+          "issue": null
         },
         {
-          "id": "button/label/typography",
-          "property": "Label typography",
-          "aspect": "typography",
-          "m3": {
-            "value": "Label Large",
-            "source": {
-              "kind": "compose",
-              "file": "ButtonSmallTokens.kt",
-              "symbol": "LabelTextFont"
-            }
-          },
-          "material": {
-            "chromium": "Label Large",
-            "webkit": "Label Large"
-          },
-          "status": {
-            "chromium": "match",
-            "webkit": "match"
-          },
-          "note": ""
-        },
-        {
-          "id": "button/focus-ring/width",
-          "property": "Focus ring width",
+          "id": "button/focus-ring",
+          "property": "Focus indicator",
           "aspect": "focus",
-          "m3": {
-            "value": "3 dp",
-            "source": {
-              "kind": "compose",
-              "file": "FocusIndicatorTokens.kt",
-              "symbol": "FocusIndicatorThickness"
-            }
+          "spec": {
+            "value": "3dp Secondary ring",
+            "url": "https://m3.material.io/foundations/interaction/states/applying-states",
+            "section": "Focus",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "2dp Secondary + 3dp OnSecondary, opt-in",
+            "file": "FocusIndicatorTokens.kt",
+            "symbol": "FocusIndicatorThickness",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/FocusIndicatorTokens.kt"
           },
           "material": {
-            "chromium": "3 px",
-            "webkit": "3 px"
+            "value": "3px Secondary ring",
+            "engines": null
           },
           "status": {
-            "chromium": "match",
-            "webkit": "match"
+            "spec": "match",
+            "compose": "drift"
           },
-          "note": ""
-        }
-      ]
-    },
-    {
-      "id": "fab",
-      "name": "FAB",
-      "rows": [
-        {
-          "id": "fab/container-height/default",
-          "property": "Container height",
-          "aspect": "size",
-          "m3": {
-            "value": "56 dp",
-            "source": {
-              "kind": "compose",
-              "file": "FabBaselineTokens.kt",
-              "symbol": "ContainerHeight"
-            }
-          },
-          "material": {
-            "chromium": "56 px",
-            "webkit": "56 px"
-          },
-          "status": {
-            "chromium": "match",
-            "webkit": "match"
-          },
-          "note": ""
+          "note": "The references disagree: the spec has a 3dp ring; Compose's default is a 10% layer, its opt-in ring 2dp plus 3dp.",
+          "issue": null
         },
         {
-          "id": "fab/focus-ring/width",
-          "property": "Focus ring width",
-          "aspect": "focus",
-          "m3": {
-            "value": "3 dp",
-            "source": {
-              "kind": "compose",
-              "file": "FocusIndicatorTokens.kt",
-              "symbol": "FocusIndicatorThickness"
-            }
-          },
-          "material": {
-            "chromium": "2 px",
-            "webkit": "2 px"
-          },
-          "status": {
-            "chromium": "drift",
-            "webkit": "drift"
-          },
-          "note": "The focus ring is 2px in the outline colour."
-        },
-        {
-          "id": "fab/icon-size/large",
-          "property": "Icon size, large",
-          "aspect": "size",
-          "variant": "large",
-          "m3": {
-            "value": "36 dp",
-            "source": {
-              "kind": "compose",
-              "file": "FabLargeTokens.kt",
-              "symbol": "IconSize"
-            }
-          },
-          "material": {
-            "chromium": "32 px",
-            "webkit": "32 px"
-          },
-          "status": {
-            "chromium": "drift",
-            "webkit": "drift"
-          },
-          "note": "Newest tokens only: the released tokens say 32."
-        }
-      ]
-    },
-    {
-      "id": "switch",
-      "name": "Switch",
-      "rows": [
-        {
-          "id": "switch/track/disabled-unselected",
-          "property": "Track colour, disabled, unselected",
+          "id": "button/state-layer/hovered",
+          "property": "State layer opacity, hovered",
           "aspect": "colour",
-          "state": "disabled",
-          "m3": {
-            "value": "Surface Container Highest 12%",
-            "source": {
-              "kind": "compose",
-              "file": "SwitchTokens.kt",
-              "symbol": "DisabledUnselectedTrackColor"
-            }
+          "state": "hovered",
+          "spec": null,
+          "compose": {
+            "value": "8%",
+            "file": "StateTokens.kt",
+            "symbol": "HoverStateLayerOpacity",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/StateTokens.kt"
           },
           "material": {
-            "chromium": "On Surface 12%",
-            "webkit": "On Surface 12%"
+            "value": "8%",
+            "engines": null
           },
           "status": {
-            "chromium": "drift",
-            "webkit": "drift"
+            "spec": "no-value",
+            "compose": "match"
           },
-          "note": ""
-        },
+          "note": "The spec gives no number; Compose does.",
+          "issue": null
+        }
+      ]
+    },
+    {
+      "id": "list",
+      "name": "List",
+      "properties": [
         {
-          "id": "switch/handle/size-selected",
-          "property": "Handle size, selected",
-          "aspect": "size",
-          "state": "selected",
-          "m3": {
-            "value": "24 dp",
-            "source": {
-              "kind": "compose",
-              "file": "SwitchTokens.kt",
-              "symbol": "SelectedHandleWidth"
-            }
+          "id": "list/divider/inset-trailing",
+          "property": "Inset divider, trailing inset",
+          "aspect": "spacing",
+          "spec": {
+            "value": "24dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Dividers",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "16dp",
+            "file": "ListTokens.kt",
+            "symbol": "DividerTrailingInset",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt"
           },
           "material": {
-            "chromium": "24 px",
-            "webkit": "24 px"
+            "value": "16px",
+            "engines": null
           },
           "status": {
-            "chromium": "match",
-            "webkit": "match"
+            "spec": "drift",
+            "compose": "match"
           },
-          "note": ""
+          "note": "The references disagree: 24dp in the spec, 16dp in Compose.",
+          "issue": null
         },
         {
-          "id": "switch/density",
+          "id": "list/item/vertical-padding",
+          "property": "Item vertical padding",
+          "aspect": "spacing",
+          "spec": {
+            "value": "8dp",
+            "url": "https://m3.material.io/components/lists/specs",
+            "section": "Anatomy",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "10dp",
+            "file": "ListTokens.kt",
+            "symbol": "ListItemTopSpace",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/ListTokens.kt"
+          },
+          "material": {
+            "value": "8px",
+            "engines": null
+          },
+          "status": {
+            "spec": "match",
+            "compose": "drift"
+          },
+          "note": "The references disagree: 8dp in the spec diagram, 10dp in Compose 1.5.0.",
+          "issue": null
+        }
+      ]
+    },
+    {
+      "id": "tooltip",
+      "name": "Tooltip",
+      "properties": [
+        {
+          "id": "tooltip/exit-delay",
+          "property": "Hide delay after the pointer leaves",
+          "aspect": "motion",
+          "spec": {
+            "value": "1.5s",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Behavior",
+            "read": "2026-11-26"
+          },
+          "compose": null,
+          "material": {
+            "value": "0.1s",
+            "engines": null
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "no-value"
+          },
+          "note": "The spec keeps it 1.5s; Compose dismisses it on exit.",
+          "issue": null
+        },
+        {
+          "id": "tooltip/gap",
+          "property": "Gap to the trigger",
+          "aspect": "spacing",
+          "spec": {
+            "value": "4dp",
+            "url": "https://m3.material.io/components/tooltips/specs",
+            "section": "Plain tooltip",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "4dp",
+            "file": "PlainTooltipTokens.kt",
+            "symbol": "ContainerTopSpace",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/PlainTooltipTokens.kt"
+          },
+          "material": {
+            "value": "8px",
+            "engines": null
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "drift"
+          },
+          "note": "",
+          "issue": null
+        }
+      ]
+    },
+    {
+      "id": "bottom-sheet",
+      "name": "Bottom sheet",
+      "properties": [
+        {
+          "id": "bottom-sheet/top-clearance",
+          "property": "Top clearance at full height",
+          "aspect": "spacing",
+          "spec": {
+            "value": "56dp",
+            "url": "https://m3.material.io/components/bottom-sheets/specs",
+            "section": "Bottom sheet",
+            "read": "2026-11-26"
+          },
+          "compose": {
+            "value": "0dp",
+            "file": "SheetBottomTokens.kt",
+            "symbol": "TopClearance",
+            "url": "https://github.com/androidx/androidx/blob/919e948eaa351c590e7e6fc89d4014fad7a6e78c/compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/tokens/SheetBottomTokens.kt"
+          },
+          "material": {
+            "value": "0px",
+            "engines": null
+          },
+          "status": {
+            "spec": "drift",
+            "compose": "match"
+          },
+          "note": "The references disagree: the spec keeps 56dp (72dp on compact windows); Compose reaches the top.",
+          "issue": null
+        },
+        {
+          "id": "bottom-sheet/density",
           "property": "Density",
           "aspect": "density",
-          "m3": {
-            "value": null,
-            "source": null
-          },
+          "spec": null,
+          "compose": null,
           "material": {
-            "chromium": "—",
-            "webkit": "—"
+            "value": "—",
+            "engines": null
           },
           "status": {
-            "chromium": "no-source",
-            "webkit": "no-source"
+            "spec": "no-value",
+            "compose": "no-value"
           },
-          "note": "M3 gives no density for the switch."
+          "note": "Neither reference gives a density for the bottom sheet.",
+          "issue": null
         }
       ]
     }

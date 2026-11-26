@@ -1,5 +1,5 @@
-// md3.io/conformance/matrix (src/server/conformance.ts): the search field, the filter chips (status, aspect,
-// browser), each row's disclosure, and the tray that counts what the filters select and copies it as CSV.
+// md3.io/conformance/matrix (src/server/conformance.ts): the search field, the filter chips (status, reference,
+// aspect), each row's disclosure, and the tray that counts what the filters select and copies it as CSV.
 // Without this script every row shows with its detail open.
 import 'material/elements/css/card';
 import 'material/elements/css/progress';
@@ -15,7 +15,7 @@ registerPage('conformance', (content, life) => {
   if (!page) return;
   defineCard(); defineProgress(); defineChips(); defineTextField(); defineIconButton(); defineButton();
   page.classList.add('matrix--scripted');
-  const allBrowsers = (page.dataset.browsers ?? 'chromium webkit').split(' ');
+  const allRefs = (page.dataset.refs ?? 'spec compose').split(' ');
   const rows = [...page.querySelectorAll<HTMLElement>('.matrix-row')];
   const search = page.querySelector<HTMLElement & { value?: string }>('.matrix-search');
   const count = page.querySelector<HTMLElement>('[data-matrix-count]');
@@ -30,12 +30,12 @@ registerPage('conformance', (content, life) => {
     const query = (search?.value ?? '').trim().toLowerCase();
     const statuses = selected('status');
     const aspects = selected('aspect');
-    const browsers = selected('browser').length ? selected('browser') : allBrowsers;
+    const refs = selected('ref').length ? selected('ref') : allRefs;
     let shown = 0;
     for (const row of rows) {
       const visible = (!query || (row.dataset.text ?? '').includes(query))
         && (!aspects.length || aspects.includes(row.dataset.aspect ?? ''))
-        && (!statuses.length || browsers.some(browser => statuses.includes(row.dataset[browser] ?? '')));
+        && (!statuses.length || refs.some(ref => statuses.includes(row.dataset[ref] ?? '')));
       row.hidden = !visible;
       if (visible) shown++;
     }
@@ -44,8 +44,8 @@ registerPage('conformance', (content, life) => {
       section.querySelector<HTMLElement>('.matrix-empty')!.hidden = any;
       section.classList.toggle('matrix-section--empty', !any);
     }
-    // A single browser chosen: its column alone.
-    page.dataset.only = browsers.length === 1 ? browsers[0] : '';
+    // One reference chosen: its column alone.
+    page.dataset.only = refs.length === 1 ? refs[0] : '';
     if (count) count.textContent = String(shown);
   };
   life.events(search)?.addEventListener('input', apply);
@@ -63,11 +63,11 @@ registerPage('conformance', (content, life) => {
   // The tray's copy: the rows the filters select, as CSV.
   life.events(page.querySelector('.matrix-copy'))?.addEventListener('click', async () => {
     const cell = (text: string) => `"${text.replace(/"/g, '""')}"`;
-    const lines = [['component', 'property', 'aspect', ...allBrowsers].join(',')];
+    const lines = [['component', 'property', 'aspect', ...allRefs.map(ref => `vs ${ref}`)].join(',')];
     for (const row of rows.filter(r => !r.hidden)) {
       const component = row.closest('.matrix-section')?.querySelector('h2')?.textContent ?? '';
       const property = row.querySelector('.matrix-row__anchor')?.textContent ?? '';
-      lines.push([cell(component), cell(property), cell(row.dataset.aspect ?? ''), ...allBrowsers.map(b => cell(row.dataset[b] ?? ''))].join(','));
+      lines.push([cell(component), cell(property), cell(row.dataset.aspect ?? ''), ...allRefs.map(ref => cell(row.dataset[ref] ?? ''))].join(','));
     }
     try {
       await navigator.clipboard.writeText(lines.join('\n'));
