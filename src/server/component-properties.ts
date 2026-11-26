@@ -591,10 +591,17 @@ const snackbarSections: PropertySection[] = [
       { label: 'close', name: 'With a close button', markup: snack('content-close') }, { label: 'long', name: 'Two lines, an action and a close button', markup: snack('content-long') }], stack: true },
 ];
 
+// Tooltip: the real tooltips, shown in place by their targets (src/client/catalog/tooltip.ts).
+const tooltipSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Plain, a short label for an icon button; or rich, a few lines about a feature.',
+    values: [{ label: 'plain', name: 'Plain', markup: `<div class="property-tooltip">${surfaceOf('tooltip', 'variant-plain')}</div>` },
+      { label: 'rich', name: 'Rich', markup: `<div class="property-tooltip">${surfaceOf('tooltip', 'variant-rich')}</div>` }] },
+];
+
 const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
   'button-group': buttonGroup, button, 'icon-button': iconButton, 'split-button': splitButton, fab: fabSections, 'extended-fab': extendedFab, 'fab-menu': fabMenu, timepicker, datepicker, 'loading-indicator': loadingIndicator, progress,
   'navigation-rail': navigationRail, 'navigation-bar': navigationBar, 'navigation-drawer': navigationDrawer, 'app-bar': appBarSections, tabs: tabsSections, toolbar: toolbarSections,
-  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, snackbar: snackbarSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
+  card: cardSections, carousel: carouselSections, badge: badgeSections, list: listSections, menu: menuSections, checkbox: checkboxSections, 'text-field': textFieldSections, select: selectSections, switch: switchSections, slider: sliderSections, radios: radiosSections, chips: chipsSections, search: searchSections, snackbar: snackbarSections, tooltip: tooltipSections, dialog: dialogSections, 'side-sheet': sideSheetSections, 'bottom-sheet': bottomSheetSections,
 };
 
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
@@ -624,6 +631,15 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  tooltip: {
+    points: '<ul><li>A short label or a few lines of context for a button or another element.</li>'
+      + '<li>Plain, to name what an icon button does; rich, to say more about a feature.</li>'
+      + '<li>It shows on hover and on keyboard focus, and hides when they end.</li>'
+      + '<li>It adds to an element\'s name, never replaces it: the button keeps its own <code>aria-label</code>.</li></ul>',
+    // As M3's figure (the owner's reference, 2026-11-26): a phone's top corner, Notifications named by its tooltip.
+    stage: `<div class="property-corner property-corner--tooltip"><div class="property-corner__screen property-tooltip-screen">${statusBar}${surfaceOf('tooltip', 'glance')}</div></div>`,
+    caption: 'An icon button named by its plain tooltip, at the top of a phone.', kind: 'tooltip',
+  },
   snackbar: {
     points: '<ul><li>A brief update about something the app did or will do, at the bottom of the screen.</li>'
       + '<li>It does not interrupt: people carry on without touching it.</li>'
@@ -977,6 +993,8 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
   // Confirmed by material's side-sheet table (Priam, 2026-11-26, Chromium and WebKit).
   'side-sheet': { missing: ['A back icon in the header, to go back from another region within the sheet.', 'The detached variant, with 16dp corners all round, apart from the window\'s edge.', 'A built-in row of actions at the bottom of the sheet.'],
     bugs: ['The headline uses the on-surface colour, where M3 uses on-surface-variant.'] },
+  // M3's rich tooltip figure (the owner's reference, 2026-11-26): a subhead and up to two buttons, planned for material 3.17.0.
+  tooltip: { missing: ['A rich tooltip\'s subhead and its one or two buttons: material\'s rich tooltip holds supporting text only.'] },
   dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },

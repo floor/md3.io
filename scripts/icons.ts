@@ -18,6 +18,7 @@ const names = [
   'check_box_outline_blank',
   'play_arrow',
   'more_vert',
+  'notifications',
   'format_bold',
   'format_indent_increase',
   'format_line_spacing',

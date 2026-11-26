@@ -649,3 +649,9 @@ m-search::part(avatar) { border: 0; background: none; padding: 0; border-radius:
 .property-snack-screen > md3-catalog-snackbar-glance { display: block; margin: 0 0 8px; }
 .property-snack-screen .property-phone__home { display: flex; justify-content: center; padding: 8px 0 10px; background: var(--mtrl-sys-color-surface-container); }
 .property-snack-screen .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
+/* Tooltip: a figure's room above or below its target; the glance, a phone's top corner. */
+.property-tooltip { min-height: 140px; display: grid; align-items: end; }
+.catalog-visual--tooltip.property-note__stage:has(.property-corner) { height: auto; padding: 40px 32px 0 0; place-items: start end; overflow: hidden; }
+.property-corner--tooltip { width: 420px; height: 240px; }
+.property-tooltip-screen { padding: 0 16px; }
+.property-tooltip-screen > .catalog-frame__status { display: flex; justify-content: space-between; align-items: center; padding: 14px 8px 8px; }

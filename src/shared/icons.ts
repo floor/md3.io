@@ -15,6 +15,7 @@ import brush from '../../icons/brush.svg' with { type: 'text' };
 import callEnd from '../../icons/call_end.svg' with { type: 'text' };
 import check from '../../icons/check.svg' with { type: 'text' };
 import checkBox from '../../icons/check_box.svg' with { type: 'text' };
+import notifications from '../../icons/notifications.svg' with { type: 'text' };
 import lightMode from '../../icons/light_mode.svg' with { type: 'text' };
 import formatClear from '../../icons/format_clear.svg' with { type: 'text' };
 import formatPaint from '../../icons/format_paint.svg' with { type: 'text' };
@@ -134,6 +135,7 @@ export const symbols = {
   brush: trim(brush),
   check: trim(check),
   checkBox: trim(checkBox),
+  notifications: trim(notifications),
   lightMode: trim(lightMode),
   formatClear: trim(formatClear),
   formatPaint: trim(formatPaint),
@@ -267,6 +269,7 @@ const files: Record<keyof typeof symbols, string> = {
   brush: 'brush',
   check: 'check',
   checkBox: 'check_box',
+  notifications: 'notifications',
   lightMode: 'light_mode',
   formatClear: 'format_clear',
   formatPaint: 'format_paint',
