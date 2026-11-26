@@ -396,3 +396,4 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-sheet__text { margin: 0; font-size: 14px; }
 /* A sheet docks to its box, not the window: the transform makes the box the reference of its fixed position. */
 .property-screen--sheet { transform: translateZ(0); contain: layout paint; }
+.property-card img[slot="media"] { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }

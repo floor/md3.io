@@ -253,9 +253,16 @@ const toolbarSections: PropertySection[] = [
 // the sheets standard (not modal), open in a screen box.
 const cardOf = (attrs: Attributes, actions = true) => m('card', { headline: 'A little time outside', subhead: 'Find your next escape', ...attrs },
   actions ? m('button', { slot: 'actions', variant: 'text' }, 'Explore') + m('button', { slot: 'actions', variant: 'tonal' }, 'Save') : '');
+// A photo in the card's media slot: one of the carousel's (src/shared/carousel-photos.ts: Lorem Picsum,
+// Unsplash photos, loaded at view time; its licence notes are there).
+const photoCard = () => m('card', { variant: 'elevated', headline: 'Himalayan Peaks', subhead: 'Nepal' },
+  '<img slot="media" src="https://picsum.photos/id/29/600/338" width="600" height="338" alt="Snowy peaks of the Himalaya under a blue sky" loading="lazy">'
+  + m('button', { slot: 'actions', variant: 'text' }, 'Explore') + m('button', { slot: 'actions', variant: 'tonal' }, 'Save'));
 const cardSections: PropertySection[] = [
   { key: 'variant', title: 'Variant', text: 'Elevated, with a shadow; filled, on a container colour; or outlined, with a border.',
     values: ['elevated', 'filled', 'outlined'].map(variant => ({ label: variant, markup: `<div class="property-card">${cardOf({ variant })}</div>` })) },
+  { key: 'media', title: 'Media', text: 'Media at the top of the card, clipped to its shape: a photo here.',
+    values: [{ label: 'photo', name: 'With a photo', markup: `<div class="property-card">${photoCard()}</div>` }] },
   { key: 'actions', title: 'Actions', text: 'A card can end with its actions, or hold content alone.',
     values: [{ label: 'on', name: 'With actions', markup: `<div class="property-card">${cardOf({ variant: 'outlined' })}</div>` }, { label: 'off', name: 'Without actions', markup: `<div class="property-card">${cardOf({ variant: 'outlined' }, false)}</div>` }] },
 ];
