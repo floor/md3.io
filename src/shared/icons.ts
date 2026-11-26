@@ -15,6 +15,12 @@ import brush from '../../icons/brush.svg' with { type: 'text' };
 import callEnd from '../../icons/call_end.svg' with { type: 'text' };
 import check from '../../icons/check.svg' with { type: 'text' };
 import checkBox from '../../icons/check_box.svg' with { type: 'text' };
+import formatClear from '../../icons/format_clear.svg' with { type: 'text' };
+import formatPaint from '../../icons/format_paint.svg' with { type: 'text' };
+import borderStyle from '../../icons/border_style.svg' with { type: 'text' };
+import table from '../../icons/table.svg' with { type: 'text' };
+import formatLineSpacing from '../../icons/format_line_spacing.svg' with { type: 'text' };
+import formatIndentIncrease from '../../icons/format_indent_increase.svg' with { type: 'text' };
 import moreVert from '../../icons/more_vert.svg' with { type: 'text' };
 import skipPrevious from '../../icons/skip_previous.svg' with { type: 'text' };
 import playArrow from '../../icons/play_arrow.svg' with { type: 'text' };
@@ -127,6 +133,12 @@ export const symbols = {
   brush: trim(brush),
   check: trim(check),
   checkBox: trim(checkBox),
+  formatClear: trim(formatClear),
+  formatPaint: trim(formatPaint),
+  borderStyle: trim(borderStyle),
+  table: trim(table),
+  formatLineSpacing: trim(formatLineSpacing),
+  formatIndentIncrease: trim(formatIndentIncrease),
   moreVert: trim(moreVert),
   skipPrevious: trim(skipPrevious),
   playArrow: trim(playArrow),
@@ -253,6 +265,12 @@ const files: Record<keyof typeof symbols, string> = {
   brush: 'brush',
   check: 'check',
   checkBox: 'check_box',
+  formatClear: 'format_clear',
+  formatPaint: 'format_paint',
+  borderStyle: 'border_style',
+  table: 'table',
+  formatLineSpacing: 'format_line_spacing',
+  formatIndentIncrease: 'format_indent_increase',
   moreVert: 'more_vert',
   skipPrevious: 'skip_previous',
   playArrow: 'play_arrow',

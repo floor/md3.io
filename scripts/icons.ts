@@ -18,6 +18,13 @@ const names = [
   'check_box_outline_blank',
   'play_arrow',
   'more_vert',
+  'format_bold',
+  'format_indent_increase',
+  'format_line_spacing',
+  'table',
+  'border_style',
+  'format_paint',
+  'format_clear',
   'skip_previous',
   // Added by hand before they were listed here; a run deletes what is not listed.
   'bluetooth',

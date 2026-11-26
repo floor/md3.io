@@ -399,15 +399,17 @@ const listSections: PropertySection[] = [
 // since <m-menu> opens in the top layer, one at a time.
 const menuOf = (suffix: string) => `<div class="property-menu">${surfaceOf('menu', suffix)}</div>`;
 const menuSections: PropertySection[] = [
-  { key: 'variant', title: 'Variant', text: 'Vertical, M3 Expressive\'s menu, the default; or baseline, the earlier style.',
-    values: [{ label: 'vertical', name: 'Vertical', markup: menuOf('variant-vertical') }, { label: 'baseline', name: 'Baseline', markup: menuOf('variant-baseline') }] },
+  // As M3's figures (the owner's reference, 2026-11-26).
+  { key: 'variant', title: 'Variant', text: 'Vertical menus, M3 Expressive\'s: rounded, with colour styles, selection and a submenu; their groups set apart by a gap or a divider.',
+    values: [{ label: 'gap', name: 'Vertical menu with gap', markup: menuOf('variant-gap') }, { label: 'divider', name: 'Vertical menu with divider', markup: menuOf('variant-divider') }] },
+  { key: 'baseline', title: 'Baseline', text: 'The earlier menu, still available: square corners and the standard colours.',
+    values: [{ label: 'baseline', name: 'Baseline menu', markup: menuOf('variant-baseline') }], single: true },
+  { key: 'layout', title: 'Layout', text: 'Standard, one list; or grouped, its items in groups apart, here opened from a split button.',
+    values: [{ label: 'standard', name: 'Standard', markup: menuOf('layout-standard') }, { label: 'grouped', name: 'Grouped', markup: menuOf('layout-grouped') }] },
+  { key: 'submenu', title: 'Submenus', text: 'An item can open a submenu beside it, without covering it; best on large screens, where there is room.',
+    values: [{ label: 'submenu', name: 'A submenu open beside its item', markup: menuOf('submenu') }], single: true },
   { key: 'color', title: 'Color', text: 'Standard, on a surface colour; or vibrant, in the tertiary colours, to stand out.',
     values: [{ label: 'standard', name: 'Standard', markup: menuOf('color-standard') }, { label: 'vibrant', name: 'Vibrant', markup: menuOf('color-vibrant') }] },
-  { key: 'items', title: 'Items', text: 'A label, with an icon before it, a keyboard shortcut after it, or a line of supporting text.',
-    values: [{ label: 'label', name: 'Labels', markup: menuOf('items-label') }, { label: 'shortcut', name: 'Icons and shortcuts', markup: menuOf('items-shortcut') },
-      { label: 'supporting', name: 'Supporting text', markup: menuOf('items-supporting') }] },
-  { key: 'groups', title: 'Groups', text: 'A divider or a gap sets groups of items apart.',
-    values: [{ label: 'divider', name: 'Divider', markup: menuOf('groups-divider') }, { label: 'gap', name: 'Gap', markup: menuOf('groups-gap') }] },
   { key: 'density', title: 'Density', text: 'Dense items are shorter, for long menus and pointer use.',
     values: [{ label: 'default', name: 'Default', markup: menuOf('density-default') }, { label: 'dense', name: 'Dense', markup: menuOf('density-dense') }] },
 ];
@@ -453,7 +455,7 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
     // A photo in a gallery, its menu open from the more button.
     // A photo in a gallery, its menu open from the more button (a catalog surface, as the sections' menus).
     stage: surfaceOf('menu', 'glance'),
-    caption: 'A photo\'s options, from its more button: choose one, or press Escape.', kind: 'menu',
+    caption: 'An editor\'s FAB opens its menu in front of the page: Undo and Redo, then Cut, Copy and Paste.', kind: 'menu',
   },
   // The button family at a glance: each in a small scene of its own, a card on the stage.
   button: {
