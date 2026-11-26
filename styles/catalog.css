@@ -365,3 +365,10 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .catalog-visual.property-note__stage { height: 300px; padding-bottom: 28px; }
 /* A wider phone, as in M3's figure (about 60% of the stage). */
 .property-phone { width: min(440px, 92%); }
+/* At a glance on a tablet: the rail or the drawer at the side of the lists. */
+.catalog-visual.property-note__stage:has(.property-phone--tablet) { padding: 28px; align-items: center; }
+.property-phone--tablet { width: 100%; height: 100%; border: 8px solid color-mix(in srgb, var(--mtrl-sys-color-outline) 70%, transparent); border-radius: 28px; }
+.property-phone__screen--side { flex-direction: row; justify-content: flex-start; align-items: stretch; background: var(--mtrl-sys-color-surface); }
+.property-phone__screen--side > m-navigation-rail, .property-phone__screen--side > m-drawer { flex: none; height: 100%; }
+.property-phone__content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.property-phone__content .property-phone__list { height: 100%; }

@@ -237,7 +237,7 @@ const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
 // A component at a glance, as m3.material.io's component pages open: a few points in our own
 // words, from the component's document (docs/components/<slug>.md), beside the component in a
 // phone screen.
-interface ExpressiveNote { points: string; stage: string; caption: string }
+interface ExpressiveNote { points: string; stage: string; caption: string; kind?: string }
 // A music app, scrollable inside the phone: one list per destination of the bar, the current one
 // shown; choosing a destination shows its list (src/client/catalog/navigation-bar.ts).
 const destinationsOfPhone = [{ value: 'home', label: 'Home', icon: symbols.home }, { value: 'music', label: 'Music', icon: symbols.libraryMusic }, { value: 'podcasts', label: 'Podcasts', icon: symbols.podcasts }];
@@ -247,12 +247,32 @@ const shelves: Record<string, string[][]> = {
   podcasts: [['How cities grow', 'Urban Notes, episode 42', '38 min'], ['The kitchen table', 'Food Talk, episode 117', '52 min'], ['Night sky in winter', 'Look Up, episode 9', '27 min'], ['Learning to listen', 'Quiet Hours, episode 3', '44 min'], ['Small engines', 'Workshop, episode 71', '33 min']],
 };
 const labels: Record<string, string> = { home: 'Home', music: 'Music', podcasts: 'Podcasts' };
-const phone = () => `<div class="property-phone"><div class="property-phone__screen">`
-  + Object.entries(shelves).map(([box, rows]) => `<ul class="property-phone__list" data-for="${box}" tabindex="0" aria-label="${labels[box]}"${box === 'home' ? '' : ' hidden'}>`
-    + rows.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('') + '</ul>').join('')
+const lists = () => Object.entries(shelves).map(([box, rows]) => `<ul class="property-phone__list" data-for="${box}" tabindex="0" aria-label="${labels[box]}"${box === 'home' ? '' : ' hidden'}>`
+  + rows.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('') + '</ul>').join('');
+/** A phone, its navigation bar at the bottom; or a tablet, a rail or a drawer at its side. */
+const phone = () => `<div class="property-phone"><div class="property-phone__screen">${lists()}`
   + m('navigation-bar', { value: 'home', 'aria-label': 'Music app' }, destinationsOfPhone.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
   + `<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>`;
+const tablet = (navigation: string) => `<div class="property-phone property-phone--tablet"><div class="property-phone__screen property-phone__screen--side">${navigation}<div class="property-phone__content">${lists()}</div></div></div>`;
+const tabletRail = () => tablet(m('navigation-rail', { value: 'home', 'no-toggle': true, 'aria-label': 'Music app' },
+  destinationsOfPhone.map(place => m('navigation-rail-item', { value: place.value, icon: place.icon }, place.label)).join('')));
+const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'home', headline: 'Music', width: 220, 'aria-label': 'Music app' },
+  destinationsOfPhone.map(place => m('drawer-item', { value: place.value, icon: place.icon }, place.label)).join('')));
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  'navigation-rail': {
+    points: '<ul><li>Three to seven destinations in a column along the side of a medium or expanded window.</li>'
+      + '<li>Collapsed, the labels sit under the icons; expanded, it widens into a panel with the labels beside them.</li>'
+      + '<li>A modal rail expands over the page in a dialog; a standard one takes its place in the layout.</li>'
+      + '<li>A badge on any destination: a count, a short text, or a dot.</li></ul>',
+    stage: tabletRail(), caption: 'A rail beside a music app\'s lists: choose a destination to see its list.', kind: 'navigation-rail',
+  },
+  'navigation-drawer': {
+    points: '<ul><li>The app\'s destinations in a vertical list along one edge, grouped with dividers, section labels and expandable sections.</li>'
+      + '<li>Standard, inline in a wide window; or modal, over the page behind a scrim.</li>'
+      + '<li>Each destination a button, or a link when it has an <code>href</code>.</li>'
+      + '<li>Dense items keep long lists compact, with a 48dp target kept.</li></ul>',
+    stage: tabletDrawer(), caption: 'A drawer beside a music app\'s lists: choose a destination to see its list.', kind: 'navigation-drawer',
+  },
   'navigation-bar': {
     points: '<ul><li>The app\'s main destinations, in a row along the bottom of the window: each a button, or a link when it has an <code>href</code>.</li>'
       + '<li>The icon above its label, or beside it: <code>itemLayout: \'auto\'</code> switches at 600px wide.</li>'
@@ -267,7 +287,7 @@ const expressiveNote = (slug: string): string => {
   if (!note) return '';
   return `<section class="property-note" aria-labelledby="property-expressive"><h2 id="property-expressive">At a glance</h2><div class="property-note__body">`
     + `<div class="property-note__points">${note.points}</div>`
-    + `<figure class="property-note__figure"><div class="catalog-visual catalog-visual--navigation-bar property-note__stage">${note.stage}</div><figcaption>${note.caption}</figcaption></figure></div></section>`;
+    + `<figure class="property-note__figure"><div class="catalog-visual catalog-visual--${note.kind ?? slug} property-note__stage">${note.stage}</div><figcaption>${note.caption}</figcaption></figure></div></section>`;
 };
 
 export const hasPropertyOverview = (slug: string): boolean => slug in PROPERTIES;
