@@ -68,13 +68,9 @@ export function propertyOverview(slug: string, links: { playground: string; deve
   const sections = PROPERTIES[slug]!;
   const html = sections.map(section => {
     const id = `property-${section.key}`;
-    const actions = `<div class="scenario-actions" role="group" aria-label="${escape(section.title)}">`
-      + `<a class="mtrl-button mtrl-button--tonal mtrl-button--s mtrl-button--round" href="${escape(links.playground)}" aria-label="${escape(`${name}: ${section.title} in the playground`)}"><span class="mtrl-button__icon">${links.playIcon}</span><span class="mtrl-button__text">Playground</span></a>`
-      + `<a class="mtrl-icon-button mtrl-icon-button--tonal mtrl-icon-button--s mtrl-icon-button--round" href="${escape(`${links.develop}#api`)}" aria-label="${escape(`${name}: ${section.title} in the API`)}" title="Develop"><span class="mtrl-icon-button__icon">${links.codeIcon}</span></a>`
-      + `</div>`;
     const stage = `<div class="catalog-visual catalog-visual--${slug} property-stage${section.stack ? ' property-stage--stack' : ''}">`
       + section.values.map(value => `<figure class="property-value">${value.markup}<figcaption><code>${escape(value.label)}</code></figcaption></figure>`).join('') + `</div>`;
-    return `<section class="scenario" aria-labelledby="${id}"><div class="scenario__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div>${actions}</div>${stage}</section>`;
+    return `<section class="scenario" aria-labelledby="${id}"><div class="scenario__heading"><div><h2 id="${id}">${escape(section.title)}</h2><p>${escape(section.text)}</p></div></div>${stage}</section>`;
   }).join('');
   return { html: `<div class="scenarios">${html}</div>`, toc: sections.map(section => ({ id: `property-${section.key}`, title: section.title })) };
 }
