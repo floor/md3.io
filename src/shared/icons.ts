@@ -52,6 +52,7 @@ import bluetooth from '../../icons/bluetooth.svg' with { type: 'text' };
 import link from '../../icons/link.svg' with { type: 'text' };
 import wifi from '../../icons/wifi.svg' with { type: 'text' };
 import stars from '../../icons/stars.svg' with { type: 'text' };
+import podcasts from '../../icons/podcasts.svg' with { type: 'text' };
 import starsFill from '../../icons/stars-fill.svg' with { type: 'text' };
 import article from '../../icons/article.svg' with { type: 'text' };
 import barChart from '../../icons/bar_chart.svg' with { type: 'text' };
@@ -171,6 +172,7 @@ export const symbols = {
   link: trim(link),
   wifi: trim(wifi),
   stars: trim(stars),
+  podcasts: trim(podcasts),
   starsFill: trim(starsFill),
   article: trim(article),
   barChart: trim(barChart),
@@ -291,6 +293,7 @@ const files: Record<keyof typeof symbols, string> = {
   link: 'link',
   wifi: 'wifi',
   stars: 'stars',
+  podcasts: 'podcasts',
   starsFill: 'stars-fill',
   article: 'article',
   barChart: 'bar_chart',

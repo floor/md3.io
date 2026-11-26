@@ -238,11 +238,19 @@ const PROPERTIES: Partial<Record<string, PropertySection[]>> = {
 // words, from the component's document (docs/components/<slug>.md), beside the component in a
 // phone screen.
 interface ExpressiveNote { points: string; stage: string; caption: string }
-// A real inbox, scrollable inside the phone.
-const mail = [['Ali Connors', 'Brunch this weekend?', '10:12'], ['Sandra Adams', 'Summer BBQ', '9:41'], ['Trevor Hansen', 'Oui oui', 'Yesterday'],
-  ['Britta Holt', 'Birthday gift', 'Yesterday'], ['Lee Chen', 'Recipe to try', 'Mon'], ['Jordan Price', 'Weekend hike', 'Sun'], ['Sam Rivera', 'Flight details', 'Sat'], ['Noor Haddad', 'Book club notes', 'Fri']];
-const phone = (content: string) => `<div class="property-phone"><div class="property-phone__screen"><ul class="property-phone__list" tabindex="0" aria-label="Inbox">${content}</ul>`
-  + m('navigation-bar', { value: 'inbox', 'aria-label': 'Mail' }, places.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
+// A music app, scrollable inside the phone: one list per destination of the bar, the current one
+// shown; choosing a destination shows its list (src/client/catalog/navigation-bar.ts).
+const destinationsOfPhone = [{ value: 'home', label: 'Home', icon: symbols.home }, { value: 'music', label: 'Music', icon: symbols.libraryMusic }, { value: 'podcasts', label: 'Podcasts', icon: symbols.podcasts }];
+const shelves: Record<string, string[][]> = {
+  home: [['Morning mix', 'Made for you', '25 songs'], ['Focus', 'Instrumental, calm', '40 songs'], ['Recently played', 'Mirror lake and 11 more', '12 songs'], ['Road trip', 'Your playlist', '58 songs'], ['New releases', 'From artists you follow', '18 songs'], ['Late night', 'Slow and low', '31 songs']],
+  music: [['Mirror lake', 'Waterhouse', '2:44'], ['Honeydew', 'Waterhouse', '3:25'], ['Paper boats', 'The Lindens', '3:58'], ['Northern line', 'Ada Vale', '4:12'], ['Glasshouse', 'The Lindens', '3:07'], ['Slow river', 'Ada Vale', '5:01'], ['Small hours', 'Waterhouse', '3:39']],
+  podcasts: [['How cities grow', 'Urban Notes, episode 42', '38 min'], ['The kitchen table', 'Food Talk, episode 117', '52 min'], ['Night sky in winter', 'Look Up, episode 9', '27 min'], ['Learning to listen', 'Quiet Hours, episode 3', '44 min'], ['Small engines', 'Workshop, episode 71', '33 min']],
+};
+const labels: Record<string, string> = { home: 'Home', music: 'Music', podcasts: 'Podcasts' };
+const phone = () => `<div class="property-phone"><div class="property-phone__screen">`
+  + Object.entries(shelves).map(([box, rows]) => `<ul class="property-phone__list" data-for="${box}" tabindex="0" aria-label="${labels[box]}"${box === 'home' ? '' : ' hidden'}>`
+    + rows.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('') + '</ul>').join('')
+  + m('navigation-bar', { value: 'home', 'aria-label': 'Music app' }, destinationsOfPhone.map(place => m('navigation-bar-item', { value: place.value, icon: place.icon }, place.label)).join(''))
   + `<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>`;
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
   'navigation-bar': {
@@ -250,8 +258,8 @@ const NOTES: Partial<Record<string, ExpressiveNote>> = {
       + '<li>The icon above its label, or beside it: <code>itemLayout: \'auto\'</code> switches at 600px wide.</li>'
       + '<li>A badge on any destination: a count, a short text, or a dot.</li>'
       + '<li>It can hide as the page scrolls down, and come back on the way up.</li></ul>',
-    stage: phone(mail.map(([who, what, when]) => `<li><span><strong>${who}</strong><span>${what}</span></span><span>${when}</span></li>`).join('')),
-    caption: 'Three destinations at the bottom of a mail app, Inbox the current one.',
+    stage: phone(),
+    caption: 'Three destinations at the bottom of a music app: choose one to see its list.',
   },
 };
 const expressiveNote = (slug: string): string => {
