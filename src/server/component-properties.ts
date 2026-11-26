@@ -323,13 +323,45 @@ const dialogSections: PropertySection[] = [
 const sheetText = '<p class="property-sheet__text">A place for useful context, related information and settings.</p>';
 const sideSheet = (position: string) => screen(`<div class="property-sheet-page">Page content</div>` + m('side-sheet', { open: true, headline: 'Details', width: 220, position }, sheetText), 'sheet');
 const bottomSheet = (attrs: Attributes) => screen(`<div class="property-sheet-page">Page content</div>` + m('bottom-sheet', { open: true, headline: 'Plan your visit', ...attrs }, sheetText), 'sheet');
+// A modal sheet opens in the top layer, over the whole page: its figure is the sheet in place with the
+// scrim a modal sheet has, drawn in the screen.
+const scrim = '<div class="property-sheet-scrim" aria-hidden="true"></div>';
+// The side sheet's scene: a shop's lamps, the sheet its filters; the bottom sheet's, a city and a place in it.
+const shopPage = `<div class="property-shop"><h3>Lamps</h3><ul>${['Arc floor lamp · €189', 'Linen table lamp · €69', 'Brass reading lamp · €119', 'Paper pendant · €45'].map(item => `<li>${item}</li>`).join('')}</ul></div>`;
+const filters = () => `<div class="property-shop__filters">${m('checkbox', { checked: true }, 'Floor lamps')}${m('checkbox', { checked: true }, 'Table lamps')}${m('checkbox', {}, 'Pendants')}${m('checkbox', {}, 'Under €100')}</div>`;
+const sideOf = (attrs: Attributes, modal = false) => screen(`${shopPage}${modal ? scrim : ''}` + m('side-sheet', { open: true, headline: 'Filters', width: 220, ...attrs }, filters()), 'sheet');
+const cityPage = '<img class="property-map__photo" src="https://picsum.photos/id/1067/840/600" alt="" width="420" height="300">';
+const place = () => `<p class="property-sheet__text">Italian · 400 m · Open until 23:00</p><div class="property-map__actions">${m('button', { variant: 'filled', icon: symbols.schedule }, 'Book')}${m('button', { variant: 'tonal', icon: symbols.share }, 'Share')}</div>`
+  + '<p class="property-sheet__text property-sheet__more">Hand-made pasta, a terrace over the river, and a wine list from small Italian growers.</p>';
+const bottomOf = (attrs: Attributes, modal = false) => screen(`${cityPage}${modal ? scrim : ''}` + m('bottom-sheet', { open: true, headline: 'Ristorante Lumen', 'peek-height': 196, ...attrs }, place()), 'sheet property-screen--bottom');
+// Bottom sheet content, as M3's figures: actions as a list with icons, or as a grid, a divider between kinds.
+const sheetRows = (rows: [string, string][]) => `<div class="property-sheet-rows" role="group" aria-label="Actions">${rows.map(([label, icon]) => `<button type="button" class="property-sheet-row">${icon}<span>${label}</span></button>`).join('')}</div>`;
+const sheetGrid = (cells: [string, string][]) => `<div class="property-sheet-grid" role="group" aria-label="Actions">${cells.map(([label, icon]) => `<button type="button" class="property-sheet-cell">${icon}<span>${label}</span></button>`).join('')}</div>`;
+const people = [['Ada Vale', 64], ['Sam Holt', 91], ['Lee Chen', 177], ['Rosa Diaz', 338], ['Tom Reyes', 1005]] as const;
+const phoneSheet = (photo: string, alt: string, content: string, handle = true) => `<div class="property-welcome property-welcome--sheet"><div class="property-bottom"><img src="${photo}" alt="${alt}" width="420" height="260">`
+  + m('bottom-sheet', { open: true, expanded: true, 'aria-label': alt, ...(handle ? {} : { 'no-drag-handle': true }) }, content)
+  + '<div class="property-phone__home" aria-hidden="true"><span></span></div></div></div>';
+const musicSheet = () => phoneSheet('https://picsum.photos/id/145/840/520', 'Album art', `<div class="property-sheet-head"><img src="https://picsum.photos/id/160/112/112" alt="" width="56" height="56"><span><strong>Sunday morning</strong><span>Various artists</span></span></div><hr class="property-sheet-divider">`
+  + sheetRows([['Add to playlist…', symbols.playlistAdd], ['Go to album', symbols.album], ['Go to artist', symbols.personSearch], ['Sleep timer', symbols.bedtime]]), false);
+const photoSheet = () => phoneSheet('https://picsum.photos/id/1011/840/520', 'Photos', sheetGrid([['Share', symbols.share], ['Add to', symbols.add], ['Trash', symbols.delete], ['Archive', symbols.archive]])
+  + `<hr class="property-sheet-divider"><p class="property-sheet-label">Send</p><div class="property-sheet-people">${people.map(([name, id]) => `<button type="button" class="property-sheet-person"><img src="https://picsum.photos/id/${id}/96/96" alt="" width="48" height="48"><span>${name}</span></button>`).join('')}</div>`);
 const sideSheetSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Standard, beside the page, which stays in use; or modal, over a scrim, until it is closed.',
+    values: [{ label: 'standard', name: 'Standard', markup: sideOf({ position: 'end' }) }, { label: 'modal', name: 'Modal, over a scrim', markup: sideOf({ position: 'end' }, true) }] },
   { key: 'position', title: 'Position', text: 'The edge it docks to, in the reading direction: the end, or the start.',
-    values: [{ label: 'end', markup: sideSheet('end') }, { label: 'start', markup: sideSheet('start') }] },
+    values: [{ label: 'end', name: 'End', markup: sideOf({ position: 'end' }) }, { label: 'start', name: 'Start', markup: sideOf({ position: 'start' }) }] },
+  { key: 'close', title: 'Close button', text: 'A close button in its header, or none where the sheet stays open.',
+    values: [{ label: 'on', name: 'With a close button', markup: sideOf({ position: 'end' }) }, { label: 'off', name: 'Without', markup: sideOf({ position: 'end', 'no-close-button': true }) }] },
 ];
 const bottomSheetSections: PropertySection[] = [
+  { key: 'variant', title: 'Variant', text: 'Standard, with the page above it still in use; or modal, over a scrim, until it is dismissed.',
+    values: [{ label: 'standard', name: 'Standard', markup: bottomOf({}) }, { label: 'modal', name: 'Modal, over a scrim', markup: bottomOf({}, true) }] },
+  { key: 'state', title: 'Height', text: 'Partly open, at its peek height; or expanded, dragged up or opened from its handle.',
+    values: [{ label: 'partial', name: 'Partly open, at its peek height', markup: bottomOf({}) }, { label: 'expanded', name: 'Expanded', markup: bottomOf({ expanded: true }) }] },
+  { key: 'content', title: 'Content', text: 'Actions as a list with icons, or as a grid; a divider sets apart kinds of content.',
+    values: [{ label: 'list', name: 'A list with icons', markup: musicSheet() }, { label: 'grid', name: 'A grid, and a divider', markup: photoSheet() }] },
   { key: 'drag-handle', title: 'Drag handle', text: 'The handle at its top: a button, and the way to drag it taller or shorter.',
-    values: [{ label: 'on', name: 'With the handle', markup: bottomSheet({}) }, { label: 'off', name: 'Without', markup: bottomSheet({ 'no-drag-handle': true }) }] },
+    values: [{ label: 'on', name: 'With the handle', markup: bottomOf({}) }, { label: 'off', name: 'Without', markup: bottomOf({ 'no-drag-handle': true }) }] },
 ];
 
 // Full-screen fills a phone's screen, in portrait, and scrolls vertically (the carousel's document).
@@ -584,6 +616,25 @@ const tabletRail = () => tablet(m('navigation-rail', { value: 'inbox', expanded:
   lists(mailboxes, mailNames, 'inbox'), true);
 const tabletDrawer = () => tablet(m('drawer', { open: true, value: 'inbox', headline: 'Mail', width: 260, 'aria-label': 'Mail' }, mailItems()), lists(mailboxes, mailNames, 'inbox'), true);
 const NOTES: Partial<Record<string, ExpressiveNote>> = {
+  'side-sheet': {
+    points: '<ul><li>Secondary content or controls beside the page: filters, details, settings.</li>'
+      + '<li>Standard, beside the page, which stays in use; or modal, over a scrim, for a task to finish first.</li>'
+      + '<li>At the end edge, or the start, in the reading direction.</li>'
+      + '<li>Modal, it keeps focus inside, and Escape or the scrim closes it.</li></ul>',
+    // As M3's figure (the owner's reference, 2026-11-26): a tablet's corner, the page under a scrim, a modal sheet.
+    stage: `<div class="property-corner"><div class="property-corner__screen">${shopPage}${scrim}`
+      + m('side-sheet', { open: true, headline: 'Filters', width: 260, position: 'end' }, filters()) + '</div></div>',
+    caption: 'A shop\'s filters in a modal side sheet, over its results under a scrim.', kind: 'side-sheet',
+  },
+  'bottom-sheet': {
+    points: '<ul><li>Secondary content anchored to the bottom of the screen, most often on a phone.</li>'
+      + '<li>Standard, with the page still in use; or modal, over a scrim.</li>'
+      + '<li>Dragged up to expand, down to collapse or dismiss; its handle does the same from the keyboard.</li>'
+      + '<li>Partly open at its peek height, or expanded.</li></ul>',
+    // As M3's figure (the owner's reference, 2026-11-26): a photo's actions in a list, at the bottom of a phone.
+    stage: phoneSheet('https://picsum.photos/id/1080/840/520', 'Strawberries in a punnet', sheetRows([['Share', symbols.share], ['Get link', symbols.link], ['Edit name', symbols.edit]]), false),
+    caption: 'A photo\'s actions in a bottom sheet, as a list.', kind: 'bottom-sheet',
+  },
   search: {
     points: '<ul><li>A bar that opens into a view of suggestions, recent searches or results.</li>'
       + '<li>Docked under the bar on large screens; full-screen on a phone.</li>'
@@ -903,6 +954,8 @@ const KNOWN_ISSUES: Partial<Record<string, { missing?: string[]; bugs?: string[]
       'In the vibrant colour style, a leading icon keeps its resting colour on hover, focus and press, where M3\'s newest tokens switch it to tertiary; Compose itself does not apply this yet.',
       'A menu placed in a scrolling container with the <code>container</code> option chooses its side from the window, not the container, so the container can cut it off and focusing an item can scroll the menu over its button; a fix is in progress. Menus without <code>container</code> are not affected.',
     ] },
+  // M3's side sheet figure (the owner's reference, 2026-11-26): a back icon in the header, for a region within the sheet.
+  'side-sheet': { missing: ['A back icon in the header, to go back from another region within the sheet.'] },
   dialog: { bugs: ['The medium and large dialogs share one maximum width, 560px, so large is no wider than medium.'] },
   timepicker: { bugs: ['With seconds shown, the dialog stays 328px wide while its fields need 400px, so the hour is cut at the left.'] },
   progress: { missing: ['The web component <code>&lt;m-progress&gt;</code> cannot hide the stop indicator; the JavaScript factory can, with <code>showStopIndicator: false</code>.'] },
