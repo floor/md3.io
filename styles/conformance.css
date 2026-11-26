@@ -135,3 +135,6 @@
 .md .matrix ul.matrix-rows { margin: 0; padding: 0; }
 .md .matrix li.matrix-row { margin: 0; }
 .md .matrix .matrix-detail { margin: 0; }
+.matrix-stage__count { display: block; font-weight: 400; font-size: 12px; }
+.matrix-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0 0 24px; font-size: 13px; color: var(--text-muted); }
+.matrix-legend .matrix-tick { display: inline-block; vertical-align: middle; }

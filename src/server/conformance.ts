@@ -111,7 +111,9 @@ const summaryCards = (rows: Row[]) => `<div class="matrix-summary">${REFS.map(re
     + `<p class="matrix-card__percent">${percent}%</p>${m('progress', { variant: 'linear', value: percent, max: 100, 'aria-label': `Against ${REF[ref]}: ${percent}% match` })}`
     + `<p class="matrix-card__rest">${t.drift} drift · ${t.noValue} with no ${ref === 'spec' ? 'specification' : 'Compose'} value</p>`);
 }).join('')}</div>`;
-const facts = (matrix: Matrix, rows: Row[], components: number) => `<p class="matrix-facts">References: <a class="text-link" href="${escape(matrix.references.spec.url)}">m3.material.io</a> (read ${date(matrix.references.spec.read)}) and <a class="text-link" href="${escape(matrix.references.compose.url)}">Compose Material 3 ${escape(matrix.references.compose.version)}</a> (${date(matrix.references.compose.date)}) · material ${escape(matrix.material)} · measured ${date(matrix.measured)} · ${rows.length} properties${components > 1 ? ` in ${components} components` : ''}</p>`;
+const facts = (matrix: Matrix, rows: Row[], components: number) => `<p class="matrix-facts">References: <a class="text-link" href="${escape(matrix.references.spec.url)}">m3.material.io</a> (read ${date(matrix.references.spec.read)}) and <a class="text-link" href="${escape(matrix.references.compose.url)}">Compose Material 3 ${escape(matrix.references.compose.version)}</a> (${date(matrix.references.compose.date)}) · material ${escape(matrix.material)} · measured ${date(matrix.measured)} · ${rows.length} properties${components > 1 ? ` in ${components} components${matrix.components.some(c => c.id === 'bottom-app-bar') ? ' (the bottom app bar under Toolbar)' : ''}` : ''}</p>`;
+
+const LEGEND = `<p class="matrix-legend">Each card's strip has one mark per property: <i class="matrix-tick matrix-tick--match"></i> matches, <i class="matrix-tick matrix-tick--drift"></i> drifts, <i class="matrix-tick matrix-tick--no-value"></i> the reference gives no value. The specification states few per-state values, so its strips are mostly grey.</p>`;
 
 /** The matrix's index, as the Components page: the hero, then a card per component in its category, its
  *  stage the component's scores against each reference. */
@@ -125,7 +127,8 @@ export function conformanceIndex(sections: { id: string; name: string; items: { 
     const noValue = component.properties.filter(row => REFS.every(r => row.status[r] === 'no-value')).length;
     const stage = `<div slot="media" class="matrix-stage">${REFS.map(ref => {
       const percent = percentOf(component.properties, ref);
-      return `<div class="matrix-stage__ref"><span class="matrix-stage__label">vs ${REF[ref]}</span><span class="matrix-stage__percent">${percent === null ? '—' : `${percent}%`}</span>`
+      const t = tally(component.properties, ref);
+      return `<div class="matrix-stage__ref"><span class="matrix-stage__label">vs ${REF[ref]}<span class="matrix-stage__count">${t.match} of ${t.match + t.drift}${t.drift ? ` · ${t.drift} drift` : ''}</span></span><span class="matrix-stage__percent">${percent === null ? '—' : `${percent}%`}</span>`
         + `${m('progress', { variant: 'linear', value: percent ?? 0, max: 100, 'aria-label': `${component.name} against ${REF[ref]}: ${percent ?? 0}% match` })}${ticks(component.properties, ref)}</div>`;
     }).join('')}</div>`;
     const body = `<div class="component-card__body"><h3><a href="${href}">${escape(component.name)}</a></h3>`
@@ -135,13 +138,15 @@ export function conformanceIndex(sections: { id: string; name: string; items: { 
     return m('card', { variant: 'filled', class: 'component-card matrix-component-card' }, stage + body);
   };
   const grid = sections.map(section => {
-    const items = section.items.map(item => byId.get(item.slug)).filter((c): c is Component => !!c);
+    const items = section.items.map(item => byId.get(item.slug)).filter((c): c is Component => !!c)
+      // The bottom app bar has no page of its own here (it redirects to the toolbar): its rows count on the toolbar's card.
+      .map(c => c.id === 'toolbar' && byId.has('bottom-app-bar') ? { ...c, properties: [...c.properties, ...byId.get('bottom-app-bar')!.properties] } : c);
     if (!items.length) return '';
     return `<section class="component-catalog__section docs-group" aria-labelledby="matrix-${escape(section.id)}"><h2 id="matrix-${escape(section.id)}">${escape(section.name)}</h2><div class="component-grid">${items.map(card).join('')}</div></section>`;
   }).join('');
   const hero = `<header class="page-hero"><div class="page-hero__text"><h1>Conformance</h1>`
     + `<p>How material follows Material 3's two official references, the specification on m3.material.io and Jetpack Compose Material 3, component by component and property by property.</p></div><div class="page-hero__art" aria-hidden="true"></div></header>`;
-  return { html: `<div class="page-wrap docs-overview matrix-index">${hero}<div class="page-hero-body">${facts(matrix, rows, matrix.components.length)}${summaryCards(rows)}${caution(matrix)}${grid}</div></div>` };
+  return { html: `<div class="page-wrap docs-overview matrix-index">${hero}<div class="page-hero-body">${facts(matrix, rows, matrix.components.length)}${summaryCards(rows)}${caution(matrix)}${LEGEND}${grid}</div></div>` };
 }
 
 /** One component's properties: its scores, the controls, and its rows. */
@@ -167,10 +172,11 @@ export function conformanceComponent(id: string): { html: string; name: string; 
 
   const header = `<div class="matrix-colhead" aria-hidden="true"><span>Property</span>${REFS.map(r => `<span data-col="${r}">${REF[r]}</span>`).join('')}<span data-col="material">material</span></div>`;
 
-  const sections = [component].map(component => {
+  const extra = id === 'toolbar' ? matrix.components.find(c => c.id === 'bottom-app-bar') : undefined;
+  const sections = [component, ...(extra ? [{ ...extra, name: 'Bottom app bar (deprecated)' }] : [])].map((component, index) => {
     const drifts = component.properties.filter(row => REFS.some(r => row.status[r] === 'drift')).length;
     return `<section class="matrix-section" id="${escape(component.id)}" aria-labelledby="${escape(component.id)}-title">`
-      + `<div class="matrix-section__head"><h2 id="${escape(component.id)}-title">Properties</h2>`
+      + `<div class="matrix-section__head"><h2 id="${escape(component.id)}-title">${index ? escape(component.name) : 'Properties'}</h2>`
       + `<span class="matrix-badge${drifts ? ' matrix-badge--drift' : ''}">${drifts ? `${drifts} drift` : 'All match'}</span>`
       + `<span class="matrix-section__ticks">${REFS.map(r => ticks(component.properties, r)).join('')}</span></div>`
       + `<ul class="matrix-rows">${component.properties.map(row => rowHtml(row, matrix)).join('')}</ul>`
