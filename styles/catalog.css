@@ -361,3 +361,5 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-phone__list li:last-child { border-bottom: 0; }
 .property-phone__list:focus-visible { outline: 2px solid var(--mtrl-sys-color-secondary); outline-offset: -2px; }
 .property-phone__list[hidden] { display: none; }
+/* At a glance: the stage no taller than the points beside it. */
+.catalog-visual.property-note__stage { height: 300px; padding-bottom: 28px; }
