@@ -350,3 +350,7 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 .property-phone__home span { width: 108px; height: 4px; border-radius: 2px; background: var(--mtrl-sys-color-on-surface); }
 .property-note__points ul { padding-left: 22px; }
 .property-note__points li { margin: 0 0 12px; }
+/* At a glance, closer to M3's figure: the home handle in its own strip under the bar's labels, and more room under the phone. */
+.catalog-visual.property-note__stage { height: 400px; padding-bottom: 56px; }
+.property-phone__home { height: 32px; }
+.property-phone__home span { width: 108px; height: 4px; }
