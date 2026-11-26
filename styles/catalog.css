@@ -289,10 +289,10 @@ md3-catalog-timepicker:not(:defined), md3-catalog-datepicker:not(:defined) { wid
 @media (max-width: 839px) { .catalog-visual.property-stage--menus { flex-wrap: nowrap; gap: 32px 72px; } }
 .property-stage--menus .property-value { flex-shrink: 0; }
 @media (max-width: 839px) { .catalog-visual.property-stage--menus { gap: 32px 120px; padding-left: 96px; padding-right: 24px; } }
-/* A dotted grid behind the values, as m3.material.io's figures: dots of the outline colour, every 9px, on the surface. */
+/* A dotted grid behind the values, as m3.material.io's figures: dots of the outline colour, every 8px, on the surface. */
 .catalog-visual.property-stage {
   background-color: var(--mtrl-sys-color-surface);
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--mtrl-sys-color-outline) 45%, transparent) 1px, transparent 1.2px);
-  background-size: 9px 9px;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--mtrl-sys-color-outline) 45%, transparent) 0.75px, transparent 1px);
+  background-size: 8px 8px;
   background-position: 4px 4px;
 }
