@@ -19,5 +19,18 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       merge_logs: true,
     },
+    {
+      // The full browser suite on main, each night at 03:00 (scripts/nightly-browser.ts). It runs from its own
+      // worktree, which its first run creates: bun scripts/nightly-browser.ts from any checkout of main.
+      name: "md3.io-nightly",
+      script: "bun",
+      args: "worktrees/nightly/scripts/nightly-browser.ts",
+      interpreter: "none",
+      cwd: __dirname,
+      cron_restart: "0 3 * * *",
+      autorestart: false,
+      log_date_format: "YYYY-MM-DD HH:mm:ss",
+      merge_logs: true,
+    },
   ],
 };
