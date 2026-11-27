@@ -31,6 +31,7 @@ if (nightly && !nightly.ok) {
   process.exit(1);
 }
 if (!nightly) console.warn('bump: no nightly browser result yet; going on.');
+else if (Date.now() - Date.parse(nightly.at) > 36 * 3600_000) console.warn(`bump: the last nightly browser result is from ${nightly.at}; is md3.io-nightly running?`);
 
 const version = process.argv[2] ?? (JSON.parse(await text('https://registry.npmjs.org/material/latest')) as { version: string }).version;
 if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(`bump: ${version} is not a version`);

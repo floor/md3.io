@@ -20,11 +20,11 @@ module.exports = {
       merge_logs: true,
     },
     {
-      // The full browser suite on main, each night at 03:00 (scripts/nightly-browser.ts). It runs from its own
-      // worktree, which its first run creates: bun scripts/nightly-browser.ts from any checkout of main.
+      // The full browser suite on main, each night at 03:00 (scripts/nightly-browser.ts). The script runs from this
+      // checkout and tests origin/main in its own worktree, which it creates on its first run.
       name: "md3.io-nightly",
       script: "bun",
-      args: "worktrees/nightly/scripts/nightly-browser.ts",
+      args: "scripts/nightly-browser.ts",
       interpreter: "none",
       cwd: __dirname,
       cron_restart: "0 3 * * *",

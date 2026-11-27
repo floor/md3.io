@@ -16,26 +16,34 @@ const sh = (cwd: string, ...cmd: string[]) => {
   return result.stdout.toString().trim();
 };
 
-sh(root, 'git', 'fetch', '-q', 'origin', 'main');
-if (!existsSync(tree)) sh(root, 'git', 'worktree', 'add', '-q', '--detach', tree, 'origin/main');
-else sh(tree, 'git', 'checkout', '-q', '--detach', 'origin/main');
-const commit = sh(tree, 'git', 'rev-parse', 'HEAD');
-
 mkdirSync(resolve(root, 'analysis'), { recursive: true });
 const log = resolve(root, 'analysis/nightly-browser.log');
 const started = Date.now();
-const steps = [['bun', 'install', '--frozen-lockfile'], ['bun', 'run', 'build'], ['bun', 'run', 'test:browser']];
-let ok = true;
-const out = Bun.file(log).writer();
-for (const step of steps) {
-  out.write(`$ ${step.join(' ')}\n`);
-  const result = Bun.spawnSync(step, { cwd: tree, stdout: 'pipe', stderr: 'pipe' });
-  out.write(result.stdout); out.write(result.stderr);
-  if (result.exitCode !== 0) { ok = false; out.write(`exit ${result.exitCode}\n`); break; }
-}
-await out.end();
+let ok = false;
+let commit = '';
+// Whatever stops the run, the result says it failed: an old passing result never outlives a crash.
+try {
+  sh(root, 'git', 'fetch', '-q', 'origin', 'main');
+  if (!existsSync(tree)) sh(root, 'git', 'worktree', 'add', '-q', '--detach', tree, 'origin/main');
+  else sh(tree, 'git', 'checkout', '-q', '--detach', 'origin/main');
+  commit = sh(tree, 'git', 'rev-parse', 'HEAD');
 
-const status: NightlyStatus = { ok, at: new Date().toISOString(), commit, seconds: Math.round((Date.now() - started) / 1000), log };
-writeFileSync(nightlyFile(root), `${JSON.stringify(status, null, 2)}\n`);
-console.log(`nightly browser suite ${ok ? 'passed' : 'FAILED'} on main ${commit.slice(0, 8)} in ${status.seconds}s`);
+  const steps = [['bun', 'install', '--frozen-lockfile'], ['bun', 'run', 'build'], ['bun', 'run', 'test:browser']];
+  ok = true;
+  const out = Bun.file(log).writer();
+  for (const step of steps) {
+    out.write(`$ ${step.join(' ')}\n`);
+    const result = Bun.spawnSync(step, { cwd: tree, stdout: 'pipe', stderr: 'pipe' });
+    out.write(result.stdout); out.write(result.stderr);
+    if (result.exitCode !== 0) { ok = false; out.write(`exit ${result.exitCode}\n`); break; }
+  }
+  await out.end();
+} catch (error) {
+  ok = false;
+  console.error(error);
+} finally {
+  const status: NightlyStatus = { ok, at: new Date().toISOString(), commit, seconds: Math.round((Date.now() - started) / 1000), log };
+  writeFileSync(nightlyFile(root), `${JSON.stringify(status, null, 2)}\n`);
+  console.log(`nightly browser suite ${ok ? 'passed' : 'FAILED'} on main ${commit.slice(0, 8) || '(none)'} in ${status.seconds}s`);
+}
 process.exit(ok ? 0 : 1);
