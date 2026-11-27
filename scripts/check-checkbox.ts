@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { handleRequest } from '../server';
 import { checkboxChildren } from '../src/shared/content/checkbox';
 import * as panel from './panel-driver';
+import { playgroundPublic } from '../src/shared/visibility';
 
 // The checkbox playground: by default a parent ("Additions") over M3's four
 // children, mixed with Tomato alone checked. `family` off gives a single checkbox.
@@ -31,7 +32,9 @@ try {
   await page.getByRole('navigation', { name: 'Component list', exact: true }).getByRole('link', { name: 'Checkbox', exact: true }).click();
   // The list opens a component's Overview; its Playground tab holds the preview.
   await page.waitForURL(url => url.pathname === '/components/checkbox/');
-  await page.locator('.component-tabs a[href="/components/checkbox/playground/"]').click();
+  // While the playground is hidden (playgroundPublic) it has no tab: open it by its address.
+  if (playgroundPublic) await page.locator('.component-tabs a[href="/components/checkbox/playground/"]').click();
+  else await page.goto(new URL('/components/checkbox/playground/', page.url()).href);
   await page.waitForURL(url => url.pathname === '/components/checkbox/playground/');
   const frame = page.frameLocator('#preview');
   const boxes = frame.getByRole('checkbox');

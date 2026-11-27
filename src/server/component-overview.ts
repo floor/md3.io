@@ -2,6 +2,7 @@
 // component live in that scenario), each with a button group to open it in the Playground
 // or read its code. The playground has its own tab (/components/<slug>/playground/).
 import { components, type Scenario } from '../shared/components';
+import { playgroundPublic } from '../shared/visibility';
 
 const escape = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -21,7 +22,7 @@ export function componentOverview(slug: keyof typeof components, links: Overview
     const id = `scenario-${scenario.id}`;
     // The actions, as a standard button group: Playground (tonal, the main one), then Code.
     const actions = `<div class="scenario-actions" role="group" aria-label="${escape(scenario.name)}">`
-      + `<a class="mtrl-button mtrl-button--tonal mtrl-button--s mtrl-button--round" href="${escape(links.playground + query)}" aria-label="${escape(`Open ${scenario.name} in the playground`)}"><span class="mtrl-button__icon">${links.playIcon}</span><span class="mtrl-button__text">Playground</span></a>`
+      + (playgroundPublic ? `<a class="mtrl-button mtrl-button--tonal mtrl-button--s mtrl-button--round" href="${escape(links.playground + query)}" aria-label="${escape(`Open ${scenario.name} in the playground`)}"><span class="mtrl-button__icon">${links.playIcon}</span><span class="mtrl-button__text">Playground</span></a>` : '')
       + `<a class="mtrl-icon-button mtrl-icon-button--tonal mtrl-icon-button--s mtrl-icon-button--round" href="${escape(links.develop)}" aria-label="${escape(`${name}: Develop`)}" title="Develop"><span class="mtrl-icon-button__icon">${links.codeIcon}</span></a>`
       + `</div>`;
     return `<section class="scenario" aria-labelledby="${id}"><div class="scenario__heading"><div><h2 id="${id}">${escape(scenario.name)}</h2><p>${escape(scenario.description)}</p></div>${actions}</div>`

@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { root, docSlugs, docHref, documentFile, isGuide } from './content';
 import { componentSlugs } from '../shared/components';
 import { addonSlugs, addonsPublic, isAddonPath, playgroundHref } from '../shared/addons';
-import { showcasePublic, stylesPublic } from '../shared/visibility';
+import { playgroundPublic, showcasePublic, stylesPublic } from '../shared/visibility';
 import { examples } from './examples';
 import { stylePages } from './styles';
 import { mtrlVersion } from './tokens';
@@ -58,7 +58,7 @@ export function sitemapPages(): SitemapPage[] {
   add('/components/', '0.9', shell('catalog'), 'src/server/catalog.ts');
   for (const slug of componentSlugs) {
     add(`/components/${slug}/`, '0.8', ...componentFiles(slug), shell('component-tab'), 'src/server/component-overview.ts');
-    add(`/components/${slug}/playground/`, '0.7', ...componentFiles(slug), shell('component'));
+    if (playgroundPublic) add(`/components/${slug}/playground/`, '0.7', ...componentFiles(slug), shell('component'));
   }
   if (addonsPublic) {
     add('/addons/', '0.9', shell('catalog'), 'src/shared/addons.ts', 'src/server/catalog.ts');

@@ -6,7 +6,7 @@ import { root, addonDocGroup, componentName, docGroups, docHref, docSlugs, guide
 import { themes } from './src/shared/button';
 import { components, componentDeprecations, componentIcons, componentSlugs, isComponent } from './src/shared/components';
 import { addons, addonSlugs, addonsPublic, isAddon, playgroundHref } from './src/shared/addons';
-import { isHiddenPath, showcasePublic, stylesPublic } from './src/shared/visibility';
+import { isHiddenPath, playgroundPublic, showcasePublic, stylesPublic } from './src/shared/visibility';
 import { componentDirectory } from './src/server/component-directory';
 import { componentOverview } from './src/server/component-overview';
 import { hasPropertyOverview, propertyOverview } from './src/server/component-properties';
@@ -238,7 +238,7 @@ function componentDocument(slug: string) {
 }
 /** A component's presentation: its document's opening paragraph. */
 const componentIntro = (slug: string): string => componentDocument(slug)?.develop.match(/<p>[\s\S]*?<\/p>/)?.[0] ?? '';
-const componentTabs = (slug: string): ComponentTab[] => ['overview', 'playground', 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
+const componentTabs = (slug: string): ComponentTab[] => ['overview', ...(playgroundPublic ? ['playground' as const] : []), 'develop', ...(componentDocument(slug)?.accessibility ? ['accessibility' as const] : [])];
 /** The header every tab of a component shares: the overview's hero, then the tab bar. */
 function componentHeader(slug: string, current: ComponentTab): string {
   const component = components[slug as keyof typeof components];
@@ -444,7 +444,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   const componentTabMatch = /^\/components\/([a-z-]+)\/(develop|accessibility)\/$/.exec(path);
   // A renamed component's old documentation address goes straight to its Develop tab, in one redirect.
   const movedDoc = (to: string) => to.startsWith('/docs/components/') ? `/components/${to.slice(17, -1)}/develop/` : to;
-  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)), homeCode: homeCode(), frameworkLogos: Object.fromEntries(FRAMEWORKS.map(({ id }) => [id, frameworkLogo(id)])), expressiveCards: ['button-group', 'split-button', 'fab-menu', 'loading-indicator', 'toolbar', 'progress'].map(slug => catalogCard(slug as Parameters<typeof catalogCard>[0], playgroundHref(slug), false, [{ label: 'Playground', href: `/components/${slug}/playground/` }])), shaking: treeShaking(Object.fromEntries(componentSlugs.map(slug => [slug, components[slug].name])), [['Actions', ['button', 'fab']], ['Selection & input', ['checkbox', 'text-field']], ['Navigation', ['tabs', 'navigation-bar']], ['Containment', ['card', 'dialog']], ['Communication', ['snackbar', 'tooltip']]]) });
+  if (path === '/') response = page(path, 'material — Material Design for the web', 'Material Design 3 components in TypeScript. Explore the components, make them your own, and bring them to any web project.', 'homepage', { install: renderInstall(installSpecifier(mtrlVersion)), homeCode: homeCode(), frameworkLogos: Object.fromEntries(FRAMEWORKS.map(({ id }) => [id, frameworkLogo(id)])), expressiveCards: ['button-group', 'split-button', 'fab-menu', 'loading-indicator', 'toolbar', 'progress'].map(slug => catalogCard(slug as Parameters<typeof catalogCard>[0], playgroundHref(slug), false, playgroundPublic ? [{ label: 'Playground', href: `/components/${slug}/playground/` }] : [])), shaking: treeShaking(Object.fromEntries(componentSlugs.map(slug => [slug, components[slug].name])), [['Actions', ['button', 'fab']], ['Selection & input', ['checkbox', 'text-field']], ['Navigation', ['tabs', 'navigation-bar']], ['Containment', ['card', 'dialog']], ['Communication', ['snackbar', 'tooltip']]]) });
   else if (path === '/components/top-app-bar/' || path === '/docs/components/top-app-bar/' || path === '/preview/top-app-bar/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('top-app-bar', 'app-bar')) + url.search } });
   else if (path === '/components/drawer/' || path === '/docs/components/drawer/' || path === '/preview/drawer/') response = new Response(null, { status: 301, headers: { ...commonHeaders, Location: movedDoc(path.replace('/drawer/', '/navigation-drawer/')) + url.search } });
   // Bottom app bar left the site for Toolbar; its published URLs keep working.
