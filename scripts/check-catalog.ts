@@ -12,6 +12,7 @@ import { addonDocGroup, docGroups } from '../src/server/content';
 import { componentSlugs, components } from '../src/shared/components';
 import { addonSlugs, addons, playgroundHref } from '../src/shared/addons';
 import { baseline, themeTokens } from '../src/server/tokens';
+import { playgroundPublic } from '../src/shared/visibility';
 
 const server = process.env.BASE_URL ? null : Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: (await import('../server')).handleRequest });
 const base = (process.env.BASE_URL ?? server!.url.href).replace(/\/$/, '');
@@ -212,9 +213,11 @@ try {
   await loadAll();
   const state = await inspect(page);
   assert(state.cards.length === componentSlugs.length, `The overview shows ${state.cards.length} cards, not ${componentSlugs.length}`);
+  // The title, Develop and Playground while it is public (playgroundPublic), and Accessibility where it exists.
+  const cardLinks = playgroundPublic ? 3 : 2;
   for (const [index, card] of state.cards.entries()) {
     const slug = catalogOrder[index]!;
-    assert(card.tag === 'm-card' && (card.links === 3 || card.links === 4) && card.href === `/components/${slug}/` && card.name === components[slug].name, `${slug}: the card's links are not its title to the playground and its Playground, Develop (and Accessibility) actions`);
+    assert(card.tag === 'm-card' && (card.links === cardLinks || card.links === cardLinks + 1) && card.href === `/components/${slug}/` && card.name === components[slug].name, `${slug}: the card's links are not its title to the playground and its Playground, Develop (and Accessibility) actions`);
     assert(card.elements.some(name => name.startsWith('m-') || name.startsWith('md3-catalog-')), `${slug}: no mtrl element in the card`);
     assert(card.undefined.length === 0, `${slug}: not upgraded: ${card.undefined.join(', ')}`);
     assert(card.empty.length === 0, `${slug}: renders nothing: ${card.empty.join(', ')}`);

@@ -6,6 +6,7 @@ import * as panel from './panel-driver';
 import { checkPlaygroundLayout } from './check-playground-layout';
 import { checkInputTargets } from './check-input-targets';
 import { checkPageLayout } from './check-page-layout';
+import { playgroundPublic } from '../src/shared/visibility';
 
 const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: handleRequest });
 const base = server.url.toString();
@@ -278,9 +279,10 @@ try {
   const openPlayground = async (slug: string) => {
     await page.waitForURL(url => url.pathname === `/components/${slug}/`, { waitUntil: "commit" });
     // The Overview's own content, swapped in by client navigation, before its tab is clicked.
-    await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).waitFor();
     await page.locator('.scenarios, .property-sections').first().waitFor();
-    await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).click();
+    // While the playground is hidden (playgroundPublic) it has no tab: open it by its address.
+    if (playgroundPublic) await page.locator(`.component-tabs a[href="/components/${slug}/playground/"]`).click();
+    else await page.goto(new URL(`/components/${slug}/playground/`, page.url()).href);
     await page.waitForURL(url => url.pathname === `/components/${slug}/playground/`, { waitUntil: "commit" });
     await page.locator("#preview").waitFor();
   };
