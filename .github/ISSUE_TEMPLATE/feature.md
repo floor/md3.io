@@ -11,10 +11,10 @@ labels: enhancement
 - [ ] <!-- a checkable outcome -->
 
 ## Check
-<!-- The command or steps that prove it is done, and the expected result. -->
+`<command or steps>` → <expected result once it is done>
 
 ## Scope
 In: <!-- pages, components or files --> · Out: <!-- what is not part of it -->
 
 ## Gates
-<!-- none | review | release -->
+none | cross-lab review | release | owner's go

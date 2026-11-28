@@ -11,10 +11,10 @@ labels: bug
 - [ ] <!-- a checkable outcome -->
 
 ## Check
-<!-- The command or steps that prove it is fixed, and the expected result. -->
+`<command or steps>` → <expected result once it is fixed>
 
 ## Scope
 In: <!-- pages, components or files --> · Out: <!-- what not to touch -->
 
 ## Gates
-<!-- none | review | release -->
+none | cross-lab review | release | owner's go
